@@ -39,17 +39,20 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class ChaseQuickPayForm extends PaymentMethodForm {
 
+    @SuppressWarnings("deprecation")
     private final ChaseQuickPayAccount chaseQuickPayAccount;
     private final ChaseQuickPayValidator chaseQuickPayValidator;
 
+    @SuppressWarnings("deprecation")
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
-                ((ChaseQuickPayAccountPayload) paymentAccountPayload).getHolderName());
+                paymentAccountPayload.getHolderName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 ((ChaseQuickPayAccountPayload) paymentAccountPayload).getEmail());
         return gridRow;
     }
 
+    @SuppressWarnings("deprecation")
     public ChaseQuickPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, ChaseQuickPayValidator chaseQuickPayValidator,
                              InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
