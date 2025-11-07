@@ -122,7 +122,7 @@ public final class Navigation implements PersistedDataHost {
                             i != newPath.size() - 1)) {
                 ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
                 for (int n = i + 1; n < newPath.size(); n++) {
-                    //noinspection unchecked
+                    @SuppressWarnings("unchecked")
                     Class<? extends View>[] newTemp = new Class[i + 1];
                     currentPath = ViewPath.to(temp2.toArray(newTemp));
                     navigateTo(currentPath, data);
