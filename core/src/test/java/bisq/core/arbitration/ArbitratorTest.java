@@ -54,6 +54,7 @@ public class ArbitratorTest {
                 null, null, null);
     }
 
+    @SuppressWarnings("deprecation")
     public static byte[] getBytes(@SuppressWarnings("SameParameterValue") int count) {
         return RandomUtils.nextBytes(count);
     }
