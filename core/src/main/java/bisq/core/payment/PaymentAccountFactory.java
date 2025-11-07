@@ -20,6 +20,7 @@ package bisq.core.payment;
 import bisq.core.payment.payload.PaymentMethod;
 
 public class PaymentAccountFactory {
+    @SuppressWarnings("deprecation")
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
