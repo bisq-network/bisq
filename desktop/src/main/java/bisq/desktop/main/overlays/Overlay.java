@@ -198,8 +198,8 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected int maxChar = 2200;
 
+    @SuppressWarnings("unchecked")
     private T cast() {
-        //noinspection unchecked
         return (T) this;
     }
 
