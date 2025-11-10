@@ -86,8 +86,9 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
 
         CompletableFuture.runAsync(() -> {
             try {
-                Map<String, BondedReputation> bondedReputationByTxId = getBondedReputationByTxId();
-                BsqBlockDto bsqBlockDto = toBlockDto(block, bondedReputationByTxId);
+                Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
+                Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
+                BsqBlockDto bsqBlockDto = toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId);
                 if (bsqBlockDto.getTxDtoList().isEmpty()) {
                     log.info("No relevant BSQ transactions in that block, therefor we skip publishing. bsqBlockDto={}", bsqBlockDto);
                     return;
@@ -136,9 +137,10 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                 int startBlockHeight = BsqBlocksRequest.fromProto(bsqBlocksRequest).getStartBlockHeight();
                 log.info("Request Bsq blocks from block {}", startBlockHeight);
 
-                Map<String, BondedReputation> bondedReputationByTxId = getBondedReputationByTxId();
+                Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
+                Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
                 List<BsqBlockDto> blocks = daoStateService.getBlocksFromBlockHeight(startBlockHeight).stream()
-                        .map(block -> toBlockDto(block, bondedReputationByTxId))
+                        .map(block -> toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId))
                         .filter(dto -> !dto.getTxDtoList().isEmpty())
                         .collect(Collectors.toList());
 
@@ -163,12 +165,14 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         streamObservers.clear();
     }
 
-    private BsqBlockDto toBlockDto(Block block, Map<String, BondedReputation> bondedReputationByTxId) {
+    private BsqBlockDto toBlockDto(Block block,
+                                   Map<String, BondedReputation> bondedReputationByLockupTxId,
+                                   Map<String, BondedReputation> bondedReputationByUnlockTxId) {
         try {
             List<TxDto> txDataList = block.getTxs().stream()
                     .map(tx -> {
                         Optional<ProofOfBurnDto> proofOfBurnDto = toProofOfBurnDto(tx);
-                        Optional<BondedReputationDto> bondedReputationDto = toBondedReputationDto(bondedReputationByTxId, tx);
+                        Optional<BondedReputationDto> bondedReputationDto = toBondedReputationDto(tx, bondedReputationByLockupTxId, bondedReputationByUnlockTxId);
                         if (proofOfBurnDto.isPresent() || bondedReputationDto.isPresent()) {
                             return new TxDto(tx.getId(), proofOfBurnDto, bondedReputationDto);
                         } else {
@@ -200,15 +204,22 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         }
     }
 
-    private Optional<BondedReputationDto> toBondedReputationDto(Map<String, BondedReputation> bondedReputationByTxId,
-                                                                Tx tx) {
+    private Optional<BondedReputationDto> toBondedReputationDto(Tx tx,
+                                                                Map<String, BondedReputation> bondedReputationByLockupTxId,
+                                                                Map<String, BondedReputation> bondedReputationByUnlockTxId) {
         try {
             if (tx.getTxType() == TxType.LOCKUP) {
-                BondedReputation value = bondedReputationByTxId.get(tx.getId());
-                return Optional.ofNullable(value)
+                return Optional.ofNullable(bondedReputationByLockupTxId.get(tx.getId()))
                         .map(bondedReputation -> new BondedReputationDto(bondedReputation.getAmount(),
                                 bondedReputation.getBondedAsset().getHash(),
-                                bondedReputation.getLockTime()));
+                                bondedReputation.getLockTime(),
+                                false));
+            } else if (tx.getTxType() == TxType.UNLOCK) {
+                return Optional.ofNullable(bondedReputationByUnlockTxId.get(tx.getId()))
+                        .map(bondedReputation -> new BondedReputationDto(bondedReputation.getAmount(),
+                                bondedReputation.getBondedAsset().getHash(),
+                                bondedReputation.getLockTime(),
+                                true));
             } else {
                 return Optional.empty();
             }
@@ -218,13 +229,24 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         }
     }
 
-    private Map<String, BondedReputation> getBondedReputationByTxId() {
+    private Map<String, BondedReputation> getBondedReputationByLockupTxId() {
         // We only consider lock time with at least 50 000 blocks as valid
         try {
             return bondedReputationRepository.getBondedReputationStream()
-                    .filter(BondedReputation::isActive)
                     .filter(bondedReputation -> bondedReputation.getLockTime() >= MIN_BONDED_REPUTATION_LOCK_TIME)
                     .collect(Collectors.toMap(Bond::getLockupTxId, bondedReputation -> bondedReputation));
+        } catch (Exception e) {
+            log.error("getBondedReputationByTxId failed", e);
+            throw e;
+        }
+    }
+
+    private Map<String, BondedReputation> getBondedReputationByUnlockTxId() {
+        // We only consider lock time with at least 50 000 blocks as valid
+        try {
+            return bondedReputationRepository.getBondedReputationStream()
+                    .filter(bondedReputation -> bondedReputation.getLockTime() >= MIN_BONDED_REPUTATION_LOCK_TIME)
+                    .collect(Collectors.toMap(Bond::getUnlockTxId, bondedReputation -> bondedReputation));
         } catch (Exception e) {
             log.error("getBondedReputationByTxId failed", e);
             throw e;

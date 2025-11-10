@@ -32,11 +32,13 @@ public final class BondedReputationDto implements Payload {
     private final long amount;
     private final byte[] bondedReputationHash;
     private final int lockTime;
+    private final boolean isUnlocked;
 
-    public BondedReputationDto(long amount, byte[] bondedReputationHash, int lockTime) {
+    public BondedReputationDto(long amount, byte[] bondedReputationHash, int lockTime, boolean isUnlocked) {
         this.amount = amount;
         this.bondedReputationHash = bondedReputationHash;
         this.lockTime = lockTime;
+        this.isUnlocked = isUnlocked;
     }
 
     @Override
@@ -45,12 +47,14 @@ public final class BondedReputationDto implements Payload {
                 .setAmount(amount)
                 .setBondedReputationHash(ByteString.copyFrom(bondedReputationHash))
                 .setLockTime(lockTime)
+                .setIsUnlocked(isUnlocked)
                 .build();
     }
 
     public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto) {
         return new BondedReputationDto(proto.getAmount(),
                 proto.getBondedReputationHash().toByteArray(),
-                proto.getLockTime());
+                proto.getLockTime(),
+                proto.getIsUnlocked());
     }
 }
