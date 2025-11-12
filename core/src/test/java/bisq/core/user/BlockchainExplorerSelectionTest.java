@@ -45,7 +45,7 @@ public class BlockchainExplorerSelectionTest {
 
     @Test
     void noBtcExploreSet() {
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         var explorerSelection = new BlockchainExplorerSelection(preferences, mock(PreferencesPayload.class),
                 mock(PersistenceManager.class));
         explorerSelection.selectNodes();
@@ -56,7 +56,7 @@ public class BlockchainExplorerSelectionTest {
 
     @Test
     void noBsqExploreSet() {
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         var explorerSelection = new BlockchainExplorerSelection(preferences, mock(PreferencesPayload.class),
                 mock(PersistenceManager.class));
         explorerSelection.selectNodes();
@@ -70,7 +70,7 @@ public class BlockchainExplorerSelectionTest {
 
     @Test
     void deprecatedBsqExplorerSelected() {
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         var explorerSelection = new BlockchainExplorerSelection(preferences, mock(PreferencesPayload.class),
                 mock(PersistenceManager.class));
 
@@ -90,7 +90,7 @@ public class BlockchainExplorerSelectionTest {
     @Test
     void noAutoConfirmSelected(@Mock PreferencesPayload prefPayload,
                                @SuppressWarnings("rawtypes") @Mock PersistenceManager persistenceManager) {
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         var explorerSelection = new BlockchainExplorerSelection(preferences, prefPayload, persistenceManager);
 
         List<String> defaultXmrProofServices = List.of("alice-monero-xmr-proof-service.onion",
@@ -114,7 +114,7 @@ public class BlockchainExplorerSelectionTest {
     @Test
     void blacklistedAutoConfirmSelected(@Mock PreferencesPayload prefPayload,
                                         @SuppressWarnings("rawtypes") @Mock PersistenceManager persistenceManager) {
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         var explorerSelection = new BlockchainExplorerSelection(preferences, prefPayload, persistenceManager);
 
         List<String> defaultXmrProofServices = List.of("alice-monero-xmr-proof-service.onion",

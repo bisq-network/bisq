@@ -111,6 +111,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 natpryce-make-it-easy = { module = "com.natpryce:make-it-easy", version.ref = "natpryce-make-it-easy" }
 

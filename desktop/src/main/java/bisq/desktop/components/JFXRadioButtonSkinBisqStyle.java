@@ -230,7 +230,7 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
                 topInset,
                 rightInset,
                 bottomInset,
-                leftInset) + snapSize(radio.minWidth(-1)) + padding / 3;
+                leftInset) + snapSizeX(radio.minWidth(-1)) + padding / 3;
     }
 
     @Override
