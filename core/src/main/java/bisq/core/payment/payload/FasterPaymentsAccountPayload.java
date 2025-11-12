@@ -72,6 +72,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
         this.email = email;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
@@ -82,6 +83,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static FasterPaymentsAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new FasterPaymentsAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

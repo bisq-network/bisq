@@ -78,6 +78,7 @@ public final class CashByMailAccountPayload extends PaymentAccountPayload implem
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static CashByMailAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CashByMailAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

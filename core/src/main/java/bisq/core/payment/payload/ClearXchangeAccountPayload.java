@@ -74,6 +74,7 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload impl
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static ClearXchangeAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new ClearXchangeAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

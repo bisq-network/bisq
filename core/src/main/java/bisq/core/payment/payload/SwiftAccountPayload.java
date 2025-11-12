@@ -139,6 +139,7 @@ public final class SwiftAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static SwiftAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.SwiftAccountPayload x = proto.getSwiftAccountPayload();
         return new SwiftAccountPayload(proto.getPaymentMethodId(),

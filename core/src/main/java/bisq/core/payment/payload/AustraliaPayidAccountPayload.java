@@ -77,6 +77,7 @@ public final class AustraliaPayidAccountPayload extends PaymentAccountPayload {
                 ).build();
     }
 
+    @SuppressWarnings("deprecation")
     public static AustraliaPayidAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.AustraliaPayidPayload AustraliaPayidPayload = proto.getAustraliaPayidPayload();
         return new AustraliaPayidAccountPayload(proto.getPaymentMethodId(),

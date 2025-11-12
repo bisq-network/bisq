@@ -70,6 +70,7 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PerfectMoneyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

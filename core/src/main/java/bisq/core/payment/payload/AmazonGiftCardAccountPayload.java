@@ -79,6 +79,7 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload = proto.getAmazonGiftCardAccountPayload();
         return new AmazonGiftCardAccountPayload(proto.getPaymentMethodId(),

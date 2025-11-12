@@ -69,6 +69,7 @@ public final class PaxumAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaxumAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PaxumAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

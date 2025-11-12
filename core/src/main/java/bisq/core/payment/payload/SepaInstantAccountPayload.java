@@ -107,6 +107,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.SepaInstantAccountPayload sepaInstantAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaInstantAccountPayload();

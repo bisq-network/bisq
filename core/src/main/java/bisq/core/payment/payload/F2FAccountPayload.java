@@ -85,6 +85,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.F2FAccountPayload f2fAccountPayloadPB = countryBasedPaymentAccountPayload.getF2FAccountPayload();

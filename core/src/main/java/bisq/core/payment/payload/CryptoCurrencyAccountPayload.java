@@ -64,6 +64,7 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static CryptoCurrencyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
