@@ -75,6 +75,7 @@ public final class SatispayAccountPayload extends CountryBasedPaymentAccountPayl
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static SatispayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.SatispayAccountPayload accountPayloadPB = countryBasedPaymentAccountPayload.getSatispayAccountPayload();

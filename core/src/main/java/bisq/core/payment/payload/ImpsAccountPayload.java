@@ -77,6 +77,7 @@ public final class ImpsAccountPayload extends IfscBasedAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static ImpsAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.IfscBasedAccountPayload ifscBasedAccountPayloadPB = countryBasedPaymentAccountPayload.getIfscBasedAccountPayload();

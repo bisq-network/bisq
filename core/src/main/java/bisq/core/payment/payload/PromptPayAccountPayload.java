@@ -69,6 +69,7 @@ public final class PromptPayAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PromptPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PromptPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

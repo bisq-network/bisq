@@ -94,6 +94,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
         persistedAcceptedCountryCodes.addAll(acceptedCountryCodes);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Message toProtoMessage() {
         protobuf.SepaAccountPayload.Builder builder =
@@ -111,6 +112,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();

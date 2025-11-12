@@ -71,6 +71,7 @@ public final class PaytmAccountPayload extends CountryBasedPaymentAccountPayload
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaytmAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.PaytmAccountPayload paytmAccountPayloadPB = countryBasedPaymentAccountPayload.getPaytmAccountPayload();

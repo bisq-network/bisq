@@ -70,6 +70,7 @@ public final class AdvancedCashAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static AdvancedCashAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new AdvancedCashAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

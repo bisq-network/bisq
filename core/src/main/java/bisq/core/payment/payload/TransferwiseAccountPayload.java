@@ -71,6 +71,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static TransferwiseAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new TransferwiseAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
