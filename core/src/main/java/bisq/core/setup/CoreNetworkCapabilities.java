@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreNetworkCapabilities {
 
+    @SuppressWarnings("deprecation")
     public static void setSupportedCapabilities(Config config) {
         Capabilities.app.addAll(
                 Capability.TRADE_STATISTICS,

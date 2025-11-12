@@ -38,6 +38,7 @@ public abstract class NewStateHashMessage<T extends StateHash> extends Broadcast
         this.stateHash = stateHash;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);

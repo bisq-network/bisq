@@ -41,6 +41,7 @@ public abstract class GetStateHashesRequest extends NetworkEnvelope implements D
         this.nonce = nonce;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);

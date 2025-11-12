@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * is only used as key in the map. So we have a hybrid data structure which is represented as list in the protobuffer
  * definition and provide a hashMap for the domain access.
  */
+@SuppressWarnings("deprecation")
 @Slf4j
 public class TradeStatistics2Store extends PersistableNetworkPayloadStore<TradeStatistics2> {
 

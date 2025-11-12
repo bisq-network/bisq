@@ -458,10 +458,10 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Class<? extends PaymentAccountPayload> getPaymentAccountPayloadType() {
         try {
             Package pkg = PaymentAccountPayload.class.getPackage();
-            //noinspection unchecked
             return (Class<? extends PaymentAccountPayload>) Class.forName(pkg.getName()
                     + "." + paymentAccountType.getSimpleName() + "Payload");
         } catch (Exception ex) {

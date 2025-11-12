@@ -55,6 +55,7 @@ public final class NewBlindVoteStateHashMessage extends NewStateHashMessage<Blin
         return new NewBlindVoteStateHashMessage(BlindVoteStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);

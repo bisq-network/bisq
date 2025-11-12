@@ -55,6 +55,7 @@ public final class NewProposalStateHashMessage extends NewStateHashMessage<Propo
         return new NewProposalStateHashMessage(ProposalStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);

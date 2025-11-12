@@ -419,6 +419,7 @@ public class OfferUtil {
     // editedOfferPayload fields.  Mutable fields are sourced from
     // mutableOfferPayloadFields param, e.g., payment account details, price, etc.
     // Immutable fields are sourced from the original openOffer param.
+    @SuppressWarnings("deprecation")
     public OfferPayload getMergedOfferPayload(OpenOffer openOffer,
                                               MutableOfferPayloadFields mutableOfferPayloadFields) {
         OfferPayload original = openOffer.getOffer().getOfferPayload().orElseThrow();

@@ -110,6 +110,7 @@ public class PaymentAccountUtil {
         return acceptedCountryCodes;
     }
 
+    @SuppressWarnings("deprecation")
     public static List<TradeCurrency> getTradeCurrencies(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
             case ADVANCED_CASH_ID:
