@@ -98,6 +98,7 @@ public class CoreProtoResolver implements ProtoResolver {
     @Getter
     protected Clock clock;
 
+    @SuppressWarnings("deprecation")
     @Override
     public PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         if (proto != null) {
@@ -257,6 +258,7 @@ public class CoreProtoResolver implements ProtoResolver {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public PersistablePayload fromProto(protobuf.PersistableNetworkPayload proto) {
         if (proto != null) {
