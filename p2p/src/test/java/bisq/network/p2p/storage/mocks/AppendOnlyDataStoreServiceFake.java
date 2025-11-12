@@ -29,6 +29,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
  */
 public class AppendOnlyDataStoreServiceFake extends AppendOnlyDataStoreService {
 
+    @SuppressWarnings("unchecked")
     public AppendOnlyDataStoreServiceFake() {
         addService(new MapStoreServiceFake());
     }
