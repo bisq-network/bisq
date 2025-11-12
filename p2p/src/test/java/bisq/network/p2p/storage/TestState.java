@@ -77,6 +77,7 @@ public class TestState {
     final ClockFake clockFake;
     private RemovedPayloadsService removedPayloadsService;
 
+    @SuppressWarnings("unchecked")
     TestState() {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrPersistenceManager = mock(PersistenceManager.class);
@@ -270,6 +271,7 @@ public class TestState {
         // The default matcher expects orders to stay the same. So, create a custom matcher function since
         // we don't care about the order.
         if (expectedListenersSignaled) {
+            @SuppressWarnings("unchecked")
             final ArgumentCaptor<Collection<ProtectedStorageEntry>> argument = ArgumentCaptor.forClass(Collection.class);
             verify(this.hashMapChangedListener).onRemoved(argument.capture());
 

@@ -69,8 +69,8 @@ public interface ExcludeForHashAwareProto extends Proto {
         return toProto(false);
     }
 
+    @SuppressWarnings("unchecked")
     default <T extends Message> T resolveProto(boolean serializeForHash) {
-        //noinspection unchecked
         return (T) resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 

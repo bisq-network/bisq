@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -569,18 +570,18 @@ public class Utilities {
 
         String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : "";
 
-        duration = StringUtils.replacePattern(duration, "^1 " + seconds + "|\\b1 " + seconds, "1 " + second);
-        duration = StringUtils.replacePattern(duration, "^1 " + minutes + "|\\b1 " + minutes, "1 " + minute);
-        duration = StringUtils.replacePattern(duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
-        duration = StringUtils.replacePattern(duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
+        duration = RegExUtils.replacePattern(duration, "^1 " + seconds + "|\\b1 " + seconds, "1 " + second);
+        duration = RegExUtils.replacePattern(duration, "^1 " + minutes + "|\\b1 " + minutes, "1 " + minute);
+        duration = RegExUtils.replacePattern(duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
+        duration = RegExUtils.replacePattern(duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
 
         duration = duration.replace(", 0 seconds", "");
         duration = duration.replace(", 0 minutes", "");
         duration = duration.replace(", 0 hours", "");
-        duration = StringUtils.replacePattern(duration, "^0 days, ", "");
-        duration = StringUtils.replacePattern(duration, "^0 hours, ", "");
-        duration = StringUtils.replacePattern(duration, "^0 minutes, ", "");
-        duration = StringUtils.replacePattern(duration, "^0 seconds, ", "");
+        duration = RegExUtils.replacePattern(duration, "^0 days, ", "");
+        duration = RegExUtils.replacePattern(duration, "^0 hours, ", "");
+        duration = RegExUtils.replacePattern(duration, "^0 minutes, ", "");
+        duration = RegExUtils.replacePattern(duration, "^0 seconds, ", "");
 
         String result = duration.trim();
         if (result.isEmpty()) {

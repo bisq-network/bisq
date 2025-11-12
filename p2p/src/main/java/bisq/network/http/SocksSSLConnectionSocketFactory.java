@@ -18,6 +18,7 @@
 package bisq.network.http;
 
 import org.apache.http.HttpHost;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.protocol.HttpContext;
 
@@ -36,10 +37,8 @@ import java.io.IOException;
 class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
 
     public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
-
-        // TODO check alternative to deprecated call
         // Only allow connection's to site's with valid certs.
-        super(sslContext, STRICT_HOSTNAME_VERIFIER);
+        super(sslContext, new DefaultHostnameVerifier());
 
         // Or to allow "insecure" (eg self-signed certs)
         // super(sslContext, ALLOW_ALL_HOSTNAME_VERIFIER);

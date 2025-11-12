@@ -39,8 +39,8 @@ public class TaskRunner<T extends Model> {
     private Class<? extends Task<T>> currentTask;
 
 
+    @SuppressWarnings("unchecked")
     public TaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        //noinspection unchecked
         this(sharedModel, (Class<T>) sharedModel.getClass(), resultHandler, errorMessageHandler);
     }
 

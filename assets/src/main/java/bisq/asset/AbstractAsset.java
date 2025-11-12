@@ -17,8 +17,9 @@
 
 package bisq.asset;
 
+import java.util.Objects;
+
 import static org.apache.commons.lang3.Validate.notBlank;
-import static org.apache.commons.lang3.Validate.notNull;
 
 /**
  * Abstract base class for {@link Asset} implementations. Most implementations should not
@@ -37,7 +38,7 @@ public abstract class AbstractAsset implements Asset {
     public AbstractAsset(String name, String tickerSymbol, AddressValidator addressValidator) {
         this.name = notBlank(name);
         this.tickerSymbol = notBlank(tickerSymbol);
-        this.addressValidator = notNull(addressValidator);
+        this.addressValidator = Objects.requireNonNull(addressValidator);
     }
 
     @Override

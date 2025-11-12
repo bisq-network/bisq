@@ -20,7 +20,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -214,8 +215,8 @@ public class ConfigTests {
             System.setOut(outTest);
             System.setErr(errTest);
             new Config();
-            assertThat(outBytes.toString(), isEmptyString());
-            assertThat(errBytes.toString(), isEmptyString());
+            assertThat(outBytes.toString(), is(emptyString()));
+            assertThat(errBytes.toString(), is(emptyString()));
         } finally {
             System.setOut(outOrig);
             System.setErr(errOrig);
