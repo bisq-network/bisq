@@ -72,6 +72,7 @@ public final class SwishAccountPayload extends PaymentAccountPayload implements 
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static SwishAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new SwishAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

@@ -91,6 +91,7 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static AchTransferAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.BankAccountPayload bankAccountPayloadPB = countryBasedPaymentAccountPayload.getBankAccountPayload();

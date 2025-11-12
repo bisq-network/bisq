@@ -69,6 +69,7 @@ public final class PayseraAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PayseraAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PayseraAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

@@ -71,6 +71,7 @@ public final class UpiAccountPayload extends CountryBasedPaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static UpiAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.UpiAccountPayload upiAccountPayloadPB = countryBasedPaymentAccountPayload.getUpiAccountPayload();
