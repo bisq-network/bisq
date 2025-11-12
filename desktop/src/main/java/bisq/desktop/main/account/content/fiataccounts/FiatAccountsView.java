@@ -609,6 +609,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         return getPaymentMethodForm(paymentMethod, paymentAccount);
     }
 
+    @SuppressWarnings("deprecation")
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
