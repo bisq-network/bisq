@@ -228,6 +228,7 @@ public final class OfferPayload extends OfferPayloadBase {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation")
     @Override
     public protobuf.StoragePayload toProtoMessage() {
         protobuf.OfferPayload.Builder builder = protobuf.OfferPayload.newBuilder()
@@ -280,6 +281,7 @@ public final class OfferPayload extends OfferPayloadBase {
         return protobuf.StoragePayload.newBuilder().setOfferPayload(builder).build();
     }
 
+    @SuppressWarnings("deprecation")
     public static OfferPayload fromProto(protobuf.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
