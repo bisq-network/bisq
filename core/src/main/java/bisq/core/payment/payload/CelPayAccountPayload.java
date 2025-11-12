@@ -64,6 +64,7 @@ public final class CelPayAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static CelPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CelPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

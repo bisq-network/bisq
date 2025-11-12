@@ -68,6 +68,7 @@ public final class HalCashAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static HalCashAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new HalCashAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

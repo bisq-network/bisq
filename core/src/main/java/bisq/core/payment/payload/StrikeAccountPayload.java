@@ -71,6 +71,7 @@ public final class StrikeAccountPayload extends CountryBasedPaymentAccountPayloa
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static StrikeAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.StrikeAccountPayload accountPayloadPB = countryBasedPaymentAccountPayload.getStrikeAccountPayload();

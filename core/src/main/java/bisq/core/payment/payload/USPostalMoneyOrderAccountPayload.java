@@ -74,6 +74,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static USPostalMoneyOrderAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new USPostalMoneyOrderAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

@@ -71,6 +71,7 @@ public final class NequiAccountPayload extends CountryBasedPaymentAccountPayload
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static NequiAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.NequiAccountPayload paytmAccountPayloadPB = countryBasedPaymentAccountPayload.getNequiAccountPayload();

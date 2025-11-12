@@ -70,6 +70,7 @@ public final class CapitualAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static CapitualAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CapitualAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

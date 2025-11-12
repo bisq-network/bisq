@@ -91,6 +91,7 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static DomesticWireTransferAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.BankAccountPayload bankAccountPayloadPB = countryBasedPaymentAccountPayload.getBankAccountPayload();
