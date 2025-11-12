@@ -64,6 +64,7 @@ public final class VerseAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static VerseAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new VerseAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
