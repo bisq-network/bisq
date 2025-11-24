@@ -60,6 +60,7 @@ message BondedReputationDto {
     sint64 amount = 1;
     bytes bondedReputationHash = 2;
     sint32 lockTime = 3;
+    bool isUnlocked = 4;
 }
 
 service BurningmanGrpcService {

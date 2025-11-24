@@ -24,9 +24,9 @@ package bisq.core.dao.governance.bond;
 public enum BondState {
     UNDEFINED,
     READY_FOR_LOCKUP,       // Accepted by voting (if role) but no lockup tx made yet.
-    LOCKUP_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
+    LOCKUP_TX_PENDING,      // Tx broadcast but not confirmed. Used only by tx publisher.
     LOCKUP_TX_CONFIRMED,
-    UNLOCK_TX_PENDING,      // Tx broadcasted but not confirmed. Used only by tx publisher.
+    UNLOCK_TX_PENDING,      // Tx broadcast but not confirmed. Used only by tx publisher.
     UNLOCK_TX_CONFIRMED,
     UNLOCKING,              // Lock time still not expired
     UNLOCKED,               // Fully unlocked
