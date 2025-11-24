@@ -98,6 +98,7 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload impleme
                 ).build();
     }
 
+    @SuppressWarnings("deprecation")
     public static JapanBankAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.JapanBankAccountPayload japanBankAccountPayload = proto.getJapanBankAccountPayload();
         return new JapanBankAccountPayload(proto.getPaymentMethodId(),

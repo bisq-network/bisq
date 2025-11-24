@@ -91,6 +91,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.WesternUnionAccountPayload westernUnionAccountPayload = countryBasedPaymentAccountPayload.getWesternUnionAccountPayload();

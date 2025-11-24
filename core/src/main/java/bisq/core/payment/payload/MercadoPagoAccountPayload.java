@@ -72,6 +72,7 @@ public final class MercadoPagoAccountPayload extends CountryBasedPaymentAccountP
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static MercadoPagoAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.MercadoPagoAccountPayload mercadoPagoAccountPayloadPB = countryBasedPaymentAccountPayload.getMercadoPagoAccountPayload();

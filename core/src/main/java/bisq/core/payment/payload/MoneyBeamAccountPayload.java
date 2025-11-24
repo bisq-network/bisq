@@ -72,6 +72,7 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static MoneyBeamAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new MoneyBeamAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
