@@ -79,6 +79,7 @@ public final class TransferwiseUsdAccountPayload extends CountryBasedPaymentAcco
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static TransferwiseUsdAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.TransferwiseUsdAccountPayload accountPayloadPB = countryBasedPaymentAccountPayload.getTransferwiseUsdAccountPayload();

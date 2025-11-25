@@ -86,6 +86,7 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static SameBankAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();

@@ -67,6 +67,7 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static AliPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new AliPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

@@ -20,6 +20,7 @@ package bisq.network.http;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.StrictHostnameVerifier;
 import org.apache.http.protocol.HttpContext;
 
 import javax.net.ssl.SSLContext;

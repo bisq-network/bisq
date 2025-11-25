@@ -79,6 +79,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static UpholdAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new UpholdAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

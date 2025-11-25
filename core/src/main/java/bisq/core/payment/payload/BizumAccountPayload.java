@@ -71,6 +71,7 @@ public final class BizumAccountPayload extends CountryBasedPaymentAccountPayload
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static BizumAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.BizumAccountPayload paytmAccountPayloadPB = countryBasedPaymentAccountPayload.getBizumAccountPayload();
