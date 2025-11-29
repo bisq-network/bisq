@@ -233,6 +233,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         // We only consider lock time with at least 50 000 blocks as valid
         try {
             return bondedReputationRepository.getBondedReputationStream()
+                    .filter(bondedReputation -> bondedReputation.getLockupTxId() != null)
                     .filter(bondedReputation -> bondedReputation.getLockTime() >= MIN_BONDED_REPUTATION_LOCK_TIME)
                     .collect(Collectors.toMap(Bond::getLockupTxId, bondedReputation -> bondedReputation));
         } catch (Exception e) {
@@ -245,6 +246,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         // We only consider lock time with at least 50 000 blocks as valid
         try {
             return bondedReputationRepository.getBondedReputationStream()
+                    .filter(bondedReputation -> bondedReputation.getUnlockTxId() != null)
                     .filter(bondedReputation -> bondedReputation.getLockTime() >= MIN_BONDED_REPUTATION_LOCK_TIME)
                     .collect(Collectors.toMap(Bond::getUnlockTxId, bondedReputation -> bondedReputation));
         } catch (Exception e) {
