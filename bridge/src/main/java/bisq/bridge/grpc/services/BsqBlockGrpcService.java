@@ -46,6 +46,9 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 
 import bisq.bridge.grpc.dto.BondedReputationDto;
@@ -208,18 +211,37 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                                                                 Map<String, BondedReputation> bondedReputationByLockupTxId,
                                                                 Map<String, BondedReputation> bondedReputationByUnlockTxId) {
         try {
+            String txId = tx.getId();
             if (tx.getTxType() == TxType.LOCKUP) {
-                return Optional.ofNullable(bondedReputationByLockupTxId.get(tx.getId()))
-                        .map(bondedReputation -> new BondedReputationDto(bondedReputation.getAmount(),
-                                bondedReputation.getBondedAsset().getHash(),
-                                bondedReputation.getLockTime(),
-                                false));
+                return Optional.ofNullable(bondedReputationByLockupTxId.get(txId))
+                        .map(bondedReputation -> {
+                            String lockupTxId = checkNotNull(bondedReputation.getLockupTxId(),
+                                    "lockupTxId must not be null if txType is LOCKUP. bondedReputation=" + bondedReputation);
+                            checkArgument(bondedReputation.getUnlockTxId() == null,
+                                    "unLockupTxId must be null if txType is LOCKUP. bondedReputation=" + bondedReputation);
+                            checkArgument(lockupTxId.equals(txId),
+                                    "lockupTxId must match txId if txType is LOCKUP. bondedReputation=" + bondedReputation);
+                            return new BondedReputationDto(bondedReputation.getAmount(),
+                                    bondedReputation.getBondedAsset().getHash(),
+                                    bondedReputation.getLockTime(),
+                                    lockupTxId,
+                                    Optional.empty());
+                        });
             } else if (tx.getTxType() == TxType.UNLOCK) {
-                return Optional.ofNullable(bondedReputationByUnlockTxId.get(tx.getId()))
-                        .map(bondedReputation -> new BondedReputationDto(bondedReputation.getAmount(),
-                                bondedReputation.getBondedAsset().getHash(),
-                                bondedReputation.getLockTime(),
-                                true));
+                return Optional.ofNullable(bondedReputationByUnlockTxId.get(txId))
+                        .map(bondedReputation -> {
+                            String lockupTxId = checkNotNull(bondedReputation.getLockupTxId(),
+                                    "unLockupTxId must not be null if txType is UNLOCK. bondedReputation=" + bondedReputation);
+                            String unlockTxId = checkNotNull(bondedReputation.getUnlockTxId(),
+                                    "unLockupTxId must not be null if txType is UNLOCK. bondedReputation=" + bondedReputation);
+                            checkArgument(bondedReputation.getUnlockTxId().equals(txId),
+                                    "unLockupTxId must match txId if txType is UNLOCK. bondedReputation=" + bondedReputation);
+                            return new BondedReputationDto(bondedReputation.getAmount(),
+                                    bondedReputation.getBondedAsset().getHash(),
+                                    bondedReputation.getLockTime(),
+                                    lockupTxId,
+                                    Optional.of(unlockTxId));
+                        });
             } else {
                 return Optional.empty();
             }
