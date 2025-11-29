@@ -21,6 +21,8 @@ import bisq.common.Payload;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Optional;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,29 +34,37 @@ public final class BondedReputationDto implements Payload {
     private final long amount;
     private final byte[] bondedReputationHash;
     private final int lockTime;
-    private final boolean isUnlocked;
+    private final String lockupTxId;
+    private final Optional<String> unlockTxId; // Only set at unlock tx
 
-    public BondedReputationDto(long amount, byte[] bondedReputationHash, int lockTime, boolean isUnlocked) {
+    public BondedReputationDto(long amount,
+                               byte[] bondedReputationHash,
+                               int lockTime,
+                               String lockupTxId,
+                               Optional<String> unlockTxId) {
         this.amount = amount;
         this.bondedReputationHash = bondedReputationHash;
         this.lockTime = lockTime;
-        this.isUnlocked = isUnlocked;
+        this.lockupTxId = lockupTxId;
+        this.unlockTxId = unlockTxId;
     }
 
     @Override
     public bisq.bridge.protobuf.BondedReputationDto toProtoMessage() {
-        return bisq.bridge.protobuf.BondedReputationDto.newBuilder()
+        bisq.bridge.protobuf.BondedReputationDto.Builder builder = bisq.bridge.protobuf.BondedReputationDto.newBuilder()
                 .setAmount(amount)
                 .setBondedReputationHash(ByteString.copyFrom(bondedReputationHash))
                 .setLockTime(lockTime)
-                .setIsUnlocked(isUnlocked)
-                .build();
+                .setLockupTxId(lockupTxId);
+        unlockTxId.ifPresent(builder::setUnlockTxId);
+        return builder.build();
     }
 
     public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto) {
         return new BondedReputationDto(proto.getAmount(),
                 proto.getBondedReputationHash().toByteArray(),
                 proto.getLockTime(),
-                proto.getIsUnlocked());
+                proto.getLockupTxId(),
+                proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty());
     }
 }
