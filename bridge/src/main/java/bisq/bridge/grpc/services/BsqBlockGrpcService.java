@@ -217,8 +217,6 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                         .map(bondedReputation -> {
                             String lockupTxId = checkNotNull(bondedReputation.getLockupTxId(),
                                     "lockupTxId must not be null if txType is LOCKUP. bondedReputation=" + bondedReputation);
-                            checkArgument(bondedReputation.getUnlockTxId() == null,
-                                    "unLockupTxId must be null if txType is LOCKUP. bondedReputation=" + bondedReputation);
                             checkArgument(lockupTxId.equals(txId),
                                     "lockupTxId must match txId if txType is LOCKUP. bondedReputation=" + bondedReputation);
                             return new BondedReputationDto(bondedReputation.getAmount(),
