@@ -203,8 +203,15 @@ public abstract class BsqNode implements DaoSetupService {
         // We check if we have a block with that height. If so we return. We do not use the chainHeight as with genesis
         // height we have no block but chainHeight is initially set to genesis height (bad design ;-( but a bit tricky
         // to change now as it used in many areas.)
-        if (daoStateService.getBlockAtHeight(rawBlock.getHeight()).isPresent()) {
-            log.info("We have already a block with the height of the new block. Height of new block={}", rawBlock.getHeight());
+        Optional<Block> optionalBlockAtHeight = daoStateService.getBlockAtHeight(rawBlock.getHeight());
+        if (optionalBlockAtHeight.isPresent()) {
+            if (optionalBlockAtHeight.get().getHash().equals(rawBlock.getHash())) {
+                log.info("We have already a block with the height of the new block and the same hash. Height of new block={}", rawBlock.getHeight());
+            } else {
+                log.info("We have already a block with the height of the new block but the new block has a different hash. This can happen in case of a chain fork. We will only switch the chain if the fork becomes the longer chain. " +
+                                "Height of new block={}; Hash of new block={}; Hash of existing block={}",
+                        rawBlock.getHeight(), rawBlock.getHash(), optionalBlockAtHeight.get().getHash());
+            }
             return Optional.empty();
         }
 
