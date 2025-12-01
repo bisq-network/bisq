@@ -956,6 +956,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Update persisted offer if a new capability is required after a software update
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation")
     private void maybeUpdatePersistedOffers() {
         // We need to clone to avoid ConcurrentModificationException
         ArrayList<OpenOffer> openOffersClone = new ArrayList<>(openOffers.getList());

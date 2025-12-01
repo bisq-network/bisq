@@ -1920,6 +1920,7 @@ enum RefundResultState {
 }
 
 message PreferencesPayload {
+    reserved 30;
     string user_language = 1;
     Country user_country = 2;
     repeated TradeCurrency fiat_currencies = 3;
@@ -1949,8 +1950,6 @@ message PreferencesPayload {
     string bitcoin_nodes = 27;
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
-    // Superseded by buyerSecurityDepositAsPercent.
-    int64 buyer_security_deposit_as_long = 30 [deprecated = true];
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;

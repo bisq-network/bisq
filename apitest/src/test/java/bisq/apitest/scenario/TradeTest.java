@@ -78,6 +78,7 @@ public class TradeTest extends AbstractTradeTest {
     @Test
     @Order(3)
     public void testTakeBuyBSQOffer(final TestInfo testInfo) {
+        @SuppressWarnings("deprecation")
         TakeBuyBSQOfferTest test = new TakeBuyBSQOfferTest();
         test.testTakeAlicesSellBTCForBSQOffer(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
@@ -100,6 +101,7 @@ public class TradeTest extends AbstractTradeTest {
     @Test
     @Order(5)
     public void testTakeSellBSQOffer(final TestInfo testInfo) {
+        @SuppressWarnings("deprecation")
         TakeSellBSQOfferTest test = new TakeSellBSQOfferTest();
         test.testTakeAlicesBuyBTCForBSQOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
