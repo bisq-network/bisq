@@ -83,6 +83,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static InteracETransferAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

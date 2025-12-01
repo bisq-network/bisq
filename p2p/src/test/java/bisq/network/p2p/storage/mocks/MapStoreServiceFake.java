@@ -44,6 +44,7 @@ public class MapStoreServiceFake extends MapStoreService {
     @Getter
     private final Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map;
 
+    @SuppressWarnings("unchecked")
     public MapStoreServiceFake() {
         super(mock(File.class), mock(PersistenceManager.class));
         this.map = new HashMap<>();

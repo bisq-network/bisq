@@ -197,7 +197,7 @@ class CloneOfferDataModel extends MutableOfferDataModel {
         String sharedMakerTxId = sourceOfferPayload.getOfferFeePaymentTxId();
         String newOfferId = OfferUtil.getRandomOfferId();
         long date = new Date().getTime();
-        OfferPayload clonedOfferPayload = new OfferPayload(newOfferId,
+        @SuppressWarnings("deprecation") OfferPayload clonedOfferPayload = new OfferPayload(newOfferId,
                 date,
                 sourceOfferPayload.getOwnerNodeAddress(),
                 sourceOfferPayload.getPubKeyRing(),
