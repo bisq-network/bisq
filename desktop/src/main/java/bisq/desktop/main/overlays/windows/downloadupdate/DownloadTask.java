@@ -124,25 +124,19 @@ public class DownloadTask extends Task<List<BisqInstaller.FileDescriptor>> {
         copyInputStreamToFileNew(urlConnection.getInputStream(), outputFile, fileSize);
     }
 
-    public void copyInputStreamToFileNew(final InputStream source, final File destination, int fileSize) throws IOException {
-        try {
-            final FileOutputStream output = FileUtils.openOutputStream(destination);
-            try {
-                final byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-                long count = 0;
-                int n;
-                while (EOF != (n = source.read(buffer))) {
-                    output.write(buffer, 0, n);
-                    count += n;
-                    log.trace("Progress: {}/{}", count, fileSize);
-                    updateProgress(count, fileSize);
-                }
-                output.close(); // don't swallow close Exception if copy completes normally
-            } finally {
-                IOUtils.closeQuietly(output);
+    public void copyInputStreamToFileNew(final InputStream source,
+                                         final File destination,
+                                         int fileSize) throws IOException {
+        try (final FileOutputStream output = FileUtils.openOutputStream(destination)) {
+            final byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            long count = 0;
+            int n;
+            while (EOF != (n = source.read(buffer))) {
+                output.write(buffer, 0, n);
+                count += n;
+                log.trace("Progress: {}/{}", count, fileSize);
+                updateProgress(count, fileSize);
             }
-        } finally {
-            IOUtils.closeQuietly(source);
         }
     }
 }
