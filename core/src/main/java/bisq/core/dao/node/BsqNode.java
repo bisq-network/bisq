@@ -169,7 +169,7 @@ public abstract class BsqNode implements DaoSetupService {
 
     @SuppressWarnings("WeakerAccess")
     protected void onInitialized() {
-        daoStateSnapshotService.applyPersistedSnapshot();
+        daoStateSnapshotService.applyInitialPersistedSnapshot();
 
         if (p2PService.isBootstrapped()) {
             log.info("onAllServicesInitialized: isBootstrapped");
@@ -243,7 +243,8 @@ public abstract class BsqNode implements DaoSetupService {
                 if (!pendingBlocks.contains(rawBlock)) {
                     pendingBlocks.add(rawBlock);
                     log.info("We received a block with a future block height. We store it as pending and try to apply " +
-                            "it at the next block. rawBlock: height/hash={}/{}", rawBlock.getHeight(), rawBlock.getHash());
+                                    "it at the next block. Expected block height={}; rawBlock: height/hash={}/{}",
+                            heightForNextBlock, rawBlock.getHeight(), rawBlock.getHash());
                 } else {
                     log.warn("We received a block with a future block height but we had it already added to our pendingBlocks.");
                 }
@@ -274,8 +275,11 @@ public abstract class BsqNode implements DaoSetupService {
                     lastBlock.isPresent() ? lastBlock.get().getHash() : "lastBlock not present");
 
             pendingBlocks.clear();
-            daoStateSnapshotService.revertToLastSnapshot();
-            startParseBlocks();
+            daoStateSnapshotService.revertToLastSnapshot(() -> {
+                log.info("Start parse blocks after revertToLastSnapshot");
+                startParseBlocks();
+            });
+
             throw new RequiredReorgFromSnapshotException(rawBlock);
         }
         return Optional.empty();

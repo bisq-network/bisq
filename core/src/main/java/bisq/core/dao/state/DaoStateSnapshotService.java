@@ -76,7 +76,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private LinkedList<DaoStateHash> hashChainCandidate = new LinkedList<>();
     private List<Block> blocksCandidate;
     private int snapshotHeight;
-    private int chainHeightOfLastAppliedSnapshot;
+    private int chainHeightOfLastResyncSnapshot;
     @Setter
     @Nullable
     private Runnable resyncDaoStateFromResourcesHandler;
@@ -245,7 +245,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         if (daoStateCandidate != null && snapshotHeight == chainHeight) {
-            log.error("snapshotHeight is same as chainHeight. This should never happen. chainHeight={}", chainHeight);
+            log.warn("snapshotHeight is same as chainHeight. This could happen at resync cases. chainHeight={}", chainHeight);
             return;
         }
 
@@ -287,19 +287,32 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         log.info("Cloned new daoStateCandidate at height {} took {} ms.", snapshotHeight, System.currentTimeMillis() - ts);
     }
 
-    public void applyPersistedSnapshot() {
-        applySnapshot(true);
+    public void applyInitialPersistedSnapshot() {
+        DaoState persistedDaoState = daoStateStorageService.getPersistedBsqStateAtStartup();
+        log.info("applyInitialPersistedSnapshot. DaoState with chainHeight={} and {} blocks", persistedDaoState.getChainHeight(), persistedDaoState.getBlocks().size());
+        applySnapshot(true,
+                persistedDaoState,
+                daoStateStorageService.getPersistedDaoStateHashChain());
     }
 
-    public void revertToLastSnapshot() {
-        applySnapshot(false);
+    public void revertToLastSnapshot(Runnable completeHandler) {
+        daoStateStorageService.loadPersistedDaoData((persistedDaoState, persistedDaoStateHashChain) -> {
+            log.info("revertToLastSnapshot. DaoState with chainHeight={} and {} blocks", persistedDaoState.getChainHeight(), persistedDaoState.getBlocks().size());
+            boolean success = applySnapshot(false, persistedDaoState, persistedDaoStateHashChain);
+            if (success) {
+                completeHandler.run();
+            } else {
+                log.warn("applySnapshot was not successful.");
+            }
+        });
     }
 
-    private synchronized void applySnapshot(boolean fromInitialize) {
-        DaoState persistedDaoState = daoStateStorageService.getPersistedBsqState();
+    private synchronized boolean applySnapshot(boolean fromInitialize,
+                                               DaoState persistedDaoState,
+                                               LinkedList<DaoStateHash> persistedDaoStateHashChain) {
         if (persistedDaoState == null) {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
-            return;
+            return false;
         }
 
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
@@ -310,7 +323,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             log.warn("We got called applySnapshot the 3rd time with the same snapshot height. " +
                     "We abort and call resyncDaoStateFromResources.");
             resyncDaoStateFromResources();
-            return;
+            return false;
         }
         heightsOfLastAppliedSnapshots.add(chainHeightOfPersistedDaoState);
 
@@ -324,34 +337,38 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                         "After a restart resource files will be applied if available.");
                 resyncDaoStateFromResources();
             }
-            return;
+            return false;
         }
 
-        if (!daoStateStorageService.isChainHeighMatchingLastBlockHeight()) {
+        if (!daoStateStorageService.isChainHeightMatchingLastBlockHeight(persistedDaoState)) {
+            log.warn("ChainHeight not matching last blockHeight. We call resyncDaoStateFromResources");
             resyncDaoStateFromResources();
-            return;
+            return false;
         }
 
         if (isHeightBelowGenesisHeight(chainHeightOfPersistedDaoState)) {
-            return;
+            log.warn("isHeightBelowGenesisHeight. We call resyncDaoStateFromResources");
+            return false;
         }
 
-        if (chainHeightOfLastAppliedSnapshot == chainHeightOfPersistedDaoState) {
-            // The reorg might have been caused by the previous parsing which might contains a range of
-            // blocks.
-            log.warn("We applied already a snapshot with chainHeight {}. " +
+        if (chainHeightOfLastResyncSnapshot == chainHeightOfPersistedDaoState) {
+            // If we get multiple reorgs with the same already applied snapshot we resync from resources
+            log.warn("We applied already a snapshot with chainHeight {}. chainHeight of persisted DaoState={}.\n" +
                             "We remove all dao store files and shutdown. After a restart resource files will " +
                             "be applied if available.",
-                    chainHeightOfLastAppliedSnapshot);
+                    chainHeightOfLastResyncSnapshot, chainHeightOfPersistedDaoState);
             resyncDaoStateFromResources();
-            return;
+            return false;
         }
 
-        chainHeightOfLastAppliedSnapshot = chainHeightOfPersistedDaoState;
+        if (!fromInitialize) {
+            chainHeightOfLastResyncSnapshot = chainHeightOfPersistedDaoState;
+        }
         daoStateService.applySnapshot(persistedDaoState);
-        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
         daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
         daoStateStorageService.releaseMemory();
+
+        return true;
     }
 
 
