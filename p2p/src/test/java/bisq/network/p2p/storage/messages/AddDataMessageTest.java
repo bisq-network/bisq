@@ -64,6 +64,7 @@ public class AddDataMessageTest {
         keyRing1 = new KeyRing(new KeyStorage(dir1));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void toProtoBuf() throws Exception {
         SealedAndSigned sealedAndSigned = new SealedAndSigned(RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
