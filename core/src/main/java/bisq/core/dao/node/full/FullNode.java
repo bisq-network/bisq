@@ -270,8 +270,10 @@ public class FullNode extends BsqNode {
             if (numExceptions > 10) {
                 log.warn("We got {} RPC HttpExceptions at our block handler.", numExceptions);
                 pendingBlocks.clear();
-                revertToLastSnapshot();
-                startParseBlocks();
+                daoStateSnapshotService.revertToLastSnapshot(() -> {
+                    log.info("Start parse blocks after revertToLastSnapshot");
+                    startParseBlocks();
+                });
                 numExceptions = 0;
             }
             int delayInSec = Math.min(60, numExceptions * numExceptions);
@@ -287,8 +289,7 @@ public class FullNode extends BsqNode {
             log.warn(throwable.toString());
         } else {
             String errorMessage = "An error occurred: Error=" + throwable.toString();
-            log.error(errorMessage);
-            throwable.printStackTrace();
+            log.error(errorMessage, throwable);
 
             if (throwable instanceof RpcException) {
                 Throwable cause = throwable.getCause();
@@ -301,8 +302,10 @@ public class FullNode extends BsqNode {
                         return;
                     } else if (cause instanceof NotificationHandlerException) {
                         log.error("Error from within block notification daemon: {}", cause.getCause().toString());
-                        revertToLastSnapshot();
-                        startParseBlocks();
+                        daoStateSnapshotService.revertToLastSnapshot(() -> {
+                            log.info("Start parse blocks after revertToLastSnapshot");
+                            startParseBlocks();
+                        });
                         return;
                     } else if (cause instanceof Error) {
                         throw (Error) cause;
@@ -313,9 +316,5 @@ public class FullNode extends BsqNode {
             if (errorMessageHandler != null)
                 errorMessageHandler.accept(errorMessage);
         }
-    }
-
-    private void revertToLastSnapshot() {
-        daoStateSnapshotService.revertToLastSnapshot();
     }
 }

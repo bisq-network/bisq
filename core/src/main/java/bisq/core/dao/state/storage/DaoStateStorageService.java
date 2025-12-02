@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -168,7 +169,46 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         }).start();
     }
 
-    public DaoState getPersistedBsqState() {
+    public void loadPersistedDaoData(BiConsumer<DaoState, LinkedList<DaoStateHash>> consumer) {
+        String fileName = getFileName();
+        readStore(fileName, daoStateStore -> {
+            DaoState daoState;
+            protobuf.DaoState daoStateAsProto = daoStateStore.getDaoStateAsProto();
+            if (daoStateAsProto != null) {
+                long ts = System.currentTimeMillis();
+                LinkedList<Block> blocks;
+                if (daoStateAsProto.getBlocksList().isEmpty()) {
+                    int chainHeight = daoStateAsProto.getChainHeight();
+                    blocks = bsqBlocksStorageService.readBlocks(chainHeight);
+                    if (!blocks.isEmpty()) {
+                        int heightOfLastBlock = blocks.getLast().getHeight();
+                        if (heightOfLastBlock != chainHeight) {
+                            log.error("Error at readFromResources. " +
+                                            "heightOfLastBlock not same as chainHeight.\n" +
+                                            "heightOfLastBlock={}; chainHeight={}.\n" +
+                                            "This error scenario is handled by DaoStateSnapshotService, " +
+                                            "it will resync from resources & reboot",
+                                    heightOfLastBlock, chainHeight);
+                        }
+                    }
+                } else {
+                    blocks = bsqBlocksStorageService.migrateBlocks(daoStateAsProto.getBlocksList());
+                }
+                daoState = DaoState.fromProto(daoStateAsProto, blocks);
+                log.info("Deserializing DaoState with {} blocks took {} ms",
+                        daoState.getBlocks().size(), System.currentTimeMillis() - ts);
+            } else {
+                daoState = new DaoState();
+            }
+
+            LinkedList<DaoStateHash> daoStateHashChain = daoStateStore.getDaoStateHashChain();
+            consumer.accept(daoState, daoStateHashChain);
+        });
+    }
+
+    // Only used at startup, as later we delete the data inside the store after persisting to reduce memory footprint.
+    // For snapshot recovery we use loadPersistedDaoData
+    public DaoState getPersistedBsqStateAtStartup() {
         protobuf.DaoState daoStateAsProto = store.getDaoStateAsProto();
         if (daoStateAsProto != null) {
             long ts = System.currentTimeMillis();
@@ -180,8 +220,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return new DaoState();
     }
 
-    public boolean isChainHeighMatchingLastBlockHeight() {
-        DaoState persistedDaoState = getPersistedBsqState();
+    public boolean isChainHeightMatchingLastBlockHeight(DaoState persistedDaoState) {
+        if (persistedDaoState.getBlocks().isEmpty()) {
+            log.warn("Cannot check chain height: DaoState has no blocks.");
+            return true;
+        }
         int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
         boolean isMatching = heightOfPersistedLastBlock == chainHeightOfPersistedDaoState;

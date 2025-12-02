@@ -34,6 +34,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Hex;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -277,7 +278,7 @@ public class AccountingFullNode extends AccountingNode {
                     rawDtoBlock.getHash(),
                     rawDtoBlock.getPreviousBlockHash(),
                     lastBlock.isPresent() ? lastBlock.get().getHeight() : "lastBlock not present",
-                    lastBlock.isPresent() ? lastBlock.get().getTruncatedHash() : "lastBlock not present");
+                    lastBlock.isPresent() ? Hex.encode(lastBlock.get().getTruncatedHash()) : "lastBlock not present");
 
             pendingRawDtoBlocks.clear();
             applyReOrg();
@@ -291,8 +292,7 @@ public class AccountingFullNode extends AccountingNode {
             log.warn(throwable.toString());
         } else {
             String errorMessage = "An error occurred: Error=" + throwable.toString();
-            log.error(errorMessage);
-            throwable.printStackTrace();
+            log.error(errorMessage, throwable);
 
             if (throwable instanceof RpcException) {
                 Throwable cause = throwable.getCause();
