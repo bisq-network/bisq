@@ -341,13 +341,13 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         if (!daoStateStorageService.isChainHeightMatchingLastBlockHeight(persistedDaoState)) {
-            log.warn("ChainHeight not matching last blockHeight. We call resyncDaoStateFromResources");
+            log.warn("Chain height not matching last blockHeight. We call resyncDaoStateFromResources");
             resyncDaoStateFromResources();
             return false;
         }
 
         if (isHeightBelowGenesisHeight(chainHeightOfPersistedDaoState)) {
-            log.warn("isHeightBelowGenesisHeight. We call resyncDaoStateFromResources");
+            log.warn("chainHeight of persistedDaoState is below genesis height. This must never happen.");
             return false;
         }
 

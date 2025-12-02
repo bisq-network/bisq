@@ -221,6 +221,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public boolean isChainHeightMatchingLastBlockHeight(DaoState persistedDaoState) {
+        if (persistedDaoState.getBlocks().isEmpty()) {
+            log.warn("Cannot check chain height: DaoState has no blocks.");
+            return true;
+        }
         int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
         boolean isMatching = heightOfPersistedLastBlock == chainHeightOfPersistedDaoState;
