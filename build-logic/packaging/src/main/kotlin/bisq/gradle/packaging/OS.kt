@@ -7,7 +7,7 @@ enum class OS {
 }
 
 fun getOS(): OS {
-    val osName = System.getProperty("os.name").toLowerCase(Locale.US)
+    val osName = System.getProperty("os.name").lowercase(Locale.US)
     if (isLinux(osName)) {
         return OS.LINUX
     } else if (isMacOs(osName)) {

@@ -193,6 +193,7 @@ public class TradeStatisticsManager {
         jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(array), "trade_statistics");
     }
 
+    @SuppressWarnings("deprecation")
     public void maybeRepublishTradeStatistics(Set<TradeModel> trades,
                                               @Nullable String referralId,
                                               boolean isTorNetworkNode) {

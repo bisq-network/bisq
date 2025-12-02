@@ -77,6 +77,7 @@ public final class NeftAccountPayload extends IfscBasedAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static NeftAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.IfscBasedAccountPayload ifscBasedAccountPayloadPB = countryBasedPaymentAccountPayload.getIfscBasedAccountPayload();
