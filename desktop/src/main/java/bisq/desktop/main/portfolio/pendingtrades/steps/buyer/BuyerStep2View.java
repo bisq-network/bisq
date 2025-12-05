@@ -239,6 +239,7 @@ public class BuyerStep2View extends TradeStepView {
     // Content
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void addContent() {
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.ALWAYS);
