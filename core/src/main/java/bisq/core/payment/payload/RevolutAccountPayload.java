@@ -92,7 +92,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
         return getPaymentAccountPayloadBuilder().setRevolutAccountPayload(revolutBuilder).build();
     }
 
-
+    @SuppressWarnings("deprecation")
     public static RevolutAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
         return new RevolutAccountPayload(proto.getPaymentMethodId(),

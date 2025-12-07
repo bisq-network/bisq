@@ -74,6 +74,7 @@ public final class PopmoneyAccountPayload extends PaymentAccountPayload implemen
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PopmoneyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PopmoneyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

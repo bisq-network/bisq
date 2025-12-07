@@ -80,6 +80,7 @@ public final class SbpAccountPayload extends PaymentAccountPayload implements Pa
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static SbpAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new SbpAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

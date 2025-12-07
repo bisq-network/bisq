@@ -49,6 +49,7 @@ public class ComponentsDemo extends Application {
         launch(args);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void start(Stage primaryStage) throws Exception {
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
