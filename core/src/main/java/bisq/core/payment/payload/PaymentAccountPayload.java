@@ -103,6 +103,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     }
 
     protected protobuf.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
+        @SuppressWarnings("deprecation")
         final protobuf.PaymentAccountPayload.Builder builder = protobuf.PaymentAccountPayload.newBuilder()
                 .setPaymentMethodId(paymentMethodId)
                 .setMaxTradePeriod(maxTradePeriod)

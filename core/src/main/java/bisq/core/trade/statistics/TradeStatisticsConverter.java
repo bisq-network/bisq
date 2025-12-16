@@ -54,6 +54,7 @@ public class TradeStatisticsConverter {
 
     private ExecutorService executor;
 
+    @SuppressWarnings("deprecation")
     @Inject
     public TradeStatisticsConverter(P2PService p2PService,
                                     P2PDataStorage p2PDataStorage,
@@ -115,6 +116,7 @@ public class TradeStatisticsConverter {
             executor.shutdown();
     }
 
+    @SuppressWarnings("deprecation")
     private static List<TradeStatistics3> convertToTradeStatistics3(Collection<PersistableNetworkPayload> persistableNetworkPayloads) {
         List<TradeStatistics3> list = new ArrayList<>();
         long ts = System.currentTimeMillis();
@@ -154,6 +156,7 @@ public class TradeStatisticsConverter {
         return list;
     }
 
+    @SuppressWarnings("deprecation")
     private static TradeStatistics3 convertToTradeStatistics3(TradeStatistics2 tradeStatistics2) {
         Map<String, String> extraDataMap = tradeStatistics2.getExtraDataMap();
         String mediator = extraDataMap != null ? extraDataMap.get(TradeStatistics2.MEDIATOR_ADDRESS) : null;

@@ -73,6 +73,7 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PixAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.PixAccountPayload paytmAccountPayloadPB = countryBasedPaymentAccountPayload.getPixAccountPayload();

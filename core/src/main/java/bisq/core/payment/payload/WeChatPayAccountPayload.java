@@ -67,6 +67,7 @@ public final class WeChatPayAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static WeChatPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new WeChatPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

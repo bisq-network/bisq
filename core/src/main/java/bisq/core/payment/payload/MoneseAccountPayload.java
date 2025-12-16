@@ -69,6 +69,7 @@ public final class MoneseAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static MoneseAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new MoneseAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),

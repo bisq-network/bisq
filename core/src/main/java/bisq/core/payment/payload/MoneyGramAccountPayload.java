@@ -86,6 +86,7 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload implements Pa
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.MoneyGramAccountPayload moneyGramAccountPayload = proto.getMoneyGramAccountPayload();
         return new MoneyGramAccountPayload(proto.getPaymentMethodId(),

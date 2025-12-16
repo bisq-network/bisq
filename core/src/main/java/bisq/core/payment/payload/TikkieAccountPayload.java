@@ -71,6 +71,7 @@ public final class TikkieAccountPayload extends CountryBasedPaymentAccountPayloa
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static TikkieAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.TikkieAccountPayload accountPayloadPB = countryBasedPaymentAccountPayload.getTikkieAccountPayload();

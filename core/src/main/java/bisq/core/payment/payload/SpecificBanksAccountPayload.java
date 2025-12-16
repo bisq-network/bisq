@@ -99,6 +99,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static SpecificBanksAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
         protobuf.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
