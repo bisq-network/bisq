@@ -53,7 +53,7 @@ public enum ScriptType implements ImmutableDaoStateModel {
     private final String name;
 
     @JsonValue
-    private String getName() {
+    public String getName() {
         return name;
     }
 
@@ -66,8 +66,7 @@ public enum ScriptType implements ImmutableDaoStateModel {
                 }
             }
         }
-        throw new IllegalArgumentException("Expected the argument to be a valid 'bitcoind' script type, "
-                + "but was invalid/unsupported instead. Received scriptType=" + name);
+        return UNDEFINED;
     }
 
 

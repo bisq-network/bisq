@@ -17,7 +17,6 @@
 
 package bisq.core.dao.state.model.blockchain;
 
-import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -33,21 +32,23 @@ import lombok.Value;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
+
 @Immutable
 @Value
 @AllArgsConstructor
 public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel {
-    private final int reqSigs;
     private final ScriptType scriptType;
     @Nullable
     private final ImmutableList<String> addresses;
     private final String asm;
     private final String hex;
 
-    public PubKeyScript(DtoPubKeyScript scriptPubKey) {
-        this(scriptPubKey.getReqSigs() != null ? scriptPubKey.getReqSigs() : 0,
-                scriptPubKey.getType(),
-                scriptPubKey.getAddresses() != null ? ImmutableList.copyOf(scriptPubKey.getAddresses()) : null,
+    public PubKeyScript(BitcoindScriptPubKey scriptPubKey) {
+        this(ScriptType.forName(scriptPubKey.getType()),
+                scriptPubKey.getAddress() != null ? ImmutableList.of(scriptPubKey.getAddress()) : null,
                 scriptPubKey.getAsm(),
                 scriptPubKey.getHex());
     }
@@ -59,7 +60,6 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
 
     public protobuf.PubKeyScript toProtoMessage() {
         final protobuf.PubKeyScript.Builder builder = protobuf.PubKeyScript.newBuilder()
-                .setReqSigs(reqSigs)
                 .setScriptType(scriptType.toProtoMessage())
                 .setAsm(asm)
                 .setHex(hex);
@@ -68,8 +68,7 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
     }
 
     public static PubKeyScript fromProto(protobuf.PubKeyScript proto) {
-        return new PubKeyScript(proto.getReqSigs(),
-                ScriptType.fromProto(proto.getScriptType()),
+        return new PubKeyScript(ScriptType.fromProto(proto.getScriptType()),
                 proto.getAddressesList().isEmpty() ? null : ImmutableList.copyOf(proto.getAddressesList()),
                 proto.getAsm(),
                 proto.getHex());
@@ -83,8 +82,7 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
         if (!(o instanceof PubKeyScript)) return false;
         if (!super.equals(o)) return false;
         PubKeyScript that = (PubKeyScript) o;
-        return reqSigs == that.reqSigs &&
-                scriptType.name().equals(that.scriptType.name()) &&
+        return scriptType.name().equals(that.scriptType.name()) &&
                 Objects.equals(addresses, that.addresses) &&
                 Objects.equals(asm, that.asm) &&
                 Objects.equals(hex, that.hex);
@@ -92,7 +90,6 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(super.hashCode(), reqSigs, scriptType.name(), addresses, asm, hex);
+        return Objects.hash(super.hashCode(), scriptType.name(), addresses, asm, hex);
     }
 }

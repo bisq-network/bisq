@@ -26,7 +26,6 @@ import bisq.core.dao.burningman.accounting.node.full.network.AccountingFullNodeN
 import bisq.core.dao.node.full.RpcException;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.dao.node.full.rpc.NotificationHandlerException;
-import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.user.Preferences;
 
@@ -48,6 +47,11 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetBlockResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindTransaction;
+
 @Slf4j
 @Singleton
 public class AccountingFullNode extends AccountingNode {
@@ -57,7 +61,8 @@ public class AccountingFullNode extends AccountingNode {
     private boolean addBlockHandlerAdded;
     private int batchedBlocks;
     private long batchStartTime;
-    private final List<RawDtoBlock> pendingRawDtoBlocks = new ArrayList<>();
+    private final List<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+            pendingRawDtoBlocks = new ArrayList<>();
     private int requestBlocksUpToHeadHeightCounter;
 
     @Inject
@@ -234,7 +239,8 @@ public class AccountingFullNode extends AccountingNode {
                 errorHandler);
     }
 
-    private Optional<AccountingBlock> parseBlock(RawDtoBlock rawDtoBlock) {
+    private Optional<AccountingBlock> parseBlock(BitcoindGetBlockResponse.Result<BitcoindTransaction>
+                                                         rawDtoBlock) {
         // We check if we have a block with that height. If so we return. We do not use the chainHeight as with the earliest
         // height we have no block but chainHeight is initially set to the earliest height (bad design ;-( but a bit tricky
         // to change now as it used in many areas.)
@@ -254,8 +260,8 @@ public class AccountingFullNode extends AccountingNode {
             if (!pendingRawDtoBlocks.isEmpty()) {
                 // We take only first element after sorting (so it is the accountingBlock with the next height) to avoid that
                 // we would repeat calls in recursions in case we would iterate the list.
-                pendingRawDtoBlocks.sort(Comparator.comparing(RawDtoBlock::getHeight));
-                RawDtoBlock nextPending = pendingRawDtoBlocks.get(0);
+                pendingRawDtoBlocks.sort(Comparator.comparing(BitcoindGetBlockResponse.Result<BitcoindTransaction>::getHeight));
+                BitcoindGetBlockResponse.Result<BitcoindTransaction> nextPending = pendingRawDtoBlocks.get(0);
                 if (nextPending.getHeight() == burningManAccountingService.getBlockHeightOfLastBlock() + 1) {
                     parseBlock(nextPending);
                 }
