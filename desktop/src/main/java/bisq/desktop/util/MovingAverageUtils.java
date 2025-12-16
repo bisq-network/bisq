@@ -90,6 +90,7 @@ public class MovingAverageUtils {
             this.windowSize = windowSize;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public boolean tryAdvance(Consumer<? super Stream<T>> action) {
             if (windowSize < 1) {
