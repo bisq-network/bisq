@@ -57,7 +57,7 @@ public class FxmlViewLoader implements ViewLoader {
         this.resourceBundle = resourceBundle;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public View load(Class<? extends View> viewClass) {
         FxmlView fxmlView = viewClass.getAnnotation(FxmlView.class);
 

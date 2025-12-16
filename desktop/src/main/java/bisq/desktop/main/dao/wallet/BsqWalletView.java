@@ -123,6 +123,7 @@ public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
         loadView(viewClass, null);
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void loadView(Class<? extends View> viewClass, @Nullable Object data) {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
