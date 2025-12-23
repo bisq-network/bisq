@@ -59,8 +59,8 @@ cd "$script_working_directory"
 cp -v "./desktop/package/E222AA02.asc" "$target_dir/"
 # sig key Gabriel Bernard
 cp -v "./desktop/package/4A133008.asc" "$target_dir/"
-# sig key Christoph Atteneder
-cp -v "./desktop/package/29CDFD3B.asc" "$target_dir/"
+# sig key Henrik Jannsen
+cp -v "./desktop/package/387C8307.asc" "$target_dir/"
 # signing key
 cp -v "./desktop/package/signingkey.asc" "$target_dir/"
 
