@@ -2220,7 +2220,7 @@ enum ScriptType {
 }
 
 message PubKeyScript {
-    int32 req_sigs = 1;
+    reserved 1; // 1 was req_sigs
     ScriptType script_type = 2;
     repeated string addresses = 3;
     string asm = 4;

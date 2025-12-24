@@ -30,14 +30,12 @@ public class JsonScriptPubKey {
     List<String> addresses;
     String asm;
     String hex;
-    int reqSigs;
     String type;
 
     public JsonScriptPubKey(PubKeyScript pubKeyScript) {
         addresses = pubKeyScript.getAddresses();
         asm = pubKeyScript.getAsm();
         hex = pubKeyScript.getHex();
-        reqSigs = pubKeyScript.getReqSigs();
         type = pubKeyScript.getScriptType().toString();
     }
 }
