@@ -2217,6 +2217,7 @@ enum ScriptType {
     NONSTANDARD = 8;
     WITNESS_UNKNOWN = 9;
     WITNESS_V1_TAPROOT = 10;
+    ANCHOR = 11;
 }
 
 message PubKeyScript {

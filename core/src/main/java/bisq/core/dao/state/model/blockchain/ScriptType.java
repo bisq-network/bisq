@@ -48,7 +48,8 @@ public enum ScriptType implements ImmutableDaoStateModel {
     WITNESS_V0_KEYHASH("witness_v0_keyhash"),
     WITNESS_V0_SCRIPTHASH("witness_v0_scripthash"),
     WITNESS_V1_TAPROOT("witness_v1_taproot"),
-    WITNESS_UNKNOWN("witness_unknown");
+    WITNESS_UNKNOWN("witness_unknown"),
+    ANCHOR("anchor");
 
     private final String name;
 
