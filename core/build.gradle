@@ -38,9 +38,6 @@ dependencies {
     implementation libs.fxmisc.easybind
     implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
-    implementation(libs.jackson.databind) {
-        exclude(module: 'jackson-annotations')
-    }
     implementation(libs.netlayer.tor.external) {
         exclude(module: 'slf4j-api')
     }
