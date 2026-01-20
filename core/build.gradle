@@ -14,6 +14,12 @@ dependencies {
     implementation project(':assets')
     implementation project(':common')
     implementation project(':p2p')
+    implementation('bitcoind:bitcoind') {
+        exclude(module: 'kotlin-stdlib-jdk8')
+    }
+    implementation('bitcoind:json-rpc') {
+            exclude(module: 'kotlin-stdlib-jdk8')
+    }
     annotationProcessor libs.lombok
     compileOnly libs.javax.annotation
     compileOnly libs.lombok

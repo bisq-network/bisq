@@ -17,15 +17,17 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.dao.node.full.rpc.dto.DtoSignatureScript;
-import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
-
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptSig;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindVin;
 
 public class RpcServiceTest {
     private static final String SIGNATURE = "3045" +
@@ -52,7 +54,7 @@ public class RpcServiceTest {
 
     @Test
     public void testExtractPubKeyAsHex_coinbase() {
-        checkExtractPubKeyAsHexReturnsNull(new RawDtoInput());
+        checkExtractPubKeyAsHexReturnsNull(new BitcoindVin());
     }
 
     @Test
@@ -124,17 +126,18 @@ public class RpcServiceTest {
         checkExtractPubKeyAsHexReturnsNull(input);
     }
 
-    private static void checkExtractPubKeyAsHexReturnsNull(RawDtoInput input) {
+    private static void checkExtractPubKeyAsHexReturnsNull(BitcoindVin input) {
         assertNull(RpcService.extractPubKeyAsHex(input, true));
         assertNull(RpcService.extractPubKeyAsHex(input, false));
     }
 
-    private static RawDtoInput rawInput(String asm, String... txInWitness) {
-        var input = new RawDtoInput();
-        var scriptSig = new DtoSignatureScript();
+    private static BitcoindVin rawInput(String asm, String... txInWitness) {
+        BitcoindScriptSig scriptSig = new BitcoindScriptSig();
         scriptSig.setAsm(asm);
-        input.setScriptSig(scriptSig);
-        input.setTxInWitness(txInWitness.length > 0 ? List.of(txInWitness) : null);
-        return input;
+
+        BitcoindVin vin = new BitcoindVin();
+        vin.setScriptSig(scriptSig);
+        vin.setTxInWitness(txInWitness.length > 0 ? List.of(txInWitness) : null);
+        return vin;
     }
 }

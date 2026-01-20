@@ -19,10 +19,7 @@ package bisq.core.dao.node.full;
 
 import bisq.core.dao.node.full.rpc.BitcoindClient;
 import bisq.core.dao.node.full.rpc.BitcoindDaemon;
-import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
-import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
-import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
-import bisq.core.dao.node.full.rpc.dto.RawDtoTransaction;
+import bisq.core.dao.node.full.rpc.DtoPubKeyScript;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.ScriptType;
 import bisq.core.dao.state.model.blockchain.TxInput;
@@ -51,8 +48,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import java.io.IOException;
-
 import java.math.BigDecimal;
 
 import java.util.List;
@@ -66,6 +61,16 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetBlockResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetNetworkInfoResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindTransaction;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindVin;
+import bisq.wallets.json_rpc.RpcConfig;
 
 /**
  * Request blockchain data via RPC from Bitcoin Core for a FullNode.
@@ -96,7 +101,7 @@ public class RpcService {
     private final Set<ResultHandler> setupResultHandlers = new CopyOnWriteArraySet<>();
     private final Set<Consumer<Throwable>> setupErrorHandlers = new CopyOnWriteArraySet<>();
     private volatile boolean setupComplete;
-    private Consumer<RawDtoBlock> rawDtoBlockHandler;
+    private Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>> rawDtoBlockHandler;
     private Consumer<Throwable> rawDtoBlockErrorHandler;
     private Consumer<RawBlock> rawBlockHandler;
     private Consumer<Throwable> rawBlockErrorHandler;
@@ -174,12 +179,14 @@ public class RpcService {
 
                     long startTs = System.currentTimeMillis();
 
-                    client = BitcoindClient.builder()
-                            .rpcHost(rpcHost)
-                            .rpcPort(rpcPort)
-                            .rpcUser(rpcUser)
-                            .rpcPassword(rpcPassword)
+                    var rpcConfig = RpcConfig.builder()
+                            .hostname(rpcHost)
+                            .port(rpcPort)
+                            .user(rpcUser)
+                            .password(rpcPassword)
                             .build();
+                    client = new BitcoindClient(rpcConfig);
+
                     checkNodeVersionAndHealth();
 
                     daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
@@ -239,8 +246,8 @@ public class RpcService {
                 .replaceAll("\\.0$", "");
     }
 
-    private void checkNodeVersionAndHealth() throws IOException {
-        var networkInfo = client.getNetworkInfo();
+    private void checkNodeVersionAndHealth() {
+        BitcoindGetNetworkInfoResponse.Result networkInfo = client.getNetworkInfo();
         var nodeVersion = decodeNodeVersion(networkInfo.getVersion());
 
         if (SUPPORTED_NODE_VERSION_RANGE.contains(networkInfo.getVersion())) {
@@ -251,7 +258,7 @@ public class RpcService {
                     decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.upperEndpoint()), nodeVersion);
         }
 
-        var bestRawBlock = client.getBlock(client.getBestBlockHash(), 1);
+        var bestRawBlock = client.getBlockVerbosityOne(client.getBestBlockHash());
         long currentTime = System.currentTimeMillis() / 1000;
         if ((currentTime - bestRawBlock.getTime()) > TimeUnit.HOURS.toSeconds(6)) {
             log.warn("Last available block was mined >{} hours ago; please check your network connection",
@@ -268,7 +275,8 @@ public class RpcService {
         }
     }
 
-    public void addNewRawDtoBlockHandler(Consumer<RawDtoBlock> rawDtoBlockHandler,
+    public void addNewRawDtoBlockHandler(Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+                                                 rawDtoBlockHandler,
                                          Consumer<Throwable> errorHandler) {
         this.rawDtoBlockHandler = rawDtoBlockHandler;
         this.rawDtoBlockErrorHandler = errorHandler;
@@ -281,7 +289,8 @@ public class RpcService {
         isBlockHandlerSet = true;
         daemon.setBlockListener(blockHash -> {
             try {
-                RawDtoBlock rawDtoBlock = client.getBlock(blockHash, 2);
+                BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock =
+                        client.getBlockVerbosityTwo(blockHash);
                 log.info("New rawDtoBlock received: height={}, hash={}", rawDtoBlock.getHeight(), rawDtoBlock.getHash());
 
                 if (rawBlockHandler != null) {
@@ -334,7 +343,7 @@ public class RpcService {
             ListenableFuture<RawBlock> future = executor.submit(() -> {
                 long startTs = System.currentTimeMillis();
                 String blockHash = client.getBlockHash(blockHeight);
-                var rawDtoBlock = client.getBlock(blockHash, 2);
+                var rawDtoBlock = client.getBlockVerbosityTwo(blockHash);
                 var block = getRawBlockFromRawDtoBlock(rawDtoBlock);
                 log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
                         blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
@@ -365,23 +374,26 @@ public class RpcService {
     }
 
     public void requestRawDtoBlock(int blockHeight,
-                                   Consumer<RawDtoBlock> rawDtoBlockHandler,
+                                   Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+                                           rawDtoBlockHandler,
                                    Consumer<Throwable> errorHandler) {
         try {
-            ListenableFuture<RawDtoBlock> future = executor.submit(() -> {
+            ListenableFuture<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+                    future = executor.submit(() -> {
                 long startTs = System.currentTimeMillis();
                 String blockHash = client.getBlockHash(blockHeight);
 
                 // getBlock with about 2000 tx takes about 500 ms on a 4GHz Intel Core i7 CPU.
-                var rawDtoBlock = client.getBlock(blockHash, 2);
+                var rawDtoBlock = client.getBlockVerbosityTwo(blockHash);
                 log.info("requestRawDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
-                        blockHeight, rawDtoBlock.getTx().size(), System.currentTimeMillis() - startTs);
+                        blockHeight, rawDtoBlock.getTxs().size(), System.currentTimeMillis() - startTs);
                 return rawDtoBlock;
             });
 
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
-                public void onSuccess(RawDtoBlock rawDtoBlock) {
+                public void onSuccess(BitcoindGetBlockResponse.Result<BitcoindTransaction>
+                                              rawDtoBlock) {
                     UserThread.execute(() -> rawDtoBlockHandler.accept(rawDtoBlock));
                 }
 
@@ -407,8 +419,8 @@ public class RpcService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static RawBlock getRawBlockFromRawDtoBlock(RawDtoBlock rawDtoBlock) {
-        List<RawTx> txList = rawDtoBlock.getTx().stream()
+    private static RawBlock getRawBlockFromRawDtoBlock(BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock) {
+        List<RawTx> txList = rawDtoBlock.getTxs().stream()
                 .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
                 .collect(Collectors.toList());
         return new RawBlock(rawDtoBlock.getHeight(),
@@ -418,8 +430,8 @@ public class RpcService {
                 ImmutableList.copyOf(txList));
     }
 
-    private static RawTx getTxFromRawTransaction(RawDtoTransaction rawDtoTx,
-                                                 RawDtoBlock rawDtoBlock) {
+    private static RawTx getTxFromRawTransaction(BitcoindDecodeRawTransactionResponse.Result rawDtoTx,
+                                                 BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock) {
         String txId = rawDtoTx.getTxId();
         long blockTime = rawDtoBlock.getTime() * 1000; // We convert block time from sec to ms
         int blockHeight = rawDtoBlock.getHeight();
@@ -430,9 +442,9 @@ public class RpcService {
         // it until the fork activates, which is determined by block height.
         boolean allowSegwit = blockHeight >= getActivateHardFork2Height();
 
-        final List<TxInput> txInputs = rawDtoTx.getVIn()
+        final List<TxInput> txInputs = rawDtoTx.getVin()
                 .stream()
-                .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
+                .filter(rawInput -> rawInput != null && rawInput.getTxId() != null)
                 .map(rawInput -> {
                     String pubKeyAsHex = extractPubKeyAsHex(rawInput, allowSegwit);
                     if (pubKeyAsHex == null) {
@@ -440,16 +452,17 @@ public class RpcService {
                                         "txId={}, asm={}, txInWitness={}",
                                 rawDtoTx.getTxId(), rawInput.getScriptSig().getAsm(), rawInput.getTxInWitness());
                     }
-                    return new TxInput(rawInput.getTxId(), rawInput.getVOut(), pubKeyAsHex);
+                    return new TxInput(rawInput.getTxId(), rawInput.getVout(), pubKeyAsHex);
                 })
                 .collect(Collectors.toList());
 
-        final List<RawTxOutput> txOutputs = rawDtoTx.getVOut()
+        final List<RawTxOutput> txOutputs = rawDtoTx.getVout()
                 .stream()
-                .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
+                .filter(e -> e != null && e.getScriptPubKey() != null)
                 .map(rawDtoTxOutput -> {
                             byte[] opReturnData = null;
-                            DtoPubKeyScript scriptPubKey = rawDtoTxOutput.getScriptPubKey();
+                            BitcoindScriptPubKey bitcoindScriptPubKey = rawDtoTxOutput.getScriptPubKey();
+                            DtoPubKeyScript scriptPubKey = new DtoPubKeyScript(bitcoindScriptPubKey);
                             if (ScriptType.NULL_DATA.equals(scriptPubKey.getType()) && scriptPubKey.getAsm() != null) {
                                 String[] chunks = scriptPubKey.getAsm().split(" ");
                                 // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
@@ -467,8 +480,7 @@ public class RpcService {
                                 }
                             }
                             // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
-                            String address = scriptPubKey.getAddresses() != null &&
-                                    scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
+                            String address = scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                             PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
                             return new RawTxOutput(rawDtoTxOutput.getN(),
                                     BigDecimal.valueOf(rawDtoTxOutput.getValue()).movePointRight(8).longValueExact(),
@@ -496,7 +508,7 @@ public class RpcService {
     }
 
     @VisibleForTesting
-    static String extractPubKeyAsHex(RawDtoInput rawInput, boolean allowSegwit) {
+    static String extractPubKeyAsHex(BitcoindVin rawInput, boolean allowSegwit) {
         // We only allow inputs with a single SIGHASH_ALL signature. That is, multisig or
         // signing of only some of the tx inputs/outputs is intentionally disallowed...
         if (rawInput.getScriptSig() == null) {
