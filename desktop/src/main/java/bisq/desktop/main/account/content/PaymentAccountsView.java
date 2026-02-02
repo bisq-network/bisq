@@ -44,7 +44,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
 
     protected ListView<PaymentAccount> paymentAccountsListView;
     private ChangeListener<PaymentAccount> paymentAccountChangeListener;
-    protected Button addAccountButton, exportButton, importButton;
+    protected Button addAccountButton, exportButton, exportForBisq2Button, importButton;
     protected AccountAgeWitnessService accountAgeWitnessService;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
@@ -83,6 +83,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
         addAccountButton.setOnAction(event -> addNewAccount());
         exportButton.setOnAction(event -> exportAccounts());
+        exportForBisq2Button.setOnAction(event -> exportAccountsForBisq2());
         importButton.setOnAction(event -> importAccounts());
         if (root.getScene() != null)
             root.getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -93,6 +94,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
         paymentAccountsListView.getSelectionModel().selectedItemProperty().removeListener(paymentAccountChangeListener);
         addAccountButton.setOnAction(null);
         exportButton.setOnAction(null);
+        exportForBisq2Button.setOnAction(null);
         importButton.setOnAction(null);
         if (root.getScene() != null)
             root.getScene().removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -107,7 +109,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         removeSelectAccountForm();
                     else
                         UserThread.runAfter(() -> new Popup().warning(
-                                Res.get("shared.cannotDeleteAccount"))
+                                        Res.get("shared.cannotDeleteAccount"))
                                 .show(), 100, TimeUnit.MILLISECONDS);
                 })
                 .closeButtonText(Res.get("shared.cancel"))
@@ -168,6 +170,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     protected abstract void importAccounts();
 
     protected abstract void exportAccounts();
+
+    protected abstract void exportAccountsForBisq2();
 
     protected abstract void addNewAccount();
 

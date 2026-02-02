@@ -18,22 +18,20 @@
 package bisq.desktop.main.account.content.fiataccounts;
 
 import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
-import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.TradeManager;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
+import bisq.common.crypto.KeyRing;
 import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -48,6 +46,7 @@ import javafx.collections.SetChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 class FiatAccountsDataModel extends ActivatableDataModel {
@@ -62,6 +61,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private final String accountsFileName = "FiatPaymentAccounts";
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
+    private final KeyRing keyRing;
 
     @Inject
     public FiatAccountsDataModel(User user,
@@ -70,7 +70,8 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                                  TradeManager tradeManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  PersistenceProtoResolver persistenceProtoResolver,
-                                 CorruptedStorageFileHandler corruptedStorageFileHandler) {
+                                 CorruptedStorageFileHandler corruptedStorageFileHandler,
+                                 KeyRing keyRing) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
@@ -78,6 +79,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
+        this.keyRing = keyRing;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -154,11 +156,20 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
-            ArrayList<PaymentAccount> accounts = user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
-                    .collect(Collectors.toCollection(ArrayList::new));
-            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
+            GUIUtil.exportAccounts(getFiatAccounts(user.getPaymentAccounts()), accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
         }
+    }
+
+    public void exportAccountsForBisq2(Stage stage) {
+        if (user.getPaymentAccounts() != null) {
+            GUIUtil.exportAccountsForBisq2(getFiatAccounts(user.getPaymentAccounts()), accountsFileName, preferences, stage, keyRing.getSignatureKeyPair());
+        }
+    }
+
+    private List<PaymentAccount> getFiatAccounts(Set<PaymentAccount> accounts) {
+        return accounts.stream()
+                .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void importAccounts(Stage stage) {
