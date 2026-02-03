@@ -79,6 +79,10 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
 
     @Override
     protected void activate() {
+        // Hide the export button until MuSig is rolled out onBisq 2
+        exportForBisq2Button.setVisible(false);
+        exportForBisq2Button.setManaged(false);
+
         paymentAccountsListView.setItems(getPaymentAccounts());
         paymentAccountsListView.getSelectionModel().selectedItemProperty().addListener(paymentAccountChangeListener);
         addAccountButton.setOnAction(event -> addNewAccount());
