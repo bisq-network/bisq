@@ -54,6 +54,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.user.UserPayload;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.JsonUtil;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -65,9 +66,11 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.file.JsonFileManager;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.util.Base64;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -127,9 +130,12 @@ import javafx.collections.FXCollections;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.security.KeyPair;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -144,9 +150,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -218,7 +228,69 @@ public class GUIUtil {
         }
     }
 
-    public static void exportAccounts(ArrayList<PaymentAccount> accounts,
+    @EqualsAndHashCode
+    @Getter
+    private static class ExportToBisq2Model {
+        private final String privateDsaSignatureKeyAsBase64;
+        private final String publicDsaSignatureKeyAsBase64;
+        private final List<PaymentAccount> accounts;
+
+        public ExportToBisq2Model(String privateDsaSignatureKeyAsBase64,
+                                  String publicDsaSignatureKeyAsBase64,
+                                  List<PaymentAccount> accounts) {
+            this.privateDsaSignatureKeyAsBase64 = privateDsaSignatureKeyAsBase64;
+            this.publicDsaSignatureKeyAsBase64 = publicDsaSignatureKeyAsBase64;
+            this.accounts = accounts;
+        }
+    }
+
+    public static void exportAccountsForBisq2(List<PaymentAccount> accounts,
+                                              String fileName,
+                                              Preferences preferences,
+                                              Stage stage,
+                                              KeyPair signatureKeyPair) {
+        if (accounts.isEmpty()) {
+            new Popup().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
+            return;
+        }
+        new Popup().backgroundInfo(Res.get("guiUtil.accountAndPrivateKeyExport.info"))
+                .closeButtonText(Res.get("shared.no"))
+                .actionButtonText(Res.get("shared.yes"))
+                .onAction(() -> doExportAccountsForBisq2(accounts, fileName, preferences, stage, signatureKeyPair))
+                .show();
+    }
+
+    private static void doExportAccountsForBisq2(List<PaymentAccount> accounts,
+                                                 String fileName,
+                                                 Preferences preferences,
+                                                 Stage stage,
+                                                 KeyPair signatureKeyPair) {
+        String directory = getDirectoryFromChooser(preferences, stage);
+        if (!directory.isEmpty()) {
+            File dir = new File(directory);
+            JsonFileManager jsonFileManager = new JsonFileManager(dir);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            CompletableFuture.runAsync(() -> {
+                                ExportToBisq2Model exportToBisq2Model = new ExportToBisq2Model(
+                                        Base64.encode(signatureKeyPair.getPrivate().getEncoded()),
+                                        Base64.encode(signatureKeyPair.getPublic().getEncoded()),
+                                        accounts);
+                                jsonFileManager.writeToDisc(JsonUtil.objectToJson(exportToBisq2Model), fileName);
+                            },
+                            executor)
+                    .whenComplete((r, t) -> {
+                        jsonFileManager.shutDown();
+                        executor.shutdown();
+                        UserThread.execute(() -> {
+                            Path path = dir.toPath().resolve(fileName + ".json").toAbsolutePath();
+                            new Popup().feedback(Res.get("guiUtil.accountAndPrivateKeyExport.savedToPath", path))
+                                    .show();
+                        });
+                    });
+        }
+    }
+
+    public static void exportAccounts(List<PaymentAccount> accounts,
                                       String fileName,
                                       Preferences preferences,
                                       Stage stage,
@@ -232,6 +304,8 @@ public class GUIUtil {
                 persistenceManager.initialize(paymentAccounts, fileName, PersistenceManager.Source.PRIVATE_LOW_PRIO);
                 persistenceManager.persistNow(() -> {
                     persistenceManager.shutdown();
+                    // No UserThread.execute needed here as we do the wrapping in the
+                    // persistenceManager.persistNow code
                     new Popup().feedback(Res.get("guiUtil.accountExport.savedToPath",
                                     Paths.get(directory, fileName).toAbsolutePath()))
                             .show();

@@ -2064,6 +2064,51 @@ public class FormBuilder {
         return new Tuple3<>(button1, button2, button3);
     }
 
+    public static Tuple4<Button, Button, Button, Button> add4ButtonsAfterGroup(GridPane gridPane,
+                                                                               int rowIndex,
+                                                                               String title1,
+                                                                               String title2,
+                                                                               String title3,
+                                                                               String title4) {
+        return add4Buttons(gridPane, rowIndex, title1, title2, title3, title4, 15);
+    }
+
+    public static Tuple4<Button, Button, Button, Button> add4Buttons(GridPane gridPane,
+                                                                     int rowIndex,
+                                                                     String title1,
+                                                                     String title2,
+                                                                     String title3,
+                                                                     String title4,
+                                                                     double top) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        Button button1 = new AutoTooltipButton(title1);
+
+        button1.getStyleClass().add("action-button");
+        button1.setDefaultButton(true);
+        button1.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button1, Priority.ALWAYS);
+
+        Button button2 = new AutoTooltipButton(title2);
+        button2.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button2, Priority.ALWAYS);
+
+        Button button3 = new AutoTooltipButton(title3);
+        button3.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button3, Priority.ALWAYS);
+
+        Button button4 = new AutoTooltipButton(title4);
+        button4.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button4, Priority.ALWAYS);
+
+        hBox.getChildren().addAll(button1, button2, button3, button4);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 0);
+        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        gridPane.getChildren().add(hBox);
+        return new Tuple4<>(button1, button2, button3, button4);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Button + ProgressIndicator + Label

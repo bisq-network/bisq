@@ -130,6 +130,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -157,10 +158,7 @@ import javafx.util.StringConverter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelListView;
+import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccountsViewModel> {
@@ -269,6 +267,12 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     protected void exportAccounts() {
         model.dataModel.exportAccounts((Stage) root.getScene().getWindow());
     }
+
+    @Override
+    protected void exportAccountsForBisq2() {
+        model.dataModel.exportAccountsForBisq2((Stage) root.getScene().getWindow());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -427,11 +431,12 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentAccountsListView.setMinHeight(prefNumRows * Layout.LIST_ROW_HEIGHT + 28);
         setPaymentAccountsCellFactory();
 
-        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
-                Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"));
-        addAccountButton = tuple3.first;
-        exportButton = tuple3.second;
-        importButton = tuple3.third;
+        Tuple4<Button, Button, Button, Button> tuple4 = add4ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
+                Res.get("shared.ExportAccounts"), Res.get("shared.exportAccountsForBisq2"), Res.get("shared.importAccounts"));
+        addAccountButton = tuple4.first;
+        exportButton = tuple4.second;
+        exportForBisq2Button = tuple4.third;
+        importButton = tuple4.fourth;
     }
 
     // Add new account form
