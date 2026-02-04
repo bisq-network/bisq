@@ -17,8 +17,6 @@
 
 package bisq.core.dao.burningman.accounting.blockchain.temp;
 
-import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
-import bisq.core.dao.node.full.rpc.dto.RawDtoTransaction;
 import bisq.core.dao.state.model.blockchain.ScriptType;
 
 import java.math.BigDecimal;
@@ -31,6 +29,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
+
 @Slf4j
 @EqualsAndHashCode
 @Getter
@@ -40,7 +43,7 @@ public final class TempAccountingTx {
     private final List<TempAccountingTxInput> inputs;
     private final List<TempAccountingTxOutput> outputs;
 
-    public TempAccountingTx(RawDtoTransaction tx) {
+    public TempAccountingTx(BitcoindDecodeRawTransactionResponse.Result tx) {
         txId = tx.getTxId();
 
         // If lockTime is < 500000000 it is interpreted as block height, otherwise as unix time. We use block height.
@@ -48,26 +51,27 @@ public final class TempAccountingTx {
         //todo for dev testing
         isValidDptLockTime = /*tx.getLockTime() >= BurningManAccountingService.EARLIEST_BLOCK_HEIGHT &&*/ tx.getLockTime() < 500000000;
 
-        inputs = tx.getVIn().stream()
+        inputs = tx.getVin().stream()
                 .map(input -> {
                     List<String> txInWitness = input.getTxInWitness() != null ? input.getTxInWitness() : new ArrayList<>();
                     return new TempAccountingTxInput(input.getSequence(), txInWitness);
                 })
                 .collect(Collectors.toList());
 
-        outputs = tx.getVOut().stream()
+        outputs = tx.getVout().stream()
                 .map(output -> {
                     long value = BigDecimal.valueOf(output.getValue()).movePointRight(8).longValueExact();
                     // We use a non-null field for address as in the final object we require that the address is available
                     String address = "";
-                    DtoPubKeyScript scriptPubKey = output.getScriptPubKey();
+                    BitcoindScriptPubKey scriptPubKey = output.getScriptPubKey();
                     if (scriptPubKey != null) {
-                        List<String> addresses = scriptPubKey.getAddresses();
-                        if (addresses != null && addresses.size() == 1) {
-                            address = addresses.get(0);
+                        String tmpAddress = scriptPubKey.getAddress();
+                        if (tmpAddress != null) {
+                            address = tmpAddress;
                         }
                     }
-                    ScriptType scriptType = output.getScriptPubKey() != null ? output.getScriptPubKey().getType() : null;
+                    ScriptType scriptType = output.getScriptPubKey() != null ?
+                            ScriptType.fromScriptPubKey(output.getScriptPubKey()) : null;
                     return new TempAccountingTxOutput(value, address, scriptType);
                 })
                 .collect(Collectors.toList());

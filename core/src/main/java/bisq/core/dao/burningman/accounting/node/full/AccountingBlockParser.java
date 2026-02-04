@@ -24,7 +24,6 @@ import bisq.core.dao.burningman.accounting.blockchain.AccountingTxOutput;
 import bisq.core.dao.burningman.accounting.blockchain.temp.TempAccountingTx;
 import bisq.core.dao.burningman.accounting.blockchain.temp.TempAccountingTxInput;
 import bisq.core.dao.burningman.accounting.blockchain.temp.TempAccountingTxOutput;
-import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
 import bisq.core.dao.state.model.blockchain.ScriptType;
 
 import bisq.common.util.Hex;
@@ -43,6 +42,11 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetBlockResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindTransaction;
+
 @Slf4j
 @Singleton
 public class AccountingBlockParser {
@@ -53,13 +57,13 @@ public class AccountingBlockParser {
         this.burningManAccountingService = burningManAccountingService;
     }
 
-    public AccountingBlock parse(RawDtoBlock rawDtoBlock) {
+    public AccountingBlock parse(BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock) {
         Map<String, String> burningManNameByAddress = burningManAccountingService.getBurningManNameByAddress();
         String genesisTxId = burningManAccountingService.getGenesisTxId();
 
         // We filter early for first output address match. DPT txs have multiple outputs which need to match and will be checked later.
         Set<String> receiverAddresses = burningManNameByAddress.keySet();
-        List<AccountingTx> txs = rawDtoBlock.getTx().stream()
+        List<AccountingTx> txs = rawDtoBlock.getTxs().stream()
                 .map(TempAccountingTx::new)
                 .filter(tempAccountingTx -> receiverAddresses.contains(tempAccountingTx.getOutputs().get(0).getAddress()))
                 .map(tempAccountingTx -> toAccountingTx(tempAccountingTx, burningManNameByAddress, genesisTxId))
@@ -67,7 +71,7 @@ public class AccountingBlockParser {
                 .map(Optional::get)
                 .collect(Collectors.toList());
         // Time in rawDtoBlock is in seconds
-        int timeInSec = rawDtoBlock.getTime().intValue();
+        int timeInSec = (int) rawDtoBlock.getTime();
         byte[] truncatedHash = Hex.decodeLast4Bytes(rawDtoBlock.getHash());
         byte[] truncatedPreviousBlockHash = Hex.decodeLast4Bytes(rawDtoBlock.getPreviousBlockHash());
         return new AccountingBlock(rawDtoBlock.getHeight(),
