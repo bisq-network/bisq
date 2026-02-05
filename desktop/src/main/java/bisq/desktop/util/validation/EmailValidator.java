@@ -20,91 +20,90 @@ package bisq.desktop.util.validation;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /*
- * Mail addresses consist of localPart @ domainPart
+ * Email addresses consist of localPart @ domainPart
  *
  * Local part:
- * May contain lots of symbols A-Za-z0-9.!#$%&'*+-/=?^_`{|}~
- * but cannot begin or end with a dot (.)
- * between double quotes many more symbols are allowed:
- * "(),:;<>@[\] (ASCII: 32, 34, 40, 41, 44, 58, 59, 60, 62, 64, 91–93)
+ * - Practical subset allowed: A-Za-z0-9._%+- (max 64 characters)
+ * - Leading, trailing, and consecutive dots are not allowed
+ * - Quoted strings and exotic RFC constructs are intentionally excluded
  *
  * Domain part:
- * Consists of name dot TLD
- * name can but usually doesn't (compatibility reasons) contain non-ASCII
- * symbols.
- * TLD is at least two letters long
+ * - Labels separated by dots, each 1..63 characters
+ * - Each label starts and ends with alphanumeric character
+ * - Hyphens allowed internally
+ * - At least one dot required
+ * - Last label (TLD) must be at least 2 characters, letters-only (or punycode starting with "xn--")
+ *
+ * Conservative validator:
+ * - Accepts common, interoperable email addresses
+ * - Rejects edge-case RFC addresses that break UIs, JSON, or payment rails
  */
 public final class EmailValidator extends InputValidator {
+    /**
+     * Precompiled pattern matching a conservative subset of email addresses.
+     * - prevents leading/trailing/consecutive dots in the local part
+     * - ensures domain labels start/end with alnum and allows internal hyphens
+     */
+    private static final Pattern SIMPLE_EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9_%+\\-]+(?:\\.[A-Za-z0-9_%+\\-]+)*@" +          // local-part
+            "[A-Za-z0-9](?:[A-Za-z0-9\\-]{0,61}[A-Za-z0-9])?" +         // first domain label
+            "(?:\\.[A-Za-z0-9](?:[A-Za-z0-9\\-]{0,61}[A-Za-z0-9])?)+$"  // additional labels
+    );
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private static final ValidationResult INVALID_ADDRESS = new ValidationResult(false, Res.get("validation.email.invalidAddress"));
 
-    private final ValidationResult invalidAddress = new ValidationResult(false, Res.get("validation.email.invalidAddress"));
-
+    /**
+     * Validate the supplied email address.
+     *
+     * @param input the email address to validate (may be null)
+     * @return ValidationResult true if the address is acceptable; otherwise a ValidationResult
+     *         containing {@code validation.email.invalidAddress}
+     */
     @Override
     public ValidationResult validate(String input) {
-        if (input == null || input.length() < 6 || input.length() > 100) // shortest address is l@d.cc, max length 100
-            return invalidAddress;
-        String[] subStrings;
-        String local, domain;
+        if (input == null) return INVALID_ADDRESS;
 
-        subStrings = input.split("@", -1);
+        String email = input.trim();
 
-        if (subStrings.length == 1) // address does not contain '@'
-            return invalidAddress;
-        if (subStrings.length > 2) // multiple @'s included -> check for valid double quotes
-            if (!checkForValidQuotes(subStrings)) // around @'s -> "..@..@.." and concatenate local part
-                return invalidAddress;
-        local = subStrings[0];
-        domain = subStrings[subStrings.length - 1];
+        // Practical length limits: shortest plausible a@b.cc (6), longest allowed by spec 254
+        if (email.length() < 6 || email.length() > 254) return INVALID_ADDRESS;
 
-        if (local.isEmpty())
-            return invalidAddress;
+        // local-part must be 1..64 chars
+        int at = email.indexOf('@');
+        if (at <= 0 || at > 64) return INVALID_ADDRESS; 
 
-        // local part cannot begin or end with '.'
-        if (local.startsWith(".") || local.endsWith("."))
-            return invalidAddress;
+        // Apply regex pattern
+        if (!SIMPLE_EMAIL_PATTERN.matcher(email).matches()) return INVALID_ADDRESS;
 
-        String[] splitDomain = domain.split("\\.", -1); // '.' is a regex in java and has to be escaped
-        String tld = splitDomain[splitDomain.length - 1];
-        if (splitDomain.length < 2)
-            return invalidAddress;
+        // Check TLD (last label after final dot)
+        int lastDot = email.lastIndexOf('.');
+        if (lastDot < 0 || lastDot == email.length() - 1) return INVALID_ADDRESS;
 
-        if (splitDomain[0] == null || splitDomain[0].isEmpty())
-            return invalidAddress;
+        String tld = email.substring(lastDot + 1);
 
-        // TLD length is at least two
-        if (tld.length() < 2)
-            return invalidAddress;
+        // TLD length must be at least 2 characters
+        if (tld.length() < 2) return INVALID_ADDRESS;
 
-        // TLD is letters only
-        for (int k = 0; k < tld.length(); k++)
-            if (!Character.isLetter(tld.charAt(k)))
-                return invalidAddress;
-        return new ValidationResult(true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean checkForValidQuotes(String[] subStrings) {
-        int length = subStrings.length - 2; // is index on last substring of local part
-
-        // check for odd number of double quotes before first and after last '@'
-        if ((subStrings[0].split("\"", -1).length % 2 == 1) || (subStrings[length].split("\"", -1).length % 2 == 1))
-            return false;
-        for (int k = 1; k < length; k++) {
-            if (subStrings[k].split("\"", -1).length % 2 == 0)
-                return false;
+        // allow punycode TLDs for IDN support
+        if (tld.toLowerCase(Locale.ROOT).startsWith("xn--")) {
+            // basic sanity check for punycode TLD
+            if (tld.length() > 63) return INVALID_ADDRESS;
+            for (int i = 4; i < tld.length(); i++) {
+                char c = tld.charAt(i);
+                if (!(Character.isLetterOrDigit(c) || c == '-')) return INVALID_ADDRESS;
+            }
+        } else {
+            // ASCII letters only
+            for (int i = 0; i < tld.length(); i++) {
+                if (!Character.isLetter(tld.charAt(i))) return INVALID_ADDRESS;
+            }
         }
 
-        String patchLocal = "";
-        for (int k = 0; k <= length; k++) // remember: length is last index not array length
-            patchLocal = patchLocal.concat(subStrings[k]); // @'s are not reinstalled, since not needed for further checks
-        subStrings[0] = patchLocal;
-        return true;
+        return new ValidationResult(true);
     }
 }
