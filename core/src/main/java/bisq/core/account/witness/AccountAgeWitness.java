@@ -120,7 +120,7 @@ public class AccountAgeWitness implements ProcessOncePersistableNetworkPayload, 
     public String toString() {
         return "AccountAgeWitness{" +
                 "\n     hash=" + Utilities.bytesAsHexString(hash) +
-                ",\n     date=" + Instant.ofEpochMilli(date) +
+                ",\n     date=" + Instant.ofEpochMilli(date) + " / " + date +
                 "\n}";
     }
 }

@@ -29,8 +29,12 @@ import com.google.gson.GsonBuilder;
 
 public class JsonUtil {
     public static String objectToJson(Object object) {
+        return objectToJson(object, new AnnotationExclusionStrategy());
+    }
+
+    public static String objectToJson(Object object, ExclusionStrategy exclusionStrategy) {
         GsonBuilder gsonBuilder = new GsonBuilder()
-                .setExclusionStrategies(new AnnotationExclusionStrategy())
+                .setExclusionStrategies(exclusionStrategy)
                 .setPrettyPrinting();
         if (object instanceof Contract || object instanceof OfferPayload) {
             gsonBuilder.registerTypeAdapter(OfferPayload.class,

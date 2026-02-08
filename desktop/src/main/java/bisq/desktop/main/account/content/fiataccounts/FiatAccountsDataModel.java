@@ -26,6 +26,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
+import bisq.core.payment.BsqSwapAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
@@ -169,6 +170,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private List<PaymentAccount> getFiatAccounts(Set<PaymentAccount> accounts) {
         return accounts.stream()
                 .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
+                .filter(paymentAccount -> !(paymentAccount instanceof BsqSwapAccount))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
