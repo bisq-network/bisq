@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 import bisq.bridge.grpc.services.AccountAgeWitnessGrpcService;
+import bisq.bridge.grpc.services.AccountTimestampGrpcService;
 import bisq.bridge.grpc.services.BondedRoleGrpcService;
 import bisq.bridge.grpc.services.BsqBlockGrpcService;
 import bisq.bridge.grpc.services.BurningmanGrpcService;
@@ -51,6 +52,7 @@ public class BridgeGrpcServer {
     public BridgeGrpcServer(Config config,
                             BsqBlockGrpcService bsqBlockGrpcService,
                             BurningmanGrpcService burningManGrpcService,
+                            AccountTimestampGrpcService accountTimestampGrpcService,
                             AccountAgeWitnessGrpcService accountAgeWitnessGrpcService,
                             SignedWitnessGrpcService signedWitnessGrpcService,
                             BondedRoleGrpcService bondedRoleGrpcService) {
@@ -64,6 +66,7 @@ public class BridgeGrpcServer {
                 .executor(serverExecutor)
                 .addService(bsqBlockGrpcService)
                 .addService(burningManGrpcService)
+                .addService(accountTimestampGrpcService)
                 .addService(accountAgeWitnessGrpcService)
                 .addService(signedWitnessGrpcService)
                 .addService(bondedRoleGrpcService)

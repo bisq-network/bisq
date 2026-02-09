@@ -20,6 +20,8 @@ package bisq.bridge.grpc.services;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 
+import bisq.common.util.Hex;
+
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -31,39 +33,39 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.bridge.protobuf.AccountAgeWitnessDateRequest;
-import bisq.bridge.protobuf.AccountAgeWitnessDateResponse;
-import bisq.bridge.protobuf.AccountAgeWitnessGrpcServiceGrpc;
+import bisq.bridge.protobuf.AccountTimestampGrpcServiceGrpc;
+import bisq.bridge.protobuf.AccountTimestampRequest;
+import bisq.bridge.protobuf.AccountTimestampResponse;
 
 @Slf4j
-public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGrpc.AccountAgeWitnessGrpcServiceImplBase {
+public class AccountTimestampGrpcService extends AccountTimestampGrpcServiceGrpc.AccountTimestampGrpcServiceImplBase {
     private final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
-    public AccountAgeWitnessGrpcService(AccountAgeWitnessService accountAgeWitnessService) {
+    public AccountTimestampGrpcService(AccountAgeWitnessService accountAgeWitnessService) {
         this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
     @Override
-    public void requestAccountAgeWitnessDate(AccountAgeWitnessDateRequest request,
-                                             StreamObserver<AccountAgeWitnessDateResponse> responseObserver) {
+    public void requestAccountTimestamp(AccountTimestampRequest request,
+                                        StreamObserver<AccountTimestampResponse> responseObserver) {
         try {
-            String hashAsHex = request.getHashAsHex();
-            Optional<Long> date = accountAgeWitnessService.getWitnessByHashAsHex(hashAsHex)
+            byte[] hash = request.getHash().toByteArray();
+            Optional<Long> date = accountAgeWitnessService.getWitnessByHash(hash)
                     .map(AccountAgeWitness::getDate);
             if (date.isEmpty()) {
                 responseObserver.onError(io.grpc.Status.NOT_FOUND
-                        .withDescription("No account age witness found for the provided hash " + hashAsHex)
+                        .withDescription("No account age witness found for the provided hash " + Hex.encode(hash))
                         .asRuntimeException());
                 return;
             }
 
-            log.info("Account age for hash {}: {} ({})", hashAsHex, date.get(), new Date(date.get()));
-            var response = AccountAgeWitnessDateResponse.newBuilder().setDate(date.get()).build();
+            log.info("Account age for hash {}: {} ({})", Hex.encode(hash), date.get(), new Date(date.get()));
+            var response = AccountTimestampResponse.newBuilder().setDate(date.get()).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            log.error("requestAccountAgeWitnessData failed", e);
+            log.error("requestAccountTimestampData failed", e);
             responseObserver.onError(io.grpc.Status.INTERNAL
                     .withDescription("Internal server error")
                     .withCause(e)

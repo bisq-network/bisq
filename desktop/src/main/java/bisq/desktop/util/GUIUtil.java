@@ -87,6 +87,8 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -275,7 +277,19 @@ public class GUIUtil {
                                         Base64.encode(signatureKeyPair.getPrivate().getEncoded()),
                                         Base64.encode(signatureKeyPair.getPublic().getEncoded()),
                                         accounts);
-                                jsonFileManager.writeToDisc(JsonUtil.objectToJson(exportToBisq2Model), fileName);
+                                // We want to have the salt included thus we override the ExclusionStrategy
+                                String json = JsonUtil.objectToJson(exportToBisq2Model, new ExclusionStrategy() {
+                                    @Override
+                                    public boolean shouldSkipField(FieldAttributes fieldAttributes) {
+                                        return false;
+                                    }
+
+                                    @Override
+                                    public boolean shouldSkipClass(Class<?> aClass) {
+                                        return false;
+                                    }
+                                });
+                                jsonFileManager.writeToDisc(json, fileName);
                             },
                             executor)
                     .whenComplete((r, t) -> {
