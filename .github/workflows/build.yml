@@ -16,7 +16,7 @@ jobs:
             java: ['11']
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v6.0.1
+    - uses: actions/checkout@v6.0.2
       with:
           submodules: 'true'
 
