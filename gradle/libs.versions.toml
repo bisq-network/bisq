@@ -87,7 +87,6 @@ hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 
 javax-annotation = { module = "javax.annotation:javax.annotation-api", version.ref = "javax-annotation" }
 jcsv = { module = "com.googlecode.jcsv:jcsv", version.ref = "jcsv" }
