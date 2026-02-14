@@ -26,7 +26,7 @@ public final class SwishValidator extends PhoneNumberValidator {
     // Public no-arg constructor required by Guice injector.
     // Superclass' isoCountryCode must be set before validation.
     public SwishValidator() {
-        this.setIsoCountryCode("SE");
+        super("SE");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
