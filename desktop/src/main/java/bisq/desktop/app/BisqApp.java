@@ -34,6 +34,7 @@ import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.ImageUtil;
 
+import bisq.core.app.ShutdownDelayer;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -371,6 +372,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         String potentialIssues = checkTradesAtShutdown() + checkDisputesAtShutdown() + checkOffersAtShutdown();
         promptUserAtShutdown(potentialIssues).thenAccept(asyncOkToShutDown -> {
             if (asyncOkToShutDown) {
+                ShutdownDelayer.maybeWaitForPendingMessagesToBePublished();
                 stop();
             }
         });
