@@ -236,7 +236,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                 columns[4] = String.valueOf(item.isReceived());
                 columns[5] = item.getAmountAsString();
                 columns[6] = String.valueOf(item.getNumConfirmations());
-                columns[7] = item.getTxType().name();
+                columns[7] = item.getTxTypeForExport();
                 return columns;
             };
 
@@ -771,4 +771,3 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         tableView.getColumns().add(column);
     }
 }
-

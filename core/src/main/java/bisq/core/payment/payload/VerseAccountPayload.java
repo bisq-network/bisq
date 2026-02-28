@@ -32,6 +32,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+// Verse was shut down
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter

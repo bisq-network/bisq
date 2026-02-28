@@ -56,7 +56,6 @@ public final class TransferwiseAccount extends PaymentAccount {
             new FiatCurrency("GEL"),
             new FiatCurrency("GHS"),
             new FiatCurrency("HKD"),
-            new FiatCurrency("HRK"),
             new FiatCurrency("HUF"),
             new FiatCurrency("IDR"),
             new FiatCurrency("ILS"),

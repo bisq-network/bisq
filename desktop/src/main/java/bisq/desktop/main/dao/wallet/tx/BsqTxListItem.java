@@ -24,8 +24,10 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.coin.BsqFormatter;
 
@@ -48,6 +50,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 class BsqTxListItem extends TxConfidenceListItem {
+    private static final String ISSUANCE_TX_TYPE_FOR_EXPORT_PREFIX = "ISSUANCE_FROM_";
+    private static final String ISSUANCE_TX_TYPE_FOR_EXPORT_SUFFIX = "_REQUEST";
     private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
     private final Date date;
@@ -169,5 +173,40 @@ class BsqTxListItem extends TxConfidenceListItem {
     boolean isBsqSwapTx() {
         return getOptionalBsqTrade().isPresent();
     }
-}
 
+    boolean isCompensationIssuanceTx() {
+        return isCompensationIssuanceTx(getTxType());
+    }
+
+    boolean isCompensationIssuanceTx(TxType txType) {
+        return txType == TxType.COMPENSATION_REQUEST &&
+                daoFacade.isIssuanceTx(txId, IssuanceType.COMPENSATION);
+    }
+
+    boolean isReimbursementIssuanceTx() {
+        return isReimbursementIssuanceTx(getTxType());
+    }
+
+    boolean isReimbursementIssuanceTx(TxType txType) {
+        return txType == TxType.REIMBURSEMENT_REQUEST &&
+                daoFacade.isIssuanceTx(txId, IssuanceType.REIMBURSEMENT);
+    }
+
+    String getTxTypeForExport() {
+        if (isBsqSwapTx())
+            return PaymentMethod.BSQ_SWAP_ID;
+
+        TxType txType = getTxType();
+        if (isCompensationIssuanceTx(txType))
+            return getIssuanceTxTypeForExport(IssuanceType.COMPENSATION);
+
+        if (isReimbursementIssuanceTx(txType))
+            return getIssuanceTxTypeForExport(IssuanceType.REIMBURSEMENT);
+
+        return txType.name();
+    }
+
+    private String getIssuanceTxTypeForExport(IssuanceType issuanceType) {
+        return ISSUANCE_TX_TYPE_FOR_EXPORT_PREFIX + issuanceType.name() + ISSUANCE_TX_TYPE_FOR_EXPORT_SUFFIX;
+    }
+}

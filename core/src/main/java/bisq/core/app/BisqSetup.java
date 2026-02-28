@@ -557,16 +557,21 @@ public class BisqSetup {
             }
         });
     }
-
+    
+    boolean hasShownStorageWarning = false;
     private void checkFreeDiskSpace() {
         long TWO_GIGABYTES = 2147483648L;
         long usableSpace = new File(Config.appDataDir(), VERSION_FILE_NAME).getUsableSpace();
+        if (hasShownStorageWarning) {
+            return;
+        }
         if (usableSpace < TWO_GIGABYTES) {
             String message = Res.get("popup.warning.diskSpace", formatBytes(usableSpace), formatBytes(TWO_GIGABYTES));
             log.warn(message);
             if (diskSpaceWarningHandler != null) {
                 diskSpaceWarningHandler.accept(message);
             }
+            hasShownStorageWarning = true;
         }
     }
 

@@ -28,6 +28,8 @@ import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
+// Verse was shut down
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 public final class VerseAccount extends PaymentAccount {
 

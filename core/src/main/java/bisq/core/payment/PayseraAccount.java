@@ -46,7 +46,6 @@ public final class PayseraAccount extends PaymentAccount {
             new FiatCurrency("GBP"),
             new FiatCurrency("GEL"),
             new FiatCurrency("HKD"),
-            new FiatCurrency("HRK"),
             new FiatCurrency("HUF"),
             new FiatCurrency("ILS"),
             new FiatCurrency("INR"),

@@ -121,6 +121,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String MONESE_ID = "MONESE";
     public static final String SATISPAY_ID = "SATISPAY";
     public static final String TIKKIE_ID = "TIKKIE";
+    // Verse was shut down
+    @Deprecated
     public static final String VERSE_ID = "VERSE";
     public static final String STRIKE_ID = "STRIKE";
     public static final String SWIFT_ID = "SWIFT";
@@ -186,6 +188,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod MONESE;
     public static PaymentMethod SATISPAY;
     public static PaymentMethod TIKKIE;
+    // Verse was shut down
+    @Deprecated
     public static PaymentMethod VERSE;
     public static PaymentMethod STRIKE;
     public static PaymentMethod SWIFT;
@@ -260,6 +264,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             TIKKIE = new PaymentMethod(TIKKIE_ID, DAY, Coin.parseCoin("0.05")),
+            // Verse was shut down
             VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             STRIKE = new PaymentMethod(STRIKE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),

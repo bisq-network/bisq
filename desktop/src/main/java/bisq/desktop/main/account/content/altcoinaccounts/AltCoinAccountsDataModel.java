@@ -31,6 +31,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
+import bisq.common.crypto.KeyRing;
 import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
@@ -44,7 +45,9 @@ import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 class AltCoinAccountsDataModel extends ActivatableDataModel {
@@ -58,6 +61,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private final String accountsFileName = "AltcoinPaymentAccounts";
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
+    private final KeyRing keyRing;
 
     @Inject
     public AltCoinAccountsDataModel(User user,
@@ -65,13 +69,15 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                                     OpenOfferManager openOfferManager,
                                     TradeManager tradeManager,
                                     PersistenceProtoResolver persistenceProtoResolver,
-                                    CorruptedStorageFileHandler corruptedStorageFileHandler) {
+                                    CorruptedStorageFileHandler corruptedStorageFileHandler,
+                                    KeyRing keyRing) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
+        this.keyRing = keyRing;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -161,11 +167,20 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
-            ArrayList<PaymentAccount> accounts = user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> paymentAccount instanceof AssetAccount)
-                    .collect(Collectors.toCollection(ArrayList::new));
-            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
+            GUIUtil.exportAccounts(getAltcoinAccounts(user.getPaymentAccounts()), accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
         }
+    }
+
+    public void exportAccountsForBisq2(Stage stage) {
+        if (user.getPaymentAccounts() != null) {
+            GUIUtil.exportAccountsForBisq2(getAltcoinAccounts(user.getPaymentAccounts()), accountsFileName, preferences, stage, keyRing.getSignatureKeyPair());
+        }
+    }
+
+    private List<PaymentAccount> getAltcoinAccounts(Set<PaymentAccount> accounts) {
+        return accounts.stream()
+                .filter(paymentAccount -> paymentAccount instanceof AssetAccount)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void importAccounts(Stage stage) {

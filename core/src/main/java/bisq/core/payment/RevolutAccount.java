@@ -43,7 +43,6 @@ public final class RevolutAccount extends PaymentAccount {
             new FiatCurrency("EUR"),
             new FiatCurrency("GBP"),
             new FiatCurrency("HKD"),
-            new FiatCurrency("HRK"),
             new FiatCurrency("HUF"),
             new FiatCurrency("ILS"),
             new FiatCurrency("ISK"),
