@@ -5,8 +5,8 @@
    ```sh
    git clone https://github.com/bisq-network/bisq
    # if you intend to do testing on the latest release, you can clone the respective branch selectively, without downloading the whole repository
-   # for the 1.9.21 release, you would do it like this:
-   git clone --recurse-submodules --branch release/v1.9.21 https://github.com/bisq-network/bisq
+   # for the 1.9.22 release, you would do it like this:
+   git clone --recurse-submodules --branch release/v1.9.22 https://github.com/bisq-network/bisq
    cd bisq
    ```
 
@@ -15,7 +15,11 @@
    On macOS and Linux, execute:
    ```sh
    ./gradlew build
-   ./gradlew installDist
+   ```
+
+   On Windows:
+   ```cmd
+   gradlew.bat build
    ```
    If you prefer to skip tests to speed up the building process, just append _-x test_ to the previous commands.
 
@@ -40,22 +44,26 @@
 
    ```sh
    JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 PATH=/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH ./gradlew clean build
-   JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 PATH=/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH ./gradlew installDist
    ```
 
 If you do not have JDK 11 installed, check out scripts in the [scripts](../scripts) directory or download it manually from https://jdk.java.net/archive/.
 
 ## Running Bisq
 
-Once Bisq is installed, its executables will be available in the root project directory. Run **Bisq Desktop** as follows:
+Once Bisq is installed, its executables will be available in the `scripts` folder under the root project directory. Run **Bisq Desktop** as follows:
 
 On macOS and Linux:
 ```sh
-./desktop/build/app/bin/bisq-desktop
+./scripts/desktop
 ```
 or, to select a specific version of Java:
 ```sh
-env JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 ./desktop/build/app/bin/bisq-desktop
+env JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 ./scripts/desktop
+```
+
+On Windows:
+```cmd
+scripts\desktop.bat
 ```
 
 ## See also
