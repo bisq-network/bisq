@@ -6,7 +6,7 @@
 
 <h3 align="center">
     
-![Actions Status](https://github.com/bisq-network/bisq/workflows/Build%20Bisq/badge.svg)
+![Actions Status](https://github.com/bisq-network/bisq/workflows/Build%20Bisq/badge.svg) ![Downloads Count](https://img.shields.io/github/downloads/bisq-network/bisq/total.svg)
 
 
 ## What is Bisq?
