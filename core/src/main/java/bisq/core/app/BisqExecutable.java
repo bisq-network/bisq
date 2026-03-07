@@ -136,6 +136,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     // Desktop gets called from JavaFx thread
     protected void onApplicationLaunched() {
         configUserThread();
+        ShutdownDelayer.setClock(new ShutdownDelayer.BlockingClock());
 
         // Now we can use the user thread start periodic tasks
         CommonSetup.startPeriodicTasks();

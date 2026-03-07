@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.core.app.ShutdownDelayer;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InfoTextField;
@@ -535,11 +536,13 @@ public class SellerStep3View extends TradeStepView {
 
     private void onReleaseBitcoin() {
         if (!model.dataModel.requiresPayoutDelay() || model.dataModel.requiredPayoutDelayHasPassed()) {
+            ShutdownDelayer.reportPendingPaymentReceivedMessage();
+
             busyAnimation.play();
             statusLabel.setText(Res.get("shared.sendingConfirmation"));
 
-            model.dataModel.onFiatPaymentReceived(() -> {
-            }, errorMessage -> {
+            model.dataModel.onFiatPaymentReceived(ShutdownDelayer::reportPaymentReceivedMessageSent, errorMessage -> {
+                ShutdownDelayer.reportPaymentReceivedMessageSent();
                 busyAnimation.stop();
                 new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
             });
