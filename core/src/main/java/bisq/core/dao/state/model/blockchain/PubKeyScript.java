@@ -17,7 +17,7 @@
 
 package bisq.core.dao.state.model.blockchain;
 
-import bisq.core.dao.node.full.rpc.dto.DtoPubKeyScript;
+import bisq.core.dao.node.full.rpc.DtoPubKeyScript;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -25,33 +25,35 @@ import bisq.common.proto.persistable.PersistablePayload;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Objects;
-import java.util.Optional;
 
-import lombok.AllArgsConstructor;
-import lombok.Value;
+import lombok.Getter;
 
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-@Value
-@AllArgsConstructor
+@Getter
 public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel {
     private final int reqSigs;
     private final ScriptType scriptType;
-    @Nullable
     private final ImmutableList<String> addresses;
     private final String asm;
     private final String hex;
 
     public PubKeyScript(DtoPubKeyScript scriptPubKey) {
-        this(scriptPubKey.getReqSigs() != null ? scriptPubKey.getReqSigs() : 0,
+        this(scriptPubKey.getReqSigs(),
                 scriptPubKey.getType(),
-                scriptPubKey.getAddresses() != null ? ImmutableList.copyOf(scriptPubKey.getAddresses()) : null,
+                ImmutableList.copyOf(scriptPubKey.getAddresses()),
                 scriptPubKey.getAsm(),
                 scriptPubKey.getHex());
     }
 
+    private PubKeyScript(int reqSigs, ScriptType scriptType, ImmutableList<String> addresses, String asm, String hex) {
+        this.reqSigs = reqSigs;
+        this.scriptType = scriptType;
+        this.addresses = addresses;
+        this.asm = asm;
+        this.hex = hex;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -63,14 +65,18 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
                 .setScriptType(scriptType.toProtoMessage())
                 .setAsm(asm)
                 .setHex(hex);
-        Optional.ofNullable(addresses).ifPresent(builder::addAllAddresses);
+
+        if (!addresses.isEmpty()) {
+            builder.addAllAddresses(addresses);
+        }
+
         return builder.build();
     }
 
     public static PubKeyScript fromProto(protobuf.PubKeyScript proto) {
         return new PubKeyScript(proto.getReqSigs(),
                 ScriptType.fromProto(proto.getScriptType()),
-                proto.getAddressesList().isEmpty() ? null : ImmutableList.copyOf(proto.getAddressesList()),
+                proto.getAddressesList().isEmpty() ? ImmutableList.of() : ImmutableList.copyOf(proto.getAddressesList()),
                 proto.getAsm(),
                 proto.getHex());
     }

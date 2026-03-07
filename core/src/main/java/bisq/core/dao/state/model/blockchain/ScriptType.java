@@ -31,6 +31,10 @@ import lombok.ToString;
 
 import javax.annotation.concurrent.Immutable;
 
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
+
 @ToString
 @Immutable
 @AllArgsConstructor
@@ -58,12 +62,17 @@ public enum ScriptType implements ImmutableDaoStateModel {
     }
 
     @JsonCreator
-    public static ScriptType forName(String name) {
-        if (name != null) {
-            for (ScriptType scriptType : ScriptType.values()) {
-                if (name.equals(scriptType.getName())) {
-                    return scriptType;
-                }
+    public static ScriptType fromScriptPubKey(BitcoindScriptPubKey scriptPubKey) {
+        String name = scriptPubKey.getType();
+        // Old Bitcoin Core nodes return "witness_unknown" for P2A output scripts and the DAO doesn't use any
+        // P2A outputs.
+        if (name.equals("anchor")) {
+            return WITNESS_UNKNOWN;
+        }
+
+        for (ScriptType scriptType : ScriptType.values()) {
+            if (name.equals(scriptType.getName())) {
+                return scriptType;
             }
         }
         throw new IllegalArgumentException("Expected the argument to be a valid 'bitcoind' script type, "
