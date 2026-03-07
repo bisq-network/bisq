@@ -132,6 +132,7 @@ desktop/build:
 	mv .localnet/Bitcoin-regtest .localnet/bitcoind
 	mv .localnet/bisq-BTC_REGTEST_Alice_dao .localnet/alice
 	mv .localnet/bisq-BTC_REGTEST_Bob_dao .localnet/bob
+	mkdir .localnet/bitcoind2
 	# Remove the preconfigured bitcoin.conf in favor of explicitly
 	# parameterizing the invocation of bitcoind in the target below
 	rm -v .localnet/bitcoind/bitcoin.conf
@@ -155,6 +156,7 @@ deploy: setup
 	# deploy each node in its own named screen window
 	for target in \
 			bitcoind \
+			bitcoind2 \
 			seednode \
 			seednode2 \
 			alice \
@@ -189,6 +191,22 @@ bitcoind: .localnet
 		-rpcpassword=bsq \
 		-datadir=.localnet/bitcoind \
 		-blocknotify='.localnet/bitcoind/blocknotify %s'
+
+bitcoind2: .localnet
+	bitcoind \
+		-regtest \
+		-port=19444 \
+		-bind=127.0.0.1:19445=onion \
+		-addnode=127.0.0.1:18444 \
+		-prune=0 \
+		-txindex=1 \
+		-peerbloomfilters=1 \
+		-server \
+		-rpcallowip=127.0.0.1 \
+		-rpcbind=127.0.0.1:19443 \
+		-rpcuser=bisqdao \
+		-rpcpassword=bsq \
+		-datadir=.localnet/bitcoind2 \
 
 seednode: seednode/build
 	./bisq-seednode \
