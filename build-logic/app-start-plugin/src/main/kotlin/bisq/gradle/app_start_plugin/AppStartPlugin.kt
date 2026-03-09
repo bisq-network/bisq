@@ -37,7 +37,7 @@ class AppStartPlugin @Inject constructor(private val javaToolchainService: JavaT
                 project.files(allFiles)
             }.get()
 
-            jvmArgs.addAll(javaApplicationExtension.applicationDefaultJvmArgs)
+            jvmArgs = javaApplicationExtension.applicationDefaultJvmArgs.toList()
 
             workingDir = project.projectDir.parentFile
             mainClass.set(javaApplicationExtension.mainClass)
