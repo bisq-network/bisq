@@ -3,7 +3,9 @@ plugins {
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
-mainClassName = 'bisq.btcnodemonitor.BtcNodeMonitorMain'
+application {
+    mainClass = 'bisq.btcnodemonitor.BtcNodeMonitorMain'
+}
 
 distTar.enabled = true
 

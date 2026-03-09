@@ -3,7 +3,9 @@ plugins {
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
-mainClassName = 'bisq.statistics.StatisticsMain'
+application {
+    mainClass = 'bisq.statistics.StatisticsMain'
+}
 
 dependencies {
     implementation project(':common')
