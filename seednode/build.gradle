@@ -6,7 +6,8 @@ plugins {
 
 application {
     mainClass = 'bisq.seednode.SeedNodeMain'
-    applicationDefaultJvmArgs = ['-XX:+ExitOnOutOfMemoryError']
+    applicationDefaultJvmArgs = ['-XX:+ExitOnOutOfMemoryError', '-Xms4096M', '-Xmx4096M',
+                                 '-Djava.net.preferIPv4Stack=true']
 }
 
 distTar.enabled = true
