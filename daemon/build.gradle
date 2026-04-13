@@ -5,7 +5,9 @@ plugins {
 
 distTar.enabled = true
 
-mainClassName = 'bisq.daemon.app.BisqDaemonMain'
+application {
+    mainClass = 'bisq.daemon.app.BisqDaemonMain'
+}
 
 dependencies {
     implementation project(':proto')

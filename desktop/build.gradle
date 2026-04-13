@@ -17,8 +17,6 @@ javafx {
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
-mainClassName = 'bisq.desktop.app.BisqAppMain'
-
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
 dependencies {

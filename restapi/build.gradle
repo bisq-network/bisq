@@ -3,7 +3,9 @@ plugins {
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
-mainClassName = 'bisq.restapi.RestApiMain'
+application {
+    mainClass = 'bisq.restapi.RestApiMain'
+}
 
 distTar.enabled = false
 

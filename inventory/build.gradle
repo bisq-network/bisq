@@ -2,7 +2,10 @@ plugins {
     id 'bisq.application'
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
-mainClassName = 'bisq.inventory.InventoryMonitorMain'
+
+application {
+    mainClass = 'bisq.inventory.InventoryMonitorMain'
+}
 
 distTar.enabled = true
 
