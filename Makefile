@@ -35,10 +35,10 @@
 #  the various Bisq seed and desktop nodes that will make up your
 #  localnet:
 #
-#     $ ls -1 bisq-*
-#     bisq-desktop
-#     bisq-seednode
-#     bisq-statsnode
+#     $ ls -1 scripts
+#     desktop
+#     seednode
+#     statsnode
 #
 #  - You will see a new '.localnet' directory containing the data dirs
 #  for your regtest Bitcoin and Bisq nodes. Once you've deployed them in
@@ -209,7 +209,7 @@ bitcoind2: .localnet
 		-datadir=.localnet/bitcoind2 \
 
 seednode: seednode/build
-	./bisq-seednode \
+	scripts/seednode \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -223,7 +223,7 @@ seednode: seednode/build
 		--appName=seednode
 
 seednode2: seednode/build
-	./bisq-seednode \
+	scripts/seednode \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -237,7 +237,7 @@ seednode2: seednode/build
 		--appName=seednode2
 
 mediator: desktop/build
-	./bisq-desktop \
+	scripts/desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -246,7 +246,7 @@ mediator: desktop/build
 		--appName=Mediator
 
 alice: setup
-	./bisq-desktop \
+	scripts/desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -262,7 +262,7 @@ alice: setup
 		--appName=Alice
 
 bob: setup
-	./bisq-desktop \
+	scripts/desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \

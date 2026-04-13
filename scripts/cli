@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+absolute_script_path=$(realpath "$0")
+scripts_dir_path=$(dirname "$absolute_script_path")
+
+cd "${scripts_dir_path}/.." || exit 1
+
+gradle_args=()
+for arg in "$@"; do
+    gradle_args+=("$(printf '%q' "$arg")")
+done
+
+./gradlew cli:startBisqApp --args=\""${gradle_args[*]}"\"
