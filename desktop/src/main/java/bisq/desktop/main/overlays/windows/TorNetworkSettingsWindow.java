@@ -295,6 +295,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
         // init persisted values
         selectedBridgeOption = BridgeOption.values()[preferences.getBridgeOptionOrdinal()];
+        selectedTorTransportOrdinal = Transport.values()[preferences.getTorTransportOrdinal()];
+        customBridges = preferences.getCustomBridges();
         switch (selectedBridgeOption) {
             case PROVIDED:
                 toggleGroup.selectToggle(providedBridgesRadioButton);
@@ -309,10 +311,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         }
         applyToggleSelection();
 
-        selectedTorTransportOrdinal = Transport.values()[preferences.getTorTransportOrdinal()];
         transportTypeComboBox.getSelectionModel().select(selectedTorTransportOrdinal);
-
-        customBridges = preferences.getCustomBridges();
         bridgeEntriesTextArea.setText(customBridges);
 
         toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
