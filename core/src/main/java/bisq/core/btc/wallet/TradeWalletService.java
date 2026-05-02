@@ -1337,18 +1337,12 @@ public class TradeWalletService {
         return new TransactionInput(params,
                 parentTransaction,
                 scriptProgram,
-                getConnectedOutPoint(rawTransactionInput),
+                WallteUtils.getConnectedOutPoint(rawTransactionInput, params),
                 Coin.valueOf(rawTransactionInput.value));
     }
 
-    private TransactionOutPoint getConnectedOutPoint(RawTransactionInput rawTransactionInput) {
-        return new TransactionOutPoint(params, rawTransactionInput.index,
-                new Transaction(params, rawTransactionInput.parentTransaction));
-    }
-
     public boolean isP2WH(RawTransactionInput rawTransactionInput) {
-        return ScriptPattern.isP2WH(
-                checkNotNull(getConnectedOutPoint(rawTransactionInput).getConnectedOutput()).getScriptPubKey());
+        return WallteUtils.isP2WH(rawTransactionInput, params);
     }
 
     // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
