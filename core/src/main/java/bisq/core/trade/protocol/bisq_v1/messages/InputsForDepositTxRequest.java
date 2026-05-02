@@ -50,9 +50,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final long takerFee;
     private final boolean isCurrencyForTakerFeeBtc;
     private final List<RawTransactionInput> rawTransactionInputs;
-    private final long changeOutputValue;
-    @Nullable
-    private final String changeOutputAddress;
     private final byte[] takerMultiSigPubKey;
     private final String takerPayoutAddressString;
     private final PubKeyRing takerPubKeyRing;
@@ -91,8 +88,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      long takerFee,
                                      boolean isCurrencyForTakerFeeBtc,
                                      List<RawTransactionInput> rawTransactionInputs,
-                                     long changeOutputValue,
-                                     @Nullable String changeOutputAddress,
                                      byte[] takerMultiSigPubKey,
                                      String takerPayoutAddressString,
                                      PubKeyRing takerPubKeyRing,
@@ -120,8 +115,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.rawTransactionInputs = rawTransactionInputs;
-        this.changeOutputValue = changeOutputValue;
-        this.changeOutputAddress = changeOutputAddress;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.takerPubKeyRing = takerPubKeyRing;
@@ -158,7 +151,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .addAllRawTransactionInputs(rawTransactionInputs.stream()
                         .map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
-                .setChangeOutputValue(changeOutputValue)
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
@@ -177,7 +169,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setCurrentDate(currentDate)
                 .setBurningManSelectionHeight(burningManSelectionHeight);
 
-        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
         Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
         Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
@@ -210,8 +201,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 proto.getTakerFee(),
                 proto.getIsCurrencyForTakerFeeBtc(),
                 rawTransactionInputs,
-                proto.getChangeOutputValue(),
-                ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()),
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
@@ -243,8 +232,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     takerFee=" + takerFee +
                 ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
                 ",\n     rawTransactionInputs=" + rawTransactionInputs +
-                ",\n     changeOutputValue=" + changeOutputValue +
-                ",\n     changeOutputAddress='" + changeOutputAddress + '\'' +
                 ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
                 ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +

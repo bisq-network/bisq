@@ -343,12 +343,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         try {
             long tradeAmount = inputsForDepositTxRequest.getTradeAmount();
             checkArgument(inputsForDepositTxRequest.getTxFee() > 0, "Trade tx fee must be positive");
-            long changeOutputValue = inputsForDepositTxRequest.getChangeOutputValue();
-            checkArgument(changeOutputValue >= 0,
-                    "Taker change output value must not be negative");
-            if (changeOutputValue > 0) {
-                Validator.nonEmptyStringOf(inputsForDepositTxRequest.getChangeOutputAddress());
-            }
             checkArgument(tradeAmount >= offer.getMinAmount().value,
                     "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
                     tradeAmount, offer.getMinAmount().value);

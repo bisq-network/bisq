@@ -96,23 +96,14 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                         .add(takersDoubleMinerFee);
             }
 
-            long takersChangeOutputValue = request.getChangeOutputValue();
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
             TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    takersChangeOutputValue,
+                    0,
                     expectedTakerContribution,
                     processModel.getBtcWalletService(),
                     "Taker");
 
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
-
-            String takersChangeOutputAddress = request.getChangeOutputAddress();
-            if (takersChangeOutputValue > 0) {
-                nonEmptyStringOf(takersChangeOutputAddress);
-            }
-
-            tradingPeer.setChangeOutputValue(takersChangeOutputValue);
-            tradingPeer.setChangeOutputAddress(takersChangeOutputAddress);
 
             tradingPeer.setMultiSigPubKey(checkNotNull(request.getTakerMultiSigPubKey()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
