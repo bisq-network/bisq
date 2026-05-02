@@ -296,6 +296,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         }
 
         Offer offer = openOffer.getOffer();
+        if (!isValidInputsForDepositTxRequest(offer, inputsForDepositTxRequest)) {
+            return;
+        }
+
         openOfferManager.reserveOpenOffer(openOffer);
         Trade trade;
         if (offer.isBuyOffer()) {
@@ -332,6 +336,33 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         });
 
         requestPersistence();
+    }
+
+    private boolean isValidInputsForDepositTxRequest(Offer offer,
+                                                     InputsForDepositTxRequest inputsForDepositTxRequest) {
+        try {
+            long tradeAmount = inputsForDepositTxRequest.getTradeAmount();
+            checkArgument(inputsForDepositTxRequest.getTxFee() > 0, "Trade tx fee must be positive");
+            long changeOutputValue = inputsForDepositTxRequest.getChangeOutputValue();
+            checkArgument(changeOutputValue >= 0,
+                    "Taker change output value must not be negative");
+            if (changeOutputValue > 0) {
+                Validator.nonEmptyStringOf(inputsForDepositTxRequest.getChangeOutputAddress());
+            }
+            checkArgument(tradeAmount >= offer.getMinAmount().value,
+                    "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
+                    tradeAmount, offer.getMinAmount().value);
+            checkArgument(tradeAmount <= offer.getAmount().value,
+                    "Trade amount must not exceed offer amount. tradeAmount=%s, offerAmount=%s",
+                    tradeAmount, offer.getAmount().value);
+            return true;
+        } catch (Exception t) {
+            log.warn("Invalid inputsForDepositTxRequest with tradeId {} and uid {}: {}",
+                    inputsForDepositTxRequest.getTradeId(),
+                    inputsForDepositTxRequest.getUid(),
+                    t.getMessage());
+            return false;
+        }
     }
 
 

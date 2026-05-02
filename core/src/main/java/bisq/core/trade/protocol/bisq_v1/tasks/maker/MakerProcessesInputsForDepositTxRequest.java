@@ -17,12 +17,14 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -34,6 +36,7 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.base.Charsets;
 
+import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,10 +70,17 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Optional.ofNullable(request.getTakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
 
-            tradingPeer.setRawTransactionInputs(checkNotNull(request.getRawTransactionInputs()));
-            checkArgument(request.getRawTransactionInputs().size() > 0);
+            List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
+            TradePeerTxInputValidator.getValidatedInputValue(takerRawTransactionInputs,
+                    processModel.getBtcWalletService(),
+                    "Taker");
+            tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            tradingPeer.setChangeOutputValue(request.getChangeOutputValue());
+            long changeOutputValue = request.getChangeOutputValue();
+            checkArgument(changeOutputValue >= 0, "Taker change output value must not be negative");
+            if (changeOutputValue > 0)
+                nonEmptyStringOf(request.getChangeOutputAddress());
+            tradingPeer.setChangeOutputValue(changeOutputValue);
             tradingPeer.setChangeOutputAddress(request.getChangeOutputAddress());
 
             tradingPeer.setMultiSigPubKey(checkNotNull(request.getTakerMultiSigPubKey()));
@@ -118,8 +128,16 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             offer.verifyTakersTradePrice(takersTradePrice);
             trade.setPriceAsLong(takersTradePrice);
 
-            checkArgument(request.getTradeAmount() > 0);
-            trade.setAmount(Coin.valueOf(request.getTradeAmount()));
+            checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
+
+            long tradeAmount = request.getTradeAmount();
+            checkArgument(tradeAmount >= offer.getMinAmount().value,
+                    "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
+                    tradeAmount, offer.getMinAmount().value);
+            checkArgument(tradeAmount <= offer.getAmount().value,
+                    "Trade amount must not exceed offer amount. tradeAmount=%s, offerAmount=%s",
+                    tradeAmount, offer.getAmount().value);
+            trade.setAmount(Coin.valueOf(tradeAmount));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
