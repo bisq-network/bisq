@@ -343,8 +343,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         try {
             long tradeAmount = inputsForDepositTxRequest.getTradeAmount();
             checkArgument(inputsForDepositTxRequest.getTxFee() > 0, "Trade tx fee must be positive");
-            checkArgument(inputsForDepositTxRequest.getChangeOutputValue() >= 0,
+            long changeOutputValue = inputsForDepositTxRequest.getChangeOutputValue();
+            checkArgument(changeOutputValue >= 0,
                     "Taker change output value must not be negative");
+            if (changeOutputValue > 0) {
+                Validator.nonEmptyStringOf(inputsForDepositTxRequest.getChangeOutputAddress());
+            }
             checkArgument(tradeAmount >= offer.getMinAmount().value,
                     "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
                     tradeAmount, offer.getMinAmount().value);
@@ -352,7 +356,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     "Trade amount must not exceed offer amount. tradeAmount=%s, offerAmount=%s",
                     tradeAmount, offer.getAmount().value);
             return true;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             log.warn("Invalid inputsForDepositTxRequest with tradeId {} and uid {}: {}",
                     inputsForDepositTxRequest.getTradeId(),
                     inputsForDepositTxRequest.getUid(),
