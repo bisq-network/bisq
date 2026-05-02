@@ -57,6 +57,7 @@ public final class TradePeerTxInputValidator {
         for (RawTransactionInput input : rawTransactionInputs) {
             checkNotNull(input, "%s raw transaction input must not be null", peerRole);
             checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
+            checkArgument(walletService.isP2WH(input), "input must be P2WH", peerRole);
             input.validate(walletService);
             inputValue = Math.addExact(inputValue, input.value);
         }
