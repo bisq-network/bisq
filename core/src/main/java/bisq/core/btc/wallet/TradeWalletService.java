@@ -21,7 +21,6 @@ import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.model.InputsAndChangeOutput;
 import bisq.core.btc.model.PreparedDepositTxAndMakerInputs;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletConfig;
@@ -308,18 +307,19 @@ public class TradeWalletService {
 
 
     /**
-     * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the
-     * taker's address for that trade. That will be used to send to the maker for creating the deposit transaction.
+     * The taker creates a dummy transaction to get the input(s). That will be used to send to the maker for creating the deposit transaction.
+     * Note that the taker has no change output as the provided input was constructed for the exact required amount.
+     * Only makers with a range amount offer can have a change output.
      *
      * @param takeOfferFeeTx the take offer fee tx
      * @param inputAmount    amount of takers input
      * @param txFee          mining fee
-     * @return a data container holding the inputs, the output value and address
+     * @return A list of RawTransactionInputs
      * @throws TransactionVerificationException if there was an unexpected problem with the created dummy tx
      */
-    public InputsAndChangeOutput takerCreatesDepositTxInputs(Transaction takeOfferFeeTx,
-                                                             Coin inputAmount,
-                                                             Coin txFee)
+    public List<RawTransactionInput> takerCreatesDepositTxInputs(Transaction takeOfferFeeTx,
+                                                                 Coin inputAmount,
+                                                                 Coin txFee)
             throws TransactionVerificationException {
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
@@ -359,21 +359,15 @@ public class TradeWalletService {
 
         //WalletService.printTx("dummyTX", dummyTX);
 
-        List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream().map(e -> {
-            checkNotNull(e.getConnectedOutput(), "e.getConnectedOutput() must not be null");
-            checkNotNull(e.getConnectedOutput().getParentTransaction(),
-                    "e.getConnectedOutput().getParentTransaction() must not be null");
-            checkNotNull(e.getValue(), "e.getValue() must not be null");
-            return getRawInputFromTransactionInput(e);
-        }).collect(Collectors.toList());
-
-
-        // TODO changeOutputValue and changeOutputAddress is not used as taker spends exact amount from fee tx.
-        // Change is handled already at the fee tx creation so the handling of a change output for the deposit tx
-        // can be removed here. We still keep it atm as we prefer to not introduce a larger
-        // refactoring. When new trade protocol gets implemented this can be cleaned.
-        // The maker though can have a change output if the taker takes less as the max. offer amount!
-        return new InputsAndChangeOutput(new ArrayList<>(rawTransactionInputList), 0, null);
+        return dummyTX.getInputs().stream()
+                .map(e -> {
+                    checkNotNull(e.getConnectedOutput(), "e.getConnectedOutput() must not be null");
+                    checkNotNull(e.getConnectedOutput().getParentTransaction(),
+                            "e.getConnectedOutput().getParentTransaction() must not be null");
+                    checkNotNull(e.getValue(), "e.getValue() must not be null");
+                    return getRawInputFromTransactionInput(e);
+                })
+                .collect(Collectors.toList());
     }
 
     public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Coin makerInputAmount,
