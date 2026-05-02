@@ -52,6 +52,8 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.script.ScriptError;
+import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
@@ -760,8 +762,8 @@ public class TradeWalletService {
             throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
 
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
-        ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
-        ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
+        ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature).toCanonicalised();
+        ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature).toCanonicalised();
         TransactionSignature buyerTxSig = new TransactionSignature(buyerECDSASignature, Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);
         TransactionInput input = delayedPayoutTx.getInput(0);
@@ -774,8 +776,17 @@ public class TradeWalletService {
         if (checkNotNull(inputValue).isLessThan(delayedPayoutTx.getOutputSum().add(MIN_DELAYED_PAYOUT_TX_FEE))) {
             throw new TransactionVerificationException("Delayed payout tx is paying less than the minimum allowed tx fee");
         }
+        // SegWit validation in Script.correctlySpends is incomplete, as it only checks the witness of P2WPKH inputs.
+        // Therefore, we must manually verify both signatures ourselves against the computed sigHash.
         Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
         input.getScriptSig().correctlySpends(delayedPayoutTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
+        Sha256Hash sigHash = delayedPayoutTx.hashForWitnessSignature(0, redeemScript,
+                inputValue, Transaction.SigHash.ALL, false);
+        ECKey buyerKey = ECKey.fromPublicOnly(buyerPubKey);
+        ECKey sellerKey = ECKey.fromPublicOnly(sellerPubKey);
+        if (!buyerKey.verify(sigHash, buyerECDSASignature) || !sellerKey.verify(sigHash, sellerECDSASignature)) {
+            throw new ScriptException(ScriptError.SCRIPT_ERR_CHECKSIGVERIFY, "Invalid signature");
+        }
         return delayedPayoutTx;
     }
 
