@@ -38,8 +38,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -75,16 +73,14 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
                     "all takerRawTransactionInputs must be P2WH");
-            long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
             Coin expectedTakerContribution = offer.getSellerSecurityDeposit()
                     .add(tradeAmount)
                     .add(trade.getTradeTxFee().multiply(2));
             TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    takerChangeOutputValue,
+                    0,
                     expectedTakerContribution,
                     walletService,
                     "Taker");
-            @Nullable String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
@@ -97,8 +93,6 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,
-                    takerChangeOutputValue,
-                    takerChangeAddressString,
                     makerAddress,
                     makerChangeAddress,
                     buyerPubKey,

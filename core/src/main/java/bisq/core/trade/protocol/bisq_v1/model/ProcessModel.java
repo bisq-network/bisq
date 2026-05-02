@@ -136,11 +136,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     private List<RawTransactionInput> rawTransactionInputs;
     @Setter
-    private long changeOutputValue;
-    @Nullable
-    @Setter
-    private String changeOutputAddress;
-    @Setter
     private boolean useSavingsWallet;
     @Setter
     private long fundsNeededForTradeAsLong;
@@ -219,7 +214,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 .setOfferId(offerId)
                 .setAccountId(accountId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setChangeOutputValue(changeOutputValue)
                 .setUseSavingsWallet(useSavingsWallet)
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
                 .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name())
@@ -232,7 +226,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
                 ProtoUtil.collectionToProto(rawTransactionInputs, protobuf.RawTransactionInput.class)));
-        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
@@ -245,7 +238,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
         PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
         ProcessModel processModel = new ProcessModel(proto.getOfferId(), proto.getAccountId(), pubKeyRing, tradingPeer);
-        processModel.setChangeOutputValue(proto.getChangeOutputValue());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
         processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
         processModel.setBuyerPayoutAmountFromMediation(proto.getBuyerPayoutAmountFromMediation());
@@ -259,7 +251,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());
         processModel.setRawTransactionInputs(rawTransactionInputs);
-        processModel.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
         processModel.setMyMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMyMultiSigPubKey()));
         processModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
         processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));

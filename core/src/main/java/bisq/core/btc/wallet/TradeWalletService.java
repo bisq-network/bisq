@@ -373,8 +373,6 @@ public class TradeWalletService {
     public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Coin makerInputAmount,
                                                                          Coin msOutputAmount,
                                                                          List<RawTransactionInput> takerRawTransactionInputs,
-                                                                         long takerChangeOutputValue,
-                                                                         @Nullable String takerChangeAddressString,
                                                                          Address makerAddress,
                                                                          Address makerChangeAddress,
                                                                          byte[] buyerPubKey,
@@ -384,8 +382,6 @@ public class TradeWalletService {
                 makerInputAmount,
                 msOutputAmount,
                 takerRawTransactionInputs,
-                takerChangeOutputValue,
-                takerChangeAddressString,
                 makerAddress,
                 makerChangeAddress,
                 buyerPubKey,
@@ -395,8 +391,6 @@ public class TradeWalletService {
     public PreparedDepositTxAndMakerInputs buyerAsMakerCreatesAndSignsDepositTx(Coin makerInputAmount,
                                                                                 Coin msOutputAmount,
                                                                                 List<RawTransactionInput> takerRawTransactionInputs,
-                                                                                long takerChangeOutputValue,
-                                                                                @Nullable String takerChangeAddressString,
                                                                                 Address makerAddress,
                                                                                 Address makerChangeAddress,
                                                                                 byte[] buyerPubKey,
@@ -406,8 +400,6 @@ public class TradeWalletService {
                 makerInputAmount,
                 msOutputAmount,
                 takerRawTransactionInputs,
-                takerChangeOutputValue,
-                takerChangeAddressString,
                 makerAddress,
                 makerChangeAddress,
                 buyerPubKey,
@@ -421,8 +413,6 @@ public class TradeWalletService {
      * @param makerInputAmount          the input amount of the maker
      * @param msOutputAmount            the output amount to our MS output
      * @param takerRawTransactionInputs raw data for the connected outputs for all inputs of the taker (normally 1 input)
-     * @param takerChangeOutputValue    optional taker change output value
-     * @param takerChangeAddressString  optional taker change address
      * @param makerAddress              the maker's address
      * @param makerChangeAddress        the maker's change address
      * @param buyerPubKey               the public key of the buyer
@@ -437,8 +427,6 @@ public class TradeWalletService {
                                                                   Coin makerInputAmount,
                                                                   Coin msOutputAmount,
                                                                   List<RawTransactionInput> takerRawTransactionInputs,
-                                                                  long takerChangeOutputValue,
-                                                                  @Nullable String takerChangeAddressString,
                                                                   Address makerAddress,
                                                                   Address makerChangeAddress,
                                                                   byte[] buyerPubKey,
@@ -503,30 +491,13 @@ public class TradeWalletService {
                 hashedMultiSigOutputScript.getProgram());
         preparedDepositTx.addOutput(hashedMultiSigOutput);
 
-        TransactionOutput takerTransactionOutput = null;
-        if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
-            takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    Address.fromString(params, takerChangeAddressString));
-        }
-
         if (makerIsBuyer) {
             // Add optional buyer outputs
             if (makerOutput != null) {
                 preparedDepositTx.addOutput(makerOutput);
             }
-
-            // Add optional seller outputs
-            if (takerTransactionOutput != null) {
-                preparedDepositTx.addOutput(takerTransactionOutput);
-            }
         } else {
             // taker is buyer role
-
-            // Add optional seller outputs
-            if (takerTransactionOutput != null) {
-                preparedDepositTx.addOutput(takerTransactionOutput);
-            }
-
             // Add optional buyer outputs
             if (makerOutput != null) {
                 preparedDepositTx.addOutput(makerOutput);
