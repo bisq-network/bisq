@@ -17,15 +17,18 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +67,11 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
             tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
-            tradingPeer.setRawTransactionInputs(checkNotNull(response.getMakerInputs()));
+            List<RawTransactionInput> makerInputs = checkNotNull(response.getMakerInputs());
+            TradePeerTxInputValidator.getValidatedInputValue(makerInputs,
+                    processModel.getBtcWalletService(),
+                    "Maker");
+            tradingPeer.setRawTransactionInputs(makerInputs);
             byte[] preparedDepositTx = checkNotNull(response.getPreparedDepositTx());
             processModel.setPreparedDepositTx(preparedDepositTx);
             long lockTime = response.getLockTime();
@@ -87,8 +94,6 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setAccountAgeWitnessSignature(checkNotNull(response.getAccountAgeWitnessSignatureOfPreparedDepositTx()));
 
             tradingPeer.setCurrentDate(response.getCurrentDate());
-
-            checkArgument(response.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
