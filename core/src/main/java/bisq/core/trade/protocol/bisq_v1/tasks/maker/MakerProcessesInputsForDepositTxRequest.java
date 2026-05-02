@@ -78,19 +78,39 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkArgument(requestTradeAmount <= offer.getAmount().value,
                     "Trade amount must not exceed offer amount. requestTradeAmount=%s, offerAmount=%s",
                     requestTradeAmount, offer.getAmount().value);
-            trade.setAmount(Coin.valueOf(requestTradeAmount));
+            Coin tradeAmount = Coin.valueOf(requestTradeAmount);
+            trade.setAmount(tradeAmount);
 
-            List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
-            TradePeerTxInputValidator.getValidatedInputValue(takerRawTransactionInputs,
-                    processModel.getBtcWalletService(),
-                    "Taker");
-            tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
+
+            // Taker pays the miner fee for deposit tx and payout tx
+            Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
+            Coin expectedTakerContribution;
+            if (offer.isBuyOffer()) {
+                // Taker is the seller.
+                expectedTakerContribution = offer.getSellerSecurityDeposit()
+                        .add(tradeAmount)
+                        .add(takersDoubleMinerFee);
+            } else {
+                // Taker is buyer
+                expectedTakerContribution = offer.getBuyerSecurityDeposit()
+                        .add(takersDoubleMinerFee);
+            }
 
             long takersChangeOutputValue = request.getChangeOutputValue();
-            checkArgument(takersChangeOutputValue >= 0, "Taker change output value must not be negative");
+            List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
+            TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
+                    takersChangeOutputValue,
+                    expectedTakerContribution,
+                    processModel.getBtcWalletService(),
+                    "Taker");
+
+            tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
+
             String takersChangeOutputAddress = request.getChangeOutputAddress();
-            if (takersChangeOutputValue > 0)
+            if (takersChangeOutputValue > 0) {
                 nonEmptyStringOf(takersChangeOutputAddress);
+            }
+
             tradingPeer.setChangeOutputValue(takersChangeOutputValue);
             tradingPeer.setChangeOutputAddress(takersChangeOutputAddress);
 
@@ -134,13 +154,11 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             trade.setMediatorPubKeyRing(checkNotNull(mediator.getPubKeyRing(),
                     "mediator.getPubKeyRing() must not be null"));
 
-
             long takersTradePrice = request.getTradePrice();
             offer.verifyTakersTradePrice(takersTradePrice);
             trade.setPriceAsLong(takersTradePrice);
 
             checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
-
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
@@ -153,7 +171,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     }
 
     public static boolean verifyBurningManSelectionHeight(int takersBurningManSelectionHeight,
-                                                   int makersBurningManSelectionHeight) {
+                                                          int makersBurningManSelectionHeight) {
         if (takersBurningManSelectionHeight == makersBurningManSelectionHeight) {
             return true;
 
