@@ -28,6 +28,8 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.ECKey;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -63,7 +65,12 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(response.getMakersPaymentMethodId()));
 
             tradingPeer.setAccountId(nonEmptyStringOf(response.getMakerAccountId()));
-            tradingPeer.setMultiSigPubKey(checkNotNull(response.getMakerMultiSigPubKey()));
+
+            byte[] makerMultiSigPubKey = checkNotNull(response.getMakerMultiSigPubKey());
+            checkArgument(ECKey.isPubKeyCanonical(makerMultiSigPubKey) && makerMultiSigPubKey.length == 33,
+                    "makerMultiSigPubKey must be a valid compressed public key");
+            tradingPeer.setMultiSigPubKey(makerMultiSigPubKey);
+
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
             tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
