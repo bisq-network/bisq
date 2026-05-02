@@ -30,6 +30,8 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Coin;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -56,7 +58,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradingPeer tradingPeer = processModel.getTradePeer();
-            Offer offer = checkNotNull(processModel.getOffer(), "offer must not be null");
+            Offer offer = checkNotNull(processModel.getOffer(), "Offer must not be null");
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(response.getMakerPaymentAccountPayload())
@@ -73,7 +75,29 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
             List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
 
-            TradePeerTxInputValidator.getValidatedInputValue(makerRawTransactionInputs,
+            long makerChangeOutputValue = 0;
+            // Only when maker is seller there is the trade amount reserved and if taker trades less than
+            // max offer amount there will be a change output.
+            if (offer.isRange() && offer.isSellOffer()) {
+                long maxOfferAmount = offer.getAmount().getValue();
+                makerChangeOutputValue = maxOfferAmount - trade.getAmountAsLong();
+                checkArgument(makerChangeOutputValue >= 0,
+                        "For sell offers with range amount the makerChangeOutputValue must not be negative");
+            }
+
+            Coin expectedMakerContribution;
+            if (offer.isBuyOffer()) {
+                // maker is the buyer.
+                expectedMakerContribution = offer.getBuyerSecurityDeposit();
+            } else {
+                // maker is seller
+                expectedMakerContribution = offer.getSellerSecurityDeposit()
+                        .add(trade.getAmount());
+            }
+
+            TradePeerTxInputValidator.validateContribution(makerRawTransactionInputs,
+                    makerChangeOutputValue,
+                    expectedMakerContribution,
                     btcWalletService,
                     "Maker");
 
