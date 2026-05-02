@@ -1,3 +1,4 @@
 [submodule "bitcoind"]
 	path = bitcoind
 	url = https://github.com/bisq-network/bitcoind.git
+	branch = for_bisq_1.9.21
