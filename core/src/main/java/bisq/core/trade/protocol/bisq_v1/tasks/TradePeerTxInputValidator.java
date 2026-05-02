@@ -32,19 +32,16 @@ public final class TradePeerTxInputValidator {
     }
 
     public static void validateContribution(List<RawTransactionInput> rawTransactionInputs,
-                                            long changeOutputValue,
                                             Coin expectedContribution,
                                             BtcWalletService walletService,
                                             String peerRole) {
-        checkArgument(changeOutputValue >= 0, "%s change output value must not be negative", peerRole);
         checkNotNull(expectedContribution, "%s expected contribution must not be null", peerRole);
         checkArgument(expectedContribution.isPositive(), "%s expected contribution must be positive", peerRole);
 
-        long inputValue = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
-        long actualContribution = Math.subtractExact(inputValue, changeOutputValue);
+        long actualContribution = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
         checkArgument(actualContribution == expectedContribution.value,
-                "%s contribution mismatch. inputValue=%s, changeOutputValue=%s, actualContribution=%s, expectedContribution=%s",
-                peerRole, inputValue, changeOutputValue, actualContribution, expectedContribution.value);
+                "%s contribution mismatch. actualContribution=%s, expectedContribution=%s",
+                peerRole, actualContribution, expectedContribution.value);
     }
 
     private static long getValidatedInputValue(List<RawTransactionInput> rawTransactionInputs,

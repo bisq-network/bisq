@@ -75,28 +75,19 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
             List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
 
-            long makerChangeOutputValue = 0;
-            // Only when maker is seller there is the trade amount reserved and if taker trades less than
-            // max offer amount there will be a change output.
-            if (offer.isRange() && offer.isSellOffer()) {
-                long maxOfferAmount = offer.getAmount().getValue();
-                makerChangeOutputValue = maxOfferAmount - trade.getAmountAsLong();
-                checkArgument(makerChangeOutputValue >= 0,
-                        "For sell offers with range amount the makerChangeOutputValue must not be negative");
-            }
-
             Coin expectedMakerContribution;
             if (offer.isBuyOffer()) {
                 // maker is the buyer.
                 expectedMakerContribution = offer.getBuyerSecurityDeposit();
             } else {
                 // maker is seller
+                // We use the offer amount not the trade amount as we compare with the inputs which come from the
+                // makers fee tx which has the reserved funds for the max. offer amount.
                 expectedMakerContribution = offer.getSellerSecurityDeposit()
-                        .add(trade.getAmount());
+                        .add(offer.getAmount());
             }
 
             TradePeerTxInputValidator.validateContribution(makerRawTransactionInputs,
-                    makerChangeOutputValue,
                     expectedMakerContribution,
                     btcWalletService,
                     "Maker");

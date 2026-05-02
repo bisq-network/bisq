@@ -98,7 +98,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
             TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    0,
                     expectedTakerContribution,
                     processModel.getBtcWalletService(),
                     "Taker");

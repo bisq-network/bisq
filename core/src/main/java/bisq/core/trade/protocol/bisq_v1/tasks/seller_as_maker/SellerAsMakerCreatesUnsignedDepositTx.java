@@ -85,7 +85,6 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
             Coin expectedTakerContribution = offer.getBuyerSecurityDeposit()
                     .add(trade.getTradeTxFee().multiply(2));
             TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    0,
                     expectedTakerContribution,
                     walletService,
                     "Taker");

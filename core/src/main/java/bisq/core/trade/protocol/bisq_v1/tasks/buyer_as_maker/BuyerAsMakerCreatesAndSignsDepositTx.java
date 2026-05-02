@@ -77,7 +77,6 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     .add(tradeAmount)
                     .add(trade.getTradeTxFee().multiply(2));
             TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    0,
                     expectedTakerContribution,
                     walletService,
                     "Taker");
