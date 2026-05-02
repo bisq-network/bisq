@@ -61,6 +61,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), request);
 
             TradingPeer tradingPeer = processModel.getTradePeer();
+            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -69,6 +70,15 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                     .ifPresent(e -> tradingPeer.setHashOfPaymentAccountPayload(request.getHashOfTakersPaymentAccountPayload()));
             Optional.ofNullable(request.getTakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
+
+            long requestTradeAmount = request.getTradeAmount();
+            checkArgument(requestTradeAmount >= offer.getMinAmount().value,
+                    "Trade amount must be at least offer minimum amount. requestTradeAmount=%s, minAmount=%s",
+                    requestTradeAmount, offer.getMinAmount().value);
+            checkArgument(requestTradeAmount <= offer.getAmount().value,
+                    "Trade amount must not exceed offer amount. requestTradeAmount=%s, offerAmount=%s",
+                    requestTradeAmount, offer.getAmount().value);
+            trade.setAmount(Coin.valueOf(requestTradeAmount));
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
             TradePeerTxInputValidator.getValidatedInputValue(takerRawTransactionInputs,
@@ -124,21 +134,13 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             trade.setMediatorPubKeyRing(checkNotNull(mediator.getPubKeyRing(),
                     "mediator.getPubKeyRing() must not be null"));
 
-            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
+
             long takersTradePrice = request.getTradePrice();
             offer.verifyTakersTradePrice(takersTradePrice);
             trade.setPriceAsLong(takersTradePrice);
 
             checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
 
-            long tradeAmount = request.getTradeAmount();
-            checkArgument(tradeAmount >= offer.getMinAmount().value,
-                    "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
-                    tradeAmount, offer.getMinAmount().value);
-            checkArgument(tradeAmount <= offer.getAmount().value,
-                    "Trade amount must not exceed offer amount. tradeAmount=%s, offerAmount=%s",
-                    tradeAmount, offer.getAmount().value);
-            trade.setAmount(Coin.valueOf(tradeAmount));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
