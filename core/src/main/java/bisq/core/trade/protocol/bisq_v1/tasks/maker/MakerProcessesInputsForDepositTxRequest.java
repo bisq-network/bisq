@@ -76,12 +76,13 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                     "Taker");
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            long changeOutputValue = request.getChangeOutputValue();
-            checkArgument(changeOutputValue >= 0, "Taker change output value must not be negative");
-            if (changeOutputValue > 0)
-                nonEmptyStringOf(request.getChangeOutputAddress());
-            tradingPeer.setChangeOutputValue(changeOutputValue);
-            tradingPeer.setChangeOutputAddress(request.getChangeOutputAddress());
+            long takersChangeOutputValue = request.getChangeOutputValue();
+            checkArgument(takersChangeOutputValue >= 0, "Taker change output value must not be negative");
+            String takersChangeOutputAddress = request.getChangeOutputAddress();
+            if (takersChangeOutputValue > 0)
+                nonEmptyStringOf(takersChangeOutputAddress);
+            tradingPeer.setChangeOutputValue(takersChangeOutputValue);
+            tradingPeer.setChangeOutputAddress(takersChangeOutputAddress);
 
             tradingPeer.setMultiSigPubKey(checkNotNull(request.getTakerMultiSigPubKey()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
