@@ -10,6 +10,13 @@
    cd bisq
    ```
 
+If the project was already cloned, and you need to update the submodule run:
+
+   ```sh
+   git submodule sync --recursive
+   git submodule update --init --recursive
+   ```
+
 2. **Build Bisq**
 
    On macOS and Linux, execute:
