@@ -73,11 +73,11 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
                     "all takerRawTransactionInputs must be P2WH");
-            Coin expectedTakerContribution = offer.getSellerSecurityDeposit()
+            Coin expectedTakersInputAmount = offer.getSellerSecurityDeposit()
                     .add(tradeAmount)
                     .add(trade.getTradeTxFee().multiply(2));
-            TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    expectedTakerContribution,
+            TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+                    expectedTakersInputAmount,
                     walletService,
                     "Taker");
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();

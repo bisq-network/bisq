@@ -75,20 +75,20 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
             List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
 
-            Coin expectedMakerContribution;
+            Coin expectedMakersInputAmount;
             if (offer.isBuyOffer()) {
                 // maker is the buyer.
-                expectedMakerContribution = offer.getBuyerSecurityDeposit();
+                expectedMakersInputAmount = offer.getBuyerSecurityDeposit();
             } else {
                 // maker is seller
                 // We use the offer amount not the trade amount as we compare with the inputs which come from the
                 // makers fee tx which has the reserved funds for the max. offer amount.
-                expectedMakerContribution = offer.getSellerSecurityDeposit()
+                expectedMakersInputAmount = offer.getSellerSecurityDeposit()
                         .add(offer.getAmount());
             }
 
-            TradePeerTxInputValidator.validateContribution(makerRawTransactionInputs,
-                    expectedMakerContribution,
+            TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
+                    expectedMakersInputAmount,
                     btcWalletService,
                     "Maker");
 

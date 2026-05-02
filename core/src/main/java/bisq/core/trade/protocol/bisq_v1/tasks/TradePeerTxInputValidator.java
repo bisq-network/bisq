@@ -24,24 +24,24 @@ import org.bitcoinj.core.Coin;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public final class TradePeerTxInputValidator {
-    private TradePeerTxInputValidator() {
-    }
+    public static void validatePeersInputs(List<RawTransactionInput> rawTransactionInputs,
+                                           Coin expectedInputAmount,
+                                           BtcWalletService walletService,
+                                           String peerRole) {
+        checkNotNull(expectedInputAmount, "%s expected input value must not be null", peerRole);
+        checkArgument(expectedInputAmount.isPositive(), "%s expected input value must be positive", peerRole);
 
-    public static void validateContribution(List<RawTransactionInput> rawTransactionInputs,
-                                            Coin expectedContribution,
-                                            BtcWalletService walletService,
-                                            String peerRole) {
-        checkNotNull(expectedContribution, "%s expected contribution must not be null", peerRole);
-        checkArgument(expectedContribution.isPositive(), "%s expected contribution must be positive", peerRole);
-
-        long actualContribution = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
-        checkArgument(actualContribution == expectedContribution.value,
-                "%s contribution mismatch. actualContribution=%s, expectedContribution=%s",
-                peerRole, actualContribution, expectedContribution.value);
+        long inputValueFromTxInputs = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
+        checkArgument(inputValueFromTxInputs == expectedInputAmount.value,
+                "%s input value mismatch. inputValueFromTxInputs=%s, expectedInputAmount=%s",
+                peerRole, inputValueFromTxInputs, expectedInputAmount.value);
     }
 
     private static long getValidatedInputValue(List<RawTransactionInput> rawTransactionInputs,
