@@ -67,8 +67,9 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setAccountId(nonEmptyStringOf(response.getMakerAccountId()));
 
             byte[] makerMultiSigPubKey = checkNotNull(response.getMakerMultiSigPubKey());
-            checkArgument(ECKey.isPubKeyCanonical(makerMultiSigPubKey) && makerMultiSigPubKey.length == 33,
-                    "makerMultiSigPubKey must be a valid compressed public key");
+            checkArgument(makerMultiSigPubKey.length == 33, "makerMultiSigPubKey must be compressed");
+            // Check that the maker multisig key decompresses to a valid curve point:
+            ECKey.fromPublicOnly(makerMultiSigPubKey);
             tradingPeer.setMultiSigPubKey(makerMultiSigPubKey);
 
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));

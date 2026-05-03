@@ -85,8 +85,9 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setChangeOutputAddress(request.getChangeOutputAddress());
 
             byte[] takerMultiSigPubKey = checkNotNull(request.getTakerMultiSigPubKey());
-            checkArgument(ECKey.isPubKeyCanonical(takerMultiSigPubKey) && takerMultiSigPubKey.length == 33,
-                    "takerMultiSigPubKey must be a valid compressed public key");
+            checkArgument(takerMultiSigPubKey.length == 33, "takerMultiSigPubKey must be compressed");
+            // Check that the taker multisig key decompresses to a valid curve point:
+            ECKey.fromPublicOnly(takerMultiSigPubKey);
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
@@ -155,7 +156,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     }
 
     public static boolean verifyBurningManSelectionHeight(int takersBurningManSelectionHeight,
-                                                   int makersBurningManSelectionHeight) {
+                                                          int makersBurningManSelectionHeight) {
         if (takersBurningManSelectionHeight == makersBurningManSelectionHeight) {
             return true;
 
