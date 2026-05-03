@@ -40,6 +40,10 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class InputsForDepositTxRequest extends TradeMessage implements DirectMessage {
@@ -132,6 +136,32 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
         this.takersPaymentMethodId = takersPaymentMethodId;
         this.burningManSelectionHeight = burningManSelectionHeight;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkArgument(tradeAmount > 0, "tradeAmount must be positive");
+        checkArgument(tradePrice > 0, "tradePrice must be positive");
+        checkArgument(txFee > 0, "txFee must be positive");
+        checkArgument(takerFee > 0, "takerFee must be positive");
+        checkList(rawTransactionInputs, true, "rawTransactionInputs");
+        checkNonEmptyBytes(takerMultiSigPubKey, "takerMultiSigPubKey");
+        checkNonEmptyString(takerPayoutAddressString, "takerPayoutAddressString");
+        checkNotNull(takerPubKeyRing, "takerPubKeyRing must not be null");
+        checkNonEmptyString(takerAccountId, "takerAccountId");
+        checkNonEmptyString(takerFeeTxId, "takerFeeTxId");
+        checkList(acceptedArbitratorNodeAddresses, false, "acceptedArbitratorNodeAddresses");
+        checkList(acceptedMediatorNodeAddresses, false, "acceptedMediatorNodeAddresses");
+        checkList(acceptedRefundAgentNodeAddresses, false, "acceptedRefundAgentNodeAddresses");
+        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
+        checkNotNull(refundAgentNodeAddress, "refundAgentNodeAddress must not be null");
+        checkNonEmptyBytes(accountAgeWitnessSignatureOfOfferId, "accountAgeWitnessSignatureOfOfferId");
+        checkArgument(currentDate > 0, "currentDate must be positive");
+        checkNullableBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
+        checkNullableString(takersPaymentMethodId, "takersPaymentMethodId");
+        checkArgument(burningManSelectionHeight > 0, "burningManSelectionHeight must be positive");
     }
 
 

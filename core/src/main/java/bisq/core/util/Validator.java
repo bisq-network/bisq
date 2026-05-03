@@ -21,18 +21,53 @@ import bisq.core.trade.protocol.TradeMessage;
 
 import org.bitcoinj.core.Coin;
 
+import java.util.Collection;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Utility class for validating domain data.
- */
 public class Validator {
 
     public static String nonEmptyStringOf(String value) {
         checkNotNull(value);
-        checkArgument(value.length() > 0);
+        checkArgument(!value.isEmpty());
         return value;
+    }
+
+    public static String checkNonEmptyString(String value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isEmpty(), "%s must not be empty", fieldName);
+        return value;
+    }
+
+    public static void checkNullableString(@Nullable String value, String fieldName) {
+        if (value != null) {
+            checkArgument(!value.isEmpty(), "%s must not be empty", fieldName);
+        }
+    }
+
+    public static byte[] checkNonEmptyBytes(byte[] value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(value.length > 0, "%s must not be empty", fieldName);
+        return value;
+    }
+
+    public static void checkNullableBytes(@Nullable byte[] value, String fieldName) {
+        if (value != null) {
+            checkArgument(value.length > 0, "%s must not be empty", fieldName);
+        }
+    }
+
+    public static <T extends Collection<?>> T checkList(T values, boolean requireNonEmpty, String fieldName) {
+        checkNotNull(values, "%s must not be null", fieldName);
+        if (requireNonEmpty) {
+            checkArgument(!values.isEmpty(), "%s must not be empty", fieldName);
+        }
+        checkArgument(values.stream().noneMatch(Objects::isNull), "%s must not contain null entries", fieldName);
+        return values;
     }
 
     public static long nonNegativeLongOf(long value) {

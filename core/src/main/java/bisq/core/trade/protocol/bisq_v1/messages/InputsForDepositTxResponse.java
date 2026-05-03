@@ -41,6 +41,10 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class InputsForDepositTxResponse extends TradeMessage implements DirectMessage {
@@ -141,6 +145,25 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
         this.lockTime = lockTime;
         this.hashOfMakersPaymentAccountPayload = hashOfMakersPaymentAccountPayload;
         this.makersPaymentMethodId = makersPaymentMethodId;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNonEmptyString(makerAccountId, "makerAccountId");
+        checkNonEmptyBytes(makerMultiSigPubKey, "makerMultiSigPubKey");
+        checkNonEmptyString(makerContractAsJson, "makerContractAsJson");
+        checkNonEmptyString(makerContractSignature, "makerContractSignature");
+        checkNonEmptyString(makerPayoutAddressString, "makerPayoutAddressString");
+        checkNonEmptyBytes(preparedDepositTx, "preparedDepositTx");
+        checkList(makerInputs, true, "makerInputs");
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNullableBytes(accountAgeWitnessSignatureOfPreparedDepositTx,
+                "accountAgeWitnessSignatureOfPreparedDepositTx");
+        checkArgument(currentDate > 0, "currentDate must be positive");
+        checkArgument(lockTime > 0, "lockTime must be positive");
+        checkNullableBytes(hashOfMakersPaymentAccountPayload, "hashOfMakersPaymentAccountPayload");
+        checkNullableString(makersPaymentMethodId, "makersPaymentMethodId");
     }
 
     @Override
