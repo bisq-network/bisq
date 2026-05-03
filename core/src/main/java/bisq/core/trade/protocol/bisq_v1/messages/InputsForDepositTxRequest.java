@@ -161,7 +161,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         checkArgument(currentDate > 0, "currentDate must be positive");
         checkNullableBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
         checkNullableString(takersPaymentMethodId, "takersPaymentMethodId");
-        checkArgument(burningManSelectionHeight > 0, "burningManSelectionHeight must be positive");
+        // burningManSelectionHeight was added in v1.9.7 which cannot be used for trading anymore, though old persisted
+        // trades might carry that field thus we do not enforce positive values.
+        checkArgument(burningManSelectionHeight >= 0, "burningManSelectionHeight must be positive");
     }
 
 
