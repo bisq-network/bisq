@@ -41,6 +41,10 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class InputsForDepositTxResponse extends TradeMessage implements DirectMessage {
@@ -57,8 +61,7 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
     private final List<RawTransactionInput> makerInputs;
     private final NodeAddress senderNodeAddress;
 
-    // added in v 0.6. can be null if we trade with an older peer
-    @Nullable
+    // added in v 0.6. It was null in earlier versions which are not supported anymore
     private final byte[] accountAgeWitnessSignatureOfPreparedDepositTx;
     private final long currentDate;
     private final long lockTime;
@@ -80,7 +83,7 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                                       List<RawTransactionInput> makerInputs,
                                       NodeAddress senderNodeAddress,
                                       String uid,
-                                      @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
+                                      byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
                                       long currentDate,
                                       long lockTime,
                                       @Nullable byte[] hashOfMakersPaymentAccountPayload,
@@ -121,7 +124,7 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                                        NodeAddress senderNodeAddress,
                                        String uid,
                                        int messageVersion,
-                                       @Nullable byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
+                                       byte[] accountAgeWitnessSignatureOfPreparedDepositTx,
                                        long currentDate,
                                        long lockTime,
                                        @Nullable byte[] hashOfMakersPaymentAccountPayload,
@@ -141,6 +144,25 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
         this.lockTime = lockTime;
         this.hashOfMakersPaymentAccountPayload = hashOfMakersPaymentAccountPayload;
         this.makersPaymentMethodId = makersPaymentMethodId;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNonEmptyString(makerAccountId, "makerAccountId");
+        checkNonEmptyBytes(makerMultiSigPubKey, "makerMultiSigPubKey");
+        checkNonEmptyString(makerContractAsJson, "makerContractAsJson");
+        checkNonEmptyString(makerContractSignature, "makerContractSignature");
+        checkNonEmptyString(makerPayoutAddressString, "makerPayoutAddressString");
+        checkNonEmptyBytes(preparedDepositTx, "preparedDepositTx");
+        checkList(makerInputs, true, "makerInputs");
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNonEmptyBytes(accountAgeWitnessSignatureOfPreparedDepositTx,
+                "accountAgeWitnessSignatureOfPreparedDepositTx");
+        checkArgument(currentDate > 0, "currentDate must be positive");
+        checkArgument(lockTime > 0, "lockTime must be positive");
+        checkNullableBytes(hashOfMakersPaymentAccountPayload, "hashOfMakersPaymentAccountPayload");
+        checkNullableString(makersPaymentMethodId, "makersPaymentMethodId");
     }
 
     @Override
@@ -156,9 +178,9 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                 .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)
-                .setLockTime(lockTime);
+                .setLockTime(lockTime)
+                .setAccountAgeWitnessSignatureOfPreparedDepositTx(ByteString.copyFrom(accountAgeWitnessSignatureOfPreparedDepositTx));
 
-        Optional.ofNullable(accountAgeWitnessSignatureOfPreparedDepositTx).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfPreparedDepositTx(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         Optional.ofNullable(makerPaymentAccountPayload).ifPresent(e -> builder.setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage()));
         Optional.ofNullable(hashOfMakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfMakersPaymentAccountPayload(ByteString.copyFrom(hashOfMakersPaymentAccountPayload)));
@@ -191,7 +213,7 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion,
-                ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfPreparedDepositTx()),
+                proto.getAccountAgeWitnessSignatureOfPreparedDepositTx().toByteArray(),
                 proto.getCurrentDate(),
                 proto.getLockTime(),
                 hashOfMakersPaymentAccountPayload,

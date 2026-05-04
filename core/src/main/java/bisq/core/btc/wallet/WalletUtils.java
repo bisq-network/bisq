@@ -26,17 +26,28 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptPattern;
 
-public class WalletUtils {
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public final class WalletUtils {
+    private WalletUtils() {
+    }
+
     public static boolean isP2WH(RawTransactionInput rawTransactionInput, NetworkParameters params) {
-        TransactionOutput connectedOutput = getConnectedOutPoint(rawTransactionInput, params).getConnectedOutput();
-        if (connectedOutput == null) {
+        try {
+            TransactionOutput connectedOutput = getConnectedOutPoint(rawTransactionInput, params).getConnectedOutput();
+            if (connectedOutput == null) {
+                return false;
+            }
+            Script scriptPubKey = connectedOutput.getScriptPubKey();
+            if (scriptPubKey == null) {
+                return false;
+            }
+            return ScriptPattern.isP2WH(scriptPubKey);
+        } catch (Exception e) {
+            log.error("isP2WH check failed", e);
             return false;
         }
-        Script scriptPubKey = connectedOutput.getScriptPubKey();
-        if (scriptPubKey == null) {
-            return false;
-        }
-        return ScriptPattern.isP2WH(scriptPubKey);
     }
 
     public static TransactionOutPoint getConnectedOutPoint(RawTransactionInput rawTransactionInput,

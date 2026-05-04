@@ -53,8 +53,8 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
         try {
             runInterceptHook();
             InputsForDepositTxResponse response = (InputsForDepositTxResponse) processModel.getTradeMessage();
-            checkTradeId(processModel.getOfferId(), response);
             checkNotNull(response);
+            checkTradeId(processModel.getOfferId(), response);
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradingPeer tradingPeer = processModel.getTradePeer();

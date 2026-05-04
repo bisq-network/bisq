@@ -30,6 +30,9 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class DelayedPayoutTxSignatureRequest extends TradeMessage implements DirectMessage {
@@ -64,6 +67,14 @@ public final class DelayedPayoutTxSignatureRequest extends TradeMessage implemen
         this.senderNodeAddress = senderNodeAddress;
         this.delayedPayoutTx = delayedPayoutTx;
         this.delayedPayoutTxSellerSignature = delayedPayoutTxSellerSignature;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNonEmptyBytes(delayedPayoutTx, "delayedPayoutTx");
+        checkNonEmptyBytes(delayedPayoutTxSellerSignature, "delayedPayoutTxSellerSignature");
     }
 
 
