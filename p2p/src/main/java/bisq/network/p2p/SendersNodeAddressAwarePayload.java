@@ -15,13 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.mailbox;
+package bisq.network.p2p;
 
+import javax.annotation.Nullable;
 
-import bisq.network.p2p.DirectMessage;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
-import bisq.network.p2p.UidMessage;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
+/**
+ * Interface for payloads that include the sender's node address.
+ */
+public interface SendersNodeAddressAwarePayload {
+    NodeAddress getSenderNodeAddress();
 
-public interface MailboxMessage extends DirectMessage, UidMessage, ExpirablePayload, SendersNodeAddressAwarePayload {
+    static boolean isSenderNodeAddressMatching(@Nullable NodeAddress payloadSenderNodeAddress,
+                                               @Nullable NodeAddress expectedSenderNodeAddress) {
+        return payloadSenderNodeAddress != null && payloadSenderNodeAddress.equals(expectedSenderNodeAddress);
+    }
 }
