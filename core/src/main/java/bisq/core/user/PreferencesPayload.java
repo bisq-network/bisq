@@ -45,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
+import static bisq.core.user.Preferences.DEFAULT_PRICE_DISTANCE;
+import static bisq.core.user.Preferences.getClampedMaxPriceDistanceInPercent;
 
 @Slf4j
 @Data
@@ -69,7 +71,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private TradeCurrency preferredTradeCurrency;
     private long withdrawalTxFeeInVbytes = 100;
     private boolean useCustomWithdrawalTxFee = false;
-    private double maxPriceDistanceInPercent = 0.3;
+    private double maxPriceDistanceInPercent = getClampedMaxPriceDistanceInPercent(DEFAULT_PRICE_DISTANCE);
     @Nullable
     private String offerBookChartScreenCurrencyCode;
     @Nullable
@@ -257,6 +259,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
         if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
             paymentAccount = PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), coreProtoResolver);
 
+        double maxPriceDistanceInPercent = getClampedMaxPriceDistanceInPercent(proto.getMaxPriceDistanceInPercent());
         return new PreferencesPayload(
                 proto.getUserLanguage(),
                 Country.fromProto(userCountry),
@@ -280,7 +283,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
                 proto.getWithdrawalTxFeeInVbytes(),
                 proto.getUseCustomWithdrawalTxFee(),
-                proto.getMaxPriceDistanceInPercent(),
+                maxPriceDistanceInPercent,
                 ProtoUtil.stringOrNullFromProto(proto.getOfferBookChartScreenCurrencyCode()),
                 ProtoUtil.stringOrNullFromProto(proto.getTradeChartsScreenCurrencyCode()),
                 ProtoUtil.stringOrNullFromProto(proto.getBuyScreenCurrencyCode()),

@@ -357,21 +357,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deviationListener = (observable, oldValue, newValue) -> {
             try {
                 double value = ParsingUtils.parsePercentStringToDouble(newValue);
-                final double maxDeviation = 0.5;
+                double maxDeviation = Preferences.MAX_PRICE_DISTANCE;
                 if (value <= maxDeviation) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
                     new Popup().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
-                    UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                    UserThread.runAfter(() -> deviationInputTextField.setText(getFormattedPersistedDeviation()), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
                 log.error("Exception at parseDouble deviation: {}", t.toString());
-                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(getFormattedPersistedDeviation()), 100, TimeUnit.MILLISECONDS);
             }
         };
         deviationFocusedListener = (observable1, oldValue1, newValue1) -> {
             if (oldValue1 && !newValue1)
-                UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> deviationInputTextField.setText(getFormattedPersistedDeviation()), 100, TimeUnit.MILLISECONDS);
         };
 
         // ignoreTraders
@@ -453,6 +453,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             tooltip.setHideDelay(Duration.millis(0));
             Tooltip.install(useBisqWalletForFundingToggle, tooltip);
         }
+    }
+
+    private String getFormattedPersistedDeviation() {
+        return FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent());
     }
 
     private void initializeSeparator() {
@@ -1002,7 +1006,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         btcExplorerTextField.setText(preferences.getBlockChainExplorer().getName());
         bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().getName());
 
-        deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.setText(getFormattedPersistedDeviation());
         deviationInputTextField.textProperty().addListener(deviationListener);
         deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
 
