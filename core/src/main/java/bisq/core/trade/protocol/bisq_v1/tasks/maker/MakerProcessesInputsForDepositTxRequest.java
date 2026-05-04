@@ -61,6 +61,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), request);
 
             TradingPeer tradingPeer = processModel.getTradePeer();
+            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -70,18 +71,48 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Optional.ofNullable(request.getTakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
 
+            long requestTradeAmount = request.getTradeAmount();
+            checkArgument(requestTradeAmount >= offer.getMinAmount().value,
+                    "Trade amount must be at least offer minimum amount. requestTradeAmount=%s, minAmount=%s",
+                    requestTradeAmount, offer.getMinAmount().value);
+            checkArgument(requestTradeAmount <= offer.getAmount().value,
+                    "Trade amount must not exceed offer amount. requestTradeAmount=%s, offerAmount=%s",
+                    requestTradeAmount, offer.getAmount().value);
+            Coin tradeAmount = Coin.valueOf(requestTradeAmount);
+            trade.setAmount(tradeAmount);
+
+
+            // Taker pays the miner fee for deposit tx and payout tx
+            Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
+            Coin expectedTakerContribution;
+            if (offer.isBuyOffer()) {
+                // Taker is the seller.
+                expectedTakerContribution = offer.getSellerSecurityDeposit()
+                        .add(tradeAmount)
+                        .add(takersDoubleMinerFee);
+            } else {
+                // Taker is buyer
+                expectedTakerContribution = offer.getBuyerSecurityDeposit()
+                        .add(takersDoubleMinerFee);
+            }
+
+            long takersChangeOutputValue = request.getChangeOutputValue();
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
-            TradePeerTxInputValidator.getValidatedInputValue(takerRawTransactionInputs,
+            TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
+                    takersChangeOutputValue,
+                    expectedTakerContribution,
                     processModel.getBtcWalletService(),
                     "Taker");
+
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            long changeOutputValue = request.getChangeOutputValue();
-            checkArgument(changeOutputValue >= 0, "Taker change output value must not be negative");
-            if (changeOutputValue > 0)
-                nonEmptyStringOf(request.getChangeOutputAddress());
-            tradingPeer.setChangeOutputValue(changeOutputValue);
-            tradingPeer.setChangeOutputAddress(request.getChangeOutputAddress());
+            String takersChangeOutputAddress = request.getChangeOutputAddress();
+            if (takersChangeOutputValue > 0) {
+                nonEmptyStringOf(takersChangeOutputAddress);
+            }
+
+            tradingPeer.setChangeOutputValue(takersChangeOutputValue);
+            tradingPeer.setChangeOutputAddress(takersChangeOutputAddress);
 
             tradingPeer.setMultiSigPubKey(checkNotNull(request.getTakerMultiSigPubKey()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
@@ -123,21 +154,11 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             trade.setMediatorPubKeyRing(checkNotNull(mediator.getPubKeyRing(),
                     "mediator.getPubKeyRing() must not be null"));
 
-            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             long takersTradePrice = request.getTradePrice();
             offer.verifyTakersTradePrice(takersTradePrice);
             trade.setPriceAsLong(takersTradePrice);
 
             checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
-
-            long tradeAmount = request.getTradeAmount();
-            checkArgument(tradeAmount >= offer.getMinAmount().value,
-                    "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
-                    tradeAmount, offer.getMinAmount().value);
-            checkArgument(tradeAmount <= offer.getAmount().value,
-                    "Trade amount must not exceed offer amount. tradeAmount=%s, offerAmount=%s",
-                    tradeAmount, offer.getAmount().value);
-            trade.setAmount(Coin.valueOf(tradeAmount));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
@@ -150,7 +171,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     }
 
     public static boolean verifyBurningManSelectionHeight(int takersBurningManSelectionHeight,
-                                                   int makersBurningManSelectionHeight) {
+                                                          int makersBurningManSelectionHeight) {
         if (takersBurningManSelectionHeight == makersBurningManSelectionHeight) {
             return true;
 

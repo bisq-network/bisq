@@ -18,7 +18,9 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -27,6 +29,8 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
+
+import org.bitcoinj.core.Coin;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +56,9 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             checkTradeId(processModel.getOfferId(), response);
             checkNotNull(response);
 
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradingPeer tradingPeer = processModel.getTradePeer();
+            Offer offer = checkNotNull(processModel.getOffer(), "Offer must not be null");
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(response.getMakerPaymentAccountPayload())
@@ -67,17 +73,42 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
             tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
-            List<RawTransactionInput> makerInputs = checkNotNull(response.getMakerInputs());
-            TradePeerTxInputValidator.getValidatedInputValue(makerInputs,
-                    processModel.getBtcWalletService(),
+            List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
+
+            long makerChangeOutputValue = 0;
+            // Only when maker is seller there is the trade amount reserved and if taker trades less than
+            // max offer amount there will be a change output.
+            if (offer.isRange() && offer.isSellOffer()) {
+                long maxOfferAmount = offer.getAmount().getValue();
+                makerChangeOutputValue = maxOfferAmount - trade.getAmountAsLong();
+                checkArgument(makerChangeOutputValue >= 0,
+                        "For sell offers with range amount the makerChangeOutputValue must not be negative");
+            }
+
+            Coin expectedMakerContribution;
+            if (offer.isBuyOffer()) {
+                // maker is the buyer.
+                expectedMakerContribution = offer.getBuyerSecurityDeposit();
+            } else {
+                // maker is seller
+                expectedMakerContribution = offer.getSellerSecurityDeposit()
+                        .add(trade.getAmount());
+            }
+
+            TradePeerTxInputValidator.validateContribution(makerRawTransactionInputs,
+                    makerChangeOutputValue,
+                    expectedMakerContribution,
+                    btcWalletService,
                     "Maker");
-            tradingPeer.setRawTransactionInputs(makerInputs);
+
+            tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
+
             byte[] preparedDepositTx = checkNotNull(response.getPreparedDepositTx());
             processModel.setPreparedDepositTx(preparedDepositTx);
             long lockTime = response.getLockTime();
             if (Config.baseCurrencyNetwork().isMainnet()) {
-                int myLockTime = processModel.getBtcWalletService().getBestChainHeight() +
-                        Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isBlockchain());
+                int myLockTime = btcWalletService.getBestChainHeight() +
+                        Restrictions.getLockTime(offer.getPaymentMethod().isBlockchain());
                 // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in case a new
                 // block was just found
                 checkArgument(Math.abs(lockTime - myLockTime) <= 3,
@@ -85,7 +116,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
                                 "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
             }
             trade.setLockTime(lockTime);
-            long delay = processModel.getBtcWalletService().getBestChainHeight() - lockTime;
+            long delay = btcWalletService.getBestChainHeight() - lockTime;
             log.info("lockTime={}, delay={}", lockTime, delay);
 
             // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a

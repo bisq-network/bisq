@@ -31,22 +31,6 @@ public final class TradePeerTxInputValidator {
     private TradePeerTxInputValidator() {
     }
 
-    public static long getValidatedInputValue(List<RawTransactionInput> rawTransactionInputs,
-                                              BtcWalletService walletService,
-                                              String peerRole) {
-        checkNotNull(rawTransactionInputs, "%s raw transaction inputs must not be null", peerRole);
-        checkArgument(!rawTransactionInputs.isEmpty(), "%s raw transaction inputs must not be empty", peerRole);
-
-        long inputValue = 0;
-        for (RawTransactionInput input : rawTransactionInputs) {
-            checkNotNull(input, "%s raw transaction input must not be null", peerRole);
-            checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
-            input.validate(walletService);
-            inputValue = Math.addExact(inputValue, input.value);
-        }
-        return inputValue;
-    }
-
     public static void validateContribution(List<RawTransactionInput> rawTransactionInputs,
                                             long changeOutputValue,
                                             Coin expectedContribution,
@@ -61,5 +45,21 @@ public final class TradePeerTxInputValidator {
         checkArgument(actualContribution == expectedContribution.value,
                 "%s contribution mismatch. inputValue=%s, changeOutputValue=%s, actualContribution=%s, expectedContribution=%s",
                 peerRole, inputValue, changeOutputValue, actualContribution, expectedContribution.value);
+    }
+
+    private static long getValidatedInputValue(List<RawTransactionInput> rawTransactionInputs,
+                                               BtcWalletService walletService,
+                                               String peerRole) {
+        checkNotNull(rawTransactionInputs, "%s raw transaction inputs must not be null", peerRole);
+        checkArgument(!rawTransactionInputs.isEmpty(), "%s raw transaction inputs must not be empty", peerRole);
+
+        long inputValue = 0;
+        for (RawTransactionInput input : rawTransactionInputs) {
+            checkNotNull(input, "%s raw transaction input must not be null", peerRole);
+            checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
+            input.validate(walletService);
+            inputValue = Math.addExact(inputValue, input.value);
+        }
+        return inputValue;
     }
 }

@@ -369,6 +369,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getDirection() == OfferDirection.BUY;
     }
 
+    public boolean isSellOffer() {
+        return getDirection() == OfferDirection.SELL;
+    }
+
     public OfferDirection getMirroredDirection() {
         return getDirection() == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
     }
