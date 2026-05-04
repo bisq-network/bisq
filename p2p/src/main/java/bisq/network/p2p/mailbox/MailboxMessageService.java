@@ -23,6 +23,7 @@ import bisq.network.p2p.NetworkNotReadyException;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.SendersNodeAddressAwarePayload;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
@@ -44,7 +45,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Tuple2;
@@ -157,6 +157,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PersistedDataHost
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -234,6 +235,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We wait until all services are ready to avoid some edge cases as in https://github.com/bisq-network/bisq/issues/6367
@@ -278,7 +280,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         }
 
         checkNotNull(peer, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
-        checkNotNull(networkNode.getNodeAddress(),
+        NodeAddress nodeAddress = networkNode.getNodeAddress();
+        checkNotNull(nodeAddress,
                 "My node address must not be null at sendEncryptedMailboxMessage");
         checkArgument(!keyRing.getPubKeyRing().equals(peersPubKeyRing), "We got own keyring instead of that from peer");
 
@@ -299,9 +302,19 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             return;
         }
 
+        if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(networkEnvelope, nodeAddress)) {
+            NodeAddress senderNodeAddress = SendersNodeAddressAwarePayload.getSenderNodeAddress(networkEnvelope);
+            // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
+            // must match the node address of the sender.
+            log.error("Sender node address {} does not match my node address {}",
+                    senderNodeAddress, nodeAddress);
+            sendMailboxMessageListener.onFault("Sender node address of payload is not matching our node address");
+            return;
+        }
+
         try {
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
-                    networkNode.getNodeAddress(),
+                    nodeAddress,
                     encryptionService.encryptAndSign(peersPubKeyRing, networkEnvelope));
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
@@ -377,6 +390,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // HashMapChangedListener implementation for ProtectedStorageEntry items
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -411,6 +425,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addHashMapChangedListener() {
@@ -475,20 +490,24 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         }
         try {
             DecryptedMessageWithPubKey decryptedMessageWithPubKey = encryptionService.decryptAndVerify(sealedAndSigned);
-            checkArgument(decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage);
             return new MailboxItem(protectedMailboxStorageEntry, decryptedMessageWithPubKey);
         } catch (CryptoException ignore) {
             // Expected if message was not intended for us
             // We persist those entries so at the next startup we do not need to try to decrypt it anymore
             ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
-        } catch (ProtobufferException e) {
-            log.error(e.toString());
-            e.getStackTrace();
+        } catch (Exception e) {
+            log.error("tryDecryptProtectedMailboxStorageEntry failed", e);
         }
         return new MailboxItem(protectedMailboxStorageEntry, null);
     }
 
     private void handleMailboxItem(MailboxItem mailboxItem) {
+        if (mailboxItem.isInvalidDecryptedMessage()) {
+            removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
+            removeMailboxItemFromLocalStore(mailboxItem.getUid());
+            return;
+        }
+
         String uid = mailboxItem.getUid();
         if (!mailboxItemsByUid.containsKey(uid)) {
             mailboxItemsByUid.put(uid, mailboxItem);
@@ -651,14 +670,11 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     private void removeMailboxItemFromLocalStore(String uid) {
         MailboxItem mailboxItem = mailboxItemsByUid.get(uid);
-        mailboxItemsByUid.remove(uid);
-        mailboxMessageList.remove(mailboxItem);
-        log.trace("## removeMailboxItemFromMap uid={}\nhash={}\nmailboxItemsByUid={}",
-                uid,
-                P2PDataStorage.get32ByteHashAsByteArray(mailboxItem.getProtectedMailboxStorageEntry().getProtectedStoragePayload()),
-                mailboxItemsByUid.keySet()
-        );
-        requestPersistence();
+        boolean removedFromMap = mailboxItemsByUid.remove(uid) != null;
+        boolean removedFromList = mailboxMessageList.remove(mailboxItem);
+        if (removedFromMap || removedFromList) {
+            requestPersistence();
+        }
     }
 
     private void requestPersistence() {

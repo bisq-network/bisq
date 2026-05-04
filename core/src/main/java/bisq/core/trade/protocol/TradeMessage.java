@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.network.p2p.SendersNodeAddressAwarePayload;
 import bisq.network.p2p.UidMessage;
 
 import bisq.common.proto.network.NetworkEnvelope;
@@ -27,10 +28,16 @@ import lombok.ToString;
 
 import static bisq.core.util.Validator.checkNonEmptyString;
 
+/**
+ * Base class for trade-related messages exchanged between peers.
+ * As the TradeMessage is wrapped into a PrefixedSealedAndSignedMessage we use the SendersNodeAddressAwarePayload
+ * to allow network level validation that the senders node address matches the address from the outer
+ * SendersNodeAddressAwareEnvelope.
+ */
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @ToString
-public abstract class TradeMessage extends NetworkEnvelope implements UidMessage {
+public abstract class TradeMessage extends NetworkEnvelope implements UidMessage, SendersNodeAddressAwarePayload {
     protected final String tradeId;
     protected final String uid;
 

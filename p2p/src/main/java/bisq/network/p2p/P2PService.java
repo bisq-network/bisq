@@ -376,21 +376,63 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             PrefixedSealedAndSignedMessage sealedMsg = (PrefixedSealedAndSignedMessage) networkEnvelope;
             try {
                 DecryptedMessageWithPubKey decryptedMsg = encryptionService.decryptAndVerify(sealedMsg.getSealedAndSigned());
-                connection.maybeHandleSupportedCapabilitiesMessage(decryptedMsg.getNetworkEnvelope());
-                connection.getPeersNodeAddressOptional().ifPresentOrElse(nodeAddress ->
-                                decryptedDirectMessageListeners.forEach(e -> e.onDirectMessage(decryptedMsg, nodeAddress)),
-                        () -> {
-                            log.error("peersNodeAddress is expected to be available at onMessage for " +
-                                    "processing PrefixedSealedAndSignedMessage.");
-                        });
+                NetworkEnvelope decryptedEnvelope = decryptedMsg.getNetworkEnvelope();
+                if (decryptedEnvelope == null) {
+                    log.error("Decrypted envelope must not be null at processing PrefixedSealedAndSignedMessage.");
+                    return;
+                }
+
+                NodeAddress senderNodeAddress = getVerifiedDirectMessageSenderNodeAddress(decryptedEnvelope, sealedMsg,
+                        connection);
+                if (senderNodeAddress == null) {
+                    return;
+                }
+
+                connection.maybeHandleSupportedCapabilitiesMessage(decryptedEnvelope);
+                decryptedDirectMessageListeners.forEach(e -> e.onDirectMessage(decryptedMsg, senderNodeAddress));
             } catch (CryptoException e) {
                 log.warn("Decryption of a direct message failed. This is not expected as the " +
-                        "direct message was sent to our node.");
+                        "direct message was sent to our node.", e);
             } catch (ProtobufferException e) {
-                log.error("ProtobufferException at decryptAndVerify: {}", e.toString());
-                e.getStackTrace();
+                log.error("ProtobufferException at decryptAndVerify", e);
             }
         }
+    }
+
+    @Nullable
+    private NodeAddress getVerifiedDirectMessageSenderNodeAddress(NetworkEnvelope decryptedEnvelope,
+                                                                  PrefixedSealedAndSignedMessage sealedMsg,
+                                                                  Connection connection) {
+        NodeAddress envelopeSenderNodeAddress = sealedMsg.getSenderNodeAddress();
+        if (envelopeSenderNodeAddress == null) {
+            log.error("Sender node address of outer envelope must not be null at processing " +
+                    "PrefixedSealedAndSignedMessage.");
+            return null;
+        }
+
+        if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(decryptedEnvelope, envelopeSenderNodeAddress)) {
+            NodeAddress payloadSenderNodeAddress = SendersNodeAddressAwarePayload.getSenderNodeAddress(decryptedEnvelope);
+            log.error("Sender node address of decryptedEnvelope {} does not match sender node address " +
+                            "of outer envelope {}",
+                    payloadSenderNodeAddress, envelopeSenderNodeAddress);
+            return null;
+        }
+
+        Optional<NodeAddress> connectionSenderNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        if (connectionSenderNodeAddressOptional.isEmpty()) {
+            log.error("peersNodeAddress is expected to be available at onMessage for " +
+                    "processing PrefixedSealedAndSignedMessage.");
+            return null;
+        }
+
+        NodeAddress connectionSenderNodeAddress = connectionSenderNodeAddressOptional.get();
+        if (!connectionSenderNodeAddress.equals(envelopeSenderNodeAddress)) {
+            log.error("Connection peer node address {} does not match sender node address of outer envelope {}",
+                    connectionSenderNodeAddress, envelopeSenderNodeAddress);
+            return null;
+        }
+
+        return connectionSenderNodeAddress;
     }
 
 
@@ -418,7 +460,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         checkNotNull(peersNodeAddress, "Peer node address must not be null at doSendEncryptedDirectMessage");
 
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedDirectMessage");
+        NodeAddress nodeAddress = networkNode.getNodeAddress();
+        checkNotNull(nodeAddress, "My node address must not be null at doSendEncryptedDirectMessage");
 
         if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peersNodeAddress, message, peerManager)) {
             sendDirectMessageListener.onFault("We did not send the EncryptedMessage " +
@@ -426,11 +469,21 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return;
         }
 
+        if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(message, nodeAddress)) {
+            NodeAddress senderNodeAddress = SendersNodeAddressAwarePayload.getSenderNodeAddress(message);
+            // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
+            // must match the node address of the sender.
+            log.error("Sender node address {} does not match my node address {}",
+                    senderNodeAddress, nodeAddress);
+            sendDirectMessageListener.onFault("Sender node address of payload is not matching our node address");
+            return;
+        }
+
         try {
             // Prefix is not needed for direct messages but as old code is doing the verification we still need to
             // send it if peer has not updated.
             PrefixedSealedAndSignedMessage sealedMsg = new PrefixedSealedAndSignedMessage(
-                    networkNode.getNodeAddress(),
+                    nodeAddress,
                     encryptionService.encryptAndSign(pubKeyRing, message));
 
             SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, sealedMsg);
