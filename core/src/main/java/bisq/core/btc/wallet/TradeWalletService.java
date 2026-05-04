@@ -524,6 +524,7 @@ public class TradeWalletService {
      * @param takerIsSeller             the flag indicating if we are in the taker as seller role or the opposite
      * @param makersDepositTxSerialized the prepared deposit transaction signed by the maker
      * @param msOutputAmount            the MultiSig output amount, as determined by the taker
+     * @param expectedMakerChange       the maker change output amount, as determined by the taker
      * @param buyerInputs               the connected outputs for all inputs of the buyer
      * @param sellerInputs              the connected outputs for all inputs of the seller
      * @param buyerPubKey               the public key of the buyer
@@ -537,6 +538,7 @@ public class TradeWalletService {
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
                                            byte[] makersDepositTxSerialized,
                                            Coin msOutputAmount,
+                                           Coin expectedMakerChange,
                                            List<RawTransactionInput> buyerInputs,
                                            List<RawTransactionInput> sellerInputs,
                                            byte[] buyerPubKey,
@@ -557,6 +559,7 @@ public class TradeWalletService {
         if (!makersDepositTx.getOutput(0).getValue().equals(msOutputAmount)) {
             throw new TransactionVerificationException("Maker's MultiSig output amount does not match taker's MultiSig output amount");
         }
+        checkPreparedDepositTxOutputs(makersDepositTx, expectedMakerChange);
 
         // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new
         // depositTx
@@ -618,6 +621,29 @@ public class TradeWalletService {
         WalletService.checkWalletConsistency(wallet);
 
         return depositTx;
+    }
+
+    static void checkPreparedDepositTxOutputs(Transaction makersDepositTx,
+                                              Coin expectedMakerChange)
+            throws TransactionVerificationException {
+        checkNotNull(expectedMakerChange, "expectedMakerChange must not be null");
+        checkArgument(!expectedMakerChange.isNegative(), "expectedMakerChange must not be negative");
+        int outputCount = makersDepositTx.getOutputs().size();
+        if (expectedMakerChange.isZero()) {
+            if (outputCount != 1) {
+                throw new TransactionVerificationException("Maker's preparedDepositTx must not have a change output");
+            }
+            return;
+        }
+
+        if (outputCount != 2) {
+            throw new TransactionVerificationException("Maker's preparedDepositTx must have exactly one change output");
+        }
+
+        Coin makerChangeOutput = makersDepositTx.getOutput(1).getValue();
+        if (!makerChangeOutput.equals(expectedMakerChange)) {
+            throw new TransactionVerificationException("Maker's preparedDepositTx change output value does not match the expected maker change");
+        }
     }
 
 

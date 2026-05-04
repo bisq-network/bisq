@@ -76,12 +76,17 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
                     .add(checkNotNull(trade.getAmount()));
 
             TradingPeer tradingPeer = processModel.getTradePeer();
+            List<RawTransactionInput> buyerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
+            Coin buyerInput = Coin.valueOf(buyerInputs.stream().mapToLong(input -> input.value).sum());
+            Coin expectedMakerChange = buyerInput.subtract(offer.getBuyerSecurityDeposit());
+            checkArgument(!expectedMakerChange.isNegative(), "expectedMakerChange must not be negative");
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
                     processModel.getPreparedDepositTx(),
                     msOutputAmount,
-                    checkNotNull(tradingPeer.getRawTransactionInputs()),
+                    expectedMakerChange,
+                    buyerInputs,
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigPubKey);

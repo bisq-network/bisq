@@ -83,11 +83,16 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             List<RawTransactionInput> sellerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
+            Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
+            Coin expectedMakerChange = sellerInput.subtract(offer.getSellerSecurityDeposit().add(checkNotNull(trade.getAmount())));
+            checkArgument(!expectedMakerChange.isNegative(), "expectedMakerChange must not be negative");
+
             byte[] sellerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     false,
                     processModel.getPreparedDepositTx(),
                     msOutputAmount,
+                    expectedMakerChange,
                     buyerInputs,
                     sellerInputs,
                     buyerMultiSigPubKey,
