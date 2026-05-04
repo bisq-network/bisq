@@ -79,40 +79,30 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                     "Trade amount must not exceed offer amount. requestTradeAmount=%s, offerAmount=%s",
                     requestTradeAmount, offer.getAmount().value);
             Coin tradeAmount = Coin.valueOf(requestTradeAmount);
-            trade.setAmount(tradeAmount);
-
 
             // Taker pays the miner fee for deposit tx and payout tx
             Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
-            Coin expectedTakerContribution;
+            Coin expectedTakersInputAmount;
             if (offer.isBuyOffer()) {
                 // Taker is the seller.
-                expectedTakerContribution = offer.getSellerSecurityDeposit()
+                expectedTakersInputAmount = offer.getSellerSecurityDeposit()
                         .add(tradeAmount)
                         .add(takersDoubleMinerFee);
             } else {
                 // Taker is buyer
-                expectedTakerContribution = offer.getBuyerSecurityDeposit()
+                expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
                         .add(takersDoubleMinerFee);
             }
 
-            long takersChangeOutputValue = request.getChangeOutputValue();
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
-            TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    takersChangeOutputValue,
-                    expectedTakerContribution,
+            TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+                    expectedTakersInputAmount,
                     processModel.getBtcWalletService(),
                     "Taker");
 
+            trade.setAmount(tradeAmount);
+
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
-
-            String takersChangeOutputAddress = request.getChangeOutputAddress();
-            if (takersChangeOutputValue > 0) {
-                nonEmptyStringOf(takersChangeOutputAddress);
-            }
-
-            tradingPeer.setChangeOutputValue(takersChangeOutputValue);
-            tradingPeer.setChangeOutputAddress(takersChangeOutputAddress);
 
             tradingPeer.setMultiSigPubKey(checkNotNull(request.getTakerMultiSigPubKey()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));

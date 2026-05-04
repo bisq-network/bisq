@@ -24,27 +24,24 @@ import org.bitcoinj.core.Coin;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public final class TradePeerTxInputValidator {
-    private TradePeerTxInputValidator() {
-    }
+    public static void validatePeersInputs(List<RawTransactionInput> rawTransactionInputs,
+                                           Coin expectedInputAmount,
+                                           BtcWalletService walletService,
+                                           String peerRole) {
+        checkNotNull(expectedInputAmount, "%s expected input value must not be null", peerRole);
+        checkArgument(expectedInputAmount.isPositive(), "%s expected input value must be positive", peerRole);
 
-    public static void validateContribution(List<RawTransactionInput> rawTransactionInputs,
-                                            long changeOutputValue,
-                                            Coin expectedContribution,
-                                            BtcWalletService walletService,
-                                            String peerRole) {
-        checkArgument(changeOutputValue >= 0, "%s change output value must not be negative", peerRole);
-        checkNotNull(expectedContribution, "%s expected contribution must not be null", peerRole);
-        checkArgument(expectedContribution.isPositive(), "%s expected contribution must be positive", peerRole);
-
-        long inputValue = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
-        long actualContribution = Math.subtractExact(inputValue, changeOutputValue);
-        checkArgument(actualContribution == expectedContribution.value,
-                "%s contribution mismatch. inputValue=%s, changeOutputValue=%s, actualContribution=%s, expectedContribution=%s",
-                peerRole, inputValue, changeOutputValue, actualContribution, expectedContribution.value);
+        long inputValueFromTxInputs = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
+        checkArgument(inputValueFromTxInputs == expectedInputAmount.value,
+                "%s input value mismatch. inputValueFromTxInputs=%s, expectedInputAmount=%s",
+                peerRole, inputValueFromTxInputs, expectedInputAmount.value);
     }
 
     private static long getValidatedInputValue(List<RawTransactionInput> rawTransactionInputs,

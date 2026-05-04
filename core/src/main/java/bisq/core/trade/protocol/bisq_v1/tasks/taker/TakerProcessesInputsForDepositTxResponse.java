@@ -75,29 +75,20 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
             List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
 
-            long makerChangeOutputValue = 0;
-            // Only when maker is seller there is the trade amount reserved and if taker trades less than
-            // max offer amount there will be a change output.
-            if (offer.isRange() && offer.isSellOffer()) {
-                long maxOfferAmount = offer.getAmount().getValue();
-                makerChangeOutputValue = maxOfferAmount - trade.getAmountAsLong();
-                checkArgument(makerChangeOutputValue >= 0,
-                        "For sell offers with range amount the makerChangeOutputValue must not be negative");
-            }
-
-            Coin expectedMakerContribution;
+            Coin expectedMakersInputAmount;
             if (offer.isBuyOffer()) {
                 // maker is the buyer.
-                expectedMakerContribution = offer.getBuyerSecurityDeposit();
+                expectedMakersInputAmount = offer.getBuyerSecurityDeposit();
             } else {
                 // maker is seller
-                expectedMakerContribution = offer.getSellerSecurityDeposit()
-                        .add(trade.getAmount());
+                // We use the offer amount not the trade amount as we compare with the inputs which come from the
+                // makers fee tx which has the reserved funds for the max. offer amount.
+                expectedMakersInputAmount = offer.getSellerSecurityDeposit()
+                        .add(offer.getAmount());
             }
 
-            TradePeerTxInputValidator.validateContribution(makerRawTransactionInputs,
-                    makerChangeOutputValue,
-                    expectedMakerContribution,
+            TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
+                    expectedMakersInputAmount,
                     btcWalletService,
                     "Maker");
 

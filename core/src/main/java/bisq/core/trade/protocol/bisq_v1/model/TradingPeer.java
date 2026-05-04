@@ -73,9 +73,6 @@ public final class TradingPeer implements TradePeer {
     private byte[] multiSigPubKey;
     @Nullable
     private List<RawTransactionInput> rawTransactionInputs;
-    private long changeOutputValue;
-    @Nullable
-    private String changeOutputAddress;
 
     // added in v 0.6
     @Nullable
@@ -99,8 +96,7 @@ public final class TradingPeer implements TradePeer {
 
     @Override
     public Message toProtoMessage() {
-        final protobuf.TradingPeer.Builder builder = protobuf.TradingPeer.newBuilder()
-                .setChangeOutputValue(changeOutputValue);
+        final protobuf.TradingPeer.Builder builder = protobuf.TradingPeer.newBuilder();
         Optional.ofNullable(accountId).ifPresent(builder::setAccountId);
         Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((protobuf.PaymentAccountPayload) e.toProtoMessage()));
         Optional.ofNullable(payoutAddressString).ifPresent(builder::setPayoutAddressString);
@@ -111,7 +107,6 @@ public final class TradingPeer implements TradePeer {
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(e)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
                 ProtoUtil.collectionToProto(e, protobuf.RawTransactionInput.class)));
-        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(accountAgeWitnessNonce).ifPresent(e -> builder.setAccountAgeWitnessNonce(ByteString.copyFrom(e)));
         Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
@@ -125,7 +120,6 @@ public final class TradingPeer implements TradePeer {
             return null;
         } else {
             TradingPeer tradingPeer = new TradingPeer();
-            tradingPeer.setChangeOutputValue(proto.getChangeOutputValue());
             tradingPeer.setAccountId(ProtoUtil.stringOrNullFromProto(proto.getAccountId()));
             tradingPeer.setPaymentAccountPayload(proto.hasPaymentAccountPayload() ? coreProtoResolver.fromProto(proto.getPaymentAccountPayload()) : null);
             tradingPeer.setPayoutAddressString(ProtoUtil.stringOrNullFromProto(proto.getPayoutAddressString()));
@@ -140,7 +134,6 @@ public final class TradingPeer implements TradePeer {
                             .map(RawTransactionInput::fromProto)
                             .collect(Collectors.toList());
             tradingPeer.setRawTransactionInputs(rawTransactionInputs);
-            tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));
             tradingPeer.setAccountAgeWitnessSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignature()));
             tradingPeer.setCurrentDate(proto.getCurrentDate());
