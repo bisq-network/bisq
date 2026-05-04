@@ -21,12 +21,16 @@ import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.provider.price.PriceFeedService;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.utils.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -56,6 +60,7 @@ public class OfferBook {
     private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
     private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
     private final FilterManager filterManager;
+    private final InvalidationListener priceFeedServiceUpdateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +68,21 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, FilterManager filterManager) {
+    OfferBook(OfferBookService offerBookService, FilterManager filterManager, PriceFeedService priceFeedService) {
         this.offerBookService = offerBookService;
         this.filterManager = filterManager;
+
+        priceFeedServiceUpdateListener = new InvalidationListener() {
+            @Override
+            public void invalidated(Observable observable) {
+                List<OfferBookListItem> toRemove = offerBookListItems.stream()
+                        .filter(item -> !filterManager.isPriceInBounds(item.getOffer()))
+                        .collect(Collectors.toList());
+                toRemove.forEach(offerBookListItems::remove);
+                log.info("We got a price feed service ready and run the isPriceValid check and remove invalid offers. toRemove {}", toRemove);
+                priceFeedService.updateCounterProperty().removeListener(priceFeedServiceUpdateListener);
+            }
+        };
 
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
@@ -124,6 +141,8 @@ public class OfferBook {
                 onProofOfWorkDifficultyChanged();
             }
         });
+
+        priceFeedService.updateCounterProperty().addListener(priceFeedServiceUpdateListener);
     }
 
     private void onProofOfWorkDifficultyChanged() {
@@ -255,6 +274,9 @@ public class OfferBook {
     }
 
     private boolean isOfferAllowed(Offer offer) {
+        if (!filterManager.isPriceInBounds(offer)) {
+            return false;
+        }
         boolean isBanned = filterManager.isOfferIdBanned(offer.getId())
                 || filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
         boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()

@@ -20,6 +20,8 @@ package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferValidation;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
@@ -152,6 +154,12 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             long takersTradePrice = request.getTradePrice();
             offer.verifyTakersTradePrice(takersTradePrice);
+
+            PriceFeedService priceFeedService = processModel.getTradeManager().getPriceFeedService();
+            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
+            // high volatility environments
+            OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.5);
+
             trade.setPriceAsLong(takersTradePrice);
 
             checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");

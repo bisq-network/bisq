@@ -148,6 +148,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final BsqSwapTradeManager bsqSwapTradeManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
+    @Getter
     private final PriceFeedService priceFeedService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final TradeUtil tradeUtil;
