@@ -30,6 +30,9 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 // It is the last message in the take offer phase. We use MailboxMessage instead of DirectMessage to add more tolerance
 // in case of network issues and as the message does not trigger further protocol execution.
 @EqualsAndHashCode(callSuper = true)
@@ -61,6 +64,13 @@ public final class DepositTxMessage extends TradeMessage implements DirectMessag
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.depositTxWithoutWitnesses = depositTxWithoutWitnesses;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNonEmptyBytes(depositTxWithoutWitnesses, "depositTxWithoutWitnesses");
     }
 
     @Override

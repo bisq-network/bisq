@@ -26,6 +26,8 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Not used anymore since v1.4.0
  */
@@ -61,6 +63,13 @@ public class TraderSignedWitnessMessage extends TradeMailboxMessage {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.signedWitness = signedWitness;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNotNull(signedWitness, "signedWitness must not be null");
     }
 
     @Override

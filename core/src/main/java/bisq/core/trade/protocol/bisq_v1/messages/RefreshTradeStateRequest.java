@@ -22,6 +22,8 @@ import bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Not used anymore since v1.4.0
  * We do the re-sending of the payment sent message via the BuyerSendCounterCurrencyTransferStartedMessage task on the
@@ -45,6 +47,12 @@ public class RefreshTradeStateRequest extends TradeMailboxMessage {
                                      NodeAddress senderNodeAddress) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
     }
 
     @Override

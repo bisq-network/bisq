@@ -25,6 +25,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static bisq.core.util.Validator.checkNonEmptyString;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @ToString
@@ -34,7 +36,7 @@ public abstract class TradeMessage extends NetworkEnvelope implements UidMessage
 
     protected TradeMessage(int messageVersion, String tradeId, String uid) {
         super(messageVersion);
-        this.tradeId = tradeId;
-        this.uid = uid;
+        this.tradeId = checkNonEmptyString(tradeId, "tradeId");
+        this.uid = checkNonEmptyString(uid, "uid");
     }
 }

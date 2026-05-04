@@ -82,15 +82,12 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
                     "all takerRawTransactionInputs must be P2WH");
-            long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-            Coin expectedTakerContribution = offer.getBuyerSecurityDeposit()
+            Coin expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
                     .add(trade.getTradeTxFee().multiply(2));
-            TradePeerTxInputValidator.validateContribution(takerRawTransactionInputs,
-                    takerChangeOutputValue,
-                    expectedTakerContribution,
+            TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+                    expectedTakersInputAmount,
                     walletService,
                     "Taker");
-            String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
@@ -103,8 +100,6 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,
-                    takerChangeOutputValue,
-                    takerChangeAddressString,
                     makerAddress,
                     makerChangeAddress,
                     buyerPubKey,

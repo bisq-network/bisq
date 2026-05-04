@@ -22,6 +22,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.crypto.LowRSigningKey;
@@ -838,6 +839,10 @@ public abstract class WalletService {
         return ScriptPattern.isP2PKH(output.getScriptPubKey()) ||
                 ScriptPattern.isP2SH(output.getScriptPubKey()) ||
                 ScriptPattern.isP2WH(output.getScriptPubKey());
+    }
+
+    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
+        return WalletUtils.isP2WH(rawTransactionInput, params);
     }
 
     @Nullable

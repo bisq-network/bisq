@@ -245,8 +245,8 @@ message InputsForDepositTxRequest {
     int64 taker_fee = 6;
     bool is_currency_for_taker_fee_btc = 7;
     repeated RawTransactionInput raw_transaction_inputs = 8;
-    int64 change_output_value = 9;
-    string change_output_address = 10;
+    int64 change_output_value = 9 [deprecated = true]; // Removed in v 1.9.24
+    string change_output_address = 10 [deprecated = true]; // Removed in v 1.9.24
     bytes taker_multi_sig_pub_key = 11;
     string taker_payout_address_string = 12;
     PubKeyRing taker_pub_key_ring = 13;
@@ -1828,8 +1828,8 @@ message ProcessModel {
     reserved 8; // Not used anymore.
     bytes prepared_deposit_tx = 9;
     repeated RawTransactionInput raw_transaction_inputs = 10;
-    int64 change_output_value = 11;
-    string change_output_address = 12;
+    int64 change_output_value = 11 [deprecated = true]; // Removed in v 1.9.24
+    string change_output_address = 12 [deprecated = true]; // Removed in v 1.9.24
     bool use_savings_wallet = 13;
     int64 funds_needed_for_trade_as_long = 14;
     bytes my_multi_sig_pub_key = 15;
@@ -1852,8 +1852,8 @@ message TradingPeer {
     PubKeyRing pub_key_ring = 7;
     bytes multi_sig_pub_key = 8;
     repeated RawTransactionInput raw_transaction_inputs = 9;
-    int64 change_output_value = 10;
-    string change_output_address = 11;
+    int64 change_output_value = 10 [deprecated = true]; // Removed in v 1.9.24
+    string change_output_address = 11 [deprecated = true]; // Removed in v 1.9.24
     bytes account_age_witness_nonce = 12;
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;

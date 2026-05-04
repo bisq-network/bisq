@@ -44,6 +44,8 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 // Added at v1.7.0
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -74,6 +76,13 @@ public final class ShareBuyerPaymentAccountMessage extends TradeMailboxMessage {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.buyerPaymentAccountPayload = buyerPaymentAccountPayload;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNotNull(buyerPaymentAccountPayload, "buyerPaymentAccountPayload must not be null");
     }
 
     @Override

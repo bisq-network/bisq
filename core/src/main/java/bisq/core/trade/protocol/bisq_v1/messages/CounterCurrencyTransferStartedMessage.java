@@ -32,6 +32,11 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static bisq.core.util.Validator.checkNonEmptyString;
+import static bisq.core.util.Validator.checkNullableString;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class CounterCurrencyTransferStartedMessage extends TradeMailboxMessage {
@@ -82,6 +87,16 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMailboxMes
         this.buyerSignature = buyerSignature;
         this.counterCurrencyTxId = counterCurrencyTxId;
         this.counterCurrencyExtraData = counterCurrencyExtraData;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNonEmptyString(buyerPayoutAddress, "buyerPayoutAddress");
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNonEmptyBytes(buyerSignature, "buyerSignature");
+        checkNullableString(counterCurrencyTxId, "counterCurrencyTxId");
+        checkNullableString(counterCurrencyExtraData, "counterCurrencyExtraData");
     }
 
     @Override

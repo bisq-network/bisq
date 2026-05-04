@@ -28,6 +28,9 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class MediatedPayoutTxPublishedMessage extends TradeMailboxMessage {
@@ -58,6 +61,13 @@ public final class MediatedPayoutTxPublishedMessage extends TradeMailboxMessage 
         super(messageVersion, tradeId, uid);
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNonEmptyBytes(payoutTx, "payoutTx");
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
     }
 
     @Override
