@@ -38,6 +38,8 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class TradeLimits implements DaoStateListener {
+    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("0.125");
+
     @Nullable
     @Getter
     private static TradeLimits INSTANCE;
@@ -79,7 +81,13 @@ public class TradeLimits implements DaoStateListener {
         if (limit == null) {
             cachedMaxTradeLimit = limit = daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
         }
-        return limit;
+        return clamp(limit);
+    }
+
+    // TODO: Remove this temporary 0.125 BTC cap once the DAO-adjusted MAX_TRADE_LIMIT
+    // makes this hard-coded mitigation unnecessary.
+    public static Coin clamp(Coin amount) {
+        return amount.isGreaterThan(MAX_TRADE_AMOUNT) ? MAX_TRADE_AMOUNT : amount;
     }
 
     // We possibly rounded value for the first month gets multiplied by 4 to get the trade limit after the account
