@@ -18,7 +18,7 @@
 package bisq.network.p2p.peers.getdata.messages;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersNodeAddressMessage;
+import bisq.network.p2p.SendersNodeAddressAwareEnvelope;
 
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class GetUpdatedDataRequest extends GetDataRequest implements SendersNodeAddressMessage {
+public final class GetUpdatedDataRequest extends GetDataRequest implements SendersNodeAddressAwareEnvelope {
     private final NodeAddress senderNodeAddress;
 
     public GetUpdatedDataRequest(NodeAddress senderNodeAddress,
