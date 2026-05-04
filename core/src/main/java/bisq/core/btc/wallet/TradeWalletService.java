@@ -524,7 +524,7 @@ public class TradeWalletService {
      * The taker signs the deposit transaction he received from the maker and publishes it.
      *
      * @param takerIsSeller             the flag indicating if we are in the taker as seller role or the opposite
-     * @param makersDepositTxSerialized the prepared deposit transaction signed by the maker
+     * @param makersDepositTx           the prepared deposit transaction signed by the maker
      * @param msOutputAmount            the MultiSig output amount, as determined by the taker
      * @param buyerInputs               the connected outputs for all inputs of the buyer
      * @param sellerInputs              the connected outputs for all inputs of the seller
@@ -536,16 +536,15 @@ public class TradeWalletService {
      * final deposit tx or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
+
     public Transaction takerSignsDepositTx(boolean takerIsSeller,
-                                           byte[] makersDepositTxSerialized,
+                                           Transaction makersDepositTx,
                                            Coin msOutputAmount,
                                            List<RawTransactionInput> buyerInputs,
                                            List<RawTransactionInput> sellerInputs,
                                            byte[] buyerPubKey,
                                            byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException {
-        Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
-
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
 
@@ -621,7 +620,6 @@ public class TradeWalletService {
 
         return depositTx;
     }
-
 
     public void sellerAsMakerFinalizesDepositTx(Transaction myDepositTx,
                                                 Transaction takersDepositTx,
