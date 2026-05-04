@@ -85,7 +85,7 @@ public class PriceUtil {
         }
 
         long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, marketPrice.getCurrencyCode());
-        long marketPriceAsLong = PriceUtil.getMarketPriceAsLong("" +  marketPrice.getPrice(), marketPrice.getCurrencyCode());
+        long marketPriceAsLong = PriceUtil.getMarketPriceAsLong("" + marketPrice.getPrice(), marketPrice.getCurrencyCode());
         String marketPriceAsString = FormattingUtils.formatMarketPrice(marketPrice.getPrice(), marketPrice.getCurrencyCode());
 
         if ((isSellOffer && isFiatCurrency) || (!isSellOffer && !isFiatCurrency)) {
@@ -139,6 +139,10 @@ public class PriceUtil {
     }
 
     public boolean hasMarketPrice(Offer offer) {
+        return hasMarketPrice(priceFeedService, offer);
+    }
+
+    public static boolean hasMarketPrice(PriceFeedService priceFeedService, Offer offer) {
         String currencyCode = offer.getCurrencyCode();
         checkNotNull(priceFeedService, "priceFeed must not be null");
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
@@ -178,9 +182,17 @@ public class PriceUtil {
     public static Optional<Double> calculatePercentage(Offer offer,
                                                        double marketPrice,
                                                        OfferDirection direction) {
+        return calculatePercentage(offer.getCurrencyCode(),
+                offer.getPrice(),
+                marketPrice, direction
+        );
+    }
+
+    public static Optional<Double> calculatePercentage(String currencyCode,
+                                                       Price price,
+                                                       double marketPrice,
+                                                       OfferDirection direction) {
         // If the offer did not use % price we calculate % from current market price
-        String currencyCode = offer.getCurrencyCode();
-        Price price = offer.getPrice();
         int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
                 Altcoin.SMALLEST_UNIT_EXPONENT :
                 Fiat.SMALLEST_UNIT_EXPONENT;
