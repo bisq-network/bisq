@@ -17,16 +17,27 @@
 
 package bisq.core.trade.protocol.bisq_v1;
 
+import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
+import bisq.core.trade.model.bisq_v1.Trade;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.ScriptBuilder;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TradeValidationTest {
     private static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
@@ -93,5 +104,111 @@ public class TradeValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkMultiSigPubKey(malformedCompressedPubKey));
+    }
+
+    @Test
+    void checkTakersRawTransactionInputsAcceptsSellerInputsForBuyOffer() {
+        Coin tradeAmount = Coin.valueOf(20_000);
+        Coin tradeTxFee = Coin.valueOf(300);
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = trade(offer, tradeTxFee);
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        List<RawTransactionInput> rawTransactionInputs = rawTransactionInputs(btcWalletService,
+                offer.getSellerSecurityDeposit()
+                        .add(tradeAmount)
+                        .add(tradeTxFee.multiply(2)));
+
+        assertSame(rawTransactionInputs, TradeValidation.checkTakersRawTransactionInputs(rawTransactionInputs,
+                btcWalletService,
+                trade,
+                tradeAmount));
+    }
+
+    @Test
+    void checkTakersRawTransactionInputsAcceptsBuyerInputsForSellOffer() {
+        Coin tradeAmount = Coin.valueOf(20_000);
+        Coin tradeTxFee = Coin.valueOf(300);
+        Offer offer = offer(false, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = trade(offer, tradeTxFee);
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        List<RawTransactionInput> rawTransactionInputs = rawTransactionInputs(btcWalletService,
+                offer.getBuyerSecurityDeposit().add(tradeTxFee.multiply(2)));
+
+        assertSame(rawTransactionInputs, TradeValidation.checkTakersRawTransactionInputs(rawTransactionInputs,
+                btcWalletService,
+                trade,
+                tradeAmount));
+    }
+
+    @Test
+    void checkMakersRawTransactionInputsAcceptsBuyerInputsForBuyOffer() {
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        List<RawTransactionInput> rawTransactionInputs = rawTransactionInputs(btcWalletService,
+                offer.getBuyerSecurityDeposit());
+
+        assertSame(rawTransactionInputs, TradeValidation.checkMakersRawTransactionInputs(rawTransactionInputs,
+                btcWalletService,
+                offer));
+    }
+
+    @Test
+    void checkMakersRawTransactionInputsAcceptsSellerInputsForSellOffer() {
+        Offer offer = offer(false, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        List<RawTransactionInput> rawTransactionInputs = rawTransactionInputs(btcWalletService,
+                offer.getSellerSecurityDeposit().add(offer.getAmount()));
+
+        assertSame(rawTransactionInputs, TradeValidation.checkMakersRawTransactionInputs(rawTransactionInputs,
+                btcWalletService,
+                offer));
+    }
+
+    @Test
+    void checkTakersRawTransactionInputsRejectsNullInputs() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTakersRawTransactionInputs(null,
+                mock(BtcWalletService.class),
+                mock(Trade.class),
+                Coin.valueOf(20_000)));
+    }
+
+    @Test
+    void checkMakersRawTransactionInputsRejectsNullInputs() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkMakersRawTransactionInputs(null,
+                mock(BtcWalletService.class),
+                mock(Offer.class)));
+    }
+
+    private static Offer offer(boolean isBuyOffer,
+                               Coin buyerSecurityDeposit,
+                               Coin sellerSecurityDeposit,
+                               Coin offerAmount) {
+        Offer offer = mock(Offer.class);
+        when(offer.isBuyOffer()).thenReturn(isBuyOffer);
+        when(offer.getBuyerSecurityDeposit()).thenReturn(buyerSecurityDeposit);
+        when(offer.getSellerSecurityDeposit()).thenReturn(sellerSecurityDeposit);
+        when(offer.getAmount()).thenReturn(offerAmount);
+        return offer;
+    }
+
+    private static Trade trade(Offer offer, Coin tradeTxFee) {
+        Trade trade = mock(Trade.class);
+        when(trade.getOffer()).thenReturn(offer);
+        when(trade.getTradeTxFee()).thenReturn(tradeTxFee);
+        return trade;
+    }
+
+    private static List<RawTransactionInput> rawTransactionInputs(BtcWalletService btcWalletService, Coin inputAmount) {
+        byte[] parentTransaction = new byte[]{1, 2, 3};
+        RawTransactionInput rawTransactionInput = new RawTransactionInput(0,
+                parentTransaction,
+                inputAmount.value);
+        Transaction transaction = new Transaction(MainNetParams.get());
+        transaction.addOutput(inputAmount, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+
+        when(btcWalletService.getTxFromSerializedTx(parentTransaction)).thenReturn(transaction);
+        when(btcWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
+
+        return List.of(rawTransactionInput);
     }
 }

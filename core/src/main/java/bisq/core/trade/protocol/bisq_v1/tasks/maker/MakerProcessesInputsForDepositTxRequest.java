@@ -26,7 +26,6 @@ import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
-import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -44,6 +43,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTakersRawTransactionInputs;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeAmount;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,29 +74,12 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
 
             Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
-
-            // Taker pays the miner fee for deposit tx and payout tx
-            Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
-            Coin expectedTakersInputAmount;
-            if (offer.isBuyOffer()) {
-                // Taker is the seller.
-                expectedTakersInputAmount = offer.getSellerSecurityDeposit()
-                        .add(tradeAmount)
-                        .add(takersDoubleMinerFee);
-            } else {
-                // Taker is buyer
-                expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
-                        .add(takersDoubleMinerFee);
-            }
-
-            List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
-            TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
-                    expectedTakersInputAmount,
-                    processModel.getBtcWalletService(),
-                    "Taker");
-
             trade.setAmount(tradeAmount);
 
+            List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+                    processModel.getBtcWalletService(),
+                    trade,
+                    tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
             byte[] takerMultiSigPubKey = checkMultiSigPubKey(request.getTakerMultiSigPubKey());

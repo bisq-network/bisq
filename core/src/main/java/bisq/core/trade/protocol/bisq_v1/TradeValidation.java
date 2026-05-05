@@ -17,8 +17,16 @@
 
 package bisq.core.trade.protocol.bisq_v1;
 
+import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,4 +54,59 @@ public class TradeValidation {
         ECKey.fromPublicOnly(multiSigPubKey);
         return multiSigPubKey;
     }
+
+    public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,
+                                                                            BtcWalletService btcWalletService,
+                                                                            Trade trade,
+                                                                            Coin tradeAmount
+    ) {
+        checkNotNull(takerRawTransactionInputs);
+        Offer offer = trade.getOffer();
+
+        // Taker pays the miner fee for deposit tx and payout tx
+        Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
+        Coin expectedTakersInputAmount;
+        if (offer.isBuyOffer()) {
+            // Taker is the seller.
+            expectedTakersInputAmount = offer.getSellerSecurityDeposit()
+                    .add(tradeAmount)
+                    .add(takersDoubleMinerFee);
+        } else {
+            // Taker is buyer
+            expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
+                    .add(takersDoubleMinerFee);
+        }
+
+        TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+                expectedTakersInputAmount,
+                btcWalletService,
+                "Taker");
+        return takerRawTransactionInputs;
+    }
+
+
+    public static List<RawTransactionInput> checkMakersRawTransactionInputs(List<RawTransactionInput> makerRawTransactionInputs,
+                                                                            BtcWalletService btcWalletService,
+                                                                            Offer offer) {
+        checkNotNull(makerRawTransactionInputs);
+
+        Coin expectedMakersInputAmount;
+        if (offer.isBuyOffer()) {
+            // maker is the buyer.
+            expectedMakersInputAmount = offer.getBuyerSecurityDeposit();
+        } else {
+            // maker is seller
+            // We use the offer amount not the trade amount as we compare with the inputs which come from the
+            // makers fee tx which has the reserved funds for the max. offer amount.
+            expectedMakersInputAmount = offer.getSellerSecurityDeposit()
+                    .add(offer.getAmount());
+        }
+
+        TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
+                expectedMakersInputAmount,
+                btcWalletService,
+                "Maker");
+        return makerRawTransactionInputs;
+    }
+
 }

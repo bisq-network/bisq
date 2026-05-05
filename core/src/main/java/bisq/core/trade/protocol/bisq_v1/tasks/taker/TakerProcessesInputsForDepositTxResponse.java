@@ -24,19 +24,17 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
-import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
-
-import org.bitcoinj.core.Coin;
 
 import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMakersRawTransactionInputs;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -75,29 +73,15 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
             tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
-            List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
 
-            Coin expectedMakersInputAmount;
-            if (offer.isBuyOffer()) {
-                // maker is the buyer.
-                expectedMakersInputAmount = offer.getBuyerSecurityDeposit();
-            } else {
-                // maker is seller
-                // We use the offer amount not the trade amount as we compare with the inputs which come from the
-                // makers fee tx which has the reserved funds for the max. offer amount.
-                expectedMakersInputAmount = offer.getSellerSecurityDeposit()
-                        .add(offer.getAmount());
-            }
-
-            TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
-                    expectedMakersInputAmount,
-                    btcWalletService,
-                    "Maker");
-
+            List<RawTransactionInput> makerRawTransactionInputs = checkMakersRawTransactionInputs(response.getMakerInputs(),
+                    processModel.getBtcWalletService(),
+                    offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 
             byte[] preparedDepositTx = checkNotNull(response.getPreparedDepositTx());
             processModel.setPreparedDepositTx(preparedDepositTx);
+
             long lockTime = response.getLockTime();
             if (Config.baseCurrencyNetwork().isMainnet()) {
                 int myLockTime = btcWalletService.getBestChainHeight() +
