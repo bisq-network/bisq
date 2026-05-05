@@ -20,6 +20,7 @@ package bisq.core.util;
 import bisq.core.trade.protocol.TradeMessage;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -52,6 +53,14 @@ public class Validator {
     public static byte[] checkNonEmptyBytes(byte[] value, String fieldName) {
         checkNotNull(value, "%s must not be null", fieldName);
         checkArgument(value.length > 0, "%s must not be empty", fieldName);
+        return value;
+    }
+
+    public static byte[] checkCompressedSecp256k1PubKey(byte[] value, String fieldName) {
+        checkNonEmptyBytes(value, fieldName);
+        checkArgument(value.length == 33, "%s must be compressed", fieldName);
+        // Checks that the public key bytes decode to a valid secp256k1 curve point.
+        ECKey.fromPublicOnly(value);
         return value;
     }
 

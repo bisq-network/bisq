@@ -35,7 +35,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import com.google.common.base.Charsets;
 
@@ -44,6 +43,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.util.Validator.checkCompressedSecp256k1PubKey;
 import static bisq.core.util.Validator.checkTradeId;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -107,10 +107,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            byte[] takerMultiSigPubKey = checkNotNull(request.getTakerMultiSigPubKey());
-            checkArgument(takerMultiSigPubKey.length == 33, "takerMultiSigPubKey must be compressed");
-            // Check that the taker multisig key decompresses to a valid curve point:
-            ECKey.fromPublicOnly(takerMultiSigPubKey);
+            byte[] takerMultiSigPubKey = checkCompressedSecp256k1PubKey(request.getTakerMultiSigPubKey(),
+                    "takerMultiSigPubKey");
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
