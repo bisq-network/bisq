@@ -104,11 +104,14 @@ public class TradeValidation {
     // Trade
     /* --------------------------------------------------------------------- */
 
-    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
+    public static String checkTradeId(String tradeId, TradeMessage tradeMessage) {
         checkArgument(isTradeIdValid(tradeId, tradeMessage), "TradeId %s is not valid", tradeId);
+        return tradeId;
     }
 
     public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {
+        checkNotNull(tradeId, "tradeId must not be null");
+        checkNotNull(tradeMessage, "tradeMessage must not be null");
         return tradeId.equals(tradeMessage.getTradeId());
     }
 
