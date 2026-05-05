@@ -23,7 +23,6 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -45,7 +44,6 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
             checkArgument(message.getPayoutTx() != null);
 

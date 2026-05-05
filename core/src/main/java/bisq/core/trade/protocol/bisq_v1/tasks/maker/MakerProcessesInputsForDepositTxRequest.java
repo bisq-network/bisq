@@ -44,7 +44,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -61,7 +60,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             runInterceptHook();
             InputsForDepositTxRequest request = (InputsForDepositTxRequest) processModel.getTradeMessage();
             checkNotNull(request);
-            checkTradeId(processModel.getOfferId(), request);
 
             TradingPeer tradingPeer = processModel.getTradePeer();
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");

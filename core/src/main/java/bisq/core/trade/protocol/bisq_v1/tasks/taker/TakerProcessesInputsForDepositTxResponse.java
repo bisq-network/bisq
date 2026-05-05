@@ -30,15 +30,14 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -55,7 +54,6 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             runInterceptHook();
             InputsForDepositTxResponse response = (InputsForDepositTxResponse) processModel.getTradeMessage();
             checkNotNull(response);
-            checkTradeId(processModel.getOfferId(), response);
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradingPeer tradingPeer = processModel.getTradePeer();

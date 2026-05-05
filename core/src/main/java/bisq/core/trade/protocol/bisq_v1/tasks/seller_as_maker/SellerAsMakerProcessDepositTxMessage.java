@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -39,7 +38,6 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
         try {
             runInterceptHook();
             DepositTxMessage message = (DepositTxMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
             processModel.getTradePeer().setPreparedDepositTx(checkNotNull(message.getDepositTxWithoutWitnesses()));

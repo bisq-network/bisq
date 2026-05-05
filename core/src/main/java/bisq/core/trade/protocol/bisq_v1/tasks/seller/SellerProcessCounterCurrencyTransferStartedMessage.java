@@ -40,7 +40,6 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
         try {
             runInterceptHook();
             CounterCurrencyTransferStartedMessage message = (CounterCurrencyTransferStartedMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
             TradingPeer tradingPeer = processModel.getTradePeer();
