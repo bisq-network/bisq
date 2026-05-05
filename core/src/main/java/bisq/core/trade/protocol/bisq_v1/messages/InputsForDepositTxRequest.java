@@ -31,6 +31,8 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import org.bitcoinj.core.Coin;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -281,5 +283,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
                 ",\n     burningManSelectionHeight=" + burningManSelectionHeight +
                 "\n} " + super.toString();
+    }
+
+    public Coin getTradeAmountAsCoin() {
+        return Coin.valueOf(tradeAmount);
     }
 }
