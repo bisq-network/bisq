@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferValidation;
@@ -42,6 +43,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkBitcoinAddress;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTakersRawTransactionInputs;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeAmount;
@@ -64,6 +66,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             TradingPeer tradingPeer = processModel.getTradePeer();
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -77,7 +80,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             trade.setAmount(tradeAmount);
 
             List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
-                    processModel.getBtcWalletService(),
+                    btcWalletService,
                     trade,
                     tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
@@ -85,10 +88,12 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             byte[] takerMultiSigPubKey = checkMultiSigPubKey(request.getTakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
-            tradingPeer.setPubKeyRing(checkNotNull(request.getTakerPubKeyRing()));
+            String takerPayoutAddressString = checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+            tradingPeer.setPayoutAddressString(takerPayoutAddressString);
 
-            tradingPeer.setAccountId(nonEmptyStringOf(request.getTakerAccountId()));
+            tradingPeer.setPubKeyRing(request.getTakerPubKeyRing());
+
+            tradingPeer.setAccountId(request.getTakerAccountId());
 
             int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
             checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");

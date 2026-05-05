@@ -23,6 +23,8 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 
@@ -37,6 +39,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TradeValidation {
 
     public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
+        checkNotNull(tradeAmount, "tradeAmount must not be null");
+        checkNotNull(offerMinAmount, "offerMinAmount must not be null");
+        checkNotNull(offerMaxAmount, "offerMaxAmount must not be null");
+
         checkArgument(!tradeAmount.isLessThan(offerMinAmount),
                 "Trade amount must not be less than minimum offer amount. tradeAmount=%s, offerMinAmount=%s",
                 tradeAmount.toFriendlyString(), offerMinAmount.toFriendlyString());
@@ -50,9 +56,21 @@ public class TradeValidation {
         checkNotNull(multiSigPubKey, "multiSigPubKey must not be null");
         checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
 
-        // Check that the taker multisig key decompresses to a valid curve point:
+        // Check that the multisig key decompresses to a valid curve point:
         ECKey.fromPublicOnly(multiSigPubKey);
         return multiSigPubKey;
+    }
+
+    public static String checkBitcoinAddress(String bitcoinAddress, BtcWalletService btcWalletService) {
+        checkNotNull(bitcoinAddress, "bitcoinAddress must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        try {
+            Address.fromString(btcWalletService.getParams(), bitcoinAddress).getOutputScriptType();
+            return bitcoinAddress;
+        } catch (AddressFormatException | IllegalStateException e) {
+            throw new IllegalArgumentException("Invalid bitcoin address: " + bitcoinAddress, e);
+        }
     }
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,
@@ -60,7 +78,11 @@ public class TradeValidation {
                                                                             Trade trade,
                                                                             Coin tradeAmount
     ) {
-        checkNotNull(takerRawTransactionInputs);
+        checkNotNull(takerRawTransactionInputs, "takerRawTransactionInputs must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkNotNull(trade, "trade must not be null");
+        checkNotNull(tradeAmount, "tradeAmount must not be null");
+
         Offer offer = trade.getOffer();
 
         // Taker pays the miner fee for deposit tx and payout tx
@@ -88,7 +110,9 @@ public class TradeValidation {
     public static List<RawTransactionInput> checkMakersRawTransactionInputs(List<RawTransactionInput> makerRawTransactionInputs,
                                                                             BtcWalletService btcWalletService,
                                                                             Offer offer) {
-        checkNotNull(makerRawTransactionInputs);
+        checkNotNull(makerRawTransactionInputs, "makerRawTransactionInputs must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkNotNull(offer, "offer must not be null");
 
         Coin expectedMakersInputAmount;
         if (offer.isBuyOffer()) {

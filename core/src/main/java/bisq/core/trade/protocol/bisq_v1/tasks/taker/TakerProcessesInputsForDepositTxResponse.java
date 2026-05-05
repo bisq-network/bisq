@@ -34,6 +34,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkBitcoinAddress;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMakersRawTransactionInputs;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
 import static bisq.core.util.Validator.nonEmptyStringOf;
@@ -72,10 +73,12 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
             tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
+
+            String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
+            tradingPeer.setPayoutAddressString(makerPayoutAddressString);
 
             List<RawTransactionInput> makerRawTransactionInputs = checkMakersRawTransactionInputs(response.getMakerInputs(),
-                    processModel.getBtcWalletService(),
+                    btcWalletService,
                     offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 

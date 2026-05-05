@@ -24,8 +24,11 @@ import bisq.core.trade.model.bisq_v1.Trade;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.ScriptBuilder;
 
 import java.util.Arrays;
@@ -104,6 +107,41 @@ public class TradeValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkMultiSigPubKey(malformedCompressedPubKey));
+    }
+
+    @Test
+    void checkBitcoinAddressAcceptsAddressForWalletNetwork() {
+        String bitcoinAddress = SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString();
+
+        assertSame(bitcoinAddress, TradeValidation.checkBitcoinAddress(bitcoinAddress,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkBitcoinAddressRejectsInvalidAddress() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBitcoinAddress("not-a-bitcoin-address",
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkBitcoinAddressRejectsAddressFromDifferentNetwork() {
+        String testnetAddress = SegwitAddress.fromKey(TestNet3Params.get(), new ECKey()).toString();
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBitcoinAddress(testnetAddress,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkBitcoinAddressRejectsNullAddress() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkBitcoinAddress(null,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkBitcoinAddressRejectsNullWalletService() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkBitcoinAddress(
+                SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
+                null));
     }
 
     @Test
@@ -196,6 +234,12 @@ public class TradeValidationTest {
         when(trade.getOffer()).thenReturn(offer);
         when(trade.getTradeTxFee()).thenReturn(tradeTxFee);
         return trade;
+    }
+
+    private static BtcWalletService btcWalletService(NetworkParameters networkParameters) {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getParams()).thenReturn(networkParameters);
+        return btcWalletService;
     }
 
     private static List<RawTransactionInput> rawTransactionInputs(BtcWalletService btcWalletService, Coin inputAmount) {
