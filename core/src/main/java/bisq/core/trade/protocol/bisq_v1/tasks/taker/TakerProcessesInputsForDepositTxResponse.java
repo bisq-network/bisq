@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkBitcoinAddress;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMakersRawTransactionInputs;
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
-import static bisq.core.util.Validator.nonEmptyStringOf;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkSerializedTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -66,13 +66,14 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             Optional.ofNullable(response.getMakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(response.getMakersPaymentMethodId()));
 
-            tradingPeer.setAccountId(nonEmptyStringOf(response.getMakerAccountId()));
+            tradingPeer.setAccountId(response.getMakerAccountId());
 
             byte[] makerMultiSigPubKey = checkMultiSigPubKey(response.getMakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(makerMultiSigPubKey);
 
-            tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
-            tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
+            tradingPeer.setContractAsJson(response.getMakerContractAsJson());
+
+            tradingPeer.setContractSignature(response.getMakerContractSignature());
 
             String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(makerPayoutAddressString);
@@ -82,7 +83,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
                     offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 
-            byte[] preparedDepositTx = checkNotNull(response.getPreparedDepositTx());
+            byte[] preparedDepositTx = checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
 
             long lockTime = response.getLockTime();

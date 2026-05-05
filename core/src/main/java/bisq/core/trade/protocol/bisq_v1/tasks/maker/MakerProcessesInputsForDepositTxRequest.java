@@ -44,7 +44,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
-import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -100,7 +99,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
             // message but that cannot be changed due backward compatibility issues. It is a left over from the
             // old trade protocol.
-            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(request.getTakerFeeTxId()));
+            String takerFeeTxId = checkTransactionId(request.getTakerFeeTxId(), btcWalletService);
+            processModel.setTakeOfferFeeTxId(takerFeeTxId);
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
             // passing the nonce we want to get signed)

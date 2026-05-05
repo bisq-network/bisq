@@ -28,8 +28,11 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
 
 import java.util.List;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,6 +96,38 @@ public class TradeValidation {
 
         }
         return peersBurningManSelectionHeight;
+    }
+
+    public static byte[] checkSerializedTransaction(byte[] serializedTransaction,
+                                                    BtcWalletService btcWalletService) {
+        checkNotNull(serializedTransaction, "serializedTransaction must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        toTransaction(serializedTransaction, btcWalletService);
+        return serializedTransaction;
+    }
+
+    public static Transaction toTransaction(byte[] serializedTransaction,
+                                            BtcWalletService btcWalletService) {
+        checkNotNull(serializedTransaction, "serializedTransaction must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        try {
+            return new Transaction(btcWalletService.getParams(), serializedTransaction);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid serialized transaction", e);
+        }
+    }
+
+    public static String checkTransactionId(String txId, BtcWalletService btcWalletService) {
+        checkNotNull(txId, "txId must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        try {
+            Sha256Hash.wrap(txId.toLowerCase(Locale.ROOT));
+            return txId;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
+        }
     }
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,

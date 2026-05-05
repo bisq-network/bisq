@@ -34,6 +34,7 @@ import org.bitcoinj.script.ScriptBuilder;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,8 @@ public class TradeValidationTest {
     private static final Coin OFFER_MAX_AMOUNT = Coin.valueOf(5_000);
     private static final int GENESIS_HEIGHT = 102;
     private static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
+    private static final String VALID_TRANSACTION_ID =
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
     @Test
     void checkTradeAmountAcceptsOfferBoundsAndValuesBetweenThem() {
@@ -144,6 +147,47 @@ public class TradeValidationTest {
     void checkBitcoinAddressRejectsNullWalletService() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkBitcoinAddress(
                 SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
+                null));
+    }
+
+    @Test
+    void checkTransactionIdAcceptsValidTransactionId() {
+        assertSame(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID,
+                mock(BtcWalletService.class)));
+    }
+
+    @Test
+    void checkTransactionIdAcceptsUpperCaseTransactionId() {
+        String transactionId = VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
+
+        assertSame(transactionId, TradeValidation.checkTransactionId(transactionId,
+                mock(BtcWalletService.class)));
+    }
+
+    @Test
+    void checkTransactionIdRejectsInvalidLength() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(
+                VALID_TRANSACTION_ID.substring(1),
+                mock(BtcWalletService.class)));
+    }
+
+    @Test
+    void checkTransactionIdRejectsNonHexTransactionId() {
+        String transactionId = VALID_TRANSACTION_ID.substring(0, VALID_TRANSACTION_ID.length() - 1) + "g";
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(transactionId,
+                mock(BtcWalletService.class)));
+    }
+
+    @Test
+    void checkTransactionIdRejectsNullTransactionId() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(null,
+                mock(BtcWalletService.class)));
+    }
+
+    @Test
+    void checkTransactionIdRejectsNullWalletService() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(VALID_TRANSACTION_ID,
                 null));
     }
 
