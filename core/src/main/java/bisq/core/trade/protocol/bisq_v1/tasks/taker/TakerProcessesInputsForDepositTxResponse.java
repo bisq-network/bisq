@@ -27,17 +27,17 @@ import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.config.Config;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
+
+import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkBitcoinAddress;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMakersRawTransactionInputs;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkSerializedTransaction;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -102,8 +102,16 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
             // challenge protocol for passing the nonce we want to get signed.
-            tradingPeer.setAccountAgeWitnessNonce(preparedDepositTx);
-            tradingPeer.setAccountAgeWitnessSignature(checkNotNull(response.getAccountAgeWitnessSignatureOfPreparedDepositTx()));
+            PubKeyRing makerPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "makerPubKeyRing must not be null");
+            PublicKey makerSignatureKey = makerPubKeyRing.getSignaturePubKey();
+            @SuppressWarnings("UnnecessaryLocalVariable")
+            byte[] accountAgeWitnessNonce = preparedDepositTx;
+            byte[] accountAgeWitnessSignature = checkSignature(response.getAccountAgeWitnessSignatureOfPreparedDepositTx(),
+                    accountAgeWitnessNonce,
+                    makerSignatureKey);
+            tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);
+
+            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
 
             tradingPeer.setCurrentDate(response.getCurrentDate());
 

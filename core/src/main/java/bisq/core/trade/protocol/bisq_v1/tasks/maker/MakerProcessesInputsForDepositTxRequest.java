@@ -32,11 +32,14 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 
 import com.google.common.base.Charsets;
+
+import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Optional;
@@ -88,7 +91,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             String takerPayoutAddressString = checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(takerPayoutAddressString);
 
-            tradingPeer.setPubKeyRing(request.getTakerPubKeyRing());
+            PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
+            tradingPeer.setPubKeyRing(takerPubKeyRing);
 
             tradingPeer.setAccountId(request.getTakerAccountId());
 
@@ -104,8 +108,14 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
             // passing the nonce we want to get signed)
-            tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
-            tradingPeer.setAccountAgeWitnessSignature(request.getAccountAgeWitnessSignatureOfOfferId());
+            byte[] accountAgeWitnessNonce = trade.getId().getBytes(Charsets.UTF_8);
+            PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
+            byte[] accountAgeWitnessSignature = checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+                    accountAgeWitnessNonce,
+                    takerSignatureKey);
+            tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);
+
+            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
             tradingPeer.setCurrentDate(request.getCurrentDate());
 
             User user = checkNotNull(processModel.getUser(), "User must not be null");

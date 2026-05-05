@@ -23,6 +23,11 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Encryption;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
@@ -31,6 +36,10 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.ScriptBuilder;
+
+import java.security.KeyPair;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,6 +60,8 @@ public class TradeValidationTest {
     private static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
     private static final String VALID_TRANSACTION_ID =
             "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    private static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
+            "account-age-witness-nonce".getBytes(StandardCharsets.UTF_8);
 
     @Test
     void checkTradeAmountAcceptsOfferBoundsAndValuesBetweenThem() {
@@ -188,6 +199,77 @@ public class TradeValidationTest {
     @Test
     void checkTransactionIdRejectsNullWalletService() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(VALID_TRANSACTION_ID,
+                null));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureAcceptsSignatureOfNonce() throws CryptoException {
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing pubKeyRing = pubKeyRing(signatureKeyPair);
+        byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
+
+        assertSame(accountAgeWitnessSignature, TradeValidation.checkSignature(
+                accountAgeWitnessSignature,
+                ACCOUNT_AGE_WITNESS_NONCE,
+                pubKeyRing.getSignaturePubKey()));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureRejectsSignatureOfDifferentNonce() throws CryptoException {
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing pubKeyRing = pubKeyRing(signatureKeyPair);
+        byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
+        byte[] otherNonce = "other-nonce".getBytes(StandardCharsets.UTF_8);
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkSignature(
+                accountAgeWitnessSignature,
+                otherNonce,
+                pubKeyRing.getSignaturePubKey()));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureRejectsSignatureFromDifferentPubKey() throws CryptoException {
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing pubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkSignature(
+                accountAgeWitnessSignature,
+                ACCOUNT_AGE_WITNESS_NONCE,
+                pubKeyRing.getSignaturePubKey()));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureRejectsNullSignature() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkSignature(null,
+                ACCOUNT_AGE_WITNESS_NONCE,
+                pubKeyRing(Sig.generateKeyPair()).getSignaturePubKey()));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureRejectsEmptySignature() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkSignature(new byte[0],
+                ACCOUNT_AGE_WITNESS_NONCE,
+                pubKeyRing(Sig.generateKeyPair()).getSignaturePubKey()));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureRejectsNullNonce() throws CryptoException {
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkSignature(
+                Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
+                null,
+                pubKeyRing(signatureKeyPair).getSignaturePubKey()));
+    }
+
+    @Test
+    void checkAccountAgeWitnessSignatureRejectsNullPubKeyRing() throws CryptoException {
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkSignature(
+                Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
+                ACCOUNT_AGE_WITNESS_NONCE,
                 null));
     }
 
@@ -342,6 +424,10 @@ public class TradeValidationTest {
         DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = mock(DelayedPayoutTxReceiverService.class);
         when(delayedPayoutTxReceiverService.getBurningManSelectionHeight()).thenReturn(burningManSelectionHeight);
         return delayedPayoutTxReceiverService;
+    }
+
+    private static PubKeyRing pubKeyRing(KeyPair signatureKeyPair) {
+        return new PubKeyRing(signatureKeyPair.getPublic(), Encryption.generateKeyPair().getPublic());
     }
 
     private static List<RawTransactionInput> rawTransactionInputs(BtcWalletService btcWalletService, Coin inputAmount) {

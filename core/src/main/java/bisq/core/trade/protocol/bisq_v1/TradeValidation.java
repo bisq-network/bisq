@@ -24,6 +24,9 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Sig;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -31,11 +34,14 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
+import java.security.PublicKey;
+
 import java.util.List;
 import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -127,6 +133,21 @@ public class TradeValidation {
             return txId;
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
+        }
+    }
+
+    public static byte[] checkSignature(byte[] signature,
+                                        byte[] message,
+                                        PublicKey signaturePubKey) {
+        checkNonEmptyBytes(signature, "signature");
+        checkNonEmptyBytes(message, "message");
+        checkNotNull(signaturePubKey, "signaturePubKey must not be null");
+
+        try {
+            checkArgument(Sig.verify(signaturePubKey, message, signature), "Invalid signature");
+            return signature;
+        } catch (CryptoException e) {
+            throw new IllegalArgumentException("Invalid signature", e);
         }
     }
 
