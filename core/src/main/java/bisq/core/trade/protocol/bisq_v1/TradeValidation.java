@@ -64,6 +64,10 @@ public class TradeValidation {
     public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
     public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3;
 
+    /* --------------------------------------------------------------------- */
+    // Offer
+    /* --------------------------------------------------------------------- */
+
     public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
         checkNotNull(tradeAmount, "tradeAmount must not be null");
         checkNotNull(offerMinAmount, "offerMinAmount must not be null");
@@ -78,25 +82,38 @@ public class TradeValidation {
         return tradeAmount;
     }
 
-    public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
-        checkNotNull(multiSigPubKey, "multiSigPubKey must not be null");
-        checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
-
-        // Check that the multisig key decompresses to a valid curve point:
-        ECKey.fromPublicOnly(multiSigPubKey);
-        return multiSigPubKey;
+    public static long checkTakersTradePrice(long takersTradePrice,
+                                             PriceFeedService priceFeedService,
+                                             Offer offer) {
+        try {
+            offer.verifyTakersTradePrice(takersTradePrice);
+            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
+            // high volatility environments
+            OfferValidation.verifyPriceInBounds(priceFeedService, offer, MAX_TRADE_PRICE_DEVIATION);
+            return takersTradePrice;
+        } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static String checkBitcoinAddress(String bitcoinAddress, BtcWalletService btcWalletService) {
-        checkNotNull(bitcoinAddress, "bitcoinAddress must not be null");
-        checkNotNull(btcWalletService, "btcWalletService must not be null");
 
-        try {
-            Address.fromString(btcWalletService.getParams(), bitcoinAddress).getOutputScriptType();
-            return bitcoinAddress;
-        } catch (AddressFormatException | IllegalStateException e) {
-            throw new IllegalArgumentException("Invalid bitcoin address: " + bitcoinAddress, e);
-        }
+    /* --------------------------------------------------------------------- */
+    // Trade
+    /* --------------------------------------------------------------------- */
+
+    public static long checkPeersDate(long currentDate) {
+        long now = System.currentTimeMillis();
+        checkArgument(Math.abs(now - currentDate) <= MAX_DATE_DEVIATION, "currentDate is outside of allowed range.");
+        return currentDate;
+    }
+
+    public static PubKeyRing getCheckedMediatorPubKeyRing(NodeAddress mediatorNodeAddress, User user) {
+        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
+        checkNotNull(user, "user must not be null");
+        Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
+                "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
+        return checkNotNull(mediator.getPubKeyRing(),
+                "mediator.getPubKeyRing() must not be null");
     }
 
     public static int checkPeersBurningManSelectionHeight(int peersBurningManSelectionHeight,
@@ -120,6 +137,32 @@ public class TradeValidation {
 
         }
         return peersBurningManSelectionHeight;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Bitcoin
+    /* --------------------------------------------------------------------- */
+
+    public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
+        checkNotNull(multiSigPubKey, "multiSigPubKey must not be null");
+        checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
+
+        // Check that the multisig key decompresses to a valid curve point:
+        ECKey.fromPublicOnly(multiSigPubKey);
+        return multiSigPubKey;
+    }
+
+    public static String checkBitcoinAddress(String bitcoinAddress, BtcWalletService btcWalletService) {
+        checkNotNull(bitcoinAddress, "bitcoinAddress must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        try {
+            Address.fromString(btcWalletService.getParams(), bitcoinAddress).getOutputScriptType();
+            return bitcoinAddress;
+        } catch (AddressFormatException | IllegalStateException e) {
+            throw new IllegalArgumentException("Invalid bitcoin address: " + bitcoinAddress, e);
+        }
     }
 
     public static byte[] checkSerializedTransaction(byte[] serializedTransaction,
@@ -162,30 +205,6 @@ public class TradeValidation {
                             "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
         }
         return lockTime;
-    }
-
-    public static String checkBase64Signature(String signatureBase64) {
-        toEncodedSignature(signatureBase64);
-        return signatureBase64;
-    }
-
-    public static byte[] toEncodedSignature(String signatureBase64) {
-        return Base64.decode(signatureBase64);
-    }
-
-    public static byte[] checkSignature(byte[] signature,
-                                        byte[] message,
-                                        PublicKey signaturePubKey) {
-        checkNonEmptyBytes(signature, "signature");
-        checkNonEmptyBytes(message, "message");
-        checkNotNull(signaturePubKey, "signaturePubKey must not be null");
-
-        try {
-            checkArgument(Sig.verify(signaturePubKey, message, signature), "Invalid signature");
-            return signature;
-        } catch (CryptoException e) {
-            throw new IllegalArgumentException("Invalid signature", e);
-        }
     }
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,
@@ -248,35 +267,6 @@ public class TradeValidation {
         return makerRawTransactionInputs;
     }
 
-    public static long checkPeersDate(long currentDate) {
-        long now = System.currentTimeMillis();
-        checkArgument(Math.abs(now - currentDate) <= MAX_DATE_DEVIATION, "currentDate is outside of allowed range.");
-        return currentDate;
-    }
-
-    public static PubKeyRing getCheckedMediatorPubKeyRing(NodeAddress mediatorNodeAddress, User user) {
-        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
-        checkNotNull(user, "user must not be null");
-        Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
-                "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
-        return checkNotNull(mediator.getPubKeyRing(),
-                "mediator.getPubKeyRing() must not be null");
-    }
-
-    public static long checkTakersTradePrice(long takersTradePrice,
-                                             PriceFeedService priceFeedService,
-                                             Offer offer) {
-        try {
-            offer.verifyTakersTradePrice(takersTradePrice);
-            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
-            // high volatility environments
-            OfferValidation.verifyPriceInBounds(priceFeedService, offer, MAX_TRADE_PRICE_DEVIATION);
-            return takersTradePrice;
-        } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static Coin checkTxFee(Coin txFee) {
         checkTxFee(txFee.getValue());
         return txFee;
@@ -287,7 +277,6 @@ public class TradeValidation {
         checkArgument(txFee > 0, "txFee must be positive");
         return txFee;
     }
-
 
     public static Coin checkTakerFee(Coin takerFee) {
         checkTakerFee(takerFee.getValue());
@@ -300,4 +289,32 @@ public class TradeValidation {
         return takerFee;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Crypto
+    /* --------------------------------------------------------------------- */
+
+    public static String checkBase64Signature(String signatureBase64) {
+        toEncodedSignature(signatureBase64);
+        return signatureBase64;
+    }
+
+    public static byte[] toEncodedSignature(String signatureBase64) {
+        return Base64.decode(signatureBase64);
+    }
+
+    public static byte[] checkSignature(byte[] signature,
+                                        byte[] message,
+                                        PublicKey signaturePubKey) {
+        checkNonEmptyBytes(signature, "signature");
+        checkNonEmptyBytes(message, "message");
+        checkNotNull(signaturePubKey, "signaturePubKey must not be null");
+
+        try {
+            checkArgument(Sig.verify(signaturePubKey, message, signature), "Invalid signature");
+            return signature;
+        } catch (CryptoException e) {
+            throw new IllegalArgumentException("Invalid signature", e);
+        }
+    }
 }
