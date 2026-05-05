@@ -36,7 +36,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import com.google.common.base.Charsets;
 
@@ -45,6 +44,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -73,8 +73,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Optional.ofNullable(request.getTakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
 
-            Coin tradeAmount = request.getTradeAmountAsCoin();
-            TradeValidation.validateTradeAmountBounds(tradeAmount, offer.getMinAmount(), offer.getAmount());
+            Coin tradeAmount = TradeValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
 
             // Taker pays the miner fee for deposit tx and payout tx
             Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
@@ -100,10 +99,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            byte[] takerMultiSigPubKey = checkNotNull(request.getTakerMultiSigPubKey());
-            checkArgument(takerMultiSigPubKey.length == 33, "takerMultiSigPubKey must be compressed");
-            // Check that the taker multisig key decompresses to a valid curve point:
-            ECKey.fromPublicOnly(takerMultiSigPubKey);
+            byte[] takerMultiSigPubKey = checkMultiSigPubKey(request.getTakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
             tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
