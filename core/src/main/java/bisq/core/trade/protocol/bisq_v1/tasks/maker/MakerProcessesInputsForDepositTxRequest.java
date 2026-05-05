@@ -80,7 +80,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                     btcWalletService,
-                    trade,
+                    offer,
+                    trade.getTradeTxFee(),
                     tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 

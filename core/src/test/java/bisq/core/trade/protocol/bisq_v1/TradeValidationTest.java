@@ -398,7 +398,8 @@ public class TradeValidationTest {
 
         assertSame(rawTransactionInputs, TradeValidation.checkTakersRawTransactionInputs(rawTransactionInputs,
                 btcWalletService,
-                trade,
+                trade.getOffer(),
+                trade.getTradeTxFee(),
                 tradeAmount));
     }
 
@@ -414,7 +415,8 @@ public class TradeValidationTest {
 
         assertSame(rawTransactionInputs, TradeValidation.checkTakersRawTransactionInputs(rawTransactionInputs,
                 btcWalletService,
-                trade,
+                trade.getOffer(),
+                trade.getTradeTxFee(),
                 tradeAmount));
     }
 
@@ -446,7 +448,8 @@ public class TradeValidationTest {
     void checkTakersRawTransactionInputsRejectsNullInputs() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkTakersRawTransactionInputs(null,
                 mock(BtcWalletService.class),
-                mock(Trade.class),
+                mock(Offer.class),
+                Coin.valueOf(3000),
                 Coin.valueOf(20_000)));
     }
 

@@ -27,7 +27,7 @@ import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
-import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.user.User;
 
@@ -45,6 +45,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+
+import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 
@@ -209,18 +211,17 @@ public class TradeValidation {
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,
                                                                             BtcWalletService btcWalletService,
-                                                                            Trade trade,
-                                                                            Coin tradeAmount
-    ) {
+                                                                            Offer offer,
+                                                                            Coin tradeTxFee,
+                                                                            Coin tradeAmount) {
         checkNotNull(takerRawTransactionInputs, "takerRawTransactionInputs must not be null");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-        checkNotNull(trade, "trade must not be null");
+        checkNotNull(offer, "offer must not be null");
+        checkNotNull(tradeTxFee, "tradeTxFee must not be null");
         checkNotNull(tradeAmount, "tradeAmount must not be null");
 
-        Offer offer = trade.getOffer();
-
         // Taker pays the miner fee for deposit tx and payout tx
-        Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
+        Coin takersDoubleMinerFee = tradeTxFee.multiply(2);
         Coin expectedTakersInputAmount;
         if (offer.isBuyOffer()) {
             // Taker is the seller.
@@ -239,7 +240,6 @@ public class TradeValidation {
                 "Taker");
         return takerRawTransactionInputs;
     }
-
 
     public static List<RawTransactionInput> checkMakersRawTransactionInputs(List<RawTransactionInput> makerRawTransactionInputs,
                                                                             BtcWalletService btcWalletService,
@@ -316,5 +316,42 @@ public class TradeValidation {
         } catch (CryptoException e) {
             throw new IllegalArgumentException("Invalid signature", e);
         }
+    }
+
+
+
+    /* --------------------------------------------------------------------- */
+    // InputsForDepositTxRequest
+    /* --------------------------------------------------------------------- */
+
+    public static InputsForDepositTxRequest checkInputsForDepositTxRequest(InputsForDepositTxRequest request,
+                                                                           Offer offer,
+                                                                           User user,
+                                                                           BtcWalletService btcWalletService,
+                                                                           PriceFeedService priceFeedService,
+                                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+        Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
+        Coin tradeTxFee = checkTxFee(request.getTxFeeAsCoin());
+        checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+                btcWalletService,
+                offer,
+                tradeTxFee,
+                tradeAmount);
+        checkMultiSigPubKey(request.getTakerMultiSigPubKey());
+        checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+        PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
+        checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+        checkTransactionId(request.getTakerFeeTxId());
+        byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
+        PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
+        checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+                accountAgeWitnessNonce,
+                takerSignatureKey);
+        checkPeersDate(request.getCurrentDate());
+        NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
+        getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
+        checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
+        checkTakerFee(request.getTakerFeeAsCoin());
+        return request;
     }
 }

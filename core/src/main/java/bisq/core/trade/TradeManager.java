@@ -21,6 +21,7 @@ import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -131,8 +132,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTakerFee;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTxFee;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkInputsForDepositTxRequest;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -151,6 +151,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final P2PService p2PService;
     @Getter
     private final PriceFeedService priceFeedService;
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final TradeUtil tradeUtil;
     @Getter
@@ -203,6 +204,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
+                        DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                         TradeStatisticsManager tradeStatisticsManager,
                         TradeUtil tradeUtil,
                         ArbitratorManager arbitratorManager,
@@ -224,6 +226,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.tradeUtil = tradeUtil;
         this.arbitratorManager = arbitratorManager;
@@ -284,7 +287,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         log.info("Received inputsForDepositTxRequest from {} with tradeId {} and uid {}",
                 peer, tradeId, inputsForDepositTxRequest.getUid());
 
-        // tradeId is offerId
+        // tradeId is same as offerId
         Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
         if (openOfferOptional.isEmpty()) {
             log.warn("OpenOffer with offerId {} not found", tradeId);
@@ -307,10 +310,20 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return;
         }
 
-        Coin txFee = checkTxFee(inputsForDepositTxRequest.getTxFeeAsCoin());
-        Coin takeOfferFee = checkTakerFee(inputsForDepositTxRequest.getTakerFeeAsCoin());
+        // We check all relevant data of the request to fail early if anything is wrong.
+        // Later in the MakerProcessesInputsForDepositTxRequest we use the specific checks per field.
+        // We prefer that redundancy to avoid risks that a validation is missed.
+        checkInputsForDepositTxRequest(inputsForDepositTxRequest,
+                offer,
+                user,
+                btcWalletService,
+                priceFeedService,
+                delayedPayoutTxReceiverService);
 
         openOfferManager.reserveOpenOffer(openOffer);
+
+        Coin txFee = inputsForDepositTxRequest.getTxFeeAsCoin();
+        Coin takeOfferFee = inputsForDepositTxRequest.getTakerFeeAsCoin();
 
         boolean currencyForTakerFeeBtc = inputsForDepositTxRequest.isCurrencyForTakerFeeBtc();
         String uid = UUID.randomUUID().toString();

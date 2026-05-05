@@ -105,9 +105,9 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
 
-            tradingPeer.setCurrentDate(checkPeersDate(response.getCurrentDate()));
+            long currentDate = checkPeersDate(response.getCurrentDate());
+            tradingPeer.setCurrentDate(currentDate);
 
-            // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             processModel.getTradeManager().requestPersistence();
