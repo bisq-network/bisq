@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
@@ -71,6 +72,27 @@ public class TradeValidation {
         } catch (AddressFormatException | IllegalStateException e) {
             throw new IllegalArgumentException("Invalid bitcoin address: " + bitcoinAddress, e);
         }
+    }
+
+    public static int checkPeersBurningManSelectionHeight(int peersBurningManSelectionHeight,
+                                                          DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+        checkArgument(peersBurningManSelectionHeight > 0,
+                "peersBurningManSelectionHeight must be positive");
+        checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
+
+        int myBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
+        checkArgument(myBurningManSelectionHeight > 0,
+                "myBurningManSelectionHeight must be positive");
+
+        if (peersBurningManSelectionHeight != myBurningManSelectionHeight) {
+            // Allow SNAPSHOT_SELECTION_GRID_SIZE (10 blocks) as tolerance if traders had different heights.
+            int diff = Math.abs(peersBurningManSelectionHeight - myBurningManSelectionHeight);
+            checkArgument(diff == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
+                    "If burning Man selection heights are not the same they have to differ by " +
+                            "exactly the snapshot grid size, otherwise we fail.");
+
+        }
+        return peersBurningManSelectionHeight;
     }
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,

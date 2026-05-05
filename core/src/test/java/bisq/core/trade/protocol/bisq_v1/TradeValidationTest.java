@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 
@@ -45,6 +46,8 @@ import static org.mockito.Mockito.when;
 public class TradeValidationTest {
     private static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
     private static final Coin OFFER_MAX_AMOUNT = Coin.valueOf(5_000);
+    private static final int GENESIS_HEIGHT = 102;
+    private static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
 
     @Test
     void checkTradeAmountAcceptsOfferBoundsAndValuesBetweenThem() {
@@ -145,6 +148,55 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkPeersBurningManSelectionHeightAcceptsSameHeight() {
+        assertEquals(130,
+                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 139, GRID_SIZE, 0));
+
+        assertEquals(130,
+                TradeValidation.checkPeersBurningManSelectionHeight(130, delayedPayoutTxReceiverService(130)));
+    }
+
+    @Test
+    void checkPeersBurningManSelectionHeightAcceptsMakerOneGridAhead() {
+        assertEquals(120,
+                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 134, GRID_SIZE, 0));
+        assertEquals(130,
+                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 135, GRID_SIZE, 0));
+
+        assertEquals(120,
+                TradeValidation.checkPeersBurningManSelectionHeight(120, delayedPayoutTxReceiverService(130)));
+    }
+
+    @Test
+    void checkPeersBurningManSelectionHeightAcceptsTakerOneGridAhead() {
+        assertEquals(120,
+                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 134, GRID_SIZE, 0));
+        assertEquals(130,
+                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 135, GRID_SIZE, 0));
+
+        assertEquals(130,
+                TradeValidation.checkPeersBurningManSelectionHeight(130, delayedPayoutTxReceiverService(120)));
+    }
+
+    @Test
+    void checkPeersBurningManSelectionHeightRejectsPeerHeightZero() {
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkPeersBurningManSelectionHeight(0, delayedPayoutTxReceiverService(10)));
+    }
+
+    @Test
+    void checkPeersBurningManSelectionHeightRejectsHeightsMoreThanOneGridApart() {
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkPeersBurningManSelectionHeight(120, delayedPayoutTxReceiverService(140)));
+    }
+
+    @Test
+    void checkPeersBurningManSelectionHeightRejectsLocalHeightZero() {
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkPeersBurningManSelectionHeight(10, delayedPayoutTxReceiverService(0)));
+    }
+
+    @Test
     void checkTakersRawTransactionInputsAcceptsSellerInputsForBuyOffer() {
         Coin tradeAmount = Coin.valueOf(20_000);
         Coin tradeTxFee = Coin.valueOf(300);
@@ -240,6 +292,12 @@ public class TradeValidationTest {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         when(btcWalletService.getParams()).thenReturn(networkParameters);
         return btcWalletService;
+    }
+
+    private static DelayedPayoutTxReceiverService delayedPayoutTxReceiverService(int burningManSelectionHeight) {
+        DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = mock(DelayedPayoutTxReceiverService.class);
+        when(delayedPayoutTxReceiverService.getBurningManSelectionHeight()).thenReturn(burningManSelectionHeight);
+        return delayedPayoutTxReceiverService;
     }
 
     private static List<RawTransactionInput> rawTransactionInputs(BtcWalletService btcWalletService, Coin inputAmount) {

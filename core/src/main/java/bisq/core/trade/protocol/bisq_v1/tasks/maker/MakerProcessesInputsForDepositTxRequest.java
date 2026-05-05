@@ -43,10 +43,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkBitcoinAddress;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTakersRawTransactionInputs;
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeAmount;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -67,6 +64,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradePeer();
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -95,16 +93,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setAccountId(request.getTakerAccountId());
 
-            int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
-            checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
-
-            int makersBurningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
-
-            boolean areBurningManSelectionHeightsValid = verifyBurningManSelectionHeight(
-                    takersBurningManSelectionHeight, makersBurningManSelectionHeight);
-            checkArgument(areBurningManSelectionHeightsValid,
-                    "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
-
+            int takersBurningManSelectionHeight = checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
             processModel.setBurningManSelectionHeight(takersBurningManSelectionHeight);
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
@@ -148,23 +137,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
-        }
-    }
-
-    public static boolean verifyBurningManSelectionHeight(int takersBurningManSelectionHeight,
-                                                          int makersBurningManSelectionHeight) {
-        if (takersBurningManSelectionHeight == makersBurningManSelectionHeight) {
-            return true;
-
-        } else if (takersBurningManSelectionHeight < makersBurningManSelectionHeight) {
-            int takersNextBlockBurningManSelectionHeight =
-                    takersBurningManSelectionHeight + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
-            return takersNextBlockBurningManSelectionHeight == makersBurningManSelectionHeight;
-
-        } else {
-            int makersNextBlockBurningManSelectionHeight =
-                    makersBurningManSelectionHeight + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
-            return takersBurningManSelectionHeight == makersNextBlockBurningManSelectionHeight;
         }
     }
 }
