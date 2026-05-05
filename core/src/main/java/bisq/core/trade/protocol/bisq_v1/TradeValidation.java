@@ -21,10 +21,15 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 
 import org.bitcoinj.core.Address;
@@ -38,6 +43,7 @@ import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,6 +53,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeValidation {
+    public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);
 
     public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
         checkNotNull(tradeAmount, "tradeAmount must not be null");
@@ -210,5 +217,21 @@ public class TradeValidation {
                 "Maker");
         return makerRawTransactionInputs;
     }
+
+    public static long checkPeersDate(long currentDate) {
+        long now = System.currentTimeMillis();
+        checkArgument(Math.abs(now - currentDate) <= MAX_DATE_DEVIATION, "currentDate is outside of allowed range.");
+        return currentDate;
+    }
+
+    public static PubKeyRing getCheckedMediatorPubKeyRing(NodeAddress mediatorNodeAddress, User user) {
+        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
+        checkNotNull(user, "user must not be null");
+        Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
+                "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
+        return checkNotNull(mediator.getPubKeyRing(),
+                "mediator.getPubKeyRing() must not be null");
+    }
+
 
 }

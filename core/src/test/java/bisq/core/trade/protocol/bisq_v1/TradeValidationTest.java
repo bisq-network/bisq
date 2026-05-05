@@ -21,7 +21,11 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Encryption;
@@ -262,6 +266,76 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkPeersDateAcceptsDateWithinAllowedRange() {
+        long now = System.currentTimeMillis();
+
+        assertEquals(now, TradeValidation.checkPeersDate(now));
+        assertEquals(now - TradeValidation.MAX_DATE_DEVIATION + 60_000,
+                TradeValidation.checkPeersDate(now - TradeValidation.MAX_DATE_DEVIATION + 60_000));
+        assertEquals(now + TradeValidation.MAX_DATE_DEVIATION - 60_000,
+                TradeValidation.checkPeersDate(now + TradeValidation.MAX_DATE_DEVIATION - 60_000));
+    }
+
+    @Test
+    void checkPeersDateRejectsDateOlderThanAllowedRange() {
+        long currentDate = System.currentTimeMillis() - TradeValidation.MAX_DATE_DEVIATION - 60_000;
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(currentDate));
+    }
+
+    @Test
+    void checkPeersDateRejectsDateNewerThanAllowedRange() {
+        long currentDate = System.currentTimeMillis() + TradeValidation.MAX_DATE_DEVIATION + 60_000;
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(currentDate));
+    }
+
+    @Test
+    void checkPeersDateRejectsZeroDate() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(0));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingReturnsAcceptedMediatorPubKeyRing() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        PubKeyRing mediatorPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        User user = userWithAcceptedMediator(mediatorNodeAddress,
+                mediator(mediatorNodeAddress, mediatorPubKeyRing));
+
+        assertSame(mediatorPubKeyRing, TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsNullMediatorNodeAddress() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(null, mock(User.class)));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsNullUser() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(new NodeAddress("mediator.onion", 9999), null));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsUnknownMediator() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        User user = userWithAcceptedMediator(mediatorNodeAddress, null);
+
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsMediatorWithoutPubKeyRing() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        User user = userWithAcceptedMediator(mediatorNodeAddress, mediator(mediatorNodeAddress, null));
+
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
     void checkPeersBurningManSelectionHeightAcceptsSameHeight() {
         assertEquals(130,
                 DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 139, GRID_SIZE, 0));
@@ -416,6 +490,24 @@ public class TradeValidationTest {
 
     private static PubKeyRing pubKeyRing(KeyPair signatureKeyPair) {
         return new PubKeyRing(signatureKeyPair.getPublic(), Encryption.generateKeyPair().getPublic());
+    }
+
+    private static User userWithAcceptedMediator(NodeAddress mediatorNodeAddress, Mediator mediator) {
+        User user = mock(User.class);
+        when(user.getAcceptedMediatorByAddress(mediatorNodeAddress)).thenReturn(mediator);
+        return user;
+    }
+
+    private static Mediator mediator(NodeAddress mediatorNodeAddress, PubKeyRing pubKeyRing) {
+        return new Mediator(mediatorNodeAddress,
+                pubKeyRing,
+                List.of("en"),
+                System.currentTimeMillis(),
+                new byte[]{1},
+                "registrationSignature",
+                null,
+                null,
+                null);
     }
 
     private static List<RawTransactionInput> rawTransactionInputs(BtcWalletService btcWalletService, Coin inputAmount) {
