@@ -19,10 +19,14 @@ package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -31,12 +35,16 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
+import bisq.common.util.Base64;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.ScriptBuilder;
@@ -51,10 +59,13 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TradeValidationTest {
@@ -97,6 +108,31 @@ public class TradeValidationTest {
         assertEquals("Trade amount must not be higher than maximum offer amount. " +
                         "tradeAmount=0.00005001 BTC, offerMaxAmount=0.00005 BTC",
                 exception.getMessage());
+    }
+
+    @Test
+    void checkTakersTradePriceAcceptsVerifiedPrice() throws Exception {
+        long takersTradePrice = 50_000_000L;
+        Offer offer = mock(Offer.class);
+        when(offer.isUseMarketBasedPrice()).thenReturn(true);
+
+        assertEquals(takersTradePrice, TradeValidation.checkTakersTradePrice(takersTradePrice,
+                mock(PriceFeedService.class),
+                offer));
+        verify(offer).verifyTakersTradePrice(takersTradePrice);
+    }
+
+    @Test
+    void checkTakersTradePriceWrapsOfferPriceValidationFailure() throws Exception {
+        long takersTradePrice = 50_000_000L;
+        Offer offer = mock(Offer.class);
+        doThrow(new TradePriceOutOfToleranceException("price outside tolerance"))
+                .when(offer)
+                .verifyTakersTradePrice(takersTradePrice);
+
+        assertThrows(RuntimeException.class, () -> TradeValidation.checkTakersTradePrice(takersTradePrice,
+                mock(PriceFeedService.class),
+                offer));
     }
 
     @Test
@@ -166,6 +202,35 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkSerializedTransactionAcceptsValidSerializedTransaction() {
+        byte[] serializedTransaction = serializedTransaction();
+
+        assertSame(serializedTransaction, TradeValidation.checkSerializedTransaction(serializedTransaction,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkSerializedTransactionRejectsMalformedSerializedTransaction() {
+        assertThrows(RuntimeException.class, () -> TradeValidation.checkSerializedTransaction(new byte[]{1, 2, 3},
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkSerializedTransactionRejectsNullSerializedTransaction() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkSerializedTransaction(null,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void toTransactionParsesValidSerializedTransaction() {
+        byte[] serializedTransaction = serializedTransaction();
+
+        assertArrayEquals(serializedTransaction,
+                TradeValidation.toTransaction(serializedTransaction, btcWalletService(MainNetParams.get()))
+                        .bitcoinSerialize());
+    }
+
+    @Test
     void checkTransactionIdAcceptsValidTransactionId() {
         assertEquals(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID));
     }
@@ -192,6 +257,30 @@ public class TradeValidationTest {
     @Test
     void checkTransactionIdRejectsNullTransactionId() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(null));
+    }
+
+    @Test
+    void checkLockTimeAcceptsExpectedLockTimeAndAllowedDeviation() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
+        long expectedLockTime = 1_000 + Restrictions.getLockTime(true);
+
+        assertEquals(expectedLockTime, TradeValidation.checkLockTime(expectedLockTime, true, btcWalletService));
+        assertEquals(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+                TradeValidation.checkLockTime(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+                        true,
+                        btcWalletService));
+    }
+
+    @Test
+    void checkLockTimeRejectsLockTimeBeyondAllowedDeviation() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
+        long invalidLockTime = 1_000 + Restrictions.getLockTime(false) +
+                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkLockTime(invalidLockTime, false, btcWalletService));
     }
 
     @Test
@@ -263,6 +352,20 @@ public class TradeValidationTest {
                 Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
                 ACCOUNT_AGE_WITNESS_NONCE,
                 null));
+    }
+
+    @Test
+    void checkBase64SignatureAcceptsBase64EncodedSignature() {
+        byte[] signature = new byte[]{1, 2, 3};
+        String signatureBase64 = Base64.encode(signature);
+
+        assertSame(signatureBase64, TradeValidation.checkBase64Signature(signatureBase64));
+        assertArrayEquals(signature, TradeValidation.toEncodedSignature(signatureBase64));
+    }
+
+    @Test
+    void checkBase64SignatureRejectsInvalidBase64EncodedSignature() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64Signature("not base64"));
     }
 
     @Test
@@ -460,6 +563,61 @@ public class TradeValidationTest {
                 mock(Offer.class)));
     }
 
+    @Test
+    void checkTxFeeAcceptsPositiveFees() {
+        Coin txFee = Coin.valueOf(300);
+
+        assertSame(txFee, TradeValidation.checkTxFee(txFee));
+        assertEquals(300, TradeValidation.checkTxFee(300));
+    }
+
+    @Test
+    void checkTxFeeRejectsZeroAndNegativeFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTxFee(Coin.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTxFee(0));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTxFee(-1));
+    }
+
+    @Test
+    void checkTakerFeeAcceptsPositiveFees() {
+        Coin takerFee = Coin.valueOf(100);
+
+        assertSame(takerFee, TradeValidation.checkTakerFee(takerFee));
+        assertEquals(100, TradeValidation.checkTakerFee(100));
+    }
+
+    @Test
+    void checkTakerFeeRejectsZeroAndNegativeFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(0));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(-1));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestAcceptsValidRequest() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+
+        assertSame(fixture.request, TradeValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsInvalidAccountAgeWitnessSignature() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture =
+                inputsForDepositTxRequestValidationFixture(new byte[]{1});
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService));
+    }
+
     private static Offer offer(boolean isBuyOffer,
                                Coin buyerSecurityDeposit,
                                Coin sellerSecurityDeposit,
@@ -501,6 +659,78 @@ public class TradeValidationTest {
         return user;
     }
 
+    private static byte[] serializedTransaction() {
+        Transaction transaction = new Transaction(MainNetParams.get());
+        transaction.addInput(new TransactionInput(MainNetParams.get(),
+                transaction,
+                new byte[]{},
+                new TransactionOutPoint(MainNetParams.get(), 0, Sha256Hash.ZERO_HASH),
+                Coin.valueOf(2_000)));
+        transaction.addOutput(Coin.valueOf(1_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        return transaction.bitcoinSerialize();
+    }
+
+    private static InputsForDepositTxRequestValidationFixture inputsForDepositTxRequestValidationFixture(
+            byte[] accountAgeWitnessSignatureOverride) throws CryptoException {
+        String offerId = "offer-id";
+        Coin tradeAmount = Coin.valueOf(3_000);
+        Coin tradeTxFee = Coin.valueOf(300);
+        Coin takerFee = Coin.valueOf(100);
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        BtcWalletService btcWalletService = btcWalletService(MainNetParams.get());
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        when(offer.getId()).thenReturn(offerId);
+        when(offer.getMinAmount()).thenReturn(OFFER_MIN_AMOUNT);
+        when(offer.isUseMarketBasedPrice()).thenReturn(true);
+
+        KeyPair takerSignatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing takerPubKeyRing = pubKeyRing(takerSignatureKeyPair);
+        byte[] accountAgeWitnessSignature = accountAgeWitnessSignatureOverride != null ?
+                accountAgeWitnessSignatureOverride :
+                Sig.sign(takerSignatureKeyPair.getPrivate(), offerId.getBytes(StandardCharsets.UTF_8));
+
+        List<RawTransactionInput> rawTransactionInputs = rawTransactionInputs(btcWalletService,
+                offer.getSellerSecurityDeposit()
+                        .add(tradeAmount)
+                        .add(tradeTxFee.multiply(2)));
+        InputsForDepositTxRequest request = new InputsForDepositTxRequest(offerId,
+                new NodeAddress("sender.onion", 9999),
+                tradeAmount.value,
+                50_000_000L,
+                tradeTxFee.value,
+                takerFee.value,
+                true,
+                rawTransactionInputs,
+                new ECKey().getPubKey(),
+                SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
+                takerPubKeyRing,
+                null,
+                "taker-account-id",
+                VALID_TRANSACTION_ID,
+                List.of(),
+                List.of(mediatorNodeAddress),
+                List.of(),
+                null,
+                mediatorNodeAddress,
+                new NodeAddress("refund-agent.onion", 9999),
+                "uid",
+                1,
+                accountAgeWitnessSignature,
+                System.currentTimeMillis(),
+                new byte[]{2},
+                "SEPA",
+                130);
+        User user = userWithAcceptedMediator(mediatorNodeAddress,
+                mediator(mediatorNodeAddress, pubKeyRing(Sig.generateKeyPair())));
+
+        return new InputsForDepositTxRequestValidationFixture(request,
+                offer,
+                user,
+                btcWalletService,
+                mock(PriceFeedService.class),
+                delayedPayoutTxReceiverService(130));
+    }
+
     private static Mediator mediator(NodeAddress mediatorNodeAddress, PubKeyRing pubKeyRing) {
         return new Mediator(mediatorNodeAddress,
                 pubKeyRing,
@@ -525,5 +755,28 @@ public class TradeValidationTest {
         when(btcWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
 
         return List.of(rawTransactionInput);
+    }
+
+    private static class InputsForDepositTxRequestValidationFixture {
+        private final InputsForDepositTxRequest request;
+        private final Offer offer;
+        private final User user;
+        private final BtcWalletService btcWalletService;
+        private final PriceFeedService priceFeedService;
+        private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+
+        private InputsForDepositTxRequestValidationFixture(InputsForDepositTxRequest request,
+                                                           Offer offer,
+                                                           User user,
+                                                           BtcWalletService btcWalletService,
+                                                           PriceFeedService priceFeedService,
+                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+            this.request = request;
+            this.offer = offer;
+            this.user = user;
+            this.btcWalletService = btcWalletService;
+            this.priceFeedService = priceFeedService;
+            this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
+        }
     }
 }
