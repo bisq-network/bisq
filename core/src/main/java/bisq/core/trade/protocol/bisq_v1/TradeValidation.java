@@ -97,7 +97,7 @@ public class TradeValidation {
             // Allow SNAPSHOT_SELECTION_GRID_SIZE (10 blocks) as tolerance if traders had different heights.
             int diff = Math.abs(peersBurningManSelectionHeight - myBurningManSelectionHeight);
             checkArgument(diff == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
-                    "If burning Man selection heights are not the same they have to differ by " +
+                    "If Burning Man selection heights are not the same they have to differ by " +
                             "exactly the snapshot grid size, otherwise we fail.");
 
         }
@@ -124,9 +124,8 @@ public class TradeValidation {
         }
     }
 
-    public static String checkTransactionId(String txId, BtcWalletService btcWalletService) {
+    public static String checkTransactionId(String txId) {
         checkNotNull(txId, "txId must not be null");
-        checkNotNull(btcWalletService, "btcWalletService must not be null");
 
         try {
             Sha256Hash.wrap(txId.toLowerCase(Locale.ROOT));

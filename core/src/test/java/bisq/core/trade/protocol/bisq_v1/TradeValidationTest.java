@@ -163,43 +163,32 @@ public class TradeValidationTest {
 
     @Test
     void checkTransactionIdAcceptsValidTransactionId() {
-        assertSame(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID,
-                mock(BtcWalletService.class)));
+        assertSame(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID));
     }
 
     @Test
     void checkTransactionIdAcceptsUpperCaseTransactionId() {
         String transactionId = VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
 
-        assertSame(transactionId, TradeValidation.checkTransactionId(transactionId,
-                mock(BtcWalletService.class)));
+        assertSame(transactionId, TradeValidation.checkTransactionId(transactionId));
     }
 
     @Test
     void checkTransactionIdRejectsInvalidLength() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(
-                VALID_TRANSACTION_ID.substring(1),
-                mock(BtcWalletService.class)));
+                VALID_TRANSACTION_ID.substring(1)));
     }
 
     @Test
     void checkTransactionIdRejectsNonHexTransactionId() {
         String transactionId = VALID_TRANSACTION_ID.substring(0, VALID_TRANSACTION_ID.length() - 1) + "g";
 
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(transactionId,
-                mock(BtcWalletService.class)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(transactionId));
     }
 
     @Test
     void checkTransactionIdRejectsNullTransactionId() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(null,
-                mock(BtcWalletService.class)));
-    }
-
-    @Test
-    void checkTransactionIdRejectsNullWalletService() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(VALID_TRANSACTION_ID,
-                null));
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionId(null));
     }
 
     @Test

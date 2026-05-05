@@ -103,7 +103,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
             // message but that cannot be changed due backward compatibility issues. It is a left over from the
             // old trade protocol.
-            String takerFeeTxId = checkTransactionId(request.getTakerFeeTxId(), btcWalletService);
+            String takerFeeTxId = checkTransactionId(request.getTakerFeeTxId());
             processModel.setTakeOfferFeeTxId(takerFeeTxId);
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
