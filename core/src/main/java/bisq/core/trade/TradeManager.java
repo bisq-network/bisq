@@ -67,7 +67,6 @@ import bisq.core.trade.protocol.bsq_swap.model.BsqSwapProtocolModel;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
-import bisq.core.util.Validator;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.DecryptedDirectMessageListener;
@@ -188,6 +187,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
@@ -244,6 +244,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PersistedDataHost
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -262,6 +263,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DecryptedDirectMessageListener
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -276,28 +278,30 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     // The maker received a TakeOfferRequest
     private void handleTakeOfferRequest(NodeAddress peer, InputsForDepositTxRequest inputsForDepositTxRequest) {
+        String tradeId = inputsForDepositTxRequest.getTradeId();
         log.info("Received inputsForDepositTxRequest from {} with tradeId {} and uid {}",
-                peer, inputsForDepositTxRequest.getTradeId(), inputsForDepositTxRequest.getUid());
+                peer, tradeId, inputsForDepositTxRequest.getUid());
 
-        try {
-            Validator.nonEmptyStringOf(inputsForDepositTxRequest.getTradeId());
-        } catch (Throwable t) {
-            log.warn("Invalid inputsForDepositTxRequest " + inputsForDepositTxRequest);
-            return;
-        }
-
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(inputsForDepositTxRequest.getTradeId());
+        // tradeId is offerId
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
         if (openOfferOptional.isEmpty()) {
+            log.warn("OpenOffer with offerId {} not found", tradeId);
             return;
         }
-
         OpenOffer openOffer = openOfferOptional.get();
         if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
+            log.info("OpenOffer with offerId {} is not available", tradeId);
+            return;
+        }
+        Offer offer = openOffer.getOffer();
+        if (!offer.isMyOffer(keyRing)) {
+            log.info("Offer must be mine");
             return;
         }
 
-        Offer offer = openOffer.getOffer();
-        if (!isValidInputsForDepositTxRequest(offer, inputsForDepositTxRequest)) {
+        NodeAddress senderNodeAddress = inputsForDepositTxRequest.getSenderNodeAddress();
+        if (!senderNodeAddress.equals(peer)) {
+            log.info("Node address not matching. senderNodeAddress={}, peer={}", senderNodeAddress, peer);
             return;
         }
 
@@ -338,28 +342,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         requestPersistence();
     }
-
-    private boolean isValidInputsForDepositTxRequest(Offer offer,
-                                                     InputsForDepositTxRequest inputsForDepositTxRequest) {
-        try {
-            long tradeAmount = inputsForDepositTxRequest.getTradeAmount();
-            checkArgument(inputsForDepositTxRequest.getTxFee() > 0, "Trade tx fee must be positive");
-            checkArgument(tradeAmount >= offer.getMinAmount().value,
-                    "Trade amount must be at least offer minimum amount. tradeAmount=%s, minAmount=%s",
-                    tradeAmount, offer.getMinAmount().value);
-            checkArgument(tradeAmount <= offer.getAmount().value,
-                    "Trade amount must not exceed offer amount. tradeAmount=%s, offerAmount=%s",
-                    tradeAmount, offer.getAmount().value);
-            return true;
-        } catch (Exception t) {
-            log.warn("Invalid inputsForDepositTxRequest with tradeId {} and uid {}: {}",
-                    inputsForDepositTxRequest.getTradeId(),
-                    inputsForDepositTxRequest.getUid(),
-                    t.getMessage());
-            return false;
-        }
-    }
-
 
     private void handleBsqSwapRequest(NodeAddress peer, BsqSwapRequest request) {
         if (!BsqSwapTakeOfferRequestVerification.isValid(openOfferManager, provider.getFeeService(), keyRing, peer, request)) {
@@ -419,6 +401,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Lifecycle
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
@@ -467,6 +450,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Init pending trade
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initPersistedTrades() {
@@ -522,6 +506,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Take offer
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void checkOfferAvailability(Offer offer,
@@ -700,6 +685,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Complete trade
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onWithdrawRequest(String toAddress,
@@ -755,6 +741,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void closeDisputedTrade(String tradeId, Trade.DisputeState disputeState) {
@@ -772,6 +759,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade period state
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applyTradePeriodState() {
@@ -819,6 +807,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Failed trade handling
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // If trade is in already in critical state (if taker role: taker fee; both roles: after deposit published)
@@ -880,6 +869,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BsqSwapTradeManager delegates
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onBsqSwapTradeCompleted(BsqSwapTrade bsqSwapTrade) {
@@ -893,6 +883,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters, Utils
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ObservableList<Trade> getObservableList() {
