@@ -17,8 +17,6 @@
 
 package bisq.core.util;
 
-import bisq.core.trade.protocol.TradeMessage;
-
 import org.bitcoinj.core.Coin;
 
 import java.util.Collection;
@@ -87,11 +85,4 @@ public class Validator {
         return value;
     }
 
-    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(isTradeIdValid(tradeId, tradeMessage), "TradeId %s is not valid", tradeId);
-    }
-
-    public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {
-        return tradeId.equals(tradeMessage.getTradeId());
-    }
 }

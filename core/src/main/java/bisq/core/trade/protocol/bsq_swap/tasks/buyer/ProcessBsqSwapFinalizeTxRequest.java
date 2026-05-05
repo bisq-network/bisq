@@ -25,7 +25,6 @@ import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.model.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -41,6 +40,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -65,7 +65,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
         try {
             BsqSwapFinalizeTxRequest request = checkNotNull((BsqSwapFinalizeTxRequest) protocolModel.getTradeMessage());
             checkNotNull(request);
-            Validator.checkTradeId(protocolModel.getOfferId(), request);
+            checkTradeId(protocolModel.getOfferId(), request);
 
             // We will use only the seller's BTC inputs from the tx, so we do not verify anything else.
             byte[] tx = request.getTx();

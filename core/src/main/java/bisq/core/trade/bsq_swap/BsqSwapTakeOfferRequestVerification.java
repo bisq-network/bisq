@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Math.abs;
@@ -66,7 +67,7 @@ public class BsqSwapTakeOfferRequestVerification {
             checkArgument(openOffer.getState() == OpenOffer.State.AVAILABLE, "Offer not available");
 
             Offer offer = openOffer.getOffer();
-            Validator.checkTradeId(offer.getId(), request);
+            checkTradeId(offer.getId(), request);
             checkArgument(offer.isMyOffer(keyRing), "Offer must be mine");
 
             long tradeAmount = request.getTradeAmount();

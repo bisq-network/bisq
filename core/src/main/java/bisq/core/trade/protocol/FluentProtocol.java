@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.util.Validator.isTradeIdValid;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.isTradeIdValid;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Main class. Contains the condition and setup, if condition is valid it will execute the

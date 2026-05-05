@@ -27,6 +27,7 @@ import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.user.User;
@@ -102,6 +103,14 @@ public class TradeValidation {
     /* --------------------------------------------------------------------- */
     // Trade
     /* --------------------------------------------------------------------- */
+
+    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
+        checkArgument(isTradeIdValid(tradeId, tradeMessage), "TradeId %s is not valid", tradeId);
+    }
+
+    public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {
+        return tradeId.equals(tradeMessage.getTradeId());
+    }
 
     public static long checkPeersDate(long currentDate) {
         long now = System.currentTimeMillis();
