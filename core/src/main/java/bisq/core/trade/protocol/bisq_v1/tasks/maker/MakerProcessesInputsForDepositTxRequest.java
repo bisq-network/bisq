@@ -45,7 +45,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -117,8 +116,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
 
-            tradingPeer.setCurrentDate(checkPeersDate(request.getCurrentDate()));
-
+            long currentDate = checkPeersDate(request.getCurrentDate());
+            tradingPeer.setCurrentDate(currentDate);
 
             NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
             trade.setMediatorNodeAddress(mediatorNodeAddress);
@@ -128,8 +127,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             long takersTradePrice = checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
-
-            checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 

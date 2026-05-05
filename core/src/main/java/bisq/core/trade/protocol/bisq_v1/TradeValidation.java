@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
@@ -32,9 +33,11 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
+import bisq.common.util.Base64;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -59,6 +62,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TradeValidation {
     public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);
     public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
+    public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3;
 
     public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
         checkNotNull(tradeAmount, "tradeAmount must not be null");
@@ -146,6 +150,27 @@ public class TradeValidation {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
         }
+    }
+
+    public static long checkLockTime(long lockTime, boolean isBlockchain, BtcWalletService btcWalletService) {
+        if (Config.baseCurrencyNetwork().isMainnet()) {
+            int myLockTime = btcWalletService.getBestChainHeight() + Restrictions.getLockTime(isBlockchain);
+            // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in
+            // case a new block was just found
+            checkArgument(Math.abs(lockTime - myLockTime) <= MAX_LOCKTIME_BLOCK_DEVIATION,
+                    "Lock time of maker is more than 3 blocks different to the lockTime I " +
+                            "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
+        }
+        return lockTime;
+    }
+
+    public static String checkBase64Signature(String signatureBase64) {
+        toEncodedSignature(signatureBase64);
+        return signatureBase64;
+    }
+
+    public static byte[] toEncodedSignature(String signatureBase64) {
+        return Base64.decode(signatureBase64);
     }
 
     public static byte[] checkSignature(byte[] signature,
@@ -250,6 +275,29 @@ public class TradeValidation {
         } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Coin checkTxFee(Coin txFee) {
+        checkTxFee(txFee.getValue());
+        return txFee;
+    }
+
+    public static long checkTxFee(long txFee) {
+        //todo add more narrow checks
+        checkArgument(txFee > 0, "txFee must be positive");
+        return txFee;
+    }
+
+
+    public static Coin checkTakerFee(Coin takerFee) {
+        checkTakerFee(takerFee.getValue());
+        return takerFee;
+    }
+
+    public static long checkTakerFee(long takerFee) {
+        //todo add more narrow checks
+        checkArgument(takerFee > 0, "takerFee must be positive");
+        return takerFee;
     }
 
 }

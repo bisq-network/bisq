@@ -131,6 +131,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTakerFee;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTxFee;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -305,30 +307,36 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return;
         }
 
+        Coin txFee = checkTxFee(inputsForDepositTxRequest.getTxFeeAsCoin());
+        Coin takeOfferFee = checkTakerFee(inputsForDepositTxRequest.getTakerFeeAsCoin());
+
         openOfferManager.reserveOpenOffer(openOffer);
+
+        boolean currencyForTakerFeeBtc = inputsForDepositTxRequest.isCurrencyForTakerFeeBtc();
+        String uid = UUID.randomUUID().toString();
         Trade trade;
         if (offer.isBuyOffer()) {
             trade = new BuyerAsMakerTrade(offer,
-                    Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
-                    Coin.valueOf(inputsForDepositTxRequest.getTakerFee()),
-                    inputsForDepositTxRequest.isCurrencyForTakerFeeBtc(),
+                    txFee,
+                    takeOfferFee,
+                    currencyForTakerFeeBtc,
                     openOffer.getArbitratorNodeAddress(),
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
                     getNewProcessModel(offer),
-                    UUID.randomUUID().toString());
+                    uid);
         } else {
             trade = new SellerAsMakerTrade(offer,
-                    Coin.valueOf(inputsForDepositTxRequest.getTxFee()),
-                    Coin.valueOf(inputsForDepositTxRequest.getTakerFee()),
-                    inputsForDepositTxRequest.isCurrencyForTakerFeeBtc(),
+                    txFee,
+                    takeOfferFee,
+                    currencyForTakerFeeBtc,
                     openOffer.getArbitratorNodeAddress(),
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
                     getNewProcessModel(offer),
-                    UUID.randomUUID().toString());
+                    uid);
         }
 
         TradeProtocol tradeProtocol = createTradeProtocol(trade);
