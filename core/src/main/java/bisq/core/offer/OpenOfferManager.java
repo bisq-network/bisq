@@ -102,7 +102,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkPeersBurningManSelectionHeight;
+import static bisq.core.trade.TradeValidation.checkPeersBurningManSelectionHeight;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 

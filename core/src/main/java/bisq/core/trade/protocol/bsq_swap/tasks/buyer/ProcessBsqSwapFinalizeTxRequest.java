@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeId;
+import static bisq.core.trade.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
