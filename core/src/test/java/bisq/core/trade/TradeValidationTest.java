@@ -26,6 +26,7 @@ import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
 
@@ -133,6 +134,46 @@ public class TradeValidationTest {
         assertThrows(RuntimeException.class, () -> TradeValidation.checkTakersTradePrice(takersTradePrice,
                 mock(PriceFeedService.class),
                 offer));
+    }
+
+    @Test
+    void checkTradeIdAcceptsMatchingTradeMessageTradeId() {
+        String tradeId = "trade-id";
+
+        assertSame(tradeId, TradeValidation.checkTradeId(tradeId, tradeMessage(tradeId)));
+    }
+
+    @Test
+    void checkTradeIdRejectsMismatchingTradeMessageTradeId() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkTradeId("trade-id", tradeMessage("other-trade-id")));
+
+        assertEquals("TradeId trade-id is not valid", exception.getMessage());
+    }
+
+    @Test
+    void checkTradeIdRejectsNullTradeId() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeId(null, tradeMessage("trade-id")));
+    }
+
+    @Test
+    void isTradeIdValidReturnsTrueForMatchingTradeMessageTradeId() {
+        assertEquals(true, TradeValidation.isTradeIdValid("trade-id", tradeMessage("trade-id")));
+    }
+
+    @Test
+    void isTradeIdValidReturnsFalseForMismatchingTradeMessageTradeId() {
+        assertEquals(false, TradeValidation.isTradeIdValid("trade-id", tradeMessage("other-trade-id")));
+    }
+
+    @Test
+    void isTradeIdValidRejectsNullTradeId() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid(null, tradeMessage("trade-id")));
+    }
+
+    @Test
+    void isTradeIdValidRejectsNullTradeMessage() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid("trade-id", null));
     }
 
     @Test
@@ -657,6 +698,12 @@ public class TradeValidationTest {
         User user = mock(User.class);
         when(user.getAcceptedMediatorByAddress(mediatorNodeAddress)).thenReturn(mediator);
         return user;
+    }
+
+    private static TradeMessage tradeMessage(String tradeId) {
+        TradeMessage tradeMessage = mock(TradeMessage.class);
+        when(tradeMessage.getTradeId()).thenReturn(tradeId);
+        return tradeMessage;
     }
 
     private static byte[] serializedTransaction() {
