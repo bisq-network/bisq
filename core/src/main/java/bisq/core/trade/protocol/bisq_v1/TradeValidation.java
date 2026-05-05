@@ -20,7 +20,11 @@ package bisq.core.trade.protocol.bisq_v1;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferValidation;
+import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
@@ -54,6 +58,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class TradeValidation {
     public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);
+    public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
 
     public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
         checkNotNull(tradeAmount, "tradeAmount must not be null");
@@ -233,5 +238,18 @@ public class TradeValidation {
                 "mediator.getPubKeyRing() must not be null");
     }
 
+    public static long checkTakersTradePrice(long takersTradePrice,
+                                             PriceFeedService priceFeedService,
+                                             Offer offer) {
+        try {
+            offer.verifyTakersTradePrice(takersTradePrice);
+            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
+            // high volatility environments
+            OfferValidation.verifyPriceInBounds(priceFeedService, offer, MAX_TRADE_PRICE_DEVIATION);
+            return takersTradePrice;
+        } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

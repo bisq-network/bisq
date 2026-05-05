@@ -21,7 +21,6 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferValidation;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
@@ -67,6 +66,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
             User user = checkNotNull(processModel.getUser(), "User must not be null");
+            PriceFeedService priceFeedService = processModel.getTradeManager().getPriceFeedService();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -126,14 +126,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
             trade.setMediatorPubKeyRing(mediatorPubKeyRing);
 
-            long takersTradePrice = request.getTradePrice();
-            offer.verifyTakersTradePrice(takersTradePrice);
-
-            PriceFeedService priceFeedService = processModel.getTradeManager().getPriceFeedService();
-            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
-            // high volatility environments
-            OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.5);
-
+            long takersTradePrice = checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
 
             checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
