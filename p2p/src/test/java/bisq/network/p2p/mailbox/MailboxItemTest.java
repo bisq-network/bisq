@@ -23,12 +23,14 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.mocks.MockMailboxPayload;
 import bisq.network.p2p.mocks.MockPayload;
+import bisq.network.p2p.mocks.MockSignaturePubKeyAwareMailboxPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +80,36 @@ public class MailboxItemTest {
         assertTrue(mailboxItem.isInvalidDecryptedMessage());
     }
 
+    @Test
+    public void constructorKeepsDecryptedMessageWhenSenderSignaturePubKeysMatch() throws NoSuchAlgorithmException {
+        PublicKey senderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = decryptedMessageWithPubKey(
+                new MockSignaturePubKeyAwareMailboxPayload("msg", ENVELOPE_SENDER, senderSignaturePubKey),
+                senderSignaturePubKey);
+
+        MailboxItem mailboxItem = new MailboxItem(protectedMailboxStorageEntry(ENVELOPE_SENDER),
+                decryptedMessageWithPubKey);
+
+        assertTrue(mailboxItem.isMine());
+        assertFalse(mailboxItem.isInvalidDecryptedMessage());
+        assertSame(decryptedMessageWithPubKey, mailboxItem.getDecryptedMessageWithPubKey());
+    }
+
+    @Test
+    public void constructorDropsDecryptedMessageWhenSenderSignaturePubKeysMismatch() throws NoSuchAlgorithmException {
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = decryptedMessageWithPubKey(
+                new MockSignaturePubKeyAwareMailboxPayload("msg",
+                        ENVELOPE_SENDER,
+                        TestUtils.generateKeyPair().getPublic()),
+                TestUtils.generateKeyPair().getPublic());
+
+        MailboxItem mailboxItem = new MailboxItem(protectedMailboxStorageEntry(ENVELOPE_SENDER),
+                decryptedMessageWithPubKey);
+
+        assertFalse(mailboxItem.isMine());
+        assertTrue(mailboxItem.isInvalidDecryptedMessage());
+    }
+
     private static ProtectedMailboxStorageEntry protectedMailboxStorageEntry(NodeAddress envelopeSenderNodeAddress) {
         ProtectedMailboxStorageEntry protectedMailboxStorageEntry = mock(ProtectedMailboxStorageEntry.class);
         MailboxStoragePayload mailboxStoragePayload = mock(MailboxStoragePayload.class);
@@ -92,6 +124,11 @@ public class MailboxItemTest {
 
     private static DecryptedMessageWithPubKey decryptedMessageWithPubKey(NetworkEnvelope networkEnvelope)
             throws NoSuchAlgorithmException {
-        return new DecryptedMessageWithPubKey(networkEnvelope, TestUtils.generateKeyPair().getPublic());
+        return decryptedMessageWithPubKey(networkEnvelope, TestUtils.generateKeyPair().getPublic());
+    }
+
+    private static DecryptedMessageWithPubKey decryptedMessageWithPubKey(NetworkEnvelope networkEnvelope,
+                                                                         PublicKey signaturePubKey) {
+        return new DecryptedMessageWithPubKey(networkEnvelope, signaturePubKey);
     }
 }

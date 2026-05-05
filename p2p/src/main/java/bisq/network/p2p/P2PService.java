@@ -65,6 +65,8 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
+import java.security.PublicKey;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -382,6 +384,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     return;
                 }
 
+                if (!isDirectMessageSenderSignaturePubKeyValid(decryptedMsg)) {
+                    return;
+                }
+
                 NodeAddress senderNodeAddress = getVerifiedDirectMessageSenderNodeAddress(decryptedPayload, sealedMsg,
                         connection);
                 if (senderNodeAddress == null) {
@@ -397,6 +403,26 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 log.error("ProtobufferException at decryptAndVerify", e);
             }
         }
+    }
+
+    private boolean isDirectMessageSenderSignaturePubKeyValid(DecryptedMessageWithPubKey decryptedMsg) {
+        NetworkEnvelope decryptedPayload = decryptedMsg.getNetworkEnvelope();
+        if (!(decryptedPayload instanceof SendersSignaturePubKeyAwarePayload)) {
+            return true;
+        }
+
+        SendersSignaturePubKeyAwarePayload signaturePubKeyAwarePayload =
+                (SendersSignaturePubKeyAwarePayload) decryptedPayload;
+        PublicKey payloadSenderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+        PublicKey signaturePubKey = decryptedMsg.getSignaturePubKey();
+        if (!SendersSignaturePubKeyAwarePayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
+                signaturePubKey)) {
+            log.error("Sender signature pubkey of decrypted payload {} does not match signature pubkey " +
+                            "of sealed payload {}",
+                    payloadSenderSignaturePubKey, signaturePubKey);
+            return false;
+        }
+        return true;
     }
 
     @Nullable
@@ -483,6 +509,21 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 log.error("Sender node address {} does not match my node address {}",
                         payloadSenderNodeAddress, senderNodeAddress);
                 sendDirectMessageListener.onFault("Sender node address of payload is not matching our node address");
+                return;
+            }
+        }
+
+        if (payload instanceof SendersSignaturePubKeyAwarePayload) {
+            SendersSignaturePubKeyAwarePayload signaturePubKeyAwarePayload =
+                    (SendersSignaturePubKeyAwarePayload) payload;
+            PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
+            PublicKey senderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+            if (!SendersSignaturePubKeyAwarePayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
+                    mySignaturePubKey)) {
+                log.error("Sender signature pubkey {} does not match my signature pubkey {}",
+                        senderSignaturePubKey, mySignaturePubKey);
+                sendDirectMessageListener.onFault("Sender signature pubkey of payload is not matching our signature " +
+                        "pubkey");
                 return;
             }
         }

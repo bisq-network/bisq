@@ -24,6 +24,7 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.mocks.MockMailboxPayload;
+import bisq.network.p2p.mocks.MockSignaturePubKeyAwareMailboxPayload;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.PeerManager;
@@ -85,6 +86,33 @@ public class MailboxMessageServiceTest {
     }
 
     @Test
+    public void sendEncryptedMailboxMessageFailsBeforeEncryptionWhenPayloadSenderSignaturePubKeyDoesNotMatchLocalKey()
+            throws Exception {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        when(networkNode.getNodeAddress()).thenReturn(MY_NODE_ADDRESS);
+        when(networkNode.getAllConnections()).thenReturn(Set.of(mock(Connection.class)));
+        EncryptionService encryptionService = mock(EncryptionService.class);
+        KeyPair signatureKeyPair = TestUtils.generateKeyPair();
+        MailboxMessageService mailboxMessageService = newMailboxMessageService(networkNode,
+                encryptionService,
+                keyRing(signatureKeyPair));
+        mailboxMessageService.onBootstrapped();
+        SendMailboxMessageListener listener = mock(SendMailboxMessageListener.class);
+        PubKeyRing peersPubKeyRing = mock(PubKeyRing.class);
+
+        mailboxMessageService.sendEncryptedMailboxMessage(PEER_NODE_ADDRESS,
+                peersPubKeyRing,
+                new MockSignaturePubKeyAwareMailboxPayload("msg",
+                        MY_NODE_ADDRESS,
+                        TestUtils.generateKeyPair().getPublic()),
+                listener);
+
+        verify(listener).onFault("Sender signature pubkey of payload is not matching our signature pubkey");
+        verify(encryptionService, never()).encryptAndSign(any(PubKeyRing.class), any(NetworkEnvelope.class));
+        verify(networkNode, never()).sendMessage(any(NodeAddress.class), any(PrefixedSealedAndSignedMessage.class));
+    }
+
+    @Test
     public void onAddedRemovesInvalidDecryptedMailboxMessageFromNetwork() throws Exception {
         NetworkNode networkNode = mock(NetworkNode.class);
         when(networkNode.getNodeAddress()).thenReturn(MY_NODE_ADDRESS);
@@ -137,6 +165,12 @@ public class MailboxMessageServiceTest {
                                                                   EncryptionService encryptionService) {
         KeyRing keyRing = mock(KeyRing.class);
         when(keyRing.getPubKeyRing()).thenReturn(mock(PubKeyRing.class));
+        return newMailboxMessageService(networkNode, encryptionService, keyRing);
+    }
+
+    private static MailboxMessageService newMailboxMessageService(NetworkNode networkNode,
+                                                                  EncryptionService encryptionService,
+                                                                  KeyRing keyRing) {
         return newMailboxMessageService(networkNode, mock(P2PDataStorage.class), encryptionService, keyRing);
     }
 
@@ -154,5 +188,12 @@ public class MailboxMessageServiceTest {
                 keyRing,
                 Clock.systemUTC(),
                 false);
+    }
+
+    private static KeyRing keyRing(KeyPair signatureKeyPair) {
+        KeyRing keyRing = mock(KeyRing.class);
+        when(keyRing.getPubKeyRing()).thenReturn(mock(PubKeyRing.class));
+        when(keyRing.getSignatureKeyPair()).thenReturn(signatureKeyPair);
+        return keyRing;
     }
 }

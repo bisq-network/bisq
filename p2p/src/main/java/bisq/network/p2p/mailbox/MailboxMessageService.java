@@ -24,6 +24,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersSignaturePubKeyAwarePayload;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
@@ -309,6 +310,21 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                 log.error("Sender node address {} does not match my node address {}",
                         payloadSenderNodeAddress, senderNodeAddress);
                 sendMailboxMessageListener.onFault("Sender node address of payload is not matching our node address");
+                return;
+            }
+        }
+
+        if (payload instanceof SendersSignaturePubKeyAwarePayload) {
+            SendersSignaturePubKeyAwarePayload signaturePubKeyAwarePayload =
+                    (SendersSignaturePubKeyAwarePayload) payload;
+            PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
+            PublicKey senderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+            if (!SendersSignaturePubKeyAwarePayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
+                    mySignaturePubKey)) {
+                log.error("Sender signature pubkey {} does not match my signature pubkey {}",
+                        senderSignaturePubKey, mySignaturePubKey);
+                sendMailboxMessageListener.onFault("Sender signature pubkey of payload is not matching our signature " +
+                        "pubkey");
                 return;
             }
         }

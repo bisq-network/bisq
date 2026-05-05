@@ -20,12 +20,15 @@ package bisq.network.p2p.mailbox;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersSignaturePubKeyAwarePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
+
+import java.security.PublicKey;
 
 import java.time.Clock;
 
@@ -106,6 +109,20 @@ public class MailboxItem implements PersistablePayload {
                 log.error("Decrypted mailbox item sender address mismatch. " +
                                 "senderNodeAddress={}, payloadSenderNodeAddress={}",
                         senderNodeAddress, payloadSenderNodeAddress);
+                return null;
+            }
+        }
+
+        if (decryptedPayload instanceof SendersSignaturePubKeyAwarePayload) {
+            SendersSignaturePubKeyAwarePayload signaturePubKeyAwarePayload =
+                    (SendersSignaturePubKeyAwarePayload) decryptedPayload;
+            PublicKey payloadSenderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+            PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
+            if (!SendersSignaturePubKeyAwarePayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
+                    signaturePubKey)) {
+                log.error("Decrypted mailbox item sender signature pubkey mismatch. " +
+                                "payloadSenderSignaturePubKey={}, sealedPayloadSignaturePubKey={}",
+                        payloadSenderSignaturePubKey, signaturePubKey);
                 return null;
             }
         }
