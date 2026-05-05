@@ -250,8 +250,7 @@ message InputsForDepositTxRequest {
     bytes taker_multi_sig_pub_key = 11;
     string taker_payout_address_string = 12;
     PubKeyRing taker_pub_key_ring = 13;
-    // Not used anymore from 1.7.0 but kept for backward compatibility.
-    PaymentAccountPayload taker_payment_account_payload = 14;
+    PaymentAccountPayload taker_payment_account_payload = 14 [deprecated = true]; // Removed in v1.9.24
     string taker_account_id = 15;
     string taker_fee_tx_id = 16;
     repeated NodeAddress accepted_arbitrator_node_addresses = 17;

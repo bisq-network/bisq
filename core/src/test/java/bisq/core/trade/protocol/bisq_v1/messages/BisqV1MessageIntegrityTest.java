@@ -271,7 +271,6 @@ public class BisqV1MessageIntegrityTest {
                 args.takerMultiSigPubKey,
                 args.takerPayoutAddressString,
                 args.takerPubKeyRing,
-                null,
                 args.takerAccountId,
                 args.takerFeeTxId,
                 args.acceptedArbitratorNodeAddresses,

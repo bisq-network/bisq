@@ -121,7 +121,6 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     takerMultiSigPubKey,
                     takerPayoutAddressString,
                     processModel.getPubKeyRing(),
-                    null,
                     processModel.getAccountId(),
                     takerFeeTxId,
                     acceptedArbitratorAddresses,

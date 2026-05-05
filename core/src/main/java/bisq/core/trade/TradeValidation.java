@@ -68,6 +68,7 @@ public class TradeValidation {
     public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
     public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3;
 
+
     /* --------------------------------------------------------------------- */
     // Offer
     /* --------------------------------------------------------------------- */
