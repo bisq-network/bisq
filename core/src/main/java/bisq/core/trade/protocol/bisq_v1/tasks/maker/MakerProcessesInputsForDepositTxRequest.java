@@ -24,7 +24,6 @@ import bisq.core.offer.OfferValidation;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.TradeValidation;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
@@ -45,6 +44,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkMultiSigPubKey;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkTradeAmount;
 import static bisq.core.util.Validator.nonEmptyStringOf;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -73,7 +73,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Optional.ofNullable(request.getTakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
 
-            Coin tradeAmount = TradeValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
+            Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
 
             // Taker pays the miner fee for deposit tx and payout tx
             Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
