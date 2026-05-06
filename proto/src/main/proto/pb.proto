@@ -269,8 +269,7 @@ message InputsForDepositTxRequest {
 
 message InputsForDepositTxResponse {
     string trade_id = 1;
-    // Not used anymore from 1.7.0 but kept for backward compatibility.
-    PaymentAccountPayload maker_payment_account_payload = 2;
+    PaymentAccountPayload maker_payment_account_payload = 2 [deprecated = true]; // Removed in v1.9.24
     string maker_account_id = 3;
     string maker_contract_as_json = 4;
     string maker_contract_signature = 5;
