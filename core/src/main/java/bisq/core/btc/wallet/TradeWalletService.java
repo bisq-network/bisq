@@ -722,7 +722,12 @@ public class TradeWalletService {
             checkNotNull(aesKey);
         }
 
-        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey);
+        // LowRSigningKey already produces canonical (low-R, low-S) signatures. Chain
+        // toCanonicalised() explicitly so a future refactor that swaps the signer for plain
+        // ECKey.sign cannot silently regress this property.
+        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair)
+                .sign(sigHash, aesKey)
+                .toCanonicalised();
         WalletService.printTx("delayedPayoutTx for sig creation", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return mySignature.encodeToDER();
@@ -828,7 +833,7 @@ public class TradeWalletService {
         if (multiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature buyerSignature = LowRSigningKey.from(multiSigKeyPair).sign(sigHash, aesKey);
+        ECKey.ECDSASignature buyerSignature = LowRSigningKey.from(multiSigKeyPair).sign(sigHash, aesKey).toCanonicalised();
         WalletService.printTx("prepared payoutTx", preparedPayoutTx);
         WalletService.verifyTransaction(preparedPayoutTx);
         return buyerSignature.encodeToDER();
@@ -880,7 +885,7 @@ public class TradeWalletService {
         if (multiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature sellerSignature = LowRSigningKey.from(multiSigKeyPair).sign(sigHash, aesKey);
+        ECKey.ECDSASignature sellerSignature = LowRSigningKey.from(multiSigKeyPair).sign(sigHash, aesKey).toCanonicalised();
         TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
                 Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(sellerSignature, Transaction.SigHash.ALL, false);
@@ -935,7 +940,7 @@ public class TradeWalletService {
         if (myMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey);
+        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey).toCanonicalised();
         WalletService.printTx("prepared mediated payoutTx for sig creation", preparedPayoutTx);
         WalletService.verifyTransaction(preparedPayoutTx);
         return mySignature.encodeToDER();
@@ -1045,7 +1050,7 @@ public class TradeWalletService {
         if (tradersMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature tradersSignature = LowRSigningKey.from(tradersMultiSigKeyPair).sign(sigHash, aesKey);
+        ECKey.ECDSASignature tradersSignature = LowRSigningKey.from(tradersMultiSigKeyPair).sign(sigHash, aesKey).toCanonicalised();
         TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
         TransactionSignature arbitratorTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(arbitratorSignature),
                 Transaction.SigHash.ALL, false);
@@ -1124,7 +1129,7 @@ public class TradeWalletService {
 
         ECKey myPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(myPrivKeyAsHex));
         checkNotNull(myPrivateKey, "key must not be null");
-        ECKey.ECDSASignature myECDSASignature = LowRSigningKey.from(myPrivateKey).sign(sigHash, aesKey);
+        ECKey.ECDSASignature myECDSASignature = LowRSigningKey.from(myPrivateKey).sign(sigHash, aesKey).toCanonicalised();
         TransactionSignature myTxSig = new TransactionSignature(myECDSASignature, Transaction.SigHash.ALL, false);
         return Utils.HEX.encode(myTxSig.encodeToBitcoin());
     }
