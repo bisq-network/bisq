@@ -203,11 +203,12 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 .setUid(uid)
                 .setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(accountAgeWitnessSignatureOfOfferId))
                 .setCurrentDate(currentDate)
-                .setBurningManSelectionHeight(burningManSelectionHeight);
+                .setBurningManSelectionHeight(burningManSelectionHeight)
+                .setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload))
+                .setTakersPayoutMethodId(takersPaymentMethodId);
 
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
-        Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
-        Optional.ofNullable(takersPaymentMethodId).ifPresent(e -> builder.setTakersPayoutMethodId(takersPaymentMethodId));
+
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
