@@ -21,8 +21,8 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.TradeValidation;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
+import bisq.core.trade.validation.TradeValidation;
 import bisq.core.util.Validator;
 
 import bisq.network.p2p.NodeAddress;
@@ -37,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.TradeValidation.checkMakerFee;
-import static bisq.core.trade.TradeValidation.checkTakerFee;
-import static bisq.core.trade.TradeValidation.checkTradeId;
+import static bisq.core.trade.validation.TradeValidation.checkMakerFee;
+import static bisq.core.trade.validation.TradeValidation.checkTakerFee;
+import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Math.abs;
