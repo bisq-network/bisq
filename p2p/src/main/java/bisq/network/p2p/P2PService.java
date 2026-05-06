@@ -411,9 +411,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return true;
         }
 
-        SendersSignaturePubKeyProvidingPayload signaturePubKeyAwarePayload =
+        SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
                 (SendersSignaturePubKeyProvidingPayload) decryptedPayload;
-        PublicKey payloadSenderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+        PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
         PublicKey signaturePubKey = decryptedMsg.getSignaturePubKey();
         if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
                 signaturePubKey)) {
@@ -437,9 +437,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
 
         if (decryptedPayload instanceof SendersNodeAddressProvidingPayload) {
-            SendersNodeAddressProvidingPayload nodeAddressAwarePayload =
+            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
                     (SendersNodeAddressProvidingPayload) decryptedPayload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
+            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
             if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
                     senderNodeAddress)) {
                 log.error("Sender node address of decrypted payload {} does not match sender node address " +
@@ -501,10 +501,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
 
         if (payload instanceof SendersNodeAddressProvidingPayload) {
-            SendersNodeAddressProvidingPayload nodeAddressAwarePayload = (SendersNodeAddressProvidingPayload) payload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
+            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload = (SendersNodeAddressProvidingPayload) payload;
+            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
             if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
-                // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
+                // Sender node address of the SendersNodeAddressProvidingPayload to be used for encryption
                 // must match the node address of the sender.
                 log.error("Sender node address {} does not match my node address {}",
                         payloadSenderNodeAddress, senderNodeAddress);
@@ -514,10 +514,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
 
         if (payload instanceof SendersSignaturePubKeyProvidingPayload) {
-            SendersSignaturePubKeyProvidingPayload signaturePubKeyAwarePayload =
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
                     (SendersSignaturePubKeyProvidingPayload) payload;
             PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
-            PublicKey senderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+            PublicKey senderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
             if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
                     mySignaturePubKey)) {
                 log.error("Sender signature pubkey {} does not match my signature pubkey {}",

@@ -41,7 +41,7 @@ public class SendersSignaturePubKeyProvidingPayloadTest {
     }
 
     @Test
-    public void senderAwarePayloadMatchesExpectedSenderSignaturePubKey() throws NoSuchAlgorithmException {
+    public void senderProvidingPayloadMatchesExpectedSenderSignaturePubKey() throws NoSuchAlgorithmException {
         PublicKey expectedSenderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
         SignaturePubKeyProvidingPayload payload = new SignaturePubKeyProvidingPayload(expectedSenderSignaturePubKey);
 
@@ -52,7 +52,7 @@ public class SendersSignaturePubKeyProvidingPayloadTest {
     }
 
     @Test
-    public void senderAwarePayloadDoesNotMatchDifferentSenderSignaturePubKey() throws NoSuchAlgorithmException {
+    public void senderProvidingPayloadDoesNotMatchDifferentSenderSignaturePubKey() throws NoSuchAlgorithmException {
         SignaturePubKeyProvidingPayload payload = new SignaturePubKeyProvidingPayload(TestUtils.generateKeyPair().getPublic());
         PublicKey expectedSenderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
 
@@ -61,7 +61,7 @@ public class SendersSignaturePubKeyProvidingPayloadTest {
     }
 
     @Test
-    public void senderAwarePayloadDoesNotMatchNullExpectedSenderSignaturePubKey() throws NoSuchAlgorithmException {
+    public void senderProvidingPayloadDoesNotMatchNullExpectedSenderSignaturePubKey() throws NoSuchAlgorithmException {
         SignaturePubKeyProvidingPayload payload = new SignaturePubKeyProvidingPayload(TestUtils.generateKeyPair().getPublic());
 
         assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payload.getSenderSignaturePubKey(),

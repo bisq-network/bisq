@@ -101,9 +101,9 @@ public class MailboxItem implements PersistablePayload {
                 .getPrefixedSealedAndSignedMessage()
                 .getSenderNodeAddress();
         if (decryptedPayload instanceof SendersNodeAddressProvidingPayload) {
-            SendersNodeAddressProvidingPayload nodeAddressAwarePayload =
+            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
                     (SendersNodeAddressProvidingPayload) decryptedPayload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
+            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
             if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
                     senderNodeAddress)) {
                 log.error("Decrypted mailbox item sender address mismatch. " +
@@ -114,9 +114,9 @@ public class MailboxItem implements PersistablePayload {
         }
 
         if (decryptedPayload instanceof SendersSignaturePubKeyProvidingPayload) {
-            SendersSignaturePubKeyProvidingPayload signaturePubKeyAwarePayload =
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
                     (SendersSignaturePubKeyProvidingPayload) decryptedPayload;
-            PublicKey payloadSenderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+            PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
                     signaturePubKey)) {

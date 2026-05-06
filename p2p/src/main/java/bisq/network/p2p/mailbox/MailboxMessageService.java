@@ -302,10 +302,10 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         }
 
         if (payload instanceof SendersNodeAddressProvidingPayload) {
-            SendersNodeAddressProvidingPayload nodeAddressAwarePayload = (SendersNodeAddressProvidingPayload) payload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
+            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload = (SendersNodeAddressProvidingPayload) payload;
+            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
             if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
-                // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
+                // Sender node address of the SendersNodeAddressProvidingPayload to be used for encryption
                 // must match the node address of the sender.
                 log.error("Sender node address {} does not match my node address {}",
                         payloadSenderNodeAddress, senderNodeAddress);
@@ -315,10 +315,10 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         }
 
         if (payload instanceof SendersSignaturePubKeyProvidingPayload) {
-            SendersSignaturePubKeyProvidingPayload signaturePubKeyAwarePayload =
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
                     (SendersSignaturePubKeyProvidingPayload) payload;
             PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
-            PublicKey senderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
+            PublicKey senderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
             if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
                     mySignaturePubKey)) {
                 log.error("Sender signature pubkey {} does not match my signature pubkey {}",
@@ -518,7 +518,10 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     }
 
     private void handleMailboxItem(MailboxItem mailboxItem) {
-        // We might get an invalid flag if network was not ready yet, thus we add that check
+        // invalidDecryptedMessage reflects payload validation failure. We only remove such entries
+        // after all services are initialized and the node is bootstrapped, when it is safe to
+        // delete them from the network and local store.
+        // The isInvalidDecryptedMessage might fail as well  as false positive in case the network was not ready.
         if (mailboxItem.isInvalidDecryptedMessage() && allServicesInitialized && isBootstrapped) {
             removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
             removeMailboxItemFromLocalStore(mailboxItem.getUid());

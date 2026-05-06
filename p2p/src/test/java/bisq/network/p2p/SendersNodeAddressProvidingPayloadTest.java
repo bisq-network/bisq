@@ -40,7 +40,7 @@ public class SendersNodeAddressProvidingPayloadTest {
     }
 
     @Test
-    public void senderAwarePayloadMatchesExpectedSenderNodeAddress() {
+    public void senderProvidingPayloadMatchesExpectedSenderNodeAddress() {
         MockMailboxPayload payload = new MockMailboxPayload("msg", EXPECTED_SENDER);
 
         assertTrue(payload instanceof SendersNodeAddressProvidingPayload);
@@ -50,7 +50,7 @@ public class SendersNodeAddressProvidingPayloadTest {
     }
 
     @Test
-    public void senderAwarePayloadDoesNotMatchDifferentSenderNodeAddress() {
+    public void senderProvidingPayloadDoesNotMatchDifferentSenderNodeAddress() {
         MockMailboxPayload payload = new MockMailboxPayload("msg", OTHER_SENDER);
 
         assertFalse(SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(),
@@ -58,7 +58,7 @@ public class SendersNodeAddressProvidingPayloadTest {
     }
 
     @Test
-    public void senderAwarePayloadDoesNotMatchNullExpectedSenderNodeAddress() {
+    public void senderProvidingPayloadDoesNotMatchNullExpectedSenderNodeAddress() {
         MockMailboxPayload payload = new MockMailboxPayload("msg", EXPECTED_SENDER);
 
         assertFalse(SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(), null));

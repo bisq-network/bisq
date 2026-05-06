@@ -30,7 +30,7 @@ import static bisq.core.util.Validator.checkNonEmptyString;
 
 /**
  * Base class for trade-related messages exchanged between peers.
- * As the TradeMessage is wrapped into a PrefixedSealedAndSignedMessage we use the SendersNodeAddressAwarePayload
+ * As the TradeMessage is wrapped into a PrefixedSealedAndSignedMessage we use the SendersNodeAddressProvidingPayload
  * to allow network level validation that the senders node address matches the address from the outer
  * SendersNodeAddressAwareEnvelope.
  */
