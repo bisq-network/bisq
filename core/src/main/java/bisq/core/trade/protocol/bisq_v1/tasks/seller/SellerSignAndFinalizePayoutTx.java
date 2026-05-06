@@ -86,8 +86,13 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
 
             DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, sellerMultiSigPubKey);
 
+            Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+
+            processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
+                    depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
+
             Transaction transaction = processModel.getTradeWalletService().sellerSignsAndFinalizesPayoutTx(
-                    checkNotNull(trade.getDepositTx()),
+                    depositTx,
                     buyerSignature,
                     buyerPayoutAmount,
                     sellerPayoutAmount,

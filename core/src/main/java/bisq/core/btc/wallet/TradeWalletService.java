@@ -1371,6 +1371,29 @@ public class TradeWalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
+    /**
+     * Defence-in-depth check used by every payout-signing task. Verifies that the deposit-tx's
+     * output[0] script is the agreed 2-of-2 multisig for the trade. If trade.getDepositTx() is
+     * ever substituted upstream (e.g. via a future regression), this gate stops the local node
+     * from signing a payout that pays an attacker. Script-only: a value-substituted deposit tx
+     * would yield a sighash valid only for that tx, which has no on-chain prevout to spend.
+     */
+    public void verifyDepositTxMultiSigOutput(Transaction depositTx,
+                                              byte[] buyerPubKey,
+                                              byte[] sellerPubKey)
+            throws TransactionVerificationException {
+        if (depositTx.getOutputs().isEmpty()) {
+            throw new TransactionVerificationException(
+                    "depositTx has no outputs, txId=" + depositTx.getTxId());
+        }
+        Script expected = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
+        Script actual = depositTx.getOutput(0).getScriptPubKey();
+        if (!actual.equals(expected)) {
+            throw new TransactionVerificationException(
+                    "depositTx.output[0] is not the agreed 2-of-2 multisig script, txId=" + depositTx.getTxId());
+        }
+    }
+
     private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey) {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         return ScriptBuilder.createP2WSHOutputScript(redeemScript);
