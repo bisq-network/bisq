@@ -895,6 +895,28 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkTradeTxFeeRejectsFeesBelowMinBound() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(Coin.valueOf(249)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(249L));
+    }
+
+    @Test
+    void checkTradeTxFeeRejectsFeesAboveMaxBound() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(Coin.valueOf(360_001)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(360_001L));
+    }
+
+    @Test
+    void checkTradeTxFeeAcceptsBoundaryValues() {
+        Coin min = Coin.valueOf(TradeValidation.MIN_TRADE_TX_FEE_SAT);
+        Coin max = Coin.valueOf(TradeValidation.MAX_TRADE_TX_FEE_SAT);
+        assertSame(min, TradeValidation.checkTradeTxFee(min));
+        assertSame(max, TradeValidation.checkTradeTxFee(max));
+        assertEquals(TradeValidation.MIN_TRADE_TX_FEE_SAT, TradeValidation.checkTradeTxFee(TradeValidation.MIN_TRADE_TX_FEE_SAT));
+        assertEquals(TradeValidation.MAX_TRADE_TX_FEE_SAT, TradeValidation.checkTradeTxFee(TradeValidation.MAX_TRADE_TX_FEE_SAT));
+    }
+
+    @Test
     void checkTradeTxFeeAcceptsCalculatedTxFee() {
         Coin txFee = TradeFeeFactory.getTradeTxFee(Coin.valueOf(2));
 
@@ -1191,7 +1213,7 @@ public class TradeValidationTest {
         String offerId = "offer-id";
         Coin tradeAmount = Coin.valueOf(3_000);
         Coin expectedTakerFee = Coin.valueOf(100);
-        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), expectedTakerFee);
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), expectedTakerFee, 2);
         Coin tradeTxFee = TradeFeeFactory.getTradeTxFee(feeService.getTxFeePerVbyte());
         NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
         BtcWalletService btcWalletService = btcWalletService(MainNetParams.get());

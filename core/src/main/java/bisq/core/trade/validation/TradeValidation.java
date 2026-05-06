@@ -379,13 +379,31 @@ public class TradeValidation {
         return checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
     }
 
+    // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
+    // unconfirmable (locking maker funds); a huge value can drain miner fees from the maker.
+    // Envelope derived from realistic miner-fee range 1..600 sat/vB over up to ~600 vB
+    // (headroom above the stored average of taker-fee-tx ~192 vB and deposit-tx ~233 vB).
+    // The tighter check is checkTradeTxFeeIsInTolerance; these are absolute sanity bounds.
+    public static final long MIN_TRADE_TX_FEE_SAT = 250L;
+    public static final long MAX_TRADE_TX_FEE_SAT = 360_000L;
+
     public static Coin checkTradeTxFee(Coin tradeTxFee) {
         checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkTradeTxFeeBounds(tradeTxFee.getValue());
         return tradeTxFee;
     }
 
     public static long checkTradeTxFee(long tradeTxFee) {
-        return checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkTradeTxFeeBounds(tradeTxFee);
+        return tradeTxFee;
+    }
+
+    private static void checkTradeTxFeeBounds(long tradeTxFee) {
+        checkArgument(tradeTxFee >= MIN_TRADE_TX_FEE_SAT,
+                "tradeTxFee too low (must be >= %s sat). Got: %s", MIN_TRADE_TX_FEE_SAT, tradeTxFee);
+        checkArgument(tradeTxFee <= MAX_TRADE_TX_FEE_SAT,
+                "tradeTxFee too high (must be <= %s sat). Got: %s", MAX_TRADE_TX_FEE_SAT, tradeTxFee);
     }
 
     public static long checkTradeTxFeeIsInTolerance(long tradeTxFee, FeeService feeService) {
@@ -393,7 +411,7 @@ public class TradeValidation {
     }
 
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
-        checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkTradeTxFee(tradeTxFee);
         checkNotNull(feeService, "feeService must not be null");
         Coin txFeePerVbyte = feeService.getTxFeePerVbyte();
         Coin expectedTradeTxFee = TradeFeeFactory.getTradeTxFee(txFeePerVbyte);
@@ -401,7 +419,7 @@ public class TradeValidation {
     }
 
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, Coin expectedTradeTxFee) {
-        checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkTradeTxFee(tradeTxFee);
         checkIsPositive(expectedTradeTxFee, "expectedTradeTxFee");
         checkFeeIsInTolerance(tradeTxFee.getValue(), expectedTradeTxFee.getValue());
         return tradeTxFee;

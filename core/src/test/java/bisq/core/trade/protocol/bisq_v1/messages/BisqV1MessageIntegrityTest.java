@@ -237,6 +237,20 @@ public class BisqV1MessageIntegrityTest {
     }
 
     @Test
+    void inputsForDepositTxRequestRejectsTxFeeOutsideBounds() {
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = 249L));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = 360_001L));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = 0L));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = -1L));
+    }
+
+    @Test
+    void inputsForDepositTxRequestAcceptsTxFeeAtBounds() {
+        newRequest(args -> args.txFee = 250L);
+        newRequest(args -> args.txFee = 360_000L);
+    }
+
+    @Test
     void inputsForDepositTxRequestRejectsInvalidInputLists() {
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.rawTransactionInputs = List.of()));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.acceptedMediatorNodeAddresses =
