@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -42,7 +41,6 @@ public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
             runInterceptHook();
             DelayedPayoutTxSignatureRequest request = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
             checkNotNull(request);
-            Validator.checkTradeId(processModel.getOfferId(), request);
             byte[] delayedPayoutTxAsBytes = checkNotNull(request.getDelayedPayoutTx());
             Transaction preparedDelayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);

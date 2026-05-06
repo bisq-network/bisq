@@ -24,22 +24,20 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
-import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.config.Config;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Coin;
+import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
-import static bisq.core.util.Validator.nonEmptyStringOf;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -55,7 +53,6 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             runInterceptHook();
             InputsForDepositTxResponse response = (InputsForDepositTxResponse) processModel.getTradeMessage();
             checkNotNull(response);
-            checkTradeId(processModel.getOfferId(), response);
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradingPeer tradingPeer = processModel.getTradePeer();
@@ -69,40 +66,26 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             Optional.ofNullable(response.getMakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(response.getMakersPaymentMethodId()));
 
-            tradingPeer.setAccountId(nonEmptyStringOf(response.getMakerAccountId()));
+            tradingPeer.setAccountId(response.getMakerAccountId());
 
-            byte[] makerMultiSigPubKey = checkNotNull(response.getMakerMultiSigPubKey());
-            checkArgument(makerMultiSigPubKey.length == 33, "makerMultiSigPubKey must be compressed");
-            // Check that the maker multisig key decompresses to a valid curve point:
-            ECKey.fromPublicOnly(makerMultiSigPubKey);
+            byte[] makerMultiSigPubKey = checkMultiSigPubKey(response.getMakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(makerMultiSigPubKey);
 
-            tradingPeer.setContractAsJson(nonEmptyStringOf(response.getMakerContractAsJson()));
-            tradingPeer.setContractSignature(nonEmptyStringOf(response.getMakerContractSignature()));
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(response.getMakerPayoutAddressString()));
-            List<RawTransactionInput> makerRawTransactionInputs = checkNotNull(response.getMakerInputs());
+            tradingPeer.setContractAsJson(response.getMakerContractAsJson());
 
-            Coin expectedMakersInputAmount;
-            if (offer.isBuyOffer()) {
-                // maker is the buyer.
-                expectedMakersInputAmount = offer.getBuyerSecurityDeposit();
-            } else {
-                // maker is seller
-                // We use the offer amount not the trade amount as we compare with the inputs which come from the
-                // makers fee tx which has the reserved funds for the max. offer amount.
-                expectedMakersInputAmount = offer.getSellerSecurityDeposit()
-                        .add(offer.getAmount());
-            }
+            tradingPeer.setContractSignature(response.getMakerContractSignature());
 
-            TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
-                    expectedMakersInputAmount,
+            String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
+            tradingPeer.setPayoutAddressString(makerPayoutAddressString);
+
+            List<RawTransactionInput> makerRawTransactionInputs = checkMakersRawTransactionInputs(response.getMakerInputs(),
                     btcWalletService,
-                    "Maker");
-
+                    offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 
-            byte[] preparedDepositTx = checkNotNull(response.getPreparedDepositTx());
+            byte[] preparedDepositTx = checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
+
             long lockTime = response.getLockTime();
             if (Config.baseCurrencyNetwork().isMainnet()) {
                 int myLockTime = btcWalletService.getBestChainHeight() +
@@ -119,8 +102,16 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             // Maker has to sign preparedDepositTx. He cannot manipulate the preparedDepositTx - so we avoid to have a
             // challenge protocol for passing the nonce we want to get signed.
-            tradingPeer.setAccountAgeWitnessNonce(preparedDepositTx);
-            tradingPeer.setAccountAgeWitnessSignature(checkNotNull(response.getAccountAgeWitnessSignatureOfPreparedDepositTx()));
+            PubKeyRing makerPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "makerPubKeyRing must not be null");
+            PublicKey makerSignatureKey = makerPubKeyRing.getSignaturePubKey();
+            @SuppressWarnings("UnnecessaryLocalVariable")
+            byte[] accountAgeWitnessNonce = preparedDepositTx;
+            byte[] accountAgeWitnessSignature = checkSignature(response.getAccountAgeWitnessSignatureOfPreparedDepositTx(),
+                    accountAgeWitnessNonce,
+                    makerSignatureKey);
+            tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);
+
+            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
 
             tradingPeer.setCurrentDate(response.getCurrentDate());
 

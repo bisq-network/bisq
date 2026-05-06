@@ -88,7 +88,7 @@ public class Validator {
     }
 
     public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(isTradeIdValid(tradeId, tradeMessage));
+        checkArgument(isTradeIdValid(tradeId, tradeMessage), "TradeId %s is not valid", tradeId);
     }
 
     public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {

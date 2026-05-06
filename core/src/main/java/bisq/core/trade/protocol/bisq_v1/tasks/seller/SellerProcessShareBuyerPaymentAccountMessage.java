@@ -50,7 +50,6 @@ import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -66,7 +65,6 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
             runInterceptHook();
             ShareBuyerPaymentAccountMessage message = (ShareBuyerPaymentAccountMessage) processModel.getTradeMessage();
             checkNotNull(message);
-            checkTradeId(processModel.getOfferId(), message);
 
             PaymentAccountPayload buyerPaymentAccountPayload = message.getBuyerPaymentAccountPayload();
 

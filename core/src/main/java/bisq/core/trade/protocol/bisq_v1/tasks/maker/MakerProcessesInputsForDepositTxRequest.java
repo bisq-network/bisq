@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferValidation;
@@ -26,26 +27,26 @@ import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
-import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 
 import com.google.common.base.Charsets;
+
+import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
-import static bisq.core.util.Validator.nonEmptyStringOf;
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -61,10 +62,11 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             runInterceptHook();
             InputsForDepositTxRequest request = (InputsForDepositTxRequest) processModel.getTradeMessage();
             checkNotNull(request);
-            checkTradeId(processModel.getOfferId(), request);
 
             TradingPeer tradingPeer = processModel.getTradePeer();
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -74,72 +76,46 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Optional.ofNullable(request.getTakersPaymentMethodId())
                     .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
 
-            long requestTradeAmount = request.getTradeAmount();
-            checkArgument(requestTradeAmount >= offer.getMinAmount().value,
-                    "Trade amount must be at least offer minimum amount. requestTradeAmount=%s, minAmount=%s",
-                    requestTradeAmount, offer.getMinAmount().value);
-            checkArgument(requestTradeAmount <= offer.getAmount().value,
-                    "Trade amount must not exceed offer amount. requestTradeAmount=%s, offerAmount=%s",
-                    requestTradeAmount, offer.getAmount().value);
-            Coin tradeAmount = Coin.valueOf(requestTradeAmount);
-
-            // Taker pays the miner fee for deposit tx and payout tx
-            Coin takersDoubleMinerFee = trade.getTradeTxFee().multiply(2);
-            Coin expectedTakersInputAmount;
-            if (offer.isBuyOffer()) {
-                // Taker is the seller.
-                expectedTakersInputAmount = offer.getSellerSecurityDeposit()
-                        .add(tradeAmount)
-                        .add(takersDoubleMinerFee);
-            } else {
-                // Taker is buyer
-                expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
-                        .add(takersDoubleMinerFee);
-            }
-
-            List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(request.getRawTransactionInputs());
-            TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
-                    expectedTakersInputAmount,
-                    processModel.getBtcWalletService(),
-                    "Taker");
-
+            Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
             trade.setAmount(tradeAmount);
 
+            List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+                    btcWalletService,
+                    trade,
+                    tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            byte[] takerMultiSigPubKey = checkNotNull(request.getTakerMultiSigPubKey());
-            checkArgument(takerMultiSigPubKey.length == 33, "takerMultiSigPubKey must be compressed");
-            // Check that the taker multisig key decompresses to a valid curve point:
-            ECKey.fromPublicOnly(takerMultiSigPubKey);
+            byte[] takerMultiSigPubKey = checkMultiSigPubKey(request.getTakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(request.getTakerPayoutAddressString()));
-            tradingPeer.setPubKeyRing(checkNotNull(request.getTakerPubKeyRing()));
+            String takerPayoutAddressString = checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+            tradingPeer.setPayoutAddressString(takerPayoutAddressString);
 
-            tradingPeer.setAccountId(nonEmptyStringOf(request.getTakerAccountId()));
+            PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
+            tradingPeer.setPubKeyRing(takerPubKeyRing);
 
-            int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
-            checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
+            tradingPeer.setAccountId(request.getTakerAccountId());
 
-            int makersBurningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
-
-            boolean areBurningManSelectionHeightsValid = verifyBurningManSelectionHeight(
-                    takersBurningManSelectionHeight, makersBurningManSelectionHeight);
-            checkArgument(areBurningManSelectionHeightsValid,
-                    "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
-
+            int takersBurningManSelectionHeight = checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
             processModel.setBurningManSelectionHeight(takersBurningManSelectionHeight);
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
             // message but that cannot be changed due backward compatibility issues. It is a left over from the
             // old trade protocol.
-            processModel.setTakeOfferFeeTxId(nonEmptyStringOf(request.getTakerFeeTxId()));
+            String takerFeeTxId = checkTransactionId(request.getTakerFeeTxId());
+            processModel.setTakeOfferFeeTxId(takerFeeTxId);
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
             // passing the nonce we want to get signed)
-            tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
-            tradingPeer.setAccountAgeWitnessSignature(request.getAccountAgeWitnessSignatureOfOfferId());
+            byte[] accountAgeWitnessNonce = trade.getId().getBytes(Charsets.UTF_8);
+            PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
+            byte[] accountAgeWitnessSignature = checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+                    accountAgeWitnessNonce,
+                    takerSignatureKey);
+            tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);
+
+            tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
             tradingPeer.setCurrentDate(request.getCurrentDate());
 
             User user = checkNotNull(processModel.getUser(), "User must not be null");
@@ -171,23 +147,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
-        }
-    }
-
-    public static boolean verifyBurningManSelectionHeight(int takersBurningManSelectionHeight,
-                                                          int makersBurningManSelectionHeight) {
-        if (takersBurningManSelectionHeight == makersBurningManSelectionHeight) {
-            return true;
-
-        } else if (takersBurningManSelectionHeight < makersBurningManSelectionHeight) {
-            int takersNextBlockBurningManSelectionHeight =
-                    takersBurningManSelectionHeight + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
-            return takersNextBlockBurningManSelectionHeight == makersBurningManSelectionHeight;
-
-        } else {
-            int makersNextBlockBurningManSelectionHeight =
-                    makersBurningManSelectionHeight + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
-            return takersBurningManSelectionHeight == makersNextBlockBurningManSelectionHeight;
         }
     }
 }

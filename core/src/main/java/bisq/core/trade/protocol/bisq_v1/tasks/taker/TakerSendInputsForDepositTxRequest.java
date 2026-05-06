@@ -107,6 +107,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             int burningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
             processModel.setBurningManSelectionHeight(burningManSelectionHeight);
 
+
             String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,

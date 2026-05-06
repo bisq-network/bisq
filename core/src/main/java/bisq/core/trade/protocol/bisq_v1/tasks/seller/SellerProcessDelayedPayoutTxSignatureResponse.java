@@ -25,7 +25,6 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -40,7 +39,6 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
             runInterceptHook();
             DelayedPayoutTxSignatureResponse response = (DelayedPayoutTxSignatureResponse) processModel.getTradeMessage();
             checkNotNull(response);
-            checkTradeId(processModel.getOfferId(), response);
 
             processModel.getTradePeer().setDelayedPayoutTxSignature(checkNotNull(response.getDelayedPayoutTxBuyerSignature()));
 

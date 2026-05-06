@@ -22,7 +22,6 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
@@ -46,7 +45,6 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             MediatedPayoutTxPublishedMessage message = (MediatedPayoutTxPublishedMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
             checkArgument(message.getPayoutTx() != null);
 

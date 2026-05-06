@@ -49,6 +49,8 @@ import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.util.Validator.checkTradeId;
+
 @Slf4j
 public class DisputeProtocol extends TradeProtocol {
 
@@ -228,6 +230,8 @@ public class DisputeProtocol extends TradeProtocol {
 
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        checkTradeId(processModel.getOfferId(), message);
+
         if (message instanceof MediatedPayoutTxSignatureMessage) {
             handle((MediatedPayoutTxSignatureMessage) message, peer);
         } else if (message instanceof MediatedPayoutTxPublishedMessage) {
@@ -239,6 +243,8 @@ public class DisputeProtocol extends TradeProtocol {
 
     @Override
     protected void onMailboxMessage(TradeMessage message, NodeAddress peer) {
+        checkTradeId(processModel.getOfferId(), message);
+
         super.onMailboxMessage(message, peer);
         if (message instanceof MediatedPayoutTxSignatureMessage) {
             handle((MediatedPayoutTxSignatureMessage) message, peer);

@@ -27,7 +27,6 @@ import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMess
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
-import bisq.core.util.Validator;
 
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -58,7 +57,6 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             runInterceptHook();
             var message = checkNotNull((DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage());
             checkNotNull(message);
-            Validator.checkTradeId(processModel.getOfferId(), message);
 
             // To access tx confidence we need to add that tx into our wallet.
             byte[] depositTxBytes = checkNotNull(message.getDepositTx());

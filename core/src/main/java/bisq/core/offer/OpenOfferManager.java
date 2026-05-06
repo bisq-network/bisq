@@ -47,7 +47,6 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.TransactionResultHandler;
 import bisq.core.trade.model.TradableList;
-import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -103,6 +102,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.protocol.bisq_v1.TradeValidation.checkPeersBurningManSelectionHeight;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -876,16 +876,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             }
 
             try {
-                int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
-                checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
-
-                int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-
-                boolean areBurningManSelectionHeightsValid = MakerProcessesInputsForDepositTxRequest
-                        .verifyBurningManSelectionHeight(takersBurningManSelectionHeight, makersBurningManSelectionHeight);
-                checkArgument(areBurningManSelectionHeightsValid,
-                        "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight. " +
-                                "takersBurningManSelectionHeight=" + takersBurningManSelectionHeight + "; makersBurningManSelectionHeight=" + makersBurningManSelectionHeight);
+                checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
             } catch (Throwable t) {
                 errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
                 log.warn(errorMessage);
