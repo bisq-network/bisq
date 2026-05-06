@@ -46,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
+import static bisq.core.trade.validation.TradeValidation.checkSerializedTransaction;
+import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -68,8 +70,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             TradingPeer tradePeer = processModel.getTradePeer();
             PubKeyRing pubKeyRing = processModel.getPubKeyRing();
 
-            byte[] depositTxBytes = checkNotNull(message.getDepositTx());
-            Transaction depositTx = btcWalletService.getTxFromSerializedTx(depositTxBytes);
+            Transaction depositTx = toVerifiedTransaction(message.getDepositTx(), btcWalletService);
 
             // To access tx confidence we need to add that tx into our wallet.
             Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(depositTx, wallet);
@@ -78,7 +79,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             // update with full tx
             trade.applyDepositTx(committedDepositTx);
 
-            byte[] delayedPayoutTxBytes = checkNotNull(message.getDelayedPayoutTx());
+            byte[] delayedPayoutTxBytes = checkSerializedTransaction(message.getDelayedPayoutTx(), btcWalletService);
             checkArgument(Arrays.equals(delayedPayoutTxBytes, trade.getDelayedPayoutTxBytes()),
                     "mismatch between delayedPayoutTx received from peer and our one." +
                             "\n Expected: " + Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()) +
