@@ -17,8 +17,10 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -27,6 +29,8 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkDerEncodedEcdsaSignature;
+import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -39,12 +43,18 @@ public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             DelayedPayoutTxSignatureRequest request = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
             checkNotNull(request);
-            byte[] delayedPayoutTxAsBytes = checkNotNull(request.getDelayedPayoutTx());
-            Transaction preparedDelayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
+
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            TradingPeer tradePeer = processModel.getTradePeer();
+
+            Transaction preparedDelayedPayoutTx = toVerifiedTransaction(request.getDelayedPayoutTx(), btcWalletService);
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
-            processModel.getTradePeer().setDelayedPayoutTxSignature(checkNotNull(request.getDelayedPayoutTxSellerSignature()));
+
+            byte[] delayedPayoutTxSellerSignature = checkDerEncodedEcdsaSignature(request.getDelayedPayoutTxSellerSignature());
+            tradePeer.setDelayedPayoutTxSignature(delayedPayoutTxSellerSignature);
 
             // When we receive that message the taker has published the taker fee, so we apply it to the trade.
             // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
