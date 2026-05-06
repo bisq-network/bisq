@@ -43,7 +43,7 @@ public class Validator {
 
     public static String checkNonBlankString(String value, String fieldName) {
         checkNotNull(value, "%s must not be null", fieldName);
-        checkArgument(!value.isBlank(), "%s must not be empty", fieldName);
+        checkArgument(!value.isBlank(), "%s must not be blank", fieldName);
         return value;
     }
 
@@ -74,21 +74,31 @@ public class Validator {
         return values;
     }
 
-    public static long nonNegativeLongOf(long value) {
-        checkArgument(value >= 0);
+    public static long checkIsPositive(long value, String fieldName) {
+        checkArgument(value > 0, "%s must be positive", fieldName);
         return value;
     }
 
-    public static Coin nonZeroCoinOf(Coin value) {
-        checkNotNull(value);
-        checkArgument(!value.isZero());
+    public static long checkIsNotNegative(long value, String fieldName) {
+        checkArgument(value >= 0, "%s must not be negative", fieldName);
         return value;
     }
 
-    public static Coin positiveCoinOf(Coin value) {
-        checkNotNull(value);
-        checkArgument(value.isPositive());
+    public static Coin checkIsPositive(Coin value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(value.isPositive(), "%s must be positive", fieldName);
         return value;
     }
 
+    public static Coin checkIsNotNegative(Coin value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isNegative(), "%s must not be negative", fieldName);
+        return value;
+    }
+
+    public static Coin checkIsNotZero(Coin value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isZero(), "%s must not be zero", fieldName);
+        return value;
+    }
 }

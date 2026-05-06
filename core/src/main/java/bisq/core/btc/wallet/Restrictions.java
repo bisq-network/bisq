@@ -22,6 +22,9 @@ import bisq.common.config.Config;
 import org.bitcoinj.core.Coin;
 
 public class Restrictions {
+    public static final int LOCKTIME_FOR_FIAT = 144 * 20;
+    public static final int LOCKTIME_FOR_ALTCOIN = 144 * 10;
+
     private static final Coin MIN_TRADE_AMOUNT = Coin.valueOf(10_000);
     private static final Coin MIN_SECURITY_DEPOSIT = Coin.parseCoin("0.0003");
     private static final double MIN_SECURITY_DEPOSIT_AS_PERCENT = 0.15; // 15% of trade amount.
@@ -29,6 +32,7 @@ public class Restrictions {
     // At mediation, we require a min. payout to the losing party to keep incentive for the trader to accept the
     // mediated payout. For Refund agent cases we do not have that restriction.
     private static final Coin MIN_REFUND_AT_MEDIATED_DISPUTE = MIN_SECURITY_DEPOSIT.divide(2);
+
     private static Coin minNonDustOutput;
 
     public static Coin getMinNonDustOutput() {
@@ -88,8 +92,8 @@ public class Restrictions {
         }
     }
 
-    public static int getLockTime(boolean isAsset) {
+    public static int getLockTime(boolean isAltcoin) {
         // 10 days for altcoins, 20 days for other payment methods
-        return isAsset ? 144 * 10 : 144 * 20;
+        return isAltcoin ? LOCKTIME_FOR_ALTCOIN : LOCKTIME_FOR_FIAT;
     }
 }

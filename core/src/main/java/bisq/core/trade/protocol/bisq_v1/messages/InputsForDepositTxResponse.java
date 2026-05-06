@@ -36,10 +36,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import static bisq.core.util.Validator.checkList;
-import static bisq.core.util.Validator.checkNonBlankString;
-import static bisq.core.util.Validator.checkNonEmptyBytes;
-import static bisq.core.util.Validator.checkNonEmptyString;
+import static bisq.core.util.Validator.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -100,6 +97,7 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private InputsForDepositTxResponse(String tradeId,

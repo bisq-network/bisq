@@ -21,9 +21,9 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.TradeValidation;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
 import bisq.core.util.Validator;
-import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -32,12 +32,13 @@ import bisq.common.crypto.KeyRing;
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.TradeValidation.checkMakerFee;
+import static bisq.core.trade.TradeValidation.checkTakerFee;
 import static bisq.core.trade.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -76,9 +77,13 @@ public class BsqSwapTakeOfferRequestVerification {
             checkArgument(tradeAmount >= offer.getMinAmount().getValue() &&
                     tradeAmount <= offer.getAmount().getValue(), "TradeAmount not within offers amount range");
             checkArgument(isDateInTolerance(request), "Trade date is out of tolerance");
-            checkArgument(isTxFeeInTolerance(request, feeService), "Miner fee from taker not in tolerance");
-            checkArgument(request.getMakerFee() == Objects.requireNonNull(CoinUtil.getMakerFee(false, amountAsCoin)).value);
-            checkArgument(request.getTakerFee() == Objects.requireNonNull(CoinUtil.getTakerFee(false, amountAsCoin)).value);
+
+            long peersMinerFeeRate = request.getTxFeePerVbyte();
+            long expectedMinerFeeRate = feeService.getTxFeePerVbyte().getValue();
+            TradeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
+
+            checkMakerFee(request.getMakerFee(), false, amountAsCoin);
+            checkTakerFee(request.getTakerFee(), false, amountAsCoin);
         } catch (Exception e) {
             log.error("BsqSwapTakeOfferRequestVerification failed. Request={}, peer={}, error={}", request, peer, e.toString());
             return false;
@@ -89,19 +94,5 @@ public class BsqSwapTakeOfferRequestVerification {
 
     private static boolean isDateInTolerance(BsqSwapRequest request) {
         return abs(request.getTradeDate() - new Date().getTime()) < TimeUnit.MINUTES.toMillis(10);
-    }
-
-    private static boolean isTxFeeInTolerance(BsqSwapRequest request, FeeService feeService) {
-        double myFee = (double) feeService.getTxFeePerVbyte().getValue();
-        double peersFee = (double) Coin.valueOf(request.getTxFeePerVbyte()).getValue();
-        // Allow for 50% diff in mining fee, ie, maker will accept taker fee that's less
-        // than 50% off their own fee from service (that is, 100% higher or 50% lower).
-        // Both parties will use the same fee while creating the bsq swap tx.
-        double diff = abs(1 - myFee / peersFee);
-        boolean isInTolerance = diff < 0.5;
-        if (!isInTolerance) {
-            log.warn("Miner fee from taker not in tolerance. myFee={}, peersFee={}, diff={}", myFee, peersFee, diff);
-        }
-        return isInTolerance;
     }
 }

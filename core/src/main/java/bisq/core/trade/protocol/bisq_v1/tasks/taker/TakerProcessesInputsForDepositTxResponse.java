@@ -79,8 +79,8 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             byte[] preparedDepositTx = checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
 
-            boolean isBlockchain = offer.getPaymentMethod().isBlockchain();
-            long lockTime = checkLockTime(response.getLockTime(), isBlockchain, btcWalletService);
+            boolean isAltcoin = offer.getPaymentMethod().isBlockchain();
+            long lockTime = checkLockTime(response.getLockTime(), isAltcoin, btcWalletService);
             trade.setLockTime(lockTime);
 
             long delay = btcWalletService.getBestChainHeight() - lockTime;
