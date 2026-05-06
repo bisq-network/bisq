@@ -31,7 +31,6 @@ import bisq.common.taskrunner.TaskRunner;
 import java.security.PublicKey;
 
 import java.util.List;
-import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,17 +55,8 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradePeer();
             Offer offer = checkNotNull(processModel.getOffer(), "Offer must not be null");
 
-            // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
-            // TODO This is now always null and the field can be removed from the message
-            Optional.ofNullable(response.getMakerPaymentAccountPayload())
-                    .ifPresent(e -> tradingPeer.setPaymentAccountPayload(response.getMakerPaymentAccountPayload()));
-
-            // Those 2 fields are actually not null anymore as old versions cannot trade anymore
-            // TODO remove the nullable annotation
-            Optional.ofNullable(response.getHashOfMakersPaymentAccountPayload())
-                    .ifPresent(e -> tradingPeer.setHashOfPaymentAccountPayload(response.getHashOfMakersPaymentAccountPayload()));
-            Optional.ofNullable(response.getMakersPaymentMethodId())
-                    .ifPresent(e -> tradingPeer.setPaymentMethodId(response.getMakersPaymentMethodId()));
+            tradingPeer.setHashOfPaymentAccountPayload(response.getHashOfMakersPaymentAccountPayload());
+            tradingPeer.setPaymentMethodId(response.getMakersPaymentMethodId());
 
             tradingPeer.setAccountId(response.getMakerAccountId());
 

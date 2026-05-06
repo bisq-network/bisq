@@ -239,7 +239,6 @@ public class BisqV1MessageIntegrityTest {
         customizer.accept(args);
         return new InputsForDepositTxResponse(
                 args.tradeId,
-                null,
                 args.makerAccountId,
                 args.makerMultiSigPubKey,
                 args.makerContractAsJson,
