@@ -311,11 +311,15 @@ public class TradeValidationTest {
         when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
         long expectedLockTime = 1_000 + Restrictions.getLockTime(true);
 
-        assertEquals(expectedLockTime, TradeValidation.checkLockTime(expectedLockTime, true, btcWalletService));
+        assertEquals(expectedLockTime, TradeValidation.checkLockTime(expectedLockTime,
+                true,
+                btcWalletService,
+                true));
         assertEquals(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
                 TradeValidation.checkLockTime(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
                         true,
-                        btcWalletService));
+                        btcWalletService,
+                        true));
     }
 
     @Test
@@ -326,7 +330,33 @@ public class TradeValidationTest {
                 TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
 
         assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkLockTime(invalidLockTime, false, btcWalletService));
+                () -> TradeValidation.checkLockTime(invalidLockTime, false, btcWalletService, true));
+    }
+
+    @Test
+    void checkLockTimeSkipsHeightToleranceOnNonMainnet() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
+        long lockTimeOutsideMainnetTolerance = 1_000 + Restrictions.getLockTime(false) +
+                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
+
+        assertEquals(lockTimeOutsideMainnetTolerance,
+                TradeValidation.checkLockTime(lockTimeOutsideMainnetTolerance, false, btcWalletService, false));
+    }
+
+    @Test
+    void checkLockTimeRejectsNullWalletService() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkLockTime(1, true, null, true));
+    }
+
+    @Test
+    void checkLockTimeRejectsNonPositiveLockTime() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkLockTime(0, true, btcWalletService, true));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkLockTime(-1, true, btcWalletService, true));
     }
 
     @Test

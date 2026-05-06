@@ -43,7 +43,7 @@ public class Validator {
 
     public static String checkNonBlankString(String value, String fieldName) {
         checkNotNull(value, "%s must not be null", fieldName);
-        checkArgument(!value.isBlank(), "%s must not be empty", fieldName);
+        checkArgument(!value.isBlank(), "%s must not be blank", fieldName);
         return value;
     }
 
@@ -74,7 +74,7 @@ public class Validator {
         return values;
     }
 
-    public static long checkIsPositiveValue(long value, String fieldName) {
+    public static long checkIsPositive(long value, String fieldName) {
         checkArgument(value > 0, "%s must be positive", fieldName);
         return value;
     }

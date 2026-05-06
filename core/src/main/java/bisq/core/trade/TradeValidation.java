@@ -48,6 +48,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
@@ -58,6 +59,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -199,7 +201,7 @@ public class TradeValidation {
 
         try {
             return new Transaction(btcWalletService.getParams(), serializedTransaction);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             throw new IllegalArgumentException("Invalid serialized transaction", e);
         }
     }
@@ -214,14 +216,26 @@ public class TradeValidation {
         }
     }
 
-    public static long checkLockTime(long lockTime, boolean isBlockchain, BtcWalletService btcWalletService) {
-        if (Config.baseCurrencyNetwork().isMainnet()) {
-            int myLockTime = btcWalletService.getBestChainHeight() + Restrictions.getLockTime(isBlockchain);
+    public static long checkLockTime(long lockTime, boolean isAltcoin, BtcWalletService btcWalletService) {
+        return checkLockTime(lockTime, isAltcoin, btcWalletService, Config.baseCurrencyNetwork().isMainnet());
+    }
+
+    @VisibleForTesting
+    static long checkLockTime(long lockTime,
+                              boolean isAltcoin,
+                              BtcWalletService btcWalletService,
+                              boolean isMainnet) {
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkIsPositive(lockTime, "lockTime must be positive");
+
+        // For regtest dev testing we use shorter lock times and skip the test
+        if (isMainnet) {
+            int expectedUnlockHeight = btcWalletService.getBestChainHeight() + Restrictions.getLockTime(isAltcoin);
             // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in
             // case a new block was just found
-            checkArgument(Math.abs(lockTime - myLockTime) <= MAX_LOCKTIME_BLOCK_DEVIATION,
+            checkArgument(Math.abs(lockTime - expectedUnlockHeight) <= MAX_LOCKTIME_BLOCK_DEVIATION,
                     "Lock time of maker is more than 3 blocks different to the lockTime I " +
-                            "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
+                            "calculated. Makers lockTime= " + lockTime + ", expectedUnlockHeight=" + expectedUnlockHeight);
         }
         return lockTime;
     }
