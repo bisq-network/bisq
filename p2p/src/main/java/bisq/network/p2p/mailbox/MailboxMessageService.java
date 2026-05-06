@@ -512,6 +512,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (Exception e) {
             log.error("tryDecryptProtectedMailboxStorageEntry failed", e);
+            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
         }
         return new MailboxItem(protectedMailboxStorageEntry, null);
     }
