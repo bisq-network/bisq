@@ -400,7 +400,7 @@ public class TradeValidationTest {
         byte[] signature = new byte[]{1, 2, 3};
         String signatureBase64 = Base64.encode(signature);
 
-        assertSame(signatureBase64, TradeValidation.checkBase64Signature(signatureBase64));
+        assertEquals(signatureBase64, TradeValidation.checkBase64Signature(signatureBase64));
         assertArrayEquals(signature, TradeValidation.toEncodedSignature(signatureBase64));
     }
 

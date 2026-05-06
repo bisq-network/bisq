@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -309,11 +310,13 @@ public class TradeValidation {
     /* --------------------------------------------------------------------- */
 
     public static String checkBase64Signature(String signatureBase64) {
-        toEncodedSignature(signatureBase64);
-        return signatureBase64;
+        byte[] encodedSignature = toEncodedSignature(signatureBase64);
+        return Base64.encode(encodedSignature);
     }
 
     public static byte[] toEncodedSignature(String signatureBase64) {
+        checkNotNull(signatureBase64, "signatureBase64 must not be null");
+        checkNonBlankString(signatureBase64, "signatureBase64");
         return Base64.decode(signatureBase64);
     }
 
