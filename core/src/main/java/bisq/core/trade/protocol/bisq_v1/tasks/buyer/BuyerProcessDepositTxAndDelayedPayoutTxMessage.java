@@ -55,7 +55,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            var message = checkNotNull((DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage());
+
+            var message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
             checkNotNull(message);
 
             // To access tx confidence we need to add that tx into our wallet.
@@ -80,8 +81,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
             if (sellerPaymentAccountPayload != null) {
                 byte[] sellerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(sellerPaymentAccountPayload);
-                Contract contract = trade.getContract();
-                byte[] peersPaymentAccountPayloadHash = checkNotNull(contract).getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing());
+                Contract contract = checkNotNull(trade.getContract());
+                byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing());
                 checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                         "Hash of payment account is invalid");
 
@@ -92,7 +93,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
                 // As we have added the payment accounts we need to update the json. We also update the signature
                 // thought that has less relevance with the changes of 1.7.0
-                String contractAsJson = JsonUtil.objectToJson(contract);
+                String contractAsJson = checkNotNull(JsonUtil.objectToJson(contract));
                 String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
                 trade.setContractAsJson(contractAsJson);
                 if (contract.isBuyerMakerAndSellerTaker()) {
@@ -101,7 +102,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                     trade.setTakerContractSignature(signature);
                 }
 
-                byte[] contractHash = Hash.getSha256Hash(checkNotNull(contractAsJson));
+                byte[] contractHash = Hash.getSha256Hash(contractAsJson);
                 trade.setContractHash(contractHash);
             }
 
