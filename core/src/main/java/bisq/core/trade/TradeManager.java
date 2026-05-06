@@ -287,6 +287,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         log.info("Received inputsForDepositTxRequest from {} with tradeId {} and uid {}",
                 peer, tradeId, inputsForDepositTxRequest.getUid());
 
+
         // tradeId is same as offerId
         Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
         if (openOfferOptional.isEmpty()) {
@@ -304,21 +305,29 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return;
         }
 
-        NodeAddress senderNodeAddress = inputsForDepositTxRequest.getSenderNodeAddress();
-        if (!senderNodeAddress.equals(peer)) {
-            log.info("Node address not matching. senderNodeAddress={}, peer={}", senderNodeAddress, peer);
+        try {
+            NodeAddress senderNodeAddress = inputsForDepositTxRequest.getSenderNodeAddress();
+            if (!senderNodeAddress.equals(peer)) {
+                log.info("Node address not matching. senderNodeAddress={}, peer={}", senderNodeAddress, peer);
+                return;
+            }
+
+            // We check all relevant data of the request to fail early if anything is wrong.
+            // Later in the MakerProcessesInputsForDepositTxRequest we use the specific checks per field.
+            // We prefer that redundancy to avoid risks that a validation is missed.
+            checkInputsForDepositTxRequest(inputsForDepositTxRequest,
+                    offer,
+                    user,
+                    btcWalletService,
+                    priceFeedService,
+                    delayedPayoutTxReceiverService);
+        } catch (RuntimeException e) {
+            log.warn("Received invalid InputsForDepositTxRequest for tradeId {} from peer {}. Error={}",
+                    tradeId,
+                    peer,
+                    e.toString());
             return;
         }
-
-        // We check all relevant data of the request to fail early if anything is wrong.
-        // Later in the MakerProcessesInputsForDepositTxRequest we use the specific checks per field.
-        // We prefer that redundancy to avoid risks that a validation is missed.
-        checkInputsForDepositTxRequest(inputsForDepositTxRequest,
-                offer,
-                user,
-                btcWalletService,
-                priceFeedService,
-                delayedPayoutTxReceiverService);
 
         openOfferManager.reserveOpenOffer(openOffer);
 

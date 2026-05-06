@@ -280,23 +280,25 @@ public class TradeValidation {
     }
 
     public static Coin checkTxFee(Coin txFee) {
+        checkNotNull(txFee, "txFee must not be null");
         checkTxFee(txFee.getValue());
         return txFee;
     }
 
     public static long checkTxFee(long txFee) {
-        //todo add more narrow checks
+        //todo check against expected fee
         checkArgument(txFee > 0, "txFee must be positive");
         return txFee;
     }
 
     public static Coin checkTakerFee(Coin takerFee) {
+        checkNotNull(takerFee, "takerFee must not be null");
         checkTakerFee(takerFee.getValue());
         return takerFee;
     }
 
     public static long checkTakerFee(long takerFee) {
-        //todo add more narrow checks
+        //todo check against expected fee
         checkArgument(takerFee > 0, "takerFee must be positive");
         return takerFee;
     }
@@ -342,6 +344,13 @@ public class TradeValidation {
                                                                            BtcWalletService btcWalletService,
                                                                            PriceFeedService priceFeedService,
                                                                            DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+        checkNotNull(request, "request must not be null");
+        checkNotNull(offer, "offer must not be null");
+        checkNotNull(user, "user must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkNotNull(priceFeedService, "priceFeedService must not be null");
+        checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
+
         Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
         Coin tradeTxFee = checkTxFee(request.getTxFeeAsCoin());
         checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
