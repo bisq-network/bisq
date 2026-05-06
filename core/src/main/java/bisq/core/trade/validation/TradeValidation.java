@@ -46,6 +46,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.VerificationException;
@@ -55,6 +56,9 @@ import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 
+import java.math.BigInteger;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -190,16 +194,21 @@ public class TradeValidation {
         }
     }
 
+    public static Transaction checkTransaction(Transaction transaction) {
+        checkNotNull(transaction, "transaction must not be null");
+        try {
+            transaction.verify();
+        } catch (VerificationException e) {
+            throw new IllegalArgumentException("Invalid transaction", e);
+        }
+        return transaction;
+    }
+
     public static byte[] checkSerializedTransaction(byte[] serializedTransaction,
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(serializedTransaction, "serializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-        Transaction transaction = toTransaction(serializedTransaction, btcWalletService);
-        try {
-            transaction.verify();
-        } catch (VerificationException e) {
-            throw new IllegalArgumentException("Invalid deposit transaction", e);
-        }
+        toVerifiedTransaction(serializedTransaction, btcWalletService);
         return serializedTransaction;
     }
 
@@ -207,11 +216,9 @@ public class TradeValidation {
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(signedSerializedTransaction, "signedSerializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-
-        Transaction signedTransaction = toTransaction(signedSerializedTransaction, btcWalletService);
+        Transaction signedTransaction = toVerifiedTransaction(signedSerializedTransaction, btcWalletService);
         checkArgument(signedTransaction.getInputs().stream().noneMatch(TradeValidation::hasSignatureData),
                 "signedSerializedTransaction must not be signed");
-
         return signedSerializedTransaction;
     }
 
@@ -220,15 +227,16 @@ public class TradeValidation {
         return input.getScriptBytes().length > 0 || input.hasWitness();
     }
 
-    public static Transaction toTransaction(byte[] serializedTransaction,
-                                            BtcWalletService btcWalletService) {
+    public static Transaction toVerifiedTransaction(byte[] serializedTransaction,
+                                                    BtcWalletService btcWalletService) {
         checkNonEmptyBytes(serializedTransaction, "serializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-
         try {
-            return new Transaction(btcWalletService.getParams(), serializedTransaction);
+            Transaction transaction = new Transaction(btcWalletService.getParams(), serializedTransaction);
+            transaction.verify();
+            return transaction;
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid serialized transaction", e);
+            throw new IllegalArgumentException("Invalid transaction", e);
         }
     }
 
@@ -240,6 +248,29 @@ public class TradeValidation {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
         }
+    }
+
+    public static byte[] checkDerEncodedEcdsaSignature(byte[] bitcoinSignature) {
+        checkNonEmptyBytes(bitcoinSignature, "bitcoinSignature");
+        try {
+            ECKey.ECDSASignature signature = ECKey.ECDSASignature.decodeFromDER(bitcoinSignature);
+            checkArgument(Arrays.equals(bitcoinSignature, signature.encodeToDER()),
+                    "bitcoinSignature must be strictly DER encoded");
+            checkArgument(isValidSignatureValue(signature.r),
+                    "bitcoinSignature r value is outside of allowed range");
+            checkArgument(isValidSignatureValue(signature.s),
+                    "bitcoinSignature s value is outside of allowed range");
+            checkArgument(signature.isCanonical(),
+                    "bitcoinSignature must use low-S canonical encoding");
+            return bitcoinSignature;
+        } catch (SignatureDecodeException e) {
+            throw new IllegalArgumentException("Invalid bitcoin signature", e);
+        }
+    }
+
+    @VisibleForTesting
+    static boolean isValidSignatureValue(BigInteger value) {
+        return value.signum() > 0 && value.compareTo(ECKey.CURVE.getN()) < 0;
     }
 
     public static long checkLockTime(long lockTime, boolean isAltcoin, BtcWalletService btcWalletService) {
