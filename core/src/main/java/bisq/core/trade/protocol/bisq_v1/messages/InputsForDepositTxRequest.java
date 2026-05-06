@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bisq_v1.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
@@ -213,7 +212,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
     }
 
     public static InputsForDepositTxRequest fromProto(protobuf.InputsForDepositTxRequest proto,
-                                                      CoreProtoResolver coreProtoResolver,
                                                       int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto)

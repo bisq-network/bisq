@@ -161,7 +161,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case REFRESH_TRADE_STATE_REQUEST:
                     return RefreshTradeStateRequest.fromProto(proto.getRefreshTradeStateRequest(), messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_REQUEST:
-                    return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), this, messageVersion);
+                    return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_RESPONSE:
                     return InputsForDepositTxResponse.fromProto(proto.getInputsForDepositTxResponse(), this, messageVersion);
                 case DEPOSIT_TX_MESSAGE:
