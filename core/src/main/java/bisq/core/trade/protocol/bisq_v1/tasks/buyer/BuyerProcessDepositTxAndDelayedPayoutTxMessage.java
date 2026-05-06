@@ -38,6 +38,8 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 
+import java.security.PrivateKey;
+
 import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,15 +68,16 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             TradingPeer tradePeer = processModel.getTradePeer();
             PubKeyRing pubKeyRing = processModel.getPubKeyRing();
 
-            // To access tx confidence we need to add that tx into our wallet.
             byte[] depositTxBytes = checkNotNull(message.getDepositTx());
             Transaction depositTx = btcWalletService.getTxFromSerializedTx(depositTxBytes);
-            // update with full tx
-            Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(depositTx, wallet);
-            trade.applyDepositTx(committedDepositTx);
-            BtcWalletService.printTx("depositTx received from peer", committedDepositTx);
 
             // To access tx confidence we need to add that tx into our wallet.
+            Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(depositTx, wallet);
+            BtcWalletService.printTx("depositTx received from peer", committedDepositTx);
+
+            // update with full tx
+            trade.applyDepositTx(committedDepositTx);
+
             byte[] delayedPayoutTxBytes = checkNotNull(message.getDelayedPayoutTx());
             checkArgument(Arrays.equals(delayedPayoutTxBytes, trade.getDelayedPayoutTxBytes()),
                     "mismatch between delayedPayoutTx received from peer and our one." +
@@ -95,14 +98,14 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
 
                 tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
-                contract.setPaymentAccountPayloads(sellerPaymentAccountPayload,
-                        processModel.getPaymentAccountPayload(trade),
-                        pubKeyRing);
+                PaymentAccountPayload paymentAccountPayload = processModel.getPaymentAccountPayload(trade);
+                contract.setPaymentAccountPayloads(sellerPaymentAccountPayload, paymentAccountPayload, pubKeyRing);
 
                 // As we have added the payment accounts we need to update the json. We also update the signature
                 // thought that has less relevance with the changes of 1.7.0
                 String contractAsJson = checkNotNull(JsonUtil.objectToJson(contract));
-                String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
+                PrivateKey privateKey = processModel.getKeyRing().getSignatureKeyPair().getPrivate();
+                String signature = Sig.sign(privateKey, contractAsJson);
                 trade.setContractAsJson(contractAsJson);
                 if (contract.isBuyerMakerAndSellerTaker()) {
                     trade.setMakerContractSignature(signature);
