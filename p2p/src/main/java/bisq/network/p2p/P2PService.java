@@ -544,15 +544,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
+                    log.error(throwable.getMessage(), throwable);
                     sendDirectMessageListener.onFault(throwable.toString());
                 }
             }, MoreExecutors.directExecutor());
         } catch (CryptoException e) {
-            e.printStackTrace();
-            log.error(payload.toString());
-            log.error(e.toString());
+            log.error("Encrypting direct message {} for peer {} failed",
+                    payload.getClass().getSimpleName(), peersNodeAddress);
             sendDirectMessageListener.onFault(e.toString());
         }
     }
