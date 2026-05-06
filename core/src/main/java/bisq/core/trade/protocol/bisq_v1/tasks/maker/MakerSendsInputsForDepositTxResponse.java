@@ -80,7 +80,6 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             InputsForDepositTxResponse message = new InputsForDepositTxResponse(
                     processModel.getOfferId(),
-                    null,
                     processModel.getAccountId(),
                     makerMultiSigPubKey,
                     trade.getContractAsJson(),
