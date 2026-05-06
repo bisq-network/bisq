@@ -70,7 +70,8 @@ public class OfferAvailabilityProtocol {
                 OfferMessage offerMessage = (OfferMessage) networkEnvelope;
                 Validator.nonEmptyStringOf(offerMessage.offerId);
                 if (networkEnvelope instanceof OfferAvailabilityResponse
-                        && model.getOffer().getId().equals(offerMessage.offerId)) {
+                        && model.getOffer().getId().equals(offerMessage.offerId)
+                        && peersNodeAddress.equals(model.getPeerNodeAddress())) {
                     handleOfferAvailabilityResponse((OfferAvailabilityResponse) networkEnvelope, peersNodeAddress);
                 }
             }
