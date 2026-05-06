@@ -37,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.TradeValidation.checkMakerFee;
-import static bisq.core.trade.TradeValidation.checkTakerFee;
-import static bisq.core.trade.TradeValidation.checkTradeId;
+import static bisq.core.trade.validation.TradeValidation.checkTradeId;
+import static bisq.core.trade.validation.TradeValidation.checkMakerFee;
+import static bisq.core.trade.validation.TradeValidation.checkTakerFee;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.Math.abs;
