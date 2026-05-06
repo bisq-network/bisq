@@ -25,10 +25,12 @@ import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
 
 import bisq.common.crypto.Hash;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Utilities;
@@ -59,11 +61,15 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             var message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
             checkNotNull(message);
 
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Wallet wallet = btcWalletService.getWallet();
+            TradingPeer tradePeer = processModel.getTradePeer();
+            PubKeyRing pubKeyRing = processModel.getPubKeyRing();
+
             // To access tx confidence we need to add that tx into our wallet.
             byte[] depositTxBytes = checkNotNull(message.getDepositTx());
-            Transaction depositTx = processModel.getBtcWalletService().getTxFromSerializedTx(depositTxBytes);
+            Transaction depositTx = btcWalletService.getTxFromSerializedTx(depositTxBytes);
             // update with full tx
-            Wallet wallet = processModel.getBtcWalletService().getWallet();
             Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(depositTx, wallet);
             trade.applyDepositTx(committedDepositTx);
             BtcWalletService.printTx("depositTx received from peer", committedDepositTx);
@@ -82,14 +88,16 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             if (sellerPaymentAccountPayload != null) {
                 byte[] sellerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(sellerPaymentAccountPayload);
                 Contract contract = checkNotNull(trade.getContract());
-                byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing());
+
+                byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(pubKeyRing);
                 checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                         "Hash of payment account is invalid");
 
-                processModel.getTradePeer().setPaymentAccountPayload(sellerPaymentAccountPayload);
+
+                tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
                 contract.setPaymentAccountPayloads(sellerPaymentAccountPayload,
                         processModel.getPaymentAccountPayload(trade),
-                        processModel.getPubKeyRing());
+                        pubKeyRing);
 
                 // As we have added the payment accounts we need to update the json. We also update the signature
                 // thought that has less relevance with the changes of 1.7.0
@@ -111,7 +119,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                 trade.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
             }
 
-            processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(),
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(),
                     AddressEntry.Context.RESERVED_FOR_TRADE);
 
             processModel.getTradeManager().requestPersistence();
