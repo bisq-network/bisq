@@ -74,6 +74,11 @@ public class Validator {
         return values;
     }
 
+    public static long checkIsPositiveValue(long value, String fieldName) {
+        checkArgument(value > 0, "%s must be positive", fieldName);
+        return value;
+    }
+
     public static long nonNegativeLongOf(long value) {
         checkArgument(value >= 0);
         return value;

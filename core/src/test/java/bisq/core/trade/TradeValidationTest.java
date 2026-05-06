@@ -21,8 +21,13 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -605,33 +610,132 @@ public class TradeValidationTest {
     }
 
     @Test
-    void checkTxFeeAcceptsPositiveFees() {
+    void checkTradeTxFeeAcceptsPositiveFees() {
         Coin txFee = Coin.valueOf(300);
 
-        assertSame(txFee, TradeValidation.checkTxFee(txFee));
-        assertEquals(300, TradeValidation.checkTxFee(300));
+        assertSame(txFee, TradeValidation.checkTradeTxFee(txFee));
+        assertEquals(300, TradeValidation.checkTradeTxFee(300));
     }
 
     @Test
-    void checkTxFeeRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTxFee(Coin.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTxFee(0));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTxFee(-1));
+    void checkTradeTxFeeAcceptsFeesWithinAllowedTolerance() {
+        Coin txFee = Coin.valueOf(300);
+
+        assertSame(txFee, TradeValidation.checkTradeTxFeeIsInTolerance(txFee, Coin.valueOf(300)));
+        assertEquals(1_999, TradeValidation.checkTradeTxFeeIsInTolerance(1_999, 1_000));
+        assertEquals(667, TradeValidation.checkTradeTxFeeIsInTolerance(667, 1_000));
     }
 
     @Test
-    void checkTakerFeeAcceptsPositiveFees() {
+    void checkTradeTxFeeRejectsZeroAndNegativeFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(Coin.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(0));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(-1));
+    }
+
+    @Test
+    void checkTradeTxFeeRejectsFeesOutsideAllowedTolerance() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(2_000, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(666, 1_000));
+    }
+
+    @Test
+    void checkTradeTxFeeRejectsNullFees() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeTxFee(null));
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(null, Coin.valueOf(300)));
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), (Coin) null));
+    }
+
+    @Test
+    void checkTradeTxFeeAcceptsCalculatedTxFee() {
+        Coin txFee = TradeFeeFactory.getTradeTxFee(Coin.valueOf(2));
+
+        assertSame(txFee, TradeValidation.checkTradeTxFeeIsInTolerance(txFee, TradeFeeFactory.getTradeTxFee(Coin.valueOf(2))));
+    }
+
+    @Test
+    void checkMinerFeeRateAcceptsFeesWithinAllowedTolerance() {
+        assertEquals(1_999, TradeValidation.checkMinerFeeRateIsInTolerance(1_999, 1_000));
+        assertEquals(667, TradeValidation.checkMinerFeeRateIsInTolerance(667, 1_000));
+    }
+
+    @Test
+    void checkMinerFeeRateRejectsFeesOutsideAllowedTolerance() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(2_000, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(666, 1_000));
+    }
+
+    @Test
+    void checkTakerFeeAcceptsExpectedFees() {
         Coin takerFee = Coin.valueOf(100);
 
-        assertSame(takerFee, TradeValidation.checkTakerFee(takerFee));
-        assertEquals(100, TradeValidation.checkTakerFee(100));
+        assertSame(takerFee, TradeValidation.checkTakerFee(takerFee, Coin.valueOf(100)));
+        assertEquals(100, TradeValidation.checkFeeMatchesExpected(100, 100));
     }
 
     @Test
-    void checkTakerFeeRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(0));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(-1));
+    void checkTakerFeeAcceptsCalculatedExpectedFees() {
+        configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100));
+        Coin takerFee = Coin.valueOf(100);
+
+        assertSame(takerFee, TradeValidation.checkTakerFee(takerFee, true, Coin.valueOf(3_000)));
+        assertEquals(100, TradeValidation.checkTakerFee(100, true, Coin.valueOf(3_000)));
+    }
+
+    @Test
+    void checkFeeMatchesExpectedRejectsZeroAndNegativeFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(0, 100));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(-1, 100));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(100, 0));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(100, -1));
+    }
+
+    @Test
+    void checkTakerFeeRejectsUnexpectedFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(99, 100));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(101, 100));
+    }
+
+    @Test
+    void checkTakerFeeRejectsNullFees() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTakerFee(null, Coin.valueOf(100)));
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(100), null));
+    }
+
+    @Test
+    void checkMakerFeeAcceptsExpectedFees() {
+        Coin makerFee = Coin.valueOf(77);
+
+        assertSame(makerFee, TradeValidation.checkMakerFee(makerFee, Coin.valueOf(77)));
+        assertEquals(77, TradeValidation.checkFeeMatchesExpected(77, 77));
+    }
+
+    @Test
+    void checkMakerFeeAcceptsCalculatedExpectedFees() {
+        configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100));
+        Coin makerFee = Coin.valueOf(77);
+
+        assertSame(makerFee, TradeValidation.checkMakerFee(makerFee, false, Coin.valueOf(3_000)));
+        assertEquals(77, TradeValidation.checkMakerFee(77, false, Coin.valueOf(3_000)));
+    }
+
+    @Test
+    void checkMakerFeeRejectsZeroAndNegativeFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.ZERO, Coin.valueOf(77)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(0, 77));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(-1, 77));
+    }
+
+    @Test
+    void checkMakerFeeRejectsUnexpectedFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(76), Coin.valueOf(77)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(78, 77));
+    }
+
+    @Test
+    void checkMakerFeeRejectsNullFees() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkMakerFee(null, Coin.valueOf(77)));
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(77), null));
     }
 
     @Test
@@ -643,7 +747,8 @@ public class TradeValidationTest {
                 fixture.user,
                 fixture.btcWalletService,
                 fixture.priceFeedService,
-                fixture.delayedPayoutTxReceiverService));
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
     }
 
     @Test
@@ -656,7 +761,36 @@ public class TradeValidationTest {
                 fixture.user,
                 fixture.btcWalletService,
                 fixture.priceFeedService,
-                fixture.delayedPayoutTxReceiverService));
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsTxFeeOutsideAllowedTolerance() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), 10);
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsUnexpectedTakerFee() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture =
+                inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(101));
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
     }
 
     private static Offer offer(boolean isBuyOffer,
@@ -719,10 +853,17 @@ public class TradeValidationTest {
 
     private static InputsForDepositTxRequestValidationFixture inputsForDepositTxRequestValidationFixture(
             byte[] accountAgeWitnessSignatureOverride) throws CryptoException {
+        return inputsForDepositTxRequestValidationFixture(accountAgeWitnessSignatureOverride, Coin.valueOf(100));
+    }
+
+    private static InputsForDepositTxRequestValidationFixture inputsForDepositTxRequestValidationFixture(
+            byte[] accountAgeWitnessSignatureOverride,
+            Coin requestTakerFee) throws CryptoException {
         String offerId = "offer-id";
         Coin tradeAmount = Coin.valueOf(3_000);
-        Coin tradeTxFee = Coin.valueOf(300);
-        Coin takerFee = Coin.valueOf(100);
+        Coin expectedTakerFee = Coin.valueOf(100);
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), expectedTakerFee);
+        Coin tradeTxFee = TradeFeeFactory.getTradeTxFee(feeService.getTxFeePerVbyte());
         NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
         BtcWalletService btcWalletService = btcWalletService(MainNetParams.get());
         Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
@@ -745,7 +886,7 @@ public class TradeValidationTest {
                 tradeAmount.value,
                 50_000_000L,
                 tradeTxFee.value,
-                takerFee.value,
+                requestTakerFee.value,
                 true,
                 rawTransactionInputs,
                 new ECKey().getPubKey(),
@@ -774,7 +915,33 @@ public class TradeValidationTest {
                 user,
                 btcWalletService,
                 mock(PriceFeedService.class),
-                delayedPayoutTxReceiverService(130));
+                delayedPayoutTxReceiverService(130),
+                feeService);
+    }
+
+    private static FeeService configureTradeFeeService(Coin makerFee, Coin takerFee) {
+        return configureTradeFeeService(makerFee, takerFee, 1);
+    }
+
+    private static FeeService configureTradeFeeService(Coin makerFee, Coin takerFee, long txFeePerVbyte) {
+        int chainHeight = GENESIS_HEIGHT;
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        FilterManager filterManager = mock(FilterManager.class);
+        when(periodService.getChainHeight()).thenReturn(chainHeight);
+        when(filterManager.getFilter()).thenReturn(null);
+        when(daoStateService.getParamValueAsCoin(Param.MIN_MAKER_FEE_BTC, chainHeight)).thenReturn(makerFee);
+        when(daoStateService.getParamValueAsCoin(Param.MIN_MAKER_FEE_BSQ, chainHeight)).thenReturn(makerFee);
+        when(daoStateService.getParamValueAsCoin(Param.MIN_TAKER_FEE_BTC, chainHeight)).thenReturn(takerFee);
+        when(daoStateService.getParamValueAsCoin(Param.MIN_TAKER_FEE_BSQ, chainHeight)).thenReturn(takerFee);
+        when(daoStateService.getParamValueAsCoin(Param.DEFAULT_MAKER_FEE_BTC, chainHeight)).thenReturn(Coin.SATOSHI);
+        when(daoStateService.getParamValueAsCoin(Param.DEFAULT_MAKER_FEE_BSQ, chainHeight)).thenReturn(Coin.SATOSHI);
+        when(daoStateService.getParamValueAsCoin(Param.DEFAULT_TAKER_FEE_BTC, chainHeight)).thenReturn(Coin.SATOSHI);
+        when(daoStateService.getParamValueAsCoin(Param.DEFAULT_TAKER_FEE_BSQ, chainHeight)).thenReturn(Coin.SATOSHI);
+        FeeService feeService = new FeeService(daoStateService, periodService);
+        feeService.onAllServicesInitialized(filterManager);
+        feeService.updateFeeInfo(txFeePerVbyte, 1);
+        return feeService;
     }
 
     private static Mediator mediator(NodeAddress mediatorNodeAddress, PubKeyRing pubKeyRing) {
@@ -810,19 +977,22 @@ public class TradeValidationTest {
         private final BtcWalletService btcWalletService;
         private final PriceFeedService priceFeedService;
         private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+        private final FeeService feeService;
 
         private InputsForDepositTxRequestValidationFixture(InputsForDepositTxRequest request,
                                                            Offer offer,
                                                            User user,
                                                            BtcWalletService btcWalletService,
                                                            PriceFeedService priceFeedService,
-                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                                           FeeService feeService) {
             this.request = request;
             this.offer = offer;
             this.user = user;
             this.btcWalletService = btcWalletService;
             this.priceFeedService = priceFeedService;
             this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
+            this.feeService = feeService;
         }
     }
 }

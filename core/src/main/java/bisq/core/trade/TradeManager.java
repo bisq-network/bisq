@@ -30,6 +30,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -315,12 +316,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             // We check all relevant data of the request to fail early if anything is wrong.
             // Later in the MakerProcessesInputsForDepositTxRequest we use the specific checks per field.
             // We prefer that redundancy to avoid risks that a validation is missed.
+            FeeService feeService = provider.getFeeService();
             checkInputsForDepositTxRequest(inputsForDepositTxRequest,
                     offer,
                     user,
                     btcWalletService,
                     priceFeedService,
-                    delayedPayoutTxReceiverService);
+                    delayedPayoutTxReceiverService,
+                    feeService);
         } catch (RuntimeException e) {
             log.warn("Received invalid InputsForDepositTxRequest for tradeId {} from peer {}. Error={}",
                     tradeId,

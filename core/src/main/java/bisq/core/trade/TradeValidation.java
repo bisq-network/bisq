@@ -25,6 +25,7 @@ import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.protocol.TradeMessage;
@@ -64,9 +65,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeValidation {
+    // We have to account for clock drift. We use mostly 2 hours as max drift, but we prefer to be more tolerant here
     public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);
-    public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
-    public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3;
+    public static final double MAX_TRADE_PRICE_DEVIATION = 1.5; // 50% above or below price
+    public static final double MAX_FEE_DEVIATION = 0.5; // 50% above or below peers fee
+    public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3; // Peers latest block height must inside a +/- 3 blocks tolerance to ours.
 
 
     /* --------------------------------------------------------------------- */
@@ -281,29 +284,116 @@ public class TradeValidation {
         return makerRawTransactionInputs;
     }
 
-    public static Coin checkTxFee(Coin txFee) {
-        checkNotNull(txFee, "txFee must not be null");
-        checkTxFee(txFee.getValue());
-        return txFee;
+
+    /* --------------------------------------------------------------------- */
+    // Trade tx fee  (miner fee for taker fee tx, deposit tx and payout tx)
+    /* --------------------------------------------------------------------- */
+
+    public static Coin checkTradeTxFee(Coin tradeTxFee) {
+        checkNotNull(tradeTxFee, "tradeTxFee must not be null");
+        checkTradeTxFee(tradeTxFee.getValue());
+        return tradeTxFee;
     }
 
-    public static long checkTxFee(long txFee) {
-        //todo check against expected fee
-        checkArgument(txFee > 0, "txFee must be positive");
-        return txFee;
+    public static long checkTradeTxFee(long tradeTxFee) {
+        return checkIsPositive(tradeTxFee, "tradeTxFee");
     }
 
-    public static Coin checkTakerFee(Coin takerFee) {
+    public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
+        Coin txFeePerVbyte = feeService.getTxFeePerVbyte();
+        Coin expectedTradeTxFee = TradeFeeFactory.getTradeTxFee(txFeePerVbyte);
+        return checkTradeTxFeeIsInTolerance(tradeTxFee, expectedTradeTxFee);
+    }
+
+    public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, Coin expectedTradeTxFee) {
+        checkNotNull(tradeTxFee, "tradeTxFee must not be null");
+        checkNotNull(expectedTradeTxFee, "expectedTradeTxFee must not be null");
+        checkTradeTxFeeIsInTolerance(tradeTxFee.getValue(), expectedTradeTxFee.getValue());
+        return tradeTxFee;
+    }
+
+    public static long checkTradeTxFeeIsInTolerance(long tradeTxFee, long expectedTradeTxFee) {
+        return checkFeeIsInTolerance(tradeTxFee, expectedTradeTxFee);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Miner fee rate
+    /* --------------------------------------------------------------------- */
+
+    public static long checkMinerFeeRateIsInTolerance(long minerFeeRate, long expectedMinerFeeRate) {
+        return checkFeeIsInTolerance(minerFeeRate, expectedMinerFeeRate);
+    }
+
+    @VisibleForTesting
+    static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
+        checkIsPositive(actualValue, "actualValue");
+        checkIsPositive(expectedValue, "expectedValue");
+        double deviation = Math.abs(1 - (double) expectedValue / actualValue);
+        checkArgument(deviation < MAX_FEE_DEVIATION,
+                "actualValue is outside of allowed tolerance. actualValue=%s, expectedValue=%s, deviation=%s",
+                actualValue,
+                expectedValue,
+                deviation);
+        return actualValue;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Takers trade fee
+    /* --------------------------------------------------------------------- */
+
+    public static Coin checkTakerFee(Coin takerFee, boolean isCurrencyForTakerFeeBtc, Coin tradeAmount) {
+        Coin expectedTakerFee = TradeFeeFactory.getTakerFee(isCurrencyForTakerFeeBtc, tradeAmount);
+        return checkTakerFee(takerFee, expectedTakerFee);
+    }
+
+    public static Coin checkTakerFee(Coin takerFee, Coin expectedTakerFee) {
         checkNotNull(takerFee, "takerFee must not be null");
-        checkTakerFee(takerFee.getValue());
+        checkNotNull(expectedTakerFee, "expectedTakerFee must not be null");
+        checkFeeMatchesExpected(takerFee.getValue(), expectedTakerFee.getValue());
         return takerFee;
     }
 
-    public static long checkTakerFee(long takerFee) {
-        //todo check against expected fee
-        checkArgument(takerFee > 0, "takerFee must be positive");
-        return takerFee;
+    public static long checkTakerFee(long takerFee, boolean isCurrencyForTakerFeeBtc, Coin tradeAmount) {
+        long expectedTakerFee = TradeFeeFactory.getTakerFee(isCurrencyForTakerFeeBtc, tradeAmount).value;
+        return checkFeeMatchesExpected(takerFee, expectedTakerFee);
     }
+
+    @VisibleForTesting
+    static long checkFeeMatchesExpected(long fee, long expectedFee) {
+        checkIsPositive(fee, "fee");
+        checkIsPositive(expectedFee, "expectedFee");
+
+        checkArgument(fee == expectedFee,
+                "fee does not match expected fee. fee=%s, expectedFee=%s",
+                fee,
+                expectedFee);
+        return fee;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Makers trade fee
+    /* --------------------------------------------------------------------- */
+
+    public static Coin checkMakerFee(Coin makerFee, boolean isCurrencyForMakerFeeBtc, Coin tradeAmount) {
+        Coin expectedMakerFee = TradeFeeFactory.getMakerFee(isCurrencyForMakerFeeBtc, tradeAmount);
+        return checkMakerFee(makerFee, expectedMakerFee);
+    }
+
+    public static Coin checkMakerFee(Coin makerFee, Coin expectedMakerFee) {
+        checkNotNull(makerFee, "makerFee must not be null");
+        checkNotNull(expectedMakerFee, "expectedMakerFee must not be null");
+        checkFeeMatchesExpected(makerFee.getValue(), expectedMakerFee.getValue());
+        return makerFee;
+    }
+
+    public static long checkMakerFee(long makerFee, boolean isCurrencyForMakerFeeBtc, Coin tradeAmount) {
+        long expectedMakerFee = TradeFeeFactory.getMakerFee(isCurrencyForMakerFeeBtc, tradeAmount).value;
+        return checkFeeMatchesExpected(makerFee, expectedMakerFee);
+    }
+
 
 
     /* --------------------------------------------------------------------- */
@@ -347,7 +437,8 @@ public class TradeValidation {
                                                                            User user,
                                                                            BtcWalletService btcWalletService,
                                                                            PriceFeedService priceFeedService,
-                                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+                                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                                                           FeeService feeService) {
         checkNotNull(request, "request must not be null");
         checkNotNull(offer, "offer must not be null");
         checkNotNull(user, "user must not be null");
@@ -356,7 +447,7 @@ public class TradeValidation {
         checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
 
         Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
-        Coin tradeTxFee = checkTxFee(request.getTxFeeAsCoin());
+        Coin tradeTxFee = checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
         checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                 btcWalletService,
                 offer,
@@ -376,7 +467,7 @@ public class TradeValidation {
         NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
         getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
         checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
-        checkTakerFee(request.getTakerFeeAsCoin());
+        checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
         return request;
     }
 }
