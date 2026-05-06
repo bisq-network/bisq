@@ -70,21 +70,22 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             TradingPeer tradePeer = processModel.getTradePeer();
             PubKeyRing pubKeyRing = processModel.getPubKeyRing();
 
-            Transaction depositTx = toVerifiedTransaction(message.getDepositTx(), btcWalletService);
+            Transaction peersDepositTx = toVerifiedTransaction(message.getDepositTx(), btcWalletService);
 
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(depositTx, wallet);
-            BtcWalletService.printTx("depositTx received from peer", committedDepositTx);
+            Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(peersDepositTx, wallet);
+            BtcWalletService.printTx("peersDepositTx received from peer", committedDepositTx);
 
             // update with full tx
             trade.applyDepositTx(committedDepositTx);
 
-            byte[] delayedPayoutTxBytes = checkSerializedTransaction(message.getDelayedPayoutTx(), btcWalletService);
-            checkArgument(Arrays.equals(delayedPayoutTxBytes, trade.getDelayedPayoutTxBytes()),
-                    "mismatch between delayedPayoutTx received from peer and our one." +
-                            "\n Expected: " + Utilities.bytesAsHexString(trade.getDelayedPayoutTxBytes()) +
-                            "\n Received: " + Utilities.bytesAsHexString(delayedPayoutTxBytes));
-            trade.applyDelayedPayoutTxBytes(delayedPayoutTxBytes);
+            byte[] peersDelayedPayoutTxBytes = checkSerializedTransaction(message.getDelayedPayoutTx(), btcWalletService);
+            byte[] myDelayedPayoutTxBytes = trade.getDelayedPayoutTxBytes();
+            checkArgument(Arrays.equals(peersDelayedPayoutTxBytes, myDelayedPayoutTxBytes),
+                    "peersDelayedPayoutTx and myDelayedPayoutTx must be the same" +
+                            "\n myDelayedPayoutTx: " + Utilities.bytesAsHexString(myDelayedPayoutTxBytes) +
+                            "\n peersDelayedPayoutTx: " + Utilities.bytesAsHexString(peersDelayedPayoutTxBytes));
+            trade.applyDelayedPayoutTxBytes(peersDelayedPayoutTxBytes);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
