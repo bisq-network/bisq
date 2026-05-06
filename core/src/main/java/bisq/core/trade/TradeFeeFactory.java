@@ -22,13 +22,15 @@ import bisq.core.util.coin.CoinUtil;
 
 import org.bitcoinj.core.Coin;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static bisq.core.util.Validator.checkIsNotNegative;
+import static bisq.core.util.Validator.checkIsPositive;
 
 public class TradeFeeFactory {
     // Average estimated values
     public static final int TAKER_FEE_TX_VSIZE = 192;
     public static final int DEPOSIT_TX_VSIZE = 233;
+
+    public static final int MIN_TRADE_FEE = 5000;
 
     // Taker pays miner fee for deposit transaction and payout transaction
     public static Coin getTradeTxFee(Coin txFeePerVbyte) {
@@ -39,33 +41,34 @@ public class TradeFeeFactory {
     }
 
     public static Coin getMinerFeeByVsize(Coin minerFeePerVbyte, int txVsize) {
-        checkNotNull(minerFeePerVbyte, "minerFeePerVbyte must not be null");
-        checkArgument(minerFeePerVbyte.isPositive(), "minerFeePerVbyte must be positive");
-        checkArgument(txVsize > 0, "txVsize must be positive");
+        checkIsPositive(minerFeePerVbyte, "minerFeePerVbyte");
+        checkIsPositive(txVsize, "txVsize");
         return minerFeePerVbyte.multiply(txVsize);
     }
 
     public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, Coin amount) {
-        checkNotNull(amount, "amount must not be null");
+        checkIsPositive(amount, "amount");
         Coin makerFeePerBtc = FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc);
         Coin minMakerFee = FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc);
         return getTradeFee(makerFeePerBtc, minMakerFee, amount);
     }
 
     public static Coin getTakerFee(boolean isCurrencyForTakerFeeBtc, Coin amount) {
-        checkNotNull(amount, "amount must not be null");
+        checkIsPositive(amount, "amount");
         Coin takerFeePerBtc = FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc);
         Coin minTakerFee = FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc);
         return getTradeFee(takerFeePerBtc, minTakerFee, amount);
     }
 
     private static Coin getTradeFee(Coin feePerBtc, Coin minFee, Coin amount) {
-        checkNotNull(feePerBtc, "feePerBtc must not be null");
-        checkNotNull(minFee, "minFee must not be null");
-        checkNotNull(amount, "amount must not be null");
-        checkArgument(feePerBtc.isPositive(), "feePerBtc must be positive");
-        checkArgument(minFee.isPositive(), "minFee must be positive");
-        checkArgument(amount.isPositive(), "amount must be positive");
+        checkIsNotNegative(feePerBtc, "feePerBtc");
+        checkIsNotNegative(minFee, "minFee");
+        checkIsPositive(amount, "amount");
+
+        if (minFee.isZero()) {
+            minFee = Coin.valueOf(MIN_TRADE_FEE);
+        }
+
         Coin fee = CoinUtil.getFeePerBtc(feePerBtc, amount);
         return CoinUtil.maxCoin(fee, minFee);
     }

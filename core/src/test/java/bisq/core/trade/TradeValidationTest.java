@@ -652,8 +652,8 @@ public class TradeValidationTest {
         Coin txFee = Coin.valueOf(300);
 
         assertSame(txFee, TradeValidation.checkTradeTxFeeIsInTolerance(txFee, Coin.valueOf(300)));
-        assertEquals(1_999, TradeValidation.checkTradeTxFeeIsInTolerance(1_999, 1_000));
-        assertEquals(667, TradeValidation.checkTradeTxFeeIsInTolerance(667, 1_000));
+        assertEquals(1_500, TradeValidation.checkFeeIsInTolerance(1_500, 1_000));
+        assertEquals(500, TradeValidation.checkFeeIsInTolerance(500, 1_000));
     }
 
     @Test
@@ -665,8 +665,8 @@ public class TradeValidationTest {
 
     @Test
     void checkTradeTxFeeRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(2_000, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(666, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeIsInTolerance(2_001, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeIsInTolerance(499, 1_000));
     }
 
     @Test
@@ -685,14 +685,14 @@ public class TradeValidationTest {
 
     @Test
     void checkMinerFeeRateAcceptsFeesWithinAllowedTolerance() {
-        assertEquals(1_999, TradeValidation.checkMinerFeeRateIsInTolerance(1_999, 1_000));
-        assertEquals(667, TradeValidation.checkMinerFeeRateIsInTolerance(667, 1_000));
+        assertEquals(1_500, TradeValidation.checkMinerFeeRateIsInTolerance(1_500, 1_000));
+        assertEquals(500, TradeValidation.checkMinerFeeRateIsInTolerance(500, 1_000));
     }
 
     @Test
     void checkMinerFeeRateRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(2_000, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(666, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(2_001, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(499, 1_000));
     }
 
     @Test
@@ -700,7 +700,9 @@ public class TradeValidationTest {
         Coin takerFee = Coin.valueOf(100);
 
         assertSame(takerFee, TradeValidation.checkTakerFee(takerFee, Coin.valueOf(100)));
-        assertEquals(100, TradeValidation.checkFeeMatchesExpected(100, 100));
+        assertEquals(100, TradeValidation.checkTakerFeeInTolerance(100, 100));
+        assertEquals(150, TradeValidation.checkTakerFeeInTolerance(150, 100));
+        assertEquals(67, TradeValidation.checkTakerFeeInTolerance(67, 100));
     }
 
     @Test
@@ -714,16 +716,16 @@ public class TradeValidationTest {
 
     @Test
     void checkFeeMatchesExpectedRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(0, 100));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(-1, 100));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(100, 0));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(100, -1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.ZERO, Coin.valueOf(100)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(-1), Coin.valueOf(100)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(100), Coin.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(100), Coin.valueOf(-1)));
     }
 
     @Test
     void checkTakerFeeRejectsUnexpectedFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(99, 100));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(101, 100));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFeeInTolerance(151, 100));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFeeInTolerance(49, 100));
     }
 
     @Test
@@ -737,7 +739,9 @@ public class TradeValidationTest {
         Coin makerFee = Coin.valueOf(77);
 
         assertSame(makerFee, TradeValidation.checkMakerFee(makerFee, Coin.valueOf(77)));
-        assertEquals(77, TradeValidation.checkFeeMatchesExpected(77, 77));
+        assertEquals(77, TradeValidation.checkMakerFeeInTolerance(77, 77));
+        assertEquals(154, TradeValidation.checkMakerFeeInTolerance(154, 77));
+        assertEquals(39, TradeValidation.checkMakerFeeInTolerance(39, 77));
     }
 
     @Test
@@ -752,14 +756,15 @@ public class TradeValidationTest {
     @Test
     void checkMakerFeeRejectsZeroAndNegativeFees() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.ZERO, Coin.valueOf(77)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(0, 77));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(-1, 77));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(-1), Coin.valueOf(77)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(77), Coin.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(77), Coin.valueOf(-1)));
     }
 
     @Test
     void checkMakerFeeRejectsUnexpectedFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(76), Coin.valueOf(77)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeMatchesExpected(78, 77));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(155), Coin.valueOf(77)));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFeeInTolerance(155, 77));
     }
 
     @Test
@@ -812,7 +817,7 @@ public class TradeValidationTest {
     @Test
     void checkInputsForDepositTxRequestRejectsUnexpectedTakerFee() throws CryptoException {
         InputsForDepositTxRequestValidationFixture fixture =
-                inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(101));
+                inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(151));
 
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkInputsForDepositTxRequest(fixture.request,
                 fixture.offer,
