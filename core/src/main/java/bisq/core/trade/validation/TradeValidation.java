@@ -28,6 +28,7 @@ import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.trade.TradeFeeFactory;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
