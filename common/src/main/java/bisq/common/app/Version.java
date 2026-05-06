@@ -107,7 +107,8 @@ public class Version {
     // Version 1.2.2 -> TRADE_PROTOCOL_VERSION = 2
     // Version 1.5.0 -> TRADE_PROTOCOL_VERSION = 3
     // Version 1.7.0 -> TRADE_PROTOCOL_VERSION = 4
-    public static final int TRADE_PROTOCOL_VERSION = 4;
+    // Version 1.9.24 -> TRADE_PROTOCOL_VERSION = 5
+    public static final int TRADE_PROTOCOL_VERSION = 5;
     private static int p2pMessageVersion;
 
     public static final String BSQ_TX_VERSION = "1";
