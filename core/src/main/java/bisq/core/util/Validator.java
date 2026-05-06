@@ -41,6 +41,12 @@ public class Validator {
         return value;
     }
 
+    public static String checkNonBlankString(String value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isBlank(), "%s must not be empty", fieldName);
+        return value;
+    }
+
     public static void checkNullableString(@Nullable String value, String fieldName) {
         if (value != null) {
             checkArgument(!value.isEmpty(), "%s must not be empty", fieldName);
