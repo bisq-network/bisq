@@ -100,17 +100,17 @@ public class MailboxItem implements PersistablePayload {
                 .getMailboxStoragePayload()
                 .getPrefixedSealedAndSignedMessage()
                 .getSenderNodeAddress();
-        if (decryptedPayload instanceof SendersNodeAddressProvidingPayload) {
-            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
-                    (SendersNodeAddressProvidingPayload) decryptedPayload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
-            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
-                    senderNodeAddress)) {
-                log.error("Decrypted mailbox item sender address mismatch. " +
-                                "senderNodeAddress={}, payloadSenderNodeAddress={}",
-                        senderNodeAddress, payloadSenderNodeAddress);
-                return null;
-            }
+
+        // MailboxMessage implements SendersNodeAddressProvidingPayload thus the cast is safe
+        SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
+                (SendersNodeAddressProvidingPayload) decryptedPayload;
+        NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
+        if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
+                senderNodeAddress)) {
+            log.error("Decrypted mailbox item sender address mismatch. " +
+                            "senderNodeAddress={}, payloadSenderNodeAddress={}",
+                    senderNodeAddress, payloadSenderNodeAddress);
+            return null;
         }
 
         if (decryptedPayload instanceof SendersSignaturePubKeyProvidingPayload) {

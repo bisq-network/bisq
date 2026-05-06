@@ -278,6 +278,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             return;
         }
 
+        checkNotNull(mailboxMessage, "mailboxMessage must not be null");
         checkNotNull(peer, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         NodeAddress senderNodeAddress = networkNode.getNodeAddress();
         checkNotNull(senderNodeAddress,
@@ -294,24 +295,26 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             return;
         }
 
-        NetworkEnvelope payload = (NetworkEnvelope) mailboxMessage;
-        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, payload, peerManager)) {
+        // We assign to payload to make code clearer to distinct between the payload and the address and key
+        // used for the outer envelope.
+        //noinspection UnnecessaryLocalVariable
+        MailboxMessage payload = mailboxMessage;
+
+        NetworkEnvelope payloadAsNetworkEnvelope = (NetworkEnvelope) mailboxMessage;
+        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, payloadAsNetworkEnvelope, peerManager)) {
             sendMailboxMessageListener.onFault("We did not send the EncryptedMailboxMessage " +
                     "because the peer does not support the capability.");
             return;
         }
 
-        if (payload instanceof SendersNodeAddressProvidingPayload) {
-            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload = (SendersNodeAddressProvidingPayload) payload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
-            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
-                // Sender node address of the SendersNodeAddressProvidingPayload to be used for encryption
-                // must match the node address of the sender.
-                log.error("Sender node address {} does not match my node address {}",
-                        payloadSenderNodeAddress, senderNodeAddress);
-                sendMailboxMessageListener.onFault("Sender node address of payload is not matching our node address");
-                return;
-            }
+        NodeAddress payloadSenderNodeAddress = payload.getSenderNodeAddress();
+        if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
+            // Sender node address of the SendersNodeAddressProvidingPayload to be used for encryption
+            // must match the node address of the sender.
+            log.error("Sender node address {} does not match my node address {}",
+                    payloadSenderNodeAddress, senderNodeAddress);
+            sendMailboxMessageListener.onFault("Sender node address of payload is not matching our node address");
+            return;
         }
 
         if (payload instanceof SendersSignaturePubKeyProvidingPayload) {
@@ -332,7 +335,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         try {
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                     senderNodeAddress,
-                    encryptionService.encryptAndSign(peersPubKeyRing, payload));
+                    encryptionService.encryptAndSign(peersPubKeyRing, payloadAsNetworkEnvelope));
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
@@ -354,8 +357,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                 }
             }, MoreExecutors.directExecutor());
         } catch (CryptoException e) {
-            log.error("sendEncryptedMessage failed");
-            e.printStackTrace();
+            log.error("sendEncryptedMessage failed", e);
             sendMailboxMessageListener.onFault("sendEncryptedMailboxMessage failed " + e);
         }
     }

@@ -67,6 +67,7 @@ public class MailboxItemTest {
 
         assertFalse(mailboxItem.isMine());
         assertTrue(mailboxItem.isInvalidDecryptedMessage());
+        assertSame(null, mailboxItem.getDecryptedMessageWithPubKey());
     }
 
     @Test
@@ -78,6 +79,7 @@ public class MailboxItemTest {
 
         assertFalse(mailboxItem.isMine());
         assertTrue(mailboxItem.isInvalidDecryptedMessage());
+        assertSame(null, mailboxItem.getDecryptedMessageWithPubKey());
     }
 
     @Test
