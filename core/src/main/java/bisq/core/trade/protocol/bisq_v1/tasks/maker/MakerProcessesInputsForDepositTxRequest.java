@@ -21,9 +21,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferValidation;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -46,8 +44,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
-import static com.google.common.base.Preconditions.checkArgument;
+import static bisq.core.trade.TradeValidation.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -67,6 +64,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
+            User user = checkNotNull(processModel.getUser(), "User must not be null");
+            PriceFeedService priceFeedService = processModel.getTradeManager().getPriceFeedService();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())
@@ -81,7 +80,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                     btcWalletService,
-                    trade,
+                    offer,
+                    trade.getTradeTxFee(),
                     tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
@@ -116,29 +116,18 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);
 
             tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
-            tradingPeer.setCurrentDate(request.getCurrentDate());
 
-            User user = checkNotNull(processModel.getUser(), "User must not be null");
+            long currentDate = checkPeersDate(request.getCurrentDate());
+            tradingPeer.setCurrentDate(currentDate);
 
-            NodeAddress mediatorNodeAddress = checkNotNull(request.getMediatorNodeAddress(),
-                    "InputsForDepositTxRequest.getMediatorNodeAddress() must not be null");
+            NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
             trade.setMediatorNodeAddress(mediatorNodeAddress);
-            Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
-                    "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
-            trade.setMediatorPubKeyRing(checkNotNull(mediator.getPubKeyRing(),
-                    "mediator.getPubKeyRing() must not be null"));
 
-            long takersTradePrice = request.getTradePrice();
-            offer.verifyTakersTradePrice(takersTradePrice);
+            PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
+            trade.setMediatorPubKeyRing(mediatorPubKeyRing);
 
-            PriceFeedService priceFeedService = processModel.getTradeManager().getPriceFeedService();
-            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
-            // high volatility environments
-            OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.5);
-
+            long takersTradePrice = checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
-
-            checkArgument(request.getTxFee() > 0, "Trade tx fee must be positive");
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 

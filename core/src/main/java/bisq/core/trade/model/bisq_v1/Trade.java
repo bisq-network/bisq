@@ -76,6 +76,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.TradeValidation.checkTxFee;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -463,7 +464,7 @@ public abstract class Trade extends TradeModel {
                     ProcessModel processModel,
                     String uid) {
         super(uid, offer);
-        this.tradeTxFee = tradeTxFee;
+        this.tradeTxFee = checkTxFee(tradeTxFee);
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.arbitratorNodeAddress = arbitratorNodeAddress;

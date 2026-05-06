@@ -288,4 +288,12 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     public Coin getTradeAmountAsCoin() {
         return Coin.valueOf(tradeAmount);
     }
+
+    public Coin getTxFeeAsCoin() {
+        return Coin.valueOf(txFee);
+    }
+
+    public Coin getTakerFeeAsCoin() {
+        return Coin.valueOf(takerFee);
+    }
 }

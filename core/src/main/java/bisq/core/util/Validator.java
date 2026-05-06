@@ -17,8 +17,6 @@
 
 package bisq.core.util;
 
-import bisq.core.trade.protocol.TradeMessage;
-
 import org.bitcoinj.core.Coin;
 
 import java.util.Collection;
@@ -40,6 +38,12 @@ public class Validator {
     public static String checkNonEmptyString(String value, String fieldName) {
         checkNotNull(value, "%s must not be null", fieldName);
         checkArgument(!value.isEmpty(), "%s must not be empty", fieldName);
+        return value;
+    }
+
+    public static String checkNonBlankString(String value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isBlank(), "%s must not be empty", fieldName);
         return value;
     }
 
@@ -87,11 +91,4 @@ public class Validator {
         return value;
     }
 
-    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(isTradeIdValid(tradeId, tradeMessage), "TradeId %s is not valid", tradeId);
-    }
-
-    public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {
-        return tradeId.equals(tradeMessage.getTradeId());
-    }
 }

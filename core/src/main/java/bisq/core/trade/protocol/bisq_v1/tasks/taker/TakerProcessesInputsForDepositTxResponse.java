@@ -19,14 +19,12 @@ package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
-import bisq.common.config.Config;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
@@ -37,8 +35,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.protocol.bisq_v1.TradeValidation.*;
-import static com.google.common.base.Preconditions.checkArgument;
+import static bisq.core.trade.TradeValidation.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -51,6 +48,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             InputsForDepositTxResponse response = (InputsForDepositTxResponse) processModel.getTradeMessage();
             checkNotNull(response);
 
@@ -73,7 +71,8 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             tradingPeer.setContractAsJson(response.getMakerContractAsJson());
 
-            tradingPeer.setContractSignature(response.getMakerContractSignature());
+            String makerContractSignature = checkBase64Signature(response.getMakerContractSignature());
+            tradingPeer.setContractSignature(makerContractSignature);
 
             String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(makerPayoutAddressString);
@@ -86,17 +85,10 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             byte[] preparedDepositTx = checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
 
-            long lockTime = response.getLockTime();
-            if (Config.baseCurrencyNetwork().isMainnet()) {
-                int myLockTime = btcWalletService.getBestChainHeight() +
-                        Restrictions.getLockTime(offer.getPaymentMethod().isBlockchain());
-                // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in case a new
-                // block was just found
-                checkArgument(Math.abs(lockTime - myLockTime) <= 3,
-                        "Lock time of maker is more than 3 blocks different to the lockTime I " +
-                                "calculated. Makers lockTime= " + lockTime + ", myLockTime=" + myLockTime);
-            }
+            boolean isBlockchain = offer.getPaymentMethod().isBlockchain();
+            long lockTime = checkLockTime(response.getLockTime(), isBlockchain, btcWalletService);
             trade.setLockTime(lockTime);
+
             long delay = btcWalletService.getBestChainHeight() - lockTime;
             log.info("lockTime={}, delay={}", lockTime, delay);
 
@@ -113,9 +105,9 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             tradingPeer.setAccountAgeWitnessNonce(accountAgeWitnessNonce);
 
-            tradingPeer.setCurrentDate(response.getCurrentDate());
+            long currentDate = checkPeersDate(response.getCurrentDate());
+            tradingPeer.setCurrentDate(currentDate);
 
-            // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             processModel.getTradeManager().requestPersistence();

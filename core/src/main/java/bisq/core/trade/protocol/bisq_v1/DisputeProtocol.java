@@ -49,7 +49,7 @@ import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
+import static bisq.core.trade.TradeValidation.checkTradeId;
 
 @Slf4j
 public class DisputeProtocol extends TradeProtocol {
