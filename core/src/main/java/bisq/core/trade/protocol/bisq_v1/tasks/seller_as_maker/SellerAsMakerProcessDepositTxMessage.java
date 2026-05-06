@@ -26,7 +26,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.TradeValidation.checkTransactionIsUnsigned;
+import static bisq.core.trade.validation.TradeValidation.checkTransactionIsUnsigned;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
