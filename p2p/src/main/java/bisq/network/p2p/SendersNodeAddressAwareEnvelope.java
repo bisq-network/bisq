@@ -15,13 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.mailbox;
+package bisq.network.p2p;
 
-
-import bisq.network.p2p.DirectMessage;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
-import bisq.network.p2p.UidMessage;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
-
-public interface MailboxMessage extends DirectMessage, UidMessage, ExpirablePayload, SendersNodeAddressAwarePayload {
+/**
+ * Interface for network envelopes that carry sender node address information.
+ */
+public interface SendersNodeAddressAwareEnvelope {
+    NodeAddress getSenderNodeAddress();
 }

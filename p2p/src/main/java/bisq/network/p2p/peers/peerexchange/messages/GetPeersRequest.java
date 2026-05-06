@@ -18,7 +18,7 @@
 package bisq.network.p2p.peers.peerexchange.messages;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersNodeAddressMessage;
+import bisq.network.p2p.SendersNodeAddressAwareEnvelope;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.peers.peerexchange.Peer;
 
@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class GetPeersRequest extends NetworkEnvelope implements PeerExchangeMessage, SendersNodeAddressMessage, SupportedCapabilitiesMessage {
+public final class GetPeersRequest extends NetworkEnvelope implements PeerExchangeMessage, SendersNodeAddressAwareEnvelope, SupportedCapabilitiesMessage {
     private final NodeAddress senderNodeAddress;
     private final int nonce;
     private final Set<Peer> reportedPeers;

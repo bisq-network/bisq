@@ -21,7 +21,7 @@ import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersNodeAddressMessage;
+import bisq.network.p2p.SendersNodeAddressAwareEnvelope;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -406,9 +406,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
-            // If SendersNodeAddressMessage we do some verifications and apply if successful, otherwise we return false.
-            if (networkEnvelope instanceof SendersNodeAddressMessage) {
-                boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
+            // If SendersNodeAddressAwareEnvelope we do some verifications and apply if successful, otherwise we return false.
+            if (networkEnvelope instanceof SendersNodeAddressAwareEnvelope) {
+                boolean isValid = processSendersNodeAddressAwareEnvelope((SendersNodeAddressAwareEnvelope) networkEnvelope);
                 if (!isValid) {
                     log.warn("Received an invalid {} at processing BundleOfEnvelopes", networkEnvelope.getClass().getSimpleName());
                     continue;
@@ -670,23 +670,23 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         shutDown(closeConnectionReason);
     }
 
-    private boolean processSendersNodeAddressMessage(SendersNodeAddressMessage sendersNodeAddressMessage) {
-        NodeAddress senderNodeAddress = sendersNodeAddressMessage.getSenderNodeAddress();
+    private boolean processSendersNodeAddressAwareEnvelope(SendersNodeAddressAwareEnvelope sendersNodeAddressAwareEnvelope) {
+        NodeAddress senderNodeAddress = sendersNodeAddressAwareEnvelope.getSenderNodeAddress();
         checkNotNull(senderNodeAddress,
-                "senderNodeAddress must not be null at SendersNodeAddressMessage " +
-                        sendersNodeAddressMessage.getClass().getSimpleName());
+                "senderNodeAddress must not be null at SendersNodeAddressAwareEnvelope " +
+                        sendersNodeAddressAwareEnvelope.getClass().getSimpleName());
         Optional<NodeAddress> existingAddressOptional = getPeersNodeAddressOptional();
         if (existingAddressOptional.isPresent()) {
             // If we have already the peers address we check again if it matches our stored one
             checkArgument(existingAddressOptional.get().equals(senderNodeAddress),
                     "senderNodeAddress not matching connections peer address.\n\t" +
-                            "message=" + sendersNodeAddressMessage);
+                            "message=" + sendersNodeAddressAwareEnvelope);
         } else {
             setPeersNodeAddress(senderNodeAddress);
         }
 
         if (banFilter != null && banFilter.isPeerBanned(senderNodeAddress)) {
-            log.warn("We got a message from a banned peer. message={}", sendersNodeAddressMessage.getClass().getSimpleName());
+            log.warn("We got a message from a banned peer. message={}", sendersNodeAddressAwareEnvelope.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return false;
         }
@@ -837,16 +837,16 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (!(networkEnvelope instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
 
-                        // If SendersNodeAddressMessage we do some verifications and apply if successful,
+                        // If SendersNodeAddressAwareEnvelope we do some verifications and apply if successful,
                         // otherwise we return false.
-                        if (networkEnvelope instanceof SendersNodeAddressMessage) {
-                            boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
+                        if (networkEnvelope instanceof SendersNodeAddressAwareEnvelope) {
+                            boolean isValid = processSendersNodeAddressAwareEnvelope((SendersNodeAddressAwareEnvelope) networkEnvelope);
                             if (!isValid) {
                                 return;
                             }
                         }
 
-                        if (!(networkEnvelope instanceof SendersNodeAddressMessage) && peersNodeAddressOptional.isEmpty()) {
+                        if (!(networkEnvelope instanceof SendersNodeAddressAwareEnvelope) && peersNodeAddressOptional.isEmpty()) {
                             log.info("We got a {} from a peer with yet unknown address on connection with uid={}", networkEnvelope.getClass().getSimpleName(), uid);
                         }
 
@@ -909,8 +909,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Nullable
     private NodeAddress getSenderNodeAddress(NetworkEnvelope networkEnvelope) {
         return getPeersNodeAddressOptional().orElse(
-                networkEnvelope instanceof SendersNodeAddressMessage ?
-                        ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress() :
+                networkEnvelope instanceof SendersNodeAddressAwareEnvelope ?
+                        ((SendersNodeAddressAwareEnvelope) networkEnvelope).getSenderNodeAddress() :
                         null);
     }
 

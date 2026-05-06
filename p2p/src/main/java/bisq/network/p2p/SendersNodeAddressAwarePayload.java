@@ -17,6 +17,16 @@
 
 package bisq.network.p2p;
 
-public interface SendersNodeAddressMessage {
+import javax.annotation.Nullable;
+
+/**
+ * Interface for payloads that include the sender's node address.
+ */
+public interface SendersNodeAddressAwarePayload {
     NodeAddress getSenderNodeAddress();
+
+    static boolean isSenderNodeAddressMatching(@Nullable NodeAddress payloadSenderNodeAddress,
+                                               @Nullable NodeAddress expectedSenderNodeAddress) {
+        return payloadSenderNodeAddress != null && payloadSenderNodeAddress.equals(expectedSenderNodeAddress);
+    }
 }
