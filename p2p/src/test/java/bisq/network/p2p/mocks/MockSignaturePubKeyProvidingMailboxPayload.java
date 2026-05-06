@@ -18,7 +18,7 @@
 package bisq.network.p2p.mocks;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersSignaturePubKeyAwarePayload;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 import bisq.network.p2p.mailbox.MailboxMessage;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 
@@ -33,17 +33,17 @@ import java.util.UUID;
 import lombok.Getter;
 
 @Getter
-public final class MockSignaturePubKeyAwareMailboxPayload extends NetworkEnvelope
-        implements MailboxMessage, ExpirablePayload, SendersSignaturePubKeyAwarePayload {
+public final class MockSignaturePubKeyProvidingMailboxPayload extends NetworkEnvelope
+        implements MailboxMessage, ExpirablePayload, SendersSignaturePubKeyProvidingPayload {
     private final String msg;
     private final NodeAddress senderNodeAddress;
     private final PublicKey senderSignaturePubKey;
     private final String uid;
     public long ttl = 0;
 
-    public MockSignaturePubKeyAwareMailboxPayload(String msg,
-                                                  NodeAddress senderNodeAddress,
-                                                  PublicKey senderSignaturePubKey) {
+    public MockSignaturePubKeyProvidingMailboxPayload(String msg,
+                                                      NodeAddress senderNodeAddress,
+                                                      PublicKey senderSignaturePubKey) {
         super(0);
         this.msg = msg;
         this.senderNodeAddress = senderNodeAddress;

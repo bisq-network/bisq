@@ -22,7 +22,7 @@ import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.mocks.MockMailboxPayload;
 import bisq.network.p2p.mocks.MockPayload;
-import bisq.network.p2p.mocks.MockSignaturePubKeyAwareMailboxPayload;
+import bisq.network.p2p.mocks.MockSignaturePubKeyProvidingMailboxPayload;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.Broadcaster;
@@ -121,7 +121,7 @@ public class P2PServiceTest {
         PublicKey payloadSenderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
         PublicKey sealedPayloadSignaturePubKey = TestUtils.generateKeyPair().getPublic();
         DirectReceiveFixture fixture = new DirectReceiveFixture(
-                new MockSignaturePubKeyAwareMailboxPayload("msg", ENVELOPE_SENDER, payloadSenderSignaturePubKey),
+                new MockSignaturePubKeyProvidingMailboxPayload("msg", ENVELOPE_SENDER, payloadSenderSignaturePubKey),
                 sealedPayloadSignaturePubKey,
                 ENVELOPE_SENDER,
                 ENVELOPE_SENDER);
@@ -179,7 +179,7 @@ public class P2PServiceTest {
 
         fixture.p2PService.sendEncryptedDirectMessage(ENVELOPE_SENDER,
                 mock(PubKeyRing.class),
-                new MockSignaturePubKeyAwareMailboxPayload("msg",
+                new MockSignaturePubKeyProvidingMailboxPayload("msg",
                         MY_NODE_ADDRESS,
                         TestUtils.generateKeyPair().getPublic()),
                 listener);

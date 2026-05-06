@@ -24,7 +24,7 @@ import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersSignaturePubKeyAwarePayload;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class InputsForDepositTxRequest extends TradeMessage
-        implements DirectMessage, SendersSignaturePubKeyAwarePayload {
+        implements DirectMessage, SendersSignaturePubKeyProvidingPayload {
     private final NodeAddress senderNodeAddress;
     private final long tradeAmount;
     private final long tradePrice;

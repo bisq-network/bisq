@@ -24,7 +24,7 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.mocks.MockMailboxPayload;
-import bisq.network.p2p.mocks.MockSignaturePubKeyAwareMailboxPayload;
+import bisq.network.p2p.mocks.MockSignaturePubKeyProvidingMailboxPayload;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.PeerManager;
@@ -102,7 +102,7 @@ public class MailboxMessageServiceTest {
 
         mailboxMessageService.sendEncryptedMailboxMessage(PEER_NODE_ADDRESS,
                 peersPubKeyRing,
-                new MockSignaturePubKeyAwareMailboxPayload("msg",
+                new MockSignaturePubKeyProvidingMailboxPayload("msg",
                         MY_NODE_ADDRESS,
                         TestUtils.generateKeyPair().getPublic()),
                 listener);

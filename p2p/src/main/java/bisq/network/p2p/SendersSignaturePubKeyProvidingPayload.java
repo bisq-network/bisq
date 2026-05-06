@@ -22,7 +22,7 @@ import java.security.PublicKey;
 /**
  * Interface for payloads that include the sender's signature public key.
  */
-public interface SendersSignaturePubKeyAwarePayload {
+public interface SendersSignaturePubKeyProvidingPayload {
     PublicKey getSenderSignaturePubKey();
 
     static boolean isSenderSignaturePubKeyMatching(PublicKey payloadSenderSignaturePubKey,

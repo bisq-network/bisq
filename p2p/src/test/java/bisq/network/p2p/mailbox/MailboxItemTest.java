@@ -23,7 +23,7 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.mocks.MockMailboxPayload;
 import bisq.network.p2p.mocks.MockPayload;
-import bisq.network.p2p.mocks.MockSignaturePubKeyAwareMailboxPayload;
+import bisq.network.p2p.mocks.MockSignaturePubKeyProvidingMailboxPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
@@ -84,7 +84,7 @@ public class MailboxItemTest {
     public void constructorKeepsDecryptedMessageWhenSenderSignaturePubKeysMatch() throws NoSuchAlgorithmException {
         PublicKey senderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
         DecryptedMessageWithPubKey decryptedMessageWithPubKey = decryptedMessageWithPubKey(
-                new MockSignaturePubKeyAwareMailboxPayload("msg", ENVELOPE_SENDER, senderSignaturePubKey),
+                new MockSignaturePubKeyProvidingMailboxPayload("msg", ENVELOPE_SENDER, senderSignaturePubKey),
                 senderSignaturePubKey);
 
         MailboxItem mailboxItem = new MailboxItem(protectedMailboxStorageEntry(ENVELOPE_SENDER),
@@ -98,7 +98,7 @@ public class MailboxItemTest {
     @Test
     public void constructorDropsDecryptedMessageWhenSenderSignaturePubKeysMismatch() throws NoSuchAlgorithmException {
         DecryptedMessageWithPubKey decryptedMessageWithPubKey = decryptedMessageWithPubKey(
-                new MockSignaturePubKeyAwareMailboxPayload("msg",
+                new MockSignaturePubKeyProvidingMailboxPayload("msg",
                         ENVELOPE_SENDER,
                         TestUtils.generateKeyPair().getPublic()),
                 TestUtils.generateKeyPair().getPublic());

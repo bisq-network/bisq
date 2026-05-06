@@ -407,15 +407,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     private boolean isDirectMessageSenderSignaturePubKeyValid(DecryptedMessageWithPubKey decryptedMsg) {
         NetworkEnvelope decryptedPayload = decryptedMsg.getNetworkEnvelope();
-        if (!(decryptedPayload instanceof SendersSignaturePubKeyAwarePayload)) {
+        if (!(decryptedPayload instanceof SendersSignaturePubKeyProvidingPayload)) {
             return true;
         }
 
-        SendersSignaturePubKeyAwarePayload signaturePubKeyAwarePayload =
-                (SendersSignaturePubKeyAwarePayload) decryptedPayload;
+        SendersSignaturePubKeyProvidingPayload signaturePubKeyAwarePayload =
+                (SendersSignaturePubKeyProvidingPayload) decryptedPayload;
         PublicKey payloadSenderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
         PublicKey signaturePubKey = decryptedMsg.getSignaturePubKey();
-        if (!SendersSignaturePubKeyAwarePayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
+        if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
                 signaturePubKey)) {
             log.error("Sender signature pubkey of decrypted payload {} does not match signature pubkey " +
                             "of sealed payload {}",
@@ -513,12 +513,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             }
         }
 
-        if (payload instanceof SendersSignaturePubKeyAwarePayload) {
-            SendersSignaturePubKeyAwarePayload signaturePubKeyAwarePayload =
-                    (SendersSignaturePubKeyAwarePayload) payload;
+        if (payload instanceof SendersSignaturePubKeyProvidingPayload) {
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyAwarePayload =
+                    (SendersSignaturePubKeyProvidingPayload) payload;
             PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
             PublicKey senderSignaturePubKey = signaturePubKeyAwarePayload.getSenderSignaturePubKey();
-            if (!SendersSignaturePubKeyAwarePayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
+            if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
                     mySignaturePubKey)) {
                 log.error("Sender signature pubkey {} does not match my signature pubkey {}",
                         senderSignaturePubKey, mySignaturePubKey);

@@ -21,7 +21,7 @@ import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersSignaturePubKeyAwarePayload;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.PubKeyRing;
 
@@ -33,7 +33,7 @@ import lombok.Getter;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public abstract class BsqSwapRequest extends TradeMessage
-        implements DirectMessage, SendersSignaturePubKeyAwarePayload {
+        implements DirectMessage, SendersSignaturePubKeyProvidingPayload {
     protected final NodeAddress senderNodeAddress;
     protected final PubKeyRing takerPubKeyRing;
     protected final long tradeAmount;
