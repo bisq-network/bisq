@@ -43,6 +43,7 @@ import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -67,6 +68,7 @@ import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -211,6 +213,66 @@ public class TradeValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkMultiSigPubKey(malformedCompressedPubKey));
+    }
+
+    @Test
+    void checkMultiSigPubKeyAcceptsValidCompressedCurvePoints() {
+        // These deterministic encodings exercise x-coordinates where x^3 + 7 is a quadratic residue mod the
+        // secp256k1 field prime, so both compressed y-parity prefixes map to valid curve points.
+        String[] validEncodings = {
+                "020000000000000000000000000000000000000000000000000000000000000001",
+                "020000000000000000000000000000000000000000000000000000000000000002",
+                "020000000000000000000000000000000000000000000000000000000000000003",
+                "020000000000000000000000000000000000000000000000000000000000000004",
+                "020000000000000000000000000000000000000000000000000000000000000006",
+                "020000000000000000000000000000000000000000000000000000000000000008",
+                "02000000000000000000000000000000000000000000000000000000000000000c",
+                "02000000000000000000000000000000000000000000000000000000000000000d",
+                "02000000000000000000000000000000000000000000000000000000000000000e",
+                "030000000000000000000000000000000000000000000000000000000000000001",
+                "030000000000000000000000000000000000000000000000000000000000000002",
+                "030000000000000000000000000000000000000000000000000000000000000003",
+                "030000000000000000000000000000000000000000000000000000000000000004",
+                "030000000000000000000000000000000000000000000000000000000000000006",
+                "030000000000000000000000000000000000000000000000000000000000000008",
+                "03000000000000000000000000000000000000000000000000000000000000000c",
+                "03000000000000000000000000000000000000000000000000000000000000000d",
+                "03000000000000000000000000000000000000000000000000000000000000000e"
+        };
+
+        for (String validEncoding : validEncodings) {
+            byte[] multiSigPubKey = Utilities.decodeFromHex(validEncoding);
+            assertDoesNotThrow(() -> TradeValidation.checkMultiSigPubKey(multiSigPubKey), validEncoding);
+        }
+    }
+
+    @Test
+    void checkMultiSigPubKeyRejectsInvalidCompressedCurvePoints() {
+        // These x-coordinates do not produce a quadratic residue for x^3 + 7 mod the secp256k1 field prime,
+        // so neither compressed y-parity prefix can decompress to a valid curve point.
+        String[] invalidEncodings = {
+                "020000000000000000000000000000000000000000000000000000000000000000",
+                "020000000000000000000000000000000000000000000000000000000000000005",
+                "020000000000000000000000000000000000000000000000000000000000000007",
+                "020000000000000000000000000000000000000000000000000000000000000009",
+                "02000000000000000000000000000000000000000000000000000000000000000a",
+                "02000000000000000000000000000000000000000000000000000000000000000b",
+                "02000000000000000000000000000000000000000000000000000000000000000f",
+                "030000000000000000000000000000000000000000000000000000000000000000",
+                "030000000000000000000000000000000000000000000000000000000000000005",
+                "030000000000000000000000000000000000000000000000000000000000000007",
+                "030000000000000000000000000000000000000000000000000000000000000009",
+                "03000000000000000000000000000000000000000000000000000000000000000a",
+                "03000000000000000000000000000000000000000000000000000000000000000b",
+                "03000000000000000000000000000000000000000000000000000000000000000f"
+        };
+
+        for (String invalidEncoding : invalidEncodings) {
+            byte[] multiSigPubKey = Utilities.decodeFromHex(invalidEncoding);
+            assertThrows(IllegalArgumentException.class,
+                    () -> TradeValidation.checkMultiSigPubKey(multiSigPubKey),
+                    invalidEncoding);
+        }
     }
 
     @Test
