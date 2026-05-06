@@ -47,6 +47,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.VerificationException;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -192,8 +194,30 @@ public class TradeValidation {
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(serializedTransaction, "serializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-        toTransaction(serializedTransaction, btcWalletService);
+        Transaction transaction = toTransaction(serializedTransaction, btcWalletService);
+        try {
+            transaction.verify();
+        } catch (VerificationException e) {
+            throw new IllegalArgumentException("Invalid deposit transaction", e);
+        }
         return serializedTransaction;
+    }
+
+    public static byte[] checkTransactionIsUnsigned(byte[] signedSerializedTransaction,
+                                                    BtcWalletService btcWalletService) {
+        checkNonEmptyBytes(signedSerializedTransaction, "signedSerializedTransaction");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        Transaction signedTransaction = toTransaction(signedSerializedTransaction, btcWalletService);
+        checkArgument(signedTransaction.getInputs().stream().noneMatch(TradeValidation::hasSignatureData),
+                "signedSerializedTransaction must not be signed");
+
+        return signedSerializedTransaction;
+    }
+
+    @VisibleForTesting
+    static boolean hasSignatureData(TransactionInput input) {
+        return input.getScriptBytes().length > 0 || input.hasWitness();
     }
 
     public static Transaction toTransaction(byte[] serializedTransaction,

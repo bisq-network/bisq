@@ -53,6 +53,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.ScriptBuilder;
@@ -337,6 +338,56 @@ public class TradeValidationTest {
         assertArrayEquals(serializedTransaction,
                 TradeValidation.toTransaction(serializedTransaction, btcWalletService(MainNetParams.get()))
                         .bitcoinSerialize());
+    }
+
+    @Test
+    void checkTransactionIsUnsignedAcceptsValidUnsignedTransaction() {
+        byte[] depositTxWithoutWitnesses = serializedTransaction();
+
+        assertSame(depositTxWithoutWitnesses,
+                TradeValidation.checkTransactionIsUnsigned(depositTxWithoutWitnesses,
+                        btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkTransactionIsUnsignedRejectsMalformedSerializedTransaction() {
+        assertThrows(RuntimeException.class, () -> TradeValidation.checkTransactionIsUnsigned(
+                new byte[]{1, 2, 3},
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkTransactionIsUnsignedRejectsStructurallyInvalidTransaction() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
+                serializedTransactionWithoutOutputs(),
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkTransactionIsUnsignedRejectsTransactionWithScriptSig() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
+                serializedTransactionWithScriptSig(),
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkTransactionIsUnsignedRejectsTransactionWithWitness() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
+                serializedTransactionWithWitness(),
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkTransactionIsUnsignedRejectsNullTransaction() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionIsUnsigned(null,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void checkTransactionIsUnsignedRejectsNullWalletService() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionIsUnsigned(
+                serializedTransaction(),
+                null));
     }
 
     @Test
@@ -939,14 +990,40 @@ public class TradeValidationTest {
     }
 
     private static byte[] serializedTransaction() {
+        return transaction(new byte[]{}).bitcoinSerialize();
+    }
+
+    private static byte[] serializedTransactionWithoutOutputs() {
         Transaction transaction = new Transaction(MainNetParams.get());
         transaction.addInput(new TransactionInput(MainNetParams.get(),
                 transaction,
                 new byte[]{},
                 new TransactionOutPoint(MainNetParams.get(), 0, Sha256Hash.ZERO_HASH),
                 Coin.valueOf(2_000)));
-        transaction.addOutput(Coin.valueOf(1_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
         return transaction.bitcoinSerialize();
+    }
+
+    private static byte[] serializedTransactionWithScriptSig() {
+        return transaction(new byte[]{1, 1}).bitcoinSerialize();
+    }
+
+    private static byte[] serializedTransactionWithWitness() {
+        Transaction transaction = transaction(new byte[]{});
+        TransactionWitness witness = new TransactionWitness(1);
+        witness.setPush(0, new byte[]{1});
+        transaction.getInput(0).setWitness(witness);
+        return transaction.bitcoinSerialize();
+    }
+
+    private static Transaction transaction(byte[] scriptSigProgram) {
+        Transaction transaction = new Transaction(MainNetParams.get());
+        transaction.addInput(new TransactionInput(MainNetParams.get(),
+                transaction,
+                scriptSigProgram,
+                new TransactionOutPoint(MainNetParams.get(), 0, Sha256Hash.ZERO_HASH),
+                Coin.valueOf(2_000)));
+        transaction.addOutput(Coin.valueOf(1_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        return transaction;
     }
 
     private static InputsForDepositTxRequestValidationFixture inputsForDepositTxRequestValidationFixture(

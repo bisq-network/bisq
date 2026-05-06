@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -25,6 +26,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.TradeValidation.checkTransactionIsUnsigned;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -40,13 +42,17 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
             DepositTxMessage message = (DepositTxMessage) processModel.getTradeMessage();
             checkNotNull(message);
 
-            processModel.getTradePeer().setPreparedDepositTx(checkNotNull(message.getDepositTxWithoutWitnesses()));
-            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+
+            byte[] depositTxWithoutWitnesses = checkTransactionIsUnsigned(message.getDepositTxWithoutWitnesses(), btcWalletService);
+            processModel.getTradePeer().setPreparedDepositTx(depositTxWithoutWitnesses);
 
             // When we receive that message the taker has published the taker fee, so we apply it to the trade.
             // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
             // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
             trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
+
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             processModel.getTradeManager().requestPersistence();
 
