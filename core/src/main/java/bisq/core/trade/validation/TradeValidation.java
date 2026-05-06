@@ -232,7 +232,7 @@ public class TradeValidation {
         checkNonEmptyBytes(serializedTransaction, "serializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
         try {
-            Transaction transaction = new Transaction(btcWalletService.getParams(), serializedTransaction);
+            Transaction transaction = btcWalletService.getTxFromSerializedTx(serializedTransaction);
             transaction.verify();
             return transaction;
         } catch (Exception e) {

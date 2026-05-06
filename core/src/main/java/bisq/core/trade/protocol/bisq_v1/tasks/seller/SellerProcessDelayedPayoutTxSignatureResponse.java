@@ -55,7 +55,6 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
             byte[] delayedPayoutTxBuyerSignature = checkDerEncodedEcdsaSignature(response.getDelayedPayoutTxBuyerSignature());
             tradePeer.setDelayedPayoutTxSignature(delayedPayoutTxBuyerSignature);
 
-
             byte[] depositTx = checkSerializedTransaction(response.getDepositTx(), btcWalletService);
             Transaction buyersDepositTxWithWitnesses = btcWalletService.getTxFromSerializedTx(depositTx);
             Transaction myDepositTx = processModel.getDepositTx();
