@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.validation;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -29,7 +29,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
-import bisq.core.trade.protocol.bisq_v1.tasks.TradePeerTxInputValidator;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;

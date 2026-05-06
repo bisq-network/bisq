@@ -132,7 +132,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.trade.TradeValidation.checkInputsForDepositTxRequest;
+import static bisq.core.trade.validation.TradeValidation.checkInputsForDepositTxRequest;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
