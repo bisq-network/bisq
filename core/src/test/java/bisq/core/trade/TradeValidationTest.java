@@ -751,7 +751,6 @@ public class TradeValidationTest {
                 new ECKey().getPubKey(),
                 SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
                 takerPubKeyRing,
-                null,
                 "taker-account-id",
                 VALID_TRANSACTION_ID,
                 List.of(),

@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bisq_v1.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.TradeMessage;
 
@@ -45,7 +44,10 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.util.Validator.*;
+import static bisq.core.util.Validator.checkList;
+import static bisq.core.util.Validator.checkNonBlankString;
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static bisq.core.util.Validator.checkNonEmptyString;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -63,11 +65,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
     private final byte[] takerMultiSigPubKey;
     private final String takerPayoutAddressString;
     private final PubKeyRing takerPubKeyRing;
-
-    // Removed with 1.7.0
-    @Nullable
-    private final PaymentAccountPayload takerPaymentAccountPayload;
-
     private final String takerAccountId;
     private final String takerFeeTxId;
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
@@ -82,9 +79,7 @@ public final class InputsForDepositTxRequest extends TradeMessage
     private final long currentDate;
 
     // Added at 1.7.0
-    @Nullable
     private final byte[] hashOfTakersPaymentAccountPayload;
-    @Nullable
     private final String takersPaymentMethodId;
 
     // Added in v 1.9.7
@@ -101,7 +96,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
                                      byte[] takerMultiSigPubKey,
                                      String takerPayoutAddressString,
                                      PubKeyRing takerPubKeyRing,
-                                     @Nullable PaymentAccountPayload takerPaymentAccountPayload,
                                      String takerAccountId,
                                      String takerFeeTxId,
                                      List<NodeAddress> acceptedArbitratorNodeAddresses,
@@ -114,8 +108,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                                      int messageVersion,
                                      byte[] accountAgeWitnessSignatureOfOfferId,
                                      long currentDate,
-                                     @Nullable byte[] hashOfTakersPaymentAccountPayload,
-                                     @Nullable String takersPaymentMethodId,
+                                     byte[] hashOfTakersPaymentAccountPayload,
+                                     String takersPaymentMethodId,
                                      int burningManSelectionHeight) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
@@ -128,7 +122,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
         this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.takerPubKeyRing = takerPubKeyRing;
-        this.takerPaymentAccountPayload = takerPaymentAccountPayload;
         this.takerAccountId = takerAccountId;
         this.takerFeeTxId = takerFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
@@ -165,8 +158,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
         checkNotNull(refundAgentNodeAddress, "refundAgentNodeAddress must not be null");
         checkNonEmptyBytes(accountAgeWitnessSignatureOfOfferId, "accountAgeWitnessSignatureOfOfferId");
         checkArgument(currentDate > 0, "currentDate must be positive");
-        checkNullableBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
-        checkNullableString(takersPaymentMethodId, "takersPaymentMethodId");
+        checkNonEmptyBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
+        checkNonBlankString(takersPaymentMethodId, "takersPaymentMethodId");
         // burningManSelectionHeight was added in v1.9.7 which cannot be used for trading anymore, though old persisted
         // trades might carry that field thus we do not enforce positive values.
         checkArgument(burningManSelectionHeight >= 0, "burningManSelectionHeight must be positive");
@@ -213,7 +206,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 .setBurningManSelectionHeight(burningManSelectionHeight);
 
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
-        Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
         Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
         Optional.ofNullable(takersPaymentMethodId).ifPresent(e -> builder.setTakersPayoutMethodId(takersPaymentMethodId));
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
@@ -232,10 +224,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
         List<NodeAddress> acceptedRefundAgentNodeAddresses = proto.getAcceptedRefundAgentNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
 
-        PaymentAccountPayload takerPaymentAccountPayload = proto.hasTakerPaymentAccountPayload() ?
-                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()) : null;
-        byte[] hashOfTakersPaymentAccountPayload = ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfTakersPaymentAccountPayload());
-
         return new InputsForDepositTxRequest(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getTradeAmount(),
@@ -247,7 +235,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
-                takerPaymentAccountPayload,
                 proto.getTakerAccountId(),
                 proto.getTakerFeeTxId(),
                 acceptedArbitratorNodeAddresses,
@@ -260,8 +247,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 messageVersion,
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
                 proto.getCurrentDate(),
-                hashOfTakersPaymentAccountPayload,
-                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()),
+                proto.getHashOfTakersPaymentAccountPayload().toByteArray(),
+                proto.getTakersPayoutMethodId(),
                 proto.getBurningManSelectionHeight());
     }
 

@@ -40,7 +40,6 @@ import com.google.common.base.Charsets;
 import java.security.PublicKey;
 
 import java.util.List;
-import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,13 +66,8 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             User user = checkNotNull(processModel.getUser(), "User must not be null");
             PriceFeedService priceFeedService = processModel.getTradeManager().getPriceFeedService();
 
-            // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
-            Optional.ofNullable(request.getTakerPaymentAccountPayload())
-                    .ifPresent(e -> tradingPeer.setPaymentAccountPayload(request.getTakerPaymentAccountPayload()));
-            Optional.ofNullable(request.getHashOfTakersPaymentAccountPayload())
-                    .ifPresent(e -> tradingPeer.setHashOfPaymentAccountPayload(request.getHashOfTakersPaymentAccountPayload()));
-            Optional.ofNullable(request.getTakersPaymentMethodId())
-                    .ifPresent(e -> tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId()));
+            tradingPeer.setHashOfPaymentAccountPayload(request.getHashOfTakersPaymentAccountPayload());
+            tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId());
 
             Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
             trade.setAmount(tradeAmount);
