@@ -19,7 +19,7 @@ package bisq.network.p2p.mailbox;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
 import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
@@ -100,11 +100,11 @@ public class MailboxItem implements PersistablePayload {
                 .getMailboxStoragePayload()
                 .getPrefixedSealedAndSignedMessage()
                 .getSenderNodeAddress();
-        if (decryptedPayload instanceof SendersNodeAddressAwarePayload) {
-            SendersNodeAddressAwarePayload nodeAddressAwarePayload =
-                    (SendersNodeAddressAwarePayload) decryptedPayload;
+        if (decryptedPayload instanceof SendersNodeAddressProvidingPayload) {
+            SendersNodeAddressProvidingPayload nodeAddressAwarePayload =
+                    (SendersNodeAddressProvidingPayload) decryptedPayload;
             NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
-            if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
+            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
                     senderNodeAddress)) {
                 log.error("Decrypted mailbox item sender address mismatch. " +
                                 "senderNodeAddress={}, payloadSenderNodeAddress={}",

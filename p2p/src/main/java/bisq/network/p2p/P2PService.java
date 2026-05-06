@@ -436,11 +436,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return null;
         }
 
-        if (decryptedPayload instanceof SendersNodeAddressAwarePayload) {
-            SendersNodeAddressAwarePayload nodeAddressAwarePayload =
-                    (SendersNodeAddressAwarePayload) decryptedPayload;
+        if (decryptedPayload instanceof SendersNodeAddressProvidingPayload) {
+            SendersNodeAddressProvidingPayload nodeAddressAwarePayload =
+                    (SendersNodeAddressProvidingPayload) decryptedPayload;
             NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
-            if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
+            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
                     senderNodeAddress)) {
                 log.error("Sender node address of decrypted payload {} does not match sender node address " +
                                 "of outer envelope {}",
@@ -500,10 +500,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return;
         }
 
-        if (payload instanceof SendersNodeAddressAwarePayload) {
-            SendersNodeAddressAwarePayload nodeAddressAwarePayload = (SendersNodeAddressAwarePayload) payload;
+        if (payload instanceof SendersNodeAddressProvidingPayload) {
+            SendersNodeAddressProvidingPayload nodeAddressAwarePayload = (SendersNodeAddressProvidingPayload) payload;
             NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
-            if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
+            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
                 // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
                 // must match the node address of the sender.
                 log.error("Sender node address {} does not match my node address {}",

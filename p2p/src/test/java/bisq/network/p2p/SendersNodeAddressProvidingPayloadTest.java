@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SendersNodeAddressAwarePayloadTest {
+public class SendersNodeAddressProvidingPayloadTest {
     private static final NodeAddress EXPECTED_SENDER = new NodeAddress("sender.onion", 9999);
     private static final NodeAddress OTHER_SENDER = new NodeAddress("other.onion", 9999);
 
@@ -36,16 +36,16 @@ public class SendersNodeAddressAwarePayloadTest {
     public void payloadWithoutSenderNodeAddressDoesNotImplementInterface() {
         NetworkEnvelope payload = new MockPayload("msg");
 
-        assertFalse(payload instanceof SendersNodeAddressAwarePayload);
+        assertFalse(payload instanceof SendersNodeAddressProvidingPayload);
     }
 
     @Test
     public void senderAwarePayloadMatchesExpectedSenderNodeAddress() {
         MockMailboxPayload payload = new MockMailboxPayload("msg", EXPECTED_SENDER);
 
-        assertTrue(payload instanceof SendersNodeAddressAwarePayload);
+        assertTrue(payload instanceof SendersNodeAddressProvidingPayload);
         assertEquals(EXPECTED_SENDER, payload.getSenderNodeAddress());
-        assertTrue(SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(),
+        assertTrue(SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(),
                 EXPECTED_SENDER));
     }
 
@@ -53,7 +53,7 @@ public class SendersNodeAddressAwarePayloadTest {
     public void senderAwarePayloadDoesNotMatchDifferentSenderNodeAddress() {
         MockMailboxPayload payload = new MockMailboxPayload("msg", OTHER_SENDER);
 
-        assertFalse(SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(),
+        assertFalse(SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(),
                 EXPECTED_SENDER));
     }
 
@@ -61,6 +61,6 @@ public class SendersNodeAddressAwarePayloadTest {
     public void senderAwarePayloadDoesNotMatchNullExpectedSenderNodeAddress() {
         MockMailboxPayload payload = new MockMailboxPayload("msg", EXPECTED_SENDER);
 
-        assertFalse(SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(), null));
+        assertFalse(SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payload.getSenderNodeAddress(), null));
     }
 }

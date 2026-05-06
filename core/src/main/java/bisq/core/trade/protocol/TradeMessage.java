@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
 import bisq.network.p2p.UidMessage;
 
 import bisq.common.proto.network.NetworkEnvelope;
@@ -37,7 +37,7 @@ import static bisq.core.util.Validator.checkNonEmptyString;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @ToString
-public abstract class TradeMessage extends NetworkEnvelope implements UidMessage, SendersNodeAddressAwarePayload {
+public abstract class TradeMessage extends NetworkEnvelope implements UidMessage, SendersNodeAddressProvidingPayload {
     protected final String tradeId;
     protected final String uid;
 

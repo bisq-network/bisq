@@ -20,7 +20,7 @@ package bisq.network.p2p;
 /**
  * Interface for payloads that include the sender's node address.
  */
-public interface SendersNodeAddressAwarePayload {
+public interface SendersNodeAddressProvidingPayload {
     NodeAddress getSenderNodeAddress();
 
     static boolean isSenderNodeAddressMatching(NodeAddress payloadSenderNodeAddress,

@@ -19,9 +19,9 @@ package bisq.network.p2p.mailbox;
 
 
 import bisq.network.p2p.DirectMessage;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
 import bisq.network.p2p.UidMessage;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 
-public interface MailboxMessage extends DirectMessage, UidMessage, ExpirablePayload, SendersNodeAddressAwarePayload {
+public interface MailboxMessage extends DirectMessage, UidMessage, ExpirablePayload, SendersNodeAddressProvidingPayload {
 }

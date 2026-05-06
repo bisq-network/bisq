@@ -23,7 +23,7 @@ import bisq.network.p2p.NetworkNotReadyException;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendMailboxMessageListener;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
 import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.Connection;
@@ -301,10 +301,10 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             return;
         }
 
-        if (payload instanceof SendersNodeAddressAwarePayload) {
-            SendersNodeAddressAwarePayload nodeAddressAwarePayload = (SendersNodeAddressAwarePayload) payload;
+        if (payload instanceof SendersNodeAddressProvidingPayload) {
+            SendersNodeAddressProvidingPayload nodeAddressAwarePayload = (SendersNodeAddressProvidingPayload) payload;
             NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
-            if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
+            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
                 // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
                 // must match the node address of the sender.
                 log.error("Sender node address {} does not match my node address {}",
