@@ -98,7 +98,9 @@ public class TradeValidation {
             int diff = Math.abs(peersBurningManSelectionHeight - myBurningManSelectionHeight);
             checkArgument(diff == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
                     "If Burning Man selection heights are not the same they have to differ by " +
-                            "exactly the snapshot grid size, otherwise we fail.");
+                            "exactly the snapshot grid size, otherwise we fail. " +
+                            "peersBurningManSelectionHeight=%s, myBurningManSelectionHeight=%s, diff=%s",
+                    peersBurningManSelectionHeight, myBurningManSelectionHeight, diff);
 
         }
         return peersBurningManSelectionHeight;
@@ -128,8 +130,7 @@ public class TradeValidation {
         checkNotNull(txId, "txId must not be null");
 
         try {
-            Sha256Hash.wrap(txId.toLowerCase(Locale.ROOT));
-            return txId;
+            return Sha256Hash.wrap(txId.toLowerCase(Locale.ROOT)).toString();
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
         }

@@ -163,14 +163,13 @@ public class TradeValidationTest {
 
     @Test
     void checkTransactionIdAcceptsValidTransactionId() {
-        assertSame(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID));
+        assertEquals(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID));
     }
 
     @Test
     void checkTransactionIdAcceptsUpperCaseTransactionId() {
         String transactionId = VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
-
-        assertSame(transactionId, TradeValidation.checkTransactionId(transactionId));
+        assertEquals(transactionId.toLowerCase(Locale.ROOT), TradeValidation.checkTransactionId(transactionId));
     }
 
     @Test
