@@ -22,6 +22,7 @@ import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.mocks.MockMailboxPayload;
 import bisq.network.p2p.mocks.MockPayload;
+import bisq.network.p2p.mocks.MockSignaturePubKeyProvidingMailboxPayload;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.Broadcaster;
@@ -35,6 +36,9 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.proto.network.NetworkEnvelope;
+
+import java.security.KeyPair;
+import java.security.PublicKey;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -112,6 +116,26 @@ public class P2PServiceTest {
     }
 
     @Test
+    public void onMessageDropsDirectMessageWhenPayloadSenderSignaturePubKeyDoesNotMatchSealedPayload()
+            throws Exception {
+        PublicKey payloadSenderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
+        PublicKey sealedPayloadSignaturePubKey = TestUtils.generateKeyPair().getPublic();
+        DirectReceiveFixture fixture = new DirectReceiveFixture(
+                new MockSignaturePubKeyProvidingMailboxPayload("msg", ENVELOPE_SENDER, payloadSenderSignaturePubKey),
+                sealedPayloadSignaturePubKey,
+                ENVELOPE_SENDER,
+                ENVELOPE_SENDER);
+        AtomicBoolean listenerCalled = new AtomicBoolean();
+        fixture.p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderNodeAddress) ->
+                listenerCalled.set(true));
+
+        fixture.p2PService.onMessage(fixture.sealedMessage, fixture.connection);
+
+        assertFalse(listenerCalled.get());
+        verify(fixture.connection, never()).maybeHandleSupportedCapabilitiesMessage(any(NetworkEnvelope.class));
+    }
+
+    @Test
     public void onMessageDispatchesDirectMessageWithoutPayloadSenderWhenOuterEnvelopeAndConnectionMatch()
             throws Exception {
         DirectReceiveFixture fixture = new DirectReceiveFixture(
@@ -145,6 +169,26 @@ public class P2PServiceTest {
         verify(fixture.networkNode, never()).sendMessage(any(NodeAddress.class), any(NetworkEnvelope.class));
     }
 
+    @Test
+    public void sendEncryptedDirectMessageFailsBeforeEncryptionWhenPayloadSenderSignaturePubKeyDoesNotMatchLocalKey()
+            throws Exception {
+        KeyPair localSignatureKeyPair = TestUtils.generateKeyPair();
+        DirectSendFixture fixture = new DirectSendFixture(localSignatureKeyPair);
+        setBootstrapped(fixture.p2PService);
+        SendDirectMessageListener listener = mock(SendDirectMessageListener.class);
+
+        fixture.p2PService.sendEncryptedDirectMessage(ENVELOPE_SENDER,
+                mock(PubKeyRing.class),
+                new MockSignaturePubKeyProvidingMailboxPayload("msg",
+                        MY_NODE_ADDRESS,
+                        TestUtils.generateKeyPair().getPublic()),
+                listener);
+
+        verify(listener).onFault("Sender signature pubkey of payload is not matching our signature pubkey");
+        verify(fixture.encryptionService, never()).encryptAndSign(any(PubKeyRing.class), any(NetworkEnvelope.class));
+        verify(fixture.networkNode, never()).sendMessage(any(NodeAddress.class), any(NetworkEnvelope.class));
+    }
+
     private static void setBootstrapped(P2PService p2PService) throws ReflectiveOperationException {
         Field field = P2PService.class.getDeclaredField("isBootstrapped");
         field.setAccessible(true);
@@ -152,6 +196,12 @@ public class P2PServiceTest {
     }
 
     private static P2PService newP2PService(NetworkNode networkNode, EncryptionService encryptionService) {
+        return newP2PService(networkNode, encryptionService, mock(KeyRing.class));
+    }
+
+    private static P2PService newP2PService(NetworkNode networkNode,
+                                            EncryptionService encryptionService,
+                                            KeyRing keyRing) {
         return new P2PService(networkNode,
                 mock(PeerManager.class),
                 mock(P2PDataStorage.class),
@@ -161,7 +211,7 @@ public class P2PServiceTest {
                 mock(Broadcaster.class),
                 mock(Socks5ProxyProvider.class),
                 encryptionService,
-                mock(KeyRing.class),
+                keyRing,
                 mock(MailboxMessageService.class));
     }
 
@@ -178,9 +228,15 @@ public class P2PServiceTest {
         private DirectReceiveFixture(NetworkEnvelope payload,
                                      NodeAddress envelopeSender,
                                      NodeAddress connectionSender) throws Exception {
+            this(payload, TestUtils.generateKeyPair().getPublic(), envelopeSender, connectionSender);
+        }
+
+        private DirectReceiveFixture(NetworkEnvelope payload,
+                                     PublicKey sealedPayloadSignaturePubKey,
+                                     NodeAddress envelopeSender,
+                                     NodeAddress connectionSender) throws Exception {
             this.payload = payload;
-            decryptedMessageWithPubKey = new DecryptedMessageWithPubKey(payload,
-                    TestUtils.generateKeyPair().getPublic());
+            decryptedMessageWithPubKey = new DecryptedMessageWithPubKey(payload, sealedPayloadSignaturePubKey);
             when(sealedMessage.getSealedAndSigned()).thenReturn(sealedAndSigned);
             when(sealedMessage.getSenderNodeAddress()).thenReturn(envelopeSender);
             when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.of(connectionSender));
@@ -195,8 +251,22 @@ public class P2PServiceTest {
         private final P2PService p2PService;
 
         private DirectSendFixture() {
-            when(networkNode.getNodeAddress()).thenReturn(MY_NODE_ADDRESS);
-            p2PService = newP2PService(networkNode, encryptionService);
+            this(mock(KeyRing.class));
         }
+
+        private DirectSendFixture(KeyPair signatureKeyPair) {
+            this(keyRing(signatureKeyPair));
+        }
+
+        private DirectSendFixture(KeyRing keyRing) {
+            when(networkNode.getNodeAddress()).thenReturn(MY_NODE_ADDRESS);
+            p2PService = newP2PService(networkNode, encryptionService, keyRing);
+        }
+    }
+
+    private static KeyRing keyRing(KeyPair signatureKeyPair) {
+        KeyRing keyRing = mock(KeyRing.class);
+        when(keyRing.getSignatureKeyPair()).thenReturn(signatureKeyPair);
+        return keyRing;
     }
 }

@@ -19,13 +19,16 @@ package bisq.network.p2p.mailbox;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
+
+import java.security.PublicKey;
 
 import java.time.Clock;
 
@@ -97,15 +100,29 @@ public class MailboxItem implements PersistablePayload {
                 .getMailboxStoragePayload()
                 .getPrefixedSealedAndSignedMessage()
                 .getSenderNodeAddress();
-        if (decryptedPayload instanceof SendersNodeAddressAwarePayload) {
-            SendersNodeAddressAwarePayload nodeAddressAwarePayload =
-                    (SendersNodeAddressAwarePayload) decryptedPayload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
-            if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
-                    senderNodeAddress)) {
-                log.error("Decrypted mailbox item sender address mismatch. " +
-                                "senderNodeAddress={}, payloadSenderNodeAddress={}",
-                        senderNodeAddress, payloadSenderNodeAddress);
+
+        // MailboxMessage implements SendersNodeAddressProvidingPayload thus the cast is safe
+        SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
+                (SendersNodeAddressProvidingPayload) decryptedPayload;
+        NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
+        if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
+                senderNodeAddress)) {
+            log.error("Decrypted mailbox item sender address mismatch. " +
+                            "senderNodeAddress={}, payloadSenderNodeAddress={}",
+                    senderNodeAddress, payloadSenderNodeAddress);
+            return null;
+        }
+
+        if (decryptedPayload instanceof SendersSignaturePubKeyProvidingPayload) {
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
+                    (SendersSignaturePubKeyProvidingPayload) decryptedPayload;
+            PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
+            PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
+            if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
+                    signaturePubKey)) {
+                log.error("Decrypted mailbox item sender signature pubkey mismatch. " +
+                                "payloadSenderSignaturePubKey={}, sealedPayloadSignaturePubKey={}",
+                        payloadSenderSignaturePubKey, signaturePubKey);
                 return null;
             }
         }

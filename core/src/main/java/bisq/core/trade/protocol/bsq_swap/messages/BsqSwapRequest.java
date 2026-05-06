@@ -21,15 +21,19 @@ import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.PubKeyRing;
+
+import java.security.PublicKey;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class BsqSwapRequest extends TradeMessage implements DirectMessage {
+public abstract class BsqSwapRequest extends TradeMessage
+        implements DirectMessage, SendersSignaturePubKeyProvidingPayload {
     protected final NodeAddress senderNodeAddress;
     protected final PubKeyRing takerPubKeyRing;
     protected final long tradeAmount;
@@ -56,5 +60,10 @@ public abstract class BsqSwapRequest extends TradeMessage implements DirectMessa
         this.makerFee = makerFee;
         this.takerFee = takerFee;
         this.tradeDate = tradeDate;
+    }
+
+    @Override
+    public PublicKey getSenderSignaturePubKey() {
+        return takerPubKeyRing != null ? takerPubKeyRing.getSignaturePubKey() : null;
     }
 }

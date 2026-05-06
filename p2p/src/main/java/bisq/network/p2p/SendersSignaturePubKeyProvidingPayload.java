@@ -15,13 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.mailbox;
+package bisq.network.p2p;
 
+import java.security.PublicKey;
 
-import bisq.network.p2p.DirectMessage;
-import bisq.network.p2p.SendersNodeAddressProvidingPayload;
-import bisq.network.p2p.UidMessage;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
+/**
+ * Interface for payloads that include the sender's signature public key.
+ */
+public interface SendersSignaturePubKeyProvidingPayload {
+    PublicKey getSenderSignaturePubKey();
 
-public interface MailboxMessage extends DirectMessage, UidMessage, ExpirablePayload, SendersNodeAddressProvidingPayload {
+    static boolean isSenderSignaturePubKeyMatching(PublicKey payloadSenderSignaturePubKey,
+                                                   PublicKey expectedSenderSignaturePubKey) {
+        return payloadSenderSignaturePubKey != null &&
+                payloadSenderSignaturePubKey.equals(expectedSenderSignaturePubKey);
+    }
 }

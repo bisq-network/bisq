@@ -24,6 +24,7 @@ import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -32,6 +33,8 @@ import bisq.common.util.Utilities;
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
+
+import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +51,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class InputsForDepositTxRequest extends TradeMessage implements DirectMessage {
+public final class InputsForDepositTxRequest extends TradeMessage
+        implements DirectMessage, SendersSignaturePubKeyProvidingPayload {
     private final NodeAddress senderNodeAddress;
     private final long tradeAmount;
     private final long tradePrice;
@@ -166,6 +170,11 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         // burningManSelectionHeight was added in v1.9.7 which cannot be used for trading anymore, though old persisted
         // trades might carry that field thus we do not enforce positive values.
         checkArgument(burningManSelectionHeight >= 0, "burningManSelectionHeight must be positive");
+    }
+
+    @Override
+    public PublicKey getSenderSignaturePubKey() {
+        return takerPubKeyRing.getSignaturePubKey();
     }
 
 

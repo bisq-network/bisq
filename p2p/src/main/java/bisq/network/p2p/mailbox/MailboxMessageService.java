@@ -23,7 +23,8 @@ import bisq.network.p2p.NetworkNotReadyException;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.SendMailboxMessageListener;
-import bisq.network.p2p.SendersNodeAddressAwarePayload;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 import bisq.network.p2p.messaging.DecryptedMailboxListener;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
@@ -277,6 +278,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             return;
         }
 
+        checkNotNull(mailboxMessage, "mailboxMessage must not be null");
         checkNotNull(peer, "PeerAddress must not be null (sendEncryptedMailboxMessage)");
         NodeAddress senderNodeAddress = networkNode.getNodeAddress();
         checkNotNull(senderNodeAddress,
@@ -293,22 +295,39 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             return;
         }
 
-        NetworkEnvelope payload = (NetworkEnvelope) mailboxMessage;
-        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, payload, peerManager)) {
+        // We assign to payload to make code clearer to distinct between the payload and the address and key
+        // used for the outer envelope.
+        //noinspection UnnecessaryLocalVariable
+        MailboxMessage payload = mailboxMessage;
+
+        NetworkEnvelope payloadAsNetworkEnvelope = (NetworkEnvelope) mailboxMessage;
+        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peer, payloadAsNetworkEnvelope, peerManager)) {
             sendMailboxMessageListener.onFault("We did not send the EncryptedMailboxMessage " +
                     "because the peer does not support the capability.");
             return;
         }
 
-        if (payload instanceof SendersNodeAddressAwarePayload) {
-            SendersNodeAddressAwarePayload nodeAddressAwarePayload = (SendersNodeAddressAwarePayload) payload;
-            NodeAddress payloadSenderNodeAddress = nodeAddressAwarePayload.getSenderNodeAddress();
-            if (!SendersNodeAddressAwarePayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
-                // Sender node address of the SendersNodeAddressAwarePayload to be used for encryption
-                // must match the node address of the sender.
-                log.error("Sender node address {} does not match my node address {}",
-                        payloadSenderNodeAddress, senderNodeAddress);
-                sendMailboxMessageListener.onFault("Sender node address of payload is not matching our node address");
+        NodeAddress payloadSenderNodeAddress = payload.getSenderNodeAddress();
+        if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
+            // Sender node address of the SendersNodeAddressProvidingPayload to be used for encryption
+            // must match the node address of the sender.
+            log.error("Sender node address {} does not match my node address {}",
+                    payloadSenderNodeAddress, senderNodeAddress);
+            sendMailboxMessageListener.onFault("Sender node address of payload is not matching our node address");
+            return;
+        }
+
+        if (payload instanceof SendersSignaturePubKeyProvidingPayload) {
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
+                    (SendersSignaturePubKeyProvidingPayload) payload;
+            PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
+            PublicKey senderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
+            if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
+                    mySignaturePubKey)) {
+                log.error("Sender signature pubkey {} does not match my signature pubkey {}",
+                        senderSignaturePubKey, mySignaturePubKey);
+                sendMailboxMessageListener.onFault("Sender signature pubkey of payload is not matching our signature " +
+                        "pubkey");
                 return;
             }
         }
@@ -316,7 +335,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         try {
             PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                     senderNodeAddress,
-                    encryptionService.encryptAndSign(peersPubKeyRing, payload));
+                    encryptionService.encryptAndSign(peersPubKeyRing, payloadAsNetworkEnvelope));
             SettableFuture<Connection> future = networkNode.sendMessage(peer, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
@@ -338,8 +357,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                 }
             }, MoreExecutors.directExecutor());
         } catch (CryptoException e) {
-            log.error("sendEncryptedMessage failed");
-            e.printStackTrace();
+            log.error("sendEncryptedMessage failed", e);
             sendMailboxMessageListener.onFault("sendEncryptedMailboxMessage failed " + e);
         }
     }
@@ -496,12 +514,16 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (Exception e) {
             log.error("tryDecryptProtectedMailboxStorageEntry failed", e);
+            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
         }
         return new MailboxItem(protectedMailboxStorageEntry, null);
     }
 
     private void handleMailboxItem(MailboxItem mailboxItem) {
-        // We might get an invalid flag if network was not ready yet, thus we add that check
+        // invalidDecryptedMessage reflects payload validation failure. We only remove such entries
+        // after all services are initialized and the node is bootstrapped, when it is safe to
+        // delete them from the network and local store.
+        // The isInvalidDecryptedMessage might fail as well  as false positive in case the network was not ready.
         if (mailboxItem.isInvalidDecryptedMessage() && allServicesInitialized && isBootstrapped) {
             removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
             removeMailboxItemFromLocalStore(mailboxItem.getUid());
