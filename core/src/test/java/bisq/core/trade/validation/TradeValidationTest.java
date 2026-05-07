@@ -19,7 +19,6 @@ package bisq.core.trade.validation;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -346,59 +345,6 @@ public class TradeValidationTest {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDerEncodedEcdsaSignature(bitcoinSignature));
     }
 
-    @Test
-    void checkLockTimeAcceptsExpectedLockTimeAndAllowedDeviation() {
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
-        long expectedLockTime = 1_000 + Restrictions.getLockTime(true);
-
-        assertEquals(expectedLockTime, TradeValidation.checkLockTime(expectedLockTime,
-                true,
-                btcWalletService,
-                true));
-        assertEquals(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
-                TradeValidation.checkLockTime(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
-                        true,
-                        btcWalletService,
-                        true));
-    }
-
-    @Test
-    void checkLockTimeRejectsLockTimeBeyondAllowedDeviation() {
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
-        long invalidLockTime = 1_000 + Restrictions.getLockTime(false) +
-                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkLockTime(invalidLockTime, false, btcWalletService, true));
-    }
-
-    @Test
-    void checkLockTimeSkipsHeightToleranceOnNonMainnet() {
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
-        long lockTimeOutsideMainnetTolerance = 1_000 + Restrictions.getLockTime(false) +
-                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
-
-        assertEquals(lockTimeOutsideMainnetTolerance,
-                TradeValidation.checkLockTime(lockTimeOutsideMainnetTolerance, false, btcWalletService, false));
-    }
-
-    @Test
-    void checkLockTimeRejectsNullWalletService() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkLockTime(1, true, null, true));
-    }
-
-    @Test
-    void checkLockTimeRejectsNonPositiveLockTime() {
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkLockTime(0, true, btcWalletService, true));
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkLockTime(-1, true, btcWalletService, true));
-    }
 
     @Test
     void checkAccountAgeWitnessSignatureAcceptsSignatureOfNonce() throws CryptoException {

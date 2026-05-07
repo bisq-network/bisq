@@ -17,9 +17,15 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
+
+import bisq.common.config.Config;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -70,5 +76,29 @@ public final class DelayedPayoutTxValidation {
                         "trade fee: %s, expected amount: %s",
                 tradeAmount, buyerDeposit, sellerDeposit, tradeTxFee, expectedAmount);
         return inputAmount;
+    }
+
+    public static long checkLockTime(long lockTime, boolean isAltcoin, BtcWalletService btcWalletService) {
+        return checkLockTime(lockTime, isAltcoin, btcWalletService, Config.baseCurrencyNetwork().isMainnet());
+    }
+
+    @VisibleForTesting
+    static long checkLockTime(long lockTime,
+                              boolean isAltcoin,
+                              BtcWalletService btcWalletService,
+                              boolean isMainnet) {
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkIsPositive(lockTime, "lockTime");
+
+        // For regtest dev testing we use shorter lock times and skip the test
+        if (isMainnet) {
+            int expectedUnlockHeight = btcWalletService.getBestChainHeight() + Restrictions.getLockTime(isAltcoin);
+            // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in
+            // case a new block was just found
+            checkArgument(Math.abs(lockTime - expectedUnlockHeight) <= TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+                    "Lock time of maker is more than 3 blocks different to the lockTime I " +
+                            "calculated. Makers lockTime= " + lockTime + ", expectedUnlockHeight=" + expectedUnlockHeight);
+        }
+        return lockTime;
     }
 }

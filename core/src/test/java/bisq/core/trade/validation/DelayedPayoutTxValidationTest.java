@@ -17,6 +17,8 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -119,12 +121,65 @@ public class DelayedPayoutTxValidationTest {
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(1, null));
     }
 
-
     @Test
     void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 0, 1));
         assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, -1, 1));
         assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 1, 0.99));
+    }
+
+    @Test
+    void checkLockTimeAcceptsExpectedLockTimeAndAllowedDeviation() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
+        long expectedLockTime = 1_000 + Restrictions.getLockTime(true);
+
+        assertEquals(expectedLockTime, DelayedPayoutTxValidation.checkLockTime(expectedLockTime,
+                true,
+                btcWalletService,
+                true));
+        assertEquals(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+                DelayedPayoutTxValidation.checkLockTime(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+                        true,
+                        btcWalletService,
+                        true));
+    }
+
+    @Test
+    void checkLockTimeRejectsLockTimeBeyondAllowedDeviation() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
+        long invalidLockTime = 1_000 + Restrictions.getLockTime(false) +
+                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkLockTime(invalidLockTime, false, btcWalletService, true));
+    }
+
+    @Test
+    void checkLockTimeSkipsHeightToleranceOnNonMainnet() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
+        long lockTimeOutsideMainnetTolerance = 1_000 + Restrictions.getLockTime(false) +
+                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
+
+        assertEquals(lockTimeOutsideMainnetTolerance,
+                DelayedPayoutTxValidation.checkLockTime(lockTimeOutsideMainnetTolerance, false, btcWalletService, false));
+    }
+
+    @Test
+    void checkLockTimeRejectsNullWalletService() {
+        assertThrows(NullPointerException.class, () -> DelayedPayoutTxValidation.checkLockTime(1, true, null, true));
+    }
+
+    @Test
+    void checkLockTimeRejectsNonPositiveLockTime() {
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkLockTime(0, true, btcWalletService, true));
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkLockTime(-1, true, btcWalletService, true));
     }
 
     private static DelayedPayoutTxReceiverService delayedPayoutTxReceiverService(int burningManSelectionHeight) {

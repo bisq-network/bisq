@@ -19,7 +19,6 @@ package bisq.core.trade.validation;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -28,7 +27,6 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
@@ -57,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -202,30 +199,6 @@ public final class TradeValidation {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
         }
-    }
-
-    public static long checkLockTime(long lockTime, boolean isAltcoin, BtcWalletService btcWalletService) {
-        return checkLockTime(lockTime, isAltcoin, btcWalletService, Config.baseCurrencyNetwork().isMainnet());
-    }
-
-    @VisibleForTesting
-    static long checkLockTime(long lockTime,
-                              boolean isAltcoin,
-                              BtcWalletService btcWalletService,
-                              boolean isMainnet) {
-        checkNotNull(btcWalletService, "btcWalletService must not be null");
-        checkIsPositive(lockTime, "lockTime");
-
-        // For regtest dev testing we use shorter lock times and skip the test
-        if (isMainnet) {
-            int expectedUnlockHeight = btcWalletService.getBestChainHeight() + Restrictions.getLockTime(isAltcoin);
-            // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in
-            // case a new block was just found
-            checkArgument(Math.abs(lockTime - expectedUnlockHeight) <= MAX_LOCKTIME_BLOCK_DEVIATION,
-                    "Lock time of maker is more than 3 blocks different to the lockTime I " +
-                            "calculated. Makers lockTime= " + lockTime + ", expectedUnlockHeight=" + expectedUnlockHeight);
-        }
-        return lockTime;
     }
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,

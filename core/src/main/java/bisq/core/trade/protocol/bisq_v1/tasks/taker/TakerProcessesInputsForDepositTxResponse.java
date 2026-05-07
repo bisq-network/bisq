@@ -24,6 +24,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.DepositTxValidation;
 
 import bisq.common.crypto.PubKeyRing;
@@ -81,7 +82,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             processModel.setPreparedDepositTx(preparedDepositTx);
 
             boolean isAltcoin = offer.getPaymentMethod().isBlockchain();
-            long lockTime = checkLockTime(response.getLockTime(), isAltcoin, btcWalletService);
+            long lockTime = DelayedPayoutTxValidation.checkLockTime(response.getLockTime(), isAltcoin, btcWalletService);
             trade.setLockTime(lockTime);
 
             long delay = btcWalletService.getBestChainHeight() - lockTime;
