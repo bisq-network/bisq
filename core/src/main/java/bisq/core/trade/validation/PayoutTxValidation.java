@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static bisq.core.trade.validation.DepositTxValidation.checkMultiSigPubKey;
+import static bisq.core.trade.validation.TransactionValidation.checkMultiSigPubKey;
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static bisq.core.util.Validator.checkIsNotNegative;

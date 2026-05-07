@@ -65,7 +65,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             tradingPeer.setAccountId(response.getMakerAccountId());
 
-            byte[] makerMultiSigPubKey = DepositTxValidation.checkMultiSigPubKey(response.getMakerMultiSigPubKey());
+            byte[] makerMultiSigPubKey = TransactionValidation.checkMultiSigPubKey(response.getMakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(makerMultiSigPubKey);
 
             tradingPeer.setContractAsJson(response.getMakerContractAsJson());

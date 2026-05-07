@@ -86,7 +86,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                     tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            byte[] takerMultiSigPubKey = DepositTxValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
+            byte[] takerMultiSigPubKey = TransactionValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
             String takerPayoutAddressString = TransactionValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);

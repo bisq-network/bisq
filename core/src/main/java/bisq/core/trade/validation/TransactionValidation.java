@@ -122,4 +122,13 @@ public class TransactionValidation {
             throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
         }
     }
+
+    public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
+        checkNonEmptyBytes(multiSigPubKey, "multiSigPubKey");
+        checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
+
+        // Check that the multisig key decompresses to a valid curve point:
+        ECKey.fromPublicOnly(multiSigPubKey);
+        return multiSigPubKey;
+    }
 }

@@ -33,7 +33,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -62,30 +61,6 @@ public final class DepositTxValidation {
     }
 
     /* --------------------------------------------------------------------- */
-    // TradeAmount
-    /* --------------------------------------------------------------------- */
-
-
-    /* --------------------------------------------------------------------- */
-    // TradePrice
-    /* --------------------------------------------------------------------- */
-
-
-    /* --------------------------------------------------------------------- */
-    // DepositTx
-    /* --------------------------------------------------------------------- */
-
-    public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
-        checkNonEmptyBytes(multiSigPubKey, "multiSigPubKey");
-        checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
-
-        // Check that the multisig key decompresses to a valid curve point:
-        ECKey.fromPublicOnly(multiSigPubKey);
-        return multiSigPubKey;
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // InputsForDepositTxRequest
     /* --------------------------------------------------------------------- */
 
@@ -111,7 +86,7 @@ public final class DepositTxValidation {
                 offer,
                 tradeTxFee,
                 tradeAmount);
-        checkMultiSigPubKey(request.getTakerMultiSigPubKey());
+        TransactionValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
         TransactionValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
         PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
         DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
