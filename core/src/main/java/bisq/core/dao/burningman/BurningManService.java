@@ -206,7 +206,7 @@ public class BurningManService {
     }
 
 
-    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
+    public List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
         return getBurningManCandidatesByName(chainHeight).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
                 .filter(BurningManCandidate::isReceiverAddressValid)
