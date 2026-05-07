@@ -1315,10 +1315,6 @@ public class TradeWalletService {
                 Coin.valueOf(rawTransactionInput.value));
     }
 
-    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
-        return WalletUtils.isP2WH(rawTransactionInput, params);
-    }
-
     // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
     // Atm it is still used by traderSignAndFinalizeDisputedPayoutTx which is used by ArbitrationManager.
 

@@ -96,7 +96,10 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         var buyerInputs = checkNotNull(processModel.getRawTransactionInputs());
         var sellerInputs = checkNotNull(processModel.getTradePeer().getRawTransactionInputs());
 
-        return buyerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH) &&
-                sellerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH);
+        // P2WPKH is the only canonical Bisq funding shape. Both sides' inputs being P2WPKH
+        // is sufficient for a non-malleable txid, and matches the policy enforced upstream
+        // in the deposit-tx construction and signing tasks.
+        return buyerInputs.stream().allMatch(processModel.getBtcWalletService()::isP2WPKH) &&
+                sellerInputs.stream().allMatch(processModel.getBtcWalletService()::isP2WPKH);
     }
 }

@@ -52,7 +52,8 @@ public final class TradePeerTxInputValidator {
             checkNotNull(input, "%s raw transaction input must not be null", peerRole);
             checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
             input.validate(walletService);
-            checkArgument(walletService.isP2WH(input), "%s input must be P2WH", peerRole);
+            // Strict P2WPKH only — a peer cannot supply a script-controlled funding input.
+            checkArgument(walletService.isP2WPKH(input), "%s input must be P2WPKH", peerRole);
             inputValue = Math.addExact(inputValue, input.value);
         }
         return inputValue;

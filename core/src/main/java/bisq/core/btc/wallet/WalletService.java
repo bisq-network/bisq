@@ -841,8 +841,8 @@ public abstract class WalletService {
                 ScriptPattern.isP2WH(output.getScriptPubKey());
     }
 
-    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
-        return WalletUtils.isP2WH(rawTransactionInput, params);
+    public boolean isP2WPKH(RawTransactionInput rawTransactionInput) {
+        return WalletUtils.isP2WPKH(rawTransactionInput, params);
     }
 
     @Nullable
