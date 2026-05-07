@@ -644,17 +644,28 @@ public class TradeWalletService {
 
 
     public void sellerAddsBuyerWitnessesToDepositTx(Transaction myDepositTx,
-                                                    Transaction buyersDepositTxWithWitnesses) {
-        int numberInputs = myDepositTx.getInputs().size();
+                                                    Transaction buyersDepositTxWithWitnesses)
+            throws TransactionVerificationException {
+        Transaction checkedMyDepositTx = checkNotNull(myDepositTx, "myDepositTx must not be null");
+        Transaction checkedBuyersDepositTxWithWitnesses = checkNotNull(buyersDepositTxWithWitnesses,
+                "buyersDepositTxWithWitnesses must not be null");
+        int numberInputs = checkedMyDepositTx.getInputs().size();
+        checkArgument(checkedBuyersDepositTxWithWitnesses.getInputs().size() == numberInputs,
+                "Deposit transactions must have the same number of inputs. myDepositTxInputs=%s, buyersDepositTxInputs=%s",
+                numberInputs,
+                checkedBuyersDepositTxWithWitnesses.getInputs().size());
+
         for (int i = 0; i < numberInputs; i++) {
-            var txInput = myDepositTx.getInput(i);
-            var witnessFromBuyer = buyersDepositTxWithWitnesses.getInput(i).getWitness();
+            var txInput = checkedMyDepositTx.getInput(i);
+            var witnessFromBuyer = checkedBuyersDepositTxWithWitnesses.getInput(i).getWitness();
 
             if (TransactionWitness.EMPTY.equals(txInput.getWitness()) &&
                     !TransactionWitness.EMPTY.equals(witnessFromBuyer)) {
                 txInput.setWitness(witnessFromBuyer);
             }
         }
+
+        WalletService.verifyTransaction(checkedMyDepositTx);
     }
 
 
