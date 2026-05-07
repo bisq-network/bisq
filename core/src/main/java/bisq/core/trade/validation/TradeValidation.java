@@ -121,15 +121,6 @@ public final class TradeValidation {
     // Bitcoin
     /* --------------------------------------------------------------------- */
 
-    public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
-        checkNonEmptyBytes(multiSigPubKey, "multiSigPubKey");
-        checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
-
-        // Check that the multisig key decompresses to a valid curve point:
-        ECKey.fromPublicOnly(multiSigPubKey);
-        return multiSigPubKey;
-    }
-
     public static String checkBitcoinAddress(String bitcoinAddress, BtcWalletService btcWalletService) {
         checkNonBlankString(bitcoinAddress, "bitcoinAddress");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
@@ -533,7 +524,7 @@ public final class TradeValidation {
                 offer,
                 tradeTxFee,
                 tradeAmount);
-        checkMultiSigPubKey(request.getTakerMultiSigPubKey());
+        DepositTxValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
         checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
         PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
         DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);

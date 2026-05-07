@@ -25,6 +25,7 @@ import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.price.PriceFeedService;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -37,6 +38,7 @@ import java.util.Arrays;
 
 import static bisq.core.trade.validation.TradeValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsPositive;
+import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -86,6 +88,15 @@ public final class DepositTxValidation {
     // DepositTx
     /* --------------------------------------------------------------------- */
 
+    public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
+        checkNonEmptyBytes(multiSigPubKey, "multiSigPubKey");
+        checkArgument(multiSigPubKey.length == 33, "multiSigPubKey must be compressed");
+
+        // Check that the multisig key decompresses to a valid curve point:
+        ECKey.fromPublicOnly(multiSigPubKey);
+        return multiSigPubKey;
+    }
+
     public static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
                                                                                   Transaction expectedDepositTx,
                                                                                   BtcWalletService btcWalletService) {
@@ -128,5 +139,4 @@ public final class DepositTxValidation {
         input.setScriptSig(ScriptBuilder.createEmpty());
         input.setWitness(TransactionWitness.EMPTY);
     }
-
 }
