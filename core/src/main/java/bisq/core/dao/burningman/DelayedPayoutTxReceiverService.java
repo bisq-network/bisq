@@ -117,8 +117,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                                                    long inputAmount,
                                                    long tradeTxFee) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight,
-                false);
+        Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
 
         // We need to use the same txFeePerVbyte value for both traders.
         // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.

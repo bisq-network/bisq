@@ -209,12 +209,9 @@ public class BurningManService {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
 
-    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
-        return getActiveBurningManCandidates(chainHeight, false);
-    }
 
-    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
-        return getBurningManCandidatesByName(chainHeight, limitCappingRounds).values().stream()
+    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
+        return getBurningManCandidatesByName(chainHeight, false).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
                 .filter(BurningManCandidate::isReceiverAddressValid)
                 .collect(Collectors.toList());
