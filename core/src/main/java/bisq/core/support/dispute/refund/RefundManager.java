@@ -343,7 +343,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         NetworkParameters params = btcWalletService.getParams();
         for (int i = 0; i < delayedPayoutTx.getOutputs().size(); i++) {
             TransactionOutput transactionOutput = delayedPayoutTx.getOutputs().get(i);
-            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(0);
+            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(i);
             Address address = transactionOutput.getScriptPubKey().getToAddress(params);
             Address receiverAddress = Address.fromString(params, receiverTuple.second);
             checkArgument(address.equals(receiverAddress),
