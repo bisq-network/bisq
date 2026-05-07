@@ -330,12 +330,57 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkTransactionAcceptsValidTransaction() {
+        Transaction transaction = transaction(new byte[]{});
+
+        assertSame(transaction, TradeValidation.checkTransaction(transaction));
+    }
+
+    @Test
+    void checkTransactionRejectsStructurallyInvalidTransaction() {
+        Transaction transaction = transactionWithoutOutputs();
+
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransaction(transaction));
+    }
+
+    @Test
+    void checkTransactionRejectsNullTransaction() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransaction(null));
+    }
+
+    @Test
     void toTransactionParsesValidSerializedVerifiedTransaction() {
         byte[] serializedTransaction = serializedTransaction();
 
         assertArrayEquals(serializedTransaction,
                 TradeValidation.toVerifiedTransaction(serializedTransaction, btcWalletService(MainNetParams.get()))
                         .bitcoinSerialize());
+    }
+
+    @Test
+    void toVerifiedTransactionRejectsMalformedSerializedTransaction() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.toVerifiedTransaction(new byte[]{1, 2, 3},
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void toVerifiedTransactionRejectsStructurallyInvalidTransaction() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.toVerifiedTransaction(
+                serializedTransactionWithoutOutputs(),
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void toVerifiedTransactionRejectsNullSerializedTransaction() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.toVerifiedTransaction(null,
+                btcWalletService(MainNetParams.get())));
+    }
+
+    @Test
+    void toVerifiedTransactionRejectsNullWalletService() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.toVerifiedTransaction(
+                serializedTransaction(),
+                null));
     }
 
     @Test
@@ -608,6 +653,16 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkBase64SignatureRejectsNullSignature() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkBase64Signature(null));
+    }
+
+    @Test
+    void checkBase64SignatureRejectsBlankSignature() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64Signature(" "));
+    }
+
+    @Test
     void checkPeersDateAcceptsDateWithinAllowedRange() {
         long now = System.currentTimeMillis();
 
@@ -859,6 +914,14 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkMinerFeeRateRejectsZeroAndNegativeFees() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(0, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(-1, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(1_000, 0));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(1_000, -1));
+    }
+
+    @Test
     void checkTakerFeeAcceptsExpectedFees() {
         Coin takerFee = Coin.valueOf(100);
 
@@ -991,6 +1054,40 @@ public class TradeValidationTest {
                 fixture.feeService));
     }
 
+    @Test
+    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 0, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, -1, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 1, 0.99));
+    }
+
+    @Test
+    void checkByteArrayWithExpectedAcceptsMatchingByteArrays() {
+        byte[] current = new byte[]{1, 2, 3};
+
+        assertSame(current, TradeValidation.checkByteArrayWithExpected(current, new byte[]{1, 2, 3}));
+    }
+
+    @Test
+    void checkByteArrayWithExpectedRejectsMismatchingByteArrays() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkByteArrayWithExpected(new byte[]{1, 2, 3}, new byte[]{1, 2, 4}));
+
+        assertEquals("current is not matching expected. current=010203, expected=010204", exception.getMessage());
+    }
+
+    @Test
+    void checkByteArrayWithExpectedRejectsNullAndEmptyByteArrays() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkByteArrayWithExpected(null, new byte[]{1}));
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkByteArrayWithExpected(new byte[]{1}, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkByteArrayWithExpected(new byte[0], new byte[]{1}));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkByteArrayWithExpected(new byte[]{1}, new byte[0]));
+    }
+
     private static Offer offer(boolean isBuyOffer,
                                Coin buyerSecurityDeposit,
                                Coin sellerSecurityDeposit,
@@ -1043,13 +1140,7 @@ public class TradeValidationTest {
     }
 
     private static byte[] serializedTransactionWithoutOutputs() {
-        Transaction transaction = new Transaction(MainNetParams.get());
-        transaction.addInput(new TransactionInput(MainNetParams.get(),
-                transaction,
-                new byte[]{},
-                new TransactionOutPoint(MainNetParams.get(), 0, Sha256Hash.ZERO_HASH),
-                Coin.valueOf(2_000)));
-        return transaction.bitcoinSerialize();
+        return transactionWithoutOutputs().bitcoinSerialize();
     }
 
     private static byte[] serializedTransactionWithScriptSig() {
@@ -1072,6 +1163,16 @@ public class TradeValidationTest {
                 new TransactionOutPoint(MainNetParams.get(), 0, Sha256Hash.ZERO_HASH),
                 Coin.valueOf(2_000)));
         transaction.addOutput(Coin.valueOf(1_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        return transaction;
+    }
+
+    private static Transaction transactionWithoutOutputs() {
+        Transaction transaction = new Transaction(MainNetParams.get());
+        transaction.addInput(new TransactionInput(MainNetParams.get(),
+                transaction,
+                new byte[]{},
+                new TransactionOutPoint(MainNetParams.get(), 0, Sha256Hash.ZERO_HASH),
+                Coin.valueOf(2_000)));
         return transaction;
     }
 
