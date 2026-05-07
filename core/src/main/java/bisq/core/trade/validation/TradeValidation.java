@@ -199,8 +199,8 @@ public class TradeValidation {
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(unsignedSerializedTransaction, "unsignedSerializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-        Transaction signedTransaction = toVerifiedTransaction(unsignedSerializedTransaction, btcWalletService);
-        checkArgument(signedTransaction.getInputs().stream().noneMatch(TradeValidation::hasSignatureData),
+        Transaction unsignedTransaction = toVerifiedTransaction(unsignedSerializedTransaction, btcWalletService);
+        checkArgument(unsignedTransaction.getInputs().stream().noneMatch(TradeValidation::hasSignatureData),
                 "unsignedSerializedTransaction must not be signed");
         return unsignedSerializedTransaction;
     }
