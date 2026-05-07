@@ -33,7 +33,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionWitness;
-import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.ScriptBuilder;
 
 import java.util.Arrays;
@@ -41,6 +40,7 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.validation.DepositTxValidation.checkDepositTxMatchesIgnoringWitnessesAndScriptSigs;
+import static bisq.core.trade.validation.TradeValidationTestUtils.PARAMS;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -51,11 +51,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class DepositTxValidationTest {
-    private static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
-    private static final Coin OFFER_MAX_AMOUNT = Coin.valueOf(5_000);
-    private static final MainNetParams PARAMS = MainNetParams.get();
-    private static final String BUYER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
-    private static final String SELLER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
+    static final String SELLER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
+    static final String BUYER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
+    static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
+    static final Coin OFFER_MAX_AMOUNT = Coin.valueOf(5_000);
+
 
     /* --------------------------------------------------------------------- */
     // TradeAmount
@@ -269,7 +269,7 @@ public class DepositTxValidationTest {
     @Test
     void checkDepositTxMatchesIgnoringWitnessesAndScriptSigsRejectsNullPublicArgs() {
         Transaction depositTx = depositTx(Coin.valueOf(10_000), BUYER_ADDRESS, 0);
-        BtcWalletService btcWalletService = btcWalletService();
+        BtcWalletService btcWalletService = TradeValidationTestUtils.btcWalletService();
 
         assertThrows(NullPointerException.class,
                 () -> checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(null,
@@ -285,7 +285,7 @@ public class DepositTxValidationTest {
                         (BtcWalletService) null));
     }
 
-    private static Transaction depositTx(Coin outputAmount, String addressString, long outpointIndex) {
+    static Transaction depositTx(Coin outputAmount, String addressString, long outpointIndex) {
         Transaction transaction = new Transaction(PARAMS);
         transaction.addInput(new TransactionInput(PARAMS,
                 transaction,
@@ -296,20 +296,14 @@ public class DepositTxValidationTest {
         return transaction;
     }
 
-    private static void addSignatureData(Transaction transaction, byte[] scriptSigProgram, byte[] witnessProgram) {
+    static void addSignatureData(Transaction transaction, byte[] scriptSigProgram, byte[] witnessProgram) {
         transaction.getInput(0).setScriptSig(new ScriptBuilder().data(scriptSigProgram).build());
         TransactionWitness witness = new TransactionWitness(1);
         witness.setPush(0, witnessProgram);
         transaction.getInput(0).setWitness(witness);
     }
 
-    private static Transaction copy(Transaction transaction) {
+    static Transaction copy(Transaction transaction) {
         return new Transaction(PARAMS, transaction.bitcoinSerialize());
-    }
-
-    private static BtcWalletService btcWalletService() {
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        when(btcWalletService.getParams()).thenReturn(PARAMS);
-        return btcWalletService;
     }
 }

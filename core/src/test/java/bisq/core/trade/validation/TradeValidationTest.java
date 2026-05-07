@@ -46,7 +46,6 @@ import bisq.common.util.Base64;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -69,6 +68,8 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
+import static bisq.core.trade.validation.DepositTxValidationTest.OFFER_MIN_AMOUNT;
+import static bisq.core.trade.validation.TradeValidationTestUtils.btcWalletService;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -78,15 +79,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TradeValidationTest {
-    private static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
-    private static final int GENESIS_HEIGHT = 102;
-    private static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
-    private static final String VALID_TRANSACTION_ID =
-            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
             "account-age-witness-nonce".getBytes(StandardCharsets.UTF_8);
-
-
 
 
     @Test
@@ -135,13 +129,13 @@ public class TradeValidationTest {
         String bitcoinAddress = SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString();
 
         assertSame(bitcoinAddress, TradeValidation.checkBitcoinAddress(bitcoinAddress,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkBitcoinAddressRejectsInvalidAddress() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBitcoinAddress("not-a-bitcoin-address",
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
@@ -149,13 +143,13 @@ public class TradeValidationTest {
         String testnetAddress = SegwitAddress.fromKey(TestNet3Params.get(), new ECKey()).toString();
 
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBitcoinAddress(testnetAddress,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkBitcoinAddressRejectsNullAddress() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkBitcoinAddress(null,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
@@ -170,19 +164,19 @@ public class TradeValidationTest {
         byte[] serializedTransaction = serializedTransaction();
 
         assertSame(serializedTransaction, TradeValidation.checkSerializedTransaction(serializedTransaction,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkSerializedTransactionRejectsMalformedSerializedTransaction() {
         assertThrows(RuntimeException.class, () -> TradeValidation.checkSerializedTransaction(new byte[]{1, 2, 3},
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkSerializedTransactionRejectsNullSerializedTransaction() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkSerializedTransaction(null,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
@@ -209,27 +203,27 @@ public class TradeValidationTest {
         byte[] serializedTransaction = serializedTransaction();
 
         assertArrayEquals(serializedTransaction,
-                TradeValidation.toVerifiedTransaction(serializedTransaction, btcWalletService(MainNetParams.get()))
+                TradeValidation.toVerifiedTransaction(serializedTransaction, btcWalletService())
                         .bitcoinSerialize());
     }
 
     @Test
     void toVerifiedTransactionRejectsMalformedSerializedTransaction() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.toVerifiedTransaction(new byte[]{1, 2, 3},
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void toVerifiedTransactionRejectsStructurallyInvalidTransaction() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.toVerifiedTransaction(
                 serializedTransactionWithoutOutputs(),
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void toVerifiedTransactionRejectsNullSerializedTransaction() {
         assertThrows(NullPointerException.class, () -> TradeValidation.toVerifiedTransaction(null,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
@@ -245,41 +239,41 @@ public class TradeValidationTest {
 
         assertSame(depositTxWithoutWitnesses,
                 TradeValidation.checkTransactionIsUnsigned(depositTxWithoutWitnesses,
-                        btcWalletService(MainNetParams.get())));
+                        btcWalletService()));
     }
 
     @Test
     void checkTransactionIsUnsignedRejectsMalformedSerializedTransaction() {
         assertThrows(RuntimeException.class, () -> TradeValidation.checkTransactionIsUnsigned(
                 new byte[]{1, 2, 3},
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkTransactionIsUnsignedRejectsStructurallyInvalidTransaction() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
                 serializedTransactionWithoutOutputs(),
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkTransactionIsUnsignedRejectsTransactionWithScriptSig() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
                 serializedTransactionWithScriptSig(),
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkTransactionIsUnsignedRejectsTransactionWithWitness() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
                 serializedTransactionWithWitness(),
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
     void checkTransactionIsUnsignedRejectsNullTransaction() {
         assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionIsUnsigned(null,
-                btcWalletService(MainNetParams.get())));
+                btcWalletService()));
     }
 
     @Test
@@ -291,24 +285,24 @@ public class TradeValidationTest {
 
     @Test
     void checkTransactionIdAcceptsValidTransactionId() {
-        assertEquals(VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(VALID_TRANSACTION_ID));
+        assertEquals(TradeValidationTestUtils.VALID_TRANSACTION_ID, TradeValidation.checkTransactionId(TradeValidationTestUtils.VALID_TRANSACTION_ID));
     }
 
     @Test
     void checkTransactionIdAcceptsUpperCaseTransactionId() {
-        String transactionId = VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
+        String transactionId = TradeValidationTestUtils.VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
         assertEquals(transactionId.toLowerCase(Locale.ROOT), TradeValidation.checkTransactionId(transactionId));
     }
 
     @Test
     void checkTransactionIdRejectsInvalidLength() {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(
-                VALID_TRANSACTION_ID.substring(1)));
+                TradeValidationTestUtils.VALID_TRANSACTION_ID.substring(1)));
     }
 
     @Test
     void checkTransactionIdRejectsNonHexTransactionId() {
-        String transactionId = VALID_TRANSACTION_ID.substring(0, VALID_TRANSACTION_ID.length() - 1) + "g";
+        String transactionId = TradeValidationTestUtils.VALID_TRANSACTION_ID.substring(0, TradeValidationTestUtils.VALID_TRANSACTION_ID.length() - 1) + "g";
 
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionId(transactionId));
     }
@@ -1013,11 +1007,6 @@ public class TradeValidationTest {
         return trade;
     }
 
-    private static BtcWalletService btcWalletService(NetworkParameters networkParameters) {
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        when(btcWalletService.getParams()).thenReturn(networkParameters);
-        return btcWalletService;
-    }
 
     private static DelayedPayoutTxReceiverService delayedPayoutTxReceiverService(int burningManSelectionHeight) {
         DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = mock(DelayedPayoutTxReceiverService.class);
@@ -1100,7 +1089,7 @@ public class TradeValidationTest {
         FeeService feeService = configureTradeFeeService(Coin.valueOf(77), expectedTakerFee, 2);
         Coin tradeTxFee = TradeFeeFactory.getTradeTxFee(feeService.getTxFeePerVbyte());
         NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
-        BtcWalletService btcWalletService = btcWalletService(MainNetParams.get());
+        BtcWalletService btcWalletService = btcWalletService();
         Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
         when(offer.getId()).thenReturn(offerId);
         when(offer.getMinAmount()).thenReturn(OFFER_MIN_AMOUNT);
@@ -1128,7 +1117,7 @@ public class TradeValidationTest {
                 SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
                 takerPubKeyRing,
                 "taker-account-id",
-                VALID_TRANSACTION_ID,
+                TradeValidationTestUtils.VALID_TRANSACTION_ID,
                 List.of(),
                 List.of(mediatorNodeAddress),
                 List.of(),
@@ -1159,7 +1148,7 @@ public class TradeValidationTest {
     }
 
     private static FeeService configureTradeFeeService(Coin makerFee, Coin takerFee, long txFeePerVbyte) {
-        int chainHeight = GENESIS_HEIGHT;
+        int chainHeight = TradeValidationTestUtils.GENESIS_HEIGHT;
         DaoStateService daoStateService = mock(DaoStateService.class);
         PeriodService periodService = mock(PeriodService.class);
         FilterManager filterManager = mock(FilterManager.class);

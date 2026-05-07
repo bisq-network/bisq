@@ -21,14 +21,14 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 
 import org.junit.jupiter.api.Test;
 
+import static bisq.core.trade.validation.TradeValidationTestUtils.GENESIS_HEIGHT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DelayedPayoutTxValidationTest {
-    private static final int GENESIS_HEIGHT = 102;
-    private static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
+    static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
 
     @Test
     void checkBurningManSelectionHeightAcceptsSameHeight() {
