@@ -112,20 +112,13 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                 SNAPSHOT_SELECTION_GRID_SIZE);
     }
 
-    public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
-                                                   long inputAmount,
-                                                   long tradeTxFee) {
-        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, true, true);
-    }
 
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
-                                                   long tradeTxFee,
-                                                   boolean isBugfix6699Activated,
-                                                   boolean isProposal412Activated) {
+                                                   long tradeTxFee) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
         Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight,
-                !isProposal412Activated);
+                false);
 
         // We need to use the same txFeePerVbyte value for both traders.
         // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.
@@ -156,7 +149,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
-                .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
+                .filter(candidate -> candidate.getReceiverAddress(true).isPresent())
                 .mapToDouble(candidate -> {
                     double cappedBurnAmountShare = candidate.getCappedBurnAmountShare();
                     long amount = Math.round(cappedBurnAmountShare * spendableAmount);
@@ -168,11 +161,11 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         //  amount just under 1000 sats or 64 * fee-rate could get erroneously included and lead to significant
         //  underpaying of the DPT (by perhaps around 5-10% per erroneously included output).
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
-                .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
+                .filter(candidate -> candidate.getReceiverAddress(true).isPresent())
                 .map(candidate -> {
                     double cappedBurnAmountShare = candidate.getCappedBurnAmountShare() / adjustment;
                     return new Tuple2<>(Math.round(cappedBurnAmountShare * spendableAmount),
-                            candidate.getReceiverAddress(isBugfix6699Activated).get());
+                            candidate.getReceiverAddress(true).get());
                 })
                 .filter(tuple -> tuple.first >= minOutputAmount)
                 .filter(tuple -> tuple.first <= maxOutputAmount)
