@@ -19,7 +19,6 @@ package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.WalletUtils;
-import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.validation.exceptions.InvalidTxException;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -32,27 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TradeDataValidation {
-
-    public static void validateDepositInputs(Trade trade) throws InvalidTxException {
-        // assumption: deposit tx always has 2 inputs, the maker and taker
-        if (trade == null || trade.getDepositTx() == null || trade.getDepositTx().getInputs().size() != 2) {
-            throw new InvalidTxException("Deposit transaction is null or has unexpected input count");
-        }
-        Transaction depositTx = trade.getDepositTx();
-        String txIdInput0 = depositTx.getInput(0).getOutpoint().getHash().toString();
-        String txIdInput1 = depositTx.getInput(1).getOutpoint().getHash().toString();
-        String contractMakerTxId = trade.getContract().getOfferPayload().getOfferFeePaymentTxId();
-        String contractTakerTxId = trade.getContract().getTakerFeeTxID();
-        boolean makerFirstMatch = contractMakerTxId.equalsIgnoreCase(txIdInput0) && contractTakerTxId.equalsIgnoreCase(txIdInput1);
-        boolean takerFirstMatch = contractMakerTxId.equalsIgnoreCase(txIdInput1) && contractTakerTxId.equalsIgnoreCase(txIdInput0);
-        if (!makerFirstMatch && !takerFirstMatch) {
-            String errMsg = "Maker/Taker txId in contract does not match deposit tx input";
-            log.error(errMsg +
-                    "\nContract Maker tx=" + contractMakerTxId + " Contract Taker tx=" + contractTakerTxId +
-                    "\nDeposit Input0=" + txIdInput0 + " Deposit Input1=" + txIdInput1);
-            throw new InvalidTxException(errMsg);
-        }
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
