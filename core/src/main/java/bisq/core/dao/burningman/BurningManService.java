@@ -116,10 +116,6 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
-        return getBurningManCandidatesByName(chainHeight, false);
-    }
-
-    Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight, boolean limitCappingRounds) {
         Map<String, BurningManCandidate> burningManCandidatesByName = new TreeMap<>();
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = getProofOfBurnOpReturnTxOutputByHash(chainHeight);
 
@@ -189,7 +185,7 @@ public class BurningManService {
                 .sum();
         burningManCandidates.forEach(candidate -> candidate.calculateShares(totalDecayedCompensationAmounts, totalDecayedBurnAmounts));
 
-        int numRoundsWithCapsApplied = imposeCaps(burningManCandidates, limitCappingRounds);
+        int numRoundsWithCapsApplied = imposeCaps(burningManCandidates, false);
 
         double sumAllCappedBurnAmountShares = burningManCandidates.stream()
                 .filter(candidate -> candidate.getRoundCapped().isPresent())
@@ -211,7 +207,7 @@ public class BurningManService {
 
 
     List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
-        return getBurningManCandidatesByName(chainHeight, false).values().stream()
+        return getBurningManCandidatesByName(chainHeight).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
                 .filter(BurningManCandidate::isReceiverAddressValid)
                 .collect(Collectors.toList());
