@@ -532,6 +532,46 @@ public class DepositTxValidationTest {
                         null));
     }
 
+    @Test
+    void getCheckedMediatorPubKeyRingReturnsAcceptedMediatorPubKeyRing() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        PubKeyRing mediatorPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress,
+                TradeValidationTestUtils.mediator(mediatorNodeAddress, mediatorPubKeyRing));
+
+        assertSame(mediatorPubKeyRing, DepositTxValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsNullMediatorNodeAddress() {
+        assertThrows(NullPointerException.class,
+                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(null, mock(User.class)));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsNullUser() {
+        assertThrows(NullPointerException.class,
+                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(new NodeAddress("mediator.onion", 9999), null));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsUnknownMediator() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, null);
+
+        assertThrows(NullPointerException.class,
+                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsMediatorWithoutPubKeyRing() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, TradeValidationTestUtils.mediator(mediatorNodeAddress, null));
+
+        assertThrows(NullPointerException.class,
+                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
 
     static Transaction depositTx(Coin outputAmount, String addressString, long outpointIndex) {
         Transaction transaction = new Transaction(PARAMS);

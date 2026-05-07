@@ -27,6 +27,7 @@ import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
 
@@ -150,7 +151,7 @@ public final class DepositTxValidation {
                 takerSignatureKey);
         TradeValidation.checkPeersDate(request.getCurrentDate());
         NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
-        TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
+        getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
         checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
         TradeFeeValidation.checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
         return request;
@@ -276,5 +277,14 @@ public final class DepositTxValidation {
         checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WH),
                 "rawTransactionInputs must not be malleable");
         return rawTransactionInputs;
+    }
+
+    public static PubKeyRing getCheckedMediatorPubKeyRing(NodeAddress mediatorNodeAddress, User user) {
+        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
+        checkNotNull(user, "user must not be null");
+        Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
+                "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
+        return checkNotNull(mediator.getPubKeyRing(),
+                "mediator.getPubKeyRing() must not be null");
     }
 }
