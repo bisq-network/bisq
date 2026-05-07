@@ -26,7 +26,6 @@ import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.trade.validation.DepositTxValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -39,6 +38,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxShape;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -81,7 +81,7 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
             List<RawTransactionInput> buyerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             Transaction makersDepositTx = new Transaction(walletService.getParams(), checkNotNull(processModel.getPreparedDepositTx()));
             verifyPreparedDepositTxFromBuyerAsMaker(makersDepositTx);
-            DepositTxValidation.assertCanonicalDepositTxShape(makersDepositTx, buyerInputs, walletService.getParams());
+            checkCanonicalDepositTxShape(makersDepositTx, buyerInputs, walletService.getParams());
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,

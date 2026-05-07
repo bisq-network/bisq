@@ -740,7 +740,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private void validatePayoutTx() {
         try {
-            DelayedPayoutTxValidation.validateDelayedPayoutTx(trade.getDelayedPayoutTx(),
+            DelayedPayoutTxValidation.checkDelayedPayoutTx(trade.getDelayedPayoutTx(),
                     trade,
                     model.dataModel.btcWalletService);
         } catch (MissingTxException ignore) {

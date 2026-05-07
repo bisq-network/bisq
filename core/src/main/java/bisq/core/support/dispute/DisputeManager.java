@@ -41,8 +41,6 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.validation.DelayedPayoutTxValidation;
-import bisq.core.trade.validation.exceptions.ValidationException;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.NodeAddress;
@@ -60,6 +58,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.utils.Fiat;
 
 import javafx.beans.property.IntegerProperty;
@@ -73,7 +72,6 @@ import java.time.Instant;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -85,6 +83,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTx;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -487,16 +486,24 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateTradeAndDispute(dispute, trade);
-            DelayedPayoutTxValidation.validateDelayedPayoutTx(trade.getDelayedPayoutTx(),
-                    trade,
-                    btcWalletService);
-            if (dispute.isUsingLegacyBurningMan()) {
+            Transaction delayedPayoutTx = null;
+            try {
+                delayedPayoutTx = checkDelayedPayoutTx(trade.getDelayedPayoutTx(),
+                        trade,
+                        btcWalletService);
+            } catch (RuntimeException e) {
+                // The peer sent us an invalid delayed payout tx. We do not return here as we don't want to break
+                // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
+                // a popup displayed to react.
+                log.warn("Delayed payout tx is invalid. {}", e.toString());
+            }
+            if (delayedPayoutTx != null && dispute.isUsingLegacyBurningMan()) {
                 DisputeValidation.validateDonationAddress(dispute,
-                        Objects.requireNonNull(trade.getDelayedPayoutTx()),
+                        delayedPayoutTx,
                         btcWalletService.getParams());
                 DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             }
-        } catch (ValidationException | DisputeValidation.ValidationException e) {
+        } catch (DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

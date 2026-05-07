@@ -24,6 +24,10 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.script.ScriptBuilder;
 
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +39,66 @@ import static org.mockito.Mockito.when;
 
 class DelayedPayoutTxValidationTest {
     static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
+
+    /* --------------------------------------------------------------------- */
+    // Delayed payout tx
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkDelayedPayoutTxAcceptsExpectedTransaction() {
+        Trade trade = tradeWithLockTime(144);
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+
+        assertEquals(delayedPayoutTx,
+                DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsUnexpectedLockTime() {
+        Trade trade = tradeWithLockTime(144);
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 145);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsUnexpectedSequence() {
+        Trade trade = tradeWithLockTime(144);
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        delayedPayoutTx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputAcceptsInputSpendingDepositTxOutputZero() {
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+
+        assertEquals(delayedPayoutTx,
+                DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, depositTx));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputRejectsInputNotSpendingDepositTxOutputZero() {
+        Transaction depositTx = depositTx();
+        Transaction otherDepositTx = depositTx(1);
+        Transaction delayedPayoutTx = delayedPayoutTx(otherDepositTx, 144);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, depositTx));
+    }
 
     /* --------------------------------------------------------------------- */
     // Burning Man selection height
@@ -191,5 +255,35 @@ class DelayedPayoutTxValidationTest {
         DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = mock(DelayedPayoutTxReceiverService.class);
         when(delayedPayoutTxReceiverService.getBurningManSelectionHeight()).thenReturn(burningManSelectionHeight);
         return delayedPayoutTxReceiverService;
+    }
+
+    private static Trade tradeWithLockTime(long lockTime) {
+        Trade trade = mock(Trade.class);
+        when(trade.getLockTime()).thenReturn(lockTime);
+        when(trade.isUsingLegacyBurningMan()).thenReturn(false);
+        return trade;
+    }
+
+    private static Transaction depositTx() {
+        return depositTx(0);
+    }
+
+    private static Transaction depositTx(long outpointIndex) {
+        Transaction transaction = new Transaction(ValidationTestUtils.PARAMS);
+        transaction.addInput(new TransactionInput(ValidationTestUtils.PARAMS,
+                transaction,
+                new byte[]{},
+                new TransactionOutPoint(ValidationTestUtils.PARAMS, outpointIndex, Sha256Hash.ZERO_HASH),
+                Coin.valueOf(2_000)));
+        transaction.addOutput(Coin.valueOf(1_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        return transaction;
+    }
+
+    private static Transaction delayedPayoutTx(Transaction depositTx, long lockTime) {
+        Transaction transaction = new Transaction(ValidationTestUtils.PARAMS);
+        transaction.addInput(depositTx.getOutput(0));
+        transaction.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+        transaction.setLockTime(lockTime);
+        return transaction;
     }
 }

@@ -28,7 +28,6 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.MinerFeeValidation;
-import bisq.core.trade.validation.exceptions.ValidationException;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -39,6 +38,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTx;
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInput;
 import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount;
 import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkLockTime;
 import static bisq.core.trade.validation.DepositTxValidation.checkRawTransactionInputsAreNotMalleable;
@@ -63,7 +64,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
             Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
-            DelayedPayoutTxValidation.validateDelayedPayoutTx(peersPreparedDelayedPayoutTx, trade, btcWalletService);
+            checkDelayedPayoutTx(peersPreparedDelayedPayoutTx, trade, btcWalletService);
 
             int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);
@@ -106,11 +107,9 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             List<RawTransactionInput> peersRawTransactionInputs = processModel.getTradePeer().getRawTransactionInputs();
             checkRawTransactionInputsAreNotMalleable(peersRawTransactionInputs, tradeWalletService);
 
-            DelayedPayoutTxValidation.validateDelayedPayoutTxInput(peersPreparedDelayedPayoutTx, preparedDepositTx);
+            checkDelayedPayoutTxInput(peersPreparedDelayedPayoutTx, preparedDepositTx);
 
             complete();
-        } catch (ValidationException e) {
-            failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);
         }

@@ -22,14 +22,12 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.validation.exceptions.InvalidTxException;
 
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.ProtocolException;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
@@ -60,6 +58,11 @@ import static org.mockito.Mockito.when;
 class DepositTxValidationTest {
     static final String SELLER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
     static final String BUYER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
+    private static final String MAKER_FEE_TX_ID = ValidationTestUtils.VALID_TRANSACTION_ID;
+    private static final String TAKER_FEE_TX_ID =
+            "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+    private static final String OTHER_TX_ID =
+            "1111111111111111111111111111111111111111111111111111111111111111";
 
     private static final String MAKER_ROLE = "Maker";
     private static final String TAKER_ROLE = "Taker";
@@ -131,6 +134,102 @@ class DepositTxValidationTest {
                 () -> checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(depositTx,
                         depositTx,
                         (BtcWalletService) null));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Canonical deposit tx shape
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkCanonicalDepositTxShapeAcceptsCanonicalTx() {
+        Transaction tx = canonicalTx();
+        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000)));
+
+        assertSame(tx, DepositTxValidation.checkCanonicalDepositTxShape(tx, p2wpkhInputs, PARAMS));
+    }
+
+    @Test
+    void checkCanonicalDepositTxShapeRejectsNonV1Tx() {
+        Transaction tx = canonicalTx();
+        tx.setVersion(2);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
+                        Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000))),
+                        PARAMS));
+    }
+
+    @Test
+    void checkCanonicalDepositTxShapeRejectsNonZeroLockTime() {
+        Transaction tx = canonicalTx();
+        tx.setLockTime(1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
+                        Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000))),
+                        PARAMS));
+    }
+
+    @Test
+    void checkCanonicalDepositTxShapeRejectsRbfEnabledSequence() {
+        Transaction tx = canonicalTx();
+        tx.getInput(0).setSequenceNumber(0);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
+                        Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000))),
+                        PARAMS));
+    }
+
+    @Test
+    void checkCanonicalDepositTxShapeAcceptsLockTimeOptInSequence() {
+        Transaction tx = canonicalTx();
+        tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000)));
+
+        assertSame(tx, DepositTxValidation.checkCanonicalDepositTxShape(tx, p2wpkhInputs, PARAMS));
+    }
+
+    @Test
+    void checkCanonicalDepositTxShapeRejectsNonP2WPKHPeerInput() {
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxShape(canonicalTx(),
+                        Collections.singletonList(rawInput(parentTxWithP2pkhOutput(1_000))),
+                        PARAMS));
+    }
+
+    @Test
+    void checkCanonicalDepositTxShapeRejectsNullPeerInput() {
+        assertThrows(NullPointerException.class,
+                () -> DepositTxValidation.checkCanonicalDepositTxShape(canonicalTx(),
+                        Collections.singletonList(null),
+                        PARAMS));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Deposit inputs
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkDepositInputsAcceptsMakerThenTakerInputOrder() {
+        Trade trade = tradeWithDepositInputs(MAKER_FEE_TX_ID, TAKER_FEE_TX_ID);
+
+        assertSame(trade, DepositTxValidation.checkDepositInputs(trade));
+    }
+
+    @Test
+    void checkDepositInputsAcceptsTakerThenMakerInputOrder() {
+        Trade trade = tradeWithDepositInputs(TAKER_FEE_TX_ID, MAKER_FEE_TX_ID);
+
+        assertSame(trade, DepositTxValidation.checkDepositInputs(trade));
+    }
+
+    @Test
+    void checkDepositInputsRejectsInputMissingContractFeeTxId() {
+        Trade trade = tradeWithDepositInputs(MAKER_FEE_TX_ID, OTHER_TX_ID);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkDepositInputs(trade));
     }
 
     /* --------------------------------------------------------------------- */
@@ -421,62 +520,6 @@ class DepositTxValidationTest {
         assertEquals(ArrayIndexOutOfBoundsException.class, exception.getCause().getClass());
     }
 
-    @Test
-    void assertCanonicalDepositTxShapeAcceptsCanonicalTx() {
-        assertDoesNotThrow(() -> DepositTxValidation.assertCanonicalDepositTxShape(
-                canonicalTx(), p2wpkhInputs(), PARAMS));
-    }
-
-    @Test
-    void assertCanonicalDepositTxShapeRejectsNonV1Tx() {
-        Transaction tx = canonicalTx();
-        tx.setVersion(2);
-
-        assertThrows(InvalidTxException.class,
-                () -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
-    }
-
-    @Test
-    void assertCanonicalDepositTxShapeRejectsNonZeroLockTime() {
-        Transaction tx = canonicalTx();
-        tx.setLockTime(1);
-
-        assertThrows(InvalidTxException.class,
-                () -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
-    }
-
-    @Test
-    void assertCanonicalDepositTxShapeRejectsRbfEnabledSequence() {
-        Transaction tx = canonicalTx();
-        tx.getInput(0).setSequenceNumber(0);
-
-        assertThrows(InvalidTxException.class,
-                () -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
-    }
-
-    @Test
-    void assertCanonicalDepositTxShapeAcceptsLockTimeOptInSequence() {
-        // NO_SEQUENCE - 1 (0xFFFFFFFE) keeps RBF disabled while opting in to lockTime; canonical for Bisq.
-        Transaction tx = canonicalTx();
-        tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
-
-        assertDoesNotThrow(() -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
-    }
-
-    @Test
-    void assertCanonicalDepositTxShapeRejectsNonP2WPKHPeerInput() {
-        assertThrows(InvalidTxException.class,
-                () -> DepositTxValidation.assertCanonicalDepositTxShape(canonicalTx(), p2pkhInputs(), PARAMS));
-    }
-
-    @Test
-    void assertCanonicalDepositTxShapeRejectsNullPeerInput() {
-        assertThrows(InvalidTxException.class,
-                () -> DepositTxValidation.assertCanonicalDepositTxShape(canonicalTx(),
-                        java.util.Collections.singletonList(null),
-                        PARAMS));
-    }
-
     private static BtcWalletService walletServiceFor(List<RawTransactionInput> rawTransactionInputs) {
         BtcWalletService btcWalletService = btcWalletService();
         rawTransactionInputs.forEach(rawTransactionInput -> {
@@ -507,6 +550,36 @@ class DepositTxValidationTest {
         Transaction spendingTx = new Transaction(PARAMS);
         TransactionInput input = spendingTx.addInput(parentTx.getOutput(0));
         return new RawTransactionInput(input);
+    }
+
+    private static Trade tradeWithDepositInputs(String input0TxId, String input1TxId) {
+        OfferPayload offerPayload = mock(OfferPayload.class);
+        when(offerPayload.getOfferFeePaymentTxId()).thenReturn(MAKER_FEE_TX_ID);
+
+        Contract contract = mock(Contract.class);
+        when(contract.getOfferPayload()).thenReturn(offerPayload);
+        when(contract.getTakerFeeTxID()).thenReturn(TAKER_FEE_TX_ID);
+
+        Trade trade = mock(Trade.class);
+        when(trade.getDepositTx()).thenReturn(depositTxWithInputs(input0TxId, input1TxId));
+        when(trade.getContract()).thenReturn(contract);
+        return trade;
+    }
+
+    private static Transaction depositTxWithInputs(String input0TxId, String input1TxId) {
+        Transaction transaction = new Transaction(PARAMS);
+        transaction.addInput(transactionInput(transaction, input0TxId));
+        transaction.addInput(transactionInput(transaction, input1TxId));
+        transaction.addOutput(Coin.valueOf(1_000), SegwitAddress.fromKey(PARAMS, new ECKey()));
+        return transaction;
+    }
+
+    private static TransactionInput transactionInput(Transaction transaction, String txId) {
+        return new TransactionInput(PARAMS,
+                transaction,
+                new byte[]{},
+                new TransactionOutPoint(PARAMS, 0, Sha256Hash.wrap(txId)),
+                Coin.valueOf(1_000));
     }
 
     private static RawTransactionInput rawInputWithValue(Transaction parentTx, long value) {
@@ -568,25 +641,4 @@ class DepositTxValidationTest {
                 Coin.valueOf(2_000)));
         return tx;
     }
-
-    private static List<RawTransactionInput> p2wpkhInputs() {
-        return parentTxInputs(ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
-    }
-
-    private static List<RawTransactionInput> p2pkhInputs() {
-        return parentTxInputs(ScriptBuilder.createOutputScript(LegacyAddress.fromKey(PARAMS, new ECKey())));
-    }
-
-    private static List<RawTransactionInput> parentTxInputs(org.bitcoinj.script.Script outputScript) {
-        Transaction parent = new Transaction(PARAMS);
-        // Bitcoinj's segwit serialization requires at least one input; add a dummy.
-        parent.addInput(new TransactionInput(PARAMS,
-                parent,
-                new byte[]{},
-                new TransactionOutPoint(PARAMS, 0, Sha256Hash.ZERO_HASH),
-                Coin.valueOf(2_000)));
-        parent.addOutput(Coin.valueOf(1_000), outputScript);
-        return List.of(new RawTransactionInput(0, parent.bitcoinSerialize(), 1_000));
-    }
-
 }

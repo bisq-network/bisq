@@ -21,13 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
-import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.validation.exceptions.InvalidAmountException;
-import bisq.core.trade.validation.exceptions.InvalidInputException;
-import bisq.core.trade.validation.exceptions.InvalidLockTimeException;
-import bisq.core.trade.validation.exceptions.InvalidTxException;
-import bisq.core.trade.validation.exceptions.MissingTxException;
 
 import bisq.common.config.Config;
 
@@ -42,19 +36,104 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.function.Consumer;
 
-import lombok.extern.slf4j.Slf4j;
-
 import javax.annotation.Nullable;
 
 import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Slf4j
 public final class DelayedPayoutTxValidation {
     public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3; // Peers latest block height must inside a +/- 3 blocks tolerance to ours.
 
     private DelayedPayoutTxValidation() {
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Delayed payout transaction
+    /* --------------------------------------------------------------------- */
+
+    public static Transaction checkDelayedPayoutTx(Transaction delayedPayoutTx,
+                                                   Trade trade,
+                                                   BtcWalletService btcWalletService) {
+        return checkDelayedPayoutTx(delayedPayoutTx,
+                trade,
+                btcWalletService,
+                null);
+    }
+
+    public static Transaction checkDelayedPayoutTx(Transaction delayedPayoutTx,
+                                                   Trade trade,
+                                                   BtcWalletService btcWalletService,
+                                                   @Nullable Consumer<String> addressConsumer) {
+        Transaction checkedDelayedPayoutTx = checkNotNull(delayedPayoutTx,
+                "delayedPayoutTx must not be null");
+        Trade checkedTrade = checkNotNull(trade, "trade must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        checkArgument(checkedDelayedPayoutTx.getInputs().size() == 1,
+                "Number of delayedPayoutTx inputs must be 1");
+        checkArgument(checkedDelayedPayoutTx.getLockTime() == checkedTrade.getLockTime(),
+                "delayedPayoutTx.getLockTime() must match trade.getLockTime()");
+        checkArgument(checkedDelayedPayoutTx.getInput(0).getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1,
+                "Sequence number must be 0xFFFFFFFE");
+
+        if (checkedTrade.isUsingLegacyBurningMan()) {
+            checkLegacyDelayedPayoutTxOutput(checkedDelayedPayoutTx,
+                    checkedTrade,
+                    btcWalletService,
+                    addressConsumer);
+        }
+
+        return checkedDelayedPayoutTx;
+    }
+
+    private static void checkLegacyDelayedPayoutTxOutput(Transaction delayedPayoutTx,
+                                                         Trade trade,
+                                                         BtcWalletService btcWalletService,
+                                                         @Nullable Consumer<String> addressConsumer) {
+        checkArgument(delayedPayoutTx.getOutputs().size() == 1,
+                "Number of delayedPayoutTx outputs must be 1");
+
+        TransactionOutput output = delayedPayoutTx.getOutput(0);
+        Offer offer = checkNotNull(trade.getOffer(), "trade.getOffer() must not be null");
+        Coin msOutputAmount = offer.getBuyerSecurityDeposit()
+                .add(offer.getSellerSecurityDeposit())
+                .add(checkNotNull(trade.getAmount(), "trade.getAmount() must not be null"));
+
+        checkArgument(output.getValue().equals(msOutputAmount),
+                "Output value of deposit tx and delayed payout tx is not matching. " +
+                        "Output: %s / msOutputAmount: %s",
+                output,
+                msOutputAmount);
+
+        if (addressConsumer != null) {
+            NetworkParameters params = checkNotNull(btcWalletService.getParams(),
+                    "btcWalletService.getParams() must not be null");
+            String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
+            addressConsumer.accept(delayedPayoutTxOutputAddress);
+        }
+    }
+
+    public static Transaction checkDelayedPayoutTxInput(Transaction delayedPayoutTx,
+                                                        Transaction depositTx) {
+        Transaction checkedDelayedPayoutTx = checkNotNull(delayedPayoutTx,
+                "delayedPayoutTx must not be null");
+        Transaction checkedDepositTx = checkNotNull(depositTx, "depositTx must not be null");
+        checkArgument(checkedDelayedPayoutTx.getInputs().size() == 1,
+                "Number of delayedPayoutTx inputs must be 1");
+
+        TransactionInput input = checkedDelayedPayoutTx.getInput(0);
+        TransactionOutPoint outpoint = checkNotNull(input.getOutpoint(),
+                "delayedPayoutTx input outpoint must not be null");
+        checkArgument(checkedDepositTx.getTxId().equals(outpoint.getHash()) && outpoint.getIndex() == 0,
+                "Input of delayed payout transaction does not point to output 0 of deposit tx. " +
+                        "delayedPayoutTxId=%s, depositTxId=%s, outpointHash=%s, outpointIndex=%s",
+                checkedDelayedPayoutTx.getTxId(),
+                checkedDepositTx.getTxId(),
+                outpoint.getHash(),
+                outpoint.getIndex());
+        return checkedDelayedPayoutTx;
     }
 
 
@@ -137,101 +216,5 @@ public final class DelayedPayoutTxValidation {
                             "calculated. Makers lockTime= " + lockTime + ", expectedUnlockHeight=" + expectedUnlockHeight);
         }
         return lockTime;
-    }
-
-    public static void validateDelayedPayoutTx(Transaction delayedPayoutTx,
-                                               Trade trade,
-                                               BtcWalletService btcWalletService)
-            throws DisputeValidation.AddressException, MissingTxException,
-            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validateDelayedPayoutTx(delayedPayoutTx,
-                trade,
-                btcWalletService,
-                null);
-    }
-
-    public static void validateDelayedPayoutTx(Transaction delayedPayoutTx,
-                                               Trade trade,
-                                               BtcWalletService btcWalletService,
-                                               @Nullable Consumer<String> addressConsumer)
-            throws DisputeValidation.AddressException, MissingTxException,
-            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        String errorMsg;
-        if (delayedPayoutTx == null) {
-            errorMsg = "DelayedPayoutTx must not be null";
-            log.error(errorMsg);
-            throw new MissingTxException("DelayedPayoutTx must not be null");
-        }
-
-        // Validate tx structure
-        if (delayedPayoutTx.getInputs().size() != 1) {
-            errorMsg = "Number of delayedPayoutTx inputs must be 1";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidTxException(errorMsg);
-        }
-
-
-        // connectedOutput is null and input.getValue() is null at that point as the tx is not committed to the wallet
-        // yet. So we cannot check that the input matches but we did the amount check earlier in the trade protocol.
-
-        // Validate lock time
-        if (delayedPayoutTx.getLockTime() != trade.getLockTime()) {
-            errorMsg = "delayedPayoutTx.getLockTime() must match trade.getLockTime()";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidLockTimeException(errorMsg);
-        }
-
-        // Validate seq num
-        if (delayedPayoutTx.getInput(0).getSequenceNumber() != TransactionInput.NO_SEQUENCE - 1) {
-            errorMsg = "Sequence number must be 0xFFFFFFFE";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidLockTimeException(errorMsg);
-        }
-
-        if (trade.isUsingLegacyBurningMan()) {
-            if (delayedPayoutTx.getOutputs().size() != 1) {
-                errorMsg = "Number of delayedPayoutTx outputs must be 1";
-                log.error(errorMsg);
-                log.error(delayedPayoutTx.toString());
-                throw new InvalidTxException(errorMsg);
-            }
-
-            // Check amount
-            TransactionOutput output = delayedPayoutTx.getOutput(0);
-            Offer offer = checkNotNull(trade.getOffer());
-            Coin msOutputAmount = offer.getBuyerSecurityDeposit()
-                    .add(offer.getSellerSecurityDeposit())
-                    .add(checkNotNull(trade.getAmount()));
-
-            if (!output.getValue().equals(msOutputAmount)) {
-                errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
-                log.error(errorMsg);
-                log.error(delayedPayoutTx.toString());
-                throw new InvalidAmountException(errorMsg);
-            }
-
-            NetworkParameters params = btcWalletService.getParams();
-            if (addressConsumer != null) {
-                String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
-                addressConsumer.accept(delayedPayoutTxOutputAddress);
-            }
-        }
-    }
-
-    public static void validateDelayedPayoutTxInput(Transaction delayedPayoutTx, Transaction depositTx)
-            throws InvalidInputException {
-        TransactionInput input = delayedPayoutTx.getInput(0);
-        checkNotNull(input, "delayedPayoutTx.getInput(0) must not be null");
-        // input.getConnectedOutput() is null as the tx is not committed at that point
-
-        TransactionOutPoint outpoint = input.getOutpoint();
-        if (!outpoint.getHash().toString().equals(depositTx.getTxId().toString()) || outpoint.getIndex() != 0) {
-            throw new InvalidInputException("Input of delayed payout transaction does not point to output of deposit tx.\n" +
-                    "Delayed payout tx=" + delayedPayoutTx + "\n" +
-                    "Deposit tx=" + depositTx);
-        }
     }
 }
