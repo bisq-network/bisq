@@ -73,19 +73,19 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
             Contract contract = checkNotNull(trade.getContract());
             PubKeyRing myPubKeyRing = processModel.getPubKeyRing();
 
-            PaymentAccountPayload buyerPaymentAccountPayload = message.getBuyerPaymentAccountPayload();
+            PaymentAccountPayload myPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
 
-            byte[] buyerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(buyerPaymentAccountPayload);
+            PaymentAccountPayload peersPaymentAccountPayload = message.getBuyerPaymentAccountPayload();
 
+            byte[] buyerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(peersPaymentAccountPayload);
 
             byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(myPubKeyRing);
             checkArgument(Arrays.equals(buyerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                     "Hash of payment account is invalid");
 
-            processModel.getTradePeer().setPaymentAccountPayload(buyerPaymentAccountPayload);
-            contract.setPaymentAccountPayloads(buyerPaymentAccountPayload,
-                    processModel.getPaymentAccountPayload(trade),
-                    myPubKeyRing);
+            processModel.getTradePeer().setPaymentAccountPayload(peersPaymentAccountPayload);
+
+            contract.setPaymentAccountPayloads(peersPaymentAccountPayload, myPaymentAccountPayload, myPubKeyRing);
 
             // As we have added the payment accounts we need to update the json. We also update the signature
             // thought that has less relevance with the changes of 1.7.0
