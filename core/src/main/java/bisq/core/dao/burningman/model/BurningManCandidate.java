@@ -74,10 +74,6 @@ public class BurningManCandidate {
     public BurningManCandidate() {
     }
 
-    public Optional<String> getReceiverAddress() {
-        return receiverAddress;
-    }
-
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
         if (burnOutputModels.contains(burnOutputModel)) {
             return;
