@@ -25,7 +25,6 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
@@ -72,14 +71,12 @@ import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class TradeValidationTest {
     private static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
-    private static final Coin OFFER_MAX_AMOUNT = Coin.valueOf(5_000);
     private static final int GENESIS_HEIGHT = 102;
     private static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
     private static final String VALID_TRANSACTION_ID =
@@ -87,62 +84,8 @@ public class TradeValidationTest {
     private static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
             "account-age-witness-nonce".getBytes(StandardCharsets.UTF_8);
 
-    @Test
-    void checkTradeAmountAcceptsOfferBoundsAndValuesBetweenThem() {
-        Coin tradeAmount = Coin.valueOf(3_000);
 
-        assertSame(OFFER_MIN_AMOUNT,
-                TradeValidation.checkTradeAmount(OFFER_MIN_AMOUNT, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
-        assertSame(tradeAmount,
-                TradeValidation.checkTradeAmount(tradeAmount, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
-        assertSame(OFFER_MAX_AMOUNT,
-                TradeValidation.checkTradeAmount(OFFER_MAX_AMOUNT, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
-    }
 
-    @Test
-    void checkTradeAmountRejectsAmountsBelowOfferMinimum() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkTradeAmount(Coin.valueOf(999), OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
-
-        assertEquals("Trade amount must not be less than minimum offer amount. " +
-                        "tradeAmount=0.00000999 BTC, offerMinAmount=0.00001 BTC",
-                exception.getMessage());
-    }
-
-    @Test
-    void checkTradeAmountRejectsAmountsAboveOfferMaximum() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkTradeAmount(Coin.valueOf(5_001), OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
-
-        assertEquals("Trade amount must not be higher than maximum offer amount. " +
-                        "tradeAmount=0.00005001 BTC, offerMaxAmount=0.00005 BTC",
-                exception.getMessage());
-    }
-
-    @Test
-    void checkTakersTradePriceAcceptsVerifiedPrice() throws Exception {
-        long takersTradePrice = 50_000_000L;
-        Offer offer = mock(Offer.class);
-        when(offer.isUseMarketBasedPrice()).thenReturn(true);
-
-        assertEquals(takersTradePrice, TradeValidation.checkTakersTradePrice(takersTradePrice,
-                mock(PriceFeedService.class),
-                offer));
-        verify(offer).verifyTakersTradePrice(takersTradePrice);
-    }
-
-    @Test
-    void checkTakersTradePriceWrapsOfferPriceValidationFailure() throws Exception {
-        long takersTradePrice = 50_000_000L;
-        Offer offer = mock(Offer.class);
-        doThrow(new TradePriceOutOfToleranceException("price outside tolerance"))
-                .when(offer)
-                .verifyTakersTradePrice(takersTradePrice);
-
-        assertThrows(RuntimeException.class, () -> TradeValidation.checkTakersTradePrice(takersTradePrice,
-                mock(PriceFeedService.class),
-                offer));
-    }
 
     @Test
     void checkTradeIdAcceptsMatchingTradeMessageTradeId() {

@@ -18,7 +18,13 @@
 package bisq.core.trade.validation;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferValidation;
+import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
+import bisq.core.provider.price.PriceFeedService;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -30,12 +36,55 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 
 import static bisq.core.trade.validation.TradeValidation.checkTransaction;
+import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class DepositTxValidation {
     private DepositTxValidation() {
     }
+
+    /* --------------------------------------------------------------------- */
+    // TradeAmount
+    /* --------------------------------------------------------------------- */
+
+    public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
+        checkIsPositive(tradeAmount, "tradeAmount");
+        checkIsPositive(offerMinAmount, "offerMinAmount");
+        checkIsPositive(offerMaxAmount, "offerMaxAmount");
+
+        checkArgument(!tradeAmount.isLessThan(offerMinAmount),
+                "Trade amount must not be less than minimum offer amount. tradeAmount=%s, offerMinAmount=%s",
+                tradeAmount.toFriendlyString(), offerMinAmount.toFriendlyString());
+        checkArgument(!tradeAmount.isGreaterThan(offerMaxAmount),
+                "Trade amount must not be higher than maximum offer amount. tradeAmount=%s, offerMaxAmount=%s",
+                tradeAmount.toFriendlyString(), offerMaxAmount.toFriendlyString());
+        return tradeAmount;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // TradePrice
+    /* --------------------------------------------------------------------- */
+
+    public static long checkTakersTradePrice(long takersTradePrice,
+                                             PriceFeedService priceFeedService,
+                                             Offer offer) {
+        try {
+            offer.verifyTakersTradePrice(takersTradePrice);
+            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
+            // high volatility environments
+            OfferValidation.verifyPriceInBounds(priceFeedService, offer, TradeValidation.MAX_TRADE_PRICE_DEVIATION);
+            return takersTradePrice;
+        } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DepositTx
+    /* --------------------------------------------------------------------- */
 
     public static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
                                                                                   Transaction expectedDepositTx,
@@ -79,4 +128,5 @@ public final class DepositTxValidation {
         input.setScriptSig(ScriptBuilder.createEmpty());
         input.setWitness(TransactionWitness.EMPTY);
     }
+
 }
