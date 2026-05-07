@@ -486,7 +486,7 @@ public class TradeWalletService {
 
 
         // Add MultiSig output
-        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
 
         // Tx fee for deposit tx will be paid by buyer.
         TransactionOutput hashedMultiSigOutput = new TransactionOutput(params, preparedDepositTx, msOutputAmount,
@@ -549,7 +549,7 @@ public class TradeWalletService {
         checkArgument(!sellerInputs.isEmpty());
 
         // Check if maker's MultiSig script is identical to the taker's
-        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
         if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(hashedMultiSigOutputScript)) {
             throw new TransactionVerificationException("Maker's hashedMultiSigOutputScript does not match taker's hashedMultiSigOutputScript");
         }
@@ -742,7 +742,7 @@ public class TradeWalletService {
         }
         // SegWit validation in Script.correctlySpends is incomplete, as it only checks the witness of P2WPKH inputs.
         // Therefore, we must manually verify both signatures ourselves against the computed sigHash.
-        Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
         input.getScriptSig().correctlySpends(delayedPayoutTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
         Sha256Hash sigHash = delayedPayoutTx.hashForWitnessSignature(0, redeemScript,
                 inputValue, Transaction.SigHash.ALL, false);
@@ -1316,8 +1316,8 @@ public class TradeWalletService {
                 Coin.valueOf(rawTransactionInput.value));
     }
 
-    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
-        return WalletUtils.isP2WH(rawTransactionInput, params);
+    public boolean isP2WPKH(RawTransactionInput rawTransactionInput) {
+        return WalletUtils.isP2WPKH(rawTransactionInput, params);
     }
 
     // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
@@ -1349,13 +1349,9 @@ public class TradeWalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, boolean legacy) {
+    private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey) {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
-        if (legacy) {
-            return ScriptBuilder.createP2SHOutputScript(redeemScript);
-        } else {
-            return ScriptBuilder.createP2WSHOutputScript(redeemScript);
-        }
+        return ScriptBuilder.createP2WSHOutputScript(redeemScript);
     }
 
     private Transaction createPayoutTx(Transaction depositTx,

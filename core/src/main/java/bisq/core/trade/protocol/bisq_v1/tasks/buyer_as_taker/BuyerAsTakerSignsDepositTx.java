@@ -22,6 +22,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -92,6 +93,7 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     offer.getAmount(),
                     checkNotNull(trade.getAmount()),
                     sellerInputs);
+            TradeDataValidation.assertCanonicalDepositTxShape(makersDepositTx, sellerInputs, walletService.getParams());
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     false,
@@ -107,6 +109,12 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
 
             complete();
         } catch (Throwable t) {
+            // The multisig lock may have been set above before this throw; release it so the
+            // funds are not stuck "locked in multisig" against a trade that never proceeds.
+            // Idempotent — a no-op if the lock was never taken.
+            // Use the persisted offerId, not processModel.getOffer() — the latter is transient and
+            // may be null if this task fails before the offer was reattached on a restart.
+            processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(processModel.getOfferId());
             failed(t);
         }
     }

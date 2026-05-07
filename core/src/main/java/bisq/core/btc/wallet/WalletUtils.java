@@ -33,7 +33,11 @@ public final class WalletUtils {
     private WalletUtils() {
     }
 
-    public static boolean isP2WH(RawTransactionInput rawTransactionInput, NetworkParameters params) {
+    /**
+     * Strict P2WPKH check. The Bisq trade-protocol funding path is canonically P2WPKH; any
+     * other shape (P2WSH, legacy P2PKH, P2SH-wrapped) is non-canonical for this path.
+     */
+    public static boolean isP2WPKH(RawTransactionInput rawTransactionInput, NetworkParameters params) {
         try {
             TransactionOutput connectedOutput = getConnectedOutPoint(rawTransactionInput, params).getConnectedOutput();
             if (connectedOutput == null) {
@@ -43,9 +47,9 @@ public final class WalletUtils {
             if (scriptPubKey == null) {
                 return false;
             }
-            return ScriptPattern.isP2WH(scriptPubKey);
+            return ScriptPattern.isP2WPKH(scriptPubKey);
         } catch (Exception e) {
-            log.error("isP2WH check failed", e);
+            log.error("isP2WPKH check failed", e);
             return false;
         }
     }

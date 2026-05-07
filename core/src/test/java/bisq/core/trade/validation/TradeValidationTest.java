@@ -1294,7 +1294,7 @@ public class TradeValidationTest {
         transaction.addOutput(inputAmount, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
 
         when(btcWalletService.getTxFromSerializedTx(parentTransaction)).thenReturn(transaction);
-        when(btcWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
+        when(btcWalletService.isP2WPKH(rawTransactionInput)).thenReturn(true);
 
         return List.of(rawTransactionInput);
     }
