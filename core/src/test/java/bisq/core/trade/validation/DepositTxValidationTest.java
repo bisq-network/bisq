@@ -17,11 +17,22 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.TradeFeeFactory;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
+import bisq.core.user.User;
 
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
@@ -33,14 +44,20 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionWitness;
+import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.ScriptBuilder;
 
+import java.security.KeyPair;
+
+import java.nio.charset.StandardCharsets;
+
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.validation.DepositTxValidation.checkDepositTxMatchesIgnoringWitnessesAndScriptSigs;
-import static bisq.core.trade.validation.TradeValidationTestUtils.PARAMS;
+import static bisq.core.trade.validation.TradeValidationTestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -190,6 +207,74 @@ public class DepositTxValidationTest {
         }
     }
 
+    /* --------------------------------------------------------------------- */
+    // InputsForDepositTxRequest
+    /* --------------------------------------------------------------------- */
+
+
+    @Test
+    void checkInputsForDepositTxRequestAcceptsValidRequest() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+
+        assertSame(fixture.request, DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsInvalidAccountAgeWitnessSignature() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture =
+                inputsForDepositTxRequestValidationFixture(new byte[]{1});
+
+        assertThrows(IllegalArgumentException.class, () -> DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsTxFeeOutsideAllowedTolerance() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), 10);
+
+        assertThrows(IllegalArgumentException.class, () -> DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsUnexpectedTakerFee() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture =
+                inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(151));
+
+        assertThrows(IllegalArgumentException.class, () -> DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
+    }
+
+
+
+
+    /* --------------------------------------------------------------------- */
+    //
+    /* --------------------------------------------------------------------- */
+
+
     @Test
     void checkMultiSigPubKeyRejectsInvalidCompressedCurvePoints() {
         // These x-coordinates do not produce a quadratic residue for x^3 + 7 mod the secp256k1 field prime,
@@ -306,4 +391,100 @@ public class DepositTxValidationTest {
     static Transaction copy(Transaction transaction) {
         return new Transaction(PARAMS, transaction.bitcoinSerialize());
     }
+
+
+    static InputsForDepositTxRequestValidationFixture inputsForDepositTxRequestValidationFixture(
+            byte[] accountAgeWitnessSignatureOverride) throws CryptoException {
+        return inputsForDepositTxRequestValidationFixture(accountAgeWitnessSignatureOverride, Coin.valueOf(100));
+    }
+
+    static InputsForDepositTxRequestValidationFixture inputsForDepositTxRequestValidationFixture(
+            byte[] accountAgeWitnessSignatureOverride,
+            Coin requestTakerFee) throws CryptoException {
+        String offerId = "offer-id";
+        Coin tradeAmount = Coin.valueOf(3_000);
+        Coin expectedTakerFee = Coin.valueOf(100);
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), expectedTakerFee, 2);
+        Coin tradeTxFee = TradeFeeFactory.getTradeTxFee(feeService.getTxFeePerVbyte());
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        BtcWalletService btcWalletService = btcWalletService();
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        when(offer.getId()).thenReturn(offerId);
+        when(offer.getMinAmount()).thenReturn(OFFER_MIN_AMOUNT);
+        when(offer.isUseMarketBasedPrice()).thenReturn(true);
+
+        KeyPair takerSignatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing takerPubKeyRing = pubKeyRing(takerSignatureKeyPair);
+        byte[] accountAgeWitnessSignature = accountAgeWitnessSignatureOverride != null ?
+                accountAgeWitnessSignatureOverride :
+                Sig.sign(takerSignatureKeyPair.getPrivate(), offerId.getBytes(StandardCharsets.UTF_8));
+
+        List<RawTransactionInput> rawTransactionInputs = rawTransactionInputs(btcWalletService,
+                offer.getSellerSecurityDeposit()
+                        .add(tradeAmount)
+                        .add(tradeTxFee.multiply(2)));
+        InputsForDepositTxRequest request = new InputsForDepositTxRequest(offerId,
+                new NodeAddress("sender.onion", 9999),
+                tradeAmount.value,
+                50_000_000L,
+                tradeTxFee.value,
+                requestTakerFee.value,
+                true,
+                rawTransactionInputs,
+                new ECKey().getPubKey(),
+                SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
+                takerPubKeyRing,
+                "taker-account-id",
+                TradeValidationTestUtils.VALID_TRANSACTION_ID,
+                List.of(),
+                List.of(mediatorNodeAddress),
+                List.of(),
+                null,
+                mediatorNodeAddress,
+                new NodeAddress("refund-agent.onion", 9999),
+                "uid",
+                1,
+                accountAgeWitnessSignature,
+                System.currentTimeMillis(),
+                new byte[]{2},
+                "SEPA",
+                130);
+        User user = userWithAcceptedMediator(mediatorNodeAddress,
+                mediator(mediatorNodeAddress, pubKeyRing(Sig.generateKeyPair())));
+
+        return new InputsForDepositTxRequestValidationFixture(request,
+                offer,
+                user,
+                btcWalletService,
+                mock(PriceFeedService.class),
+                delayedPayoutTxReceiverService(130),
+                feeService);
+    }
+
+    static class InputsForDepositTxRequestValidationFixture {
+        private final InputsForDepositTxRequest request;
+        private final Offer offer;
+        private final User user;
+        private final BtcWalletService btcWalletService;
+        private final PriceFeedService priceFeedService;
+        private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+        private final FeeService feeService;
+
+        private InputsForDepositTxRequestValidationFixture(InputsForDepositTxRequest request,
+                                                           Offer offer,
+                                                           User user,
+                                                           BtcWalletService btcWalletService,
+                                                           PriceFeedService priceFeedService,
+                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                                           FeeService feeService) {
+            this.request = request;
+            this.offer = offer;
+            this.user = user;
+            this.btcWalletService = btcWalletService;
+            this.priceFeedService = priceFeedService;
+            this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
+            this.feeService = feeService;
+        }
+    }
+
 }

@@ -21,15 +21,12 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.TradeFeeFactory;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TradeMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -51,7 +48,6 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.VerificationException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 
@@ -493,51 +489,6 @@ public final class TradeValidation {
         } catch (CryptoException e) {
             throw new IllegalArgumentException("Invalid signature", e);
         }
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // InputsForDepositTxRequest
-    /* --------------------------------------------------------------------- */
-
-    public static InputsForDepositTxRequest checkInputsForDepositTxRequest(InputsForDepositTxRequest request,
-                                                                           Offer offer,
-                                                                           User user,
-                                                                           BtcWalletService btcWalletService,
-                                                                           PriceFeedService priceFeedService,
-                                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
-                                                                           FeeService feeService) {
-        checkNotNull(request, "request must not be null");
-        checkNotNull(offer, "offer must not be null");
-        checkNotNull(user, "user must not be null");
-        checkNotNull(btcWalletService, "btcWalletService must not be null");
-        checkNotNull(priceFeedService, "priceFeedService must not be null");
-        checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
-        checkNotNull(feeService, "feeService must not be null");
-
-        Coin tradeAmount = DepositTxValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
-        Coin tradeTxFee = checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
-        checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
-                btcWalletService,
-                offer,
-                tradeTxFee,
-                tradeAmount);
-        DepositTxValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
-        checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
-        PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
-        DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
-        checkTransactionId(request.getTakerFeeTxId());
-        byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
-        PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
-        checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
-                accountAgeWitnessNonce,
-                takerSignatureKey);
-        checkPeersDate(request.getCurrentDate());
-        NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
-        getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
-        DepositTxValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
-        checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
-        return request;
     }
 
 }

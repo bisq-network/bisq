@@ -18,11 +18,19 @@
 package bisq.core.trade.validation;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -33,6 +41,9 @@ import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.script.ScriptBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+
+import java.security.PublicKey;
 
 import java.util.Arrays;
 
@@ -97,6 +108,52 @@ public final class DepositTxValidation {
         return multiSigPubKey;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // InputsForDepositTxRequest
+    /* --------------------------------------------------------------------- */
+
+    public static InputsForDepositTxRequest checkInputsForDepositTxRequest(InputsForDepositTxRequest request,
+                                                                           Offer offer,
+                                                                           User user,
+                                                                           BtcWalletService btcWalletService,
+                                                                           PriceFeedService priceFeedService,
+                                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                                                           FeeService feeService) {
+        checkNotNull(request, "request must not be null");
+        checkNotNull(offer, "offer must not be null");
+        checkNotNull(user, "user must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkNotNull(priceFeedService, "priceFeedService must not be null");
+        checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
+        checkNotNull(feeService, "feeService must not be null");
+
+        Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
+        Coin tradeTxFee = TradeValidation.checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
+        TradeValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+                btcWalletService,
+                offer,
+                tradeTxFee,
+                tradeAmount);
+        checkMultiSigPubKey(request.getTakerMultiSigPubKey());
+        TradeValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+        PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
+        DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+        TradeValidation.checkTransactionId(request.getTakerFeeTxId());
+        byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
+        PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
+        TradeValidation.checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+                accountAgeWitnessNonce,
+                takerSignatureKey);
+        TradeValidation.checkPeersDate(request.getCurrentDate());
+        NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
+        TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
+        checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
+        TradeValidation.checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
+        return request;
+    }
+
+
     public static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
                                                                                   Transaction expectedDepositTx,
                                                                                   BtcWalletService btcWalletService) {
@@ -139,4 +196,6 @@ public final class DepositTxValidation {
         input.setScriptSig(ScriptBuilder.createEmpty());
         input.setWitness(TransactionWitness.EMPTY);
     }
+
+
 }
