@@ -68,18 +68,21 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
         BtcWalletService btcWalletService = processModel.getBtcWalletService();
         TradingPeer tradingPeer = processModel.getTradePeer();
 
-        Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
+        Contract contract = checkNotNull(trade.getContract(),
+                "contract must not be null");
         boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
         String myPayoutAddressString = btcWalletService.getOrCreateAddressEntry(trade.getId(),
                 AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-        String peersPayoutAddressString = tradingPeer.getPayoutAddressString();
+        String peersPayoutAddressString = checkNotNull(tradingPeer.getPayoutAddressString(),
+                "peersPayoutAddressString must not be null");
         String buyerPayoutAddressString = isMyRoleBuyer ? myPayoutAddressString : peersPayoutAddressString;
         String sellerPayoutAddressString = isMyRoleBuyer ? peersPayoutAddressString : myPayoutAddressString;
         byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
         byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
         byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
         byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
-        Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+        Transaction depositTx = checkNotNull(trade.getDepositTx(),
+                "trade.getDepositTx() must not be null");
         Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
         Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
         NetworkParameters params = btcWalletService.getParams();

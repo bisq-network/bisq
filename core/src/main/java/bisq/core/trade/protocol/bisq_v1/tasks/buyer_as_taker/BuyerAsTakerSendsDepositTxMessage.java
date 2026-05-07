@@ -88,7 +88,6 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
                         }
                 );
             } else {
-                log.error("processModel.getDepositTx() = {}", signedDepositTx);
                 failed("DepositTx is null");
             }
         } catch (Throwable t) {

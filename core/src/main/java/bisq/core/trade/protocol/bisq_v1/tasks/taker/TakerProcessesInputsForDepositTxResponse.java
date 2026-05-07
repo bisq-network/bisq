@@ -81,7 +81,8 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
                     offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 
-            byte[] preparedDepositTx = TransactionValidation.checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
+            // We expect the prepared deposit transaction to be unsigned
+            byte[] preparedDepositTx = DepositTxValidation.checkTransactionIsUnsigned(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
 
             boolean isAltcoin = offer.getPaymentMethod().isBlockchain();
