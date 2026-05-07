@@ -51,7 +51,6 @@ public class BisqV1MessageIntegrityTest {
                 "counter-currency-extra-data",
                 UID));
         assertDoesNotThrow(() -> new PayoutTxPublishedMessage(TRADE_ID, bytes(3), NODE_ADDRESS, null));
-        assertDoesNotThrow(() -> new TraderSignedWitnessMessage(UID, TRADE_ID, NODE_ADDRESS, signedWitness()));
         assertDoesNotThrow(() -> new DelayedPayoutTxSignatureRequest(UID, TRADE_ID, NODE_ADDRESS, bytes(4), bytes(5)));
         assertDoesNotThrow(() -> new ShareBuyerPaymentAccountMessage(UID,
                 TRADE_ID,
@@ -109,10 +108,6 @@ public class BisqV1MessageIntegrityTest {
                 null,
                 UID));
         assertThrows(NullPointerException.class, () -> new PayoutTxPublishedMessage(TRADE_ID, bytes(3), null, null));
-        assertThrows(NullPointerException.class, () -> new TraderSignedWitnessMessage(UID,
-                TRADE_ID,
-                NODE_ADDRESS,
-                null));
         assertThrows(NullPointerException.class, () -> new DelayedPayoutTxSignatureRequest(UID,
                 TRADE_ID,
                 null,
