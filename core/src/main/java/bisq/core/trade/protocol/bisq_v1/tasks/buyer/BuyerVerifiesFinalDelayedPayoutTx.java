@@ -56,7 +56,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             Transaction depositTx = trade.getDepositTx();
             checkNotNull(depositTx, "trade.getDepositTx() must not be null");
             // Now as we know the deposit tx we can also verify the input
-            TradeDataValidation.validateDelayedPayoutTxInput(depositTx, finalDelayedPayoutTx);
+            TradeDataValidation.validateDelayedPayoutTxInput(finalDelayedPayoutTx, depositTx);
 
             long inputAmount = depositTx.getOutput(0).getValue().value;
             long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
