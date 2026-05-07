@@ -23,7 +23,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
-import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.user.User;
 
@@ -297,30 +296,6 @@ public final class TradeValidation {
     }
 
 
-
-    /* --------------------------------------------------------------------- */
-    // Delayed payout transaction
-    /* --------------------------------------------------------------------- */
-
-    public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
-        checkIsPositive(inputAmount, "inputAmount");
-        checkNotNull(trade, "trade must not be null");
-        Offer offer = trade.getOffer();
-        long tradeAmount = trade.getAmountAsLong();
-        long buyerDeposit = offer.getBuyerSecurityDeposit().getValue();
-        long sellerDeposit = offer.getSellerSecurityDeposit().getValue();
-        long tradeTxFee = trade.getTradeTxFeeAsLong();
-        long expectedAmount = tradeAmount +
-                buyerDeposit +
-                sellerDeposit +
-                tradeTxFee;
-        checkArgument(inputAmount == expectedAmount,
-                "inputAmount must match expectedAmount. " +
-                        "Trade amount: %s, buyer deposit: %s, seller deposit: %s, " +
-                        "trade fee: %s, expected amount: %s",
-                tradeAmount, buyerDeposit, sellerDeposit, tradeTxFee, expectedAmount);
-        return inputAmount;
-    }
 
 
     /* --------------------------------------------------------------------- */

@@ -18,7 +18,10 @@
 package bisq.core.trade.validation;
 
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.offer.Offer;
+import bisq.core.trade.model.bisq_v1.Trade;
 
+import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -47,5 +50,25 @@ public final class DelayedPayoutTxValidation {
 
         }
         return burningManSelectionHeight;
+    }
+
+    public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
+        checkIsPositive(inputAmount, "inputAmount");
+        checkNotNull(trade, "trade must not be null");
+        Offer offer = trade.getOffer();
+        long tradeAmount = trade.getAmountAsLong();
+        long buyerDeposit = offer.getBuyerSecurityDeposit().getValue();
+        long sellerDeposit = offer.getSellerSecurityDeposit().getValue();
+        long tradeTxFee = trade.getTradeTxFeeAsLong();
+        long expectedAmount = tradeAmount +
+                buyerDeposit +
+                sellerDeposit +
+                tradeTxFee;
+        checkArgument(inputAmount == expectedAmount,
+                "inputAmount must match expectedAmount. " +
+                        "Trade amount: %s, buyer deposit: %s, seller deposit: %s, " +
+                        "trade fee: %s, expected amount: %s",
+                tradeAmount, buyerDeposit, sellerDeposit, tradeTxFee, expectedAmount);
+        return inputAmount;
     }
 }

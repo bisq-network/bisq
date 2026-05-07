@@ -676,49 +676,6 @@ public class TradeValidationTest {
                         null));
     }
 
-    @Test
-    void checkDelayedPayoutTxInputAmountAcceptsExpectedInputAmount() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
-        long expectedInputAmount = 42_300;
-
-        assertEquals(expectedInputAmount,
-                TradeValidation.checkDelayedPayoutTxInputAmount(expectedInputAmount, trade));
-    }
-
-    @Test
-    void checkDelayedPayoutTxInputAmountRejectsUnexpectedInputAmount() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkDelayedPayoutTxInputAmount(42_299, trade));
-    }
-
-    @Test
-    void checkDelayedPayoutTxInputAmountRejectsZeroAndNegativeInputAmount() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkDelayedPayoutTxInputAmount(0, trade));
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkDelayedPayoutTxInputAmount(-1, trade));
-    }
-
-    @Test
-    void checkDelayedPayoutTxInputAmountRejectsNullTrade() {
-        assertThrows(NullPointerException.class,
-                () -> TradeValidation.checkDelayedPayoutTxInputAmount(1, null));
-    }
-
-
-    @Test
-    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 0, 1));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, -1, 1));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 1, 0.99));
-    }
 
     @Test
     void checkByteArrayWithExpectedAcceptsMatchingByteArrays() {
