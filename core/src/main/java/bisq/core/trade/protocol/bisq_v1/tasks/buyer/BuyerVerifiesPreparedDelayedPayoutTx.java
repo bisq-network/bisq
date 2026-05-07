@@ -21,6 +21,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -34,6 +35,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkBurningManSelectionHeight;
 import static bisq.core.trade.validation.TradeValidation.checkRawTransactionInputsAreNotMalleable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -50,18 +52,21 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
             Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             TradeDataValidation.validateDelayedPayoutTx(trade, peersPreparedDelayedPayoutTx, btcWalletService);
 
             Transaction preparedDepositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            long inputAmount = preparedDepositTx.getOutput(0).getValue().value;
+            long availableAmount = preparedDepositTx.getOutput(0).getValue().value;
             long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
 
-            int burningManSelectionHeight = processModel.getBurningManSelectionHeight();
+            int burningManSelectionHeight = checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
+                    delayedPayoutTxReceiverService);
+
             List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
                     burningManSelectionHeight,
-                    inputAmount,
+                    availableAmount,
                     tradeTxFeeAsLong);
 
             long lockTime = trade.getLockTime();
