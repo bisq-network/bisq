@@ -880,6 +880,11 @@ public abstract class WalletService {
         return maybeAddTxToWallet(serializedTransaction, wallet, TransactionConfidence.Source.NETWORK);
     }
 
+    public static Transaction maybeAddNetworkTxToWallet(Transaction transaction,
+                                                        Wallet wallet) throws VerificationException {
+        return maybeAddTxToWallet(transaction, wallet, TransactionConfidence.Source.NETWORK);
+    }
+
     public static Transaction maybeAddSelfTxToWallet(Transaction transaction,
                                                      Wallet wallet) throws VerificationException {
         return maybeAddTxToWallet(transaction, wallet, TransactionConfidence.Source.SELF);
