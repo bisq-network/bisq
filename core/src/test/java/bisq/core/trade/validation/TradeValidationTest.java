@@ -22,7 +22,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.trade.TradeFeeFactory;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.User;
 
@@ -676,93 +675,6 @@ public class TradeValidationTest {
                 () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(List.of(TradeValidationTestUtils.rawTransactionInput(Coin.SATOSHI)),
                         null));
     }
-
-    @Test
-    void checkTradeTxFeeAcceptsPositiveFees() {
-        Coin txFee = Coin.valueOf(300);
-
-        assertSame(txFee, TradeValidation.checkTradeTxFee(txFee));
-        assertEquals(300, TradeValidation.checkTradeTxFee(300));
-    }
-
-    @Test
-    void checkTradeTxFeeAcceptsFeesWithinAllowedTolerance() {
-        Coin txFee = Coin.valueOf(300);
-
-        assertSame(txFee, TradeValidation.checkTradeTxFeeIsInTolerance(txFee, Coin.valueOf(300)));
-        assertEquals(1_500, TradeValidation.checkFeeIsInTolerance(1_500, 1_000));
-        assertEquals(500, TradeValidation.checkFeeIsInTolerance(500, 1_000));
-    }
-
-    @Test
-    void checkTradeTxFeeRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(Coin.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(0));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(-1));
-    }
-
-    @Test
-    void checkTradeTxFeeRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeIsInTolerance(2_001, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkFeeIsInTolerance(499, 1_000));
-    }
-
-    @Test
-    void checkTradeTxFeeRejectsNullFees() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeTxFee(null));
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(null, Coin.valueOf(300)));
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), (Coin) null));
-    }
-
-    @Test
-    void checkTradeTxFeeRejectsFeesBelowMinBound() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(Coin.valueOf(249)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(249L));
-    }
-
-    @Test
-    void checkTradeTxFeeRejectsFeesAboveMaxBound() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(Coin.valueOf(360_001)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTradeTxFee(360_001L));
-    }
-
-    @Test
-    void checkTradeTxFeeAcceptsBoundaryValues() {
-        Coin min = Coin.valueOf(TradeValidation.MIN_TRADE_TX_FEE_SAT);
-        Coin max = Coin.valueOf(TradeValidation.MAX_TRADE_TX_FEE_SAT);
-        assertSame(min, TradeValidation.checkTradeTxFee(min));
-        assertSame(max, TradeValidation.checkTradeTxFee(max));
-        assertEquals(TradeValidation.MIN_TRADE_TX_FEE_SAT, TradeValidation.checkTradeTxFee(TradeValidation.MIN_TRADE_TX_FEE_SAT));
-        assertEquals(TradeValidation.MAX_TRADE_TX_FEE_SAT, TradeValidation.checkTradeTxFee(TradeValidation.MAX_TRADE_TX_FEE_SAT));
-    }
-
-    @Test
-    void checkTradeTxFeeAcceptsCalculatedTxFee() {
-        Coin txFee = TradeFeeFactory.getTradeTxFee(Coin.valueOf(2));
-
-        assertSame(txFee, TradeValidation.checkTradeTxFeeIsInTolerance(txFee, TradeFeeFactory.getTradeTxFee(Coin.valueOf(2))));
-    }
-
-    @Test
-    void checkMinerFeeRateAcceptsFeesWithinAllowedTolerance() {
-        assertEquals(1_500, TradeValidation.checkMinerFeeRateIsInTolerance(1_500, 1_000));
-        assertEquals(500, TradeValidation.checkMinerFeeRateIsInTolerance(500, 1_000));
-    }
-
-    @Test
-    void checkMinerFeeRateRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(2_001, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(499, 1_000));
-    }
-
-    @Test
-    void checkMinerFeeRateRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(0, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(-1, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(1_000, 0));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(1_000, -1));
-    }
-
 
     @Test
     void checkDelayedPayoutTxInputAmountAcceptsExpectedInputAmount() {

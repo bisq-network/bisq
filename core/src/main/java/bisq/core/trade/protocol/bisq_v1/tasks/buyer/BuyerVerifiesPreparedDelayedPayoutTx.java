@@ -28,6 +28,7 @@ import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -38,7 +39,10 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.*;
+import static bisq.core.trade.validation.TradeValidation.checkDelayedPayoutTxInputAmount;
+import static bisq.core.trade.validation.TradeValidation.checkLockTime;
+import static bisq.core.trade.validation.TradeValidation.checkRawTransactionInputsAreNotMalleable;
+import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -64,7 +68,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);
 
-            long tradeTxFeeAsLong = checkTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(), feeService);
+            long tradeTxFeeAsLong = MinerFeeValidation.checkTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(), feeService);
 
             Transaction preparedDepositTx = toVerifiedTransaction(processModel.getPreparedDepositTx(), btcWalletService);
             long multisigOutputAmount = preparedDepositTx.getOutput(0).getValue().value;

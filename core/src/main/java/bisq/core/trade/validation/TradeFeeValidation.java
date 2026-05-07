@@ -25,7 +25,10 @@ import com.google.common.annotations.VisibleForTesting;
 
 import static bisq.core.util.Validator.checkIsPositive;
 
-public class TradeFeeValidation {
+public final class TradeFeeValidation {
+    private TradeFeeValidation() {
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Takers trade fee

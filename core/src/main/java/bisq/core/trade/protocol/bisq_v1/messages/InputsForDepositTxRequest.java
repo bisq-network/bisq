@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bisq_v1.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.trade.protocol.TradeMessage;
-import bisq.core.trade.validation.TradeValidation;
+import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
@@ -144,7 +144,7 @@ public final class InputsForDepositTxRequest extends TradeMessage
         checkArgument(tradeAmount > 0, "tradeAmount must be positive");
         checkArgument(tradePrice > 0, "tradePrice must be positive");
         // Bound the taker-supplied trade tx fee. Single source of truth in TradeValidation.
-        TradeValidation.checkTradeTxFee(txFee);
+        MinerFeeValidation.checkTradeTxFee(txFee);
         checkArgument(takerFee > 0, "takerFee must be positive");
         checkList(rawTransactionInputs, true, "rawTransactionInputs");
         checkNonEmptyBytes(takerMultiSigPubKey, "takerMultiSigPubKey");

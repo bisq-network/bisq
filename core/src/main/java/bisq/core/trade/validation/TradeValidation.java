@@ -22,9 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
-import bisq.core.trade.TradeFeeFactory;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.user.User;
@@ -297,74 +295,6 @@ public final class TradeValidation {
                 "rawTransactionInputs must be canonical funding inputs (P2WPKH only)");
         return rawTransactionInputs;
     }
-
-
-    /* --------------------------------------------------------------------- */
-    // Trade tx fee  (miner fee for taker fee tx, deposit tx and payout tx)
-    /* --------------------------------------------------------------------- */
-
-    @VisibleForTesting
-    static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
-        return TradeValidationUtils.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
-    }
-
-    // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
-    // unconfirmable (locking maker funds); a huge value can drain miner fees from the maker.
-    // Envelope derived from realistic miner-fee range 1..600 sat/vB over up to ~600 vB
-    // (headroom above the stored average of taker-fee-tx ~192 vB and deposit-tx ~233 vB).
-    // The tighter check is checkTradeTxFeeIsInTolerance; these are absolute sanity bounds.
-    public static final long MIN_TRADE_TX_FEE_SAT = 250L;
-    public static final long MAX_TRADE_TX_FEE_SAT = 360_000L;
-
-    public static Coin checkTradeTxFee(Coin tradeTxFee) {
-        checkIsPositive(tradeTxFee, "tradeTxFee");
-        checkTradeTxFeeBounds(tradeTxFee.getValue());
-        return tradeTxFee;
-    }
-
-    public static long checkTradeTxFee(long tradeTxFee) {
-        checkIsPositive(tradeTxFee, "tradeTxFee");
-        checkTradeTxFeeBounds(tradeTxFee);
-        return tradeTxFee;
-    }
-
-    private static void checkTradeTxFeeBounds(long tradeTxFee) {
-        checkArgument(tradeTxFee >= MIN_TRADE_TX_FEE_SAT,
-                "tradeTxFee too low (must be >= %s sat). Got: %s", MIN_TRADE_TX_FEE_SAT, tradeTxFee);
-        checkArgument(tradeTxFee <= MAX_TRADE_TX_FEE_SAT,
-                "tradeTxFee too high (must be <= %s sat). Got: %s", MAX_TRADE_TX_FEE_SAT, tradeTxFee);
-    }
-
-    public static long checkTradeTxFeeIsInTolerance(long tradeTxFee, FeeService feeService) {
-        return checkTradeTxFeeIsInTolerance(Coin.valueOf(tradeTxFee), feeService).getValue();
-    }
-
-    public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
-        checkTradeTxFee(tradeTxFee);
-        checkNotNull(feeService, "feeService must not be null");
-        Coin txFeePerVbyte = feeService.getTxFeePerVbyte();
-        Coin expectedTradeTxFee = TradeFeeFactory.getTradeTxFee(txFeePerVbyte);
-        return checkTradeTxFeeIsInTolerance(tradeTxFee, expectedTradeTxFee);
-    }
-
-    public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, Coin expectedTradeTxFee) {
-        checkTradeTxFee(tradeTxFee);
-        checkIsPositive(expectedTradeTxFee, "expectedTradeTxFee");
-        checkFeeIsInTolerance(tradeTxFee.getValue(), expectedTradeTxFee.getValue());
-        return tradeTxFee;
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Miner fee rate
-    /* --------------------------------------------------------------------- */
-
-    public static long checkMinerFeeRateIsInTolerance(long minerFeeRate, long expectedMinerFeeRate) {
-        checkIsPositive(minerFeeRate, "minerFeeRate");
-        checkIsPositive(expectedMinerFeeRate, "expectedMinerFeeRate");
-        return checkFeeIsInTolerance(minerFeeRate, expectedMinerFeeRate);
-    }
-
 
 
 

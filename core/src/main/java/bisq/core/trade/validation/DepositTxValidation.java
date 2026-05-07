@@ -129,7 +129,7 @@ public final class DepositTxValidation {
         checkNotNull(feeService, "feeService must not be null");
 
         Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
-        Coin tradeTxFee = TradeValidation.checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
+        Coin tradeTxFee = MinerFeeValidation.checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
         TradeValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                 btcWalletService,
                 offer,
