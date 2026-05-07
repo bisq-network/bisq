@@ -24,11 +24,11 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.MinerFeeValidation;
+import bisq.core.trade.validation.exceptions.ValidationException;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -63,7 +63,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
             Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
-            TradeDataValidation.validateDelayedPayoutTx(peersPreparedDelayedPayoutTx, trade, btcWalletService);
+            DelayedPayoutTxValidation.validateDelayedPayoutTx(peersPreparedDelayedPayoutTx, trade, btcWalletService);
 
             int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);
@@ -106,10 +106,10 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             List<RawTransactionInput> peersRawTransactionInputs = processModel.getTradePeer().getRawTransactionInputs();
             checkRawTransactionInputsAreNotMalleable(peersRawTransactionInputs, tradeWalletService);
 
-            TradeDataValidation.validateDelayedPayoutTxInput(peersPreparedDelayedPayoutTx, preparedDepositTx);
+            DelayedPayoutTxValidation.validateDelayedPayoutTxInput(peersPreparedDelayedPayoutTx, preparedDepositTx);
 
             complete();
-        } catch (TradeDataValidation.ValidationException e) {
+        } catch (ValidationException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);

@@ -18,9 +18,9 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -62,7 +62,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
                     delayedPayoutTxReceivers,
                     lockTime);
 
-            TradeDataValidation.validateDelayedPayoutTx(preparedDelayedPayoutTx,
+            DelayedPayoutTxValidation.validateDelayedPayoutTx(preparedDelayedPayoutTx,
                     trade,
                     processModel.getBtcWalletService());
 

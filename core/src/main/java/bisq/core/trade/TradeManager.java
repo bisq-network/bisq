@@ -37,7 +37,6 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
-import bisq.core.trade.bisq_v1.TradeTxException;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.bsq_swap.BsqSwapTakeOfferRequestVerification;
 import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
@@ -68,6 +67,7 @@ import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 import bisq.core.trade.protocol.bsq_swap.model.BsqSwapProtocolModel;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.trade.validation.exceptions.TradeTxException;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;

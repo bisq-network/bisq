@@ -18,6 +18,7 @@
 package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.trade.validation.exceptions.InvalidTxException;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -51,7 +52,7 @@ public class TradeDataValidationTest {
         Transaction tx = canonicalTx();
         tx.setVersion(2);
 
-        assertThrows(TradeDataValidation.InvalidTxException.class,
+        assertThrows(InvalidTxException.class,
                 () -> TradeDataValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
     }
 
@@ -60,7 +61,7 @@ public class TradeDataValidationTest {
         Transaction tx = canonicalTx();
         tx.setLockTime(1);
 
-        assertThrows(TradeDataValidation.InvalidTxException.class,
+        assertThrows(InvalidTxException.class,
                 () -> TradeDataValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
     }
 
@@ -69,7 +70,7 @@ public class TradeDataValidationTest {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(0);
 
-        assertThrows(TradeDataValidation.InvalidTxException.class,
+        assertThrows(InvalidTxException.class,
                 () -> TradeDataValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
     }
 
@@ -84,13 +85,13 @@ public class TradeDataValidationTest {
 
     @Test
     void assertCanonicalDepositTxShapeRejectsNonP2WPKHPeerInput() {
-        assertThrows(TradeDataValidation.InvalidTxException.class,
+        assertThrows(InvalidTxException.class,
                 () -> TradeDataValidation.assertCanonicalDepositTxShape(canonicalTx(), p2pkhInputs(), PARAMS));
     }
 
     @Test
     void assertCanonicalDepositTxShapeRejectsNullPeerInput() {
-        assertThrows(TradeDataValidation.InvalidTxException.class,
+        assertThrows(InvalidTxException.class,
                 () -> TradeDataValidation.assertCanonicalDepositTxShape(canonicalTx(),
                         java.util.Collections.singletonList(null),
                         PARAMS));

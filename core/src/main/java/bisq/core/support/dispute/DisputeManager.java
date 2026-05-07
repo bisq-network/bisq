@@ -39,9 +39,10 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.exceptions.ValidationException;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.NodeAddress;
@@ -486,7 +487,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateTradeAndDispute(dispute, trade);
-            TradeDataValidation.validateDelayedPayoutTx(trade.getDelayedPayoutTx(),
+            DelayedPayoutTxValidation.validateDelayedPayoutTx(trade.getDelayedPayoutTx(),
                     trade,
                     btcWalletService);
             if (dispute.isUsingLegacyBurningMan()) {
@@ -495,7 +496,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                         btcWalletService.getParams());
                 DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             }
-        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
+        } catch (ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

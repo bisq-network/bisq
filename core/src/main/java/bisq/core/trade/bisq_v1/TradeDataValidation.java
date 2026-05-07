@@ -18,125 +18,20 @@
 package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletUtils;
-import bisq.core.offer.Offer;
-import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.exceptions.InvalidTxException;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
-import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class TradeDataValidation {
-    public static void validateDelayedPayoutTx(Transaction delayedPayoutTx,
-                                               Trade trade,
-                                               BtcWalletService btcWalletService)
-            throws DisputeValidation.AddressException, MissingTxException,
-            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validateDelayedPayoutTx(delayedPayoutTx,
-                trade,
-                btcWalletService,
-                null);
-    }
-
-    public static void validateDelayedPayoutTx(Transaction delayedPayoutTx,
-                                               Trade trade,
-                                               BtcWalletService btcWalletService,
-                                               @Nullable Consumer<String> addressConsumer)
-            throws DisputeValidation.AddressException, MissingTxException,
-            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        String errorMsg;
-        if (delayedPayoutTx == null) {
-            errorMsg = "DelayedPayoutTx must not be null";
-            log.error(errorMsg);
-            throw new MissingTxException("DelayedPayoutTx must not be null");
-        }
-
-        // Validate tx structure
-        if (delayedPayoutTx.getInputs().size() != 1) {
-            errorMsg = "Number of delayedPayoutTx inputs must be 1";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidTxException(errorMsg);
-        }
-
-
-        // connectedOutput is null and input.getValue() is null at that point as the tx is not committed to the wallet
-        // yet. So we cannot check that the input matches but we did the amount check earlier in the trade protocol.
-
-        // Validate lock time
-        if (delayedPayoutTx.getLockTime() != trade.getLockTime()) {
-            errorMsg = "delayedPayoutTx.getLockTime() must match trade.getLockTime()";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidLockTimeException(errorMsg);
-        }
-
-        // Validate seq num
-        if (delayedPayoutTx.getInput(0).getSequenceNumber() != TransactionInput.NO_SEQUENCE - 1) {
-            errorMsg = "Sequence number must be 0xFFFFFFFE";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidLockTimeException(errorMsg);
-        }
-
-        if (trade.isUsingLegacyBurningMan()) {
-            if (delayedPayoutTx.getOutputs().size() != 1) {
-                errorMsg = "Number of delayedPayoutTx outputs must be 1";
-                log.error(errorMsg);
-                log.error(delayedPayoutTx.toString());
-                throw new InvalidTxException(errorMsg);
-            }
-
-            // Check amount
-            TransactionOutput output = delayedPayoutTx.getOutput(0);
-            Offer offer = checkNotNull(trade.getOffer());
-            Coin msOutputAmount = offer.getBuyerSecurityDeposit()
-                    .add(offer.getSellerSecurityDeposit())
-                    .add(checkNotNull(trade.getAmount()));
-
-            if (!output.getValue().equals(msOutputAmount)) {
-                errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
-                log.error(errorMsg);
-                log.error(delayedPayoutTx.toString());
-                throw new InvalidAmountException(errorMsg);
-            }
-
-            NetworkParameters params = btcWalletService.getParams();
-            if (addressConsumer != null) {
-                String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
-                addressConsumer.accept(delayedPayoutTxOutputAddress);
-            }
-        }
-    }
-
-    public static void validateDelayedPayoutTxInput(Transaction delayedPayoutTx, Transaction depositTx)
-            throws InvalidInputException {
-        TransactionInput input = delayedPayoutTx.getInput(0);
-        checkNotNull(input, "delayedPayoutTx.getInput(0) must not be null");
-        // input.getConnectedOutput() is null as the tx is not committed at that point
-
-        TransactionOutPoint outpoint = input.getOutpoint();
-        if (!outpoint.getHash().toString().equals(depositTx.getTxId().toString()) || outpoint.getIndex() != 0) {
-            throw new InvalidInputException("Input of delayed payout transaction does not point to output of deposit tx.\n" +
-                    "Delayed payout tx=" + delayedPayoutTx + "\n" +
-                    "Deposit tx=" + depositTx);
-        }
-    }
 
     public static void validateDepositInputs(Trade trade) throws InvalidTxException {
         // assumption: deposit tx always has 2 inputs, the maker and taker
@@ -250,55 +145,6 @@ public class TradeDataValidation {
                         "Bisq v1 trades require P2WPKH UTXOs; legacy P2PKH, P2SH-wrapped, and P2WSH inputs are rejected. " +
                         "Move funds to a native segwit address and retry.");
             }
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Exceptions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static class ValidationException extends Exception {
-        ValidationException(String msg) {
-            super(msg);
-        }
-
-        ValidationException(String msg, Throwable cause) {
-            super(msg, cause);
-        }
-    }
-
-    public static class MissingTxException extends ValidationException {
-        MissingTxException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class InvalidTxException extends ValidationException {
-        InvalidTxException(String msg) {
-            super(msg);
-        }
-
-        InvalidTxException(String msg, Throwable cause) {
-            super(msg, cause);
-        }
-    }
-
-    public static class InvalidAmountException extends ValidationException {
-        InvalidAmountException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class InvalidLockTimeException extends ValidationException {
-        InvalidLockTimeException(String msg) {
-            super(msg);
-        }
-    }
-
-    public static class InvalidInputException extends ValidationException {
-        InvalidInputException(String msg) {
-            super(msg);
         }
     }
 }

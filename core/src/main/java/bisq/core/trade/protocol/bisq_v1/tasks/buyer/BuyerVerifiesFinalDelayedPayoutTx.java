@@ -18,9 +18,10 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.exceptions.ValidationException;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -49,14 +50,14 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             checkNotNull(finalDelayedPayoutTx, "trade.getDelayedPayoutTx() must not be null");
 
             // Check again tx
-            TradeDataValidation.validateDelayedPayoutTx(finalDelayedPayoutTx,
+            DelayedPayoutTxValidation.validateDelayedPayoutTx(finalDelayedPayoutTx,
                     trade,
                     btcWalletService);
 
             Transaction depositTx = trade.getDepositTx();
             checkNotNull(depositTx, "trade.getDepositTx() must not be null");
             // Now as we know the deposit tx we can also verify the input
-            TradeDataValidation.validateDelayedPayoutTxInput(finalDelayedPayoutTx, depositTx);
+            DelayedPayoutTxValidation.validateDelayedPayoutTxInput(finalDelayedPayoutTx, depositTx);
 
             long inputAmount = depositTx.getOutput(0).getValue().value;
             long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
@@ -86,7 +87,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             }
 
             complete();
-        } catch (TradeDataValidation.ValidationException e) {
+        } catch (ValidationException e) {
             failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);
