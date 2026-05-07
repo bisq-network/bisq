@@ -44,7 +44,7 @@ public final class MinerFeeValidation {
 
     @VisibleForTesting
     static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
-        return TradeValidationUtils.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
+        return TradeValidation.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
     }
 
     public static Coin checkTradeTxFee(Coin tradeTxFee) {

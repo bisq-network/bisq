@@ -21,7 +21,7 @@ import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.TradeValidationTestUtils.configureTradeFeeService;
+import static bisq.core.trade.validation.ValidationTestUtils.configureTradeFeeService;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;

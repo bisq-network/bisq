@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.TradeValidationTestUtils.pubKeyRing;
+import static bisq.core.trade.validation.ValidationTestUtils.pubKeyRing;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;

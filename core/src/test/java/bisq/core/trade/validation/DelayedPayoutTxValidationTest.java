@@ -27,7 +27,7 @@ import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.TradeValidationTestUtils.GENESIS_HEIGHT;
+import static bisq.core.trade.validation.ValidationTestUtils.GENESIS_HEIGHT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -87,8 +87,8 @@ public class DelayedPayoutTxValidationTest {
 
     @Test
     void checkDelayedPayoutTxInputAmountAcceptsExpectedInputAmount() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+        Offer offer = ValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = ValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
         long expectedInputAmount = 42_300;
 
         assertEquals(expectedInputAmount,
@@ -97,8 +97,8 @@ public class DelayedPayoutTxValidationTest {
 
     @Test
     void checkDelayedPayoutTxInputAmountRejectsUnexpectedInputAmount() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+        Offer offer = ValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = ValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
 
         assertThrows(IllegalArgumentException.class,
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(42_299, trade));
@@ -106,8 +106,8 @@ public class DelayedPayoutTxValidationTest {
 
     @Test
     void checkDelayedPayoutTxInputAmountRejectsZeroAndNegativeInputAmount() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+        Offer offer = ValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = ValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
 
         assertThrows(IllegalArgumentException.class,
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(0, trade));

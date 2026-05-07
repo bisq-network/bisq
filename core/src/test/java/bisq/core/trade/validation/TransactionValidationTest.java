@@ -32,7 +32,7 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.TradeValidationTestUtils.btcWalletService;
+import static bisq.core.trade.validation.ValidationTestUtils.btcWalletService;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TransactionValidationTest {
@@ -73,7 +73,7 @@ public class TransactionValidationTest {
 
     @Test
     void checkSerializedTransactionAcceptsValidSerializedTransaction() {
-        byte[] serializedTransaction = TradeValidationTestUtils.serializedTransaction();
+        byte[] serializedTransaction = ValidationTestUtils.serializedTransaction();
 
         assertSame(serializedTransaction, TransactionValidation.checkSerializedTransaction(serializedTransaction,
                 btcWalletService()));
@@ -93,14 +93,14 @@ public class TransactionValidationTest {
 
     @Test
     void checkTransactionAcceptsValidTransaction() {
-        Transaction transaction = TradeValidationTestUtils.transaction(new byte[]{});
+        Transaction transaction = ValidationTestUtils.transaction(new byte[]{});
 
         assertSame(transaction, TransactionValidation.checkTransaction(transaction));
     }
 
     @Test
     void checkTransactionRejectsStructurallyInvalidTransaction() {
-        Transaction transaction = TradeValidationTestUtils.transactionWithoutOutputs();
+        Transaction transaction = ValidationTestUtils.transactionWithoutOutputs();
 
         assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkTransaction(transaction));
     }
@@ -112,7 +112,7 @@ public class TransactionValidationTest {
 
     @Test
     void toTransactionParsesValidSerializedVerifiedTransaction() {
-        byte[] serializedTransaction = TradeValidationTestUtils.serializedTransaction();
+        byte[] serializedTransaction = ValidationTestUtils.serializedTransaction();
 
         assertArrayEquals(serializedTransaction,
                 TransactionValidation.toVerifiedTransaction(serializedTransaction, btcWalletService())
@@ -128,7 +128,7 @@ public class TransactionValidationTest {
     @Test
     void toVerifiedTransactionRejectsStructurallyInvalidTransaction() {
         assertThrows(IllegalArgumentException.class, () -> TransactionValidation.toVerifiedTransaction(
-                TradeValidationTestUtils.serializedTransactionWithoutOutputs(),
+                ValidationTestUtils.serializedTransactionWithoutOutputs(),
                 btcWalletService()));
     }
 
@@ -141,31 +141,31 @@ public class TransactionValidationTest {
     @Test
     void toVerifiedTransactionRejectsNullWalletService() {
         assertThrows(NullPointerException.class, () -> TransactionValidation.toVerifiedTransaction(
-                TradeValidationTestUtils.serializedTransaction(),
+                ValidationTestUtils.serializedTransaction(),
                 null));
     }
 
 
     @Test
     void checkTransactionIdAcceptsValidTransactionId() {
-        assertEquals(TradeValidationTestUtils.VALID_TRANSACTION_ID, TransactionValidation.checkTransactionId(TradeValidationTestUtils.VALID_TRANSACTION_ID));
+        assertEquals(ValidationTestUtils.VALID_TRANSACTION_ID, TransactionValidation.checkTransactionId(ValidationTestUtils.VALID_TRANSACTION_ID));
     }
 
     @Test
     void checkTransactionIdAcceptsUpperCaseTransactionId() {
-        String transactionId = TradeValidationTestUtils.VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
+        String transactionId = ValidationTestUtils.VALID_TRANSACTION_ID.toUpperCase(Locale.ROOT);
         assertEquals(transactionId.toLowerCase(Locale.ROOT), TransactionValidation.checkTransactionId(transactionId));
     }
 
     @Test
     void checkTransactionIdRejectsInvalidLength() {
         assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkTransactionId(
-                TradeValidationTestUtils.VALID_TRANSACTION_ID.substring(1)));
+                ValidationTestUtils.VALID_TRANSACTION_ID.substring(1)));
     }
 
     @Test
     void checkTransactionIdRejectsNonHexTransactionId() {
-        String transactionId = TradeValidationTestUtils.VALID_TRANSACTION_ID.substring(0, TradeValidationTestUtils.VALID_TRANSACTION_ID.length() - 1) + "g";
+        String transactionId = ValidationTestUtils.VALID_TRANSACTION_ID.substring(0, ValidationTestUtils.VALID_TRANSACTION_ID.length() - 1) + "g";
 
         assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkTransactionId(transactionId));
     }
@@ -177,7 +177,7 @@ public class TransactionValidationTest {
 
     @Test
     void checkDerEncodedEcdsaSignatureAcceptsStrictDerEncodedCanonicalSignature() {
-        byte[] bitcoinSignature = TradeValidationTestUtils.bitcoinSignature(BigInteger.ONE, BigInteger.ONE);
+        byte[] bitcoinSignature = ValidationTestUtils.bitcoinSignature(BigInteger.ONE, BigInteger.ONE);
 
         assertSame(bitcoinSignature, TransactionValidation.checkDerEncodedEcdsaSignature(bitcoinSignature));
     }
@@ -199,7 +199,7 @@ public class TransactionValidationTest {
 
     @Test
     void checkDerEncodedEcdsaSignatureRejectsNonStrictDerEncoding() {
-        byte[] bitcoinSignature = TradeValidationTestUtils.bitcoinSignature(BigInteger.ONE, BigInteger.ONE);
+        byte[] bitcoinSignature = ValidationTestUtils.bitcoinSignature(BigInteger.ONE, BigInteger.ONE);
         byte[] bitcoinSignatureWithTrailingData = Arrays.copyOf(bitcoinSignature, bitcoinSignature.length + 1);
         bitcoinSignatureWithTrailingData[bitcoinSignature.length] = 1;
 
@@ -210,18 +210,18 @@ public class TransactionValidationTest {
     @Test
     void checkDerEncodedEcdsaSignatureRejectsValuesOutsideCurveOrder() {
         assertThrows(IllegalArgumentException.class,
-                () -> TransactionValidation.checkDerEncodedEcdsaSignature(TradeValidationTestUtils.bitcoinSignature(BigInteger.ZERO, BigInteger.ONE)));
+                () -> TransactionValidation.checkDerEncodedEcdsaSignature(ValidationTestUtils.bitcoinSignature(BigInteger.ZERO, BigInteger.ONE)));
         assertThrows(IllegalArgumentException.class,
-                () -> TransactionValidation.checkDerEncodedEcdsaSignature(TradeValidationTestUtils.bitcoinSignature(BigInteger.ONE, BigInteger.ZERO)));
+                () -> TransactionValidation.checkDerEncodedEcdsaSignature(ValidationTestUtils.bitcoinSignature(BigInteger.ONE, BigInteger.ZERO)));
         assertThrows(IllegalArgumentException.class,
-                () -> TransactionValidation.checkDerEncodedEcdsaSignature(TradeValidationTestUtils.bitcoinSignature(ECKey.CURVE.getN(), BigInteger.ONE)));
+                () -> TransactionValidation.checkDerEncodedEcdsaSignature(ValidationTestUtils.bitcoinSignature(ECKey.CURVE.getN(), BigInteger.ONE)));
         assertThrows(IllegalArgumentException.class,
-                () -> TransactionValidation.checkDerEncodedEcdsaSignature(TradeValidationTestUtils.bitcoinSignature(BigInteger.ONE, ECKey.CURVE.getN())));
+                () -> TransactionValidation.checkDerEncodedEcdsaSignature(ValidationTestUtils.bitcoinSignature(BigInteger.ONE, ECKey.CURVE.getN())));
     }
 
     @Test
     void checkDerEncodedEcdsaSignatureRejectsNonCanonicalSValue() {
-        byte[] bitcoinSignature = TradeValidationTestUtils.bitcoinSignature(BigInteger.ONE, ECKey.CURVE.getN().subtract(BigInteger.ONE));
+        byte[] bitcoinSignature = ValidationTestUtils.bitcoinSignature(BigInteger.ONE, ECKey.CURVE.getN().subtract(BigInteger.ONE));
 
         assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkDerEncodedEcdsaSignature(bitcoinSignature));
     }
@@ -320,6 +320,13 @@ public class TransactionValidationTest {
                     () -> TransactionValidation.checkMultiSigPubKey(multiSigPubKey),
                     invalidEncoding);
         }
+    }
+
+    @Test
+    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 0, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, -1, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 1, 0.99));
     }
 
 

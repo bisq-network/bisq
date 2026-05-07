@@ -81,4 +81,23 @@ public final class TradeValidation {
         return checkNotNull(mediator.getPubKeyRing(),
                 "mediator.getPubKeyRing() must not be null");
     }
+
+    static long checkValueInTolerance(long actualValue, long expectedValue, double factor) {
+        checkArgument(expectedValue > 0, "expectedValue must be > 0");
+        checkArgument(factor >= 1.0, "factor must be >= 1");
+
+        double min = expectedValue / factor;
+        double max = expectedValue * factor;
+
+        checkArgument(actualValue >= min && actualValue <= max,
+                "actualValue is outside of allowed tolerance. " +
+                        "actualValue=%s, expectedValue=%s, min=%s, max=%s, factor=%s",
+                actualValue,
+                expectedValue,
+                min,
+                max,
+                factor);
+
+        return actualValue;
+    }
 }

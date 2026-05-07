@@ -64,7 +64,7 @@ public final class TradeFeeValidation {
     // in trades.
     @VisibleForTesting
     static long checkTakerFeeInTolerance(long fee, long expectedFee) {
-        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, MAX_TAKER_FEE_DEVIATION_FACTOR);
+        return TradeValidation.checkValueInTolerance(fee, expectedFee, MAX_TAKER_FEE_DEVIATION_FACTOR);
     }
 
 
@@ -98,6 +98,6 @@ public final class TradeFeeValidation {
     // in trades.
     @VisibleForTesting
     static long checkMakerFeeInTolerance(long fee, long expectedFee) {
-        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, MAX_MAKER_FEE_DEVIATION_FACTOR);
+        return TradeValidation.checkValueInTolerance(fee, expectedFee, MAX_MAKER_FEE_DEVIATION_FACTOR);
     }
 }

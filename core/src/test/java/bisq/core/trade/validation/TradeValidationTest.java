@@ -26,7 +26,7 @@ import bisq.common.crypto.Sig;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.TradeValidationTestUtils.pubKeyRing;
+import static bisq.core.trade.validation.ValidationTestUtils.pubKeyRing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,35 +38,35 @@ public class TradeValidationTest {
     void checkTradeIdAcceptsMatchingTradeMessageTradeId() {
         String tradeId = "trade-id";
 
-        assertSame(tradeId, TradeValidation.checkTradeId(tradeId, TradeValidationTestUtils.tradeMessage(tradeId)));
+        assertSame(tradeId, TradeValidation.checkTradeId(tradeId, ValidationTestUtils.tradeMessage(tradeId)));
     }
 
     @Test
     void checkTradeIdRejectsMismatchingTradeMessageTradeId() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkTradeId("trade-id", TradeValidationTestUtils.tradeMessage("other-trade-id")));
+                () -> TradeValidation.checkTradeId("trade-id", ValidationTestUtils.tradeMessage("other-trade-id")));
 
         assertEquals("TradeId trade-id is not valid", exception.getMessage());
     }
 
     @Test
     void checkTradeIdRejectsNullTradeId() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeId(null, TradeValidationTestUtils.tradeMessage("trade-id")));
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkTradeId(null, ValidationTestUtils.tradeMessage("trade-id")));
     }
 
     @Test
     void isTradeIdValidReturnsTrueForMatchingTradeMessageTradeId() {
-        assertEquals(true, TradeValidation.isTradeIdValid("trade-id", TradeValidationTestUtils.tradeMessage("trade-id")));
+        assertEquals(true, TradeValidation.isTradeIdValid("trade-id", ValidationTestUtils.tradeMessage("trade-id")));
     }
 
     @Test
     void isTradeIdValidReturnsFalseForMismatchingTradeMessageTradeId() {
-        assertEquals(false, TradeValidation.isTradeIdValid("trade-id", TradeValidationTestUtils.tradeMessage("other-trade-id")));
+        assertEquals(false, TradeValidation.isTradeIdValid("trade-id", ValidationTestUtils.tradeMessage("other-trade-id")));
     }
 
     @Test
     void isTradeIdValidRejectsNullTradeId() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid(null, TradeValidationTestUtils.tradeMessage("trade-id")));
+        assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid(null, ValidationTestUtils.tradeMessage("trade-id")));
     }
 
     @Test
@@ -136,8 +136,8 @@ public class TradeValidationTest {
     void getCheckedMediatorPubKeyRingReturnsAcceptedMediatorPubKeyRing() {
         NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
         PubKeyRing mediatorPubKeyRing = pubKeyRing(Sig.generateKeyPair());
-        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress,
-                TradeValidationTestUtils.mediator(mediatorNodeAddress, mediatorPubKeyRing));
+        User user = ValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress,
+                ValidationTestUtils.mediator(mediatorNodeAddress, mediatorPubKeyRing));
 
         assertSame(mediatorPubKeyRing, TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
     }
@@ -157,7 +157,7 @@ public class TradeValidationTest {
     @Test
     void getCheckedMediatorPubKeyRingRejectsUnknownMediator() {
         NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
-        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, null);
+        User user = ValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, null);
 
         assertThrows(NullPointerException.class,
                 () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
@@ -166,7 +166,7 @@ public class TradeValidationTest {
     @Test
     void getCheckedMediatorPubKeyRingRejectsMediatorWithoutPubKeyRing() {
         NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
-        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, TradeValidationTestUtils.mediator(mediatorNodeAddress, null));
+        User user = ValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, ValidationTestUtils.mediator(mediatorNodeAddress, null));
 
         assertThrows(NullPointerException.class,
                 () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
