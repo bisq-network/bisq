@@ -24,7 +24,6 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
@@ -91,7 +90,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
             if (sellerPaymentAccountPayload != null) {
-                byte[] sellerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(sellerPaymentAccountPayload);
+                byte[] sellerPaymentAccountPayloadHash = sellerPaymentAccountPayload.getHashForContract();
                 Contract contract = checkNotNull(trade.getContract());
 
                 byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(pubKeyRing);

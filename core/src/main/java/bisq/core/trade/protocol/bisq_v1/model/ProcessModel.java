@@ -49,7 +49,6 @@ import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -72,8 +71,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
 // persist them.
 
@@ -85,11 +82,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public class ProcessModel implements ProtocolModel<TradingPeer> {
-
-    public static byte[] hashOfPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
-        return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).serializeForHash());
-    }
-
     // Transient/Immutable (net set in constructor so they are not final, but at init)
     transient private Provider provider;
     transient private TradeManager tradeManager;

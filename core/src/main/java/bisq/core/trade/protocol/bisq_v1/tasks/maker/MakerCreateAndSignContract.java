@@ -21,10 +21,10 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
@@ -65,9 +65,12 @@ public class MakerCreateAndSignContract extends TradeTask {
 
             AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
 
-            byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
+            PaymentAccountPayload makersPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "Payment account payload cannot be null for trade: " + trade.getId());
+            byte[] hashOfMakersPaymentAccountPayload = makersPaymentAccountPayload.getHashForContract();
+
             byte[] hashOfTakersPaymentAccountPayload = taker.getHashOfPaymentAccountPayload();
-            String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
+            String makersPaymentMethodId = makersPaymentAccountPayload.getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
             OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
 

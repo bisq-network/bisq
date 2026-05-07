@@ -50,7 +50,6 @@ public class BisqV1MessageIntegrityTest {
                 "counter-currency-tx-id",
                 "counter-currency-extra-data",
                 UID));
-        assertDoesNotThrow(() -> RefreshTradeStateRequest.fromProto(refreshTradeStateRequest(TRADE_ID, UID), 1));
         assertDoesNotThrow(() -> new PayoutTxPublishedMessage(TRADE_ID, bytes(3), NODE_ADDRESS, null));
         assertDoesNotThrow(() -> new TraderSignedWitnessMessage(UID, TRADE_ID, NODE_ADDRESS, signedWitness()));
         assertDoesNotThrow(() -> new DelayedPayoutTxSignatureRequest(UID, TRADE_ID, NODE_ADDRESS, bytes(4), bytes(5)));
@@ -94,8 +93,6 @@ public class BisqV1MessageIntegrityTest {
                 null,
                 null,
                 ""));
-        assertThrows(IllegalArgumentException.class,
-                () -> RefreshTradeStateRequest.fromProto(refreshTradeStateRequest("", UID), 1));
         assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.uid = ""));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.tradeId = ""));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.uid = ""));

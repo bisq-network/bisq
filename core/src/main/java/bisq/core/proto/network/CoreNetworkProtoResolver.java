@@ -63,7 +63,6 @@ import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessag
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
@@ -158,8 +157,6 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage(), messageVersion);
 
                 // trade protocol messages
-                case REFRESH_TRADE_STATE_REQUEST:
-                    return RefreshTradeStateRequest.fromProto(proto.getRefreshTradeStateRequest(), messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_REQUEST:
                     return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_RESPONSE:

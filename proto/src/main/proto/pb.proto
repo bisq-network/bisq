@@ -83,7 +83,7 @@ message NetworkEnvelope {
         DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
         PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
 
-        RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true];
+        RefreshTradeStateRequest refresh_trade_state_request = 50 [deprecated = true]; // Java class removed in 1.9.24
         TraderSignedWitnessMessage trader_signed_witness_message = 51 [deprecated = true];
 
         GetInventoryRequest get_inventory_request = 52;

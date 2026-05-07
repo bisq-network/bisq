@@ -21,6 +21,7 @@ import bisq.core.locale.Res;
 
 import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.crypto.CryptoUtils;
+import bisq.common.crypto.Hash;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
@@ -122,7 +123,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     public abstract String getPaymentDetailsForTradePopup();
 
-    public boolean showRefTextWarning() { return true; }
+    public boolean showRefTextWarning() {
+        return true;
+    }
 
     public byte[] getSalt() {
         checkArgument(excludeFromJsonDataMap.containsKey(SALT), "Salt must have been set in excludeFromJsonDataMap.");
@@ -140,6 +143,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     public String getHolderNameOrPromptIfEmpty() {
         return getHolderName().isEmpty() ? Res.get("payment.account.owner.ask") : getHolderName();
     }
+
     public void setHolderName(String holderName) {
         // an empty string must result in the mapping removing the entry.
         excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
@@ -156,5 +160,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     public String getOwnerId() {
         return null;
+    }
+
+    public byte[] getHashForContract() {
+        return Hash.getRipemd160hash(serializeForHash());
     }
 }
