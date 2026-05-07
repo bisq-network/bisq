@@ -92,7 +92,7 @@ public class TradeValidationTest {
         PubKeyRing pubKeyRing = pubKeyRing(signatureKeyPair);
         byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
 
-        assertSame(accountAgeWitnessSignature, TradeValidation.checkSignature(
+        assertSame(accountAgeWitnessSignature, TradeValidation.checkDSASignature(
                 accountAgeWitnessSignature,
                 ACCOUNT_AGE_WITNESS_NONCE,
                 pubKeyRing.getSignaturePubKey()));
@@ -105,7 +105,7 @@ public class TradeValidationTest {
         byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
         byte[] otherNonce = "other-nonce".getBytes(StandardCharsets.UTF_8);
 
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkSignature(
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDSASignature(
                 accountAgeWitnessSignature,
                 otherNonce,
                 pubKeyRing.getSignaturePubKey()));
@@ -117,7 +117,7 @@ public class TradeValidationTest {
         PubKeyRing pubKeyRing = pubKeyRing(Sig.generateKeyPair());
         byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
 
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkSignature(
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDSASignature(
                 accountAgeWitnessSignature,
                 ACCOUNT_AGE_WITNESS_NONCE,
                 pubKeyRing.getSignaturePubKey()));
@@ -125,14 +125,14 @@ public class TradeValidationTest {
 
     @Test
     void checkAccountAgeWitnessSignatureRejectsNullSignature() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkSignature(null,
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkDSASignature(null,
                 ACCOUNT_AGE_WITNESS_NONCE,
                 pubKeyRing(Sig.generateKeyPair()).getSignaturePubKey()));
     }
 
     @Test
     void checkAccountAgeWitnessSignatureRejectsEmptySignature() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkSignature(new byte[0],
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDSASignature(new byte[0],
                 ACCOUNT_AGE_WITNESS_NONCE,
                 pubKeyRing(Sig.generateKeyPair()).getSignaturePubKey()));
     }
@@ -141,7 +141,7 @@ public class TradeValidationTest {
     void checkAccountAgeWitnessSignatureRejectsNullNonce() throws CryptoException {
         KeyPair signatureKeyPair = Sig.generateKeyPair();
 
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkSignature(
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkDSASignature(
                 Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
                 null,
                 pubKeyRing(signatureKeyPair).getSignaturePubKey()));
@@ -151,34 +151,34 @@ public class TradeValidationTest {
     void checkAccountAgeWitnessSignatureRejectsNullPubKeyRing() throws CryptoException {
         KeyPair signatureKeyPair = Sig.generateKeyPair();
 
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkSignature(
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkDSASignature(
                 Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
                 ACCOUNT_AGE_WITNESS_NONCE,
                 null));
     }
 
     @Test
-    void checkBase64SignatureAcceptsBase64EncodedSignature() {
+    void checkBase64SignatureAcceptsBase64EncodedDSASignature() {
         byte[] signature = new byte[]{1, 2, 3};
         String signatureBase64 = Base64.encode(signature);
 
-        assertEquals(signatureBase64, TradeValidation.checkBase64Signature(signatureBase64));
-        assertArrayEquals(signature, TradeValidation.toDecodedSignature(signatureBase64));
+        assertEquals(signatureBase64, TradeValidation.checkBase64DSASignature(signatureBase64));
+        assertArrayEquals(signature, TradeValidation.fromBase64DSASignature(signatureBase64));
     }
 
     @Test
-    void checkBase64SignatureRejectsInvalidBase64EncodedSignature() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64Signature("not base64"));
+    void checkBase64SignatureRejectsInvalidBase64EncodedDSASignature() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64DSASignature("not base64"));
     }
 
     @Test
-    void checkBase64SignatureRejectsNullSignature() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkBase64Signature(null));
+    void checkBase64SignatureRejectsNullDSASignature() {
+        assertThrows(NullPointerException.class, () -> TradeValidation.checkBase64DSASignature(null));
     }
 
     @Test
-    void checkBase64SignatureRejectsBlankSignature() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64Signature(" "));
+    void checkBase64SignatureRejectsBlankDSASignature() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64DSASignature(" "));
     }
 
     @Test

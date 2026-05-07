@@ -79,42 +79,29 @@ public final class TradeValidation {
     }
 
 
-    /* --------------------------------------------------------------------- */
-    // Bitcoin
-    /* --------------------------------------------------------------------- */
-
-
-
-
-
-    /* --------------------------------------------------------------------- */
-    // Crypto
-    /* --------------------------------------------------------------------- */
-
-    public static String checkBase64Signature(String signatureBase64) {
-        checkNonBlankString(signatureBase64, "signatureBase64");
-        toDecodedSignature(signatureBase64);
-        return signatureBase64;
+    public static String checkBase64DSASignature(String dsaSignatureBase64) {
+        checkNonBlankString(dsaSignatureBase64, "dsaSignatureBase64");
+        fromBase64DSASignature(dsaSignatureBase64);
+        return dsaSignatureBase64;
     }
 
-    public static byte[] toDecodedSignature(String signatureBase64) {
-        checkNonBlankString(signatureBase64, "signatureBase64");
-        return Base64.decode(signatureBase64);
+    public static byte[] fromBase64DSASignature(String dsaSignatureBase64) {
+        checkNonBlankString(dsaSignatureBase64, "dsaSignatureBase64");
+        return Base64.decode(dsaSignatureBase64);
     }
 
-    public static byte[] checkSignature(byte[] signature,
-                                        byte[] message,
-                                        PublicKey signaturePubKey) {
-        checkNonEmptyBytes(signature, "signature");
+    public static byte[] checkDSASignature(byte[] dsaSignature,
+                                           byte[] message,
+                                           PublicKey signaturePubKey) {
+        checkNonEmptyBytes(dsaSignature, "dsaSignature");
         checkNonEmptyBytes(message, "message");
         checkNotNull(signaturePubKey, "signaturePubKey must not be null");
 
         try {
-            checkArgument(Sig.verify(signaturePubKey, message, signature), "Invalid signature");
-            return signature;
+            checkArgument(Sig.verify(signaturePubKey, message, dsaSignature), "Invalid dsaSignature");
+            return dsaSignature;
         } catch (CryptoException e) {
-            throw new IllegalArgumentException("Invalid signature", e);
+            throw new IllegalArgumentException("Invalid dsaSignature", e);
         }
     }
-
 }

@@ -46,8 +46,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkDSASignature;
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
-import static bisq.core.trade.validation.TradeValidation.checkSignature;
 import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -109,7 +109,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             // passing the nonce we want to get signed)
             byte[] accountAgeWitnessNonce = trade.getId().getBytes(Charsets.UTF_8);
             PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
-            byte[] accountAgeWitnessSignature = checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+            byte[] accountAgeWitnessSignature = checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
                     accountAgeWitnessNonce,
                     takerSignatureKey);
             tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);

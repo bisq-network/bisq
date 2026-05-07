@@ -145,7 +145,7 @@ public final class DepositTxValidation {
         TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
-        TradeValidation.checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+        TradeValidation.checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
                 accountAgeWitnessNonce,
                 takerSignatureKey);
         TradeValidation.checkPeersDate(request.getCurrentDate());
