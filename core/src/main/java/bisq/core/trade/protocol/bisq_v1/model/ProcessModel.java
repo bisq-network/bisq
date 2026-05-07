@@ -32,6 +32,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
@@ -415,5 +416,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public DaoFacade getDaoFacade() {
         return provider.getDaoFacade();
+    }
+
+    public FeeService getFeeService() {
+        return provider.getFeeService();
     }
 }

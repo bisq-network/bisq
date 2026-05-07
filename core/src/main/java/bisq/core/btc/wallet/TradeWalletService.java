@@ -671,7 +671,8 @@ public class TradeWalletService {
         delayedPayoutTx.addInput(depositTxOutput);
         applyLockTime(lockTime, delayedPayoutTx);
         checkArgument(!receivers.isEmpty(), "receivers must not be empty");
-        receivers.forEach(receiver -> delayedPayoutTx.addOutput(Coin.valueOf(receiver.first), Address.fromString(params, receiver.second)));
+        receivers.forEach(receiver -> delayedPayoutTx.addOutput(Coin.valueOf(receiver.first),
+                Address.fromString(params, receiver.second)));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return delayedPayoutTx;

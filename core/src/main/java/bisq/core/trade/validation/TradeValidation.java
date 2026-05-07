@@ -20,6 +20,7 @@ package bisq.core.trade.validation;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
@@ -29,6 +30,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.TradeFeeFactory;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
@@ -41,6 +43,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
 import bisq.common.util.Hex;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -146,27 +149,27 @@ public class TradeValidation {
                 "mediator.getPubKeyRing() must not be null");
     }
 
-    public static int checkPeersBurningManSelectionHeight(int peersBurningManSelectionHeight,
-                                                          DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
-        checkArgument(peersBurningManSelectionHeight > 0,
-                "peersBurningManSelectionHeight must be positive");
+    public static int checkBurningManSelectionHeight(int burningManSelectionHeight,
+                                                     DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+        checkArgument(burningManSelectionHeight > 0,
+                "burningManSelectionHeight must be positive");
         checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
 
-        int myBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-        checkArgument(myBurningManSelectionHeight > 0,
-                "myBurningManSelectionHeight must be positive");
+        int expectedBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
+        checkArgument(expectedBurningManSelectionHeight > 0,
+                "expectedBurningManSelectionHeight must be positive");
 
-        if (peersBurningManSelectionHeight != myBurningManSelectionHeight) {
+        if (burningManSelectionHeight != expectedBurningManSelectionHeight) {
             // Allow SNAPSHOT_SELECTION_GRID_SIZE (10 blocks) as tolerance if traders had different heights.
-            int diff = Math.abs(peersBurningManSelectionHeight - myBurningManSelectionHeight);
+            int diff = Math.abs(burningManSelectionHeight - expectedBurningManSelectionHeight);
             checkArgument(diff == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
                     "If Burning Man selection heights are not the same they have to differ by " +
                             "exactly the snapshot grid size, otherwise we fail. " +
-                            "peersBurningManSelectionHeight=%s, myBurningManSelectionHeight=%s, diff=%s",
-                    peersBurningManSelectionHeight, myBurningManSelectionHeight, diff);
+                            "burningManSelectionHeight=%s, expectedBurningManSelectionHeight=%s, diff=%s",
+                    burningManSelectionHeight, expectedBurningManSelectionHeight, diff);
 
         }
-        return peersBurningManSelectionHeight;
+        return burningManSelectionHeight;
     }
 
 
@@ -357,6 +360,15 @@ public class TradeValidation {
         return makerRawTransactionInputs;
     }
 
+    public static List<RawTransactionInput> checkRawTransactionInputsAreNotMalleable(List<RawTransactionInput> rawTransactionInputs,
+                                                                                     TradeWalletService tradeWalletService) {
+        checkNotNull(rawTransactionInputs, "rawTransactionInputs must not be null");
+        checkNotNull(tradeWalletService, "tradeWalletService must not be null");
+        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WH),
+                "rawTransactionInputs must not be malleable");
+        return rawTransactionInputs;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Trade tx fee  (miner fee for taker fee tx, deposit tx and payout tx)
@@ -374,6 +386,10 @@ public class TradeValidation {
 
     public static long checkTradeTxFee(long tradeTxFee) {
         return checkIsPositive(tradeTxFee, "tradeTxFee");
+    }
+
+    public static long checkTradeTxFeeIsInTolerance(long tradeTxFee, FeeService feeService) {
+        return checkTradeTxFeeIsInTolerance(Coin.valueOf(tradeTxFee), feeService).getValue();
     }
 
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
@@ -474,6 +490,31 @@ public class TradeValidation {
 
 
     /* --------------------------------------------------------------------- */
+    // Delayed payout transaction
+    /* --------------------------------------------------------------------- */
+
+    public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
+        checkIsPositive(inputAmount, "inputAmount must be positive");
+        checkNotNull(trade, "trade must no be null");
+        Offer offer = trade.getOffer();
+        long tradeAmount = trade.getAmountAsLong();
+        long buyerDeposit = offer.getBuyerSecurityDeposit().getValue();
+        long sellerDeposit = offer.getSellerSecurityDeposit().getValue();
+        long tradeTxFee = trade.getTradeTxFeeAsLong();
+        long expectedAmount = tradeAmount +
+                buyerDeposit +
+                sellerDeposit +
+                tradeTxFee;
+        checkArgument(inputAmount == expectedAmount,
+                "inputAmount must match expectedAmount. " +
+                        "Trade amount: %s, buyer deposit: %s, seller deposit: %s, " +
+                        "trade fee: %s, expected amount: %s",
+                tradeAmount, buyerDeposit, sellerDeposit, tradeTxFee, expectedAmount);
+        return inputAmount;
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // Crypto
     /* --------------------------------------------------------------------- */
 
@@ -533,7 +574,7 @@ public class TradeValidation {
         checkMultiSigPubKey(request.getTakerMultiSigPubKey());
         checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
         PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
-        checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+        checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
         checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
@@ -578,7 +619,8 @@ public class TradeValidation {
         checkArgument(Arrays.equals(current, expected),
                 "current is not matching expected. " +
                         "current=%s, expected=%s",
-                Hex.encode(current), Hex.encode(expected));
+                Utilities.toTruncatedString(Hex.encode(current), 8),
+                Utilities.toTruncatedString(Hex.encode(expected), 8));
         return current;
     }
 }
