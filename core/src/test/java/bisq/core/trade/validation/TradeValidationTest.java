@@ -20,6 +20,7 @@ package bisq.core.trade.validation;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
@@ -858,6 +859,40 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkRawTransactionInputsAreNotMalleableAcceptsP2whInputs() {
+        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+        RawTransactionInput rawTransactionInput = rawTransactionInput(Coin.valueOf(10_000));
+        List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
+        when(tradeWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
+
+        assertSame(rawTransactionInputs,
+                TradeValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs, tradeWalletService));
+        verify(tradeWalletService).isP2WH(rawTransactionInput);
+    }
+
+    @Test
+    void checkRawTransactionInputsAreNotMalleableRejectsMalleableInputs() {
+        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+        RawTransactionInput rawTransactionInput = rawTransactionInput(Coin.valueOf(10_000));
+        List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
+        when(tradeWalletService.isP2WH(rawTransactionInput)).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs,
+                        tradeWalletService));
+    }
+
+    @Test
+    void checkRawTransactionInputsAreNotMalleableRejectsNullArguments() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(null,
+                        mock(TradeWalletService.class)));
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(List.of(rawTransactionInput(Coin.SATOSHI)),
+                        null));
+    }
+
+    @Test
     void checkTradeTxFeeAcceptsPositiveFees() {
         Coin txFee = Coin.valueOf(300);
 
@@ -1000,6 +1035,42 @@ public class TradeValidationTest {
     }
 
     @Test
+    void checkDelayedPayoutTxInputAmountAcceptsExpectedInputAmount() {
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+        long expectedInputAmount = 42_300;
+
+        assertEquals(expectedInputAmount,
+                TradeValidation.checkDelayedPayoutTxInputAmount(expectedInputAmount, trade));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputAmountRejectsUnexpectedInputAmount() {
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkDelayedPayoutTxInputAmount(42_299, trade));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputAmountRejectsZeroAndNegativeInputAmount() {
+        Offer offer = offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkDelayedPayoutTxInputAmount(0, trade));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeValidation.checkDelayedPayoutTxInputAmount(-1, trade));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputAmountRejectsNullTrade() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.checkDelayedPayoutTxInputAmount(1, null));
+    }
+
+    @Test
     void checkInputsForDepositTxRequestAcceptsValidRequest() throws CryptoException {
         InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
 
@@ -1101,9 +1172,15 @@ public class TradeValidationTest {
     }
 
     private static Trade trade(Offer offer, Coin tradeTxFee) {
+        return trade(offer, tradeTxFee, Coin.ZERO);
+    }
+
+    private static Trade trade(Offer offer, Coin tradeTxFee, Coin tradeAmount) {
         Trade trade = mock(Trade.class);
         when(trade.getOffer()).thenReturn(offer);
         when(trade.getTradeTxFee()).thenReturn(tradeTxFee);
+        when(trade.getTradeTxFeeAsLong()).thenReturn(tradeTxFee.value);
+        when(trade.getAmountAsLong()).thenReturn(tradeAmount.value);
         return trade;
     }
 
@@ -1286,10 +1363,8 @@ public class TradeValidationTest {
     }
 
     private static List<RawTransactionInput> rawTransactionInputs(BtcWalletService btcWalletService, Coin inputAmount) {
-        byte[] parentTransaction = new byte[]{1, 2, 3};
-        RawTransactionInput rawTransactionInput = new RawTransactionInput(0,
-                parentTransaction,
-                inputAmount.value);
+        RawTransactionInput rawTransactionInput = rawTransactionInput(inputAmount);
+        byte[] parentTransaction = rawTransactionInput.parentTransaction;
         Transaction transaction = new Transaction(MainNetParams.get());
         transaction.addOutput(inputAmount, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
 
@@ -1297,6 +1372,13 @@ public class TradeValidationTest {
         when(btcWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
 
         return List.of(rawTransactionInput);
+    }
+
+    private static RawTransactionInput rawTransactionInput(Coin inputAmount) {
+        byte[] parentTransaction = new byte[]{1, 2, 3};
+        return new RawTransactionInput(0,
+                parentTransaction,
+                inputAmount.value);
     }
 
     private static class InputsForDepositTxRequestValidationFixture {
