@@ -38,7 +38,6 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
-import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
 
@@ -73,12 +72,11 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
             Contract contract = checkNotNull(trade.getContract());
             PubKeyRing myPubKeyRing = processModel.getPubKeyRing();
 
-            PaymentAccountPayload myPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
-
+            PaymentAccountPayload myPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "Payment account payload cannot be null for trade: " + trade.getId());
             PaymentAccountPayload peersPaymentAccountPayload = message.getBuyerPaymentAccountPayload();
 
-            byte[] buyerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(peersPaymentAccountPayload);
-
+            byte[] buyerPaymentAccountPayloadHash = peersPaymentAccountPayload.getHashForContract();
             byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(myPubKeyRing);
             checkArgument(Arrays.equals(buyerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                     "Hash of payment account is invalid");
