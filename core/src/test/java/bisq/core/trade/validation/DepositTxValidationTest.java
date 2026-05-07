@@ -79,72 +79,6 @@ public class DepositTxValidationTest {
     private static final String MAKER_ROLE = "Maker";
     private static final String TAKER_ROLE = "Taker";
 
-
-
-
-    /* --------------------------------------------------------------------- */
-    // InputsForDepositTxRequest
-    /* --------------------------------------------------------------------- */
-
-
-    @Test
-    void checkInputsForDepositTxRequestAcceptsValidRequest() throws CryptoException {
-        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
-
-        assertSame(fixture.request, DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
-                fixture.offer,
-                fixture.user,
-                fixture.btcWalletService,
-                fixture.priceFeedService,
-                fixture.delayedPayoutTxReceiverService,
-                fixture.feeService));
-    }
-
-    @Test
-    void checkInputsForDepositTxRequestRejectsInvalidAccountAgeWitnessSignature() throws CryptoException {
-        InputsForDepositTxRequestValidationFixture fixture =
-                inputsForDepositTxRequestValidationFixture(new byte[]{1});
-
-        assertThrows(IllegalArgumentException.class, () -> DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
-                fixture.offer,
-                fixture.user,
-                fixture.btcWalletService,
-                fixture.priceFeedService,
-                fixture.delayedPayoutTxReceiverService,
-                fixture.feeService));
-    }
-
-    @Test
-    void checkInputsForDepositTxRequestRejectsTxFeeOutsideAllowedTolerance() throws CryptoException {
-        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
-        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), 10);
-
-        assertThrows(IllegalArgumentException.class, () -> DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
-                fixture.offer,
-                fixture.user,
-                fixture.btcWalletService,
-                fixture.priceFeedService,
-                fixture.delayedPayoutTxReceiverService,
-                feeService));
-    }
-
-    @Test
-    void checkInputsForDepositTxRequestRejectsUnexpectedTakerFee() throws CryptoException {
-        InputsForDepositTxRequestValidationFixture fixture =
-                inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(151));
-
-        assertThrows(IllegalArgumentException.class, () -> DepositTxValidation.checkInputsForDepositTxRequest(fixture.request,
-                fixture.offer,
-                fixture.user,
-                fixture.btcWalletService,
-                fixture.priceFeedService,
-                fixture.delayedPayoutTxReceiverService,
-                fixture.feeService));
-    }
-
-
-
-
     @Test
     void checkDepositTxMatchesIgnoringWitnessesAndScriptSigsAcceptsMatchingTxsAndReturnsDepositTx() {
         Transaction expectedDepositTx = depositTx(Coin.valueOf(10_000), BUYER_ADDRESS, 0);
@@ -546,10 +480,6 @@ public class DepositTxValidationTest {
     }
 
 
-
-
-
-
     static Transaction depositTx(Coin outputAmount, String addressString, long outpointIndex) {
         Transaction transaction = new Transaction(PARAMS);
         transaction.addInput(new TransactionInput(PARAMS,
@@ -642,21 +572,21 @@ public class DepositTxValidationTest {
     }
 
     static class InputsForDepositTxRequestValidationFixture {
-        private final InputsForDepositTxRequest request;
-        private final Offer offer;
-        private final User user;
-        private final BtcWalletService btcWalletService;
-        private final PriceFeedService priceFeedService;
-        private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
-        private final FeeService feeService;
+        final InputsForDepositTxRequest request;
+        final Offer offer;
+        final User user;
+        final BtcWalletService btcWalletService;
+        final PriceFeedService priceFeedService;
+        final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+        final FeeService feeService;
 
-        private InputsForDepositTxRequestValidationFixture(InputsForDepositTxRequest request,
-                                                           Offer offer,
-                                                           User user,
-                                                           BtcWalletService btcWalletService,
-                                                           PriceFeedService priceFeedService,
-                                                           DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
-                                                           FeeService feeService) {
+        InputsForDepositTxRequestValidationFixture(InputsForDepositTxRequest request,
+                                                   Offer offer,
+                                                   User user,
+                                                   BtcWalletService btcWalletService,
+                                                   PriceFeedService priceFeedService,
+                                                   DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                                   FeeService feeService) {
             this.request = request;
             this.offer = offer;
             this.user = user;
