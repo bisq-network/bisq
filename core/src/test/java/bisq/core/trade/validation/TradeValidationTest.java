@@ -17,6 +17,10 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
@@ -33,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 
 public class TradeValidationTest {
     static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
@@ -78,7 +83,6 @@ public class TradeValidationTest {
     void isTradeIdValidRejectsNullTradeMessage() {
         assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid("trade-id", null));
     }
-
 
 
     @Test
@@ -232,5 +236,45 @@ public class TradeValidationTest {
                 () -> TradeValidation.checkHashFromContract(new byte[0], new byte[]{1}));
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkHashFromContract(new byte[]{1}, new byte[0]));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingReturnsAcceptedMediatorPubKeyRing() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        PubKeyRing mediatorPubKeyRing = pubKeyRing(Sig.generateKeyPair());
+        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress,
+                TradeValidationTestUtils.mediator(mediatorNodeAddress, mediatorPubKeyRing));
+
+        assertSame(mediatorPubKeyRing, TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsNullMediatorNodeAddress() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(null, mock(User.class)));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsNullUser() {
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(new NodeAddress("mediator.onion", 9999), null));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsUnknownMediator() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, null);
+
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    @Test
+    void getCheckedMediatorPubKeyRingRejectsMediatorWithoutPubKeyRing() {
+        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
+        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, TradeValidationTestUtils.mediator(mediatorNodeAddress, null));
+
+        assertThrows(NullPointerException.class,
+                () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
     }
 }

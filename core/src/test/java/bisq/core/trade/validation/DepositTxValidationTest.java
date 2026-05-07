@@ -371,47 +371,6 @@ public class DepositTxValidationTest {
     }
 
     @Test
-    void getCheckedMediatorPubKeyRingReturnsAcceptedMediatorPubKeyRing() {
-        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
-        PubKeyRing mediatorPubKeyRing = pubKeyRing(Sig.generateKeyPair());
-        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress,
-                TradeValidationTestUtils.mediator(mediatorNodeAddress, mediatorPubKeyRing));
-
-        assertSame(mediatorPubKeyRing, DepositTxValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
-    }
-
-    @Test
-    void getCheckedMediatorPubKeyRingRejectsNullMediatorNodeAddress() {
-        assertThrows(NullPointerException.class,
-                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(null, mock(User.class)));
-    }
-
-    @Test
-    void getCheckedMediatorPubKeyRingRejectsNullUser() {
-        assertThrows(NullPointerException.class,
-                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(new NodeAddress("mediator.onion", 9999), null));
-    }
-
-    @Test
-    void getCheckedMediatorPubKeyRingRejectsUnknownMediator() {
-        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
-        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, null);
-
-        assertThrows(NullPointerException.class,
-                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
-    }
-
-    @Test
-    void getCheckedMediatorPubKeyRingRejectsMediatorWithoutPubKeyRing() {
-        NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
-        User user = TradeValidationTestUtils.userWithAcceptedMediator(mediatorNodeAddress, TradeValidationTestUtils.mediator(mediatorNodeAddress, null));
-
-        assertThrows(NullPointerException.class,
-                () -> DepositTxValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
-    }
-
-
-    @Test
     void acceptsExactExpectedInputAmountForP2WHInputs() {
         List<RawTransactionInput> rawTransactionInputs = Arrays.asList(
                 rawInput(parentTxWithP2WHOutput(40_000)),

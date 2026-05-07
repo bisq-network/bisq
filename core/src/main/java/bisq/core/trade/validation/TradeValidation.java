@@ -17,9 +17,14 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.protocol.TradeMessage;
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
 import bisq.common.util.Hex;
@@ -97,5 +102,14 @@ public final class TradeValidation {
                 Utilities.toTruncatedString(Hex.encode(current), 8),
                 Utilities.toTruncatedString(Hex.encode(expected), 8));
         return current;
+    }
+
+    public static PubKeyRing getCheckedMediatorPubKeyRing(NodeAddress mediatorNodeAddress, User user) {
+        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
+        checkNotNull(user, "user must not be null");
+        Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
+                "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
+        return checkNotNull(mediator.getPubKeyRing(),
+                "mediator.getPubKeyRing() must not be null");
     }
 }
