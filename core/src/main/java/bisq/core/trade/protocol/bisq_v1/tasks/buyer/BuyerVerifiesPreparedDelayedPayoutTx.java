@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
@@ -33,6 +34,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkRawTransactionInputsAreNotMalleable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -82,13 +84,13 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
                 throw new IllegalArgumentException(errorMsg);
             }
 
-            // If the deposit tx is non-malleable, we already know its final ID, so should check that now
-            // before sending any further data to the seller, to provide extra protection for the buyer.
-            if (isDepositTxNonMalleable()) {
-                TradeDataValidation.validatePayoutTxInput(preparedDepositTx, peersPreparedDelayedPayoutTx);
-            } else {
-                log.info("Deposit tx is malleable, so we skip peersPreparedDelayedPayoutTx input validation.");
-            }
+            List<RawTransactionInput> myRawTransactionInputs = processModel.getRawTransactionInputs();
+            checkRawTransactionInputsAreNotMalleable(myRawTransactionInputs, tradeWalletService);
+
+            List<RawTransactionInput> peersRawTransactionInputs = processModel.getTradePeer().getRawTransactionInputs();
+            checkRawTransactionInputsAreNotMalleable(peersRawTransactionInputs, tradeWalletService);
+
+            TradeDataValidation.validatePayoutTxInput(preparedDepositTx, peersPreparedDelayedPayoutTx);
 
             complete();
         } catch (TradeDataValidation.ValidationException e) {
@@ -96,13 +98,5 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private boolean isDepositTxNonMalleable() {
-        var buyerInputs = checkNotNull(processModel.getRawTransactionInputs());
-        var sellerInputs = checkNotNull(processModel.getTradePeer().getRawTransactionInputs());
-
-        return buyerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH) &&
-                sellerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH);
     }
 }
