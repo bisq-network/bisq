@@ -258,13 +258,27 @@ public final class DepositTxValidation {
     }
 
     /**
+     * Throws unless the tx is version 1. Bisq deposit txs are constructed by bitcoinj at the
+     * default version (1) and have no need for v2 semantics (no relative-locktime / BIP68
+     * use). The version field is part of the serialized tx and therefore part of the txid,
+     * so a peer-supplied tx at any other version would still hash differently than what we
+     * expect. Rejecting non-v1 keeps the funding path canonical and removes a degree of
+     * freedom a peer could otherwise wiggle without us noticing.
+     */
+    static void assertVersionIsOne(Transaction tx) throws InvalidTxException {
+        if (tx.getVersion() != 1) {
+            throw new InvalidTxException("Transaction must be version 1, got " + tx.getVersion());
+        }
+    }
+
+    /**
      * Throws if the tx has a non-zero lockTime. Strictly, lockTime is ignored when every
      * input has a final sequence (0xffffffff), so a non-zero lockTime alone does not always
      * delay mining. We still require lockTime == 0 as a canonical-form / policy invariant:
      * any non-zero value is non-canonical for this path and a peer setting one would be
      * either buggy or trying to deviate from the protocol-specified shape.
      */
-    public static void assertLockTimeIsZero(Transaction tx) throws InvalidTxException {
+    static void assertLockTimeIsZero(Transaction tx) throws InvalidTxException {
         if (tx.getLockTime() != 0) {
             throw new InvalidTxException("Transaction must have lockTime == 0, got " + tx.getLockTime());
         }
@@ -276,7 +290,7 @@ public final class DepositTxValidation {
      * replace the broadcast tx with a different one before it confirms — so the txid that
      * lands on chain may not be the txid we signed for in any downstream binding.
      */
-    public static void assertInputSequencesDisableRbf(Transaction tx) throws InvalidTxException {
+    static void assertInputSequencesDisableRbf(Transaction tx) throws InvalidTxException {
         for (TransactionInput txIn : tx.getInputs()) {
             long seq = txIn.getSequenceNumber();
             if (seq != TransactionInput.NO_SEQUENCE - 1 && seq != TransactionInput.NO_SEQUENCE) {
@@ -285,19 +299,6 @@ public final class DepositTxValidation {
         }
     }
 
-    /**
-     * Throws unless the tx is version 1. Bisq deposit txs are constructed by bitcoinj at the
-     * default version (1) and have no need for v2 semantics (no relative-locktime / BIP68
-     * use). The version field is part of the serialized tx and therefore part of the txid,
-     * so a peer-supplied tx at any other version would still hash differently than what we
-     * expect. Rejecting non-v1 keeps the funding path canonical and removes a degree of
-     * freedom a peer could otherwise wiggle without us noticing.
-     */
-    public static void assertVersionIsOne(Transaction tx) throws InvalidTxException {
-        if (tx.getVersion() != 1) {
-            throw new InvalidTxException("Transaction must be version 1, got " + tx.getVersion());
-        }
-    }
 
     /**
      * Throws unless every supplied funding input refers to a P2WPKH UTXO. Two reasons:
@@ -308,21 +309,21 @@ public final class DepositTxValidation {
      *     peer-controlled script semantics and unpredictable vsize. The Bisq trade-protocol
      *     funding path is canonically P2WPKH; anything else is non-standard for this path.
      */
-    public static void assertAllInputsAreP2WPKH(List<RawTransactionInput> inputs,
+    static void assertAllInputsAreP2WPKH(List<RawTransactionInput> inputs,
                                                 NetworkParameters params) throws InvalidTxException {
         if (inputs == null) {
             throw new InvalidTxException("Funding inputs list must not be null");
         }
-        for (int listPos = 0; listPos < inputs.size(); listPos++) {
-            RawTransactionInput input = inputs.get(listPos);
+        for (int i = 0; i < inputs.size(); i++) {
+            RawTransactionInput input = inputs.get(i);
             if (input == null) {
-                throw new InvalidTxException("Funding input at position " + listPos + " must not be null");
+                throw new InvalidTxException("Funding input at position " + i + " must not be null");
             }
             if (!WalletUtils.isP2WPKH(input, params)) {
                 // Avoid re-parsing parentTransaction here — it may be malformed (which is
                 // exactly why isP2WPKH returned false). Surface only the fields we already
                 // hold on the RawTransactionInput.
-                throw new InvalidTxException("Funding input at position " + listPos +
+                throw new InvalidTxException("Funding input at position " + i +
                         " (parent vout=" + input.index + ")" +
                         " is not native segwit P2WPKH (bech32: bc1q on mainnet, tb1q on testnet, bcrt1q on regtest). " +
                         "Bisq v1 trades require P2WPKH UTXOs; legacy P2PKH, P2SH-wrapped, and P2WSH inputs are rejected. " +
