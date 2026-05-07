@@ -599,7 +599,7 @@ public class TradeValidationTest {
         String signatureBase64 = Base64.encode(signature);
 
         assertEquals(signatureBase64, TradeValidation.checkBase64Signature(signatureBase64));
-        assertArrayEquals(signature, TradeValidation.toEncodedSignature(signatureBase64));
+        assertArrayEquals(signature, TradeValidation.toDecodedSignature(signatureBase64));
     }
 
     @Test
