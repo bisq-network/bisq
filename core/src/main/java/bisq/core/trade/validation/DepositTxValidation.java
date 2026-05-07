@@ -21,10 +21,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
-import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferValidation;
-import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -54,7 +51,6 @@ import java.util.List;
 import static bisq.core.trade.validation.TradeValidation.checkDSASignature;
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
-import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -69,38 +65,10 @@ public final class DepositTxValidation {
     // TradeAmount
     /* --------------------------------------------------------------------- */
 
-    public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
-        checkIsPositive(tradeAmount, "tradeAmount");
-        checkIsPositive(offerMinAmount, "offerMinAmount");
-        checkIsPositive(offerMaxAmount, "offerMaxAmount");
-
-        checkArgument(!tradeAmount.isLessThan(offerMinAmount),
-                "Trade amount must not be less than minimum offer amount. tradeAmount=%s, offerMinAmount=%s",
-                tradeAmount.toFriendlyString(), offerMinAmount.toFriendlyString());
-        checkArgument(!tradeAmount.isGreaterThan(offerMaxAmount),
-                "Trade amount must not be higher than maximum offer amount. tradeAmount=%s, offerMaxAmount=%s",
-                tradeAmount.toFriendlyString(), offerMaxAmount.toFriendlyString());
-        return tradeAmount;
-    }
-
 
     /* --------------------------------------------------------------------- */
     // TradePrice
     /* --------------------------------------------------------------------- */
-
-    public static long checkTakersTradePrice(long takersTradePrice,
-                                             PriceFeedService priceFeedService,
-                                             Offer offer) {
-        try {
-            offer.verifyTakersTradePrice(takersTradePrice);
-            // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
-            // high volatility environments
-            OfferValidation.verifyPriceInBounds(priceFeedService, offer, MAX_TRADE_PRICE_DEVIATION);
-            return takersTradePrice;
-        } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
 
     /* --------------------------------------------------------------------- */
@@ -136,7 +104,7 @@ public final class DepositTxValidation {
         checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
         checkNotNull(feeService, "feeService must not be null");
 
-        Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
+        Coin tradeAmount = TradeAmountValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
         Coin tradeTxFee = MinerFeeValidation.checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
         checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                 btcWalletService,
@@ -156,7 +124,7 @@ public final class DepositTxValidation {
         checkPeersDate(request.getCurrentDate());
         NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
         getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
-        checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
+        TradePriceValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
         TradeFeeValidation.checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
         return request;
     }

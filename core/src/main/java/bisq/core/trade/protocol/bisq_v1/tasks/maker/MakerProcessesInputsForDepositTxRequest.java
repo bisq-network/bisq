@@ -28,6 +28,8 @@ import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.TradeAmountValidation;
+import bisq.core.trade.validation.TradePriceValidation;
 import bisq.core.trade.validation.TransactionValidation;
 import bisq.core.user.User;
 
@@ -74,7 +76,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setHashOfPaymentAccountPayload(request.getHashOfTakersPaymentAccountPayload());
             tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId());
 
-            Coin tradeAmount = DepositTxValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
+            Coin tradeAmount = TradeAmountValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
             trade.setAmount(tradeAmount);
 
             List<RawTransactionInput> takerRawTransactionInputs = DepositTxValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
@@ -125,7 +127,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
             trade.setMediatorPubKeyRing(mediatorPubKeyRing);
 
-            long takersTradePrice = DepositTxValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
+            long takersTradePrice = TradePriceValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
