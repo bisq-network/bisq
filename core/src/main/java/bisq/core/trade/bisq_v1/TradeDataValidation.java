@@ -47,14 +47,14 @@ public class TradeDataValidation {
                                                BtcWalletService btcWalletService)
             throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validateDelayedPayoutTx(trade,
-                delayedPayoutTx,
+        validateDelayedPayoutTx(delayedPayoutTx,
+                trade,
                 btcWalletService,
                 null);
     }
 
-    public static void validateDelayedPayoutTx(Trade trade,
-                                               Transaction delayedPayoutTx,
+    public static void validateDelayedPayoutTx(Transaction delayedPayoutTx,
+                                               Trade trade,
                                                BtcWalletService btcWalletService,
                                                @Nullable Consumer<String> addressConsumer)
             throws DisputeValidation.AddressException, MissingTxException,
