@@ -83,11 +83,7 @@ public class BurningManCandidate {
     }
 
     public Optional<String> getReceiverAddress() {
-        return getReceiverAddress(true);
-    }
-
-    public Optional<String> getReceiverAddress(boolean isBugfix6699Activated) {
-        return isBugfix6699Activated ? receiverAddress : mostRecentAddress;
+        return receiverAddress;
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
