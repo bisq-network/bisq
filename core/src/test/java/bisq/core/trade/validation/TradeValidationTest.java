@@ -733,52 +733,52 @@ public class TradeValidationTest {
     }
 
     @Test
-    void checkPeersBurningManSelectionHeightAcceptsSameHeight() {
+    void checkBurningManSelectionHeightAcceptsSameHeight() {
         assertEquals(130,
                 DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 139, GRID_SIZE, 0));
 
         assertEquals(130,
-                TradeValidation.checkPeersBurningManSelectionHeight(130, delayedPayoutTxReceiverService(130)));
+                TradeValidation.checkBurningManSelectionHeight(130, delayedPayoutTxReceiverService(130)));
     }
 
     @Test
-    void checkPeersBurningManSelectionHeightAcceptsMakerOneGridAhead() {
+    void checkBurningManSelectionHeightAcceptsMakerOneGridAhead() {
         assertEquals(120,
                 DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 134, GRID_SIZE, 0));
         assertEquals(130,
                 DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 135, GRID_SIZE, 0));
 
         assertEquals(120,
-                TradeValidation.checkPeersBurningManSelectionHeight(120, delayedPayoutTxReceiverService(130)));
+                TradeValidation.checkBurningManSelectionHeight(120, delayedPayoutTxReceiverService(130)));
     }
 
     @Test
-    void checkPeersBurningManSelectionHeightAcceptsTakerOneGridAhead() {
+    void checkBurningManSelectionHeightAcceptsTakerOneGridAhead() {
         assertEquals(120,
                 DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 134, GRID_SIZE, 0));
         assertEquals(130,
                 DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 135, GRID_SIZE, 0));
 
         assertEquals(130,
-                TradeValidation.checkPeersBurningManSelectionHeight(130, delayedPayoutTxReceiverService(120)));
+                TradeValidation.checkBurningManSelectionHeight(130, delayedPayoutTxReceiverService(120)));
     }
 
     @Test
-    void checkPeersBurningManSelectionHeightRejectsPeerHeightZero() {
+    void checkBurningManSelectionHeightRejectsPeerHeightZero() {
         assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkPeersBurningManSelectionHeight(0, delayedPayoutTxReceiverService(10)));
+                () -> TradeValidation.checkBurningManSelectionHeight(0, delayedPayoutTxReceiverService(10)));
     }
 
     @Test
-    void checkPeersBurningManSelectionHeightRejectsHeightsMoreThanOneGridApart() {
+    void checkBurningManSelectionHeightRejectsHeightsMoreThanOneGridApart() {
         assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkPeersBurningManSelectionHeight(120, delayedPayoutTxReceiverService(140)));
+                () -> TradeValidation.checkBurningManSelectionHeight(120, delayedPayoutTxReceiverService(140)));
     }
 
     @Test
-    void checkPeersBurningManSelectionHeightRejectsLocalHeightZero() {
+    void checkBurningManSelectionHeightRejectsLocalHeightZero() {
         assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkPeersBurningManSelectionHeight(10, delayedPayoutTxReceiverService(0)));
+                () -> TradeValidation.checkBurningManSelectionHeight(10, delayedPayoutTxReceiverService(0)));
     }
 
     @Test

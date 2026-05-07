@@ -102,7 +102,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.trade.validation.TradeValidation.checkPeersBurningManSelectionHeight;
+import static bisq.core.trade.validation.TradeValidation.checkBurningManSelectionHeight;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -876,7 +876,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             }
 
             try {
-                checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+                checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
             } catch (Throwable t) {
                 errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
                 log.warn(errorMessage);

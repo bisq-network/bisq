@@ -148,27 +148,27 @@ public class TradeValidation {
                 "mediator.getPubKeyRing() must not be null");
     }
 
-    public static int checkPeersBurningManSelectionHeight(int peersBurningManSelectionHeight,
-                                                          DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
-        checkArgument(peersBurningManSelectionHeight > 0,
-                "peersBurningManSelectionHeight must be positive");
+    public static int checkBurningManSelectionHeight(int burningManSelectionHeight,
+                                                     DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+        checkArgument(burningManSelectionHeight > 0,
+                "burningManSelectionHeight must be positive");
         checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
 
-        int myBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-        checkArgument(myBurningManSelectionHeight > 0,
-                "myBurningManSelectionHeight must be positive");
+        int expectedBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
+        checkArgument(expectedBurningManSelectionHeight > 0,
+                "expectedBurningManSelectionHeight must be positive");
 
-        if (peersBurningManSelectionHeight != myBurningManSelectionHeight) {
+        if (burningManSelectionHeight != expectedBurningManSelectionHeight) {
             // Allow SNAPSHOT_SELECTION_GRID_SIZE (10 blocks) as tolerance if traders had different heights.
-            int diff = Math.abs(peersBurningManSelectionHeight - myBurningManSelectionHeight);
+            int diff = Math.abs(burningManSelectionHeight - expectedBurningManSelectionHeight);
             checkArgument(diff == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
                     "If Burning Man selection heights are not the same they have to differ by " +
                             "exactly the snapshot grid size, otherwise we fail. " +
-                            "peersBurningManSelectionHeight=%s, myBurningManSelectionHeight=%s, diff=%s",
-                    peersBurningManSelectionHeight, myBurningManSelectionHeight, diff);
+                            "burningManSelectionHeight=%s, expectedBurningManSelectionHeight=%s, diff=%s",
+                    burningManSelectionHeight, expectedBurningManSelectionHeight, diff);
 
         }
-        return peersBurningManSelectionHeight;
+        return burningManSelectionHeight;
     }
 
 
@@ -544,7 +544,7 @@ public class TradeValidation {
         checkMultiSigPubKey(request.getTakerMultiSigPubKey());
         checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
         PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
-        checkPeersBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+        checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
         checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
