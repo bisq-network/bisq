@@ -240,7 +240,7 @@ public final class DepositTxValidation {
                     .add(takersDoubleMinerFee);
         }
 
-        TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+        validatePeersInputs(takerRawTransactionInputs,
                 expectedTakersInputAmount,
                 btcWalletService,
                 "Taker");
@@ -266,7 +266,7 @@ public final class DepositTxValidation {
                     .add(offer.getAmount());
         }
 
-        TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
+        validatePeersInputs(makerRawTransactionInputs,
                 expectedMakersInputAmount,
                 btcWalletService,
                 "Maker");
@@ -289,5 +289,35 @@ public final class DepositTxValidation {
                 "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
         return checkNotNull(mediator.getPubKeyRing(),
                 "mediator.getPubKeyRing() must not be null");
+    }
+
+    public static void validatePeersInputs(List<RawTransactionInput> rawTransactionInputs,
+                                           Coin expectedInputAmount,
+                                           BtcWalletService walletService,
+                                           String peerRole) {
+        checkNotNull(rawTransactionInputs, "%s raw transaction inputs must not be null", peerRole);
+        checkArgument(!rawTransactionInputs.isEmpty(), "%s raw transaction inputs must not be empty", peerRole);
+        checkNotNull(walletService, "%s wallet service must not be null", peerRole);
+        checkNotNull(expectedInputAmount, "%s expected input value must not be null", peerRole);
+        checkArgument(expectedInputAmount.isPositive(), "%s expected input value must be positive", peerRole);
+
+        long inputValueFromTxInputs = getValidatedInputValue(rawTransactionInputs, walletService, peerRole);
+        checkArgument(inputValueFromTxInputs == expectedInputAmount.value,
+                "%s input value mismatch. inputValueFromTxInputs=%s, expectedInputAmount=%s",
+                peerRole, inputValueFromTxInputs, expectedInputAmount.value);
+    }
+
+    private static long getValidatedInputValue(List<RawTransactionInput> rawTransactionInputs,
+                                               BtcWalletService walletService,
+                                               String peerRole) {
+        long inputValue = 0;
+        for (RawTransactionInput input : rawTransactionInputs) {
+            checkNotNull(input, "%s raw transaction input must not be null", peerRole);
+            checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
+            input.validate(walletService);
+            checkArgument(walletService.isP2WH(input), "%s input must be P2WH", peerRole);
+            inputValue = Math.addExact(inputValue, input.value);
+        }
+        return inputValue;
     }
 }

@@ -24,8 +24,8 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
-import bisq.core.trade.validation.TradePeerTxInputValidator;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DepositTxValidation;
 
 import bisq.common.crypto.Hash;
 import bisq.common.taskrunner.TaskRunner;
@@ -82,7 +82,7 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             Coin expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
                     .add(trade.getTradeTxFee().multiply(2));
-            TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+            DepositTxValidation.validatePeersInputs(takerRawTransactionInputs,
                     expectedTakersInputAmount,
                     walletService,
                     "Taker");
