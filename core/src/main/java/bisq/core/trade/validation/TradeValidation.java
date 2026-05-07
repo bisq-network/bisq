@@ -20,6 +20,7 @@ package bisq.core.trade.validation;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
@@ -356,6 +357,15 @@ public class TradeValidation {
                 btcWalletService,
                 "Maker");
         return makerRawTransactionInputs;
+    }
+
+    public static List<RawTransactionInput> checkRawTransactionInputsAreNotMalleable(List<RawTransactionInput> rawTransactionInputs,
+                                                                                     TradeWalletService tradeWalletService) {
+        checkNotNull(rawTransactionInputs, "rawTransactionInputs must not be null");
+        checkNotNull(tradeWalletService, "tradeWalletService must not be null");
+        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WH),
+                "rawTransactionInputs must not be malleable");
+        return rawTransactionInputs;
     }
 
 
