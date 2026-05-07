@@ -40,6 +40,7 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
+import bisq.common.util.Hex;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -503,7 +504,6 @@ public class TradeValidation {
     }
 
 
-
     /* --------------------------------------------------------------------- */
     // InputsForDepositTxRequest
     /* --------------------------------------------------------------------- */
@@ -570,5 +570,15 @@ public class TradeValidation {
                 factor);
 
         return actualValue;
+    }
+
+    public static byte[] checkByteArrayWithExpected(byte[] current, byte[] expected) {
+        checkNonEmptyBytes(current, "current");
+        checkNonEmptyBytes(expected, "expected");
+        checkArgument(Arrays.equals(current, expected),
+                "current is not matching expected. " +
+                        "current=%s, expected=%s",
+                Hex.encode(current), Hex.encode(expected));
+        return current;
     }
 }
