@@ -88,7 +88,7 @@ public final class TradeValidation {
         }
     }
 
-    public static byte[] checkByteArrayWithExpected(byte[] current, byte[] expected) {
+    public static byte[] checkHashFromContract(byte[] current, byte[] expected) {
         checkNonEmptyBytes(current, "current");
         checkNonEmptyBytes(expected, "expected");
         checkArgument(Arrays.equals(current, expected),

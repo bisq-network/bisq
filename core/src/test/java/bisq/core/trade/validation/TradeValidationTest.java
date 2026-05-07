@@ -211,13 +211,13 @@ public class TradeValidationTest {
     void checkByteArrayWithExpectedAcceptsMatchingByteArrays() {
         byte[] current = new byte[]{1, 2, 3};
 
-        assertSame(current, TradeValidation.checkByteArrayWithExpected(current, new byte[]{1, 2, 3}));
+        assertSame(current, TradeValidation.checkHashFromContract(current, new byte[]{1, 2, 3}));
     }
 
     @Test
     void checkByteArrayWithExpectedRejectsMismatchingByteArrays() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkByteArrayWithExpected(new byte[]{1, 2, 3}, new byte[]{1, 2, 4}));
+                () -> TradeValidation.checkHashFromContract(new byte[]{1, 2, 3}, new byte[]{1, 2, 4}));
 
         assertEquals("current is not matching expected. current=010203, expected=010204", exception.getMessage());
     }
@@ -225,12 +225,12 @@ public class TradeValidationTest {
     @Test
     void checkByteArrayWithExpectedRejectsNullAndEmptyByteArrays() {
         assertThrows(NullPointerException.class,
-                () -> TradeValidation.checkByteArrayWithExpected(null, new byte[]{1}));
+                () -> TradeValidation.checkHashFromContract(null, new byte[]{1}));
         assertThrows(NullPointerException.class,
-                () -> TradeValidation.checkByteArrayWithExpected(new byte[]{1}, null));
+                () -> TradeValidation.checkHashFromContract(new byte[]{1}, null));
         assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkByteArrayWithExpected(new byte[0], new byte[]{1}));
+                () -> TradeValidation.checkHashFromContract(new byte[0], new byte[]{1}));
         assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkByteArrayWithExpected(new byte[]{1}, new byte[0]));
+                () -> TradeValidation.checkHashFromContract(new byte[]{1}, new byte[0]));
     }
 }
