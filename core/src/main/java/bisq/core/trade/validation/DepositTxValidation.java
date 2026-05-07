@@ -51,6 +51,8 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
+import static bisq.core.trade.validation.TradeValidation.checkDSASignature;
+import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
@@ -58,6 +60,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class DepositTxValidation {
+    public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
+
     private DepositTxValidation() {
     }
 
@@ -91,7 +95,7 @@ public final class DepositTxValidation {
             offer.verifyTakersTradePrice(takersTradePrice);
             // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
             // high volatility environments
-            OfferValidation.verifyPriceInBounds(priceFeedService, offer, TradeValidation.MAX_TRADE_PRICE_DEVIATION);
+            OfferValidation.verifyPriceInBounds(priceFeedService, offer, MAX_TRADE_PRICE_DEVIATION);
             return takersTradePrice;
         } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
             throw new RuntimeException(e);
@@ -146,17 +150,16 @@ public final class DepositTxValidation {
         TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
-        TradeValidation.checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+        checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
                 accountAgeWitnessNonce,
                 takerSignatureKey);
-        TradeValidation.checkPeersDate(request.getCurrentDate());
+        checkPeersDate(request.getCurrentDate());
         NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
         getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
         checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
         TradeFeeValidation.checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
         return request;
     }
-
 
     public static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
                                                                                   Transaction expectedDepositTx,

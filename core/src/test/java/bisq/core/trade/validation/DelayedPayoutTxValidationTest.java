@@ -138,8 +138,8 @@ public class DelayedPayoutTxValidationTest {
                 true,
                 btcWalletService,
                 true));
-        assertEquals(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
-                DelayedPayoutTxValidation.checkLockTime(expectedLockTime + TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+        assertEquals(expectedLockTime + DelayedPayoutTxValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+                DelayedPayoutTxValidation.checkLockTime(expectedLockTime + DelayedPayoutTxValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
                         true,
                         btcWalletService,
                         true));
@@ -150,7 +150,7 @@ public class DelayedPayoutTxValidationTest {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
         long invalidLockTime = 1_000 + Restrictions.getLockTime(false) +
-                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
+                DelayedPayoutTxValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
 
         assertThrows(IllegalArgumentException.class,
                 () -> DelayedPayoutTxValidation.checkLockTime(invalidLockTime, false, btcWalletService, true));
@@ -161,7 +161,7 @@ public class DelayedPayoutTxValidationTest {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         when(btcWalletService.getBestChainHeight()).thenReturn(1_000);
         long lockTimeOutsideMainnetTolerance = 1_000 + Restrictions.getLockTime(false) +
-                TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
+                DelayedPayoutTxValidation.MAX_LOCKTIME_BLOCK_DEVIATION + 1;
 
         assertEquals(lockTimeOutsideMainnetTolerance,
                 DelayedPayoutTxValidation.checkLockTime(lockTimeOutsideMainnetTolerance, false, btcWalletService, false));

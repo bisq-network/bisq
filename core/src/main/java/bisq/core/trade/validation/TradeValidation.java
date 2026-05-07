@@ -38,11 +38,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class TradeValidation {
     // We have to account for clock drift. We use mostly 2 hours as max drift, but we prefer to be more tolerant here
     public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);
-    public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3; // Peers latest block height must inside a +/- 3 blocks tolerance to ours.
-    public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
-    public static final double MAX_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
-    public static final double MAX_MAKER_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
-    public static final double MAX_TAKER_FEE_DEVIATION_FACTOR = 1.5; // Max change by factor 1.5 (expected / 1.5 or expected * 1.5)
 
     private TradeValidation() {
     }

@@ -26,6 +26,9 @@ import com.google.common.annotations.VisibleForTesting;
 import static bisq.core.util.Validator.checkIsPositive;
 
 public final class TradeFeeValidation {
+    public static final double MAX_MAKER_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
+    public static final double MAX_TAKER_FEE_DEVIATION_FACTOR = 1.5; // Max change by factor 1.5 (expected / 1.5 or expected * 1.5)
+
     private TradeFeeValidation() {
     }
 
@@ -61,7 +64,7 @@ public final class TradeFeeValidation {
     // in trades.
     @VisibleForTesting
     static long checkTakerFeeInTolerance(long fee, long expectedFee) {
-        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, TradeValidation.MAX_TAKER_FEE_DEVIATION_FACTOR);
+        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, MAX_TAKER_FEE_DEVIATION_FACTOR);
     }
 
 
@@ -95,6 +98,6 @@ public final class TradeFeeValidation {
     // in trades.
     @VisibleForTesting
     static long checkMakerFeeInTolerance(long fee, long expectedFee) {
-        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, TradeValidation.MAX_MAKER_FEE_DEVIATION_FACTOR);
+        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, MAX_MAKER_FEE_DEVIATION_FACTOR);
     }
 }

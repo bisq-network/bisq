@@ -32,6 +32,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class DelayedPayoutTxValidation {
+    public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3; // Peers latest block height must inside a +/- 3 blocks tolerance to ours.
+
     private DelayedPayoutTxValidation() {
     }
 
@@ -95,7 +97,7 @@ public final class DelayedPayoutTxValidation {
             int expectedUnlockHeight = btcWalletService.getBestChainHeight() + Restrictions.getLockTime(isAltcoin);
             // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in
             // case a new block was just found
-            checkArgument(Math.abs(lockTime - expectedUnlockHeight) <= TradeValidation.MAX_LOCKTIME_BLOCK_DEVIATION,
+            checkArgument(Math.abs(lockTime - expectedUnlockHeight) <= MAX_LOCKTIME_BLOCK_DEVIATION,
                     "Lock time of maker is more than 3 blocks different to the lockTime I " +
                             "calculated. Makers lockTime= " + lockTime + ", expectedUnlockHeight=" + expectedUnlockHeight);
         }

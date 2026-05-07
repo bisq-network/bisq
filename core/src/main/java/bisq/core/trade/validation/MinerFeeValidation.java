@@ -29,6 +29,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class MinerFeeValidation {
+    public static final double MAX_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
 
     // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
     // unconfirmable (locking maker funds); a huge value can drain miner fees from the maker.
@@ -43,7 +44,7 @@ public final class MinerFeeValidation {
 
     @VisibleForTesting
     static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
-        return TradeValidationUtils.checkValueInTolerance(actualValue, expectedValue, TradeValidation.MAX_FEE_DEVIATION_FACTOR);
+        return TradeValidationUtils.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
     }
 
     public static Coin checkTradeTxFee(Coin tradeTxFee) {
