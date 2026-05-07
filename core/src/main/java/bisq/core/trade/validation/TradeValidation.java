@@ -364,8 +364,8 @@ public class TradeValidation {
                                                                                      TradeWalletService tradeWalletService) {
         checkNotNull(rawTransactionInputs, "rawTransactionInputs must not be null");
         checkNotNull(tradeWalletService, "tradeWalletService must not be null");
-        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WH),
-                "rawTransactionInputs must not be malleable");
+        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WPKH),
+                "rawTransactionInputs must be canonical funding inputs (P2WPKH only)");
         return rawTransactionInputs;
     }
 

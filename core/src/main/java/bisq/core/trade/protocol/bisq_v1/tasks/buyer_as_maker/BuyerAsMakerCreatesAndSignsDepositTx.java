@@ -71,8 +71,6 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     .add(tradeAmount);
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
-            checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
-                    "all takerRawTransactionInputs must be P2WH");
             Coin expectedTakersInputAmount = offer.getSellerSecurityDeposit()
                     .add(tradeAmount)
                     .add(trade.getTradeTxFee().multiply(2));

@@ -859,15 +859,15 @@ public class TradeValidationTest {
     }
 
     @Test
-    void checkRawTransactionInputsAreNotMalleableAcceptsP2whInputs() {
+    void checkRawTransactionInputsAreNotMalleableAcceptsP2WPKHInputs() {
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
         RawTransactionInput rawTransactionInput = rawTransactionInput(Coin.valueOf(10_000));
         List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
-        when(tradeWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
+        when(tradeWalletService.isP2WPKH(rawTransactionInput)).thenReturn(true);
 
         assertSame(rawTransactionInputs,
                 TradeValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs, tradeWalletService));
-        verify(tradeWalletService).isP2WH(rawTransactionInput);
+        verify(tradeWalletService).isP2WPKH(rawTransactionInput);
     }
 
     @Test
@@ -875,7 +875,7 @@ public class TradeValidationTest {
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
         RawTransactionInput rawTransactionInput = rawTransactionInput(Coin.valueOf(10_000));
         List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
-        when(tradeWalletService.isP2WH(rawTransactionInput)).thenReturn(false);
+        when(tradeWalletService.isP2WPKH(rawTransactionInput)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs,
@@ -1391,7 +1391,7 @@ public class TradeValidationTest {
         transaction.addOutput(inputAmount, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
 
         when(btcWalletService.getTxFromSerializedTx(parentTransaction)).thenReturn(transaction);
-        when(btcWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
+        when(btcWalletService.isP2WPKH(rawTransactionInput)).thenReturn(true);
 
         return List.of(rawTransactionInput);
     }

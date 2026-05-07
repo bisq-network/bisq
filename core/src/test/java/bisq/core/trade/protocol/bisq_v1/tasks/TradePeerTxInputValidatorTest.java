@@ -63,15 +63,15 @@ public class TradePeerTxInputValidatorTest {
         walletService = mock(BtcWalletService.class);
         when(walletService.getTxFromSerializedTx(any(byte[].class)))
                 .thenAnswer(invocation -> new Transaction(PARAMS, invocation.getArgument(0)));
-        when(walletService.isP2WH(any(RawTransactionInput.class)))
-                .thenAnswer(invocation -> WalletUtils.isP2WH(invocation.getArgument(0), PARAMS));
+        when(walletService.isP2WPKH(any(RawTransactionInput.class)))
+                .thenAnswer(invocation -> WalletUtils.isP2WPKH(invocation.getArgument(0), PARAMS));
     }
 
     @Test
-    void acceptsExactExpectedInputAmountForP2WHInputs() {
+    void acceptsExactExpectedInputAmountForP2WPKHInputs() {
         List<RawTransactionInput> rawTransactionInputs = Arrays.asList(
-                rawInput(parentTxWithP2WHOutput(40_000)),
-                rawInput(parentTxWithP2WHOutput(60_000)));
+                rawInput(parentTxWithP2WPKHOutput(40_000)),
+                rawInput(parentTxWithP2WPKHOutput(60_000)));
 
         assertDoesNotThrow(() -> TradePeerTxInputValidator.validatePeersInputs(
                 rawTransactionInputs,
@@ -83,7 +83,7 @@ public class TradePeerTxInputValidatorTest {
     @Test
     void rejectsInputAmountMismatch() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
-                rawInput(parentTxWithP2WHOutput(100_000)));
+                rawInput(parentTxWithP2WPKHOutput(100_000)));
 
         assertThrows(IllegalArgumentException.class,
                 () -> TradePeerTxInputValidator.validatePeersInputs(
@@ -109,7 +109,7 @@ public class TradePeerTxInputValidatorTest {
     void rejectsNullInput() {
         assertThrows(NullPointerException.class,
                 () -> TradePeerTxInputValidator.validatePeersInputs(
-                        Arrays.asList(rawInput(parentTxWithP2WHOutput(1)), null),
+                        Arrays.asList(rawInput(parentTxWithP2WPKHOutput(1)), null),
                         Coin.valueOf(1),
                         walletService,
                         TAKER_ROLE));
@@ -118,7 +118,7 @@ public class TradePeerTxInputValidatorTest {
     @Test
     void rejectsNullExpectedInputAmount() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
-                rawInput(parentTxWithP2WHOutput(100_000)));
+                rawInput(parentTxWithP2WPKHOutput(100_000)));
 
         assertThrows(NullPointerException.class,
                 () -> TradePeerTxInputValidator.validatePeersInputs(rawTransactionInputs, null, walletService, MAKER_ROLE));
@@ -127,7 +127,7 @@ public class TradePeerTxInputValidatorTest {
     @Test
     void rejectsNonPositiveExpectedInputAmount() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
-                rawInput(parentTxWithP2WHOutput(100_000)));
+                rawInput(parentTxWithP2WPKHOutput(100_000)));
 
         assertThrows(IllegalArgumentException.class,
                 () -> TradePeerTxInputValidator.validatePeersInputs(rawTransactionInputs, Coin.ZERO, walletService, MAKER_ROLE));
@@ -135,7 +135,7 @@ public class TradePeerTxInputValidatorTest {
 
     @Test
     void rejectsInputValueMismatchWithParentTxOutput() {
-        Transaction parentTx = parentTxWithP2WHOutput(100_000);
+        Transaction parentTx = parentTxWithP2WPKHOutput(100_000);
         RawTransactionInput rawTransactionInput = rawInputWithValue(parentTx, 100_001);
 
         assertThrows(IllegalArgumentException.class,
@@ -147,7 +147,7 @@ public class TradePeerTxInputValidatorTest {
     }
 
     @Test
-    void rejectsNonP2WHInput() {
+    void rejectsNonP2WPKHInput() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
                 rawInput(parentTxWithP2pkhOutput(100_000)));
 
@@ -191,7 +191,7 @@ public class TradePeerTxInputValidatorTest {
                 .build());
     }
 
-    private static Transaction parentTxWithP2WHOutput(long value) {
+    private static Transaction parentTxWithP2WPKHOutput(long value) {
         Transaction tx = new Transaction(PARAMS);
         tx.addInput(Sha256Hash.ZERO_HASH, 0, ScriptBuilder.createEmpty());
         tx.addOutput(Coin.valueOf(value), SegwitAddress.fromKey(PARAMS, new ECKey()));

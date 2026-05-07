@@ -486,7 +486,7 @@ public class TradeWalletService {
 
 
         // Add MultiSig output
-        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
 
         // Tx fee for deposit tx will be paid by buyer.
         TransactionOutput hashedMultiSigOutput = new TransactionOutput(params, preparedDepositTx, msOutputAmount,
@@ -531,9 +531,9 @@ public class TradeWalletService {
      * @param buyerPubKey               the public key of the buyer
      * @param sellerPubKey              the public key of the seller
      * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
-     * @throws TransactionVerificationException if a non-P2WH maker-as-buyer input wasn't signed, the maker's MultiSig
-     * script, contract hash or output amount doesn't match the taker's, or there was an unexpected problem with the
-     * final deposit tx or its signatures
+     * @throws TransactionVerificationException if a maker-as-buyer input is not P2WPKH, the maker's MultiSig script,
+     * contract hash or output amount doesn't match the taker's, or there was an unexpected problem with the final
+     * deposit tx or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
 
@@ -549,7 +549,7 @@ public class TradeWalletService {
         checkArgument(!sellerInputs.isEmpty());
 
         // Check if maker's MultiSig script is identical to the taker's
-        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        Script hashedMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
         if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(hashedMultiSigOutputScript)) {
             throw new TransactionVerificationException("Maker's hashedMultiSigOutputScript does not match taker's hashedMultiSigOutputScript");
         }
@@ -570,9 +570,13 @@ public class TradeWalletService {
                 TransactionInput makersInput = makersDepositTx.getInputs().get(i);
                 byte[] makersScriptSigProgram = makersInput.getScriptSig().getProgram();
                 TransactionInput input = getTransactionInput(depositTx, makersScriptSigProgram, buyerInputs.get(i));
+                // Maker inputs are validated upstream by TradePeerTxInputValidator
+                // and TradeDataValidation.assertAllInputsAreP2WPKH. Re-check here so this signing
+                // path cannot be reached with a non-P2WPKH input even if a future caller skips them.
                 Script scriptPubKey = checkNotNull(input.getConnectedOutput()).getScriptPubKey();
-                if (makersScriptSigProgram.length == 0 && !ScriptPattern.isP2WH(scriptPubKey)) {
-                    throw new TransactionVerificationException("Non-segwit inputs from maker not signed.");
+                if (!ScriptPattern.isP2WPKH(scriptPubKey)) {
+                    throw new TransactionVerificationException("Maker input " + i +
+                            " is not native segwit P2WPKH (scriptPubKey=" + scriptPubKey + ")");
                 }
                 if (!TransactionWitness.EMPTY.equals(makersInput.getWitness())) {
                     input.setWitness(makersInput.getWitness());
@@ -592,11 +596,18 @@ public class TradeWalletService {
             }
 
             // Add seller inputs
-            // We grab the signature from the makersDepositTx and apply it to the new tx input
-            for (int i = buyerInputs.size(), k = 0; i < makersDepositTx.getInputs().size(); i++, k++) {
-                TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
-                // We get the deposit tx unsigned if maker is seller
-                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, sellerInputs.get(k)));
+            // We get the deposit tx unsigned if maker is seller
+            for (int k = 0; k < sellerInputs.size(); k++) {
+                TransactionInput input = getTransactionInput(depositTx, new byte[]{}, sellerInputs.get(k));
+                // Maker inputs are validated upstream by TradePeerTxInputValidator
+                // and TradeDataValidation.assertAllInputsAreP2WPKH. Re-check here so this signing
+                // path cannot be reached with a non-P2WPKH input even if a future caller skips them.
+                Script scriptPubKey = checkNotNull(input.getConnectedOutput()).getScriptPubKey();
+                if (!ScriptPattern.isP2WPKH(scriptPubKey)) {
+                    throw new TransactionVerificationException("Maker input " + k +
+                            " is not native segwit P2WPKH (scriptPubKey=" + scriptPubKey + ")");
+                }
+                depositTx.addInput(input);
             }
         }
 
@@ -753,7 +764,7 @@ public class TradeWalletService {
         }
         // SegWit validation in Script.correctlySpends is incomplete, as it only checks the witness of P2WPKH inputs.
         // Therefore, we must manually verify both signatures ourselves against the computed sigHash.
-        Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey, false);
+        Script scriptPubKey = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
         input.getScriptSig().correctlySpends(delayedPayoutTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
         Sha256Hash sigHash = delayedPayoutTx.hashForWitnessSignature(0, redeemScript,
                 inputValue, Transaction.SigHash.ALL, false);
@@ -1327,8 +1338,8 @@ public class TradeWalletService {
                 Coin.valueOf(rawTransactionInput.value));
     }
 
-    public boolean isP2WH(RawTransactionInput rawTransactionInput) {
-        return WalletUtils.isP2WH(rawTransactionInput, params);
+    public boolean isP2WPKH(RawTransactionInput rawTransactionInput) {
+        return WalletUtils.isP2WPKH(rawTransactionInput, params);
     }
 
     // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
@@ -1360,13 +1371,9 @@ public class TradeWalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, boolean legacy) {
+    private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey) {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
-        if (legacy) {
-            return ScriptBuilder.createP2SHOutputScript(redeemScript);
-        } else {
-            return ScriptBuilder.createP2WSHOutputScript(redeemScript);
-        }
+        return ScriptBuilder.createP2WSHOutputScript(redeemScript);
     }
 
     private Transaction createPayoutTx(Transaction depositTx,

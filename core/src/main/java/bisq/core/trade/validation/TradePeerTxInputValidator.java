@@ -48,11 +48,19 @@ public final class TradePeerTxInputValidator {
                                                BtcWalletService walletService,
                                                String peerRole) {
         long inputValue = 0;
-        for (RawTransactionInput input : rawTransactionInputs) {
-            checkNotNull(input, "%s raw transaction input must not be null", peerRole);
-            checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
+        for (int listPos = 0; listPos < rawTransactionInputs.size(); listPos++) {
+            RawTransactionInput input = rawTransactionInputs.get(listPos);
+            checkNotNull(input, "%s raw transaction input at position %s must not be null", peerRole, listPos);
+            checkArgument(input.value > 0,
+                    "%s raw transaction input at position %s must have positive value", peerRole, listPos);
             input.validate(walletService);
-            checkArgument(walletService.isP2WH(input), "%s input must be P2WH", peerRole);
+            // Strict P2WPKH only — a peer cannot supply a script-controlled funding input.
+            checkArgument(walletService.isP2WPKH(input),
+                    "%s funding input at position %s (parent vout=%s) is not native segwit P2WPKH " +
+                            "(bech32: bc1q on mainnet, tb1q on testnet, bcrt1q on regtest). " +
+                            "Bisq v1 trades require P2WPKH UTXOs; legacy P2PKH, P2SH-wrapped, and P2WSH inputs are rejected. " +
+                            "Move funds to a native segwit address and retry.",
+                    peerRole, listPos, input.index);
             inputValue = Math.addExact(inputValue, input.value);
         }
         return inputValue;
