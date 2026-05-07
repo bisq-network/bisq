@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class PayoutTxValidationTest {
+class PayoutTxValidationTest {
     private static final NetworkParameters PARAMS = RegTestParams.get();
     private static final Coin DEPOSIT_OUTPUT_AMOUNT = Coin.valueOf(120_000);
     private static final Coin BUYER_PAYOUT_AMOUNT = Coin.valueOf(80_000);
@@ -58,6 +58,10 @@ public class PayoutTxValidationTest {
     private static final String SELLER_PAYOUT_ADDRESS = SegwitAddress.fromKey(PARAMS, SELLER_PAYOUT_KEY).toString();
     private static final String FUNDING_TX_ID = "0000000000000000000000000000000000000000000000000000000000000001";
     private static final String OTHER_FUNDING_TX_ID = "0000000000000000000000000000000000000000000000000000000000000002";
+
+    /* --------------------------------------------------------------------- */
+    // Valid payout tx
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkPayoutTxAcceptsExpectedPayoutTx() {
@@ -124,6 +128,10 @@ public class PayoutTxValidationTest {
                 BUYER_MULTI_SIG_KEY.getPubKey(),
                 SELLER_MULTI_SIG_KEY.getPubKey()));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Input and output validation
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkPayoutTxRejectsInputWhichDoesNotSpendDepositOutput() {
@@ -204,6 +212,10 @@ public class PayoutTxValidationTest {
                 SELLER_MULTI_SIG_KEY.getPubKey(),
                 PARAMS));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Witness and signature validation
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkPayoutTxRejectsMissingInputWitness() {
@@ -326,6 +338,10 @@ public class PayoutTxValidationTest {
                 SELLER_MULTI_SIG_KEY.getPubKey(),
                 PARAMS));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Payout amount validation
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkPayoutTxRejectsNegativeBuyerPayoutAmount() {

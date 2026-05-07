@@ -27,12 +27,14 @@ import bisq.common.crypto.Sig;
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.validation.ValidationTestUtils.pubKeyRing;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-public class TradeValidationTest {
+class TradeValidationTest {
+
+    /* --------------------------------------------------------------------- */
+    // Trade id
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkTradeIdAcceptsMatchingTradeMessageTradeId() {
@@ -56,12 +58,12 @@ public class TradeValidationTest {
 
     @Test
     void isTradeIdValidReturnsTrueForMatchingTradeMessageTradeId() {
-        assertEquals(true, TradeValidation.isTradeIdValid("trade-id", ValidationTestUtils.tradeMessage("trade-id")));
+        assertTrue(TradeValidation.isTradeIdValid("trade-id", ValidationTestUtils.tradeMessage("trade-id")));
     }
 
     @Test
     void isTradeIdValidReturnsFalseForMismatchingTradeMessageTradeId() {
-        assertEquals(false, TradeValidation.isTradeIdValid("trade-id", ValidationTestUtils.tradeMessage("other-trade-id")));
+        assertFalse(TradeValidation.isTradeIdValid("trade-id", ValidationTestUtils.tradeMessage("other-trade-id")));
     }
 
     @Test
@@ -73,6 +75,10 @@ public class TradeValidationTest {
     void isTradeIdValidRejectsNullTradeMessage() {
         assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid("trade-id", null));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Peer date
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkPeersDateAcceptsDateWithinAllowedRange() {
@@ -104,16 +110,19 @@ public class TradeValidationTest {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(0));
     }
 
+    /* --------------------------------------------------------------------- */
+    // Contract hash
+    /* --------------------------------------------------------------------- */
 
     @Test
-    void checkByteArrayWithExpectedAcceptsMatchingByteArrays() {
+    void checkHashFromContractAcceptsMatchingByteArrays() {
         byte[] current = new byte[]{1, 2, 3};
 
         assertSame(current, TradeValidation.checkHashFromContract(current, new byte[]{1, 2, 3}));
     }
 
     @Test
-    void checkByteArrayWithExpectedRejectsMismatchingByteArrays() {
+    void checkHashFromContractRejectsMismatchingByteArrays() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkHashFromContract(new byte[]{1, 2, 3}, new byte[]{1, 2, 4}));
 
@@ -121,7 +130,7 @@ public class TradeValidationTest {
     }
 
     @Test
-    void checkByteArrayWithExpectedRejectsNullAndEmptyByteArrays() {
+    void checkHashFromContractRejectsNullAndEmptyByteArrays() {
         assertThrows(NullPointerException.class,
                 () -> TradeValidation.checkHashFromContract(null, new byte[]{1}));
         assertThrows(NullPointerException.class,
@@ -131,6 +140,10 @@ public class TradeValidationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> TradeValidation.checkHashFromContract(new byte[]{1}, new byte[0]));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Mediator
+    /* --------------------------------------------------------------------- */
 
     @Test
     void getCheckedMediatorPubKeyRingReturnsAcceptedMediatorPubKeyRing() {
@@ -170,5 +183,16 @@ public class TradeValidationTest {
 
         assertThrows(NullPointerException.class,
                 () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Tolerance helper
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 0, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, -1, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 1, 0.99));
     }
 }

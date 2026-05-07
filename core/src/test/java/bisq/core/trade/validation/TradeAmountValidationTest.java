@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TradeAmountValidationTest {
+class TradeAmountValidationTest {
     static final Coin OFFER_MIN_AMOUNT = Coin.valueOf(1_000);
     static final Coin OFFER_MAX_AMOUNT = Coin.valueOf(5_000);
 

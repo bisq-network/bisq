@@ -33,8 +33,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class DelayedPayoutTxValidationTest {
+class DelayedPayoutTxValidationTest {
     static final int GRID_SIZE = DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
+
+    /* --------------------------------------------------------------------- */
+    // Burning Man selection height
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkBurningManSelectionHeightAcceptsSameHeight() {
@@ -85,6 +89,10 @@ public class DelayedPayoutTxValidationTest {
                 () -> DelayedPayoutTxValidation.checkBurningManSelectionHeight(10, delayedPayoutTxReceiverService(0)));
     }
 
+    /* --------------------------------------------------------------------- */
+    // Delayed payout tx input amount
+    /* --------------------------------------------------------------------- */
+
     @Test
     void checkDelayedPayoutTxInputAmountAcceptsExpectedInputAmount() {
         Offer offer = ValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
@@ -120,6 +128,10 @@ public class DelayedPayoutTxValidationTest {
         assertThrows(NullPointerException.class,
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(1, null));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Lock time
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkLockTimeAcceptsExpectedLockTimeAndAllowedDeviation() {

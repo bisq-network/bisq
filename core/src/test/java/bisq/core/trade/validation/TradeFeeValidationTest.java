@@ -26,7 +26,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TradeFeeValidationTest {
+class TradeFeeValidationTest {
+
+    /* --------------------------------------------------------------------- */
+    // Taker fee
+    /* --------------------------------------------------------------------- */
+
     @Test
     void checkTakerFeeAcceptsExpectedFees() {
         Coin takerFee = Coin.valueOf(100);
@@ -65,6 +70,10 @@ public class TradeFeeValidationTest {
         assertThrows(NullPointerException.class, () -> TradeFeeValidation.checkTakerFee(null, Coin.valueOf(100)));
         assertThrows(NullPointerException.class, () -> TradeFeeValidation.checkTakerFee(Coin.valueOf(100), null));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Maker fee
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkMakerFeeAcceptsExpectedFees() {

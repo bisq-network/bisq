@@ -18,6 +18,7 @@
 package bisq.core.trade.validation;
 
 import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.validation.ValidationTestUtils.InputsForDepositTxRequestValidationFixture;
 
 import bisq.common.crypto.CryptoException;
 
@@ -25,16 +26,20 @@ import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.DepositTxValidationTest.inputsForDepositTxRequestValidationFixture;
 import static bisq.core.trade.validation.ValidationTestUtils.configureTradeFeeService;
+import static bisq.core.trade.validation.ValidationTestUtils.inputsForDepositTxRequestValidationFixture;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class InputsForDepositTxRequestValidationTest {
+class InputsForDepositTxRequestValidationTest {
+
+    /* --------------------------------------------------------------------- */
+    // InputsForDepositTxRequest
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkInputsForDepositTxRequestAcceptsValidRequest() throws CryptoException {
-        DepositTxValidationTest.InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
 
         assertSame(fixture.request, InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
                 fixture.offer,
@@ -47,8 +52,7 @@ public class InputsForDepositTxRequestValidationTest {
 
     @Test
     void checkInputsForDepositTxRequestRejectsInvalidAccountAgeWitnessSignature() throws CryptoException {
-        DepositTxValidationTest.InputsForDepositTxRequestValidationFixture fixture =
-                inputsForDepositTxRequestValidationFixture(new byte[]{1});
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(new byte[]{1});
 
         assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
                 fixture.offer,
@@ -61,7 +65,7 @@ public class InputsForDepositTxRequestValidationTest {
 
     @Test
     void checkInputsForDepositTxRequestRejectsTxFeeOutsideAllowedTolerance() throws CryptoException {
-        DepositTxValidationTest.InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
         FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), 10);
 
         assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
@@ -75,7 +79,7 @@ public class InputsForDepositTxRequestValidationTest {
 
     @Test
     void checkInputsForDepositTxRequestRejectsUnexpectedTakerFee() throws CryptoException {
-        DepositTxValidationTest.InputsForDepositTxRequestValidationFixture fixture =
+        InputsForDepositTxRequestValidationFixture fixture =
                 inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(151));
 
         assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,

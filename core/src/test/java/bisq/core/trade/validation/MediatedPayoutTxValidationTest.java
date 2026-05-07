@@ -35,10 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class MediatedPayoutTxValidationTest {
+class MediatedPayoutTxValidationTest {
     private static final MainNetParams PARAMS = MainNetParams.get();
     private static final String BUYER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
     private static final String SELLER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
+
+    /* --------------------------------------------------------------------- */
+    // Mediation result amounts
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkMediatedPayoutAmountsAcceptsMediationResultTotalAndReturnsBuyerAmount() {
@@ -58,6 +62,10 @@ public class MediatedPayoutTxValidationTest {
                         Coin.valueOf(3_999),
                         Coin.valueOf(10_000)));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout tx
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkMediatedPayoutTxAcceptsExpectedInputOutputsAndAddresses() {

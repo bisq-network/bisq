@@ -34,9 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class DsaSignatureValidationTest {
+class DsaSignatureValidationTest {
     static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
             "account-age-witness-nonce".getBytes(StandardCharsets.UTF_8);
+
+    /* --------------------------------------------------------------------- */
+    // DSA signature
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkAccountAgeWitnessSignatureAcceptsSignatureOfNonce() throws CryptoException {
@@ -108,6 +112,10 @@ public class DsaSignatureValidationTest {
                 ACCOUNT_AGE_WITNESS_NONCE,
                 null));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Base64 DSA signature
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkBase64SignatureAcceptsBase64EncodedDSASignature() {

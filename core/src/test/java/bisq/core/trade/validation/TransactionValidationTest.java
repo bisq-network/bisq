@@ -35,7 +35,12 @@ import org.junit.jupiter.api.Test;
 import static bisq.core.trade.validation.ValidationTestUtils.btcWalletService;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TransactionValidationTest {
+class TransactionValidationTest {
+
+    /* --------------------------------------------------------------------- */
+    // Bitcoin address
+    /* --------------------------------------------------------------------- */
+
     @Test
     void checkBitcoinAddressAcceptsAddressForWalletNetwork() {
         String bitcoinAddress = SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString();
@@ -70,6 +75,10 @@ public class TransactionValidationTest {
                 SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
                 null));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Transaction
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkSerializedTransactionAcceptsValidSerializedTransaction() {
@@ -145,6 +154,9 @@ public class TransactionValidationTest {
                 null));
     }
 
+    /* --------------------------------------------------------------------- */
+    // Transaction id
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkTransactionIdAcceptsValidTransactionId() {
@@ -174,6 +186,10 @@ public class TransactionValidationTest {
     void checkTransactionIdRejectsNullTransactionId() {
         assertThrows(NullPointerException.class, () -> TransactionValidation.checkTransactionId(null));
     }
+
+    /* --------------------------------------------------------------------- */
+    // DER encoded ECDSA signature
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkDerEncodedEcdsaSignatureAcceptsStrictDerEncodedCanonicalSignature() {
@@ -228,7 +244,7 @@ public class TransactionValidationTest {
 
 
     /* --------------------------------------------------------------------- */
-    // DepositTx checkMultiSigPubKey
+    // Multisig public key
     /* --------------------------------------------------------------------- */
 
     @Test
@@ -321,13 +337,4 @@ public class TransactionValidationTest {
                     invalidEncoding);
         }
     }
-
-    @Test
-    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 0, 1));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, -1, 1));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkValueInTolerance(1, 1, 0.99));
-    }
-
-
 }

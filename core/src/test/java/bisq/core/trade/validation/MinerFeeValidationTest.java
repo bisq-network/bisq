@@ -27,7 +27,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class MinerFeeValidationTest {
+class MinerFeeValidationTest {
+
+    /* --------------------------------------------------------------------- */
+    // Trade tx fee
+    /* --------------------------------------------------------------------- */
+
     @Test
     void checkTradeTxFeeAcceptsPositiveFees() {
         Coin txFee = Coin.valueOf(300);
@@ -93,6 +98,10 @@ public class MinerFeeValidationTest {
 
         assertSame(txFee, MinerFeeValidation.checkTradeTxFeeIsInTolerance(txFee, TradeFeeFactory.getTradeTxFee(Coin.valueOf(2))));
     }
+
+    /* --------------------------------------------------------------------- */
+    // Miner fee rate
+    /* --------------------------------------------------------------------- */
 
     @Test
     void checkMinerFeeRateAcceptsFeesWithinAllowedTolerance() {
