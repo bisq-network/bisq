@@ -32,6 +32,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
@@ -49,7 +50,6 @@ import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -72,8 +72,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 // Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
 // persist them.
 
@@ -85,11 +83,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public class ProcessModel implements ProtocolModel<TradingPeer> {
-
-    public static byte[] hashOfPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
-        return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).serializeForHash());
-    }
-
     // Transient/Immutable (net set in constructor so they are not final, but at init)
     transient private Provider provider;
     transient private TradeManager tradeManager;
@@ -135,11 +128,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Nullable
     @Setter
     private List<RawTransactionInput> rawTransactionInputs;
-    @Setter
-    private long changeOutputValue;
-    @Nullable
-    @Setter
-    private String changeOutputAddress;
     @Setter
     private boolean useSavingsWallet;
     @Setter
@@ -219,7 +207,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 .setOfferId(offerId)
                 .setAccountId(accountId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setChangeOutputValue(changeOutputValue)
                 .setUseSavingsWallet(useSavingsWallet)
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
                 .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name())
@@ -232,7 +219,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
                 ProtoUtil.collectionToProto(rawTransactionInputs, protobuf.RawTransactionInput.class)));
-        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
@@ -245,7 +231,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         TradingPeer tradingPeer = TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver);
         PubKeyRing pubKeyRing = PubKeyRing.fromProto(proto.getPubKeyRing());
         ProcessModel processModel = new ProcessModel(proto.getOfferId(), proto.getAccountId(), pubKeyRing, tradingPeer);
-        processModel.setChangeOutputValue(proto.getChangeOutputValue());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
         processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
         processModel.setBuyerPayoutAmountFromMediation(proto.getBuyerPayoutAmountFromMediation());
@@ -259,7 +244,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());
         processModel.setRawTransactionInputs(rawTransactionInputs);
-        processModel.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
         processModel.setMyMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMyMultiSigPubKey()));
         processModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
         processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
@@ -432,5 +416,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public DaoFacade getDaoFacade() {
         return provider.getDaoFacade();
+    }
+
+    public FeeService getFeeService() {
+        return provider.getFeeService();
     }
 }

@@ -19,8 +19,10 @@ package bisq.core.trade.protocol.bisq_v1.tasks.seller_as_taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -76,12 +78,16 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
                     .add(checkNotNull(trade.getAmount()));
 
             TradingPeer tradingPeer = processModel.getTradePeer();
+            List<RawTransactionInput> buyerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
+            Transaction makersDepositTx = new Transaction(walletService.getParams(), checkNotNull(processModel.getPreparedDepositTx()));
+            verifyPreparedDepositTxFromBuyerAsMaker(makersDepositTx);
+            TradeDataValidation.assertCanonicalDepositTxShape(makersDepositTx, buyerInputs, walletService.getParams());
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
-                    processModel.getPreparedDepositTx(),
+                    makersDepositTx,
                     msOutputAmount,
-                    checkNotNull(tradingPeer.getRawTransactionInputs()),
+                    buyerInputs,
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigPubKey);
@@ -93,10 +99,24 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
 
             complete();
         } catch (Throwable t) {
+            // The multisig lock may have been set above before this throw; release it so the
+            // funds are not stuck "locked in multisig" against a trade that never proceeds.
+            // Idempotent — a no-op if the lock was never taken.
+            // Use the persisted offerId, not processModel.getOffer() — the latter is transient and
+            // may be null if this task fails before the offer was reattached on a restart.
+            processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(processModel.getOfferId());
             Contract contract = trade.getContract();
             if (contract != null)
                 contract.printDiff(processModel.getTradePeer().getContractAsJson());
             failed(t);
+        }
+    }
+
+    static void verifyPreparedDepositTxFromBuyerAsMaker(Transaction makersDepositTx)
+            throws TransactionVerificationException {
+        int outputCount = makersDepositTx.getOutputs().size();
+        if (outputCount != 1) {
+            throw new TransactionVerificationException("Maker's preparedDepositTx must not have a change output");
         }
     }
 }

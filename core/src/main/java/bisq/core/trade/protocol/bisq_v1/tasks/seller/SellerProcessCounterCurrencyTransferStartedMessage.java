@@ -17,16 +17,17 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkBitcoinAddress;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -40,11 +41,14 @@ public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTas
         try {
             runInterceptHook();
             CounterCurrencyTransferStartedMessage message = (CounterCurrencyTransferStartedMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
             TradingPeer tradingPeer = processModel.getTradePeer();
-            tradingPeer.setPayoutAddressString(Validator.nonEmptyStringOf(message.getBuyerPayoutAddress()));
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+
+            String buyerPayoutAddress = checkBitcoinAddress(message.getBuyerPayoutAddress(), btcWalletService);
+            tradingPeer.setPayoutAddressString(buyerPayoutAddress);
+
             tradingPeer.setSignature(checkNotNull(message.getBuyerSignature()));
 
             // update to the latest peer address of our peer if the message is correct

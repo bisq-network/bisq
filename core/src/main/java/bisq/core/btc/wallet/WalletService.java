@@ -22,6 +22,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.crypto.LowRSigningKey;
@@ -840,6 +841,10 @@ public abstract class WalletService {
                 ScriptPattern.isP2WH(output.getScriptPubKey());
     }
 
+    public boolean isP2WPKH(RawTransactionInput rawTransactionInput) {
+        return WalletUtils.isP2WPKH(rawTransactionInput, params);
+    }
+
     @Nullable
     public static Address getAddressFromOutput(TransactionOutput output) {
         return isOutputScriptConvertibleToAddress(output) ?
@@ -873,6 +878,11 @@ public abstract class WalletService {
     public static Transaction maybeAddNetworkTxToWallet(byte[] serializedTransaction,
                                                         Wallet wallet) throws VerificationException {
         return maybeAddTxToWallet(serializedTransaction, wallet, TransactionConfidence.Source.NETWORK);
+    }
+
+    public static Transaction maybeAddNetworkTxToWallet(Transaction transaction,
+                                                        Wallet wallet) throws VerificationException {
+        return maybeAddTxToWallet(transaction, wallet, TransactionConfidence.Source.NETWORK);
     }
 
     public static Transaction maybeAddSelfTxToWallet(Transaction transaction,

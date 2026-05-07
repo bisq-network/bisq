@@ -17,6 +17,9 @@
 
 package bisq.network.p2p;
 
-public interface SendersNodeAddressMessage {
+/**
+ * Interface for network envelopes that carry sender node address information.
+ */
+public interface SendersNodeAddressAwareEnvelope {
     NodeAddress getSenderNodeAddress();
 }

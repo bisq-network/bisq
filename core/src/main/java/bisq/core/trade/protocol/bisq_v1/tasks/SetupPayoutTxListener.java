@@ -32,9 +32,9 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Objects;
-
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class SetupPayoutTxListener extends TradeTask {
@@ -49,6 +49,8 @@ public abstract class SetupPayoutTxListener extends TradeTask {
 
     protected abstract void setState();
 
+    protected abstract void validatePayoutTx(Transaction payoutTx);
+
     @Override
     protected void run() {
         try {
@@ -57,13 +59,12 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                 BtcWalletService walletService = processModel.getBtcWalletService();
                 String id = processModel.getOffer().getId();
                 Address address = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddress();
+                Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
 
                 // check if the payout already happened (ensuring it was > deposit block height, see GH #5725)
                 TransactionConfidence confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                    Objects.requireNonNull(trade.getDepositTx()).getConfidence().getAppearedAtChainHeight());
-                if (isInNetwork(confidence)) {
-                    applyConfidence(confidence);
-                } else {
+                        depositTx.getConfidence().getAppearedAtChainHeight());
+                if (!isInNetwork(confidence) || !applyConfidence(confidence)) {
                     confidenceListener = new AddressConfidenceListener(address) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
@@ -91,9 +92,12 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         }
     }
 
-    private void applyConfidence(TransactionConfidence confidence) {
+    private boolean applyConfidence(TransactionConfidence confidence) {
         if (trade.getPayoutTx() == null) {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
+            if (!isPayoutTxValid(walletTx)) {
+                return false;
+            }
             trade.setPayoutTx(walletTx);
             processModel.getTradeManager().requestPersistence();
             BtcWalletService.printTx("payoutTx received from network", walletTx);
@@ -106,6 +110,21 @@ public abstract class SetupPayoutTxListener extends TradeTask {
 
         // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
         UserThread.execute(this::unSubscribe);
+        return true;
+    }
+
+    private boolean isPayoutTxValid(Transaction payoutTx) {
+        try {
+            validatePayoutTx(payoutTx);
+            return true;
+        } catch (Exception e) {
+            String txId = payoutTx != null ? payoutTx.getTxId().toString() : "null";
+            log.warn("Ignoring invalid payoutTx from network. tradeId={}, txId={}, error={}",
+                    trade.getId(),
+                    txId,
+                    e.toString());
+            return false;
+        }
     }
 
     private boolean isInNetwork(TransactionConfidence confidence) {

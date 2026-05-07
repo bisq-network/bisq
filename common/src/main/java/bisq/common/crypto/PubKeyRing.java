@@ -31,6 +31,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
@@ -46,6 +48,9 @@ public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJso
     private transient PublicKey encryptionPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
+        checkNotNull(signaturePubKey, "signaturePubKey must not be null");
+        checkNotNull(encryptionPubKey, "encryptionPubKey must not be null");
+
         this.signaturePubKeyBytes = Sig.getPublicKeyBytes(signaturePubKey);
         this.encryptionPubKeyBytes = Encryption.getPublicKeyBytes(encryptionPubKey);
         this.signaturePubKey = signaturePubKey;
@@ -55,14 +60,21 @@ public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJso
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @VisibleForTesting
     public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes) {
+        checkNotNull(signaturePubKeyBytes, "signaturePubKeyBytes must not be null");
+        checkNotNull(encryptionPubKeyBytes, "encryptionPubKeyBytes must not be null");
+
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
         signaturePubKey = Sig.getPublicKeyFromBytes(signaturePubKeyBytes);
         encryptionPubKey = Encryption.getPublicKeyFromBytes(encryptionPubKeyBytes);
+
+        checkNotNull(signaturePubKey, "signaturePubKey must not be null");
+        checkNotNull(encryptionPubKey, "encryptionPubKey must not be null");
     }
 
     @Override

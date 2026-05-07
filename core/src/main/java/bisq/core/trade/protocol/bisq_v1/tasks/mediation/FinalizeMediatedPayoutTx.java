@@ -35,6 +35,9 @@ import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutTx;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -58,9 +61,6 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
             Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
             Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
 
-            checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
-
-
             byte[] mySignature = checkNotNull(processModel.getMediatedPayoutTxSignature(),
                     "processModel.getTxSignatureFromMediation must not be null");
             byte[] peersSignature = checkNotNull(tradingPeer.getMediatedPayoutTxSignature(),
@@ -73,14 +73,19 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
             Coin totalPayoutAmount = offer.getBuyerSecurityDeposit().add(tradeAmount).add(offer.getSellerSecurityDeposit());
             Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
             Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
-            checkArgument(totalPayoutAmount.equals(buyerPayoutAmount.add(sellerPayoutAmount)),
-                    "Payout amount does not match buyerPayoutAmount=" + buyerPayoutAmount.toFriendlyString() +
-                            "; sellerPayoutAmount=" + sellerPayoutAmount);
+            Coin validatedBuyerPayoutAmount = checkMediatedPayoutAmounts(buyerPayoutAmount,
+                    sellerPayoutAmount,
+                    totalPayoutAmount);
 
             String myPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
             String peersPayoutAddressString = tradingPeer.getPayoutAddressString();
             String buyerPayoutAddressString = isMyRoleBuyer ? myPayoutAddressString : peersPayoutAddressString;
             String sellerPayoutAddressString = isMyRoleBuyer ? peersPayoutAddressString : myPayoutAddressString;
+            String validatedBuyerPayoutAddressString = checkMediatedPayoutAddresses(buyerPayoutAddressString,
+                    validatedBuyerPayoutAmount,
+                    sellerPayoutAddressString,
+                    sellerPayoutAmount,
+                    walletService);
 
             byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
             byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
@@ -93,20 +98,30 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
 
+            processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
+                    depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
+
             Transaction transaction = processModel.getTradeWalletService().finalizeMediatedPayoutTx(
                     depositTx,
                     buyerSignature,
                     sellerSignature,
-                    buyerPayoutAmount,
+                    validatedBuyerPayoutAmount,
                     sellerPayoutAmount,
-                    buyerPayoutAddressString,
+                    validatedBuyerPayoutAddressString,
                     sellerPayoutAddressString,
                     multiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey
             );
 
-            trade.setPayoutTx(transaction);
+            Transaction validatedTransaction = checkMediatedPayoutTx(transaction,
+                    depositTx,
+                    validatedBuyerPayoutAmount,
+                    sellerPayoutAmount,
+                    validatedBuyerPayoutAddressString,
+                    sellerPayoutAddressString,
+                    walletService);
+            trade.setPayoutTx(validatedTransaction);
 
             processModel.getTradeManager().requestPersistence();
 
@@ -118,4 +133,3 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
         }
     }
 }
-

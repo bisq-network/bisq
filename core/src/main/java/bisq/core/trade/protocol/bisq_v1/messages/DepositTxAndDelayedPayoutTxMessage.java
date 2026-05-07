@@ -34,6 +34,9 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 // It is the last message in the take offer phase. We use MailboxMessage instead of DirectMessage to add more tolerance
 // in case of network issues and as the message does not trigger further protocol execution.
 @EqualsAndHashCode(callSuper = true)
@@ -78,6 +81,14 @@ public final class DepositTxAndDelayedPayoutTxMessage extends TradeMailboxMessag
         this.depositTx = depositTx;
         this.delayedPayoutTx = delayedPayoutTx;
         this.sellerPaymentAccountPayload = sellerPaymentAccountPayload;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNonEmptyBytes(depositTx, "depositTx");
+        checkNonEmptyBytes(delayedPayoutTx, "delayedPayoutTx");
     }
 
     @Override

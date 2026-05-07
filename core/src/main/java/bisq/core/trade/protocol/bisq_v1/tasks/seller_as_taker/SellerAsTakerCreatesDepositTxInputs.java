@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller_as_taker;
 
-import bisq.core.btc.model.InputsAndChangeOutput;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -25,6 +25,8 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,14 +50,12 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
                     .add(txFee)
                     .add(txFee) // We add 2 times the fee as one is for the payout tx
                     .add(tradeAmount);
-            InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
+            List<RawTransactionInput> rawTransactionInputs = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
                     processModel.getTakeOfferFeeTx(),
                     takerInputAmount,
                     txFee);
 
-            processModel.setRawTransactionInputs(result.rawTransactionInputs);
-            processModel.setChangeOutputValue(result.changeOutputValue);
-            processModel.setChangeOutputAddress(result.changeOutputAddress);
+            processModel.setRawTransactionInputs(rawTransactionInputs);
 
             processModel.getTradeManager().requestPersistence();
 

@@ -26,6 +26,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import com.google.common.base.Preconditions;
@@ -46,7 +47,8 @@ public class BuyerSignPayoutTx extends TradeTask {
         try {
             runInterceptHook();
             Preconditions.checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
-            Preconditions.checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+            Transaction depositTx = Preconditions.checkNotNull(trade.getDepositTx(),
+                    "trade.getDepositTx() must not be null");
             Offer offer = Preconditions.checkNotNull(trade.getOffer(), "offer must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
@@ -67,8 +69,11 @@ public class BuyerSignPayoutTx extends TradeTask {
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
             byte[] sellerMultiSigPubKey = processModel.getTradePeer().getMultiSigPubKey();
 
+            processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
+                    depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
+
             byte[] payoutTxSignature = processModel.getTradeWalletService().buyerSignsPayoutTx(
-                    trade.getDepositTx(),
+                    depositTx,
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     buyerPayoutAddressString,

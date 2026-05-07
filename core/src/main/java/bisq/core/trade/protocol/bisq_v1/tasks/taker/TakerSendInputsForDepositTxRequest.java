@@ -19,9 +19,9 @@ package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
-import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -91,9 +91,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
 
             String offerId = processModel.getOfferId();
 
-            // From 1.7.0 on we do not send the payment account data but only the hash.
-            // For backward compatibility we still keep the fields but set it to null
-            byte[] hashOfTakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
+            PaymentAccountPayload takersPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "Payment account payload cannot be null for trade: " + trade.getId());
+            byte[] hashOfTakersPaymentAccountPayload = takersPaymentAccountPayload.getHashForContract();
 
             // We still send the signatureOfNonce below to not get too many changes. It will be needed later but it
             // does no harm to have that data earlier.
@@ -107,7 +107,8 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             int burningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
             processModel.setBurningManSelectionHeight(burningManSelectionHeight);
 
-            String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
+
+            String takersPaymentMethodId = takersPaymentAccountPayload.getPaymentMethodId();
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
@@ -117,12 +118,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     trade.getTakerFee().getValue(),
                     trade.isCurrencyForTakerFeeBtc(),
                     processModel.getRawTransactionInputs(),
-                    processModel.getChangeOutputValue(),
-                    processModel.getChangeOutputAddress(),
                     takerMultiSigPubKey,
                     takerPayoutAddressString,
                     processModel.getPubKeyRing(),
-                    null,
                     processModel.getAccountId(),
                     takerFeeTxId,
                     acceptedArbitratorAddresses,

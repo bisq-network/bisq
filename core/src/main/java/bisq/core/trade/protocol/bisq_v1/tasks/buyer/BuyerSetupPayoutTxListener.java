@@ -17,12 +17,23 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.SetupPayoutTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTx;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerSetupPayoutTxListener extends SetupPayoutTxListener {
@@ -47,5 +58,33 @@ public class BuyerSetupPayoutTxListener extends SetupPayoutTxListener {
         trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
 
         processModel.getTradeManager().requestPersistence();
+    }
+
+    @Override
+    protected void validatePayoutTx(Transaction payoutTx) {
+        BtcWalletService btcWalletService = processModel.getBtcWalletService();
+        TradingPeer tradingPeer = processModel.getTradePeer();
+
+        Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
+        Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
+        Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(tradeAmount);
+        Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
+        String buyerPayoutAddressString = btcWalletService.getOrCreateAddressEntry(trade.getId(),
+                AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+        String sellerPayoutAddressString = tradingPeer.getPayoutAddressString();
+        Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+        byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+        byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+        NetworkParameters params = btcWalletService.getParams();
+
+        checkPayoutTx(payoutTx,
+                depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString,
+                myMultiSigPubKey,
+                peersMultiSigPubKey,
+                params);
     }
 }

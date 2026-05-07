@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public final class LegacyBurningMan extends BurningManCandidate {
     public LegacyBurningMan(String address) {
-        receiverAddress = mostRecentAddress = Optional.of(address);
+        receiverAddress = Optional.of(address);
     }
 
     public void applyBurnAmountShare(double burnAmountShare) {

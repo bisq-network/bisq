@@ -65,6 +65,7 @@ import com.google.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -331,14 +332,10 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         long inputAmount = depositTx.getOutput(0).getValue().value;
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
-        boolean wasBugfix6699ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.BUGFIX_6699_ACTIVATION_DATE);
-        boolean wasProposal412ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.PROPOSAL_412_ACTIVATION_DATE);
         List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
-                dispute.getTradeTxFee(),
-                wasBugfix6699ActivatedAtTradeDate,
-                wasProposal412ActivatedAtTradeDate);
+                dispute.getTradeTxFee());
         log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
         checkArgument(delayedPayoutTx.getOutputs().size() == delayedPayoutTxReceivers.size(),
                 "Size of outputs and delayedPayoutTxReceivers must be the same");
@@ -347,7 +344,9 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         for (int i = 0; i < delayedPayoutTx.getOutputs().size(); i++) {
             TransactionOutput transactionOutput = delayedPayoutTx.getOutputs().get(i);
             Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(0);
-            checkArgument(transactionOutput.getScriptPubKey().getToAddress(params).toString().equals(receiverTuple.second),
+            String address = transactionOutput.getScriptPubKey().getToAddress(params).toString().toLowerCase(Locale.ROOT);
+            String receiverAddress = receiverTuple.second.toLowerCase(Locale.ROOT);
+            checkArgument(address.equals(receiverAddress),
                     "output address does not match delayedPayoutTxReceivers address. transactionOutput=" + transactionOutput);
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
                     "output value does not match delayedPayoutTxReceivers value. transactionOutput=" + transactionOutput);

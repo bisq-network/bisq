@@ -35,6 +35,8 @@ import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -50,13 +52,13 @@ public class SignMediatedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            TradingPeer tradingPeer = processModel.getTradePeer();
             if (processModel.getMediatedPayoutTxSignature() != null) {
                 log.warn("processModel.getTxSignatureFromMediation is already set");
             }
 
-            String tradeId = trade.getId();
+            TradingPeer tradingPeer = processModel.getTradePeer();
             BtcWalletService walletService = processModel.getBtcWalletService();
+            String tradeId = trade.getId();
             Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
             Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
@@ -66,9 +68,9 @@ public class SignMediatedPayoutTx extends TradeTask {
             Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
             Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
 
-            checkArgument(totalPayoutAmount.equals(buyerPayoutAmount.add(sellerPayoutAmount)),
-                    "Payout amount does not match buyerPayoutAmount=" + buyerPayoutAmount.toFriendlyString() +
-                            "; sellerPayoutAmount=" + sellerPayoutAmount);
+            Coin validatedBuyerPayoutAmount = checkMediatedPayoutAmounts(buyerPayoutAmount,
+                    sellerPayoutAmount,
+                    totalPayoutAmount);
 
             boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
 
@@ -76,6 +78,11 @@ public class SignMediatedPayoutTx extends TradeTask {
             String peersPayoutAddressString = tradingPeer.getPayoutAddressString();
             String buyerPayoutAddressString = isMyRoleBuyer ? myPayoutAddressString : peersPayoutAddressString;
             String sellerPayoutAddressString = isMyRoleBuyer ? peersPayoutAddressString : myPayoutAddressString;
+            String validatedBuyerPayoutAddressString = checkMediatedPayoutAddresses(buyerPayoutAddressString,
+                    validatedBuyerPayoutAmount,
+                    sellerPayoutAddressString,
+                    sellerPayoutAmount,
+                    walletService);
 
             byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
             byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
@@ -88,11 +95,14 @@ public class SignMediatedPayoutTx extends TradeTask {
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
 
+            processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
+                    depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
+
             byte[] mediatedPayoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
                     depositTx,
-                    buyerPayoutAmount,
+                    validatedBuyerPayoutAmount,
                     sellerPayoutAmount,
-                    buyerPayoutAddressString,
+                    validatedBuyerPayoutAddressString,
                     sellerPayoutAddressString,
                     myMultiSigKeyPair,
                     buyerMultiSigPubKey,
@@ -107,4 +117,3 @@ public class SignMediatedPayoutTx extends TradeTask {
         }
     }
 }
-

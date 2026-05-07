@@ -142,6 +142,14 @@ public class OfferBookService {
             return;
         }
 
+        // We allow 10% tolerance to the max allowed price percentage to avoid ignoring offers in
+        // high volatility environments
+        if (!OfferValidation.isPriceInBounds(priceFeedService, offer, 1.1)) {
+            log.warn("Offer has invalid price. {}", offer);
+            errorMessageHandler.handleErrorMessage("Add offer failed: price is out of bounds");
+            return;
+        }
+
         boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayloadBase());
         if (result) {
             resultHandler.handleResult();

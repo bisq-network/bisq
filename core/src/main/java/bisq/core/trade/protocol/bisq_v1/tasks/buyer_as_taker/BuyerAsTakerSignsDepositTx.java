@@ -19,8 +19,10 @@ package bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -84,9 +86,18 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
 
             List<RawTransactionInput> sellerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             byte[] sellerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+            Transaction makersDepositTx = new Transaction(walletService.getParams(), checkNotNull(processModel.getPreparedDepositTx()));
+            verifyPreparedDepositTxFromSellerAsMaker(makersDepositTx,
+                    offer.getSellerSecurityDeposit(),
+                    offer.getMinAmount(),
+                    offer.getAmount(),
+                    checkNotNull(trade.getAmount()),
+                    sellerInputs);
+            TradeDataValidation.assertCanonicalDepositTxShape(makersDepositTx, sellerInputs, walletService.getParams());
+
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     false,
-                    processModel.getPreparedDepositTx(),
+                    makersDepositTx,
                     msOutputAmount,
                     buyerInputs,
                     sellerInputs,
@@ -98,7 +109,47 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
 
             complete();
         } catch (Throwable t) {
+            // The multisig lock may have been set above before this throw; release it so the
+            // funds are not stuck "locked in multisig" against a trade that never proceeds.
+            // Idempotent — a no-op if the lock was never taken.
+            // Use the persisted offerId, not processModel.getOffer() — the latter is transient and
+            // may be null if this task fails before the offer was reattached on a restart.
+            processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(processModel.getOfferId());
             failed(t);
+        }
+    }
+
+    static void verifyPreparedDepositTxFromSellerAsMaker(Transaction makersDepositTx,
+                                                     Coin sellerSecurityDeposit,
+                                                     Coin offerMinAmount,
+                                                     Coin offerAmount,
+                                                     Coin tradeAmount,
+                                                     List<RawTransactionInput> sellerInputs)
+            throws TransactionVerificationException {
+        checkArgument(!tradeAmount.isLessThan(offerMinAmount),
+                "tradeAmount must not be less than offerMinAmount");
+        checkArgument(!tradeAmount.isGreaterThan(offerAmount),
+                "tradeAmount must not be greater than offerAmount");
+        Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
+        Coin expectedMakerChange = sellerInput.subtract(sellerSecurityDeposit.add(tradeAmount));
+        checkArgument(!expectedMakerChange.isNegative(), "expectedMakerChange must not be negative");
+        checkArgument(!expectedMakerChange.isGreaterThan(offerAmount.subtract(tradeAmount)),
+                "expectedMakerChange must not be greater than remaining offer amount");
+        int outputCount = makersDepositTx.getOutputs().size();
+        if (expectedMakerChange.isZero()) {
+            if (outputCount != 1) {
+                throw new TransactionVerificationException("Maker's preparedDepositTx must not have a change output");
+            }
+            return;
+        }
+
+        if (outputCount != 2) {
+            throw new TransactionVerificationException("Maker's preparedDepositTx must have exactly one change output");
+        }
+
+        Coin makerChangeOutput = makersDepositTx.getOutput(1).getValue();
+        if (!makerChangeOutput.equals(expectedMakerChange)) {
+            throw new TransactionVerificationException("Maker's preparedDepositTx change output value does not match the expected maker change");
         }
     }
 }
