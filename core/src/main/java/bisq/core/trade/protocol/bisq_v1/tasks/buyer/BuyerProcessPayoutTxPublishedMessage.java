@@ -23,14 +23,15 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.TradeValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.wallet.Wallet;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -43,20 +44,24 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
             checkNotNull(message);
-            checkArgument(message.getPayoutTx() != null);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             if (trade.getPayoutTx() == null) {
-                Transaction committedPayoutTx = WalletService.maybeAddNetworkTxToWallet(message.getPayoutTx(), processModel.getBtcWalletService().getWallet());
+                BtcWalletService btcWalletService = processModel.getBtcWalletService();
+                Wallet wallet = btcWalletService.getWallet();
+
+                byte[] payoutTx = TradeValidation.checkSerializedTransaction(message.getPayoutTx(), btcWalletService);
+                Transaction committedPayoutTx = WalletService.maybeAddNetworkTxToWallet(payoutTx, wallet);
                 trade.setPayoutTx(committedPayoutTx);
                 BtcWalletService.printTx("payoutTx received from peer", committedPayoutTx);
 
                 trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
-                processModel.getBtcWalletService().resetCoinLockedInMultiSigAddressEntry(trade.getId());
+                btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());
             } else {
                 log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
             }

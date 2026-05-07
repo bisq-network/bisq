@@ -31,7 +31,7 @@ import org.bitcoinj.core.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.TradeValidation.checkDerEncodedEcdsaSignature;
-import static bisq.core.trade.validation.TradeValidation.checkSerializedTransaction;
+import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -55,8 +55,7 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
             byte[] delayedPayoutTxBuyerSignature = checkDerEncodedEcdsaSignature(response.getDelayedPayoutTxBuyerSignature());
             tradePeer.setDelayedPayoutTxSignature(delayedPayoutTxBuyerSignature);
 
-            byte[] depositTx = checkSerializedTransaction(response.getDepositTx(), btcWalletService);
-            Transaction buyersDepositTxWithWitnesses = btcWalletService.getTxFromSerializedTx(depositTx);
+            Transaction buyersDepositTxWithWitnesses = toVerifiedTransaction(response.getDepositTx(), btcWalletService);
             Transaction myDepositTx = processModel.getDepositTx();
             tradeWalletService.sellerAddsBuyerWitnessesToDepositTx(myDepositTx, buyersDepositTxWithWitnesses);
 

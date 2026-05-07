@@ -38,10 +38,11 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             MediatedPayoutTxSignatureMessage message = (MediatedPayoutTxSignatureMessage) processModel.getTradeMessage();
             checkNotNull(message);
 
-            processModel.getTradePeer().setMediatedPayoutTxSignature(checkNotNull(message.getTxSignature()));
+            processModel.getTradePeer().setMediatedPayoutTxSignature(message.getTxSignature());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
