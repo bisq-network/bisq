@@ -149,7 +149,7 @@ public final class DepositTxValidation {
         NodeAddress mediatorNodeAddress = request.getMediatorNodeAddress();
         TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
         checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
-        TradeValidation.checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
+        TradeFeeValidation.checkTakerFee(request.getTakerFeeAsCoin(), request.isCurrencyForTakerFeeBtc(), tradeAmount);
         return request;
     }
 

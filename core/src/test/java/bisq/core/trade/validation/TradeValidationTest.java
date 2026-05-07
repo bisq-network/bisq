@@ -53,7 +53,6 @@ import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.validation.TradeValidationTestUtils.btcWalletService;
-import static bisq.core.trade.validation.TradeValidationTestUtils.configureTradeFeeService;
 import static bisq.core.trade.validation.TradeValidationTestUtils.pubKeyRing;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -764,83 +763,6 @@ public class TradeValidationTest {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMinerFeeRateIsInTolerance(1_000, -1));
     }
 
-    @Test
-    void checkTakerFeeAcceptsExpectedFees() {
-        Coin takerFee = Coin.valueOf(100);
-
-        assertSame(takerFee, TradeValidation.checkTakerFee(takerFee, Coin.valueOf(100)));
-        assertEquals(100, TradeValidation.checkTakerFeeInTolerance(100, 100));
-        assertEquals(150, TradeValidation.checkTakerFeeInTolerance(150, 100));
-        assertEquals(67, TradeValidation.checkTakerFeeInTolerance(67, 100));
-    }
-
-    @Test
-    void checkTakerFeeAcceptsCalculatedExpectedFees() {
-        configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100));
-        Coin takerFee = Coin.valueOf(100);
-
-        assertSame(takerFee, TradeValidation.checkTakerFee(takerFee, true, Coin.valueOf(3_000)));
-        assertEquals(100, TradeValidation.checkTakerFee(100, true, Coin.valueOf(3_000)));
-    }
-
-    @Test
-    void checkFeeMatchesExpectedRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.ZERO, Coin.valueOf(100)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(-1), Coin.valueOf(100)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(100), Coin.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(100), Coin.valueOf(-1)));
-    }
-
-    @Test
-    void checkTakerFeeRejectsUnexpectedFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFeeInTolerance(151, 100));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTakerFeeInTolerance(49, 100));
-    }
-
-    @Test
-    void checkTakerFeeRejectsNullFees() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTakerFee(null, Coin.valueOf(100)));
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTakerFee(Coin.valueOf(100), null));
-    }
-
-    @Test
-    void checkMakerFeeAcceptsExpectedFees() {
-        Coin makerFee = Coin.valueOf(77);
-
-        assertSame(makerFee, TradeValidation.checkMakerFee(makerFee, Coin.valueOf(77)));
-        assertEquals(77, TradeValidation.checkMakerFeeInTolerance(77, 77));
-        assertEquals(154, TradeValidation.checkMakerFeeInTolerance(154, 77));
-        assertEquals(39, TradeValidation.checkMakerFeeInTolerance(39, 77));
-    }
-
-    @Test
-    void checkMakerFeeAcceptsCalculatedExpectedFees() {
-        configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100));
-        Coin makerFee = Coin.valueOf(77);
-
-        assertSame(makerFee, TradeValidation.checkMakerFee(makerFee, false, Coin.valueOf(3_000)));
-        assertEquals(77, TradeValidation.checkMakerFee(77, false, Coin.valueOf(3_000)));
-    }
-
-    @Test
-    void checkMakerFeeRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.ZERO, Coin.valueOf(77)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(-1), Coin.valueOf(77)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(77), Coin.ZERO));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(77), Coin.valueOf(-1)));
-    }
-
-    @Test
-    void checkMakerFeeRejectsUnexpectedFees() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(155), Coin.valueOf(77)));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkMakerFeeInTolerance(155, 77));
-    }
-
-    @Test
-    void checkMakerFeeRejectsNullFees() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkMakerFee(null, Coin.valueOf(77)));
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkMakerFee(Coin.valueOf(77), null));
-    }
 
     @Test
     void checkDelayedPayoutTxInputAmountAcceptsExpectedInputAmount() {
