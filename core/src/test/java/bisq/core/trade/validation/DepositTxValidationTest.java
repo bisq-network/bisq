@@ -22,12 +22,14 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.exceptions.InvalidTxException;
 
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.ProtocolException;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
@@ -419,6 +421,62 @@ class DepositTxValidationTest {
         assertEquals(ArrayIndexOutOfBoundsException.class, exception.getCause().getClass());
     }
 
+    @Test
+    void assertCanonicalDepositTxShapeAcceptsCanonicalTx() {
+        assertDoesNotThrow(() -> DepositTxValidation.assertCanonicalDepositTxShape(
+                canonicalTx(), p2wpkhInputs(), PARAMS));
+    }
+
+    @Test
+    void assertCanonicalDepositTxShapeRejectsNonV1Tx() {
+        Transaction tx = canonicalTx();
+        tx.setVersion(2);
+
+        assertThrows(InvalidTxException.class,
+                () -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
+    }
+
+    @Test
+    void assertCanonicalDepositTxShapeRejectsNonZeroLockTime() {
+        Transaction tx = canonicalTx();
+        tx.setLockTime(1);
+
+        assertThrows(InvalidTxException.class,
+                () -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
+    }
+
+    @Test
+    void assertCanonicalDepositTxShapeRejectsRbfEnabledSequence() {
+        Transaction tx = canonicalTx();
+        tx.getInput(0).setSequenceNumber(0);
+
+        assertThrows(InvalidTxException.class,
+                () -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
+    }
+
+    @Test
+    void assertCanonicalDepositTxShapeAcceptsLockTimeOptInSequence() {
+        // NO_SEQUENCE - 1 (0xFFFFFFFE) keeps RBF disabled while opting in to lockTime; canonical for Bisq.
+        Transaction tx = canonicalTx();
+        tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+
+        assertDoesNotThrow(() -> DepositTxValidation.assertCanonicalDepositTxShape(tx, p2wpkhInputs(), PARAMS));
+    }
+
+    @Test
+    void assertCanonicalDepositTxShapeRejectsNonP2WPKHPeerInput() {
+        assertThrows(InvalidTxException.class,
+                () -> DepositTxValidation.assertCanonicalDepositTxShape(canonicalTx(), p2pkhInputs(), PARAMS));
+    }
+
+    @Test
+    void assertCanonicalDepositTxShapeRejectsNullPeerInput() {
+        assertThrows(InvalidTxException.class,
+                () -> DepositTxValidation.assertCanonicalDepositTxShape(canonicalTx(),
+                        java.util.Collections.singletonList(null),
+                        PARAMS));
+    }
+
     private static BtcWalletService walletServiceFor(List<RawTransactionInput> rawTransactionInputs) {
         BtcWalletService btcWalletService = btcWalletService();
         rawTransactionInputs.forEach(rawTransactionInput -> {
@@ -500,4 +558,35 @@ class DepositTxValidationTest {
     static Transaction copy(Transaction transaction) {
         return new Transaction(PARAMS, transaction.bitcoinSerialize());
     }
+
+    private static Transaction canonicalTx() {
+        Transaction tx = new Transaction(PARAMS);
+        tx.addInput(new TransactionInput(PARAMS,
+                tx,
+                new byte[]{},
+                new TransactionOutPoint(PARAMS, 0, Sha256Hash.ZERO_HASH),
+                Coin.valueOf(2_000)));
+        return tx;
+    }
+
+    private static List<RawTransactionInput> p2wpkhInputs() {
+        return parentTxInputs(ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+    }
+
+    private static List<RawTransactionInput> p2pkhInputs() {
+        return parentTxInputs(ScriptBuilder.createOutputScript(LegacyAddress.fromKey(PARAMS, new ECKey())));
+    }
+
+    private static List<RawTransactionInput> parentTxInputs(org.bitcoinj.script.Script outputScript) {
+        Transaction parent = new Transaction(PARAMS);
+        // Bitcoinj's segwit serialization requires at least one input; add a dummy.
+        parent.addInput(new TransactionInput(PARAMS,
+                parent,
+                new byte[]{},
+                new TransactionOutPoint(PARAMS, 0, Sha256Hash.ZERO_HASH),
+                Coin.valueOf(2_000)));
+        parent.addOutput(Coin.valueOf(1_000), outputScript);
+        return List.of(new RawTransactionInput(0, parent.bitcoinSerialize(), 1_000));
+    }
+
 }

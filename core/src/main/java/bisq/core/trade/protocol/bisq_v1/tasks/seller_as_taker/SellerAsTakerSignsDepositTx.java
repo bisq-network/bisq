@@ -17,16 +17,16 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller_as_taker;
 
+import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DepositTxValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -81,7 +81,7 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
             List<RawTransactionInput> buyerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
             Transaction makersDepositTx = new Transaction(walletService.getParams(), checkNotNull(processModel.getPreparedDepositTx()));
             verifyPreparedDepositTxFromBuyerAsMaker(makersDepositTx);
-            TradeDataValidation.assertCanonicalDepositTxShape(makersDepositTx, buyerInputs, walletService.getParams());
+            DepositTxValidation.assertCanonicalDepositTxShape(makersDepositTx, buyerInputs, walletService.getParams());
 
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
