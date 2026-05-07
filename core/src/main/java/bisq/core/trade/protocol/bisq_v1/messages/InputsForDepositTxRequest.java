@@ -161,9 +161,7 @@ public final class InputsForDepositTxRequest extends TradeMessage
         checkArgument(currentDate > 0, "currentDate must be positive");
         checkNonEmptyBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
         checkNonBlankString(takersPaymentMethodId, "takersPaymentMethodId");
-        // burningManSelectionHeight was added in v1.9.7 which cannot be used for trading anymore, though old persisted
-        // trades might carry that field thus we do not enforce positive values.
-        checkArgument(burningManSelectionHeight >= 0, "burningManSelectionHeight must be positive");
+        checkArgument(burningManSelectionHeight > 0, "burningManSelectionHeight must be positive");
     }
 
     @Override
@@ -174,6 +172,7 @@ public final class InputsForDepositTxRequest extends TradeMessage
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
