@@ -478,11 +478,11 @@ public class TradeValidation {
 
     public static String checkBase64Signature(String signatureBase64) {
         checkNonBlankString(signatureBase64, "signatureBase64");
-        byte[] encodedSignature = toEncodedSignature(signatureBase64);
-        return Base64.encode(encodedSignature);
+        toDecodedSignature(signatureBase64);
+        return signatureBase64;
     }
 
-    public static byte[] toEncodedSignature(String signatureBase64) {
+    public static byte[] toDecodedSignature(String signatureBase64) {
         checkNonBlankString(signatureBase64, "signatureBase64");
         return Base64.decode(signatureBase64);
     }
