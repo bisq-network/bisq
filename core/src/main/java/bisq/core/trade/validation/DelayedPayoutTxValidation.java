@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -66,8 +67,8 @@ public final class DelayedPayoutTxValidation {
                                                    Trade trade,
                                                    BtcWalletService btcWalletService,
                                                    @Nullable Consumer<String> addressConsumer) {
-        Transaction checkedDelayedPayoutTx = checkNotNull(delayedPayoutTx,
-                "delayedPayoutTx must not be null");
+        Transaction checkedDelayedPayoutTx = checkTransaction(checkNotNull(delayedPayoutTx,
+                "delayedPayoutTx must not be null"));
         Trade checkedTrade = checkNotNull(trade, "trade must not be null");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
 
@@ -97,9 +98,14 @@ public final class DelayedPayoutTxValidation {
 
         TransactionOutput output = delayedPayoutTx.getOutput(0);
         Offer offer = checkNotNull(trade.getOffer(), "trade.getOffer() must not be null");
-        Coin msOutputAmount = offer.getBuyerSecurityDeposit()
-                .add(offer.getSellerSecurityDeposit())
-                .add(checkNotNull(trade.getAmount(), "trade.getAmount() must not be null"));
+        Coin buyerSecurityDeposit = checkIsPositive(offer.getBuyerSecurityDeposit(),
+                "offer.getBuyerSecurityDeposit()");
+        Coin sellerSecurityDeposit = checkIsPositive(offer.getSellerSecurityDeposit(),
+                "offer.getSellerSecurityDeposit()");
+        Coin tradeAmount = checkIsPositive(trade.getAmount(), "trade.getAmount()");
+        Coin msOutputAmount = buyerSecurityDeposit
+                .add(sellerSecurityDeposit)
+                .add(tradeAmount);
 
         checkArgument(output.getValue().equals(msOutputAmount),
                 "Output value of deposit tx and delayed payout tx is not matching. " +
@@ -171,12 +177,14 @@ public final class DelayedPayoutTxValidation {
 
     public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
         checkIsPositive(inputAmount, "inputAmount");
-        checkNotNull(trade, "trade must not be null");
-        Offer offer = trade.getOffer();
-        long tradeAmount = trade.getAmountAsLong();
-        long buyerDeposit = offer.getBuyerSecurityDeposit().getValue();
-        long sellerDeposit = offer.getSellerSecurityDeposit().getValue();
-        long tradeTxFee = trade.getTradeTxFeeAsLong();
+        Trade checkedTrade = checkNotNull(trade, "trade must not be null");
+        Offer offer = checkNotNull(checkedTrade.getOffer(), "trade.getOffer() must not be null");
+        long tradeAmount = checkIsPositive(checkedTrade.getAmountAsLong(), "tradeAmount");
+        long buyerDeposit = checkIsPositive(offer.getBuyerSecurityDeposit(),
+                "offer.getBuyerSecurityDeposit()").getValue();
+        long sellerDeposit = checkIsPositive(offer.getSellerSecurityDeposit(),
+                "offer.getSellerSecurityDeposit()").getValue();
+        long tradeTxFee = checkIsPositive(checkedTrade.getTradeTxFeeAsLong(), "tradeTxFee");
         long expectedAmount = tradeAmount +
                 buyerDeposit +
                 sellerDeposit +

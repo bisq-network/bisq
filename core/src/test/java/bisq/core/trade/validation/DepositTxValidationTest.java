@@ -25,6 +25,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.exceptions.InvalidTxException;
 
 import com.google.protobuf.ByteString;
 
@@ -233,6 +234,42 @@ class DepositTxValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.checkDepositInputs(trade));
+    }
+
+    @Test
+    void checkDepositInputsRejectsNullTrade() {
+        assertThrows(NullPointerException.class,
+                () -> DepositTxValidation.checkDepositInputs(null));
+    }
+
+    @Test
+    void checkDepositInputsRejectsUnexpectedInputCount() {
+        Transaction depositTx = new Transaction(PARAMS);
+        depositTx.addInput(transactionInput(depositTx, MAKER_FEE_TX_ID));
+        depositTx.addOutput(Coin.valueOf(1_000), SegwitAddress.fromKey(PARAMS, new ECKey()));
+        Trade trade = tradeWithDepositTx(depositTx);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkDepositInputs(trade));
+    }
+
+    @Test
+    void checkDepositInputsRejectsStructurallyInvalidDepositTx() {
+        Transaction depositTx = new Transaction(PARAMS);
+        depositTx.addInput(transactionInput(depositTx, MAKER_FEE_TX_ID));
+        depositTx.addInput(transactionInput(depositTx, TAKER_FEE_TX_ID));
+        Trade trade = tradeWithDepositTx(depositTx);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.checkDepositInputs(trade));
+    }
+
+    @Test
+    void validateDepositInputsWrapsValidationFailures() {
+        Trade trade = tradeWithDepositInputs(MAKER_FEE_TX_ID, OTHER_TX_ID);
+
+        assertThrows(InvalidTxException.class,
+                () -> DepositTxValidation.validateDepositInputs(trade));
     }
 
     /* --------------------------------------------------------------------- */
@@ -565,6 +602,10 @@ class DepositTxValidationTest {
     }
 
     private static Trade tradeWithDepositInputs(String input0TxId, String input1TxId) {
+        return tradeWithDepositTx(depositTxWithInputs(input0TxId, input1TxId));
+    }
+
+    private static Trade tradeWithDepositTx(Transaction depositTx) {
         OfferPayload offerPayload = mock(OfferPayload.class);
         when(offerPayload.getOfferFeePaymentTxId()).thenReturn(MAKER_FEE_TX_ID);
 
@@ -573,7 +614,7 @@ class DepositTxValidationTest {
         when(contract.getTakerFeeTxID()).thenReturn(TAKER_FEE_TX_ID);
 
         Trade trade = mock(Trade.class);
-        when(trade.getDepositTx()).thenReturn(depositTxWithInputs(input0TxId, input1TxId));
+        when(trade.getDepositTx()).thenReturn(depositTx);
         when(trade.getContract()).thenReturn(contract);
         return trade;
     }

@@ -162,15 +162,17 @@ public final class DepositTxValidation {
 
     public static Trade checkDepositInputs(Trade trade) {
         Trade checkedTrade = checkNotNull(trade, "trade must not be null");
-        Transaction depositTx = checkNotNull(checkedTrade.getDepositTx(),
-                "trade.getDepositTx() must not be null");
+        Transaction depositTx = checkTransaction(checkNotNull(checkedTrade.getDepositTx(),
+                "trade.getDepositTx() must not be null"));
         checkArgument(depositTx.getInputs().size() == 2,
                 "Deposit transaction has unexpected input count");
 
         Contract contract = checkNotNull(checkedTrade.getContract(),
                 "trade.getContract() must not be null");
-        String txIdInput0 = depositTx.getInput(0).getOutpoint().getHash().toString();
-        String txIdInput1 = depositTx.getInput(1).getOutpoint().getHash().toString();
+        String txIdInput0 = checkNotNull(depositTx.getInput(0).getOutpoint(),
+                "depositTx input 0 outpoint must not be null").getHash().toString();
+        String txIdInput1 = checkNotNull(depositTx.getInput(1).getOutpoint(),
+                "depositTx input 1 outpoint must not be null").getHash().toString();
         String contractMakerTxId = checkNotNull(checkNotNull(contract.getOfferPayload(),
                         "contract.getOfferPayload() must not be null").getOfferFeePaymentTxId(),
                 "contract.getOfferPayload().getOfferFeePaymentTxId() must not be null");
@@ -305,7 +307,8 @@ public final class DepositTxValidation {
         checkNotNull(rawTransactionInputs, "rawTransactionInputs must not be null");
         checkNotNull(tradeWalletService, "tradeWalletService must not be null");
         checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WPKH),
-                "rawTransactionInputs must not be malleable");
+                "rawTransactionInputs must all be native segwit P2WPKH inputs; " +
+                        "legacy P2PKH, P2SH-wrapped, and P2WSH inputs are not supported");
         return rawTransactionInputs;
     }
 

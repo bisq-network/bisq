@@ -73,7 +73,7 @@ public final class MinerFeeValidation {
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
         checkTradeTxFee(tradeTxFee);
         checkNotNull(feeService, "feeService must not be null");
-        Coin txFeePerVbyte = feeService.getTxFeePerVbyte();
+        Coin txFeePerVbyte = checkIsPositive(feeService.getTxFeePerVbyte(), "txFeePerVbyte");
         Coin expectedTradeTxFee = TradeFeeFactory.getTradeTxFee(txFeePerVbyte);
         return checkTradeTxFeeIsInTolerance(tradeTxFee, expectedTradeTxFee);
     }

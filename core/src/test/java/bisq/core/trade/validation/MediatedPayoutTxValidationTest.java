@@ -29,6 +29,7 @@ import org.bitcoinj.params.MainNetParams;
 
 import org.junit.jupiter.api.Test;
 
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutTx;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,6 +62,40 @@ class MediatedPayoutTxValidationTest {
                 () -> checkMediatedPayoutAmounts(Coin.valueOf(6_000),
                         Coin.valueOf(3_999),
                         Coin.valueOf(10_000)));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Mediation result addresses
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkMediatedPayoutAddressesAcceptsValidAddressesForPositiveAmounts() {
+        assertEquals(BUYER_ADDRESS,
+                checkMediatedPayoutAddresses(BUYER_ADDRESS,
+                        Coin.valueOf(6_000),
+                        SELLER_ADDRESS,
+                        Coin.valueOf(4_000),
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkMediatedPayoutAddressesRejectsInvalidAddressForPositiveAmount() {
+        assertThrows(IllegalArgumentException.class,
+                () -> checkMediatedPayoutAddresses("not-a-bitcoin-address",
+                        Coin.valueOf(6_000),
+                        SELLER_ADDRESS,
+                        Coin.valueOf(4_000),
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkMediatedPayoutAddressesRejectsBlankAddressEvenForZeroAmount() {
+        assertThrows(IllegalArgumentException.class,
+                () -> checkMediatedPayoutAddresses(" ",
+                        Coin.ZERO,
+                        SELLER_ADDRESS,
+                        Coin.valueOf(4_000),
+                        ValidationTestUtils.btcWalletService()));
     }
 
     /* --------------------------------------------------------------------- */

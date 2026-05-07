@@ -30,6 +30,7 @@ import static bisq.core.trade.validation.ValidationTestUtils.configureTradeFeeSe
 import static bisq.core.trade.validation.ValidationTestUtils.inputsForDepositTxRequestValidationFixture;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 class InputsForDepositTxRequestValidationTest {
 
@@ -81,6 +82,34 @@ class InputsForDepositTxRequestValidationTest {
     void checkInputsForDepositTxRequestRejectsUnexpectedTakerFee() throws CryptoException {
         InputsForDepositTxRequestValidationFixture fixture =
                 inputsForDepositTxRequestValidationFixture(null, Coin.valueOf(151));
+
+        assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsNullOfferId() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        when(fixture.offer.getId()).thenReturn(null);
+
+        assertThrows(NullPointerException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                fixture.feeService));
+    }
+
+    @Test
+    void checkInputsForDepositTxRequestRejectsBlankOfferId() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        when(fixture.offer.getId()).thenReturn(" ");
 
         assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
                 fixture.offer,

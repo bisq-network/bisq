@@ -143,7 +143,7 @@ public final class InputsForDepositTxRequest extends TradeMessage
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
         checkArgument(tradeAmount > 0, "tradeAmount must be positive");
         checkArgument(tradePrice > 0, "tradePrice must be positive");
-        // Bound the taker-supplied trade tx fee. Single source of truth in TradeValidation.
+        // Bound the taker-supplied trade tx fee. Single source of truth in MinerFeeValidation.
         MinerFeeValidation.checkTradeTxFee(txFee);
         checkArgument(takerFee > 0, "takerFee must be positive");
         checkList(rawTransactionInputs, true, "rawTransactionInputs");

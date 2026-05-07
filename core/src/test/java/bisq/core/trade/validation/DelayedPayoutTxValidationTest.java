@@ -23,13 +23,17 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.script.ScriptBuilder;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 
@@ -76,6 +80,102 @@ class DelayedPayoutTxValidationTest {
         Transaction depositTx = depositTx();
         Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
         delayedPayoutTx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsUnexpectedInputCount() {
+        Trade trade = tradeWithLockTime(144);
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        delayedPayoutTx.addInput(depositTx(1).getOutput(0));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsStructurallyInvalidTransaction() {
+        Trade trade = tradeWithLockTime(144);
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = new Transaction(ValidationTestUtils.PARAMS);
+        delayedPayoutTx.addInput(depositTx.getOutput(0));
+        delayedPayoutTx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+        delayedPayoutTx.setLockTime(144);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsNullArguments() {
+        Trade trade = tradeWithLockTime(144);
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        BtcWalletService btcWalletService = ValidationTestUtils.btcWalletService();
+
+        assertThrows(NullPointerException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(null, trade, btcWalletService));
+        assertThrows(NullPointerException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx, null, btcWalletService));
+        assertThrows(NullPointerException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx, trade, null));
+    }
+
+    @Test
+    void checkDelayedPayoutTxAcceptsExpectedLegacyBurningManOutput() {
+        String outputAddress = SegwitAddress.fromKey(ValidationTestUtils.PARAMS, new ECKey()).toString();
+        Trade trade = legacyBurningManTrade(144,
+                Coin.valueOf(10_000),
+                Coin.valueOf(12_000),
+                Coin.valueOf(20_000));
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                144,
+                Coin.valueOf(42_000),
+                outputAddress);
+        AtomicReference<String> consumedAddress = new AtomicReference<>();
+
+        assertEquals(delayedPayoutTx,
+                DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService(),
+                        consumedAddress::set));
+        assertEquals(outputAddress, consumedAddress.get());
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsUnexpectedLegacyBurningManOutputAmount() {
+        Trade trade = legacyBurningManTrade(144,
+                Coin.valueOf(10_000),
+                Coin.valueOf(12_000),
+                Coin.valueOf(20_000));
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144, Coin.valueOf(41_999));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        ValidationTestUtils.btcWalletService()));
+    }
+
+    @Test
+    void checkDelayedPayoutTxRejectsUnexpectedLegacyBurningManOutputCount() {
+        Trade trade = legacyBurningManTrade(144,
+                Coin.valueOf(10_000),
+                Coin.valueOf(12_000),
+                Coin.valueOf(20_000));
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144, Coin.valueOf(42_000));
+        delayedPayoutTx.addOutput(Coin.SATOSHI, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
 
         assertThrows(IllegalArgumentException.class,
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
@@ -206,6 +306,33 @@ class DelayedPayoutTxValidationTest {
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(1, null));
     }
 
+    @Test
+    void checkDelayedPayoutTxInputAmountRejectsMissingTradeOffer() {
+        Trade trade = mock(Trade.class);
+        when(trade.getAmountAsLong()).thenReturn(20_000L);
+        when(trade.getTradeTxFeeAsLong()).thenReturn(300L);
+
+        assertThrows(NullPointerException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(42_300, trade));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputAmountRejectsNonPositiveTradeFields() {
+        Offer offer = ValidationTestUtils.offer(true, Coin.ZERO, Coin.valueOf(12_000), Coin.valueOf(40_000));
+        Trade trade = ValidationTestUtils.trade(offer, Coin.valueOf(300), Coin.valueOf(20_000));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(32_300, trade));
+
+        Offer offerWithPositiveDeposits = ValidationTestUtils.offer(true,
+                Coin.valueOf(10_000),
+                Coin.valueOf(12_000),
+                Coin.valueOf(40_000));
+        Trade tradeWithoutAmount = ValidationTestUtils.trade(offerWithPositiveDeposits, Coin.valueOf(300), Coin.ZERO);
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount(22_300, tradeWithoutAmount));
+    }
+
     /* --------------------------------------------------------------------- */
     // Lock time
     /* --------------------------------------------------------------------- */
@@ -277,6 +404,22 @@ class DelayedPayoutTxValidationTest {
         return trade;
     }
 
+    private static Trade legacyBurningManTrade(long lockTime,
+                                               Coin buyerSecurityDeposit,
+                                               Coin sellerSecurityDeposit,
+                                               Coin tradeAmount) {
+        Offer offer = ValidationTestUtils.offer(true,
+                buyerSecurityDeposit,
+                sellerSecurityDeposit,
+                Coin.valueOf(40_000));
+        Trade trade = mock(Trade.class);
+        when(trade.getLockTime()).thenReturn(lockTime);
+        when(trade.isUsingLegacyBurningMan()).thenReturn(true);
+        when(trade.getOffer()).thenReturn(offer);
+        when(trade.getAmount()).thenReturn(tradeAmount);
+        return trade;
+    }
+
     private static Transaction depositTx() {
         return depositTx(0);
     }
@@ -293,10 +436,25 @@ class DelayedPayoutTxValidationTest {
     }
 
     private static Transaction delayedPayoutTx(Transaction depositTx, long lockTime) {
+        return delayedPayoutTx(depositTx, lockTime, Coin.valueOf(500));
+    }
+
+    private static Transaction delayedPayoutTx(Transaction depositTx, long lockTime, Coin outputAmount) {
+        return delayedPayoutTx(depositTx,
+                lockTime,
+                outputAmount,
+                SegwitAddress.fromKey(ValidationTestUtils.PARAMS, new ECKey()).toString());
+    }
+
+    private static Transaction delayedPayoutTx(Transaction depositTx,
+                                               long lockTime,
+                                               Coin outputAmount,
+                                               String outputAddress) {
         Transaction transaction = new Transaction(ValidationTestUtils.PARAMS);
         transaction.addInput(depositTx.getOutput(0));
         transaction.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
         transaction.setLockTime(lockTime);
+        transaction.addOutput(outputAmount, Address.fromString(ValidationTestUtils.PARAMS, outputAddress));
         return transaction;
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.TradeFeeFactory;
 
 import org.bitcoinj.core.Coin;
@@ -26,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class MinerFeeValidationTest {
 
@@ -68,6 +71,7 @@ class MinerFeeValidationTest {
         assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFee(null));
         assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(null, Coin.valueOf(300)));
         assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), (Coin) null));
+        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), (FeeService) null));
     }
 
     @Test
@@ -97,6 +101,19 @@ class MinerFeeValidationTest {
         Coin txFee = TradeFeeFactory.getTradeTxFee(Coin.valueOf(2));
 
         assertSame(txFee, MinerFeeValidation.checkTradeTxFeeIsInTolerance(txFee, TradeFeeFactory.getTradeTxFee(Coin.valueOf(2))));
+    }
+
+    @Test
+    void checkTradeTxFeeRejectsInvalidFeeServiceRate() {
+        FeeService feeService = mock(FeeService.class);
+        when(feeService.getTxFeePerVbyte()).thenReturn(null);
+
+        assertThrows(NullPointerException.class,
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), feeService));
+
+        when(feeService.getTxFeePerVbyte()).thenReturn(Coin.ZERO);
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), feeService));
     }
 
     /* --------------------------------------------------------------------- */

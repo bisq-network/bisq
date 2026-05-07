@@ -62,6 +62,7 @@ public final class InputsForDepositTxRequestValidation {
         checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
         checkNotNull(feeService, "feeService must not be null");
 
+        String checkedOfferId = TradeValidation.checkTradeId(offer.getId(), request);
         Coin tradeAmount = TradeAmountValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
         Coin tradeTxFee = MinerFeeValidation.checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
         DepositTxValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
@@ -75,7 +76,7 @@ public final class InputsForDepositTxRequestValidation {
                 "takerPubKeyRing must not be null");
         DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
         TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
-        byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
+        byte[] accountAgeWitnessNonce = checkedOfferId.getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = checkNotNull(takerPubKeyRing.getSignaturePubKey(),
                 "takerSignatureKey must not be null");
         checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
