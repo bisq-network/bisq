@@ -24,7 +24,9 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.script.ScriptBuilder;
@@ -98,6 +100,17 @@ class DelayedPayoutTxValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, depositTx));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputRejectsNullTransactions() {
+        Transaction depositTx = depositTx();
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+
+        assertThrows(NullPointerException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(null, depositTx));
+        assertThrows(NullPointerException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, null));
     }
 
     /* --------------------------------------------------------------------- */

@@ -38,14 +38,11 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Slf4j
 public final class DepositTxValidation {
     private DepositTxValidation() {
     }
@@ -332,34 +329,32 @@ public final class DepositTxValidation {
                                                BtcWalletService walletService,
                                                String peerRole) {
         long inputValue = 0;
-        for (RawTransactionInput input : rawTransactionInputs) {
-            checkNotNull(input, "%s raw transaction input must not be null", peerRole);
-            checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
+        for (int listPos = 0; listPos < rawTransactionInputs.size(); listPos++) {
+            RawTransactionInput input = rawTransactionInputs.get(listPos);
+            checkNotNull(input, "%s raw transaction input at position %s must not be null", peerRole, listPos);
+            checkArgument(input.value > 0,
+                    "%s raw transaction input at position %s must have positive value",
+                    peerRole,
+                    listPos);
             input.validate(walletService);
-            checkArgument(walletService.isP2WPKH(input), "%s input must be P2WH", peerRole);
+            checkArgument(walletService.isP2WPKH(input),
+                    "%s funding input at position %s (parent vout=%s) is not native segwit P2WPKH " +
+                            "(bech32: bc1q on mainnet, tb1q on testnet, bcrt1q on regtest). " +
+                            "Bisq v1 trades require P2WPKH UTXOs; legacy P2PKH, P2SH-wrapped, and P2WSH inputs are rejected. " +
+                            "Move funds to a native segwit address and retry.",
+                    peerRole,
+                    listPos,
+                    input.index);
             inputValue = Math.addExact(inputValue, input.value);
         }
         return inputValue;
     }
 
     public static void validateDepositInputs(Trade trade) throws InvalidTxException {
-        // assumption: deposit tx always has 2 inputs, the maker and taker
-        if (trade == null || trade.getDepositTx() == null || trade.getDepositTx().getInputs().size() != 2) {
-            throw new InvalidTxException("Deposit transaction is null or has unexpected input count");
-        }
-        Transaction depositTx = trade.getDepositTx();
-        String txIdInput0 = depositTx.getInput(0).getOutpoint().getHash().toString();
-        String txIdInput1 = depositTx.getInput(1).getOutpoint().getHash().toString();
-        String contractMakerTxId = trade.getContract().getOfferPayload().getOfferFeePaymentTxId();
-        String contractTakerTxId = trade.getContract().getTakerFeeTxID();
-        boolean makerFirstMatch = contractMakerTxId.equalsIgnoreCase(txIdInput0) && contractTakerTxId.equalsIgnoreCase(txIdInput1);
-        boolean takerFirstMatch = contractMakerTxId.equalsIgnoreCase(txIdInput1) && contractTakerTxId.equalsIgnoreCase(txIdInput0);
-        if (!makerFirstMatch && !takerFirstMatch) {
-            String errMsg = "Maker/Taker txId in contract does not match deposit tx input";
-            log.error(errMsg +
-                    "\nContract Maker tx=" + contractMakerTxId + " Contract Taker tx=" + contractTakerTxId +
-                    "\nDeposit Input0=" + txIdInput0 + " Deposit Input1=" + txIdInput1);
-            throw new InvalidTxException(errMsg);
+        try {
+            checkDepositInputs(trade);
+        } catch (RuntimeException e) {
+            throw new InvalidTxException(e.getMessage(), e);
         }
     }
 }

@@ -61,4 +61,26 @@ class TradeAmountValidationTest {
                 exception.getMessage());
     }
 
+    @Test
+    void checkTradeAmountRejectsInvalidOfferBounds() {
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), OFFER_MAX_AMOUNT, OFFER_MIN_AMOUNT));
+    }
+
+    @Test
+    void checkTradeAmountRejectsNullAndNonPositiveAmounts() {
+        assertThrows(NullPointerException.class,
+                () -> TradeAmountValidation.checkTradeAmount(null, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
+        assertThrows(NullPointerException.class,
+                () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), null, OFFER_MAX_AMOUNT));
+        assertThrows(NullPointerException.class,
+                () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), OFFER_MIN_AMOUNT, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeAmount(Coin.ZERO, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), Coin.ZERO, OFFER_MAX_AMOUNT));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), OFFER_MIN_AMOUNT, Coin.ZERO));
+    }
+
 }

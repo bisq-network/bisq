@@ -23,6 +23,9 @@ import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.price.PriceFeedService;
 
+import static bisq.core.util.Validator.checkIsPositive;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public final class TradePriceValidation {
     public static final double MAX_TRADE_PRICE_DEVIATION = 1.5;
 
@@ -36,12 +39,16 @@ public final class TradePriceValidation {
     public static long checkTakersTradePrice(long takersTradePrice,
                                              PriceFeedService priceFeedService,
                                              Offer offer) {
+        long checkedTakersTradePrice = checkIsPositive(takersTradePrice, "takersTradePrice");
+        checkNotNull(priceFeedService, "priceFeedService must not be null");
+        checkNotNull(offer, "offer must not be null");
+
         try {
-            offer.verifyTakersTradePrice(takersTradePrice);
+            offer.verifyTakersTradePrice(checkedTakersTradePrice);
             // We allow 50% tolerance to the max allowed price percentage to avoid failing trades in
             // high volatility environments
             OfferValidation.verifyPriceInBounds(priceFeedService, offer, MAX_TRADE_PRICE_DEVIATION);
-            return takersTradePrice;
+            return checkedTakersTradePrice;
         } catch (TradePriceOutOfToleranceException | MarketPriceNotAvailableException e) {
             throw new RuntimeException(e);
         }

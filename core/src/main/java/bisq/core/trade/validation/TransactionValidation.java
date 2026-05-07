@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
@@ -51,9 +52,11 @@ public final class TransactionValidation {
     public static String checkBitcoinAddress(String bitcoinAddress, BtcWalletService btcWalletService) {
         checkNonBlankString(bitcoinAddress, "bitcoinAddress");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
+        NetworkParameters params = checkNotNull(btcWalletService.getParams(),
+                "btcWalletService.getParams() must not be null");
 
         try {
-            Address.fromString(btcWalletService.getParams(), bitcoinAddress).getOutputScriptType();
+            Address.fromString(params, bitcoinAddress).getOutputScriptType();
             return bitcoinAddress;
         } catch (AddressFormatException | IllegalStateException e) {
             throw new IllegalArgumentException("Invalid bitcoin address: " + bitcoinAddress, e);
@@ -102,9 +105,11 @@ public final class TransactionValidation {
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(serializedTransaction, "serializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
+        NetworkParameters params = checkNotNull(btcWalletService.getParams(),
+                "btcWalletService.getParams() must not be null");
 
         try {
-            Transaction transaction = new Transaction(btcWalletService.getParams(), serializedTransaction);
+            Transaction transaction = new Transaction(params, serializedTransaction);
             transaction.verify();
             return transaction;
         } catch (Exception e) {

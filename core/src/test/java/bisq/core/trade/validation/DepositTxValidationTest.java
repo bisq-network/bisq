@@ -20,7 +20,10 @@ package bisq.core.trade.validation;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletUtils;
 import bisq.core.offer.Offer;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import com.google.protobuf.ByteString;
@@ -143,7 +146,7 @@ class DepositTxValidationTest {
     @Test
     void checkCanonicalDepositTxShapeAcceptsCanonicalTx() {
         Transaction tx = canonicalTx();
-        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000)));
+        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000)));
 
         assertSame(tx, DepositTxValidation.checkCanonicalDepositTxShape(tx, p2wpkhInputs, PARAMS));
     }
@@ -155,7 +158,7 @@ class DepositTxValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
-                        Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000))),
+                        Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000))),
                         PARAMS));
     }
 
@@ -166,7 +169,7 @@ class DepositTxValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
-                        Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000))),
+                        Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000))),
                         PARAMS));
     }
 
@@ -177,7 +180,7 @@ class DepositTxValidationTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.checkCanonicalDepositTxShape(tx,
-                        Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000))),
+                        Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000))),
                         PARAMS));
     }
 
@@ -185,7 +188,7 @@ class DepositTxValidationTest {
     void checkCanonicalDepositTxShapeAcceptsLockTimeOptInSequence() {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
-        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2WHOutput(1_000)));
+        List<RawTransactionInput> p2wpkhInputs = Collections.singletonList(rawInput(parentTxWithP2wpkhOutput(1_000)));
 
         assertSame(tx, DepositTxValidation.checkCanonicalDepositTxShape(tx, p2wpkhInputs, PARAMS));
     }
@@ -367,7 +370,7 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkRawTransactionInputsAreNotMalleableAcceptsP2whInputs() {
+    void checkRawTransactionInputsAreNotMalleableAcceptsP2wpkhInputs() {
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
         RawTransactionInput rawTransactionInput = ValidationTestUtils.rawTransactionInput(Coin.valueOf(10_000));
         List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
@@ -405,10 +408,10 @@ class DepositTxValidationTest {
     /* --------------------------------------------------------------------- */
 
     @Test
-    void acceptsExactExpectedInputAmountForP2WHInputs() {
+    void acceptsExactExpectedInputAmountForP2WPKHInputs() {
         List<RawTransactionInput> rawTransactionInputs = Arrays.asList(
-                rawInput(parentTxWithP2WHOutput(40_000)),
-                rawInput(parentTxWithP2WHOutput(60_000)));
+                rawInput(parentTxWithP2wpkhOutput(40_000)),
+                rawInput(parentTxWithP2wpkhOutput(60_000)));
         BtcWalletService btcWalletService = walletServiceFor(rawTransactionInputs);
 
         assertDoesNotThrow(() -> DepositTxValidation.validatePeersInputs(
@@ -421,7 +424,7 @@ class DepositTxValidationTest {
     @Test
     void rejectsInputAmountMismatch() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
-                rawInput(parentTxWithP2WHOutput(100_000)));
+                rawInput(parentTxWithP2wpkhOutput(100_000)));
         BtcWalletService btcWalletService = walletServiceFor(rawTransactionInputs);
 
         assertThrows(IllegalArgumentException.class,
@@ -446,7 +449,7 @@ class DepositTxValidationTest {
 
     @Test
     void rejectsNullInput() {
-        List<RawTransactionInput> rawTransactionInputs = Arrays.asList(rawInput(parentTxWithP2WHOutput(1)), null);
+        List<RawTransactionInput> rawTransactionInputs = Arrays.asList(rawInput(parentTxWithP2wpkhOutput(1)), null);
         BtcWalletService btcWalletService = walletServiceFor(rawTransactionInputs.get(0));
 
         assertThrows(NullPointerException.class,
@@ -460,7 +463,7 @@ class DepositTxValidationTest {
     @Test
     void rejectsNullExpectedInputAmount() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
-                rawInput(parentTxWithP2WHOutput(100_000)));
+                rawInput(parentTxWithP2wpkhOutput(100_000)));
 
         assertThrows(NullPointerException.class,
                 () -> DepositTxValidation.validatePeersInputs(rawTransactionInputs, null, btcWalletService(), MAKER_ROLE));
@@ -469,7 +472,7 @@ class DepositTxValidationTest {
     @Test
     void rejectsNonPositiveExpectedInputAmount() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
-                rawInput(parentTxWithP2WHOutput(100_000)));
+                rawInput(parentTxWithP2wpkhOutput(100_000)));
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.validatePeersInputs(rawTransactionInputs, Coin.ZERO, btcWalletService(), MAKER_ROLE));
@@ -477,7 +480,7 @@ class DepositTxValidationTest {
 
     @Test
     void rejectsInputValueMismatchWithParentTxOutput() {
-        Transaction parentTx = parentTxWithP2WHOutput(100_000);
+        Transaction parentTx = parentTxWithP2wpkhOutput(100_000);
         RawTransactionInput rawTransactionInput = rawInputWithValue(parentTx, 100_001);
         BtcWalletService btcWalletService = walletServiceFor(rawTransactionInput);
 
@@ -490,9 +493,23 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void rejectsNonP2WHInput() {
+    void rejectsNonP2WPKHInput() {
         List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
                 rawInput(parentTxWithP2pkhOutput(100_000)));
+        BtcWalletService btcWalletService = walletServiceFor(rawTransactionInputs);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DepositTxValidation.validatePeersInputs(
+                        rawTransactionInputs,
+                        Coin.valueOf(100_000),
+                        btcWalletService,
+                        TAKER_ROLE));
+    }
+
+    @Test
+    void rejectsP2WSHInput() {
+        List<RawTransactionInput> rawTransactionInputs = Collections.singletonList(
+                rawInput(parentTxWithP2wshOutput(100_000)));
         BtcWalletService btcWalletService = walletServiceFor(rawTransactionInputs);
 
         assertThrows(IllegalArgumentException.class,
@@ -538,12 +555,7 @@ class DepositTxValidationTest {
                                                 RawTransactionInput rawTransactionInput) {
         Transaction parentTx = new Transaction(PARAMS, rawTransactionInput.parentTransaction);
         when(btcWalletService.getTxFromSerializedTx(rawTransactionInput.parentTransaction)).thenReturn(parentTx);
-        when(btcWalletService.isP2WPKH(rawTransactionInput)).thenReturn(isP2WPKH(parentTx, rawTransactionInput));
-    }
-
-    private static boolean isP2WPKH(Transaction parentTx, RawTransactionInput rawTransactionInput) {
-        Script.ScriptType scriptType = parentTx.getOutput(rawTransactionInput.index).getScriptPubKey().getScriptType();
-        return scriptType == Script.ScriptType.P2WPKH || scriptType == Script.ScriptType.P2WSH;
+        when(btcWalletService.isP2WPKH(rawTransactionInput)).thenReturn(WalletUtils.isP2WPKH(rawTransactionInput, PARAMS));
     }
 
     private static RawTransactionInput rawInput(Transaction parentTx) {
@@ -594,10 +606,18 @@ class DepositTxValidationTest {
                 .build());
     }
 
-    private static Transaction parentTxWithP2WHOutput(long value) {
+    private static Transaction parentTxWithP2wpkhOutput(long value) {
         Transaction tx = new Transaction(PARAMS);
         tx.addInput(Sha256Hash.ZERO_HASH, 0, ScriptBuilder.createEmpty());
         tx.addOutput(Coin.valueOf(value), SegwitAddress.fromKey(PARAMS, new ECKey()));
+        return tx;
+    }
+
+    private static Transaction parentTxWithP2wshOutput(long value) {
+        Transaction tx = new Transaction(PARAMS);
+        tx.addInput(Sha256Hash.ZERO_HASH, 0, ScriptBuilder.createEmpty());
+        tx.addOutput(Coin.valueOf(value),
+                ScriptBuilder.createP2WSHOutputScript(ScriptBuilder.createMultiSigOutputScript(1, List.of(new ECKey()))));
         return tx;
     }
 

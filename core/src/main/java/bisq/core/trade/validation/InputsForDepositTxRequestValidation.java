@@ -71,11 +71,13 @@ public final class InputsForDepositTxRequestValidation {
                 tradeAmount);
         TransactionValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
         TransactionValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
-        PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
+        PubKeyRing takerPubKeyRing = checkNotNull(request.getTakerPubKeyRing(),
+                "takerPubKeyRing must not be null");
         DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
         TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
-        PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
+        PublicKey takerSignatureKey = checkNotNull(takerPubKeyRing.getSignaturePubKey(),
+                "takerSignatureKey must not be null");
         checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
                 accountAgeWitnessNonce,
                 takerSignatureKey);

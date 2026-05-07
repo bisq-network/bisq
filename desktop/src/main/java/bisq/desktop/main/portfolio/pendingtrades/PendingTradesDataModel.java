@@ -44,7 +44,6 @@ import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
@@ -57,7 +56,6 @@ import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
-import bisq.core.trade.validation.exceptions.ValidationException;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -526,7 +524,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade,
                     btcWalletService,
                     donationAddressString::set);
-        } catch (ValidationException | DisputeValidation.ValidationException e) {
+        } catch (RuntimeException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

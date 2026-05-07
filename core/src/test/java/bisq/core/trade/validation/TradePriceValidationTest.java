@@ -56,4 +56,24 @@ class TradePriceValidationTest {
                 mock(PriceFeedService.class),
                 offer));
     }
+
+    @Test
+    void checkTakersTradePriceRejectsNonPositiveTradePrice() {
+        assertThrows(IllegalArgumentException.class, () -> TradePriceValidation.checkTakersTradePrice(0,
+                mock(PriceFeedService.class),
+                mock(Offer.class)));
+        assertThrows(IllegalArgumentException.class, () -> TradePriceValidation.checkTakersTradePrice(-1,
+                mock(PriceFeedService.class),
+                mock(Offer.class)));
+    }
+
+    @Test
+    void checkTakersTradePriceRejectsNullServices() {
+        assertThrows(NullPointerException.class, () -> TradePriceValidation.checkTakersTradePrice(1,
+                null,
+                mock(Offer.class)));
+        assertThrows(NullPointerException.class, () -> TradePriceValidation.checkTakersTradePrice(1,
+                mock(PriceFeedService.class),
+                null));
+    }
 }

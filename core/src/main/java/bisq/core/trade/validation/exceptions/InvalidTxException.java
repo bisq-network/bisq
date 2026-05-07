@@ -18,10 +18,6 @@
 package bisq.core.trade.validation.exceptions;
 
 public class InvalidTxException extends ValidationException {
-    public InvalidTxException(String msg) {
-        super(msg);
-    }
-
     public InvalidTxException(String msg, Throwable cause) {
         super(msg, cause);
     }

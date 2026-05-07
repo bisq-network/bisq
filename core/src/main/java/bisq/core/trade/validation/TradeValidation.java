@@ -30,14 +30,11 @@ import bisq.common.util.Utilities;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Slf4j
 public final class TradeValidation {
     // We have to account for clock drift. We use mostly 2 hours as max drift, but we prefer to be more tolerant here
     public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);

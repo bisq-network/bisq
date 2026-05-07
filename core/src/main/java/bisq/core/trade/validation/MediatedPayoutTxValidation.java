@@ -149,13 +149,15 @@ public final class MediatedPayoutTxValidation {
         String checkedBuyerPayoutAddressString = checkNonBlankString(buyerPayoutAddressString, "buyerPayoutAddressString");
         String checkedSellerPayoutAddressString = checkNonBlankString(sellerPayoutAddressString, "sellerPayoutAddressString");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
+        NetworkParameters params = checkNotNull(btcWalletService.getParams(),
+                "btcWalletService.getParams() must not be null");
         return checkMediatedPayoutTx(payoutTx,
                 depositTx,
                 checkedBuyerPayoutAmount,
                 checkedSellerPayoutAmount,
                 checkedBuyerPayoutAddressString,
                 checkedSellerPayoutAddressString,
-                btcWalletService.getParams());
+                params);
     }
 
     @VisibleForTesting
@@ -198,8 +200,12 @@ public final class MediatedPayoutTxValidation {
     private static Coin getExpectedTotalPayoutAmount(Trade trade) {
         Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
         Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
+        Coin buyerSecurityDeposit = checkNotNull(offer.getBuyerSecurityDeposit(),
+                "offer.getBuyerSecurityDeposit() must not be null");
+        Coin sellerSecurityDeposit = checkNotNull(offer.getSellerSecurityDeposit(),
+                "offer.getSellerSecurityDeposit() must not be null");
         return tradeAmount
-                .add(offer.getBuyerSecurityDeposit())
-                .add(offer.getSellerSecurityDeposit());
+                .add(buyerSecurityDeposit)
+                .add(sellerSecurityDeposit);
     }
 }

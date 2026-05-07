@@ -17,6 +17,8 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.wallet.BtcWalletService;
+
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.ECKey;
@@ -34,6 +36,7 @@ import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.validation.ValidationTestUtils.btcWalletService;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 class TransactionValidationTest {
 
@@ -74,6 +77,13 @@ class TransactionValidationTest {
         assertThrows(NullPointerException.class, () -> TransactionValidation.checkBitcoinAddress(
                 SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
                 null));
+    }
+
+    @Test
+    void checkBitcoinAddressRejectsWalletServiceWithoutParams() {
+        assertThrows(NullPointerException.class, () -> TransactionValidation.checkBitcoinAddress(
+                SegwitAddress.fromKey(MainNetParams.get(), new ECKey()).toString(),
+                mock(BtcWalletService.class)));
     }
 
     /* --------------------------------------------------------------------- */
@@ -152,6 +162,13 @@ class TransactionValidationTest {
         assertThrows(NullPointerException.class, () -> TransactionValidation.toVerifiedTransaction(
                 ValidationTestUtils.serializedTransaction(),
                 null));
+    }
+
+    @Test
+    void toVerifiedTransactionRejectsWalletServiceWithoutParams() {
+        assertThrows(NullPointerException.class, () -> TransactionValidation.toVerifiedTransaction(
+                ValidationTestUtils.serializedTransaction(),
+                mock(BtcWalletService.class)));
     }
 
     /* --------------------------------------------------------------------- */

@@ -35,6 +35,10 @@ public final class TradeAmountValidation {
         checkIsPositive(offerMinAmount, "offerMinAmount");
         checkIsPositive(offerMaxAmount, "offerMaxAmount");
 
+        checkArgument(!offerMinAmount.isGreaterThan(offerMaxAmount),
+                "Minimum offer amount must not be higher than maximum offer amount. " +
+                        "offerMinAmount=%s, offerMaxAmount=%s",
+                offerMinAmount.toFriendlyString(), offerMaxAmount.toFriendlyString());
         checkArgument(!tradeAmount.isLessThan(offerMinAmount),
                 "Trade amount must not be less than minimum offer amount. tradeAmount=%s, offerMinAmount=%s",
                 tradeAmount.toFriendlyString(), offerMinAmount.toFriendlyString());
