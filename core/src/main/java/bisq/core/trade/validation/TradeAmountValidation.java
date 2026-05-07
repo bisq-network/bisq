@@ -22,7 +22,9 @@ import org.bitcoinj.core.Coin;
 import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TradeAmountValidation {
+public final class TradeAmountValidation {
+    private TradeAmountValidation() {
+    }
 
     /* --------------------------------------------------------------------- */
     // Trade amount

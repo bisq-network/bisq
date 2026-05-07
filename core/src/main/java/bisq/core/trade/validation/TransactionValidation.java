@@ -40,7 +40,9 @@ import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class TransactionValidation {
+public final class TransactionValidation {
+    private TransactionValidation() {
+    }
 
     /* --------------------------------------------------------------------- */
     // Bitcoin address

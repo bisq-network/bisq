@@ -39,7 +39,9 @@ import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignatur
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class InputsForDepositTxRequestValidation {
+public final class InputsForDepositTxRequestValidation {
+    private InputsForDepositTxRequestValidation() {
+    }
 
     /* --------------------------------------------------------------------- */
     // InputsForDepositTxRequest

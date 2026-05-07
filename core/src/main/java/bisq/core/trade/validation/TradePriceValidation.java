@@ -23,7 +23,9 @@ import bisq.core.offer.OfferValidation;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.price.PriceFeedService;
 
-public class TradePriceValidation {
+public final class TradePriceValidation {
+    private TradePriceValidation() {
+    }
 
     /* --------------------------------------------------------------------- */
     // Taker trade price
