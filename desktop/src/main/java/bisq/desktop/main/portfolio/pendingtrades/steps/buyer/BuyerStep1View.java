@@ -26,6 +26,8 @@ import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.DepositTxValidation;
 import bisq.core.trade.validation.exceptions.ValidationException;
 
+import org.bitcoinj.core.Transaction;
+
 public class BuyerStep1View extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,14 +85,20 @@ public class BuyerStep1View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void validatePayoutTx() {
-        try {
-            DelayedPayoutTxValidation.checkDelayedPayoutTx(trade.getDelayedPayoutTx(),
-                    trade,
-                    model.dataModel.btcWalletService);
-        } catch (RuntimeException e) {
-            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
-                new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        if (delayedPayoutTx != null) {
+            try {
+                DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        model.dataModel.btcWalletService);
+            } catch (RuntimeException e) {
+                if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                    new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
+                }
             }
+        } else {
+            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
+            // trade manager after initPendingTrades which happens after activate might be called.
         }
     }
 
