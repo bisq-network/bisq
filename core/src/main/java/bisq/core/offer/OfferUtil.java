@@ -41,6 +41,7 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 import bisq.core.util.AveragePriceUtil;
+import bisq.core.util.Validator;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
@@ -250,7 +251,9 @@ public class OfferUtil {
     }
 
     public Coin getTxFeeByVsize(Coin txFeePerVbyteFromFeeService, int vsizeInVbytes) {
-        return TradeFeeFactory.getMinerFeeByVsize(txFeePerVbyteFromFeeService, vsizeInVbytes);
+        Validator.checkIsPositive(vsizeInVbytes, "vsizeInVbytes");
+        int average = (vsizeInVbytes + TradeFeeFactory.DEPOSIT_TX_VSIZE) / 2;
+        return TradeFeeFactory.getMinerFeeByVsize(txFeePerVbyteFromFeeService, average);
     }
 
     /**
@@ -388,7 +391,7 @@ public class OfferUtil {
         checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
                         getMinBuyerSecurityDepositAsPercent());
-        if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount) ) {
+        if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount)) {
             checkArgument(!acceptedBanks.contains(null), "acceptedBanks must not be null for SAME_BANK or SPECIFIC_BANKS accounts");
         }
     }

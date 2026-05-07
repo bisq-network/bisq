@@ -54,6 +54,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -65,7 +66,6 @@ import com.google.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -343,9 +343,9 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         NetworkParameters params = btcWalletService.getParams();
         for (int i = 0; i < delayedPayoutTx.getOutputs().size(); i++) {
             TransactionOutput transactionOutput = delayedPayoutTx.getOutputs().get(i);
-            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(0);
-            String address = transactionOutput.getScriptPubKey().getToAddress(params).toString().toLowerCase(Locale.ROOT);
-            String receiverAddress = receiverTuple.second.toLowerCase(Locale.ROOT);
+            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(i);
+            Address address = transactionOutput.getScriptPubKey().getToAddress(params);
+            Address receiverAddress = Address.fromString(params, receiverTuple.second);
             checkArgument(address.equals(receiverAddress),
                     "output address does not match delayedPayoutTxReceivers address. transactionOutput=" + transactionOutput);
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
