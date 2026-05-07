@@ -50,6 +50,11 @@ public final class MediatedPayoutTxValidation {
     private MediatedPayoutTxValidation() {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout amounts
+    /* --------------------------------------------------------------------- */
+
     public static Coin checkMediatedPayoutAmounts(Coin buyerPayoutAmount,
                                                   Coin sellerPayoutAmount,
                                                   Coin expectedTotalPayoutAmount) {
@@ -65,6 +70,11 @@ public final class MediatedPayoutTxValidation {
                 checkedExpectedTotalPayoutAmount.toFriendlyString());
         return checkedBuyerPayoutAmount;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout addresses
+    /* --------------------------------------------------------------------- */
 
     public static String checkMediatedPayoutAddresses(String buyerPayoutAddressString,
                                                       Coin buyerPayoutAmount,
@@ -85,6 +95,11 @@ public final class MediatedPayoutTxValidation {
         }
         return checkedBuyerPayoutAddressString;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout transaction
+    /* --------------------------------------------------------------------- */
 
     public static Transaction checkMediatedPayoutTx(Transaction payoutTx,
                                                     Trade trade,
@@ -175,6 +190,11 @@ public final class MediatedPayoutTxValidation {
         return checkedPayoutTx;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout transaction input
+    /* --------------------------------------------------------------------- */
+
     private static Transaction checkMediatedPayoutTxInput(Transaction payoutTx,
                                                           Transaction depositTx) {
         checkNotNull(payoutTx, "payoutTx must not be null");
@@ -193,6 +213,11 @@ public final class MediatedPayoutTxValidation {
                 outpoint.getIndex());
         return payoutTx;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout transaction outputs
+    /* --------------------------------------------------------------------- */
 
     private static Coin checkMediatedPayoutTxOutputSum(Transaction depositTx,
                                                        Coin buyerPayoutAmount,
@@ -259,6 +284,11 @@ public final class MediatedPayoutTxValidation {
         return payoutTx;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Trade-derived payout amount
+    /* --------------------------------------------------------------------- */
+
     private static Coin getExpectedTotalPayoutAmount(Trade trade) {
         Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
         Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
@@ -266,6 +296,11 @@ public final class MediatedPayoutTxValidation {
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expected output
+    /* --------------------------------------------------------------------- */
 
     private static class ExpectedOutput {
         private final Coin amount;

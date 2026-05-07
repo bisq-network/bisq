@@ -29,6 +29,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DsaSignatureValidation {
+
+    /* --------------------------------------------------------------------- */
+    // Base64 DSA signature
+    /* --------------------------------------------------------------------- */
+
     public static String checkBase64DSASignature(String dsaSignatureBase64) {
         checkNonBlankString(dsaSignatureBase64, "dsaSignatureBase64");
         fromBase64DSASignature(dsaSignatureBase64);
@@ -39,6 +44,11 @@ public class DsaSignatureValidation {
         checkNonBlankString(dsaSignatureBase64, "dsaSignatureBase64");
         return Base64.decode(dsaSignatureBase64);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // DSA signature
+    /* --------------------------------------------------------------------- */
 
     public static byte[] checkDSASignature(byte[] dsaSignature,
                                            byte[] message,

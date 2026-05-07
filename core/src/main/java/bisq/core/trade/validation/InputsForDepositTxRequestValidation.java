@@ -40,6 +40,11 @@ import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class InputsForDepositTxRequestValidation {
+
+    /* --------------------------------------------------------------------- */
+    // InputsForDepositTxRequest
+    /* --------------------------------------------------------------------- */
+
     public static InputsForDepositTxRequest checkInputsForDepositTxRequest(InputsForDepositTxRequest request,
                                                                            Offer offer,
                                                                            User user,

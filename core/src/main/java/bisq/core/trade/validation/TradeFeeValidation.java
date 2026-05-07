@@ -34,7 +34,7 @@ public final class TradeFeeValidation {
 
 
     /* --------------------------------------------------------------------- */
-    // Takers trade fee
+    // Taker trade fee
     /* --------------------------------------------------------------------- */
 
     public static Coin checkTakerFee(Coin takerFee, boolean isCurrencyForTakerFeeBtc, Coin tradeAmount) {
@@ -69,7 +69,7 @@ public final class TradeFeeValidation {
 
 
     /* --------------------------------------------------------------------- */
-    // Makers trade fee
+    // Maker trade fee
     /* --------------------------------------------------------------------- */
 
     public static Coin checkMakerFee(Coin makerFee, boolean isCurrencyForMakerFeeBtc, Coin tradeAmount) {

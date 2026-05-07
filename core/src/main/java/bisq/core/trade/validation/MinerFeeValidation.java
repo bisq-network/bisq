@@ -42,10 +42,10 @@ public final class MinerFeeValidation {
     private MinerFeeValidation() {
     }
 
-    @VisibleForTesting
-    static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
-        return TradeValidation.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
-    }
+
+    /* --------------------------------------------------------------------- */
+    // Trade transaction fee
+    /* --------------------------------------------------------------------- */
 
     public static Coin checkTradeTxFee(Coin tradeTxFee) {
         checkIsPositive(tradeTxFee, "tradeTxFee");
@@ -85,9 +85,24 @@ public final class MinerFeeValidation {
         return tradeTxFee;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Miner fee rate
+    /* --------------------------------------------------------------------- */
+
     public static long checkMinerFeeRateIsInTolerance(long minerFeeRate, long expectedMinerFeeRate) {
         checkIsPositive(minerFeeRate, "minerFeeRate");
         checkIsPositive(expectedMinerFeeRate, "expectedMinerFeeRate");
         return checkFeeIsInTolerance(minerFeeRate, expectedMinerFeeRate);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Fee tolerance
+    /* --------------------------------------------------------------------- */
+
+    @VisibleForTesting
+    static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
+        return TradeValidation.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
     }
 }

@@ -23,6 +23,11 @@ import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class TradeAmountValidation {
+
+    /* --------------------------------------------------------------------- */
+    // Trade amount
+    /* --------------------------------------------------------------------- */
+
     public static Coin checkTradeAmount(Coin tradeAmount, Coin offerMinAmount, Coin offerMaxAmount) {
         checkIsPositive(tradeAmount, "tradeAmount");
         checkIsPositive(offerMinAmount, "offerMinAmount");

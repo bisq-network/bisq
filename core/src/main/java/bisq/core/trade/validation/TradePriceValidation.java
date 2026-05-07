@@ -24,6 +24,11 @@ import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.provider.price.PriceFeedService;
 
 public class TradePriceValidation {
+
+    /* --------------------------------------------------------------------- */
+    // Taker trade price
+    /* --------------------------------------------------------------------- */
+
     public static long checkTakersTradePrice(long takersTradePrice,
                                              PriceFeedService priceFeedService,
                                              Offer offer) {

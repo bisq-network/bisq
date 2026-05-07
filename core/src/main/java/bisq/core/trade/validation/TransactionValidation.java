@@ -41,6 +41,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TransactionValidation {
+
+    /* --------------------------------------------------------------------- */
+    // Bitcoin address
+    /* --------------------------------------------------------------------- */
+
     public static String checkBitcoinAddress(String bitcoinAddress, BtcWalletService btcWalletService) {
         checkNonBlankString(bitcoinAddress, "bitcoinAddress");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
@@ -53,33 +58,25 @@ public class TransactionValidation {
         }
     }
 
-    @VisibleForTesting
-    static boolean hasSignatureData(TransactionInput input) {
-        return input.getScriptBytes().length > 0 || input.hasWitness();
-    }
 
-    public static byte[] checkDerEncodedEcdsaSignature(byte[] bitcoinSignature) {
-        checkNonEmptyBytes(bitcoinSignature, "bitcoinSignature");
+    /* --------------------------------------------------------------------- */
+    // Transaction ID
+    /* --------------------------------------------------------------------- */
+
+    public static String checkTransactionId(String txId) {
+        checkNonBlankString(txId, "txId");
+
         try {
-            ECKey.ECDSASignature signature = ECKey.ECDSASignature.decodeFromDER(bitcoinSignature);
-            checkArgument(Arrays.equals(bitcoinSignature, signature.encodeToDER()),
-                    "bitcoinSignature must be strictly DER encoded");
-            checkArgument(isValidSignatureValue(signature.r),
-                    "bitcoinSignature r value is outside of allowed range");
-            checkArgument(isValidSignatureValue(signature.s),
-                    "bitcoinSignature s value is outside of allowed range");
-            checkArgument(signature.isCanonical(),
-                    "bitcoinSignature must use low-S canonical encoding");
-            return bitcoinSignature;
-        } catch (SignatureDecodeException e) {
-            throw new IllegalArgumentException("Invalid bitcoin signature", e);
+            return Sha256Hash.wrap(txId.toLowerCase(Locale.ROOT)).toString();
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
         }
     }
 
-    @VisibleForTesting
-    static boolean isValidSignatureValue(BigInteger value) {
-        return value.signum() > 0 && value.compareTo(ECKey.CURVE.getN()) < 0;
-    }
+
+    /* --------------------------------------------------------------------- */
+    // Transaction structure
+    /* --------------------------------------------------------------------- */
 
     public static Transaction checkTransaction(Transaction transaction) {
         checkNotNull(transaction, "transaction must not be null");
@@ -113,15 +110,48 @@ public class TransactionValidation {
         }
     }
 
-    public static String checkTransactionId(String txId) {
-        checkNonBlankString(txId, "txId");
 
+    /* --------------------------------------------------------------------- */
+    // Transaction signature data
+    /* --------------------------------------------------------------------- */
+
+    @VisibleForTesting
+    static boolean hasSignatureData(TransactionInput input) {
+        return input.getScriptBytes().length > 0 || input.hasWitness();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Bitcoin signature
+    /* --------------------------------------------------------------------- */
+
+    public static byte[] checkDerEncodedEcdsaSignature(byte[] bitcoinSignature) {
+        checkNonEmptyBytes(bitcoinSignature, "bitcoinSignature");
         try {
-            return Sha256Hash.wrap(txId.toLowerCase(Locale.ROOT)).toString();
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid transaction ID: " + txId, e);
+            ECKey.ECDSASignature signature = ECKey.ECDSASignature.decodeFromDER(bitcoinSignature);
+            checkArgument(Arrays.equals(bitcoinSignature, signature.encodeToDER()),
+                    "bitcoinSignature must be strictly DER encoded");
+            checkArgument(isValidSignatureValue(signature.r),
+                    "bitcoinSignature r value is outside of allowed range");
+            checkArgument(isValidSignatureValue(signature.s),
+                    "bitcoinSignature s value is outside of allowed range");
+            checkArgument(signature.isCanonical(),
+                    "bitcoinSignature must use low-S canonical encoding");
+            return bitcoinSignature;
+        } catch (SignatureDecodeException e) {
+            throw new IllegalArgumentException("Invalid bitcoin signature", e);
         }
     }
+
+    @VisibleForTesting
+    static boolean isValidSignatureValue(BigInteger value) {
+        return value.signum() > 0 && value.compareTo(ECKey.CURVE.getN()) < 0;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Multisig public key
+    /* --------------------------------------------------------------------- */
 
     public static byte[] checkMultiSigPubKey(byte[] multiSigPubKey) {
         checkNonEmptyBytes(multiSigPubKey, "multiSigPubKey");

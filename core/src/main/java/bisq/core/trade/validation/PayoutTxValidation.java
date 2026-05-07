@@ -51,6 +51,11 @@ public final class PayoutTxValidation {
     private PayoutTxValidation() {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Payout transaction
+    /* --------------------------------------------------------------------- */
+
     public static byte[] checkPayoutTx(byte[] serializedPayoutTx,
                                        BtcWalletService btcWalletService,
                                        Transaction depositTx,
@@ -131,6 +136,11 @@ public final class PayoutTxValidation {
         return checkedPayoutTx;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Payout transaction input
+    /* --------------------------------------------------------------------- */
+
     private static void checkPayoutTxInput(Transaction payoutTx,
                                            Transaction depositTx,
                                            TransactionOutput depositOutput) {
@@ -147,6 +157,11 @@ public final class PayoutTxValidation {
                 depositTx.getTxId(),
                 depositOutput.getIndex());
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Payout transaction outputs
+    /* --------------------------------------------------------------------- */
 
     private static void checkPayoutTxOutputs(Transaction payoutTx,
                                              Coin buyerPayoutAmount,
@@ -189,6 +204,11 @@ public final class PayoutTxValidation {
                 payoutAddress,
                 expectedAddress);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Payout transaction input script
+    /* --------------------------------------------------------------------- */
 
     private static void checkPayoutTxInputScript(Transaction payoutTx,
                                                  TransactionOutput depositOutput,
@@ -263,11 +283,21 @@ public final class PayoutTxValidation {
         }
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Multisig redeem script
+    /* --------------------------------------------------------------------- */
+
     private static Script get2of2MultiSigRedeemScript(byte[] buyerPubKey, byte[] sellerPubKey) {
         ECKey buyerKey = ECKey.fromPublicOnly(buyerPubKey);
         ECKey sellerKey = ECKey.fromPublicOnly(sellerPubKey);
         return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(sellerKey, buyerKey));
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expected output
+    /* --------------------------------------------------------------------- */
 
     private static final class ExpectedOutput {
         private final String name;

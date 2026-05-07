@@ -37,6 +37,11 @@ public final class DelayedPayoutTxValidation {
     private DelayedPayoutTxValidation() {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Burning Man selection height
+    /* --------------------------------------------------------------------- */
+
     public static int checkBurningManSelectionHeight(int burningManSelectionHeight,
                                                      DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
         checkArgument(burningManSelectionHeight > 0,
@@ -60,6 +65,11 @@ public final class DelayedPayoutTxValidation {
         return burningManSelectionHeight;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Delayed payout transaction input amount
+    /* --------------------------------------------------------------------- */
+
     public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
         checkIsPositive(inputAmount, "inputAmount");
         checkNotNull(trade, "trade must not be null");
@@ -79,6 +89,11 @@ public final class DelayedPayoutTxValidation {
                 tradeAmount, buyerDeposit, sellerDeposit, tradeTxFee, expectedAmount);
         return inputAmount;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Lock time
+    /* --------------------------------------------------------------------- */
 
     public static long checkLockTime(long lockTime, boolean isAltcoin, BtcWalletService btcWalletService) {
         return checkLockTime(lockTime, isAltcoin, btcWalletService, Config.baseCurrencyNetwork().isMainnet());

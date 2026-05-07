@@ -45,8 +45,9 @@ public final class DepositTxValidation {
     private DepositTxValidation() {
     }
 
+
     /* --------------------------------------------------------------------- */
-    // InputsForDepositTxRequest
+    // Deposit transaction
     /* --------------------------------------------------------------------- */
 
     public static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
@@ -93,6 +94,10 @@ public final class DepositTxValidation {
     }
 
 
+    /* --------------------------------------------------------------------- */
+    // Unsigned transaction
+    /* --------------------------------------------------------------------- */
+
     public static byte[] checkTransactionIsUnsigned(byte[] unsignedSerializedTransaction,
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(unsignedSerializedTransaction, "unsignedSerializedTransaction");
@@ -102,6 +107,11 @@ public final class DepositTxValidation {
                 "unsignedSerializedTransaction must not be signed");
         return unsignedSerializedTransaction;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Raw transaction inputs
+    /* --------------------------------------------------------------------- */
 
     public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,
                                                                             BtcWalletService btcWalletService,

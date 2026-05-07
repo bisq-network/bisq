@@ -45,6 +45,11 @@ public final class TradeValidation {
     private TradeValidation() {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Trade identity
+    /* --------------------------------------------------------------------- */
+
     public static String checkTradeId(String tradeId, TradeMessage tradeMessage) {
         checkArgument(isTradeIdValid(tradeId, tradeMessage), "TradeId %s is not valid", tradeId);
         return tradeId;
@@ -56,11 +61,21 @@ public final class TradeValidation {
         return tradeId.equals(tradeMessage.getTradeId());
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Peer date
+    /* --------------------------------------------------------------------- */
+
     public static long checkPeersDate(long currentDate) {
         long now = System.currentTimeMillis();
         checkArgument(Math.abs(now - currentDate) <= MAX_DATE_DEVIATION, "currentDate is outside of allowed range.");
         return currentDate;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Contract hash
+    /* --------------------------------------------------------------------- */
 
     public static byte[] checkHashFromContract(byte[] current, byte[] expected) {
         checkNonEmptyBytes(current, "current");
@@ -73,6 +88,11 @@ public final class TradeValidation {
         return current;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Mediator
+    /* --------------------------------------------------------------------- */
+
     public static PubKeyRing getCheckedMediatorPubKeyRing(NodeAddress mediatorNodeAddress, User user) {
         checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
         checkNotNull(user, "user must not be null");
@@ -81,6 +101,11 @@ public final class TradeValidation {
         return checkNotNull(mediator.getPubKeyRing(),
                 "mediator.getPubKeyRing() must not be null");
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Tolerance
+    /* --------------------------------------------------------------------- */
 
     static long checkValueInTolerance(long actualValue, long expectedValue, double factor) {
         checkArgument(expectedValue > 0, "expectedValue must be > 0");
