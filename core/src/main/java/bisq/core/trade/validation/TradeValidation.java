@@ -39,8 +39,6 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
-import bisq.common.util.Hex;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -311,7 +309,7 @@ public final class TradeValidation {
 
     @VisibleForTesting
     static long checkFeeIsInTolerance(long actualValue, long expectedValue) {
-        return checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
+        return TradeValidationUtils.checkValueInTolerance(actualValue, expectedValue, MAX_FEE_DEVIATION_FACTOR);
     }
 
     // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
@@ -403,7 +401,7 @@ public final class TradeValidation {
     // in trades.
     @VisibleForTesting
     static long checkTakerFeeInTolerance(long fee, long expectedFee) {
-        return checkValueInTolerance(fee, expectedFee, MAX_TAKER_FEE_DEVIATION_FACTOR);
+        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, MAX_TAKER_FEE_DEVIATION_FACTOR);
     }
 
 
@@ -438,7 +436,7 @@ public final class TradeValidation {
     // in trades.
     @VisibleForTesting
     static long checkMakerFeeInTolerance(long fee, long expectedFee) {
-        return checkValueInTolerance(fee, expectedFee, MAX_MAKER_FEE_DEVIATION_FACTOR);
+        return TradeValidationUtils.checkValueInTolerance(fee, expectedFee, MAX_MAKER_FEE_DEVIATION_FACTOR);
     }
 
 
@@ -542,38 +540,4 @@ public final class TradeValidation {
         return request;
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Generic
-    /* --------------------------------------------------------------------- */
-
-    static long checkValueInTolerance(long actualValue, long expectedValue, double factor) {
-        checkArgument(expectedValue > 0, "expectedValue must be > 0");
-        checkArgument(factor >= 1.0, "factor must be >= 1");
-
-        double min = expectedValue / factor;
-        double max = expectedValue * factor;
-
-        checkArgument(actualValue >= min && actualValue <= max,
-                "actualValue is outside of allowed tolerance. " +
-                        "actualValue=%s, expectedValue=%s, min=%s, max=%s, factor=%s",
-                actualValue,
-                expectedValue,
-                min,
-                max,
-                factor);
-
-        return actualValue;
-    }
-
-    public static byte[] checkByteArrayWithExpected(byte[] current, byte[] expected) {
-        checkNonEmptyBytes(current, "current");
-        checkNonEmptyBytes(expected, "expected");
-        checkArgument(Arrays.equals(current, expected),
-                "current is not matching expected. " +
-                        "current=%s, expected=%s",
-                Utilities.toTruncatedString(Hex.encode(current), 8),
-                Utilities.toTruncatedString(Hex.encode(expected), 8));
-        return current;
-    }
 }

@@ -50,7 +50,7 @@ import java.security.PrivateKey;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkByteArrayWithExpected;
+import static bisq.core.trade.validation.TradeValidationUtils.checkByteArrayWithExpected;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
