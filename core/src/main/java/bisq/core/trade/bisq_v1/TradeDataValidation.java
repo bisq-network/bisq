@@ -124,8 +124,8 @@ public class TradeDataValidation {
         }
     }
 
-    public static void validatePayoutTxInput(Transaction depositTx,
-                                             Transaction delayedPayoutTx)
+    public static void validateDelayedPayoutTxInput(Transaction depositTx,
+                                                    Transaction delayedPayoutTx)
             throws InvalidInputException {
         TransactionInput input = delayedPayoutTx.getInput(0);
         checkNotNull(input, "delayedPayoutTx.getInput(0) must not be null");

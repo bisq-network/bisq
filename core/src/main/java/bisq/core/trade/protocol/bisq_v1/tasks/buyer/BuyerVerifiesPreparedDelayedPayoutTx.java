@@ -106,7 +106,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             List<RawTransactionInput> peersRawTransactionInputs = processModel.getTradePeer().getRawTransactionInputs();
             checkRawTransactionInputsAreNotMalleable(peersRawTransactionInputs, tradeWalletService);
 
-            TradeDataValidation.validatePayoutTxInput(preparedDepositTx, peersPreparedDelayedPayoutTx);
+            TradeDataValidation.validateDelayedPayoutTxInput(preparedDepositTx, peersPreparedDelayedPayoutTx);
 
             complete();
         } catch (TradeDataValidation.ValidationException e) {
