@@ -29,81 +29,22 @@ import org.bitcoinj.params.MainNetParams;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
-import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
-import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutTx;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class MediatedPayoutTxValidationTest {
+class PayoutTxValidationUtilsTest {
     private static final MainNetParams PARAMS = MainNetParams.get();
     private static final String BUYER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
     private static final String SELLER_ADDRESS = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
 
-    /* --------------------------------------------------------------------- */
-    // Mediation result amounts
-    /* --------------------------------------------------------------------- */
-
-    @Test
-    void checkMediatedPayoutAmountsAcceptsMediationResultTotalAndReturnsBuyerAmount() {
-        Coin buyerPayoutAmount = Coin.valueOf(6_000);
-        Coin sellerPayoutAmount = Coin.valueOf(4_000);
-
-        assertEquals(buyerPayoutAmount,
-                checkMediatedPayoutAmounts(buyerPayoutAmount,
-                        sellerPayoutAmount,
-                        Coin.valueOf(10_000)));
-    }
-
-    @Test
-    void checkMediatedPayoutAmountsRejectsMismatchingTotal() {
-        assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutAmounts(Coin.valueOf(6_000),
-                        Coin.valueOf(3_999),
-                        Coin.valueOf(10_000)));
-    }
 
     /* --------------------------------------------------------------------- */
-    // Mediation result addresses
+    // Payout transaction input
     /* --------------------------------------------------------------------- */
 
     @Test
-    void checkMediatedPayoutAddressesAcceptsValidAddressesForPositiveAmounts() {
-        assertEquals(BUYER_ADDRESS,
-                checkMediatedPayoutAddresses(BUYER_ADDRESS,
-                        Coin.valueOf(6_000),
-                        SELLER_ADDRESS,
-                        Coin.valueOf(4_000),
-                        ValidationTestUtils.btcWalletService()));
-    }
-
-    @Test
-    void checkMediatedPayoutAddressesRejectsInvalidAddressForPositiveAmount() {
-        assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutAddresses("not-a-bitcoin-address",
-                        Coin.valueOf(6_000),
-                        SELLER_ADDRESS,
-                        Coin.valueOf(4_000),
-                        ValidationTestUtils.btcWalletService()));
-    }
-
-    @Test
-    void checkMediatedPayoutAddressesRejectsBlankAddressEvenForZeroAmount() {
-        assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutAddresses(" ",
-                        Coin.ZERO,
-                        SELLER_ADDRESS,
-                        Coin.valueOf(4_000),
-                        ValidationTestUtils.btcWalletService()));
-    }
-
-    /* --------------------------------------------------------------------- */
-    // Mediated payout tx
-    /* --------------------------------------------------------------------- */
-
-    @Test
-    void checkMediatedPayoutTxAcceptsExpectedInputOutputsAndAddresses() {
+    void checkPayoutTxInputSpendsDepositOutputZeroAcceptsMatchingInput() {
         Transaction depositTx = depositTx(Coin.valueOf(11_000));
         Transaction payoutTx = payoutTx(depositTx,
                 Coin.valueOf(6_000),
@@ -111,78 +52,13 @@ class MediatedPayoutTxValidationTest {
                 Coin.valueOf(4_000),
                 SELLER_ADDRESS);
 
-        assertSame(payoutTx,
-                checkMediatedPayoutTx(payoutTx,
-                        depositTx,
-                        Coin.valueOf(6_000),
-                        Coin.valueOf(4_000),
-                        BUYER_ADDRESS,
-                        SELLER_ADDRESS,
-                        PARAMS));
+        assertSame(payoutTx, PayoutTxValidationUtils.checkPayoutTxInputSpendsDepositOutputZero(payoutTx,
+                depositTx,
+                "payoutTx"));
     }
 
     @Test
-    void checkMediatedPayoutTxAcceptsSingleOutputWhenBuyerAmountIsZero() {
-        Transaction depositTx = depositTx(Coin.valueOf(11_000));
-        Transaction payoutTx = payoutTx(depositTx,
-                Coin.ZERO,
-                BUYER_ADDRESS,
-                Coin.valueOf(10_000),
-                SELLER_ADDRESS);
-
-        assertSame(payoutTx,
-                checkMediatedPayoutTx(payoutTx,
-                        depositTx,
-                        Coin.ZERO,
-                        Coin.valueOf(10_000),
-                        BUYER_ADDRESS,
-                        SELLER_ADDRESS,
-                        PARAMS));
-    }
-
-    @Test
-    void checkMediatedPayoutTxRejectsOutputSumAboveDepositOutputValue() {
-        Transaction depositTx = depositTx(Coin.valueOf(9_999));
-        Transaction payoutTx = payoutTx(depositTx,
-                Coin.valueOf(6_000),
-                BUYER_ADDRESS,
-                Coin.valueOf(4_000),
-                SELLER_ADDRESS);
-
-        assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutTx(payoutTx,
-                        depositTx,
-                        Coin.valueOf(6_000),
-                        Coin.valueOf(4_000),
-                        BUYER_ADDRESS,
-                        SELLER_ADDRESS,
-                        PARAMS));
-    }
-
-    @Test
-    void checkMediatedPayoutTxRejectsZeroBuyerAndSellerPayoutAmounts() {
-        Transaction depositTx = depositTx(Coin.valueOf(11_000));
-        Transaction payoutTx = payoutTx(depositTx,
-                Coin.valueOf(1_000),
-                BUYER_ADDRESS,
-                Coin.ZERO,
-                SELLER_ADDRESS);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutTx(payoutTx,
-                        depositTx,
-                        Coin.ZERO,
-                        Coin.ZERO,
-                        BUYER_ADDRESS,
-                        SELLER_ADDRESS,
-                        PARAMS));
-
-        assertEquals("Mediated payout tx must have at least one positive payout amount",
-                exception.getMessage());
-    }
-
-    @Test
-    void checkMediatedPayoutTxRejectsInputNotSpendingDepositOutputZero() {
+    void checkPayoutTxInputSpendsDepositOutputZeroRejectsDifferentDepositTx() {
         Transaction depositTx = depositTx(Coin.valueOf(11_000));
         Transaction otherDepositTx = depositTx(Coin.valueOf(12_000));
         Transaction payoutTx = payoutTx(otherDepositTx,
@@ -192,17 +68,87 @@ class MediatedPayoutTxValidationTest {
                 SELLER_ADDRESS);
 
         assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutTx(payoutTx,
+                () -> PayoutTxValidationUtils.checkPayoutTxInputSpendsDepositOutputZero(payoutTx,
                         depositTx,
+                        "payoutTx"));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Payout transaction output sum
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkPayoutTxOutputSumNotGreaterThanDepositOutputValueAcceptsCoveredPayoutAmounts() {
+        Transaction depositTx = depositTx(Coin.valueOf(10_000));
+
+        assertSame(depositTx,
+                PayoutTxValidationUtils.checkPayoutTxOutputSumNotGreaterThanDepositOutputValue(depositTx,
+                        Coin.valueOf(6_000),
+                        Coin.valueOf(4_000),
+                        "payoutTx"));
+    }
+
+    @Test
+    void checkPayoutTxOutputSumNotGreaterThanDepositOutputValueRejectsOverspend() {
+        Transaction depositTx = depositTx(Coin.valueOf(9_999));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> PayoutTxValidationUtils.checkPayoutTxOutputSumNotGreaterThanDepositOutputValue(depositTx,
+                        Coin.valueOf(6_000),
+                        Coin.valueOf(4_000),
+                        "payoutTx"));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Payout transaction outputs
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkPayoutTxOutputAmountsAndAddressesAcceptsExpectedOutputs() {
+        Transaction depositTx = depositTx(Coin.valueOf(11_000));
+        Transaction payoutTx = payoutTx(depositTx,
+                Coin.valueOf(6_000),
+                BUYER_ADDRESS,
+                Coin.valueOf(4_000),
+                SELLER_ADDRESS);
+
+        assertSame(payoutTx,
+                PayoutTxValidationUtils.checkPayoutTxOutputAmountsAndAddresses(payoutTx,
                         Coin.valueOf(6_000),
                         Coin.valueOf(4_000),
                         BUYER_ADDRESS,
                         SELLER_ADDRESS,
-                        PARAMS));
+                        PARAMS,
+                        "payoutTx",
+                        "payoutTx must have at least one positive payout amount"));
     }
 
     @Test
-    void checkMediatedPayoutTxRejectsWrongBuyerOutputAmount() {
+    void checkPayoutTxOutputAmountsAndAddressesRejectsMissingPositivePayoutAmount() {
+        Transaction depositTx = depositTx(Coin.valueOf(11_000));
+        Transaction payoutTx = payoutTx(depositTx,
+                Coin.ZERO,
+                BUYER_ADDRESS,
+                Coin.ZERO,
+                SELLER_ADDRESS);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> PayoutTxValidationUtils.checkPayoutTxOutputAmountsAndAddresses(payoutTx,
+                        Coin.ZERO,
+                        Coin.ZERO,
+                        BUYER_ADDRESS,
+                        SELLER_ADDRESS,
+                        PARAMS,
+                        "payoutTx",
+                        "payoutTx must have at least one positive payout amount"));
+
+        assertEquals("payoutTx must have at least one positive payout amount", exception.getMessage());
+    }
+
+    @Test
+    void checkPayoutTxOutputAmountsAndAddressesRejectsWrongOutputAmount() {
         Transaction depositTx = depositTx(Coin.valueOf(11_000));
         Transaction payoutTx = payoutTx(depositTx,
                 Coin.valueOf(5_999),
@@ -211,17 +157,18 @@ class MediatedPayoutTxValidationTest {
                 SELLER_ADDRESS);
 
         assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutTx(payoutTx,
-                        depositTx,
+                () -> PayoutTxValidationUtils.checkPayoutTxOutputAmountsAndAddresses(payoutTx,
                         Coin.valueOf(6_000),
                         Coin.valueOf(4_000),
                         BUYER_ADDRESS,
                         SELLER_ADDRESS,
-                        PARAMS));
+                        PARAMS,
+                        "payoutTx",
+                        "payoutTx must have at least one positive payout amount"));
     }
 
     @Test
-    void checkMediatedPayoutTxRejectsWrongBuyerOutputAddress() {
+    void checkPayoutTxOutputAmountsAndAddressesRejectsWrongOutputAddress() {
         Transaction depositTx = depositTx(Coin.valueOf(11_000));
         Transaction payoutTx = payoutTx(depositTx,
                 Coin.valueOf(6_000),
@@ -230,13 +177,14 @@ class MediatedPayoutTxValidationTest {
                 SELLER_ADDRESS);
 
         assertThrows(IllegalArgumentException.class,
-                () -> checkMediatedPayoutTx(payoutTx,
-                        depositTx,
+                () -> PayoutTxValidationUtils.checkPayoutTxOutputAmountsAndAddresses(payoutTx,
                         Coin.valueOf(6_000),
                         Coin.valueOf(4_000),
                         BUYER_ADDRESS,
                         SELLER_ADDRESS,
-                        PARAMS));
+                        PARAMS,
+                        "payoutTx",
+                        "payoutTx must have at least one positive payout amount"));
     }
 
     private static Transaction depositTx(Coin outputAmount) {

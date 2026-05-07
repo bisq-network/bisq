@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.bisq_v1;
+package bisq.core.trade.validation.exceptions;
 
-public class TradeTxException extends Exception {
-    public TradeTxException(String message) {
-        super(message);
+public class InvalidTxException extends ValidationException {
+    public InvalidTxException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

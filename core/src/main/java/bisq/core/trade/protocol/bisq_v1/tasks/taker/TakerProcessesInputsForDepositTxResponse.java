@@ -24,6 +24,9 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.TransactionValidation;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
@@ -34,7 +37,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.*;
+import static bisq.core.trade.validation.DsaSignatureValidation.checkBase64DSASignature;
+import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignature;
+import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -60,27 +65,27 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
 
             tradingPeer.setAccountId(response.getMakerAccountId());
 
-            byte[] makerMultiSigPubKey = checkMultiSigPubKey(response.getMakerMultiSigPubKey());
+            byte[] makerMultiSigPubKey = TransactionValidation.checkMultiSigPubKey(response.getMakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(makerMultiSigPubKey);
 
             tradingPeer.setContractAsJson(response.getMakerContractAsJson());
 
-            String makerContractSignature = checkBase64Signature(response.getMakerContractSignature());
+            String makerContractSignature = checkBase64DSASignature(response.getMakerContractSignature());
             tradingPeer.setContractSignature(makerContractSignature);
 
-            String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
+            String makerPayoutAddressString = TransactionValidation.checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(makerPayoutAddressString);
 
-            List<RawTransactionInput> makerRawTransactionInputs = checkMakersRawTransactionInputs(response.getMakerInputs(),
+            List<RawTransactionInput> makerRawTransactionInputs = DepositTxValidation.checkMakersRawTransactionInputs(response.getMakerInputs(),
                     btcWalletService,
                     offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 
-            byte[] preparedDepositTx = checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
+            byte[] preparedDepositTx = TransactionValidation.checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
 
             boolean isAltcoin = offer.getPaymentMethod().isBlockchain();
-            long lockTime = checkLockTime(response.getLockTime(), isAltcoin, btcWalletService);
+            long lockTime = DelayedPayoutTxValidation.checkLockTime(response.getLockTime(), isAltcoin, btcWalletService);
             trade.setLockTime(lockTime);
 
             long delay = btcWalletService.getBestChainHeight() - lockTime;
@@ -92,7 +97,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             PublicKey makerSignatureKey = makerPubKeyRing.getSignaturePubKey();
             @SuppressWarnings("UnnecessaryLocalVariable")
             byte[] accountAgeWitnessNonce = preparedDepositTx;
-            byte[] accountAgeWitnessSignature = checkSignature(response.getAccountAgeWitnessSignatureOfPreparedDepositTx(),
+            byte[] accountAgeWitnessSignature = checkDSASignature(response.getAccountAgeWitnessSignatureOfPreparedDepositTx(),
                     accountAgeWitnessNonce,
                     makerSignatureKey);
             tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);

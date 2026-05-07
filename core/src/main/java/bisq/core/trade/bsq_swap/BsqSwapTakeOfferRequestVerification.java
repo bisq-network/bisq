@@ -22,7 +22,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
-import bisq.core.trade.validation.TradeValidation;
+import bisq.core.trade.validation.MinerFeeValidation;
 import bisq.core.util.Validator;
 
 import bisq.network.p2p.NodeAddress;
@@ -37,8 +37,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkMakerFee;
-import static bisq.core.trade.validation.TradeValidation.checkTakerFee;
+import static bisq.core.trade.validation.TradeFeeValidation.checkMakerFee;
+import static bisq.core.trade.validation.TradeFeeValidation.checkTakerFee;
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -80,7 +80,7 @@ public class BsqSwapTakeOfferRequestVerification {
 
             long peersMinerFeeRate = request.getTxFeePerVbyte();
             long expectedMinerFeeRate = feeService.getTxFeePerVbyte().getValue();
-            TradeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
+            MinerFeeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
 
             checkMakerFee(request.getMakerFee(), false, amountAsCoin);
             checkTakerFee(request.getTakerFee(), false, amountAsCoin);

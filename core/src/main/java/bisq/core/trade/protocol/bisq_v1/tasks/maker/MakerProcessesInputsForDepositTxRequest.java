@@ -26,6 +26,11 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.TradeAmountValidation;
+import bisq.core.trade.validation.TradePriceValidation;
+import bisq.core.trade.validation.TransactionValidation;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -43,7 +48,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.*;
+import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignature;
+import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
+import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -69,20 +76,20 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setHashOfPaymentAccountPayload(request.getHashOfTakersPaymentAccountPayload());
             tradingPeer.setPaymentMethodId(request.getTakersPaymentMethodId());
 
-            Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
+            Coin tradeAmount = TradeAmountValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
             trade.setAmount(tradeAmount);
 
-            List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+            List<RawTransactionInput> takerRawTransactionInputs = DepositTxValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                     btcWalletService,
                     offer,
                     trade.getTradeTxFee(),
                     tradeAmount);
             tradingPeer.setRawTransactionInputs(takerRawTransactionInputs);
 
-            byte[] takerMultiSigPubKey = checkMultiSigPubKey(request.getTakerMultiSigPubKey());
+            byte[] takerMultiSigPubKey = TransactionValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
-            String takerPayoutAddressString = checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+            String takerPayoutAddressString = TransactionValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(takerPayoutAddressString);
 
             PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
@@ -90,21 +97,21 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setAccountId(request.getTakerAccountId());
 
-            int takersBurningManSelectionHeight = checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+            int takersBurningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
             processModel.setBurningManSelectionHeight(takersBurningManSelectionHeight);
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
             // message but that cannot be changed due backward compatibility issues. It is a left over from the
             // old trade protocol.
-            String takerFeeTxId = checkTransactionId(request.getTakerFeeTxId());
+            String takerFeeTxId = TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
             processModel.setTakeOfferFeeTxId(takerFeeTxId);
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
             // passing the nonce we want to get signed)
             byte[] accountAgeWitnessNonce = trade.getId().getBytes(Charsets.UTF_8);
             PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
-            byte[] accountAgeWitnessSignature = checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
+            byte[] accountAgeWitnessSignature = checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
                     accountAgeWitnessNonce,
                     takerSignatureKey);
             tradingPeer.setAccountAgeWitnessSignature(accountAgeWitnessSignature);
@@ -120,7 +127,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
             trade.setMediatorPubKeyRing(mediatorPubKeyRing);
 
-            long takersTradePrice = checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
+            long takersTradePrice = TradePriceValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

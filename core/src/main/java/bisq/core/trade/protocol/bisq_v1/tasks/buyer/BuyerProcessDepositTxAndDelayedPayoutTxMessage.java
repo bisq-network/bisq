@@ -45,8 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
-import static bisq.core.trade.validation.TradeValidation.checkSerializedTransaction;
-import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
+import static bisq.core.trade.validation.TransactionValidation.checkSerializedTransaction;
+import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 

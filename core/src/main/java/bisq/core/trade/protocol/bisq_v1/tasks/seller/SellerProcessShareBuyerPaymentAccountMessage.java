@@ -50,7 +50,7 @@ import java.security.PrivateKey;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkByteArrayWithExpected;
+import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -79,7 +79,7 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
 
             // Check if the hash of the provided payment account payload matches the hash from the contract
             // which the peer committed in early stages of the trade protocol.
-            checkByteArrayWithExpected(peersHashFromAccountPayload, peersCommittedHashFromContract);
+            checkHashFromContract(peersHashFromAccountPayload, peersCommittedHashFromContract);
 
             processModel.getTradePeer().setPaymentAccountPayload(peersPaymentAccountPayload);
 

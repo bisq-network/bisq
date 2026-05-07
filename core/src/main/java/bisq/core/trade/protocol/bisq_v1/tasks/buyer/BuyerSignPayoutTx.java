@@ -29,11 +29,12 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerSignPayoutTx extends TradeTask {
@@ -46,10 +47,10 @@ public class BuyerSignPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Preconditions.checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
-            Transaction depositTx = Preconditions.checkNotNull(trade.getDepositTx(),
+            checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
+            Transaction depositTx = checkNotNull(trade.getDepositTx(),
                     "trade.getDepositTx() must not be null");
-            Offer offer = Preconditions.checkNotNull(trade.getOffer(), "offer must not be null");
+            Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
@@ -64,7 +65,7 @@ public class BuyerSignPayoutTx extends TradeTask {
             DeterministicKey buyerMultiSigKeyPair = walletService.getMultiSigKeyPair(id, processModel.getMyMultiSigPubKey());
 
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
-            Preconditions.checkArgument(Arrays.equals(buyerMultiSigPubKey,
+            checkArgument(Arrays.equals(buyerMultiSigPubKey,
                             walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
             byte[] sellerMultiSigPubKey = processModel.getTradePeer().getMultiSigPubKey();

@@ -22,8 +22,9 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.DisputeValidation;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.exceptions.ValidationException;
 
 public class BuyerStep1View extends TradeStepView {
 
@@ -83,13 +84,10 @@ public class BuyerStep1View extends TradeStepView {
 
     private void validatePayoutTx() {
         try {
-            TradeDataValidation.validateDelayedPayoutTx(trade,
-                    trade.getDelayedPayoutTx(),
+            DelayedPayoutTxValidation.checkDelayedPayoutTx(trade.getDelayedPayoutTx(),
+                    trade,
                     model.dataModel.btcWalletService);
-        } catch (TradeDataValidation.MissingTxException ignore) {
-            // We don't react on those errors as a failed trade might get listed initially but getting removed from the
-            // trade manager after initPendingTrades which happens after activate might be called.
-        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
+        } catch (RuntimeException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
             }
@@ -99,8 +97,8 @@ public class BuyerStep1View extends TradeStepView {
     // Verify that deposit tx inputs are matching the trade fee txs outputs.
     private void validateDepositInputs() {
         try {
-            TradeDataValidation.validateDepositInputs(trade);
-        } catch (TradeDataValidation.ValidationException e) {
+            DepositTxValidation.validateDepositInputs(trade);
+        } catch (ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
             }

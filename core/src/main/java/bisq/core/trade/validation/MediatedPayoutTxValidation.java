@@ -28,18 +28,11 @@ import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
-import org.bitcoinj.core.TransactionOutput;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
-import static bisq.core.trade.validation.TradeValidation.checkBitcoinAddress;
-import static bisq.core.trade.validation.TradeValidation.checkTransaction;
+import static bisq.core.trade.validation.TransactionValidation.checkBitcoinAddress;
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsNotNegative;
 import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonBlankString;
@@ -49,6 +42,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class MediatedPayoutTxValidation {
     private MediatedPayoutTxValidation() {
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout amounts
+    /* --------------------------------------------------------------------- */
 
     public static Coin checkMediatedPayoutAmounts(Coin buyerPayoutAmount,
                                                   Coin sellerPayoutAmount,
@@ -65,6 +63,11 @@ public final class MediatedPayoutTxValidation {
                 checkedExpectedTotalPayoutAmount.toFriendlyString());
         return checkedBuyerPayoutAmount;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout addresses
+    /* --------------------------------------------------------------------- */
 
     public static String checkMediatedPayoutAddresses(String buyerPayoutAddressString,
                                                       Coin buyerPayoutAmount,
@@ -85,6 +88,11 @@ public final class MediatedPayoutTxValidation {
         }
         return checkedBuyerPayoutAddressString;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Mediated payout transaction
+    /* --------------------------------------------------------------------- */
 
     public static Transaction checkMediatedPayoutTx(Transaction payoutTx,
                                                     Trade trade,
@@ -141,13 +149,15 @@ public final class MediatedPayoutTxValidation {
         String checkedBuyerPayoutAddressString = checkNonBlankString(buyerPayoutAddressString, "buyerPayoutAddressString");
         String checkedSellerPayoutAddressString = checkNonBlankString(sellerPayoutAddressString, "sellerPayoutAddressString");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
+        NetworkParameters params = checkNotNull(btcWalletService.getParams(),
+                "btcWalletService.getParams() must not be null");
         return checkMediatedPayoutTx(payoutTx,
                 depositTx,
                 checkedBuyerPayoutAmount,
                 checkedSellerPayoutAmount,
                 checkedBuyerPayoutAddressString,
                 checkedSellerPayoutAddressString,
-                btcWalletService.getParams());
+                params);
     }
 
     @VisibleForTesting
@@ -164,118 +174,38 @@ public final class MediatedPayoutTxValidation {
         Coin checkedBuyerPayoutAmount = checkIsNotNegative(buyerPayoutAmount, "buyerPayoutAmount");
         Coin checkedSellerPayoutAmount = checkIsNotNegative(sellerPayoutAmount, "sellerPayoutAmount");
 
-        checkMediatedPayoutTxInput(checkedPayoutTx, checkedDepositTx);
-        checkMediatedPayoutTxOutputSum(checkedDepositTx, checkedBuyerPayoutAmount, checkedSellerPayoutAmount);
-        checkMediatedPayoutTxOutputAmountsAndAddresses(checkedPayoutTx,
+        PayoutTxValidationUtils.checkPayoutTxInputSpendsDepositOutputZero(checkedPayoutTx,
+                checkedDepositTx,
+                "Mediated payout tx");
+        PayoutTxValidationUtils.checkPayoutTxOutputSumNotGreaterThanDepositOutputValue(checkedDepositTx,
+                checkedBuyerPayoutAmount,
+                checkedSellerPayoutAmount,
+                "Mediated payout tx");
+        PayoutTxValidationUtils.checkPayoutTxOutputAmountsAndAddresses(checkedPayoutTx,
                 checkedBuyerPayoutAmount,
                 checkedSellerPayoutAmount,
                 buyerPayoutAddressString,
                 sellerPayoutAddressString,
-                checkedParams);
+                checkedParams,
+                "Mediated payout tx",
+                "Mediated payout tx must have at least one positive payout amount");
         return checkedPayoutTx;
     }
 
-    private static Transaction checkMediatedPayoutTxInput(Transaction payoutTx,
-                                                          Transaction depositTx) {
-        checkNotNull(payoutTx, "payoutTx must not be null");
-        checkNotNull(depositTx, "depositTx must not be null");
-        checkArgument(payoutTx.getInputs().size() == 1,
-                "Number of mediated payout tx inputs must be 1");
 
-        TransactionInput input = payoutTx.getInput(0);
-        TransactionOutPoint outpoint = input.getOutpoint();
-        checkArgument(depositTx.getTxId().equals(outpoint.getHash()) && outpoint.getIndex() == 0,
-                "Input of mediated payout transaction does not point to output 0 of deposit tx. " +
-                        "payoutTxId=%s, depositTxId=%s, outpointHash=%s, outpointIndex=%s",
-                payoutTx.getTxId(),
-                depositTx.getTxId(),
-                outpoint.getHash(),
-                outpoint.getIndex());
-        return payoutTx;
-    }
-
-    private static Coin checkMediatedPayoutTxOutputSum(Transaction depositTx,
-                                                       Coin buyerPayoutAmount,
-                                                       Coin sellerPayoutAmount) {
-        Transaction checkedDepositTx = checkNotNull(depositTx, "depositTx must not be null");
-        Coin checkedBuyerPayoutAmount = checkIsNotNegative(buyerPayoutAmount, "buyerPayoutAmount");
-        Coin checkedSellerPayoutAmount = checkIsNotNegative(sellerPayoutAmount, "sellerPayoutAmount");
-
-        checkArgument(!checkedDepositTx.getOutputs().isEmpty(), "depositTx must not be empty");
-        Coin depositOutputValue = checkIsPositive(checkedDepositTx.getOutput(0).getValue(),
-                "depositTx output 0 value");
-        Coin payoutOutputSum = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
-        checkArgument(!payoutOutputSum.isGreaterThan(depositOutputValue),
-                "Mediated payout tx output sum must not be greater than depositTx output 0 value. " +
-                        "payoutOutputSum=%s, depositOutputValue=%s",
-                payoutOutputSum.toFriendlyString(),
-                depositOutputValue.toFriendlyString());
-        return payoutOutputSum;
-    }
-
-    private static Transaction checkMediatedPayoutTxOutputAmountsAndAddresses(Transaction payoutTx,
-                                                                              Coin buyerPayoutAmount,
-                                                                              Coin sellerPayoutAmount,
-                                                                              String buyerPayoutAddressString,
-                                                                              String sellerPayoutAddressString,
-                                                                              NetworkParameters params) {
-        checkNotNull(payoutTx, "payoutTx must not be null");
-        Coin checkedBuyerPayoutAmount = checkIsNotNegative(buyerPayoutAmount, "buyerPayoutAmount");
-        Coin checkedSellerPayoutAmount = checkIsNotNegative(sellerPayoutAmount, "sellerPayoutAmount");
-        checkNotNull(params, "params must not be null");
-
-        List<ExpectedOutput> expectedOutputs = new ArrayList<>();
-        if (checkedBuyerPayoutAmount.isPositive()) {
-            String checkedBuyerPayoutAddressString = checkNonBlankString(buyerPayoutAddressString, "buyerPayoutAddressString");
-            expectedOutputs.add(new ExpectedOutput(checkedBuyerPayoutAmount, checkedBuyerPayoutAddressString, "buyer"));
-        }
-        if (checkedSellerPayoutAmount.isPositive()) {
-            String checkedSellerPayoutAddressString = checkNonBlankString(sellerPayoutAddressString, "sellerPayoutAddressString");
-            expectedOutputs.add(new ExpectedOutput(checkedSellerPayoutAmount, checkedSellerPayoutAddressString, "seller"));
-        }
-        checkArgument(!expectedOutputs.isEmpty(), "Mediated payout tx must have at least one positive payout amount");
-        checkArgument(payoutTx.getOutputs().size() == expectedOutputs.size(),
-                "Number of mediated payout tx outputs does not match mediation result. actual=%s, expected=%s",
-                payoutTx.getOutputs().size(),
-                expectedOutputs.size());
-
-        for (int i = 0; i < expectedOutputs.size(); i++) {
-            TransactionOutput output = payoutTx.getOutput(i);
-            ExpectedOutput expectedOutput = expectedOutputs.get(i);
-            checkArgument(output.getValue().equals(expectedOutput.amount),
-                    "Mediated payout tx %s output amount does not match mediation result. actual=%s, expected=%s",
-                    expectedOutput.role,
-                    output.getValue().toFriendlyString(),
-                    expectedOutput.amount.toFriendlyString());
-
-            String actualAddress = output.getScriptPubKey().getToAddress(params).toString().toLowerCase(Locale.ROOT);
-            String expectedOutputAddress = expectedOutput.address.toLowerCase(Locale.ROOT);
-            checkArgument(actualAddress.equals(expectedOutputAddress),
-                    "Mediated payout tx %s output address does not match mediation result. actual=%s, expected=%s",
-                    expectedOutput.role,
-                    actualAddress,
-                    expectedOutput.address);
-        }
-        return payoutTx;
-    }
+    /* --------------------------------------------------------------------- */
+    // Trade-derived payout amount
+    /* --------------------------------------------------------------------- */
 
     private static Coin getExpectedTotalPayoutAmount(Trade trade) {
         Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
         Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
+        Coin buyerSecurityDeposit = checkNotNull(offer.getBuyerSecurityDeposit(),
+                "offer.getBuyerSecurityDeposit() must not be null");
+        Coin sellerSecurityDeposit = checkNotNull(offer.getSellerSecurityDeposit(),
+                "offer.getSellerSecurityDeposit() must not be null");
         return tradeAmount
-                .add(offer.getBuyerSecurityDeposit())
-                .add(offer.getSellerSecurityDeposit());
-    }
-
-    private static class ExpectedOutput {
-        private final Coin amount;
-        private final String address;
-        private final String role;
-
-        private ExpectedOutput(Coin amount, String address, String role) {
-            this.amount = amount;
-            this.address = address;
-            this.role = role;
-        }
+                .add(buyerSecurityDeposit)
+                .add(sellerSecurityDeposit);
     }
 }
