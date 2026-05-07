@@ -19,29 +19,24 @@ package bisq.core.trade.validation;
 
 import bisq.core.btc.wallet.BtcWalletService;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static bisq.core.trade.validation.TransactionValidation.checkMultiSigPubKey;
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static bisq.core.util.Validator.checkIsNotNegative;
-import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -109,24 +104,23 @@ public final class PayoutTxValidation {
 
         checkTransaction(checkedPayoutTx);
 
-        checkArgument(!checkedDepositTx.getOutputs().isEmpty(), "depositTx must not be empty");
-        TransactionOutput depositOutput = checkedDepositTx.getOutput(0);
-        Coin depositOutputValue = checkIsPositive(depositOutput.getValue(), "depositTx");
         Script redeemScript = get2of2MultiSigRedeemScript(checkedBuyerMultiSigPubKey, checkedSellerMultiSigPubKey);
-        Coin payoutOutputSum = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
-        checkArgument(!payoutOutputSum.isGreaterThan(depositOutputValue),
-                "payoutTx output sum must not be greater than depositTx output 0 value. " +
-                        "payoutOutputSum=%s, depositOutputValue=%s",
-                payoutOutputSum.toFriendlyString(),
-                depositOutputValue.toFriendlyString());
-
-        checkPayoutTxInput(checkedPayoutTx, checkedDepositTx, depositOutput);
-        checkPayoutTxOutputs(checkedPayoutTx,
+        PayoutTxValidationUtils.checkPayoutTxOutputSumNotGreaterThanDepositOutputValue(checkedDepositTx,
+                checkedBuyerPayoutAmount,
+                checkedSellerPayoutAmount,
+                "payoutTx");
+        PayoutTxValidationUtils.checkPayoutTxInputSpendsDepositOutputZero(checkedPayoutTx,
+                checkedDepositTx,
+                "payoutTx");
+        PayoutTxValidationUtils.checkPayoutTxOutputAmountsAndAddresses(checkedPayoutTx,
                 checkedBuyerPayoutAmount,
                 checkedSellerPayoutAmount,
                 checkedBuyerPayoutAddressString,
                 checkedSellerPayoutAddressString,
-                checkedParams);
+                checkedParams,
+                "payoutTx",
+                "At least one payout amount must be positive");
+        TransactionOutput depositOutput = PayoutTxValidationUtils.getDepositOutputZero(checkedDepositTx);
         checkPayoutTxInputScript(checkedPayoutTx,
                 depositOutput,
                 redeemScript,
@@ -134,75 +128,6 @@ public final class PayoutTxValidation {
                 checkedSellerMultiSigPubKey);
 
         return checkedPayoutTx;
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Payout transaction input
-    /* --------------------------------------------------------------------- */
-
-    private static void checkPayoutTxInput(Transaction payoutTx,
-                                           Transaction depositTx,
-                                           TransactionOutput depositOutput) {
-        checkArgument(payoutTx.getInputs().size() == 1,
-                "payoutTx must have exactly one input. inputCount=%s",
-                payoutTx.getInputs().size());
-
-        TransactionInput input = payoutTx.getInput(0);
-        TransactionOutPoint outpoint = checkNotNull(input.getOutpoint(), "payoutTx input outpoint must not be null");
-        checkArgument(outpoint.getHash().equals(depositTx.getTxId()) && outpoint.getIndex() == depositOutput.getIndex(),
-                "payoutTx input must spend depositTx output 0. payoutTxInput=%s:%s, depositTxOutput=%s:%s",
-                outpoint.getHash(),
-                outpoint.getIndex(),
-                depositTx.getTxId(),
-                depositOutput.getIndex());
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Payout transaction outputs
-    /* --------------------------------------------------------------------- */
-
-    private static void checkPayoutTxOutputs(Transaction payoutTx,
-                                             Coin buyerPayoutAmount,
-                                             Coin sellerPayoutAmount,
-                                             String buyerPayoutAddressString,
-                                             String sellerPayoutAddressString,
-                                             NetworkParameters params) {
-        List<ExpectedOutput> expectedOutputs = new ArrayList<>();
-        if (buyerPayoutAmount.isPositive()) {
-            expectedOutputs.add(new ExpectedOutput("buyer", buyerPayoutAmount, buyerPayoutAddressString));
-        }
-        if (sellerPayoutAmount.isPositive()) {
-            expectedOutputs.add(new ExpectedOutput("seller", sellerPayoutAmount, sellerPayoutAddressString));
-        }
-
-        checkArgument(payoutTx.getOutputs().size() == expectedOutputs.size(),
-                "payoutTx output count mismatch. outputCount=%s, expectedOutputCount=%s",
-                payoutTx.getOutputs().size(),
-                expectedOutputs.size());
-
-        for (int i = 0; i < expectedOutputs.size(); i++) {
-            checkPayoutTxOutput(payoutTx.getOutput(i), expectedOutputs.get(i), params);
-        }
-    }
-
-    private static void checkPayoutTxOutput(TransactionOutput output,
-                                            ExpectedOutput expectedOutput,
-                                            NetworkParameters params) {
-        checkArgument(output.getValue().equals(expectedOutput.amount),
-                "%s payout amount mismatch. payoutAmount=%s, expectedPayoutAmount=%s",
-                expectedOutput.name,
-                output.getValue().toFriendlyString(),
-                expectedOutput.amount.toFriendlyString());
-
-        Address expectedAddress = Address.fromString(params, expectedOutput.addressString);
-        Address payoutAddress = output.getScriptPubKey().getToAddress(params);
-        checkArgument(payoutAddress.equals(expectedAddress),
-                "%s payout address mismatch. payoutAddress=%s, expectedPayoutAddress=%s",
-                expectedOutput.name,
-                payoutAddress,
-                expectedAddress);
     }
 
 
@@ -292,22 +217,5 @@ public final class PayoutTxValidation {
         ECKey buyerKey = ECKey.fromPublicOnly(buyerPubKey);
         ECKey sellerKey = ECKey.fromPublicOnly(sellerPubKey);
         return ScriptBuilder.createMultiSigOutputScript(2, Arrays.asList(sellerKey, buyerKey));
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Expected output
-    /* --------------------------------------------------------------------- */
-
-    private static final class ExpectedOutput {
-        private final String name;
-        private final Coin amount;
-        private final String addressString;
-
-        private ExpectedOutput(String name, Coin amount, String addressString) {
-            this.name = name;
-            this.amount = amount;
-            this.addressString = addressString;
-        }
     }
 }
