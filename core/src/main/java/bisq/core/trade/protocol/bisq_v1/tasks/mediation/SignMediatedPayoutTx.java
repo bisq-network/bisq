@@ -95,6 +95,9 @@ public class SignMediatedPayoutTx extends TradeTask {
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
 
+            processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
+                    depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
+
             byte[] mediatedPayoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
                     depositTx,
                     validatedBuyerPayoutAmount,
