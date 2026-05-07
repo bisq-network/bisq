@@ -96,6 +96,7 @@ public class PayoutTxValidationTest {
     void checkPayoutTxBytesRejectsEmptySerializedPayoutTx() {
         PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        when(btcWalletService.getParams()).thenReturn(PARAMS);
 
         assertThrows(IllegalArgumentException.class, () -> PayoutTxValidation.checkPayoutTx(new byte[]{},
                 btcWalletService,
@@ -221,6 +222,112 @@ public class PayoutTxValidationTest {
     }
 
     @Test
+    void checkPayoutTxRejectsWrongBuyerMultiSigPubKey() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        byte[] wrongBuyerMultiSigPubKey = new ECKey().getPubKey();
+
+        assertThrows(IllegalArgumentException.class, () -> PayoutTxValidation.checkPayoutTx(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                wrongBuyerMultiSigPubKey,
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS));
+    }
+
+    @Test
+    void checkPayoutTxRejectsSwappedWitnessSignatures() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        TransactionWitness witness = fixture.payoutTx.getInput(0).getWitness();
+        setP2wshWitness(fixture.payoutTx,
+                witness.getPush(2),
+                witness.getPush(1),
+                REDEEM_SCRIPT);
+
+        assertThrows(IllegalArgumentException.class, () -> PayoutTxValidation.checkPayoutTx(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS));
+    }
+
+    @Test
+    void checkPayoutTxRejectsInvalidWitnessSignature() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        TransactionSignature invalidSellerSignature = createWitnessSignature(fixture.payoutTx,
+                fixture.depositTx,
+                new ECKey(),
+                Transaction.SigHash.ALL);
+        TransactionSignature buyerSignature = createWitnessSignature(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_MULTI_SIG_KEY,
+                Transaction.SigHash.ALL);
+        setP2wshWitness(fixture.payoutTx, invalidSellerSignature, buyerSignature, REDEEM_SCRIPT);
+
+        assertThrows(IllegalArgumentException.class, () -> PayoutTxValidation.checkPayoutTx(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS));
+    }
+
+    @Test
+    void checkPayoutTxRejectsUnexpectedWitnessRedeemScript() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        Script unexpectedRedeemScript = ScriptBuilder.createMultiSigOutputScript(2,
+                Arrays.asList(new ECKey(), new ECKey()));
+        TransactionWitness witness = fixture.payoutTx.getInput(0).getWitness();
+        setP2wshWitness(fixture.payoutTx,
+                witness.getPush(1),
+                witness.getPush(2),
+                unexpectedRedeemScript);
+
+        assertThrows(IllegalArgumentException.class, () -> PayoutTxValidation.checkPayoutTx(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS));
+    }
+
+    @Test
+    void checkPayoutTxRejectsWitnessSignaturesWithoutSigHashAll() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        TransactionSignature sellerSignature = createWitnessSignature(fixture.payoutTx,
+                fixture.depositTx,
+                SELLER_MULTI_SIG_KEY,
+                Transaction.SigHash.NONE);
+        TransactionSignature buyerSignature = createWitnessSignature(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_MULTI_SIG_KEY,
+                Transaction.SigHash.NONE);
+        setP2wshWitness(fixture.payoutTx, sellerSignature, buyerSignature, REDEEM_SCRIPT);
+
+        assertThrows(IllegalArgumentException.class, () -> PayoutTxValidation.checkPayoutTx(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS));
+    }
+
+    @Test
     void checkPayoutTxRejectsNegativeBuyerPayoutAmount() {
         PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
 
@@ -313,21 +420,50 @@ public class PayoutTxValidationTest {
         }
 
         TransactionInput input = payoutTx.getInput(0);
-        Coin inputValue = depositTx.getOutput(0).getValue();
+        TransactionSignature sellerSignature = createWitnessSignature(payoutTx,
+                depositTx,
+                SELLER_MULTI_SIG_KEY,
+                Transaction.SigHash.ALL);
+        TransactionSignature buyerSignature = createWitnessSignature(payoutTx,
+                depositTx,
+                BUYER_MULTI_SIG_KEY,
+                Transaction.SigHash.ALL);
+        input.setScriptSig(ScriptBuilder.createEmpty());
+        setP2wshWitness(payoutTx, sellerSignature, buyerSignature, REDEEM_SCRIPT);
+        return payoutTx;
+    }
+
+    private static TransactionSignature createWitnessSignature(Transaction payoutTx,
+                                                               Transaction depositTx,
+                                                               ECKey key,
+                                                               Transaction.SigHash sigHashMode) {
         Sha256Hash sigHash = payoutTx.hashForWitnessSignature(0,
                 REDEEM_SCRIPT,
-                inputValue,
-                Transaction.SigHash.ALL,
+                depositTx.getOutput(0).getValue(),
+                sigHashMode,
                 false);
-        TransactionSignature buyerSignature = new TransactionSignature(BUYER_MULTI_SIG_KEY.sign(sigHash),
-                Transaction.SigHash.ALL,
-                false);
-        TransactionSignature sellerSignature = new TransactionSignature(SELLER_MULTI_SIG_KEY.sign(sigHash),
-                Transaction.SigHash.ALL,
-                false);
-        input.setScriptSig(ScriptBuilder.createEmpty());
-        input.setWitness(TransactionWitness.redeemP2WSH(REDEEM_SCRIPT, sellerSignature, buyerSignature));
-        return payoutTx;
+        return new TransactionSignature(key.sign(sigHash), sigHashMode, false);
+    }
+
+    private static void setP2wshWitness(Transaction payoutTx,
+                                        TransactionSignature sellerSignature,
+                                        TransactionSignature buyerSignature,
+                                        Script redeemScript) {
+        payoutTx.getInput(0).setWitness(TransactionWitness.redeemP2WSH(redeemScript,
+                sellerSignature,
+                buyerSignature));
+    }
+
+    private static void setP2wshWitness(Transaction payoutTx,
+                                        byte[] sellerSignature,
+                                        byte[] buyerSignature,
+                                        Script redeemScript) {
+        TransactionWitness witness = new TransactionWitness(4);
+        witness.setPush(0, new byte[]{});
+        witness.setPush(1, sellerSignature);
+        witness.setPush(2, buyerSignature);
+        witness.setPush(3, redeemScript.getProgram());
+        payoutTx.getInput(0).setWitness(witness);
     }
 
     private static final class PayoutFixture {

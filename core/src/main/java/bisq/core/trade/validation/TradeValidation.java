@@ -494,8 +494,8 @@ public class TradeValidation {
     /* --------------------------------------------------------------------- */
 
     public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
-        checkIsPositive(inputAmount, "inputAmount must be positive");
-        checkNotNull(trade, "trade must no be null");
+        checkIsPositive(inputAmount, "inputAmount");
+        checkNotNull(trade, "trade must not be null");
         Offer offer = trade.getOffer();
         long tradeAmount = trade.getAmountAsLong();
         long buyerDeposit = offer.getBuyerSecurityDeposit().getValue();

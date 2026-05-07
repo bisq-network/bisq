@@ -106,7 +106,7 @@ public final class PayoutTxValidation {
 
         checkArgument(!checkedDepositTx.getOutputs().isEmpty(), "depositTx must not be empty");
         TransactionOutput depositOutput = checkedDepositTx.getOutput(0);
-        Coin depositOutputValue = checkIsPositive(depositOutput.getValue(), "depositTx output must be positive");
+        Coin depositOutputValue = checkIsPositive(depositOutput.getValue(), "depositTx");
         Script redeemScript = get2of2MultiSigRedeemScript(checkedBuyerMultiSigPubKey, checkedSellerMultiSigPubKey);
         Coin payoutOutputSum = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
         checkArgument(!payoutOutputSum.isGreaterThan(depositOutputValue),
@@ -251,8 +251,15 @@ public final class PayoutTxValidation {
             ECKey sellerKey = ECKey.fromPublicOnly(sellerMultiSigPubKey);
             checkArgument(buyerKey.verify(sigHash, buyerSignature) && sellerKey.verify(sigHash, sellerSignature),
                     "payoutTx witness signatures are invalid");
-        } catch (Throwable t) {
-            throw new IllegalArgumentException("payoutTx witness signatures are invalid", t);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            String message = e.getMessage();
+            throw new IllegalArgumentException(
+                    message == null || message.isEmpty()
+                            ? "payoutTx witness signatures are invalid"
+                            : "payoutTx witness signatures are invalid: " + message,
+                    e);
         }
     }
 
