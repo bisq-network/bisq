@@ -18,30 +18,43 @@
 package bisq.network.p2p.mailbox;
 
 import bisq.network.p2p.DecryptedMessageWithPubKey;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersNodeAddressProvidingPayload;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
 import bisq.common.proto.ProtobufferException;
+import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
+
+import java.security.PublicKey;
 
 import java.time.Clock;
 
 import java.util.Optional;
 
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+@Slf4j
 @Value
 public class MailboxItem implements PersistablePayload {
     private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
     @Nullable
     private final DecryptedMessageWithPubKey decryptedMessageWithPubKey;
+    private final boolean invalidDecryptedMessage;
 
     public MailboxItem(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
                        @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         this.protectedMailboxStorageEntry = protectedMailboxStorageEntry;
-        this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
+        DecryptedMessageWithPubKey validDecryptedMessageWithPubKey = getValidDecryptedMessageWithPubKey(
+                protectedMailboxStorageEntry,
+                decryptedMessageWithPubKey);
+        this.decryptedMessageWithPubKey = validDecryptedMessageWithPubKey;
+        this.invalidDecryptedMessage = decryptedMessageWithPubKey != null && validDecryptedMessageWithPubKey == null;
     }
 
     @Override
@@ -66,6 +79,55 @@ public class MailboxItem implements PersistablePayload {
         return new MailboxItem(ProtectedMailboxStorageEntry.fromProto(proto.getProtectedMailboxStorageEntry(),
                 networkProtoResolver),
                 decryptedMessageWithPubKey);
+    }
+
+    @Nullable
+    private static DecryptedMessageWithPubKey getValidDecryptedMessageWithPubKey(
+            ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
+            @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        if (decryptedMessageWithPubKey == null) {
+            return null;
+        }
+
+        NetworkEnvelope decryptedPayload = decryptedMessageWithPubKey.getNetworkEnvelope();
+        if (!(decryptedPayload instanceof MailboxMessage)) {
+            log.error("Decrypted mailbox item contained an invalid payload type: {}",
+                    decryptedPayload == null ? "null" : decryptedPayload.getClass().getSimpleName());
+            return null;
+        }
+
+        NodeAddress senderNodeAddress = protectedMailboxStorageEntry
+                .getMailboxStoragePayload()
+                .getPrefixedSealedAndSignedMessage()
+                .getSenderNodeAddress();
+
+        // MailboxMessage implements SendersNodeAddressProvidingPayload thus the cast is safe
+        SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
+                (SendersNodeAddressProvidingPayload) decryptedPayload;
+        NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
+        if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
+                senderNodeAddress)) {
+            log.error("Decrypted mailbox item sender address mismatch. " +
+                            "senderNodeAddress={}, payloadSenderNodeAddress={}",
+                    senderNodeAddress, payloadSenderNodeAddress);
+            return null;
+        }
+
+        if (decryptedPayload instanceof SendersSignaturePubKeyProvidingPayload) {
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
+                    (SendersSignaturePubKeyProvidingPayload) decryptedPayload;
+            PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
+            PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
+            if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
+                    signaturePubKey)) {
+                log.error("Decrypted mailbox item sender signature pubkey mismatch. " +
+                                "payloadSenderSignaturePubKey={}, sealedPayloadSignaturePubKey={}",
+                        payloadSenderSignaturePubKey, signaturePubKey);
+                return null;
+            }
+        }
+
+        return decryptedMessageWithPubKey;
     }
 
     public boolean isMine() {

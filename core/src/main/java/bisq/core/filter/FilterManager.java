@@ -21,9 +21,11 @@ import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.crypto.LowRSigningKey;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferValidation;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.PriceFeedNodeAddressProvider;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
@@ -103,6 +105,7 @@ public class FilterManager {
     private final Preferences preferences;
     private final ConfigFileEditor configFileEditor;
     private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
+    private final PriceFeedService priceFeedService;
     private final boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -124,6 +127,7 @@ public class FilterManager {
                          Config config,
                          PriceFeedNodeAddressProvider priceFeedNodeAddressProvider,
                          BanFilter banFilter,
+                         PriceFeedService priceFeedService,
                          @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
@@ -132,6 +136,7 @@ public class FilterManager {
         this.preferences = preferences;
         this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
         this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
+        this.priceFeedService = priceFeedService;
         this.ignoreDevMsg = ignoreDevMsg;
 
         publicKeys = useDevPrivilegeKeys ?
@@ -419,6 +424,12 @@ public class FilterManager {
         return getFilter() != null &&
                 getFilter().getNodeAddressesBannedFromTrading().stream()
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
+    }
+
+    public boolean isPriceInBounds(Offer offer) {
+        // We allow 5% tolerance to the max allowed price percentage to avoid filtering offers in
+        // high volatility environments
+        return OfferValidation.isPriceInBounds(priceFeedService, offer, 1.05);
     }
 
     public boolean isNodeAddressBannedFromNetwork(NodeAddress nodeAddress) {

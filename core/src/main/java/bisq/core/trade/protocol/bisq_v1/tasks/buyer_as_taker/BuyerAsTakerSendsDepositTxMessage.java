@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_taker;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -26,9 +27,14 @@ import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.trade.validation.DepositTxValidation.checkTransactionIsUnsigned;
+
 
 @Slf4j
 public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
@@ -40,13 +46,21 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            if (processModel.getDepositTx() != null) {
+
+            Transaction signedDepositTx = processModel.getDepositTx();
+            if (signedDepositTx != null) {
+                BtcWalletService btcWalletService = processModel.getBtcWalletService();
+
                 // Remove witnesses from the sent depositTx, so that the seller can still compute the final
                 // tx id, but cannot publish it before providing the buyer with a signed delayed payout tx.
+                // With setting useSegwit to false in bitcoinSerialize(false) we remove the witnesses from the transaction
+                byte[] unsignedDepositTx = signedDepositTx.bitcoinSerialize(false);
+                byte[] depositTxWithoutWitnesses = checkTransactionIsUnsigned(unsignedDepositTx, btcWalletService);
+
                 DepositTxMessage message = new DepositTxMessage(UUID.randomUUID().toString(),
                         processModel.getOfferId(),
                         processModel.getMyNodeAddress(),
-                        processModel.getDepositTx().bitcoinSerialize(false));
+                        depositTxWithoutWitnesses);
 
                 NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
                 log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -74,7 +88,7 @@ public class BuyerAsTakerSendsDepositTxMessage extends TradeTask {
                         }
                 );
             } else {
-                log.error("processModel.getDepositTx() = {}", processModel.getDepositTx());
+                log.error("processModel.getDepositTx() = {}", signedDepositTx);
                 failed("DepositTx is null");
             }
         } catch (Throwable t) {

@@ -65,6 +65,8 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
+import java.security.PublicKey;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -376,21 +378,92 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             PrefixedSealedAndSignedMessage sealedMsg = (PrefixedSealedAndSignedMessage) networkEnvelope;
             try {
                 DecryptedMessageWithPubKey decryptedMsg = encryptionService.decryptAndVerify(sealedMsg.getSealedAndSigned());
-                connection.maybeHandleSupportedCapabilitiesMessage(decryptedMsg.getNetworkEnvelope());
-                connection.getPeersNodeAddressOptional().ifPresentOrElse(nodeAddress ->
-                                decryptedDirectMessageListeners.forEach(e -> e.onDirectMessage(decryptedMsg, nodeAddress)),
-                        () -> {
-                            log.error("peersNodeAddress is expected to be available at onMessage for " +
-                                    "processing PrefixedSealedAndSignedMessage.");
-                        });
+                NetworkEnvelope decryptedPayload = decryptedMsg.getNetworkEnvelope();
+                if (decryptedPayload == null) {
+                    log.error("Decrypted payload must not be null at processing PrefixedSealedAndSignedMessage.");
+                    return;
+                }
+
+                if (!isDirectMessageSenderSignaturePubKeyValid(decryptedMsg)) {
+                    return;
+                }
+
+                NodeAddress senderNodeAddress = getVerifiedDirectMessageSenderNodeAddress(decryptedPayload, sealedMsg,
+                        connection);
+                if (senderNodeAddress == null) {
+                    return;
+                }
+
+                connection.maybeHandleSupportedCapabilitiesMessage(decryptedPayload);
+                decryptedDirectMessageListeners.forEach(e -> e.onDirectMessage(decryptedMsg, senderNodeAddress));
             } catch (CryptoException e) {
                 log.warn("Decryption of a direct message failed. This is not expected as the " +
-                        "direct message was sent to our node.");
+                        "direct message was sent to our node.", e);
             } catch (ProtobufferException e) {
-                log.error("ProtobufferException at decryptAndVerify: {}", e.toString());
-                e.getStackTrace();
+                log.error("ProtobufferException at decryptAndVerify", e);
             }
         }
+    }
+
+    private boolean isDirectMessageSenderSignaturePubKeyValid(DecryptedMessageWithPubKey decryptedMsg) {
+        NetworkEnvelope decryptedPayload = decryptedMsg.getNetworkEnvelope();
+        if (!(decryptedPayload instanceof SendersSignaturePubKeyProvidingPayload)) {
+            return true;
+        }
+
+        SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
+                (SendersSignaturePubKeyProvidingPayload) decryptedPayload;
+        PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
+        PublicKey signaturePubKey = decryptedMsg.getSignaturePubKey();
+        if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
+                signaturePubKey)) {
+            log.error("Sender signature pubkey of decrypted payload {} does not match signature pubkey " +
+                            "of sealed payload {}",
+                    payloadSenderSignaturePubKey, signaturePubKey);
+            return false;
+        }
+        return true;
+    }
+
+    @Nullable
+    private NodeAddress getVerifiedDirectMessageSenderNodeAddress(NetworkEnvelope decryptedPayload,
+                                                                  PrefixedSealedAndSignedMessage sealedMsg,
+                                                                  Connection connection) {
+        NodeAddress senderNodeAddress = sealedMsg.getSenderNodeAddress();
+        if (senderNodeAddress == null) {
+            log.error("Sender node address of outer envelope must not be null at processing " +
+                    "PrefixedSealedAndSignedMessage.");
+            return null;
+        }
+
+        if (decryptedPayload instanceof SendersNodeAddressProvidingPayload) {
+            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload =
+                    (SendersNodeAddressProvidingPayload) decryptedPayload;
+            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
+            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress,
+                    senderNodeAddress)) {
+                log.error("Sender node address of decrypted payload {} does not match sender node address " +
+                                "of outer envelope {}",
+                        payloadSenderNodeAddress, senderNodeAddress);
+                return null;
+            }
+        }
+
+        Optional<NodeAddress> connectionSenderNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        if (connectionSenderNodeAddressOptional.isEmpty()) {
+            log.error("peersNodeAddress is expected to be available at onMessage for " +
+                    "processing PrefixedSealedAndSignedMessage.");
+            return null;
+        }
+
+        NodeAddress connectionSenderNodeAddress = connectionSenderNodeAddressOptional.get();
+        if (!connectionSenderNodeAddress.equals(senderNodeAddress)) {
+            log.error("Connection peer node address {} does not match sender node address of outer envelope {}",
+                    connectionSenderNodeAddress, senderNodeAddress);
+            return null;
+        }
+
+        return connectionSenderNodeAddress;
     }
 
 
@@ -399,11 +472,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // TODO OfferAvailabilityResponse is called twice!
-    public void sendEncryptedDirectMessage(NodeAddress peerNodeAddress, PubKeyRing pubKeyRing, NetworkEnvelope message,
+    public void sendEncryptedDirectMessage(NodeAddress peerNodeAddress, PubKeyRing pubKeyRing, NetworkEnvelope payload,
                                            SendDirectMessageListener sendDirectMessageListener) {
         checkNotNull(peerNodeAddress, "PeerAddress must not be null (sendEncryptedDirectMessage)");
         if (isBootstrapped()) {
-            doSendEncryptedDirectMessage(peerNodeAddress, pubKeyRing, message, sendDirectMessageListener);
+            doSendEncryptedDirectMessage(peerNodeAddress, pubKeyRing, payload, sendDirectMessageListener);
         } else {
             throw new NetworkNotReadyException();
         }
@@ -411,27 +484,56 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress,
                                               PubKeyRing pubKeyRing,
-                                              NetworkEnvelope message,
+                                              NetworkEnvelope payload,
                                               SendDirectMessageListener sendDirectMessageListener) {
         log.debug("Send encrypted direct message {} to peer {}",
-                message.getClass().getSimpleName(), peersNodeAddress);
+                payload.getClass().getSimpleName(), peersNodeAddress);
 
         checkNotNull(peersNodeAddress, "Peer node address must not be null at doSendEncryptedDirectMessage");
 
-        checkNotNull(networkNode.getNodeAddress(), "My node address must not be null at doSendEncryptedDirectMessage");
+        NodeAddress senderNodeAddress = networkNode.getNodeAddress();
+        checkNotNull(senderNodeAddress, "My node address must not be null at doSendEncryptedDirectMessage");
 
-        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peersNodeAddress, message, peerManager)) {
+        if (CapabilityUtils.capabilityRequiredAndCapabilityNotSupported(peersNodeAddress, payload, peerManager)) {
             sendDirectMessageListener.onFault("We did not send the EncryptedMessage " +
                     "because the peer does not support the capability.");
             return;
+        }
+
+        if (payload instanceof SendersNodeAddressProvidingPayload) {
+            SendersNodeAddressProvidingPayload nodeAddressProvidingPayload = (SendersNodeAddressProvidingPayload) payload;
+            NodeAddress payloadSenderNodeAddress = nodeAddressProvidingPayload.getSenderNodeAddress();
+            if (!SendersNodeAddressProvidingPayload.isSenderNodeAddressMatching(payloadSenderNodeAddress, senderNodeAddress)) {
+                // Sender node address of the SendersNodeAddressProvidingPayload to be used for encryption
+                // must match the node address of the sender.
+                log.error("Sender node address {} does not match my node address {}",
+                        payloadSenderNodeAddress, senderNodeAddress);
+                sendDirectMessageListener.onFault("Sender node address of payload is not matching our node address");
+                return;
+            }
+        }
+
+        if (payload instanceof SendersSignaturePubKeyProvidingPayload) {
+            SendersSignaturePubKeyProvidingPayload signaturePubKeyProvidingPayload =
+                    (SendersSignaturePubKeyProvidingPayload) payload;
+            PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
+            PublicKey senderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
+            if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
+                    mySignaturePubKey)) {
+                log.error("Sender signature pubkey {} does not match my signature pubkey {}",
+                        senderSignaturePubKey, mySignaturePubKey);
+                sendDirectMessageListener.onFault("Sender signature pubkey of payload is not matching our signature " +
+                        "pubkey");
+                return;
+            }
         }
 
         try {
             // Prefix is not needed for direct messages but as old code is doing the verification we still need to
             // send it if peer has not updated.
             PrefixedSealedAndSignedMessage sealedMsg = new PrefixedSealedAndSignedMessage(
-                    networkNode.getNodeAddress(),
-                    encryptionService.encryptAndSign(pubKeyRing, message));
+                    senderNodeAddress,
+                    encryptionService.encryptAndSign(pubKeyRing, payload));
 
             SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, sealedMsg);
             Futures.addCallback(future, new FutureCallback<>() {
@@ -442,15 +544,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
+                    log.error(throwable.getMessage(), throwable);
                     sendDirectMessageListener.onFault(throwable.toString());
                 }
             }, MoreExecutors.directExecutor());
         } catch (CryptoException e) {
-            e.printStackTrace();
-            log.error(message.toString());
-            log.error(e.toString());
+            log.error("Encrypting direct message {} for peer {} failed",
+                    payload.getClass().getSimpleName(), peersNodeAddress);
             sendDirectMessageListener.onFault(e.toString());
         }
     }

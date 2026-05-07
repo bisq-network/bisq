@@ -19,6 +19,7 @@ package bisq.core.filter;
 
 import bisq.core.locale.Res;
 import bisq.core.provider.PriceFeedNodeAddressProvider;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
@@ -63,6 +64,7 @@ public class FilterManagerInitializationTests {
                 mock(Config.class),
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
+                mock(PriceFeedService.class),
                 false,
                 true
         );
@@ -101,6 +103,7 @@ public class FilterManagerInitializationTests {
                 mock(Config.class),
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
+                mock(PriceFeedService.class),
                 true,
                 true
         );

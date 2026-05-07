@@ -38,6 +38,7 @@ import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWi
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
+import bisq.desktop.main.portfolio.editoffer.EditOfferView;
 import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
@@ -733,12 +734,22 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     private void setupInvalidOpenOffersHandler() {
         openOfferManager.getInvalidOffers().addListener((ListChangeListener<Tuple2<OpenOffer, String>>) c -> {
-            c.next();
-            if (c.wasAdded()) {
-                handleInvalidOpenOffers(c.getAddedSubList());
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    handleInvalidOpenOffers(c.getAddedSubList());
+                }
             }
         });
         handleInvalidOpenOffers(openOfferManager.getInvalidOffers());
+
+        openOfferManager.getOffersWithInvalidPrice().addListener((ListChangeListener<OpenOffer>) c -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    handleOffersWithInvalidPrice(c.getAddedSubList());
+                }
+            }
+        });
+        handleOffersWithInvalidPrice(openOfferManager.getOffersWithInvalidPrice());
     }
 
     private void handleInvalidOpenOffers(List<? extends Tuple2<OpenOffer, String>> list) {
@@ -754,6 +765,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         }, log::error);
 
                     })
+                    .hideCloseButton()
+                    .show();
+        });
+    }
+
+    private void handleOffersWithInvalidPrice(List<? extends OpenOffer> list) {
+        list.forEach(openOffer -> {
+            new Popup()
+                    .warning(Res.get("openOffer.invalidPrice.outOfTolerance", Preferences.MAX_PRICE_DISTANCE * 100))
+                    .actionButtonText(Res.get("shared.editOffer"))
+                    .onAction(() -> navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class))
                     .hideCloseButton()
                     .show();
         });

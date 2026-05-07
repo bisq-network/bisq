@@ -36,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -74,6 +77,13 @@ public final class PayoutTxPublishedMessage extends TradeMailboxMessage {
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
         this.signedWitness = signedWitness;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNonEmptyBytes(payoutTx, "payoutTx");
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
     }
 
     @Override

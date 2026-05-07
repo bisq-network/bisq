@@ -17,13 +17,9 @@
 
 package bisq.core.support.dispute.arbitration;
 
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
@@ -59,10 +55,7 @@ import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.crypto.DeterministicKey;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -265,43 +258,16 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 }
 
                 if (payoutTx == null) {
-                    if (dispute.getDepositTxSerialized() != null) {
-                        byte[] multiSigPubKey = isBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
-                        DeterministicKey multiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
-                        Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
-                                dispute.getDepositTxSerialized(),
-                                disputeResult.getArbitratorSignature(),
-                                disputeResult.getBuyerPayoutAmount(),
-                                disputeResult.getSellerPayoutAmount(),
-                                contract.getBuyerPayoutAddressString(),
-                                contract.getSellerPayoutAddressString(),
-                                multiSigKeyPair,
-                                contract.getBuyerMultiSigPubKey(),
-                                contract.getSellerMultiSigPubKey(),
-                                disputeResult.getArbitratorPubKey()
-                        );
-                        Transaction committedDisputedPayoutTx = WalletService.maybeAddSelfTxToWallet(signedDisputedPayoutTx, btcWalletService.getWallet());
-                        tradeWalletService.broadcastTx(committedDisputedPayoutTx, new TxBroadcaster.Callback() {
-                            @Override
-                            public void onSuccess(Transaction transaction) {
-                                // after successful publish we send peer the tx
-                                dispute.setDisputePayoutTxId(transaction.getTxId().toString());
-                                sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
-                                updateTradeOrOpenOfferManager(tradeId);
-                            }
-
-                            @Override
-                            public void onFailure(TxBroadcastException exception) {
-                                log.error(exception.getMessage());
-                            }
-                        }, 15);
-
-                        success = true;
-                    } else {
-                        errorMessage = "DepositTx is null. TradeId = " + tradeId;
-                        log.warn(errorMessage);
-                        success = false;
-                    }
+                    // Legacy arbitrator publishing path was removed: it relied on
+                    // traderSignAndFinalizeDisputedPayoutTx, which has been broken since
+                    // the P2WSH switch in 1.5.0 (inverted isP2SH polarity made every
+                    // produced tx fail input.verify) and corresponded to the legacy
+                    // arbitrator role that has been deprecated for years. Close the
+                    // dispute locally and ack; no tx broadcast.
+                    errorMessage = "Legacy arbitrator dispute payout publishing is no longer supported. TradeId = " + tradeId;
+                    log.warn(errorMessage);
+                    updateTradeOrOpenOfferManager(tradeId);
+                    success = false;
                 } else {
                     log.warn("We already got a payout tx. That might be the case if the other peer did not get the " +
                             "payout tx and opened a dispute. TradeId = " + tradeId);
@@ -319,21 +285,6 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
                 success = true;
             }
-        } catch (TransactionVerificationException e) {
-            errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage, e);
-            success = false;
-
-            // We prefer to close the dispute in that case. If there was no deposit tx and a random tx was used
-            // we get a TransactionVerificationException. No reason to keep that dispute open...
-            updateTradeOrOpenOfferManager(tradeId);
-
-            throw new RuntimeException(errorMessage);
-        } catch (AddressFormatException | WalletException | SignatureDecodeException e) {
-            errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage, e);
-            success = false;
-            throw new RuntimeException(errorMessage);
         } finally {
             // We use the chatMessage as we only persist those not the disputeResultMessage.
             // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.

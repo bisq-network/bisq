@@ -38,20 +38,19 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
-import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
 
 import bisq.common.crypto.Hash;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.Arrays;
+import java.security.PrivateKey;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
-import static com.google.common.base.Preconditions.checkArgument;
+import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -64,35 +63,44 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             ShareBuyerPaymentAccountMessage message = (ShareBuyerPaymentAccountMessage) processModel.getTradeMessage();
             checkNotNull(message);
-            checkTradeId(processModel.getOfferId(), message);
 
-            PaymentAccountPayload buyerPaymentAccountPayload = message.getBuyerPaymentAccountPayload();
+            Contract contract = checkNotNull(trade.getContract());
+            PubKeyRing myPubKeyRing = processModel.getPubKeyRing();
 
-            byte[] buyerPaymentAccountPayloadHash = ProcessModel.hashOfPaymentAccountPayload(buyerPaymentAccountPayload);
-            Contract contract = trade.getContract();
-            byte[] peersPaymentAccountPayloadHash = checkNotNull(contract).getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing());
-            checkArgument(Arrays.equals(buyerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
-                    "Hash of payment account is invalid");
+            PaymentAccountPayload myPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "Payment account payload cannot be null for trade: " + trade.getId());
 
-            processModel.getTradePeer().setPaymentAccountPayload(buyerPaymentAccountPayload);
-            checkNotNull(contract).setPaymentAccountPayloads(buyerPaymentAccountPayload,
-                    processModel.getPaymentAccountPayload(trade),
-                    processModel.getPubKeyRing());
+            PaymentAccountPayload peersPaymentAccountPayload = message.getBuyerPaymentAccountPayload();
+            byte[] peersHashFromAccountPayload = peersPaymentAccountPayload.getHashForContract();
+            byte[] peersCommittedHashFromContract = contract.getHashOfPeersPaymentAccountPayload(myPubKeyRing);
+
+            // Check if the hash of the provided payment account payload matches the hash from the contract
+            // which the peer committed in early stages of the trade protocol.
+            checkHashFromContract(peersHashFromAccountPayload, peersCommittedHashFromContract);
+
+            processModel.getTradePeer().setPaymentAccountPayload(peersPaymentAccountPayload);
+
+            // Apply both peers and my payloads to contract
+            contract.setPaymentAccountPayloads(peersPaymentAccountPayload, myPaymentAccountPayload, myPubKeyRing);
 
             // As we have added the payment accounts we need to update the json. We also update the signature
             // thought that has less relevance with the changes of 1.7.0
-            String contractAsJson = JsonUtil.objectToJson(contract);
-            String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
-            trade.setContractAsJson(contractAsJson);
+            String contractAsJson = checkNotNull(JsonUtil.objectToJson(contract));
+            byte[] contractHash = Hash.getSha256Hash(contractAsJson);
+
+            PrivateKey privateKey = processModel.getKeyRing().getSignatureKeyPair().getPrivate();
+            String signature = Sig.sign(privateKey, contractAsJson);
+
+            // If nothing failed we commit to trade
             if (contract.isBuyerMakerAndSellerTaker()) {
                 trade.setTakerContractSignature(signature);
             } else {
                 trade.setMakerContractSignature(signature);
             }
-
-            byte[] contractHash = Hash.getSha256Hash(checkNotNull(contractAsJson));
+            trade.setContractAsJson(contractAsJson);
             trade.setContractHash(contractHash);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

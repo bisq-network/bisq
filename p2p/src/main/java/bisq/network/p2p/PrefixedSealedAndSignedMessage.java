@@ -35,7 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implements MailboxMessage, SendersNodeAddressMessage {
+public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implements MailboxMessage, SendersNodeAddressAwareEnvelope {
     public static final long TTL = TimeUnit.DAYS.toMillis(15);
 
     private final NodeAddress senderNodeAddress;

@@ -39,5 +39,4 @@ public abstract class TradeMailboxMessage extends TradeMessage implements Mailbo
     public long getTTL() {
         return TTL;
     }
-
 }

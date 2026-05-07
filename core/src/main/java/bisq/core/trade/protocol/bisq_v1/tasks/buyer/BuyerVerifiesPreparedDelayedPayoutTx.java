@@ -17,10 +17,17 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.offer.Offer;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -31,6 +38,12 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTx;
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInput;
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount;
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkLockTime;
+import static bisq.core.trade.validation.DepositTxValidation.checkRawTransactionInputsAreNotMalleable;
+import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -44,59 +57,61 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction sellersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
+            Offer offer = processModel.getOffer();
+            FeeService feeService = processModel.getFeeService();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
-            TradeDataValidation.validateDelayedPayoutTx(trade,
-                    sellersPreparedDelayedPayoutTx,
-                    btcWalletService);
+            TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
-            Transaction preparedDepositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            long inputAmount = preparedDepositTx.getOutput(0).getValue().value;
-            long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
+            Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
+            checkDelayedPayoutTx(peersPreparedDelayedPayoutTx, trade, btcWalletService);
+
+            int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
+                    delayedPayoutTxReceiverService);
+
+            long tradeTxFeeAsLong = MinerFeeValidation.checkTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(), feeService);
+
+            Transaction preparedDepositTx = toVerifiedTransaction(processModel.getPreparedDepositTx(), btcWalletService);
+            long multisigOutputAmount = preparedDepositTx.getOutput(0).getValue().value;
+            long inputAmount = checkDelayedPayoutTxInputAmount(multisigOutputAmount, trade);
+
             List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
-                    processModel.getBurningManSelectionHeight(),
+                    burningManSelectionHeight,
                     inputAmount,
                     tradeTxFeeAsLong);
 
-            long lockTime = trade.getLockTime();
-            Transaction buyersPreparedDelayedPayoutTx = processModel.getTradeWalletService().createDelayedUnsignedPayoutTx(
+            boolean isAltcoin = offer.getPaymentMethod().isBlockchain();
+            long lockTime = checkLockTime(trade.getLockTime(), isAltcoin, btcWalletService);
+
+            Transaction myPreparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(
                     preparedDepositTx,
                     delayedPayoutTxReceivers,
                     lockTime);
-            if (!buyersPreparedDelayedPayoutTx.getTxId().equals(sellersPreparedDelayedPayoutTx.getTxId())) {
-                String errorMsg = "TxIds of buyersPreparedDelayedPayoutTx and sellersPreparedDelayedPayoutTx must be the same.";
-                log.error("{} \nbuyersPreparedDelayedPayoutTx={}, \nsellersPreparedDelayedPayoutTx={}, " +
+            if (!myPreparedDelayedPayoutTx.getTxId().equals(peersPreparedDelayedPayoutTx.getTxId())) {
+                String errorMsg = "TxIds of myPreparedDelayedPayoutTx and peersPreparedDelayedPayoutTx must be the same.";
+                DaoFacade daoFacade = processModel.getDaoFacade();
+                log.error("{} \nmyPreparedDelayedPayoutTx={}, \npeersPreparedDelayedPayoutTx={}, " +
                                 "\nBtcWalletService.chainHeight={}, " +
                                 "\nDaoState.chainHeight={}, " +
                                 "\nisDaoStateIsInSync={}",
-                        errorMsg, buyersPreparedDelayedPayoutTx, sellersPreparedDelayedPayoutTx,
-                        processModel.getBtcWalletService().getBestChainHeight(),
-                        processModel.getDaoFacade().getChainHeight(),
-                        processModel.getDaoFacade().isDaoStateReadyAndInSync());
+                        errorMsg, myPreparedDelayedPayoutTx, peersPreparedDelayedPayoutTx,
+                        btcWalletService.getBestChainHeight(),
+                        daoFacade.getChainHeight(),
+                        daoFacade.isDaoStateReadyAndInSync());
                 throw new IllegalArgumentException(errorMsg);
             }
 
-            // If the deposit tx is non-malleable, we already know its final ID, so should check that now
-            // before sending any further data to the seller, to provide extra protection for the buyer.
-            if (isDepositTxNonMalleable()) {
-                TradeDataValidation.validatePayoutTxInput(preparedDepositTx, sellersPreparedDelayedPayoutTx);
-            } else {
-                log.info("Deposit tx is malleable, so we skip sellersPreparedDelayedPayoutTx input validation.");
-            }
+            List<RawTransactionInput> myRawTransactionInputs = processModel.getRawTransactionInputs();
+            checkRawTransactionInputsAreNotMalleable(myRawTransactionInputs, tradeWalletService);
+
+            List<RawTransactionInput> peersRawTransactionInputs = processModel.getTradePeer().getRawTransactionInputs();
+            checkRawTransactionInputsAreNotMalleable(peersRawTransactionInputs, tradeWalletService);
+
+            checkDelayedPayoutTxInput(peersPreparedDelayedPayoutTx, preparedDepositTx);
 
             complete();
-        } catch (TradeDataValidation.ValidationException e) {
-            failed(e.getMessage());
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private boolean isDepositTxNonMalleable() {
-        var buyerInputs = checkNotNull(processModel.getRawTransactionInputs());
-        var sellerInputs = checkNotNull(processModel.getTradePeer().getRawTransactionInputs());
-
-        return buyerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH) &&
-                sellerInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH);
     }
 }

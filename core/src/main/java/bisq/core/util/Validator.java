@@ -17,46 +17,88 @@
 
 package bisq.core.util;
 
-import bisq.core.trade.protocol.TradeMessage;
-
 import org.bitcoinj.core.Coin;
+
+import java.util.Collection;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Utility class for validating domain data.
- */
 public class Validator {
 
     public static String nonEmptyStringOf(String value) {
         checkNotNull(value);
-        checkArgument(value.length() > 0);
+        checkArgument(!value.isEmpty());
         return value;
     }
 
-    public static long nonNegativeLongOf(long value) {
-        checkArgument(value >= 0);
+    public static String checkNonEmptyString(String value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isEmpty(), "%s must not be empty", fieldName);
         return value;
     }
 
-    public static Coin nonZeroCoinOf(Coin value) {
-        checkNotNull(value);
-        checkArgument(!value.isZero());
+    public static String checkNonBlankString(String value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isBlank(), "%s must not be blank", fieldName);
         return value;
     }
 
-    public static Coin positiveCoinOf(Coin value) {
-        checkNotNull(value);
-        checkArgument(value.isPositive());
+    public static void checkNullableString(@Nullable String value, String fieldName) {
+        if (value != null) {
+            checkArgument(!value.isEmpty(), "%s must not be empty", fieldName);
+        }
+    }
+
+    public static byte[] checkNonEmptyBytes(byte[] value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(value.length > 0, "%s must not be empty", fieldName);
         return value;
     }
 
-    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(isTradeIdValid(tradeId, tradeMessage));
+    public static void checkNullableBytes(@Nullable byte[] value, String fieldName) {
+        if (value != null) {
+            checkArgument(value.length > 0, "%s must not be empty", fieldName);
+        }
     }
 
-    public static boolean isTradeIdValid(String tradeId, TradeMessage tradeMessage) {
-        return tradeId.equals(tradeMessage.getTradeId());
+    public static <T extends Collection<?>> T checkList(T values, boolean requireNonEmpty, String fieldName) {
+        checkNotNull(values, "%s must not be null", fieldName);
+        if (requireNonEmpty) {
+            checkArgument(!values.isEmpty(), "%s must not be empty", fieldName);
+        }
+        checkArgument(values.stream().noneMatch(Objects::isNull), "%s must not contain null entries", fieldName);
+        return values;
+    }
+
+    public static long checkIsPositive(long value, String fieldName) {
+        checkArgument(value > 0, "%s must be positive", fieldName);
+        return value;
+    }
+
+    public static long checkIsNotNegative(long value, String fieldName) {
+        checkArgument(value >= 0, "%s must not be negative", fieldName);
+        return value;
+    }
+
+    public static Coin checkIsPositive(Coin value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(value.isPositive(), "%s must be positive", fieldName);
+        return value;
+    }
+
+    public static Coin checkIsNotNegative(Coin value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isNegative(), "%s must not be negative", fieldName);
+        return value;
+    }
+
+    public static Coin checkIsNotZero(Coin value, String fieldName) {
+        checkNotNull(value, "%s must not be null", fieldName);
+        checkArgument(!value.isZero(), "%s must not be zero", fieldName);
+        return value;
     }
 }

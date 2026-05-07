@@ -25,6 +25,7 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DepositTxValidation;
 
 import bisq.common.crypto.Hash;
 import bisq.common.taskrunner.TaskRunner;
@@ -79,10 +80,12 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     .add(offer.getBuyerSecurityDeposit());
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
-            checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
-                    "all takerRawTransactionInputs must be P2WH");
-            long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-            String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
+            Coin expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
+                    .add(trade.getTradeTxFee().multiply(2));
+            DepositTxValidation.validatePeersInputs(takerRawTransactionInputs,
+                    expectedTakersInputAmount,
+                    walletService,
+                    "Taker");
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
@@ -95,8 +98,6 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,
-                    takerChangeOutputValue,
-                    takerChangeAddressString,
                     makerAddress,
                     makerChangeAddress,
                     buyerPubKey,

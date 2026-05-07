@@ -19,9 +19,9 @@ package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
-import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
@@ -74,13 +74,13 @@ public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
             PrivateKey privateKey = processModel.getKeyRing().getSignatureKeyPair().getPrivate();
             byte[] signatureOfNonce = Sig.sign(privateKey, preparedDepositTx);
 
-            // From 1.7.0 on we do not send the payment account data but only the hash.
-            // For backward compatibility we still keep the fields but set it to null
-            byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
-            String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
+            PaymentAccountPayload makersPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "Payment account payload cannot be null for trade: " + trade.getId());
+            byte[] hashOfMakersPaymentAccountPayload = makersPaymentAccountPayload.getHashForContract();
+
+            String makersPaymentMethodId = makersPaymentAccountPayload.getPaymentMethodId();
             InputsForDepositTxResponse message = new InputsForDepositTxResponse(
                     processModel.getOfferId(),
-                    null,
                     processModel.getAccountId(),
                     makerMultiSigPubKey,
                     trade.getContractAsJson(),

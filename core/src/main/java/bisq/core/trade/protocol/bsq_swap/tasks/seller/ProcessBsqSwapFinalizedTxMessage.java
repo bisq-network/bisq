@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -32,6 +31,7 @@ import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -47,7 +47,7 @@ public abstract class ProcessBsqSwapFinalizedTxMessage extends BsqSwapTask {
         try {
             BsqSwapFinalizedTxMessage message = checkNotNull((BsqSwapFinalizedTxMessage) protocolModel.getTradeMessage());
             checkNotNull(message);
-            Validator.checkTradeId(protocolModel.getOfferId(), message);
+            checkTradeId(protocolModel.getOfferId(), message);
 
             // We cross check if the tx matches our partially signed tx by removing the sigs from the buyers inputs
             Transaction buyersTransactionWithoutSigs = protocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
