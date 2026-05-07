@@ -22,6 +22,8 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.offer.Offer;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -35,8 +37,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkBurningManSelectionHeight;
-import static bisq.core.trade.validation.TradeValidation.checkRawTransactionInputsAreNotMalleable;
+import static bisq.core.trade.validation.TradeValidation.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -50,6 +51,8 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            Offer offer = processModel.getOffer();
+            FeeService feeService = processModel.getFeeService();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
@@ -57,19 +60,22 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             TradeDataValidation.validateDelayedPayoutTx(trade, peersPreparedDelayedPayoutTx, btcWalletService);
 
-            Transaction preparedDepositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            long availableAmount = preparedDepositTx.getOutput(0).getValue().value;
-            long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-
             int burningManSelectionHeight = checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);
 
+            long tradeTxFeeAsLong = checkTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(), feeService);
+
+            Transaction preparedDepositTx = toVerifiedTransaction(processModel.getPreparedDepositTx(), btcWalletService);
+            long multisigOutputAmount = preparedDepositTx.getOutput(0).getValue().value;
+            long inputAmount = checkDelayedPayoutTxInputAmount(multisigOutputAmount, trade);
+
             List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
                     burningManSelectionHeight,
-                    availableAmount,
+                    inputAmount,
                     tradeTxFeeAsLong);
 
-            long lockTime = trade.getLockTime();
+            boolean isAltcoin = offer.getPaymentMethod().isBlockchain();
+            long lockTime = checkLockTime(trade.getLockTime(), isAltcoin, btcWalletService);
 
             Transaction myPreparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(
                     preparedDepositTx,

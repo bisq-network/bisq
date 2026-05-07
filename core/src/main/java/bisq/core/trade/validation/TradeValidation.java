@@ -30,6 +30,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.TradeFeeFactory;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.user.User;
@@ -387,6 +388,10 @@ public class TradeValidation {
         return checkIsPositive(tradeTxFee, "tradeTxFee");
     }
 
+    public static long checkTradeTxFeeIsInTolerance(long tradeTxFee, FeeService feeService) {
+        return checkTradeTxFeeIsInTolerance(Coin.valueOf(tradeTxFee), feeService).getValue();
+    }
+
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
         checkIsPositive(tradeTxFee, "tradeTxFee");
         checkNotNull(feeService, "feeService must not be null");
@@ -481,6 +486,31 @@ public class TradeValidation {
     @VisibleForTesting
     static long checkMakerFeeInTolerance(long fee, long expectedFee) {
         return checkValueInTolerance(fee, expectedFee, MAX_MAKER_FEE_DEVIATION_FACTOR);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Delayed payout transaction
+    /* --------------------------------------------------------------------- */
+
+    public static long checkDelayedPayoutTxInputAmount(long inputAmount, Trade trade) {
+        checkIsPositive(inputAmount, "inputAmount must be positive");
+        checkNotNull(trade, "trade must no be null");
+        Offer offer = trade.getOffer();
+        long tradeAmount = trade.getAmountAsLong();
+        long buyerDeposit = offer.getBuyerSecurityDeposit().getValue();
+        long sellerDeposit = offer.getSellerSecurityDeposit().getValue();
+        long tradeTxFee = trade.getTradeTxFeeAsLong();
+        long expectedAmount = tradeAmount +
+                buyerDeposit +
+                sellerDeposit +
+                tradeTxFee;
+        checkArgument(inputAmount == expectedAmount,
+                "inputAmount must match expectedAmount. " +
+                        "Trade amount: %s, buyer deposit: %s, seller deposit: %s, " +
+                        "trade fee: %s, expected amount: %s",
+                tradeAmount, buyerDeposit, sellerDeposit, tradeTxFee, expectedAmount);
+        return inputAmount;
     }
 
 
