@@ -23,14 +23,9 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.crypto.Sig;
-import bisq.common.util.Base64;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
-
-import java.security.PublicKey;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -65,32 +60,6 @@ public final class TradeValidation {
         long now = System.currentTimeMillis();
         checkArgument(Math.abs(now - currentDate) <= MAX_DATE_DEVIATION, "currentDate is outside of allowed range.");
         return currentDate;
-    }
-
-    public static String checkBase64DSASignature(String dsaSignatureBase64) {
-        checkNonBlankString(dsaSignatureBase64, "dsaSignatureBase64");
-        fromBase64DSASignature(dsaSignatureBase64);
-        return dsaSignatureBase64;
-    }
-
-    public static byte[] fromBase64DSASignature(String dsaSignatureBase64) {
-        checkNonBlankString(dsaSignatureBase64, "dsaSignatureBase64");
-        return Base64.decode(dsaSignatureBase64);
-    }
-
-    public static byte[] checkDSASignature(byte[] dsaSignature,
-                                           byte[] message,
-                                           PublicKey signaturePubKey) {
-        checkNonEmptyBytes(dsaSignature, "dsaSignature");
-        checkNonEmptyBytes(message, "message");
-        checkNotNull(signaturePubKey, "signaturePubKey must not be null");
-
-        try {
-            checkArgument(Sig.verify(signaturePubKey, message, dsaSignature), "Invalid dsaSignature");
-            return dsaSignature;
-        } catch (CryptoException e) {
-            throw new IllegalArgumentException("Invalid dsaSignature", e);
-        }
     }
 
     public static byte[] checkHashFromContract(byte[] current, byte[] expected) {

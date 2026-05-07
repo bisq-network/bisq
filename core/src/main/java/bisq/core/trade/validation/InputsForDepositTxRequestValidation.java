@@ -35,7 +35,7 @@ import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 
-import static bisq.core.trade.validation.TradeValidation.checkDSASignature;
+import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignature;
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static com.google.common.base.Preconditions.checkNotNull;
 

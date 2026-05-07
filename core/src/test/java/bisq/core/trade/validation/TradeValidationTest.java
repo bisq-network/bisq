@@ -21,28 +21,18 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
-import bisq.common.util.Base64;
-
-import java.security.KeyPair;
-
-import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.validation.TradeValidationTestUtils.pubKeyRing;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 public class TradeValidationTest {
-    static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
-            "account-age-witness-nonce".getBytes(StandardCharsets.UTF_8);
-
 
     @Test
     void checkTradeIdAcceptsMatchingTradeMessageTradeId() {
@@ -82,102 +72,6 @@ public class TradeValidationTest {
     @Test
     void isTradeIdValidRejectsNullTradeMessage() {
         assertThrows(NullPointerException.class, () -> TradeValidation.isTradeIdValid("trade-id", null));
-    }
-
-
-    @Test
-    void checkAccountAgeWitnessSignatureAcceptsSignatureOfNonce() throws CryptoException {
-        KeyPair signatureKeyPair = Sig.generateKeyPair();
-        PubKeyRing pubKeyRing = pubKeyRing(signatureKeyPair);
-        byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
-
-        assertSame(accountAgeWitnessSignature, TradeValidation.checkDSASignature(
-                accountAgeWitnessSignature,
-                ACCOUNT_AGE_WITNESS_NONCE,
-                pubKeyRing.getSignaturePubKey()));
-    }
-
-    @Test
-    void checkAccountAgeWitnessSignatureRejectsSignatureOfDifferentNonce() throws CryptoException {
-        KeyPair signatureKeyPair = Sig.generateKeyPair();
-        PubKeyRing pubKeyRing = pubKeyRing(signatureKeyPair);
-        byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
-        byte[] otherNonce = "other-nonce".getBytes(StandardCharsets.UTF_8);
-
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDSASignature(
-                accountAgeWitnessSignature,
-                otherNonce,
-                pubKeyRing.getSignaturePubKey()));
-    }
-
-    @Test
-    void checkAccountAgeWitnessSignatureRejectsSignatureFromDifferentPubKey() throws CryptoException {
-        KeyPair signatureKeyPair = Sig.generateKeyPair();
-        PubKeyRing pubKeyRing = pubKeyRing(Sig.generateKeyPair());
-        byte[] accountAgeWitnessSignature = Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE);
-
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDSASignature(
-                accountAgeWitnessSignature,
-                ACCOUNT_AGE_WITNESS_NONCE,
-                pubKeyRing.getSignaturePubKey()));
-    }
-
-    @Test
-    void checkAccountAgeWitnessSignatureRejectsNullSignature() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkDSASignature(null,
-                ACCOUNT_AGE_WITNESS_NONCE,
-                pubKeyRing(Sig.generateKeyPair()).getSignaturePubKey()));
-    }
-
-    @Test
-    void checkAccountAgeWitnessSignatureRejectsEmptySignature() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkDSASignature(new byte[0],
-                ACCOUNT_AGE_WITNESS_NONCE,
-                pubKeyRing(Sig.generateKeyPair()).getSignaturePubKey()));
-    }
-
-    @Test
-    void checkAccountAgeWitnessSignatureRejectsNullNonce() throws CryptoException {
-        KeyPair signatureKeyPair = Sig.generateKeyPair();
-
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkDSASignature(
-                Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
-                null,
-                pubKeyRing(signatureKeyPair).getSignaturePubKey()));
-    }
-
-    @Test
-    void checkAccountAgeWitnessSignatureRejectsNullPubKeyRing() throws CryptoException {
-        KeyPair signatureKeyPair = Sig.generateKeyPair();
-
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkDSASignature(
-                Sig.sign(signatureKeyPair.getPrivate(), ACCOUNT_AGE_WITNESS_NONCE),
-                ACCOUNT_AGE_WITNESS_NONCE,
-                null));
-    }
-
-    @Test
-    void checkBase64SignatureAcceptsBase64EncodedDSASignature() {
-        byte[] signature = new byte[]{1, 2, 3};
-        String signatureBase64 = Base64.encode(signature);
-
-        assertEquals(signatureBase64, TradeValidation.checkBase64DSASignature(signatureBase64));
-        assertArrayEquals(signature, TradeValidation.fromBase64DSASignature(signatureBase64));
-    }
-
-    @Test
-    void checkBase64SignatureRejectsInvalidBase64EncodedDSASignature() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64DSASignature("not base64"));
-    }
-
-    @Test
-    void checkBase64SignatureRejectsNullDSASignature() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkBase64DSASignature(null));
-    }
-
-    @Test
-    void checkBase64SignatureRejectsBlankDSASignature() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkBase64DSASignature(" "));
     }
 
     @Test

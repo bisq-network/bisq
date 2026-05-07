@@ -48,7 +48,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkDSASignature;
+import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignature;
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
 import static com.google.common.base.Preconditions.checkNotNull;
