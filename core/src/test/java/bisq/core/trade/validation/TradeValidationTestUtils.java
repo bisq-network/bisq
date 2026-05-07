@@ -52,16 +52,24 @@ import java.math.BigInteger;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TradeValidationTestUtils {
     static final MainNetParams PARAMS = MainNetParams.get();
-
     static final int GENESIS_HEIGHT = 102;
-
     static final String VALID_TRANSACTION_ID =
             "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    @Test
+    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 0, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, -1, 1));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 1, 0.99));
+    }
 
 
     static BtcWalletService btcWalletService() {

@@ -122,13 +122,6 @@ public class DelayedPayoutTxValidationTest {
     }
 
     @Test
-    void checkValueInToleranceRejectsInvalidExpectedValueAndFactor() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 0, 1));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, -1, 1));
-        assertThrows(IllegalArgumentException.class, () -> TradeValidationUtils.checkValueInTolerance(1, 1, 0.99));
-    }
-
-    @Test
     void checkLockTimeAcceptsExpectedLockTimeAndAllowedDeviation() {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         when(btcWalletService.getBestChainHeight()).thenReturn(1_000);

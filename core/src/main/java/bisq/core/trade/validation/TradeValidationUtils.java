@@ -17,12 +17,6 @@
 
 package bisq.core.trade.validation;
 
-import bisq.common.util.Hex;
-import bisq.common.util.Utilities;
-
-import java.util.Arrays;
-
-import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class TradeValidationUtils {
@@ -45,14 +39,4 @@ public class TradeValidationUtils {
         return actualValue;
     }
 
-    public static byte[] checkByteArrayWithExpected(byte[] current, byte[] expected) {
-        checkNonEmptyBytes(current, "current");
-        checkNonEmptyBytes(expected, "expected");
-        checkArgument(Arrays.equals(current, expected),
-                "current is not matching expected. " +
-                        "current=%s, expected=%s",
-                Utilities.toTruncatedString(Hex.encode(current), 8),
-                Utilities.toTruncatedString(Hex.encode(expected), 8));
-        return current;
-    }
 }

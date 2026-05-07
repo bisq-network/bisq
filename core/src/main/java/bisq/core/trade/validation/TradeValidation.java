@@ -22,9 +22,12 @@ import bisq.core.trade.protocol.TradeMessage;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
+import bisq.common.util.Hex;
+import bisq.common.util.Utilities;
 
 import java.security.PublicKey;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -83,5 +86,16 @@ public final class TradeValidation {
         } catch (CryptoException e) {
             throw new IllegalArgumentException("Invalid dsaSignature", e);
         }
+    }
+
+    public static byte[] checkByteArrayWithExpected(byte[] current, byte[] expected) {
+        checkNonEmptyBytes(current, "current");
+        checkNonEmptyBytes(expected, "expected");
+        checkArgument(Arrays.equals(current, expected),
+                "current is not matching expected. " +
+                        "current=%s, expected=%s",
+                Utilities.toTruncatedString(Hex.encode(current), 8),
+                Utilities.toTruncatedString(Hex.encode(expected), 8));
+        return current;
     }
 }
