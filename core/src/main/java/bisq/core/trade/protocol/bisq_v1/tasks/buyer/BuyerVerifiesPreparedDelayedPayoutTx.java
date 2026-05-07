@@ -63,7 +63,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService = processModel.getDelayedPayoutTxReceiverService();
 
             Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
-            TradeDataValidation.validateDelayedPayoutTx(trade, peersPreparedDelayedPayoutTx, btcWalletService);
+            TradeDataValidation.validateDelayedPayoutTx(peersPreparedDelayedPayoutTx, trade, btcWalletService);
 
             int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);

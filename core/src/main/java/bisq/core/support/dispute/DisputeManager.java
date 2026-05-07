@@ -486,8 +486,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateTradeAndDispute(dispute, trade);
-            TradeDataValidation.validateDelayedPayoutTx(trade,
-                    trade.getDelayedPayoutTx(),
+            TradeDataValidation.validateDelayedPayoutTx(trade.getDelayedPayoutTx(),
+                    trade,
                     btcWalletService);
             if (dispute.isUsingLegacyBurningMan()) {
                 DisputeValidation.validateDonationAddress(dispute,

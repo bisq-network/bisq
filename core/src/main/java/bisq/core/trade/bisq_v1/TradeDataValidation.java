@@ -42,8 +42,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeDataValidation {
-    public static void validateDelayedPayoutTx(Trade trade,
-                                               Transaction delayedPayoutTx,
+    public static void validateDelayedPayoutTx(Transaction delayedPayoutTx,
+                                               Trade trade,
                                                BtcWalletService btcWalletService)
             throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
