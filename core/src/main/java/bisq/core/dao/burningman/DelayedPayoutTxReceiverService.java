@@ -25,7 +25,6 @@ import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -34,8 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,13 +49,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
-    // Activation date for bugfix of receiver addresses getting overwritten by a new compensation
-    // requests change address.
-    // See: https://github.com/bisq-network/bisq/issues/6699
-    public static final Date BUGFIX_6699_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JULY, 24);
-    // See: https://github.com/bisq-network/proposals/issues/412
-    public static final Date PROPOSAL_412_ACTIVATION_DATE = Utilities.getUTCDate(2024, GregorianCalendar.MAY, 1);
-
     public static final int SNAPSHOT_SELECTION_GRID_SIZE = 10;
 
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
