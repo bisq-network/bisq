@@ -17,14 +17,21 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.checkDerEncodedEcdsaSignature;
+import static bisq.core.trade.validation.TradeValidation.checkSerializedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -37,15 +44,21 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             DelayedPayoutTxSignatureResponse response = (DelayedPayoutTxSignatureResponse) processModel.getTradeMessage();
             checkNotNull(response);
 
-            processModel.getTradePeer().setDelayedPayoutTxSignature(checkNotNull(response.getDelayedPayoutTxBuyerSignature()));
+            TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            TradingPeer tradePeer = processModel.getTradePeer();
 
-            processModel.getTradeWalletService().sellerAddsBuyerWitnessesToDepositTx(
-                    processModel.getDepositTx(),
-                    processModel.getBtcWalletService().getTxFromSerializedTx(response.getDepositTx())
-            );
+            byte[] delayedPayoutTxBuyerSignature = checkDerEncodedEcdsaSignature(response.getDelayedPayoutTxBuyerSignature());
+            tradePeer.setDelayedPayoutTxSignature(delayedPayoutTxBuyerSignature);
+
+            byte[] depositTx = checkSerializedTransaction(response.getDepositTx(), btcWalletService);
+            Transaction buyersDepositTxWithWitnesses = btcWalletService.getTxFromSerializedTx(depositTx);
+            Transaction myDepositTx = processModel.getDepositTx();
+            tradeWalletService.sellerAddsBuyerWitnessesToDepositTx(myDepositTx, buyersDepositTxWithWitnesses);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
