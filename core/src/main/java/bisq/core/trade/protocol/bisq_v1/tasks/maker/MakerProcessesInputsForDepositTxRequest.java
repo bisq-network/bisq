@@ -74,7 +74,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             Coin tradeAmount = DepositTxValidation.checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
             trade.setAmount(tradeAmount);
 
-            List<RawTransactionInput> takerRawTransactionInputs = checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+            List<RawTransactionInput> takerRawTransactionInputs = DepositTxValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                     btcWalletService,
                     offer,
                     trade.getTradeTxFee(),

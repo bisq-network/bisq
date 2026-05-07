@@ -17,11 +17,6 @@
 
 package bisq.core.trade.validation;
 
-import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.offer.Offer;
-import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -31,7 +26,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
@@ -45,7 +39,6 @@ import java.nio.charset.StandardCharsets;
 import java.math.BigInteger;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
@@ -57,8 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class TradeValidationTest {
     static final byte[] ACCOUNT_AGE_WITNESS_NONCE =
@@ -215,55 +206,7 @@ public class TradeValidationTest {
                 null));
     }
 
-    @Test
-    void checkTransactionIsUnsignedAcceptsValidUnsignedTransaction() {
-        byte[] depositTxWithoutWitnesses = TradeValidationTestUtils.serializedTransaction();
 
-        assertSame(depositTxWithoutWitnesses,
-                TradeValidation.checkTransactionIsUnsigned(depositTxWithoutWitnesses,
-                        btcWalletService()));
-    }
-
-    @Test
-    void checkTransactionIsUnsignedRejectsMalformedSerializedTransaction() {
-        assertThrows(RuntimeException.class, () -> TradeValidation.checkTransactionIsUnsigned(
-                new byte[]{1, 2, 3},
-                btcWalletService()));
-    }
-
-    @Test
-    void checkTransactionIsUnsignedRejectsStructurallyInvalidTransaction() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
-                TradeValidationTestUtils.serializedTransactionWithoutOutputs(),
-                btcWalletService()));
-    }
-
-    @Test
-    void checkTransactionIsUnsignedRejectsTransactionWithScriptSig() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
-                TradeValidationTestUtils.serializedTransactionWithScriptSig(),
-                btcWalletService()));
-    }
-
-    @Test
-    void checkTransactionIsUnsignedRejectsTransactionWithWitness() {
-        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkTransactionIsUnsigned(
-                TradeValidationTestUtils.serializedTransactionWithWitness(),
-                btcWalletService()));
-    }
-
-    @Test
-    void checkTransactionIsUnsignedRejectsNullTransaction() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionIsUnsigned(null,
-                btcWalletService()));
-    }
-
-    @Test
-    void checkTransactionIsUnsignedRejectsNullWalletService() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTransactionIsUnsigned(
-                TradeValidationTestUtils.serializedTransaction(),
-                null));
-    }
 
     @Test
     void checkTransactionIdAcceptsValidTransactionId() {
@@ -509,117 +452,6 @@ public class TradeValidationTest {
 
         assertThrows(NullPointerException.class,
                 () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
-    }
-
-
-    @Test
-    void checkTakersRawTransactionInputsAcceptsSellerInputsForBuyOffer() {
-        Coin tradeAmount = Coin.valueOf(20_000);
-        Coin tradeTxFee = Coin.valueOf(300);
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, tradeTxFee);
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        List<RawTransactionInput> rawTransactionInputs = TradeValidationTestUtils.rawTransactionInputs(btcWalletService,
-                offer.getSellerSecurityDeposit()
-                        .add(tradeAmount)
-                        .add(tradeTxFee.multiply(2)));
-
-        assertSame(rawTransactionInputs, TradeValidation.checkTakersRawTransactionInputs(rawTransactionInputs,
-                btcWalletService,
-                trade.getOffer(),
-                trade.getTradeTxFee(),
-                tradeAmount));
-    }
-
-    @Test
-    void checkTakersRawTransactionInputsAcceptsBuyerInputsForSellOffer() {
-        Coin tradeAmount = Coin.valueOf(20_000);
-        Coin tradeTxFee = Coin.valueOf(300);
-        Offer offer = TradeValidationTestUtils.offer(false, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        Trade trade = TradeValidationTestUtils.trade(offer, tradeTxFee);
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        List<RawTransactionInput> rawTransactionInputs = TradeValidationTestUtils.rawTransactionInputs(btcWalletService,
-                offer.getBuyerSecurityDeposit().add(tradeTxFee.multiply(2)));
-
-        assertSame(rawTransactionInputs, TradeValidation.checkTakersRawTransactionInputs(rawTransactionInputs,
-                btcWalletService,
-                trade.getOffer(),
-                trade.getTradeTxFee(),
-                tradeAmount));
-    }
-
-    @Test
-    void checkMakersRawTransactionInputsAcceptsBuyerInputsForBuyOffer() {
-        Offer offer = TradeValidationTestUtils.offer(true, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        List<RawTransactionInput> rawTransactionInputs = TradeValidationTestUtils.rawTransactionInputs(btcWalletService,
-                offer.getBuyerSecurityDeposit());
-
-        assertSame(rawTransactionInputs, TradeValidation.checkMakersRawTransactionInputs(rawTransactionInputs,
-                btcWalletService,
-                offer));
-    }
-
-    @Test
-    void checkMakersRawTransactionInputsAcceptsSellerInputsForSellOffer() {
-        Offer offer = TradeValidationTestUtils.offer(false, Coin.valueOf(10_000), Coin.valueOf(12_000), Coin.valueOf(40_000));
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        List<RawTransactionInput> rawTransactionInputs = TradeValidationTestUtils.rawTransactionInputs(btcWalletService,
-                offer.getSellerSecurityDeposit().add(offer.getAmount()));
-
-        assertSame(rawTransactionInputs, TradeValidation.checkMakersRawTransactionInputs(rawTransactionInputs,
-                btcWalletService,
-                offer));
-    }
-
-    @Test
-    void checkTakersRawTransactionInputsRejectsNullInputs() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkTakersRawTransactionInputs(null,
-                mock(BtcWalletService.class),
-                mock(Offer.class),
-                Coin.valueOf(3000),
-                Coin.valueOf(20_000)));
-    }
-
-    @Test
-    void checkMakersRawTransactionInputsRejectsNullInputs() {
-        assertThrows(NullPointerException.class, () -> TradeValidation.checkMakersRawTransactionInputs(null,
-                mock(BtcWalletService.class),
-                mock(Offer.class)));
-    }
-
-    @Test
-    void checkRawTransactionInputsAreNotMalleableAcceptsP2WPKHInputs() {
-        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
-        RawTransactionInput rawTransactionInput = TradeValidationTestUtils.rawTransactionInput(Coin.valueOf(10_000));
-        List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
-        when(tradeWalletService.isP2WPKH(rawTransactionInput)).thenReturn(true);
-
-        assertSame(rawTransactionInputs,
-                TradeValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs, tradeWalletService));
-        verify(tradeWalletService).isP2WPKH(rawTransactionInput);
-    }
-
-    @Test
-    void checkRawTransactionInputsAreNotMalleableRejectsMalleableInputs() {
-        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
-        RawTransactionInput rawTransactionInput = TradeValidationTestUtils.rawTransactionInput(Coin.valueOf(10_000));
-        List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
-        when(tradeWalletService.isP2WPKH(rawTransactionInput)).thenReturn(false);
-
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs,
-                        tradeWalletService));
-    }
-
-    @Test
-    void checkRawTransactionInputsAreNotMalleableRejectsNullArguments() {
-        assertThrows(NullPointerException.class,
-                () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(null,
-                        mock(TradeWalletService.class)));
-        assertThrows(NullPointerException.class,
-                () -> TradeValidation.checkRawTransactionInputsAreNotMalleable(List.of(TradeValidationTestUtils.rawTransactionInput(Coin.SATOSHI)),
-                        null));
     }
 
 

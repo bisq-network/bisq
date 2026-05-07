@@ -33,7 +33,7 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkTransactionIsUnsigned;
+import static bisq.core.trade.validation.DepositTxValidation.checkTransactionIsUnsigned;
 
 
 @Slf4j

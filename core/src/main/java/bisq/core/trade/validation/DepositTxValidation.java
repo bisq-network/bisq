@@ -17,7 +17,9 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
@@ -46,6 +48,7 @@ import com.google.common.base.Charsets;
 import java.security.PublicKey;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static bisq.core.trade.validation.TradeValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsPositive;
@@ -130,7 +133,7 @@ public final class DepositTxValidation {
 
         Coin tradeAmount = checkTradeAmount(request.getTradeAmountAsCoin(), offer.getMinAmount(), offer.getAmount());
         Coin tradeTxFee = MinerFeeValidation.checkTradeTxFeeIsInTolerance(request.getTxFeeAsCoin(), feeService);
-        TradeValidation.checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
+        checkTakersRawTransactionInputs(request.getRawTransactionInputs(),
                 btcWalletService,
                 offer,
                 tradeTxFee,
@@ -198,4 +201,80 @@ public final class DepositTxValidation {
     }
 
 
+    public static byte[] checkTransactionIsUnsigned(byte[] unsignedSerializedTransaction,
+                                                    BtcWalletService btcWalletService) {
+        checkNonEmptyBytes(unsignedSerializedTransaction, "unsignedSerializedTransaction");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        Transaction unsignedTransaction = TradeValidation.toVerifiedTransaction(unsignedSerializedTransaction, btcWalletService);
+        checkArgument(unsignedTransaction.getInputs().stream().noneMatch(TradeValidation::hasSignatureData),
+                "unsignedSerializedTransaction must not be signed");
+        return unsignedSerializedTransaction;
+    }
+
+    public static List<RawTransactionInput> checkTakersRawTransactionInputs(List<RawTransactionInput> takerRawTransactionInputs,
+                                                                            BtcWalletService btcWalletService,
+                                                                            Offer offer,
+                                                                            Coin tradeTxFee,
+                                                                            Coin tradeAmount) {
+        checkNotNull(takerRawTransactionInputs, "takerRawTransactionInputs must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkNotNull(offer, "offer must not be null");
+        checkNotNull(tradeTxFee, "tradeTxFee must not be null");
+        checkNotNull(tradeAmount, "tradeAmount must not be null");
+
+        // Taker pays the miner fee for deposit tx and payout tx
+        Coin takersDoubleMinerFee = tradeTxFee.multiply(2);
+        Coin expectedTakersInputAmount;
+        if (offer.isBuyOffer()) {
+            // Taker is the seller.
+            expectedTakersInputAmount = offer.getSellerSecurityDeposit()
+                    .add(tradeAmount)
+                    .add(takersDoubleMinerFee);
+        } else {
+            // Taker is buyer
+            expectedTakersInputAmount = offer.getBuyerSecurityDeposit()
+                    .add(takersDoubleMinerFee);
+        }
+
+        TradePeerTxInputValidator.validatePeersInputs(takerRawTransactionInputs,
+                expectedTakersInputAmount,
+                btcWalletService,
+                "Taker");
+        return takerRawTransactionInputs;
+    }
+
+    public static List<RawTransactionInput> checkMakersRawTransactionInputs(List<RawTransactionInput> makerRawTransactionInputs,
+                                                                            BtcWalletService btcWalletService,
+                                                                            Offer offer) {
+        checkNotNull(makerRawTransactionInputs, "makerRawTransactionInputs must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+        checkNotNull(offer, "offer must not be null");
+
+        Coin expectedMakersInputAmount;
+        if (offer.isBuyOffer()) {
+            // maker is the buyer.
+            expectedMakersInputAmount = offer.getBuyerSecurityDeposit();
+        } else {
+            // maker is seller
+            // We use the offer amount not the trade amount as we compare with the inputs which come from the
+            // makers fee tx which has the reserved funds for the max. offer amount.
+            expectedMakersInputAmount = offer.getSellerSecurityDeposit()
+                    .add(offer.getAmount());
+        }
+
+        TradePeerTxInputValidator.validatePeersInputs(makerRawTransactionInputs,
+                expectedMakersInputAmount,
+                btcWalletService,
+                "Maker");
+        return makerRawTransactionInputs;
+    }
+
+    public static List<RawTransactionInput> checkRawTransactionInputsAreNotMalleable(List<RawTransactionInput> rawTransactionInputs,
+                                                                                     TradeWalletService tradeWalletService) {
+        checkNotNull(rawTransactionInputs, "rawTransactionInputs must not be null");
+        checkNotNull(tradeWalletService, "tradeWalletService must not be null");
+        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WH),
+                "rawTransactionInputs must not be malleable");
+        return rawTransactionInputs;
+    }
 }

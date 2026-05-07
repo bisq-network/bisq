@@ -73,7 +73,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(makerPayoutAddressString);
 
-            List<RawTransactionInput> makerRawTransactionInputs = checkMakersRawTransactionInputs(response.getMakerInputs(),
+            List<RawTransactionInput> makerRawTransactionInputs = DepositTxValidation.checkMakersRawTransactionInputs(response.getMakerInputs(),
                     btcWalletService,
                     offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
