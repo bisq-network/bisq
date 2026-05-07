@@ -175,7 +175,7 @@ public final class DepositTxValidation {
                                                                                      TradeWalletService tradeWalletService) {
         checkNotNull(rawTransactionInputs, "rawTransactionInputs must not be null");
         checkNotNull(tradeWalletService, "tradeWalletService must not be null");
-        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WH),
+        checkArgument(rawTransactionInputs.stream().allMatch(tradeWalletService::isP2WPKH),
                 "rawTransactionInputs must not be malleable");
         return rawTransactionInputs;
     }
@@ -204,7 +204,7 @@ public final class DepositTxValidation {
             checkNotNull(input, "%s raw transaction input must not be null", peerRole);
             checkArgument(input.value > 0, "%s raw transaction input value must be positive", peerRole);
             input.validate(walletService);
-            checkArgument(walletService.isP2WH(input), "%s input must be P2WH", peerRole);
+            checkArgument(walletService.isP2WPKH(input), "%s input must be P2WH", peerRole);
             inputValue = Math.addExact(inputValue, input.value);
         }
         return inputValue;

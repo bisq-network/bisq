@@ -270,11 +270,11 @@ class DepositTxValidationTest {
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
         RawTransactionInput rawTransactionInput = ValidationTestUtils.rawTransactionInput(Coin.valueOf(10_000));
         List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
-        when(tradeWalletService.isP2WH(rawTransactionInput)).thenReturn(true);
+        when(tradeWalletService.isP2WPKH(rawTransactionInput)).thenReturn(true);
 
         assertSame(rawTransactionInputs,
                 DepositTxValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs, tradeWalletService));
-        verify(tradeWalletService).isP2WH(rawTransactionInput);
+        verify(tradeWalletService).isP2WPKH(rawTransactionInput);
     }
 
     @Test
@@ -282,7 +282,7 @@ class DepositTxValidationTest {
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
         RawTransactionInput rawTransactionInput = ValidationTestUtils.rawTransactionInput(Coin.valueOf(10_000));
         List<RawTransactionInput> rawTransactionInputs = List.of(rawTransactionInput);
-        when(tradeWalletService.isP2WH(rawTransactionInput)).thenReturn(false);
+        when(tradeWalletService.isP2WPKH(rawTransactionInput)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class,
                 () -> DepositTxValidation.checkRawTransactionInputsAreNotMalleable(rawTransactionInputs,
@@ -437,10 +437,10 @@ class DepositTxValidationTest {
                                                 RawTransactionInput rawTransactionInput) {
         Transaction parentTx = new Transaction(PARAMS, rawTransactionInput.parentTransaction);
         when(btcWalletService.getTxFromSerializedTx(rawTransactionInput.parentTransaction)).thenReturn(parentTx);
-        when(btcWalletService.isP2WH(rawTransactionInput)).thenReturn(isP2WH(parentTx, rawTransactionInput));
+        when(btcWalletService.isP2WPKH(rawTransactionInput)).thenReturn(isP2WPKH(parentTx, rawTransactionInput));
     }
 
-    private static boolean isP2WH(Transaction parentTx, RawTransactionInput rawTransactionInput) {
+    private static boolean isP2WPKH(Transaction parentTx, RawTransactionInput rawTransactionInput) {
         Script.ScriptType scriptType = parentTx.getOutput(rawTransactionInput.index).getScriptPubKey().getScriptType();
         return scriptType == Script.ScriptType.P2WPKH || scriptType == Script.ScriptType.P2WSH;
     }
