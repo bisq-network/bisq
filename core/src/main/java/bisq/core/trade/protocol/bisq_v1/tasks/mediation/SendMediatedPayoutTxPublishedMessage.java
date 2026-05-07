@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.mediation;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessage;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutTx;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -42,10 +44,14 @@ public class SendMediatedPayoutTxPublishedMessage extends SendMailboxMessageTask
 
     @Override
     protected TradeMailboxMessage getTradeMailboxMessage(String id) {
+        BtcWalletService btcWalletService = processModel.getBtcWalletService();
         Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
+        Transaction validatedPayoutTx = checkMediatedPayoutTx(payoutTx,
+                trade,
+                btcWalletService);
         return new MediatedPayoutTxPublishedMessage(
                 id,
-                payoutTx.bitcoinSerialize(),
+                validatedPayoutTx.bitcoinSerialize(),
                 processModel.getMyNodeAddress(),
                 UUID.randomUUID().toString()
         );

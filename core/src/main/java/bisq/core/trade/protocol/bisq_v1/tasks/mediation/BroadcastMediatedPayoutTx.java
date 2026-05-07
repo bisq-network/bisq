@@ -17,13 +17,18 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.mediation;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.BroadcastPayoutTx;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutTx;
 
 @Slf4j
 public class BroadcastMediatedPayoutTx extends BroadcastPayoutTx {
@@ -36,6 +41,10 @@ public class BroadcastMediatedPayoutTx extends BroadcastPayoutTx {
         try {
             runInterceptHook();
 
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+
+            Transaction payoutTx = trade.getPayoutTx();
+            checkMediatedPayoutTx(payoutTx, trade, btcWalletService);
             super.run();
         } catch (Throwable t) {
             failed(t);
