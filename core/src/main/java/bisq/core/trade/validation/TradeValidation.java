@@ -41,6 +41,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Base64;
 import bisq.common.util.Hex;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -578,7 +579,8 @@ public class TradeValidation {
         checkArgument(Arrays.equals(current, expected),
                 "current is not matching expected. " +
                         "current=%s, expected=%s",
-                Hex.encode(current), Hex.encode(expected));
+                Utilities.toTruncatedString(Hex.encode(current), 8),
+                Utilities.toTruncatedString(Hex.encode(expected), 8));
         return current;
     }
 }
