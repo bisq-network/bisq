@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.TransactionValidation;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -45,7 +46,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.*;
+import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
+import static bisq.core.trade.validation.TradeValidation.checkSignature;
+import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -84,7 +87,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             byte[] takerMultiSigPubKey = DepositTxValidation.checkMultiSigPubKey(request.getTakerMultiSigPubKey());
             tradingPeer.setMultiSigPubKey(takerMultiSigPubKey);
 
-            String takerPayoutAddressString = checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+            String takerPayoutAddressString = TransactionValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(takerPayoutAddressString);
 
             PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
@@ -99,7 +102,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
             // message but that cannot be changed due backward compatibility issues. It is a left over from the
             // old trade protocol.
-            String takerFeeTxId = checkTransactionId(request.getTakerFeeTxId());
+            String takerFeeTxId = TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
             processModel.setTakeOfferFeeTxId(takerFeeTxId);
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for

@@ -29,8 +29,8 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.checkDerEncodedEcdsaSignature;
-import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
+import static bisq.core.trade.validation.TransactionValidation.checkDerEncodedEcdsaSignature;
+import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j

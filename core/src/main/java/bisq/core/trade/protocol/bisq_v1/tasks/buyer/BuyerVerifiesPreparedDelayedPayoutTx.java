@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInputAmount;
 import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkLockTime;
 import static bisq.core.trade.validation.DepositTxValidation.checkRawTransactionInputsAreNotMalleable;
-import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
+import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j

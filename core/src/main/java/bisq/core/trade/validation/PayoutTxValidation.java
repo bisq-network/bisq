@@ -38,8 +38,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static bisq.core.trade.validation.DepositTxValidation.checkMultiSigPubKey;
-import static bisq.core.trade.validation.TradeValidation.checkTransaction;
-import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
+import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static bisq.core.util.Validator.checkIsNotNegative;
 import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonBlankString;

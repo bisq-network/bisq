@@ -26,6 +26,7 @@ import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.TransactionValidation;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
@@ -36,7 +37,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.TradeValidation.*;
+import static bisq.core.trade.validation.TradeValidation.checkBase64Signature;
+import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
+import static bisq.core.trade.validation.TradeValidation.checkSignature;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -70,7 +73,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             String makerContractSignature = checkBase64Signature(response.getMakerContractSignature());
             tradingPeer.setContractSignature(makerContractSignature);
 
-            String makerPayoutAddressString = checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
+            String makerPayoutAddressString = TransactionValidation.checkBitcoinAddress(response.getMakerPayoutAddressString(), btcWalletService);
             tradingPeer.setPayoutAddressString(makerPayoutAddressString);
 
             List<RawTransactionInput> makerRawTransactionInputs = DepositTxValidation.checkMakersRawTransactionInputs(response.getMakerInputs(),
@@ -78,7 +81,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
                     offer);
             tradingPeer.setRawTransactionInputs(makerRawTransactionInputs);
 
-            byte[] preparedDepositTx = checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
+            byte[] preparedDepositTx = TransactionValidation.checkSerializedTransaction(response.getPreparedDepositTx(), btcWalletService);
             processModel.setPreparedDepositTx(preparedDepositTx);
 
             boolean isAltcoin = offer.getPaymentMethod().isBlockchain();

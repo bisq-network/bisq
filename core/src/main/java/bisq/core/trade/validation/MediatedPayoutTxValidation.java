@@ -38,8 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static bisq.core.trade.validation.TradeValidation.checkBitcoinAddress;
-import static bisq.core.trade.validation.TradeValidation.checkTransaction;
+import static bisq.core.trade.validation.TransactionValidation.checkBitcoinAddress;
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsNotNegative;
 import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonBlankString;

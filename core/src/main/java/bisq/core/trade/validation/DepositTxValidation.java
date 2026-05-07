@@ -50,7 +50,7 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.List;
 
-import static bisq.core.trade.validation.TradeValidation.checkTransaction;
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -139,10 +139,10 @@ public final class DepositTxValidation {
                 tradeTxFee,
                 tradeAmount);
         checkMultiSigPubKey(request.getTakerMultiSigPubKey());
-        TradeValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
+        TransactionValidation.checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
         PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
         DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
-        TradeValidation.checkTransactionId(request.getTakerFeeTxId());
+        TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
         TradeValidation.checkSignature(request.getAccountAgeWitnessSignatureOfOfferId(),
@@ -205,8 +205,8 @@ public final class DepositTxValidation {
                                                     BtcWalletService btcWalletService) {
         checkNonEmptyBytes(unsignedSerializedTransaction, "unsignedSerializedTransaction");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-        Transaction unsignedTransaction = TradeValidation.toVerifiedTransaction(unsignedSerializedTransaction, btcWalletService);
-        checkArgument(unsignedTransaction.getInputs().stream().noneMatch(TradeValidation::hasSignatureData),
+        Transaction unsignedTransaction = TransactionValidation.toVerifiedTransaction(unsignedSerializedTransaction, btcWalletService);
+        checkArgument(unsignedTransaction.getInputs().stream().noneMatch(TransactionValidation::hasSignatureData),
                 "unsignedSerializedTransaction must not be signed");
         return unsignedSerializedTransaction;
     }
