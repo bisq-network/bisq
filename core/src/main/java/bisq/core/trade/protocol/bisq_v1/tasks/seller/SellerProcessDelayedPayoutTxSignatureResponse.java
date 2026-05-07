@@ -30,6 +30,7 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.DepositTxValidation.checkDepositTxMatchesIgnoringWitnessesAndScriptSigs;
 import static bisq.core.trade.validation.TradeValidation.checkDerEncodedEcdsaSignature;
 import static bisq.core.trade.validation.TradeValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -51,12 +52,16 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             TradingPeer tradePeer = processModel.getTradePeer();
+            Transaction myDepositTx = checkNotNull(processModel.getDepositTx(), "processModel.getDepositTx() must not be null");
 
             byte[] delayedPayoutTxBuyerSignature = checkDerEncodedEcdsaSignature(response.getDelayedPayoutTxBuyerSignature());
             tradePeer.setDelayedPayoutTxSignature(delayedPayoutTxBuyerSignature);
 
-            Transaction buyersDepositTxWithWitnesses = toVerifiedTransaction(response.getDepositTx(), btcWalletService);
-            Transaction myDepositTx = processModel.getDepositTx();
+            Transaction parsedBuyersDepositTxWithWitnesses = toVerifiedTransaction(response.getDepositTx(), btcWalletService);
+            Transaction buyersDepositTxWithWitnesses = checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(
+                    parsedBuyersDepositTxWithWitnesses,
+                    myDepositTx,
+                    btcWalletService);
             tradeWalletService.sellerAddsBuyerWitnessesToDepositTx(myDepositTx, buyersDepositTxWithWitnesses);
 
             // update to the latest peer address of our peer if the message is correct

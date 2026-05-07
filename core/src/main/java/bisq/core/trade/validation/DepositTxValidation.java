@@ -1,0 +1,82 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.trade.validation;
+
+import bisq.core.btc.wallet.BtcWalletService;
+
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionWitness;
+import org.bitcoinj.script.ScriptBuilder;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Arrays;
+
+import static bisq.core.trade.validation.TradeValidation.checkTransaction;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class DepositTxValidation {
+    private DepositTxValidation() {
+    }
+
+    public static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
+                                                                                  Transaction expectedDepositTx,
+                                                                                  BtcWalletService btcWalletService) {
+        checkNotNull(depositTx, "depositTx must not be null");
+        checkNotNull(expectedDepositTx, "expectedDepositTx must not be null");
+        checkNotNull(btcWalletService, "btcWalletService must not be null");
+
+        NetworkParameters params = checkNotNull(btcWalletService.getParams(), "params must not be null");
+        return checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(depositTx, expectedDepositTx, params);
+    }
+
+    @VisibleForTesting
+    static Transaction checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(Transaction depositTx,
+                                                                           Transaction expectedDepositTx,
+                                                                           NetworkParameters params) {
+        checkNotNull(depositTx, "depositTx must not be null");
+        checkNotNull(expectedDepositTx, "expectedDepositTx must not be null");
+        checkNotNull(params, "params must not be null");
+
+        checkTransaction(depositTx);
+        checkTransaction(expectedDepositTx);
+
+        byte[] strippedDepositTx = strippedSerializedTransaction(depositTx, params);
+        byte[] strippedExpectedDepositTx = strippedSerializedTransaction(expectedDepositTx, params);
+        checkArgument(Arrays.equals(strippedDepositTx, strippedExpectedDepositTx),
+                "Deposit tx does not match expected deposit tx when witness and scriptSig data is stripped. " +
+                        "depositTxId=%s, expectedDepositTxId=%s",
+                depositTx.getTxId(),
+                expectedDepositTx.getTxId());
+        return depositTx;
+    }
+
+    private static byte[] strippedSerializedTransaction(Transaction transaction, NetworkParameters params) {
+        Transaction strippedTransaction = new Transaction(params, transaction.bitcoinSerialize());
+        strippedTransaction.getInputs().forEach(DepositTxValidation::stripWitnessAndScriptSig);
+        return strippedTransaction.bitcoinSerialize(false);
+    }
+
+    private static void stripWitnessAndScriptSig(TransactionInput input) {
+        input.setScriptSig(ScriptBuilder.createEmpty());
+        input.setWitness(TransactionWitness.EMPTY);
+    }
+}
