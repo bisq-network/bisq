@@ -27,6 +27,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
@@ -60,7 +61,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             Transaction peersPreparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             TradeDataValidation.validateDelayedPayoutTx(trade, peersPreparedDelayedPayoutTx, btcWalletService);
 
-            int burningManSelectionHeight = checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
+            int burningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(processModel.getBurningManSelectionHeight(),
                     delayedPayoutTxReceiverService);
 
             long tradeTxFeeAsLong = checkTradeTxFeeIsInTolerance(trade.getTradeTxFeeAsLong(), feeService);

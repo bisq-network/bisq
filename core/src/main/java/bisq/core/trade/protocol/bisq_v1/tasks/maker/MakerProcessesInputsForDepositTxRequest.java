@@ -26,6 +26,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.trade.validation.DepositTxValidation;
 import bisq.core.user.User;
 
@@ -91,7 +92,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setAccountId(request.getTakerAccountId());
 
-            int takersBurningManSelectionHeight = checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+            int takersBurningManSelectionHeight = DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
             processModel.setBurningManSelectionHeight(takersBurningManSelectionHeight);
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not

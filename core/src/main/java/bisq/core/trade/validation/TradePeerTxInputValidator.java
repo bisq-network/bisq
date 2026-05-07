@@ -28,6 +28,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class TradePeerTxInputValidator {
+    private TradePeerTxInputValidator() {
+    }
+
     public static void validatePeersInputs(List<RawTransactionInput> rawTransactionInputs,
                                            Coin expectedInputAmount,
                                            BtcWalletService walletService,

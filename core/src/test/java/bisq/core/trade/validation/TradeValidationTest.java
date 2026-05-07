@@ -676,54 +676,6 @@ public class TradeValidationTest {
                 () -> TradeValidation.getCheckedMediatorPubKeyRing(mediatorNodeAddress, user));
     }
 
-    @Test
-    void checkBurningManSelectionHeightAcceptsSameHeight() {
-        assertEquals(130,
-                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 139, GRID_SIZE, 0));
-
-        assertEquals(130,
-                TradeValidation.checkBurningManSelectionHeight(130, delayedPayoutTxReceiverService(130)));
-    }
-
-    @Test
-    void checkBurningManSelectionHeightAcceptsMakerOneGridAhead() {
-        assertEquals(120,
-                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 134, GRID_SIZE, 0));
-        assertEquals(130,
-                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 135, GRID_SIZE, 0));
-
-        assertEquals(120,
-                TradeValidation.checkBurningManSelectionHeight(120, delayedPayoutTxReceiverService(130)));
-    }
-
-    @Test
-    void checkBurningManSelectionHeightAcceptsTakerOneGridAhead() {
-        assertEquals(120,
-                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 134, GRID_SIZE, 0));
-        assertEquals(130,
-                DelayedPayoutTxReceiverService.getSnapshotHeight(GENESIS_HEIGHT, 135, GRID_SIZE, 0));
-
-        assertEquals(130,
-                TradeValidation.checkBurningManSelectionHeight(130, delayedPayoutTxReceiverService(120)));
-    }
-
-    @Test
-    void checkBurningManSelectionHeightRejectsPeerHeightZero() {
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkBurningManSelectionHeight(0, delayedPayoutTxReceiverService(10)));
-    }
-
-    @Test
-    void checkBurningManSelectionHeightRejectsHeightsMoreThanOneGridApart() {
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkBurningManSelectionHeight(120, delayedPayoutTxReceiverService(140)));
-    }
-
-    @Test
-    void checkBurningManSelectionHeightRejectsLocalHeightZero() {
-        assertThrows(IllegalArgumentException.class,
-                () -> TradeValidation.checkBurningManSelectionHeight(10, delayedPayoutTxReceiverService(0)));
-    }
 
     @Test
     void checkTakersRawTransactionInputsAcceptsSellerInputsForBuyOffer() {

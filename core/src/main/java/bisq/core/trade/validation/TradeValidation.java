@@ -73,7 +73,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TradeValidation {
+public final class TradeValidation {
     // We have to account for clock drift. We use mostly 2 hours as max drift, but we prefer to be more tolerant here
     public static final long MAX_DATE_DEVIATION = TimeUnit.HOURS.toMillis(4);
     public static final int MAX_LOCKTIME_BLOCK_DEVIATION = 3; // Peers latest block height must inside a +/- 3 blocks tolerance to ours.
@@ -82,10 +82,8 @@ public class TradeValidation {
     public static final double MAX_MAKER_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
     public static final double MAX_TAKER_FEE_DEVIATION_FACTOR = 1.5; // Max change by factor 1.5 (expected / 1.5 or expected * 1.5)
 
-
-    /* --------------------------------------------------------------------- */
-    // Offer
-    /* --------------------------------------------------------------------- */
+    private TradeValidation() {
+    }
 
 
     /* --------------------------------------------------------------------- */
@@ -116,29 +114,6 @@ public class TradeValidation {
                 "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
         return checkNotNull(mediator.getPubKeyRing(),
                 "mediator.getPubKeyRing() must not be null");
-    }
-
-    public static int checkBurningManSelectionHeight(int burningManSelectionHeight,
-                                                     DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
-        checkArgument(burningManSelectionHeight > 0,
-                "burningManSelectionHeight must be positive");
-        checkNotNull(delayedPayoutTxReceiverService, "delayedPayoutTxReceiverService must not be null");
-
-        int expectedBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-        checkArgument(expectedBurningManSelectionHeight > 0,
-                "expectedBurningManSelectionHeight must be positive");
-
-        if (burningManSelectionHeight != expectedBurningManSelectionHeight) {
-            // Allow SNAPSHOT_SELECTION_GRID_SIZE (10 blocks) as tolerance if traders had different heights.
-            int diff = Math.abs(burningManSelectionHeight - expectedBurningManSelectionHeight);
-            checkArgument(diff == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
-                    "If Burning Man selection heights are not the same they have to differ by " +
-                            "exactly the snapshot grid size, otherwise we fail. " +
-                            "burningManSelectionHeight=%s, expectedBurningManSelectionHeight=%s, diff=%s",
-                    burningManSelectionHeight, expectedBurningManSelectionHeight, diff);
-
-        }
-        return burningManSelectionHeight;
     }
 
 
@@ -561,7 +536,7 @@ public class TradeValidation {
         checkMultiSigPubKey(request.getTakerMultiSigPubKey());
         checkBitcoinAddress(request.getTakerPayoutAddressString(), btcWalletService);
         PubKeyRing takerPubKeyRing = request.getTakerPubKeyRing();
-        checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
+        DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
         checkTransactionId(request.getTakerFeeTxId());
         byte[] accountAgeWitnessNonce = offer.getId().getBytes(Charsets.UTF_8);
         PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
