@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.bisq_v1.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.trade.protocol.TradeMessage;
-import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
@@ -44,10 +43,12 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.util.Validator.checkList;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddressList;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNullableNodeAddress;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkRawTransactionInputList;
 import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
-import static bisq.core.util.Validator.checkNonEmptyString;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -140,23 +141,23 @@ public final class InputsForDepositTxRequest extends TradeMessage
     }
 
     private void validate() {
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
         checkArgument(tradeAmount > 0, "tradeAmount must be positive");
         checkArgument(tradePrice > 0, "tradePrice must be positive");
-        // Bound the taker-supplied trade tx fee. Single source of truth in MinerFeeValidation.
-        MinerFeeValidation.checkTradeTxFee(txFee);
+        checkArgument(txFee > 0, "txFee must be positive");
         checkArgument(takerFee > 0, "takerFee must be positive");
-        checkList(rawTransactionInputs, true, "rawTransactionInputs");
+        checkRawTransactionInputList(rawTransactionInputs, true, "rawTransactionInputs");
         checkNonEmptyBytes(takerMultiSigPubKey, "takerMultiSigPubKey");
-        checkNonEmptyString(takerPayoutAddressString, "takerPayoutAddressString");
+        checkNonBlankString(takerPayoutAddressString, "takerPayoutAddressString");
         checkNotNull(takerPubKeyRing, "takerPubKeyRing must not be null");
-        checkNonEmptyString(takerAccountId, "takerAccountId");
-        checkNonEmptyString(takerFeeTxId, "takerFeeTxId");
-        checkList(acceptedArbitratorNodeAddresses, false, "acceptedArbitratorNodeAddresses");
-        checkList(acceptedMediatorNodeAddresses, false, "acceptedMediatorNodeAddresses");
-        checkList(acceptedRefundAgentNodeAddresses, false, "acceptedRefundAgentNodeAddresses");
-        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
-        checkNotNull(refundAgentNodeAddress, "refundAgentNodeAddress must not be null");
+        checkNonBlankString(takerAccountId, "takerAccountId");
+        checkNonBlankString(takerFeeTxId, "takerFeeTxId");
+        checkNodeAddressList(acceptedArbitratorNodeAddresses, false, "acceptedArbitratorNodeAddresses");
+        checkNodeAddressList(acceptedMediatorNodeAddresses, false, "acceptedMediatorNodeAddresses");
+        checkNodeAddressList(acceptedRefundAgentNodeAddresses, false, "acceptedRefundAgentNodeAddresses");
+        checkNullableNodeAddress(arbitratorNodeAddress, "arbitratorNodeAddress");
+        checkNodeAddress(mediatorNodeAddress, "mediatorNodeAddress");
+        checkNodeAddress(refundAgentNodeAddress, "refundAgentNodeAddress");
         checkNonEmptyBytes(accountAgeWitnessSignatureOfOfferId, "accountAgeWitnessSignatureOfOfferId");
         checkArgument(currentDate > 0, "currentDate must be positive");
         checkNonEmptyBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
@@ -240,7 +241,7 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 acceptedArbitratorNodeAddresses,
                 acceptedMediatorNodeAddresses,
                 acceptedRefundAgentNodeAddresses,
-                NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
+                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 NodeAddress.fromProto(proto.getRefundAgentNodeAddress()),
                 proto.getUid(),

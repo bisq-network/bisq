@@ -28,8 +28,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Value
@@ -68,7 +68,7 @@ public class MediatedPayoutTxSignatureMessage extends TradeMailboxMessage {
 
     private void validate() {
         checkNonEmptyBytes(txSignature, "txSignature");
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
     }
 
     @Override

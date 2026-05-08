@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -83,7 +83,7 @@ public final class PayoutTxPublishedMessage extends TradeMailboxMessage {
 
     private void validate() {
         checkNonEmptyBytes(payoutTx, "payoutTx");
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
     }
 
     @Override

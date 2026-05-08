@@ -24,7 +24,7 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -56,7 +56,7 @@ public final class PeerPublishedDelayedPayoutTxMessage extends TradeMailboxMessa
     }
 
     private void validate() {
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
     }
 
     @Override

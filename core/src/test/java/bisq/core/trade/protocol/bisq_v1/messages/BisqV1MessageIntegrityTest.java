@@ -25,6 +25,8 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
+import com.google.protobuf.ByteString;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -75,6 +77,7 @@ public class BisqV1MessageIntegrityTest {
     @Test
     void constructorsRejectMissingTradeIdentity() {
         assertThrows(IllegalArgumentException.class, () -> new DepositTxMessage(UID, "", NODE_ADDRESS, bytes(1)));
+        assertThrows(IllegalArgumentException.class, () -> new DepositTxMessage(UID, " ", NODE_ADDRESS, bytes(1)));
         assertThrows(IllegalArgumentException.class, () -> new DelayedPayoutTxSignatureRequest("",
                 TRADE_ID,
                 NODE_ADDRESS,
@@ -95,6 +98,7 @@ public class BisqV1MessageIntegrityTest {
         assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.uid = ""));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.tradeId = ""));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.uid = ""));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.uid = " "));
     }
 
     @Test
@@ -189,33 +193,58 @@ public class BisqV1MessageIntegrityTest {
     }
 
     @Test
-    void constructorsRejectEmptyMessageStrings() {
+    void constructorsRejectBlankMessageStrings() {
         assertThrows(IllegalArgumentException.class, () -> new CounterCurrencyTransferStartedMessage(TRADE_ID,
-                "",
+                " ",
                 NODE_ADDRESS,
                 bytes(1),
                 null,
                 null,
                 UID));
-        assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.makerAccountId = ""));
-        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.takerAccountId = ""));
+        assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.makerAccountId = " "));
+        assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.makerContractAsJson = " "));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.takerAccountId = " "));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.takerFeeTxId = " "));
     }
 
     @Test
-    void constructorsRejectEmptyOptionalValuesWhenPresent() {
+    void constructorsRejectBlankOptionalValuesWhenPresent() {
         assertThrows(IllegalArgumentException.class, () -> new CounterCurrencyTransferStartedMessage(TRADE_ID,
                 "buyer-payout-address",
                 NODE_ADDRESS,
                 bytes(1),
-                "",
+                " ",
                 null,
                 UID));
-        assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.makersPaymentMethodId = ""));
+        assertThrows(IllegalArgumentException.class, () -> new CounterCurrencyTransferStartedMessage(TRADE_ID,
+                "buyer-payout-address",
+                NODE_ADDRESS,
+                bytes(1),
+                null,
+                " ",
+                UID));
+        assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.makersPaymentMethodId = " "));
         assertThrows(IllegalArgumentException.class,
                 () -> newResponse(args -> args.hashOfMakersPaymentAccountPayload = new byte[0]));
-        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.takersPaymentMethodId = ""));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.takersPaymentMethodId = " "));
         assertThrows(IllegalArgumentException.class,
                 () -> newRequest(args -> args.hashOfTakersPaymentAccountPayload = new byte[0]));
+    }
+
+    @Test
+    void constructorsRejectStructurallyInvalidNodeAddresses() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DepositTxMessage(UID, TRADE_ID, new NodeAddress("", 9999), bytes(1)));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DepositTxMessage(UID, TRADE_ID, new NodeAddress(" ", 9999), bytes(1)));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DepositTxMessage(UID, TRADE_ID, new NodeAddress("peer.onion", 0), bytes(1)));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DepositTxMessage(UID, TRADE_ID, new NodeAddress("peer.onion", 65_536), bytes(1)));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.acceptedMediatorNodeAddresses =
+                List.of(new NodeAddress("", 9999))));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args ->
+                args.arbitratorNodeAddress = new NodeAddress("", 9999)));
     }
 
     @Test
@@ -223,6 +252,12 @@ public class BisqV1MessageIntegrityTest {
         assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.makerInputs = List.of()));
         assertThrows(IllegalArgumentException.class,
                 () -> newResponse(args -> args.makerInputs = Arrays.asList(rawTransactionInput(), null)));
+        assertThrows(IllegalArgumentException.class,
+                () -> newResponse(args -> args.makerInputs = List.of(rawTransactionInput(-1, bytes(16), 100_000L))));
+        assertThrows(IllegalArgumentException.class,
+                () -> newResponse(args -> args.makerInputs = List.of(rawTransactionInput(0, new byte[0], 100_000L))));
+        assertThrows(IllegalArgumentException.class,
+                () -> newResponse(args -> args.makerInputs = List.of(rawTransactionInput(0, bytes(16), -1L))));
     }
 
     @Test
@@ -233,21 +268,24 @@ public class BisqV1MessageIntegrityTest {
     @Test
     void inputsForDepositTxResponseRejectsInvalidDateAndLockTime() {
         assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.currentDate = 0));
+        assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.lockTime = -1));
+    }
+
+    @Test
+    void inputsForDepositTxResponseAcceptsStructurallyValidZeroLockTime() {
         assertThrows(IllegalArgumentException.class, () -> newResponse(args -> args.lockTime = 0));
     }
 
     @Test
-    void inputsForDepositTxRequestRejectsTxFeeOutsideBounds() {
-        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = 249L));
-        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = 360_001L));
+    void inputsForDepositTxRequestRejectsNonPositiveTxFee() {
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = 0L));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.txFee = -1L));
     }
 
     @Test
-    void inputsForDepositTxRequestAcceptsTxFeeAtBounds() {
-        newRequest(args -> args.txFee = 250L);
-        newRequest(args -> args.txFee = 360_000L);
+    void inputsForDepositTxRequestAcceptsStructurallyPositiveTxFee() {
+        newRequest(args -> args.txFee = 1L);
+        newRequest(args -> args.txFee = 360_001L);
     }
 
     @Test
@@ -255,6 +293,22 @@ public class BisqV1MessageIntegrityTest {
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.rawTransactionInputs = List.of()));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.acceptedMediatorNodeAddresses =
                 Arrays.asList(args.mediatorNodeAddress, null)));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args ->
+                args.rawTransactionInputs = List.of(rawTransactionInput(0, new byte[0], 100_000L))));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args ->
+                args.rawTransactionInputs = List.of(rawTransactionInput(Long.MAX_VALUE, bytes(21), 100_000L))));
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args ->
+                args.rawTransactionInputs = List.of(rawTransactionInput(0, bytes(21), 100_000L, -1))));
+    }
+
+    @Test
+    void inputsForDepositTxRequestRejectsNegativeBurningManSelectionHeight() {
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.burningManSelectionHeight = -1));
+    }
+
+    @Test
+    void inputsForDepositTxRequestAcceptsZeroBurningManSelectionHeightAtMessageLayer() {
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.burningManSelectionHeight = 0));
     }
 
     private static InputsForDepositTxResponse newResponse(Consumer<ResponseArgs> customizer) {
@@ -329,7 +383,23 @@ public class BisqV1MessageIntegrityTest {
     }
 
     private static RawTransactionInput rawTransactionInput() {
-        return new RawTransactionInput(0, bytes(16), 100_000L);
+        return rawTransactionInput(0, bytes(16), 100_000L);
+    }
+
+    private static RawTransactionInput rawTransactionInput(long index, byte[] parentTransaction, long value) {
+        return new RawTransactionInput(index, parentTransaction, value);
+    }
+
+    private static RawTransactionInput rawTransactionInput(long index,
+                                                           byte[] parentTransaction,
+                                                           long value,
+                                                           int scriptTypeId) {
+        return RawTransactionInput.fromProto(protobuf.RawTransactionInput.newBuilder()
+                .setIndex(index)
+                .setParentTransaction(ByteString.copyFrom(parentTransaction))
+                .setValue(value)
+                .setScriptTypeId(scriptTypeId)
+                .build());
     }
 
     private static byte[] bytes(int value) {

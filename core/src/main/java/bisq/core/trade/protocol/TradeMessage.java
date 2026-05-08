@@ -26,7 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import static bisq.core.util.Validator.checkNonEmptyString;
+import static bisq.core.util.Validator.checkNonBlankString;
 
 /**
  * Base class for trade-related messages exchanged between peers.
@@ -43,7 +43,7 @@ public abstract class TradeMessage extends NetworkEnvelope implements UidMessage
 
     protected TradeMessage(int messageVersion, String tradeId, String uid) {
         super(messageVersion);
-        this.tradeId = checkNonEmptyString(tradeId, "tradeId");
-        this.uid = checkNonEmptyString(uid, "uid");
+        this.tradeId = checkNonBlankString(tradeId, "tradeId");
+        this.uid = checkNonBlankString(uid, "uid");
     }
 }
