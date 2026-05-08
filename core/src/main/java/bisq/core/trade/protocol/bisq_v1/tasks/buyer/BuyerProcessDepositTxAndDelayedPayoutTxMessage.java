@@ -98,7 +98,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                         "Hash of payment account is invalid");
 
                 tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
-                PaymentAccountPayload paymentAccountPayload = processModel.getPaymentAccountPayload(trade);
+                PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                        "Payment account payload cannot be null for trade: " + trade.getId());
                 contract.setPaymentAccountPayloads(sellerPaymentAccountPayload, paymentAccountPayload, pubKeyRing);
 
                 // As we have added the payment accounts we need to update the json. We also update the signature
