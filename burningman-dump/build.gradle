@@ -1,0 +1,27 @@
+plugins {
+    id 'bisq.application'
+}
+
+application {
+    mainClass = 'bisq.burningmandump.BurningmanDumpMain'
+    applicationDefaultJvmArgs = ['-XX:+ExitOnOutOfMemoryError']
+}
+
+distTar.enabled = true
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':common')
+    implementation project(':proto')
+    implementation project(':p2p')
+    implementation project(':core')
+    implementation libs.bitcoinj
+    implementation libs.protobuf.java
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.google.guava
+    implementation libs.slf4j.api
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+}
