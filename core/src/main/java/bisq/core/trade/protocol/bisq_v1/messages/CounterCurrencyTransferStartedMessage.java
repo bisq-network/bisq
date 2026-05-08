@@ -32,10 +32,10 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNullableNonBlankString;
+import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
-import static bisq.core.util.Validator.checkNonEmptyString;
-import static bisq.core.util.Validator.checkNullableString;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -92,11 +92,11 @@ public final class CounterCurrencyTransferStartedMessage extends TradeMailboxMes
     }
 
     private void validate() {
-        checkNonEmptyString(buyerPayoutAddress, "buyerPayoutAddress");
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNonBlankString(buyerPayoutAddress, "buyerPayoutAddress");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
         checkNonEmptyBytes(buyerSignature, "buyerSignature");
-        checkNullableString(counterCurrencyTxId, "counterCurrencyTxId");
-        checkNullableString(counterCurrencyExtraData, "counterCurrencyExtraData");
+        checkNullableNonBlankString(counterCurrencyTxId, "counterCurrencyTxId");
+        checkNullableNonBlankString(counterCurrencyExtraData, "counterCurrencyExtraData");
     }
 
     @Override

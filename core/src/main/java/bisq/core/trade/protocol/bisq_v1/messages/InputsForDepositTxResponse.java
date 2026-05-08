@@ -36,9 +36,11 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import static bisq.core.util.Validator.*;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkRawTransactionInputList;
+import static bisq.core.util.Validator.checkNonBlankString;
+import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -135,14 +137,14 @@ public final class InputsForDepositTxResponse extends TradeMessage implements Di
     }
 
     private void validate() {
-        checkNonEmptyString(makerAccountId, "makerAccountId");
+        checkNonBlankString(makerAccountId, "makerAccountId");
         checkNonEmptyBytes(makerMultiSigPubKey, "makerMultiSigPubKey");
-        checkNonEmptyString(makerContractAsJson, "makerContractAsJson");
-        checkNonEmptyString(makerContractSignature, "makerContractSignature");
-        checkNonEmptyString(makerPayoutAddressString, "makerPayoutAddressString");
+        checkNonBlankString(makerContractAsJson, "makerContractAsJson");
+        checkNonBlankString(makerContractSignature, "makerContractSignature");
+        checkNonBlankString(makerPayoutAddressString, "makerPayoutAddressString");
         checkNonEmptyBytes(preparedDepositTx, "preparedDepositTx");
-        checkList(makerInputs, true, "makerInputs");
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkRawTransactionInputList(makerInputs, true, "makerInputs");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
         checkNonEmptyBytes(accountAgeWitnessSignatureOfPreparedDepositTx,
                 "accountAgeWitnessSignatureOfPreparedDepositTx");
         checkArgument(currentDate > 0, "currentDate must be positive");

@@ -44,6 +44,7 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Added at v1.7.0
@@ -81,7 +82,7 @@ public final class ShareBuyerPaymentAccountMessage extends TradeMailboxMessage {
     }
 
     private void validate() {
-        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkNodeAddress(senderNodeAddress, "senderNodeAddress");
         checkNotNull(buyerPaymentAccountPayload, "buyerPaymentAccountPayload must not be null");
     }
 
