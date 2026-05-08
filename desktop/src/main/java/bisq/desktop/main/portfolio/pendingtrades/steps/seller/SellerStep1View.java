@@ -22,7 +22,8 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
+import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.trade.validation.exceptions.ValidationException;
 
 public class SellerStep1View extends TradeStepView {
 
@@ -80,8 +81,8 @@ public class SellerStep1View extends TradeStepView {
     // Verify that deposit tx inputs are matching the trade fee txs outputs.
     private void validateDepositInputs() {
         try {
-            TradeDataValidation.validateDepositInputs(trade);
-        } catch (TradeDataValidation.ValidationException e) {
+            DepositTxValidation.validateDepositInputs(trade);
+        } catch (ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
             }

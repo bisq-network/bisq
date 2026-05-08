@@ -43,7 +43,8 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true, exclude = {"uid"})
 @Value
 @Slf4j
-public final class AckMessage extends NetworkEnvelope implements MailboxMessage, PersistablePayload, ExpirablePayload {
+public final class AckMessage extends NetworkEnvelope implements MailboxMessage, SendersNodeAddressAwareEnvelope,
+        PersistablePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(7);
 
     private final String uid;

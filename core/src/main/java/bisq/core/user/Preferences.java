@@ -80,6 +80,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class Preferences implements PersistedDataHost, BridgeAddressProvider {
+    public final static double DEFAULT_PRICE_DISTANCE = 0.15;
+    public final static double MAX_PRICE_DISTANCE = 0.25;
+
+    public static double getClampedMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
+        if (!Double.isFinite(maxPriceDistanceInPercent)) {
+            return DEFAULT_PRICE_DISTANCE;
+        }
+        return Math.min(MAX_PRICE_DISTANCE, Math.max(0, maxPriceDistanceInPercent));
+    }
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("mempool.space (@wiz)", "https://mempool.space/tx/", "https://mempool.space/address/"),
@@ -188,6 +197,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
@@ -382,6 +392,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
@@ -399,6 +410,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setter
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setUseAnimations(boolean useAnimations) {
@@ -542,6 +554,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
+        maxPriceDistanceInPercent = getClampedMaxPriceDistanceInPercent(maxPriceDistanceInPercent);
         prefPayload.setMaxPriceDistanceInPercent(maxPriceDistanceInPercent);
         requestPersistence();
     }
@@ -849,6 +862,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BooleanProperty useAnimationsProperty() {
@@ -1031,6 +1045,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateTradeCurrencies(ListChangeListener.Change<? extends TradeCurrency> change) {

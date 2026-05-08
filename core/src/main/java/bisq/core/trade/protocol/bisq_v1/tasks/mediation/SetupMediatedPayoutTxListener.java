@@ -17,13 +17,24 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.mediation;
 
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.support.dispute.mediation.MediationResultState;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.SetupPayoutTxListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTx;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
@@ -50,5 +61,40 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
             processModel.getTradeManager().closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED);
         }
         processModel.getTradeManager().requestPersistence();
+    }
+
+    @Override
+    protected void validatePayoutTx(Transaction payoutTx) {
+        BtcWalletService btcWalletService = processModel.getBtcWalletService();
+        TradingPeer tradingPeer = processModel.getTradePeer();
+
+        Contract contract = checkNotNull(trade.getContract(),
+                "contract must not be null");
+        boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
+        String myPayoutAddressString = btcWalletService.getOrCreateAddressEntry(trade.getId(),
+                AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+        String peersPayoutAddressString = checkNotNull(tradingPeer.getPayoutAddressString(),
+                "peersPayoutAddressString must not be null");
+        String buyerPayoutAddressString = isMyRoleBuyer ? myPayoutAddressString : peersPayoutAddressString;
+        String sellerPayoutAddressString = isMyRoleBuyer ? peersPayoutAddressString : myPayoutAddressString;
+        byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+        byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+        byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
+        byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
+        Transaction depositTx = checkNotNull(trade.getDepositTx(),
+                "trade.getDepositTx() must not be null");
+        Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
+        Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
+        NetworkParameters params = btcWalletService.getParams();
+
+        checkPayoutTx(payoutTx,
+                depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString,
+                buyerMultiSigPubKey,
+                sellerMultiSigPubKey,
+                params);
     }
 }

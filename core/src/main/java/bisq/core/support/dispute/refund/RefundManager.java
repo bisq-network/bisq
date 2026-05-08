@@ -54,6 +54,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -331,14 +332,10 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         long inputAmount = depositTx.getOutput(0).getValue().value;
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
-        boolean wasBugfix6699ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.BUGFIX_6699_ACTIVATION_DATE);
-        boolean wasProposal412ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.PROPOSAL_412_ACTIVATION_DATE);
         List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
-                dispute.getTradeTxFee(),
-                wasBugfix6699ActivatedAtTradeDate,
-                wasProposal412ActivatedAtTradeDate);
+                dispute.getTradeTxFee());
         log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
         checkArgument(delayedPayoutTx.getOutputs().size() == delayedPayoutTxReceivers.size(),
                 "Size of outputs and delayedPayoutTxReceivers must be the same");
@@ -346,8 +343,10 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         NetworkParameters params = btcWalletService.getParams();
         for (int i = 0; i < delayedPayoutTx.getOutputs().size(); i++) {
             TransactionOutput transactionOutput = delayedPayoutTx.getOutputs().get(i);
-            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(0);
-            checkArgument(transactionOutput.getScriptPubKey().getToAddress(params).toString().equals(receiverTuple.second),
+            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(i);
+            Address address = transactionOutput.getScriptPubKey().getToAddress(params);
+            Address receiverAddress = Address.fromString(params, receiverTuple.second);
+            checkArgument(address.equals(receiverAddress),
                     "output address does not match delayedPayoutTxReceivers address. transactionOutput=" + transactionOutput);
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
                     "output value does not match delayedPayoutTxReceivers value. transactionOutput=" + transactionOutput);

@@ -58,14 +58,6 @@ public class BurningManCandidate {
     @Nullable
     private Boolean receiverAddressValid;
 
-    // For deploying a bugfix with mostRecentAddress we need to maintain the old version to avoid breaking the
-    // trade protocol. We use the legacy mostRecentAddress until the activation date where we
-    // enforce the version by the filter to ensure users have updated.
-    // See: https://github.com/bisq-network/bisq/issues/6699
-    @EqualsAndHashCode.Exclude
-    @Getter(AccessLevel.NONE)
-    protected Optional<String> mostRecentAddress = Optional.empty();
-
     private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
     private final Map<Date, Set<BurnOutputModel>> burnOutputModelsByMonth = new HashMap<>();
     private long accumulatedBurnAmount;
@@ -80,14 +72,6 @@ public class BurningManCandidate {
     private OptionalInt roundCapped = OptionalInt.empty();
 
     public BurningManCandidate() {
-    }
-
-    public Optional<String> getReceiverAddress() {
-        return getReceiverAddress(true);
-    }
-
-    public Optional<String> getReceiverAddress(boolean isBugfix6699Activated) {
-        return isBugfix6699Activated ? receiverAddress : mostRecentAddress;
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
@@ -135,12 +119,6 @@ public class BurningManCandidate {
                             .thenComparing(CompensationModel::getAddress))
                     .map(CompensationModel::getAddress);
         }
-
-        // For backward compatibility reasons we need to maintain the old buggy version.
-        // See: https://github.com/bisq-network/bisq/issues/6699.
-        mostRecentAddress = compensationModels.stream()
-                .max(Comparator.comparing(CompensationModel::getHeight))
-                .map(CompensationModel::getAddress);
     }
 
     public boolean isReceiverAddressValid() {
@@ -232,7 +210,6 @@ public class BurningManCandidate {
                 ",\r\n     compensationShare=" + compensationShare +
                 ",\r\n     receiverAddress=" + receiverAddress +
                 ",\r\n     receiverAddressValid=" + isReceiverAddressValid() +
-                ",\r\n     mostRecentAddress=" + mostRecentAddress +
                 ",\r\n     burnOutputModels=" + burnOutputModels +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
                 ",\r\n     accumulatedDecayedBurnAmount=" + accumulatedDecayedBurnAmount +

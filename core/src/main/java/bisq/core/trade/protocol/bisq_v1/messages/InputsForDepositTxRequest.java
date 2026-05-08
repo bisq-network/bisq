@@ -18,18 +18,22 @@
 package bisq.core.trade.protocol.bisq_v1.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.TradeMessage;
+import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+
+import org.bitcoinj.core.Coin;
+
+import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +44,17 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.Validator.checkList;
+import static bisq.core.util.Validator.checkNonBlankString;
+import static bisq.core.util.Validator.checkNonEmptyBytes;
+import static bisq.core.util.Validator.checkNonEmptyString;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class InputsForDepositTxRequest extends TradeMessage implements DirectMessage {
+public final class InputsForDepositTxRequest extends TradeMessage
+        implements DirectMessage, SendersSignaturePubKeyProvidingPayload {
     private final NodeAddress senderNodeAddress;
     private final long tradeAmount;
     private final long tradePrice;
@@ -50,17 +62,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final long takerFee;
     private final boolean isCurrencyForTakerFeeBtc;
     private final List<RawTransactionInput> rawTransactionInputs;
-    private final long changeOutputValue;
-    @Nullable
-    private final String changeOutputAddress;
     private final byte[] takerMultiSigPubKey;
     private final String takerPayoutAddressString;
     private final PubKeyRing takerPubKeyRing;
-
-    // Removed with 1.7.0
-    @Nullable
-    private final PaymentAccountPayload takerPaymentAccountPayload;
-
     private final String takerAccountId;
     private final String takerFeeTxId;
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
@@ -75,9 +79,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final long currentDate;
 
     // Added at 1.7.0
-    @Nullable
     private final byte[] hashOfTakersPaymentAccountPayload;
-    @Nullable
     private final String takersPaymentMethodId;
 
     // Added in v 1.9.7
@@ -91,12 +93,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      long takerFee,
                                      boolean isCurrencyForTakerFeeBtc,
                                      List<RawTransactionInput> rawTransactionInputs,
-                                     long changeOutputValue,
-                                     @Nullable String changeOutputAddress,
                                      byte[] takerMultiSigPubKey,
                                      String takerPayoutAddressString,
                                      PubKeyRing takerPubKeyRing,
-                                     @Nullable PaymentAccountPayload takerPaymentAccountPayload,
                                      String takerAccountId,
                                      String takerFeeTxId,
                                      List<NodeAddress> acceptedArbitratorNodeAddresses,
@@ -109,8 +108,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      int messageVersion,
                                      byte[] accountAgeWitnessSignatureOfOfferId,
                                      long currentDate,
-                                     @Nullable byte[] hashOfTakersPaymentAccountPayload,
-                                     @Nullable String takersPaymentMethodId,
+                                     byte[] hashOfTakersPaymentAccountPayload,
+                                     String takersPaymentMethodId,
                                      int burningManSelectionHeight) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
@@ -120,12 +119,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.rawTransactionInputs = rawTransactionInputs;
-        this.changeOutputValue = changeOutputValue;
-        this.changeOutputAddress = changeOutputAddress;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.takerPubKeyRing = takerPubKeyRing;
-        this.takerPaymentAccountPayload = takerPaymentAccountPayload;
         this.takerAccountId = takerAccountId;
         this.takerFeeTxId = takerFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
@@ -139,11 +135,44 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
         this.takersPaymentMethodId = takersPaymentMethodId;
         this.burningManSelectionHeight = burningManSelectionHeight;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
+        checkArgument(tradeAmount > 0, "tradeAmount must be positive");
+        checkArgument(tradePrice > 0, "tradePrice must be positive");
+        // Bound the taker-supplied trade tx fee. Single source of truth in MinerFeeValidation.
+        MinerFeeValidation.checkTradeTxFee(txFee);
+        checkArgument(takerFee > 0, "takerFee must be positive");
+        checkList(rawTransactionInputs, true, "rawTransactionInputs");
+        checkNonEmptyBytes(takerMultiSigPubKey, "takerMultiSigPubKey");
+        checkNonEmptyString(takerPayoutAddressString, "takerPayoutAddressString");
+        checkNotNull(takerPubKeyRing, "takerPubKeyRing must not be null");
+        checkNonEmptyString(takerAccountId, "takerAccountId");
+        checkNonEmptyString(takerFeeTxId, "takerFeeTxId");
+        checkList(acceptedArbitratorNodeAddresses, false, "acceptedArbitratorNodeAddresses");
+        checkList(acceptedMediatorNodeAddresses, false, "acceptedMediatorNodeAddresses");
+        checkList(acceptedRefundAgentNodeAddresses, false, "acceptedRefundAgentNodeAddresses");
+        checkNotNull(mediatorNodeAddress, "mediatorNodeAddress must not be null");
+        checkNotNull(refundAgentNodeAddress, "refundAgentNodeAddress must not be null");
+        checkNonEmptyBytes(accountAgeWitnessSignatureOfOfferId, "accountAgeWitnessSignatureOfOfferId");
+        checkArgument(currentDate > 0, "currentDate must be positive");
+        checkNonEmptyBytes(hashOfTakersPaymentAccountPayload, "hashOfTakersPaymentAccountPayload");
+        checkNonBlankString(takersPaymentMethodId, "takersPaymentMethodId");
+        checkArgument(burningManSelectionHeight > 0, "burningManSelectionHeight must be positive");
+    }
+
+    @Override
+    public PublicKey getSenderSignaturePubKey() {
+        return takerPubKeyRing.getSignaturePubKey();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -158,7 +187,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .addAllRawTransactionInputs(rawTransactionInputs.stream()
                         .map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
-                .setChangeOutputValue(changeOutputValue)
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
@@ -175,18 +203,16 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setUid(uid)
                 .setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(accountAgeWitnessSignatureOfOfferId))
                 .setCurrentDate(currentDate)
-                .setBurningManSelectionHeight(burningManSelectionHeight);
+                .setBurningManSelectionHeight(burningManSelectionHeight)
+                .setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload))
+                .setTakersPayoutMethodId(takersPaymentMethodId);
 
-        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
-        Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
-        Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
-        Optional.ofNullable(takersPaymentMethodId).ifPresent(e -> builder.setTakersPayoutMethodId(takersPaymentMethodId));
+
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
     public static InputsForDepositTxRequest fromProto(protobuf.InputsForDepositTxRequest proto,
-                                                      CoreProtoResolver coreProtoResolver,
                                                       int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto)
@@ -198,10 +224,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         List<NodeAddress> acceptedRefundAgentNodeAddresses = proto.getAcceptedRefundAgentNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
 
-        PaymentAccountPayload takerPaymentAccountPayload = proto.hasTakerPaymentAccountPayload() ?
-                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()) : null;
-        byte[] hashOfTakersPaymentAccountPayload = ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfTakersPaymentAccountPayload());
-
         return new InputsForDepositTxRequest(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getTradeAmount(),
@@ -210,12 +232,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 proto.getTakerFee(),
                 proto.getIsCurrencyForTakerFeeBtc(),
                 rawTransactionInputs,
-                proto.getChangeOutputValue(),
-                ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()),
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
-                takerPaymentAccountPayload,
                 proto.getTakerAccountId(),
                 proto.getTakerFeeTxId(),
                 acceptedArbitratorNodeAddresses,
@@ -228,8 +247,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 messageVersion,
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
                 proto.getCurrentDate(),
-                hashOfTakersPaymentAccountPayload,
-                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()),
+                proto.getHashOfTakersPaymentAccountPayload().toByteArray(),
+                proto.getTakersPayoutMethodId(),
                 proto.getBurningManSelectionHeight());
     }
 
@@ -243,8 +262,6 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     takerFee=" + takerFee +
                 ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
                 ",\n     rawTransactionInputs=" + rawTransactionInputs +
-                ",\n     changeOutputValue=" + changeOutputValue +
-                ",\n     changeOutputAddress='" + changeOutputAddress + '\'' +
                 ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
                 ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +
@@ -262,5 +279,17 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
                 ",\n     burningManSelectionHeight=" + burningManSelectionHeight +
                 "\n} " + super.toString();
+    }
+
+    public Coin getTradeAmountAsCoin() {
+        return Coin.valueOf(tradeAmount);
+    }
+
+    public Coin getTxFeeAsCoin() {
+        return Coin.valueOf(txFee);
+    }
+
+    public Coin getTakerFeeAsCoin() {
+        return Coin.valueOf(takerFee);
     }
 }

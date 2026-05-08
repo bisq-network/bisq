@@ -18,6 +18,7 @@
 package bisq.core.filter;
 
 import bisq.core.provider.PriceFeedNodeAddressProvider;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
@@ -108,6 +109,7 @@ public class FilterManagerAddFilterToNetworkTests {
                 config,
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
+                mock(PriceFeedService.class),
                 false,
                 true
         );

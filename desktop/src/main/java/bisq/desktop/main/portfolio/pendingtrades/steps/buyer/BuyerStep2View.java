@@ -109,9 +109,8 @@ import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
-import bisq.core.support.dispute.DisputeValidation;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.VolumeUtil;
 
@@ -120,6 +119,8 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
+
+import org.bitcoinj.core.Transaction;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -147,6 +148,7 @@ public class BuyerStep2View extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BuyerStep2View(PendingTradesViewModel model) {
@@ -237,6 +239,7 @@ public class BuyerStep2View extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Content
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("deprecation")
@@ -495,6 +498,7 @@ public class BuyerStep2View extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -506,6 +510,7 @@ public class BuyerStep2View extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -527,6 +532,7 @@ public class BuyerStep2View extends TradeStepView {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
@@ -738,17 +744,20 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void validatePayoutTx() {
-        try {
-            TradeDataValidation.validateDelayedPayoutTx(trade,
-                    trade.getDelayedPayoutTx(),
-                    model.dataModel.btcWalletService);
-        } catch (TradeDataValidation.MissingTxException ignore) {
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        if (delayedPayoutTx != null) {
+            try {
+                DelayedPayoutTxValidation.checkDelayedPayoutTx(delayedPayoutTx,
+                        trade,
+                        model.dataModel.btcWalletService);
+            } catch (RuntimeException e) {
+                if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
+                    new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
+                }
+            }
+        } else {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
             // trade manager after initPendingTrades which happens after activate might be called.
-        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
-            if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
-                new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
-            }
         }
     }
 }

@@ -399,7 +399,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         if (tradeLimits == null) {
             // is null in some tests...
             log.warn("tradeLimits was null");
-            return Coin.valueOf(initialTradeLimit);
+            return TradeLimits.clamp(Coin.valueOf(initialTradeLimit));
         }
         long maxTradeLimitFromDaoParam = tradeLimits.getMaxTradeLimitFromDaoParam().value;
 
@@ -407,7 +407,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID) || id.equals(TIKKIE_ID)) {
             double factor = maxTradeLimitFromDaoParam / (double) initialTradeLimit;
             long value = MathUtils.roundDoubleToLong(Coin.valueOf(maxTradeLimit).getValue() * factor);
-            return Coin.valueOf(value);
+            return TradeLimits.clamp(Coin.valueOf(value));
         }
 
         // We use the class field maxTradeLimit only for mapping the risk factor.
@@ -427,7 +427,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                     Coin.valueOf(maxTradeLimit).toFriendlyString(), this);
         }
 
-        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoParam, riskFactor));
+        Coin limit = Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoParam, riskFactor));
+        return TradeLimits.clamp(limit);
     }
 
     public String getShortName() {
@@ -442,7 +443,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         // So we need some extra logic to get the Latin to sort separately underneath the non-Latin.
         boolean isLatin = ASCII_PATTERN.matcher(Res.get(id)).matches();
         boolean otherIsLatin = ASCII_PATTERN.matcher(Res.get(other.id)).matches();
-        if(isLatin == otherIsLatin)
+        if (isLatin == otherIsLatin)
             return Res.get(id).compareTo(Res.get(other.id));
         else
             return isLatin ? 1 : -1;

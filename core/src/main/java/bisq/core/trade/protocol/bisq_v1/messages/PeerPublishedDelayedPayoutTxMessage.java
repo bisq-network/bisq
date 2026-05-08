@@ -24,6 +24,8 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class PeerPublishedDelayedPayoutTxMessage extends TradeMailboxMessage {
@@ -49,6 +51,12 @@ public final class PeerPublishedDelayedPayoutTxMessage extends TradeMailboxMessa
                                                 NodeAddress senderNodeAddress) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
+
+        validate();
+    }
+
+    private void validate() {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null");
     }
 
     @Override

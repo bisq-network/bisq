@@ -1,10 +1,13 @@
 package bisq.core.offer;
 
 
+import org.bitcoinj.core.Coin;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,6 +25,21 @@ public class OfferUtilTest {
                 OfferUtil.getOfferIdWithMutationCounter("R2WLX85L-0a7709f1-7857-4136-9a96-2ffdf377abe6-199-4"),
                 "R2WLX85L-0a7709f1-7857-4136-9a96-2ffdf377abe6-199-5"
         );
+    }
+
+    @Test
+    public void testGetTxFeeByVsizeAveragesWithDepositTxVsize() {
+        OfferUtil offerUtil = createOfferUtil();
+
+        assertEquals(Coin.valueOf(424), offerUtil.getTxFeeByVsize(Coin.valueOf(2), 192));
+    }
+
+    @Test
+    public void testGetTxFeeByVsizeRejectsInvalidVsize() {
+        OfferUtil offerUtil = createOfferUtil();
+
+        assertThrows(IllegalArgumentException.class, () -> offerUtil.getTxFeeByVsize(Coin.valueOf(2), 0));
+        assertThrows(IllegalArgumentException.class, () -> offerUtil.getTxFeeByVsize(Coin.valueOf(2), -1));
     }
 
     @Test
@@ -72,5 +90,9 @@ public class OfferUtilTest {
         when(offer.getCounterCurrencyCode()).thenReturn("EUR");
         when(offer.isBsqSwapOffer()).thenReturn(false);
         assertFalse(OfferUtil.isAltcoinOffer(offer));
+    }
+
+    private static OfferUtil createOfferUtil() {
+        return new OfferUtil(null, null, null, null, null, null, null, null);
     }
 }

@@ -116,10 +116,6 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
-        return getBurningManCandidatesByName(chainHeight, false);
-    }
-
-    Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight, boolean limitCappingRounds) {
         Map<String, BurningManCandidate> burningManCandidatesByName = new TreeMap<>();
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = getProofOfBurnOpReturnTxOutputByHash(chainHeight);
 
@@ -189,7 +185,7 @@ public class BurningManService {
                 .sum();
         burningManCandidates.forEach(candidate -> candidate.calculateShares(totalDecayedCompensationAmounts, totalDecayedBurnAmounts));
 
-        int numRoundsWithCapsApplied = imposeCaps(burningManCandidates, limitCappingRounds);
+        int numRoundsWithCapsApplied = imposeCaps(burningManCandidates);
 
         double sumAllCappedBurnAmountShares = burningManCandidates.stream()
                 .filter(candidate -> candidate.getRoundCapped().isPresent())
@@ -209,12 +205,9 @@ public class BurningManService {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
 
-    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
-        return getActiveBurningManCandidates(chainHeight, false);
-    }
 
-    public List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
-        return getBurningManCandidatesByName(chainHeight, limitCappingRounds).values().stream()
+    public List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
+        return getBurningManCandidatesByName(chainHeight).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
                 .filter(BurningManCandidate::isReceiverAddressValid)
                 .collect(Collectors.toList());
@@ -353,7 +346,7 @@ public class BurningManService {
         return Math.round(amount * GENESIS_OUTPUT_AMOUNT_FACTOR);
     }
 
-    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates, boolean limitCappingRounds) {
+    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates) {
         List<BurningManCandidate> candidatesInDescendingBurnCapRatio = new ArrayList<>(burningManCandidates);
         candidatesInDescendingBurnCapRatio.sort(Comparator.comparing(BurningManCandidate::getBurnCapRatio).reversed());
         double thresholdBurnCapRatio = 1.0;
@@ -363,8 +356,7 @@ public class BurningManService {
         for (BurningManCandidate candidate : candidatesInDescendingBurnCapRatio) {
             double invScaleFactor = remainingBurnShare / remainingCapShare;
             double burnCapRatio = candidate.getBurnCapRatio();
-            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor ||
-                    limitCappingRounds && burnCapRatio < 1.0) {
+            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor) {
                 cappingRound++;
                 break;
             }

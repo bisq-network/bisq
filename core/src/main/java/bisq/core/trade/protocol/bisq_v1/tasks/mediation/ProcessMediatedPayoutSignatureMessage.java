@@ -21,7 +21,6 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -39,11 +38,11 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             MediatedPayoutTxSignatureMessage message = (MediatedPayoutTxSignatureMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            processModel.getTradePeer().setMediatedPayoutTxSignature(checkNotNull(message.getTxSignature()));
+            processModel.getTradePeer().setMediatedPayoutTxSignature(message.getTxSignature());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

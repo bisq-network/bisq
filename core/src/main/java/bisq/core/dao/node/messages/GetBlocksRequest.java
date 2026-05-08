@@ -20,7 +20,7 @@ package bisq.core.dao.node.messages;
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.InitialDataRequest;
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendersNodeAddressMessage;
+import bisq.network.p2p.SendersNodeAddressAwareEnvelope;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
 
 import bisq.common.app.Capabilities;
@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, SendersNodeAddressMessage,
+public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, SendersNodeAddressAwareEnvelope,
         SupportedCapabilitiesMessage, InitialDataRequest {
     private final int fromBlockHeight;
     private final int nonce;

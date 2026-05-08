@@ -194,7 +194,7 @@ public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanG
 
     private List<BurningmanDto> toBurningmanDtoList(Block block) {
         try {
-            return burningManService.getActiveBurningManCandidates(block.getHeight(), true).stream()
+            return burningManService.getActiveBurningManCandidates(block.getHeight()).stream()
                     .filter(burningManCandidate -> burningManCandidate.getReceiverAddress().isPresent())
                     .map(burningManCandidate -> {
                         String receiverAddress = burningManCandidate.getReceiverAddress().orElseThrow();

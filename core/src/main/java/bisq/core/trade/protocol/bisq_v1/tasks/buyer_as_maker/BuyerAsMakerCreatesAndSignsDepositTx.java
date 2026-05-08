@@ -25,6 +25,7 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DepositTxValidation;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -36,8 +37,6 @@ import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -72,10 +71,13 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     .add(tradeAmount);
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
-            checkArgument(takerRawTransactionInputs.stream().allMatch(processModel.getTradeWalletService()::isP2WH),
-                    "all takerRawTransactionInputs must be P2WH");
-            long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-            @Nullable String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
+            Coin expectedTakersInputAmount = offer.getSellerSecurityDeposit()
+                    .add(tradeAmount)
+                    .add(trade.getTradeTxFee().multiply(2));
+            DepositTxValidation.validatePeersInputs(takerRawTransactionInputs,
+                    expectedTakersInputAmount,
+                    walletService,
+                    "Taker");
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
@@ -88,8 +90,6 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,
-                    takerChangeOutputValue,
-                    takerChangeAddressString,
                     makerAddress,
                     makerChangeAddress,
                     buyerPubKey,

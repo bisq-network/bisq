@@ -33,14 +33,15 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SameBankAccount;
 import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.TradeFeeFactory;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
 import bisq.core.util.AveragePriceUtil;
+import bisq.core.util.Validator;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
@@ -246,20 +247,13 @@ public class OfferUtil {
     @Nullable
     public Coin getMakerFee(@Nullable Coin amount) {
         boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(amount);
-        return CoinUtil.getMakerFee(isCurrencyForMakerFeeBtc, amount);
+        return amount == null ? null : TradeFeeFactory.getMakerFee(isCurrencyForMakerFeeBtc, amount);
     }
 
     public Coin getTxFeeByVsize(Coin txFeePerVbyteFromFeeService, int vsizeInVbytes) {
-        return txFeePerVbyteFromFeeService.multiply(getAverageTakerFeeTxVsize(vsizeInVbytes));
-    }
-
-    // We use the sum of the size of the trade fee and the deposit tx to get an average.
-    // Miners will take the trade fee tx if the total fee of both dependent txs are good
-    // enough.  With that we avoid that we overpay in case that the trade fee has many
-    // inputs and we would apply that fee for the other 2 txs as well. We still might
-    // overpay a bit for the payout tx.
-    public int getAverageTakerFeeTxVsize(int txVsize) {
-        return (txVsize + 233) / 2;
+        Validator.checkIsPositive(vsizeInVbytes, "vsizeInVbytes");
+        int average = (vsizeInVbytes + TradeFeeFactory.DEPOSIT_TX_VSIZE) / 2;
+        return TradeFeeFactory.getMinerFeeByVsize(txFeePerVbyteFromFeeService, average);
     }
 
     /**
@@ -302,12 +296,7 @@ public class OfferUtil {
 
     @Nullable
     public Coin getTakerFee(boolean isCurrencyForTakerFeeBtc, @Nullable Coin amount) {
-        if (amount != null) {
-            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
-            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
-        } else {
-            return null;
-        }
+        return amount == null ? null : TradeFeeFactory.getTakerFee(isCurrencyForTakerFeeBtc, amount);
     }
 
     public boolean isCurrencyForTakerFeeBtc(Coin amount) {
@@ -402,7 +391,7 @@ public class OfferUtil {
         checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
                         getMinBuyerSecurityDepositAsPercent());
-        if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount) ) {
+        if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount)) {
             checkArgument(!acceptedBanks.contains(null), "acceptedBanks must not be null for SAME_BANK or SPECIFIC_BANKS accounts");
         }
     }
