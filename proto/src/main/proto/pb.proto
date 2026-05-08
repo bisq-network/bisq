@@ -770,6 +770,7 @@ message Filter {
     repeated string addedBtcNodes = 37;
     repeated string addedSeedNodes = 38;
     string uid = 39;
+    bool disable_bsq_swap = 40;
 }
 
 /* Deprecated */

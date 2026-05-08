@@ -80,6 +80,7 @@ public class OfferFilterService {
         REQUIRE_UPDATE_TO_NEW_VERSION,
         IS_INSUFFICIENT_COUNTERPARTY_TRADE_LIMIT,
         IS_MY_INSUFFICIENT_TRADE_LIMIT,
+        IS_BSQ_SWAP_DISABLED,
         HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED;
 
         @Getter
@@ -97,6 +98,9 @@ public class OfferFilterService {
     public Result canTakeOffer(Offer offer, boolean isTakerApiUser) {
         if (isTakerApiUser && filterManager.getFilter() != null && filterManager.getFilter().isDisableApi()) {
             return Result.API_DISABLED;
+        }
+        if (isBsqSwapDisabled(offer)) {
+            return Result.IS_BSQ_SWAP_DISABLED;
         }
         if (!isAnyPaymentAccountValidForOffer(offer)) {
             return Result.HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER;
@@ -160,6 +164,10 @@ public class OfferFilterService {
 
     public boolean isNodeAddressBanned(Offer offer) {
         return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
+    }
+
+    public boolean isBsqSwapDisabled(Offer offer) {
+        return offer.isBsqSwapOffer() && filterManager.isBsqSwapDisabled();
     }
 
     public boolean requireUpdateToNewVersion() {

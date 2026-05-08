@@ -108,7 +108,8 @@ public class TestFilter {
                 Collections.emptyList(),
                 List.of("test1.onion:1221"),
                 List.of("test2.onion:1221"),
-                UUID.randomUUID().toString()
+                UUID.randomUUID().toString(),
+                false
         );
     }
 

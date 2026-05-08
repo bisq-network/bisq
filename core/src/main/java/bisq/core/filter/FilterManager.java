@@ -426,6 +426,10 @@ public class FilterManager {
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 
+    public boolean isBsqSwapDisabled() {
+        return getFilter() != null && getFilter().isDisableBsqSwap();
+    }
+
     public boolean isPriceInBounds(Offer offer) {
         // We allow 5% tolerance to the max allowed price percentage to avoid filtering offers in
         // high volatility environments

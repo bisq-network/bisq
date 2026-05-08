@@ -197,6 +197,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disableMempoolValidation"), 15);
         CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableApi"));
+        CheckBox disableBsqSwapCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableBsqSwap"));
         CheckBox disablePowMessage = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disablePowMessage"));
         InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
@@ -243,6 +245,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             disableTradeBelowVersionTF.setText(filter.getDisableTradeBelowVersion());
             disableMempoolValidationCheckBox.setSelected(filter.isDisableMempoolValidation());
             disableApiCheckBox.setSelected(filter.isDisableApi());
+            disableBsqSwapCheckBox.setSelected(filter.isDisableBsqSwap());
             disablePowMessage.setSelected(filter.isDisablePowMessage());
             powDifficultyTF.setText(String.valueOf(filter.getPowDifficulty()));
 
@@ -299,7 +302,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         readAsPaymentAccountFiltersList(delayedPayoutTF),
                         readAsList(addedBtcNodesTF),
                         readAsList(addedSeedNodesTF),
-                        uidTF.getText()
+                        uidTF.getText(),
+                        disableBsqSwapCheckBox.isSelected()
                 );
 
                 // We remove first the old filter

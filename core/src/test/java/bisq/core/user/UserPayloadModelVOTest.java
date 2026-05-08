@@ -81,7 +81,8 @@ public class UserPayloadModelVOTest {
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
-                UUID.randomUUID().toString()));
+                UUID.randomUUID().toString(),
+                false));
 
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());

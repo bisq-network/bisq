@@ -704,6 +704,9 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                             "isInsufficientTradeLimit case.");
                 }
                 break;
+            case IS_BSQ_SWAP_DISABLED:
+                new Popup().warning(Res.get("offerbook.warning.bsqSwapDisabled")).show();
+                break;
             case HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED:
                 new Popup().warning(Res.get("offerbook.warning.hideBsqSwapsDueDaoDeactivated")).show();
                 break;

@@ -402,6 +402,8 @@ public class OfferUtil {
                 Res.get("offerbook.warning.currencyBanned"));
         checkArgument(!filterManager.isPaymentMethodBanned(paymentMethod),
                 Res.get("offerbook.warning.paymentMethodBanned"));
+        checkArgument(!PaymentMethod.BSQ_SWAP.equals(paymentMethod) || !filterManager.isBsqSwapDisabled(),
+                Res.get("offerbook.warning.bsqSwapDisabled"));
     }
 
     // Returns an edited payload: a merge of the original offerPayload and

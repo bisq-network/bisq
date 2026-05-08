@@ -108,6 +108,8 @@ public class BsqSwapTakeOfferModel extends BsqSwapOfferModel {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.offerBlocked"));
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.nodeBlocked"));
+        } else if (filterManager.isBsqSwapDisabled()) {
+            warningHandler.handleErrorMessage(Res.get("offerbook.warning.bsqSwapDisabled"));
         } else if (filterManager.requireUpdateToNewVersionForTrading()) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.requireUpdateToNewVersion"));
         } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {

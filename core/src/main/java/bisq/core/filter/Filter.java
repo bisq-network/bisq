@@ -139,6 +139,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     // the ExcludeForHash annotated fields.
     private final String uid;
 
+    // Added at v1.9.24
+    private final boolean disableBsqSwap;
+
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
@@ -179,7 +182,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getDelayedPayoutPaymentAccounts(),
                 filter.getAddedBtcNodes(),
                 filter.getAddedSeedNodes(),
-                filter.getUid());
+                filter.getUid(),
+                filter.isDisableBsqSwap());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -222,7 +226,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getDelayedPayoutPaymentAccounts(),
                 filter.getAddedBtcNodes(),
                 filter.getAddedSeedNodes(),
-                filter.getUid());
+                filter.getUid(),
+                filter.isDisableBsqSwap());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -260,7 +265,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
                   List<String> addedBtcNodes,
                   List<String> addedSeedNodes,
-                  String uid) {
+                  String uid,
+                  boolean disableBsqSwap) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
@@ -299,7 +305,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 delayedPayoutPaymentAccounts,
                 addedBtcNodes,
                 addedSeedNodes,
-                uid);
+                uid,
+                disableBsqSwap);
     }
 
 
@@ -346,7 +353,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
                   List<String> addedBtcNodes,
                   List<String> addedSeedNodes,
-                  String uid) {
+                  String uid,
+                  boolean disableBsqSwap) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -386,6 +394,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.addedBtcNodes = addedBtcNodes;
         this.addedSeedNodes = addedSeedNodes;
         this.uid = uid;
+        this.disableBsqSwap = disableBsqSwap;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -458,7 +467,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllDelayedPayoutPaymentAccounts(delayedPayoutPaymentAccountList)
                 .addAllAddedBtcNodes(addedBtcNodes)
                 .addAllAddedSeedNodes(addedSeedNodes)
-                .setUid(uid);
+                .setUid(uid)
+                .setDisableBsqSwap(disableBsqSwap);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -512,7 +522,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 delayedPayoutPaymentAccounts,
                 ProtoUtil.protocolStringListToList(proto.getAddedBtcNodesList()),
                 ProtoUtil.protocolStringListToList(proto.getAddedSeedNodesList()),
-                proto.getUid()
+                proto.getUid(),
+                proto.getDisableBsqSwap()
         );
     }
 
@@ -573,6 +584,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     takerFeeBsq=" + takerFeeBsq +
                 ",\n     addedBtcNodes=" + addedBtcNodes +
                 ",\n     addedSeedNodes=" + addedSeedNodes +
+                ",\n     disableBsqSwap=" + disableBsqSwap +
                 "\n}";
     }
 }
