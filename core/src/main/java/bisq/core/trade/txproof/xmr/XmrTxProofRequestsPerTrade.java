@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -140,14 +141,25 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         // it will have no impact on serviceAddresses and numRequiredSuccessResults.
         // Though numRequiredConfirmations can be changed during request process and will be read from
         // autoConfirmSettings at result parsing.
-        List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses();
+        List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses().stream()
+                .filter(address -> {
+                    if (filterManager.isAutoConfExplorerBanned(address)) {
+                        log.warn("Filtered out auto-confirmation address: {}", address);
+                        return false;  // #4683: filter for auto-confirm explorers
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
         numRequiredSuccessResults = serviceAddresses.size();
 
+        if (numRequiredSuccessResults == 0) {
+            log.warn("All XMR tx proof services are banned by filter; cannot auto-confirm trade {}.",
+                    trade.getShortId());
+            callResultHandlerAndMaybeTerminate(resultHandler, AssetTxProofResult.FAILED);
+            return;
+        }
+
         for (String serviceAddress : serviceAddresses) {
-            if (filterManager.isAutoConfExplorerBanned(serviceAddress)) {
-                log.warn("Filtered out auto-confirmation address: {}", serviceAddress);
-                continue;  // #4683: filter for auto-confirm explorers
-            }
             XmrTxProofModel model = new XmrTxProofModel(trade, serviceAddress, autoConfirmSettings);
             XmrTxProofRequest request = new XmrTxProofRequest(socks5ProxyProvider, model);
 
