@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.popups.PopupManager;
+import bisq.desktop.main.overlays.popups.WalletColdStorageReminder;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
@@ -157,6 +158,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
     private final ClockWatcher clockWatcher;
     private final Navigation navigation;
+    private final WalletColdStorageReminder walletColdStorageReminder;
 
     @Getter
     private final BooleanProperty showAppScreen = new SimpleBooleanProperty();
@@ -204,7 +206,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
                          CorruptedStorageFileHandler corruptedStorageFileHandler,
                          ClockWatcher clockWatcher,
-                         Navigation navigation) {
+                         Navigation navigation,
+                         WalletColdStorageReminder walletColdStorageReminder) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.bsqWalletService = bsqWalletService;
@@ -233,6 +236,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
         this.clockWatcher = clockWatcher;
         this.navigation = navigation;
+        this.walletColdStorageReminder = walletColdStorageReminder;
 
         TxIdTextField.setWalletService(btcWalletService);
 
@@ -357,6 +361,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         notificationCenter.onAllServicesAndViewsInitialized();
 
         maybeShowPopupsFromQueue();
+
+        walletColdStorageReminder.onAppStarted();
     }
 
     void onOpenDownloadWindow() {
