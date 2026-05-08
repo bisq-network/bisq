@@ -157,7 +157,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
     private fun getJavaExecutable(): Provider<RegularFile> =
         javaToolchainService.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(11))
+            languageVersion.set(JavaLanguageVersion.of(17))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }.map { it.executablePath }

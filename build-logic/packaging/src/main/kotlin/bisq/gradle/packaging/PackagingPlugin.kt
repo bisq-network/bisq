@@ -84,9 +84,8 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
     }
 
     private fun getJPackageJdkDirectory(): Provider<Directory> {
-        val javaVersion = if (getOS() == OS.MAC_OS) 15 else 17
         val launcherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(javaVersion))
+            languageVersion.set(JavaLanguageVersion.of(17))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }

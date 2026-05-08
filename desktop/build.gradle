@@ -9,7 +9,9 @@ application {
     mainClass = 'bisq.desktop.app.BisqAppMain'
     applicationDefaultJvmArgs = ['-XX:MaxRAM=8g', '-Xss1280k', '-XX:+UseG1GC', '-XX:MaxHeapFreeRatio=10',
                                  '-XX:MinHeapFreeRatio=5', '-XX:+UseStringDeduplication',
-                                 '-Djava.net.preferIPv4Stack=true']
+                                 '-Djava.net.preferIPv4Stack=true',
+                                 '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+                                 '--add-exports=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED']
 }
 
 javafx {

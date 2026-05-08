@@ -7,7 +7,7 @@ echo "[*] Bisq Seednode installation script"
 
 ROOT_USER=root
 ROOT_GROUP=root
-ROOT_PKG="build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 git vim screen ufw openjdk-11-jdk"
+ROOT_PKG="build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 git vim screen ufw openjdk-17-jdk"
 ROOT_HOME=/root
 
 SYSTEMD_SERVICE_HOME=/etc/systemd/system

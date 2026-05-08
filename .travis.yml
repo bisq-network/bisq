@@ -1,6 +1,6 @@
 language: java
 jdk:
-    - openjdk11
+    - openjdk17
 
 before_install:
     grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case

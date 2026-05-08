@@ -1,5 +1,3 @@
-import org.apache.tools.ant.taskdefs.condition.Os
-
 plugins {
     id 'java'
     id 'jacoco'
@@ -13,11 +11,7 @@ repositories {
 
 java {
     toolchain {
-        if (Os.isFamily(Os.FAMILY_MAC)) {
-            languageVersion = JavaLanguageVersion.of(15)
-        } else {
-            languageVersion = JavaLanguageVersion.of(11)
-        }
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 

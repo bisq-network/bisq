@@ -35,8 +35,7 @@
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
 
-2. Bisq currently works with JDK 11 and JDK 15. You can find out which
-   version you have with:
+2. Bisq currently works with JDK 17. You can find out which version you have with:
 
    ```sh
    javac -version
@@ -51,10 +50,10 @@
    and if the version number on the JVM line is not a supported one, you can pick the correct JDK at runtime with this syntax (verify your system path):
 
    ```sh
-   ./gradlew build -Dorg.gradle.java.home=/usr/lib/jvm/java-11-openjdk-amd64/
+   ./gradlew build -Dorg.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64/
    ```
 
-If you do not have JDK 11 installed, check out scripts in the [scripts](../scripts) directory or download it manually from https://jdk.java.net/archive/.
+If you do not have JDK 17 installed, check out scripts in the [scripts](../scripts) directory or download it manually from https://jdk.java.net/archive/.
 
 ## Running Bisq
 
@@ -66,7 +65,7 @@ On macOS and Linux:
 ```
 or, to select a specific version of Java:
 ```sh
-env JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 ./bisq-desktop
+env JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./bisq-desktop
 ```
 
 On Windows:
