@@ -3,5 +3,5 @@ plugins {
 }
 
 javafx {
-    version = "16"
+    version = "21.0.6"
 }

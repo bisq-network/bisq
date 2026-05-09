@@ -92,11 +92,15 @@ public class JFXTextFieldSkinBisqStyle<T extends TextField & IFXLabelFloatContro
 
 
     private void updateTextPos() {
-        double textWidth = textNode.getLayoutBounds().getWidth();
         final double promptWidth = promptText == null ? 0 : promptText.getLayoutBounds().getWidth();
         switch (getSkinnable().getAlignment().getHpos()) {
             case CENTER:
                 linesWrapper.promptTextScale.setPivotX(promptWidth / 2);
+                updateTextFieldSkinFields();
+                if (textNode == null || textRight == null || textTranslateX == null) {
+                    return;
+                }
+                double textWidth = textNode.getLayoutBounds().getWidth();
                 double midPoint = textRight.get() / 2;
                 double newX = midPoint - textWidth / 2;
                 if (newX + textWidth <= textRight.get()) {
@@ -111,6 +115,18 @@ public class JFXTextFieldSkinBisqStyle<T extends TextField & IFXLabelFloatContro
                 break;
         }
 
+    }
+
+    private void updateTextFieldSkinFields() {
+        if (textNode == null) {
+            textNode = ReflectionHelper.getFieldContent(TextFieldSkin.class, this, "textNode");
+        }
+        if (textTranslateX == null) {
+            textTranslateX = ReflectionHelper.getFieldContent(TextFieldSkin.class, this, "textTranslateX");
+        }
+        if (textRight == null) {
+            textRight = ReflectionHelper.getFieldContent(TextFieldSkin.class, this, "textRight");
+        }
     }
 
     private void createPromptNode() {
@@ -135,6 +151,9 @@ public class JFXTextFieldSkinBisqStyle<T extends TextField & IFXLabelFloatContro
 
         try {
             Field field = ReflectionHelper.getField(TextFieldSkin.class, "promptNode");
+            if (field == null) {
+                return;
+            }
             Object oldValue = field.get(this);
             if (oldValue != null) {
                 textPane.getChildren().remove(oldValue);

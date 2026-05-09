@@ -106,6 +106,9 @@ public class JFXTextAreaSkinBisqStyle extends TextAreaSkin {
 
         try {
             Field field = ReflectionHelper.getField(TextAreaSkin.class, "promptNode");
+            if (field == null) {
+                return;
+            }
             Object oldValue = field.get(this);
             if (oldValue != null) {
                 removeHighlight(Arrays.asList(((Node) oldValue)));
@@ -116,4 +119,3 @@ public class JFXTextAreaSkinBisqStyle extends TextAreaSkin {
         }
     }
 }
-
