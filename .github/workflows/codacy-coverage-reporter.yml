@@ -20,7 +20,7 @@ jobs:
             - name: Set up JDK
               uses: actions/setup-java@v5.2.0
               with:
-                  java-version: '11'
+                  java-version: '21'
                   distribution: 'zulu'
 
             - name: Build with Gradle
