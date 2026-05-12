@@ -233,7 +233,8 @@ package fields, package payload, and the inner `control.tar` and `data.tar`
 archives with full timestamps and numeric ownership when GNU tar is available.
 RPM reports include package digest/signature checks and payload archive listings
 when the local RPM and cpio tools can run them. DMG reports include image
-metadata and `hdiutil` verification output on macOS. PKG reports include
+metadata, `hdiutil` verification output, and `hdiutil` SHA-256 checksums on
+macOS. PKG reports include
 signature, payload, and raw `xar` archive member diagnostics when available.
 Windows reports include basic file metadata, version info, and Authenticode
 signature details, PE/COFF header timestamp metadata for `.exe` artifacts, and

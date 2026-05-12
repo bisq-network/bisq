@@ -1746,6 +1746,7 @@ tasks.register('generateInstallerStructureReport') {
             } else if (extension == 'dmg' && macos) {
                 commands << [label: 'DMG image info', command: ['hdiutil', 'imageinfo', installerFile.absolutePath]]
                 commands << [label: 'DMG image verification', command: ['hdiutil', 'verify', installerFile.absolutePath]]
+                commands << [label: 'DMG SHA-256 checksum', command: ['hdiutil', 'checksum', '-type', 'SHA256', installerFile.absolutePath]]
             } else if (extension == 'pkg' && macos) {
                 commands << [label: 'macOS package signature', command: ['pkgutil', '--check-signature', installerFile.absolutePath]]
                 commands << [label: 'macOS package payload files', command: ['pkgutil', '--payload-files', installerFile.absolutePath]]
