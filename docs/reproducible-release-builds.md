@@ -119,8 +119,9 @@ Compare the local rebuild against a CI manifest.
 ./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/ci/release-manifest.tsv
 ```
 
-`-PreleaseManifest` can also point at an extracted CI artifact or evidence
-directory if it contains exactly one `release-manifest.tsv`.
+`-PreleaseManifest` can also point at an extracted CI artifact, an evidence
+directory, or a `release-evidence.zip` file if it contains exactly one
+`release-manifest.tsv`.
 
 For stronger evidence, compare against every CI manifest that should represent
 the same Java payload. If one OS differs, inspect both `release-manifest.tsv`
@@ -242,8 +243,9 @@ Compare a local rebuild against a signed or CI-generated installer manifest:
 ./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
 ```
 
-`-PinstallerManifest` can also point at an extracted evidence directory if it
-contains exactly one `installer-manifest.tsv`.
+`-PinstallerManifest` can also point at an extracted evidence directory or an
+`installer-evidence.zip` file if it contains exactly one
+`installer-manifest.tsv`.
 
 Publish and sign the installer evidence next to the corresponding binary
 artifacts:
@@ -272,7 +274,8 @@ An independent verifier should:
 2. Verify the Gradle wrapper checksum manifest.
 3. Build with `verifyReleaseBuild`.
 4. Verify the published manifest signature.
-5. Run `verifyReleaseManifest` against the published `release-manifest.tsv`.
+5. Run `verifyReleaseManifest` against the published `release-manifest.tsv` or
+   `release-evidence.zip`.
 
 ```bash
 git submodule update --init --recursive
@@ -280,6 +283,8 @@ shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 ./gradlew clean verifyReleaseBuild
 gpg --verify /path/to/release-manifest.tsv.asc /path/to/release-manifest.tsv
 ./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/release-manifest.tsv
+gpg --verify /path/to/release-evidence.zip.asc /path/to/release-evidence.zip
+./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/release-evidence.zip
 ```
 
 If the task succeeds, the local Java payload manifest matches the signed release
@@ -292,6 +297,7 @@ compare a local installer rebuild:
 gpg --verify /path/to/installer-evidence.zip.asc /path/to/installer-evidence.zip
 gpg --verify /path/to/installer-manifest.tsv.asc /path/to/installer-manifest.tsv
 ./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
+./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-evidence.zip
 ```
 
 ## Dependency Verification Maintenance

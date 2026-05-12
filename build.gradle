@@ -11,6 +11,7 @@ import org.gradle.api.tasks.bundling.Zip
 
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.zip.ZipFile
 
 plugins {
     id 'bisq.gradle.regtest_plugin.RegtestPlugin'
@@ -702,6 +703,43 @@ def manifestEntriesFor = { Collection<File> files ->
 }
 
 def resolveManifestFile = { File manifestPath, String manifestFileName ->
+    if (manifestPath.file && manifestPath.name.toLowerCase(Locale.ROOT).endsWith('.zip')) {
+        def matchingEntries = []
+        def extractedManifest = null
+        new ZipFile(manifestPath).withCloseable { zipFile ->
+            zipFile.entries().each { entry ->
+                if (!entry.directory && (entry.name == manifestFileName || entry.name.endsWith("/${manifestFileName}"))) {
+                    matchingEntries << entry.name
+                }
+            }
+
+            if (matchingEntries.empty) {
+                throw new GradleException("No ${manifestFileName} found in ${manifestPath}")
+            }
+            if (matchingEntries.size() > 1) {
+                throw new GradleException(
+                        "Multiple ${manifestFileName} files found in ${manifestPath}:\n" +
+                                matchingEntries.collect { "  - ${it}" }.join('\n')
+                )
+            }
+
+            def extractedDir = new File(
+                    layout.buildDirectory.dir('tmp/manifest-inputs').get().asFile,
+                    Integer.toHexString(manifestPath.canonicalPath.hashCode())
+            )
+            project.delete(extractedDir)
+            extractedDir.mkdirs()
+
+            extractedManifest = new File(extractedDir, manifestFileName)
+            extractedManifest.withOutputStream { output ->
+                zipFile.getInputStream(zipFile.getEntry(matchingEntries[0])).withCloseable { input ->
+                    output << input
+                }
+            }
+        }
+        return extractedManifest
+    }
+
     if (!manifestPath.directory) {
         return manifestPath
     }
@@ -1619,7 +1657,7 @@ tasks.register('verifyReleaseBuild') {
 
 tasks.register('verifyInstallerManifest') {
     group = 'verification'
-    description = 'Builds desktop OS installer artifacts and verifies them against -PinstallerManifest=<file-or-directory>.'
+    description = 'Builds desktop OS installer artifacts and verifies them against -PinstallerManifest=<file-directory-or-zip>.'
 
     def expectedInstallerManifestProperty = providers.gradleProperty('installerManifest')
 
@@ -1631,7 +1669,7 @@ tasks.register('verifyInstallerManifest') {
     doLast {
         def expectedInstallerManifestPath = expectedInstallerManifestProperty.orNull
         if (!expectedInstallerManifestPath) {
-            throw new GradleException('Missing required -PinstallerManifest=<path-to-installer-manifest.tsv-or-directory>')
+            throw new GradleException('Missing required -PinstallerManifest=<path-to-installer-manifest.tsv-directory-or-zip>')
         }
 
         def expectedManifest = resolveInstallerManifestFile(file(expectedInstallerManifestPath))
@@ -1646,7 +1684,7 @@ tasks.register('verifyInstallerManifest') {
 
 tasks.register('verifyReleaseManifest') {
     group = 'verification'
-    description = 'Builds the desktop Java payload and verifies it against -PreleaseManifest=<file-or-directory>.'
+    description = 'Builds the desktop Java payload and verifies it against -PreleaseManifest=<file-directory-or-zip>.'
 
     def expectedReleaseManifestProperty = providers.gradleProperty('releaseManifest')
 
@@ -1659,7 +1697,7 @@ tasks.register('verifyReleaseManifest') {
     doLast {
         def expectedReleaseManifestPath = expectedReleaseManifestProperty.orNull
         if (!expectedReleaseManifestPath) {
-            throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv-or-directory>')
+            throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv-directory-or-zip>')
         }
 
         def expectedManifest = resolveReleaseManifestFile(file(expectedReleaseManifestPath))
