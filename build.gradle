@@ -1699,6 +1699,7 @@ tasks.register('generateInstallerStructureReport') {
                 commands << [label: 'Debian control archive contents', command: debTarListingCommand('--ctrl-tarfile')]
                 commands << [label: 'Debian data archive contents', command: debTarListingCommand('--fsys-tarfile')]
             } else if (extension == 'rpm') {
+                commands << [label: 'RPM package checks', command: ['rpm', '-Kv', installerFile.absolutePath], optional: true]
                 commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
                 commands << [
                         label  : 'RPM build metadata',

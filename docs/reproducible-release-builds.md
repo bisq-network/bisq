@@ -228,8 +228,10 @@ available to record package metadata, archive member metadata, payload listings,
 file type metadata, and signature details. Debian reports include listings for
 the outer archive, SHA-256 hashes for each outer archive member, package fields,
 package payload, and the inner `control.tar` and `data.tar` archives with full
-timestamps and numeric ownership when GNU tar is available. Unsupported
-installer formats are listed as skipped rather than failing the evidence task.
+timestamps and numeric ownership when GNU tar is available. RPM reports include
+package digest/signature checks when the local RPM tool can run them.
+Unsupported installer formats are listed as skipped rather than failing the
+evidence task.
 
 The `status` column in `installer-structure-report.tsv` is diagnostic:
 
