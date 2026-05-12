@@ -50,6 +50,7 @@ jobs:
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
+          build/reports/release/installer-build-info.json
           build/reports/release/installer-evidence.zip
         if-no-files-found: error
 
@@ -90,6 +91,7 @@ jobs:
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
+          build/reports/release/installer-build-info.json
           build/reports/release/installer-evidence.zip
         if-no-files-found: error
 
@@ -142,5 +144,6 @@ jobs:
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
+          build/reports/release/installer-build-info.json
           build/reports/release/installer-evidence.zip
         if-no-files-found: error

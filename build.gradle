@@ -845,6 +845,7 @@ def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv')
 def installerSha256SumsFile = releaseReportDir.map { it.file('INSTALLER-SHA256SUMS') }
 def installerManifestFile = releaseReportDir.map { it.file('installer-manifest.tsv') }
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
+def installerBuildInfoFile = releaseReportDir.map { it.file('installer-build-info.json') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
@@ -980,6 +981,114 @@ def loadGradleWrapperProperties = {
         wrapperPropertiesFile.withInputStream { wrapperProperties.load(it) }
     }
     wrapperProperties
+}
+
+def buildInfoForManifest = { Collection entries, File manifest, File checksums ->
+    def gitStatus = execText(['git', 'status', '--porcelain'])
+    def wrapperProperties = loadGradleWrapperProperties()
+    def defaultLocale = Locale.getDefault()
+    def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    def linux = osName.contains('linux')
+    def macos = osName.contains('mac')
+    def windows = osName.contains('windows')
+
+    [
+            buildInfoVersion: 1,
+            manifest        : [
+                    entryCount: entries.size(),
+                    sha256   : sha256(manifest),
+                    path     : canonicalPath(manifest)
+            ],
+            checksums       : [
+                    sha256: sha256(checksums),
+                    path  : canonicalPath(checksums)
+            ],
+            git             : [
+                    commit    : execText(['git', 'rev-parse', 'HEAD']),
+                    branch    : execText(['git', 'rev-parse', '--abbrev-ref', 'HEAD']),
+                    describe  : execText(['git', 'describe', '--tags', '--always', '--dirty']),
+                    dirty     : gitStatus != null && !gitStatus.empty,
+                    submodules: execText(['git', 'submodule', 'status', '--recursive'])
+            ],
+            gradle          : [
+                    version                     : gradle.gradleVersion,
+                    wrapperDistributionUrl      : wrapperProperties.getProperty('distributionUrl'),
+                    wrapperDistributionSha256Sum: wrapperProperties.getProperty('distributionSha256Sum'),
+                    expectedVersion             : expectedReleaseGradleVersion.get()
+            ],
+            java            : [
+                    version             : System.getProperty('java.version'),
+                    vendor              : System.getProperty('java.vendor'),
+                    runtimeVersion      : System.getProperty('java.runtime.version'),
+                    vmName              : System.getProperty('java.vm.name'),
+                    vmVersion           : System.getProperty('java.vm.version'),
+                    specificationVersion: System.getProperty('java.specification.version'),
+                    expectedVersion     : expectedReleaseJavaVersion.get(),
+                    expectedVendor      : expectedReleaseJavaVendor.get()
+            ],
+            os              : [
+                    name          : System.getProperty('os.name'),
+                    version       : System.getProperty('os.version'),
+                    arch          : System.getProperty('os.arch'),
+                    uname         : commandOutputInfo(['uname', '-a']),
+                    osRelease     : linux ? readOsRelease() : null,
+                    macosSwVers   : macos ? commandOutputInfo(['sw_vers']) : null,
+                    windowsVersion: windows ? commandOutputInfo(['cmd', '/c', 'ver']) : null
+            ],
+            environment     : [
+                    sourceDateEpoch: System.getenv('SOURCE_DATE_EPOCH'),
+                    timezone       : [
+                            id          : TimeZone.getDefault().getID(),
+                            zoneId      : java.time.ZoneId.systemDefault().getId(),
+                            userTimezone: System.getProperty('user.timezone'),
+                            tz          : System.getenv('TZ')
+                    ],
+                    locale         : [
+                            defaultLocale: defaultLocale.toLanguageTag(),
+                            javaLocale   : defaultLocale.toString(),
+                            userLanguage : System.getProperty('user.language'),
+                            userCountry  : System.getProperty('user.country'),
+                            fileEncoding : System.getProperty('file.encoding'),
+                            environment  : localeEnvironment(),
+                            command      : commandOutputInfo(['locale'])
+                    ]
+            ],
+            tools           : compactMap([
+                    jdk          : [
+                            java    : jdkToolVersionInfo('java'),
+                            javac   : jdkToolVersionInfo('javac'),
+                            jlink   : jdkToolVersionInfo('jlink'),
+                            jpackage: jdkToolVersionInfo('jpackage')
+                    ],
+                    linuxPackages: linux ? [
+                            dpkg     : commandVersionInfo(['dpkg', '--version']),
+                            dpkgDeb  : commandVersionInfo(['dpkg-deb', '--version']),
+                            dpkgQuery: commandVersionInfo(['dpkg-query', '--version']),
+                            rpm      : commandVersionInfo(['rpm', '--version']),
+                            rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
+                            fakeroot : commandVersionInfo(['fakeroot', '--version'])
+                    ] : null,
+                    archives     : linux ? [
+                            ar  : commandVersionInfo(['ar', '--version']),
+                            tar : commandVersionInfo(['tar', '--version']),
+                            gzip: commandVersionInfo(['gzip', '--version']),
+                            xz  : commandVersionInfo(['xz', '--version'])
+                    ] : null
+            ]),
+            gradleStart     : [
+                    taskNames        : gradle.startParameter.taskNames,
+                    excludedTaskNames: gradle.startParameter.excludedTaskNames,
+                    projectProperties: gradle.startParameter.projectProperties.keySet().sort()
+            ]
+    ]
+}
+
+def writeBuildInfo = { File buildInfoFile, Map buildInfo ->
+    buildInfoFile.parentFile.mkdirs()
+    buildInfoFile.setText(
+            groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(buildInfo)) + '\n',
+            StandardCharsets.UTF_8.name()
+    )
 }
 
 tasks.register('verifyReleaseEnvironment') {
@@ -1249,6 +1358,7 @@ tasks.register('generateReleaseManifest') {
     outputs.file(releaseSha256SumsFile)
     outputs.file(releaseManifestFile)
     outputs.file(releaseBuildInfoFile)
+    outputs.upToDateWhen { false }
 
     doLast {
         def jarFiles = jarTasks.get()
@@ -1276,108 +1386,8 @@ tasks.register('generateReleaseManifest') {
                 StandardCharsets.UTF_8.name()
         )
 
-        def gitStatus = execText(['git', 'status', '--porcelain'])
-        def wrapperProperties = loadGradleWrapperProperties()
-        def defaultLocale = Locale.getDefault()
-        def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
-        def linux = osName.contains('linux')
-        def macos = osName.contains('mac')
-        def windows = osName.contains('windows')
-        def buildInfo = [
-                buildInfoVersion: 1,
-                manifest        : [
-                        entryCount: entries.size(),
-                        sha256   : sha256(releaseManifest),
-                        path     : canonicalPath(releaseManifest)
-                ],
-                checksums       : [
-                        sha256: sha256(sha256Sums),
-                        path  : canonicalPath(sha256Sums)
-                ],
-                git             : [
-                        commit    : execText(['git', 'rev-parse', 'HEAD']),
-                        branch    : execText(['git', 'rev-parse', '--abbrev-ref', 'HEAD']),
-                        describe  : execText(['git', 'describe', '--tags', '--always', '--dirty']),
-                        dirty     : gitStatus != null && !gitStatus.empty,
-                        submodules: execText(['git', 'submodule', 'status', '--recursive'])
-                ],
-                gradle          : [
-                        version                       : gradle.gradleVersion,
-                        wrapperDistributionUrl        : wrapperProperties.getProperty('distributionUrl'),
-                        wrapperDistributionSha256Sum  : wrapperProperties.getProperty('distributionSha256Sum'),
-                        expectedVersion               : expectedReleaseGradleVersion.get()
-                ],
-                java            : [
-                        version              : System.getProperty('java.version'),
-                        vendor               : System.getProperty('java.vendor'),
-                        runtimeVersion       : System.getProperty('java.runtime.version'),
-                        vmName               : System.getProperty('java.vm.name'),
-                        vmVersion            : System.getProperty('java.vm.version'),
-                        specificationVersion : System.getProperty('java.specification.version'),
-                        expectedVersion      : expectedReleaseJavaVersion.get(),
-                        expectedVendor       : expectedReleaseJavaVendor.get()
-                ],
-                os              : [
-                        name          : System.getProperty('os.name'),
-                        version       : System.getProperty('os.version'),
-                        arch          : System.getProperty('os.arch'),
-                        uname         : commandOutputInfo(['uname', '-a']),
-                        osRelease     : linux ? readOsRelease() : null,
-                        macosSwVers   : macos ? commandOutputInfo(['sw_vers']) : null,
-                        windowsVersion: windows ? commandOutputInfo(['cmd', '/c', 'ver']) : null
-                ],
-                environment     : [
-                        sourceDateEpoch: System.getenv('SOURCE_DATE_EPOCH'),
-                        timezone       : [
-                                id              : TimeZone.getDefault().getID(),
-                                zoneId          : java.time.ZoneId.systemDefault().getId(),
-                                userTimezone    : System.getProperty('user.timezone'),
-                                tz              : System.getenv('TZ')
-                        ],
-                        locale         : [
-                                defaultLocale: defaultLocale.toLanguageTag(),
-                                javaLocale   : defaultLocale.toString(),
-                                userLanguage : System.getProperty('user.language'),
-                                userCountry  : System.getProperty('user.country'),
-                                fileEncoding : System.getProperty('file.encoding'),
-                                environment  : localeEnvironment(),
-                                command      : commandOutputInfo(['locale'])
-                        ]
-                ],
-                tools           : compactMap([
-                        jdk          : [
-                                java    : jdkToolVersionInfo('java'),
-                                javac   : jdkToolVersionInfo('javac'),
-                                jlink   : jdkToolVersionInfo('jlink'),
-                                jpackage: jdkToolVersionInfo('jpackage')
-                        ],
-                        linuxPackages: linux ? [
-                                dpkg     : commandVersionInfo(['dpkg', '--version']),
-                                dpkgDeb  : commandVersionInfo(['dpkg-deb', '--version']),
-                                dpkgQuery: commandVersionInfo(['dpkg-query', '--version']),
-                                rpm      : commandVersionInfo(['rpm', '--version']),
-                                rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
-                                fakeroot : commandVersionInfo(['fakeroot', '--version'])
-                        ] : null,
-                        archives     : linux ? [
-                                ar  : commandVersionInfo(['ar', '--version']),
-                                tar : commandVersionInfo(['tar', '--version']),
-                                gzip: commandVersionInfo(['gzip', '--version']),
-                                xz  : commandVersionInfo(['xz', '--version'])
-                        ] : null
-                ]),
-                gradleStart     : [
-                        taskNames          : gradle.startParameter.taskNames,
-                        excludedTaskNames  : gradle.startParameter.excludedTaskNames,
-                        projectProperties  : gradle.startParameter.projectProperties.keySet().sort()
-                ]
-        ]
-
         def buildInfoFile = releaseBuildInfoFile.get().asFile
-        buildInfoFile.setText(
-                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(buildInfo)) + '\n',
-                StandardCharsets.UTF_8.name()
-        )
+        writeBuildInfo(buildInfoFile, buildInfoForManifest(entries, releaseManifest, sha256Sums))
 
         logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${rootProject.relativePath(releaseManifest)}")
         logger.lifecycle("Wrote ${entries.size()} release checksums to ${rootProject.relativePath(sha256Sums)}")
@@ -1427,6 +1437,8 @@ tasks.register('generateInstallerManifest') {
             .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
     outputs.file(installerSha256SumsFile)
     outputs.file(installerManifestFile)
+    outputs.file(installerBuildInfoFile)
+    outputs.upToDateWhen { false }
 
     doLast {
         def installerDir = desktopInstallerDir.get().asFile
@@ -1457,8 +1469,12 @@ tasks.register('generateInstallerManifest') {
                 StandardCharsets.UTF_8.name()
         )
 
+        def buildInfoFile = installerBuildInfoFile.get().asFile
+        writeBuildInfo(buildInfoFile, buildInfoForManifest(entries, installerManifest, sha256Sums))
+
         logger.lifecycle("Wrote ${entries.size()} installer manifest entries to ${rootProject.relativePath(installerManifest)}")
         logger.lifecycle("Wrote ${entries.size()} installer checksums to ${rootProject.relativePath(sha256Sums)}")
+        logger.lifecycle("Wrote installer build info to ${rootProject.relativePath(buildInfoFile)}")
     }
 }
 
@@ -1475,6 +1491,7 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
 
     from(installerManifestFile)
     from(installerSha256SumsFile)
+    from(installerBuildInfoFile)
 
     doLast {
         def bundle = archiveFile.get().asFile

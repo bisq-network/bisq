@@ -191,10 +191,13 @@ Build the OS-specific installer artifacts and write their manifest with:
 
 - `build/reports/release/installer-manifest.tsv`
 - `build/reports/release/INSTALLER-SHA256SUMS`
+- `build/reports/release/installer-build-info.json`
 
 `installer-manifest.tsv` is the canonical comparison file for installer
 artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
-To package both installer evidence files into one reproducible ZIP, run:
+`installer-build-info.json` records the OS, JDK, Gradle, locale, timezone, and
+installer-relevant tool versions for explaining per-OS installer differences.
+To package the installer evidence files into one reproducible ZIP, run:
 
 ```bash
 ./gradlew generateInstallerEvidenceBundle
@@ -233,6 +236,7 @@ artifacts:
 - `installer-manifest.tsv.asc`
 - `INSTALLER-SHA256SUMS`
 - `INSTALLER-SHA256SUMS.asc`
+- `installer-build-info.json`
 
 ```bash
 gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-evidence.zip
