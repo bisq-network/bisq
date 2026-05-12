@@ -113,6 +113,25 @@ For stronger evidence, compare against every CI manifest that should represent
 the same Java payload. If one OS differs, inspect both `release-manifest.tsv`
 files first, then use `build-info.json` only to explain the environment.
 
+### Manifest Match Policy
+
+Before signing release artifacts, the release manager must compare their local
+Java payload manifest against the Linux GitHub Actions Java payload manifest
+for the same release tag or commit and the pinned Java version. The manifests
+must match exactly.
+
+The macOS and Windows Java payload manifests are additional verification
+signals. Compare them as well when they are available for the same release tag
+or commit. Any mismatch must be explained before signing; if the mismatch is in
+a shared Java artifact rather than a platform-specific runtime dependency,
+treat it as a release blocker.
+
+Installer manifests are compared per OS. A Linux `.deb` or `.rpm` manifest is
+not expected to match a macOS `.dmg` manifest or a Windows `.exe` manifest.
+For each OS installer that will be published, the release manager should verify
+a local rebuild against the signed or CI-provided installer manifest for that
+same OS.
+
 ## Signing And Publishing Evidence
 
 After the release manager has rebuilt locally and verified the CI manifests,
@@ -243,7 +262,6 @@ The most important remaining gaps are:
 - package repository snapshot pinning for the Linux release-builder image
 - pinned release build images or dedicated release builders for macOS and
   Windows
-- a documented policy for which CI OS manifests must match before signing
 
 Those can be added incrementally without changing the current Java payload
 manifest format.
