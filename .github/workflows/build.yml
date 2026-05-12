@@ -30,7 +30,7 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
-        arguments: build verifyGithubActionsSecurity verifyReproducibleArchives generateReleaseManifest --scan
+        arguments: build verifyGithubActionsSecurity verifyDependencySignaturePolicy verifyReproducibleArchives generateReleaseManifest --scan
 
     - name: Upload release manifests
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

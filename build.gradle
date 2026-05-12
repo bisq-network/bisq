@@ -18,6 +18,7 @@ plugins {
 def dependencyVerificationMetadata = layout.projectDirectory.file('gradle/verification-metadata.xml')
 def dependencyVerificationKeyring = layout.projectDirectory.file('gradle/verification-keyring.keys')
 def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/verification-keyring.gpg')
+def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/dependency-checksum-fallback-allowlist.tsv')
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
 def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
 
@@ -291,6 +292,81 @@ tasks.register('resolveAndVerifyDependencies') {
     doLast {
         resolveConfigurations(false)
         logger.lifecycle("Resolved and verified ${resolvableConfigurations().size()} configurations.")
+    }
+}
+
+tasks.register('verifyDependencySignaturePolicy') {
+    group = 'verification'
+    description = 'Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed.'
+
+    inputs.file(dependencyVerificationMetadata)
+    inputs.file(dependencyChecksumFallbackAllowlist)
+
+    doLast {
+        resolveConfigurations(false)
+
+        def metadataFile = dependencyVerificationMetadata.asFile
+        def allowlistFile = dependencyChecksumFallbackAllowlist.asFile
+        if (!metadataFile.exists()) {
+            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
+        }
+        if (!allowlistFile.exists()) {
+            throw new GradleException("Missing ${allowlistFile}. Review checksum-only dependencies and add the approved entries.")
+        }
+
+        def allowedEntries = new TreeSet<String>()
+        def duplicateEntries = []
+        allowlistFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
+            def trimmed = line.trim()
+            if (!trimmed || trimmed.startsWith('#')) {
+                return
+            }
+
+            def columns = line.split(/\t/, -1)
+            if (columns.size() != 2 || columns.any { !it.trim() }) {
+                throw new GradleException("Invalid checksum fallback allowlist entry at ${allowlistFile}:${number}. Expected '<group:name:version>\\t<artifact-file-name>'.")
+            }
+
+            def entry = "${columns[0].trim()}\t${columns[1].trim()}".toString()
+            if (!allowedEntries.add(entry)) {
+                duplicateEntries << entry
+            }
+        }
+
+        if (!duplicateEntries.empty) {
+            throw new GradleException("Duplicate checksum fallback allowlist entries:\n - ${duplicateEntries.unique().sort().join('\n - ')}")
+        }
+
+        def metadata = new XmlSlurper(false, false).parse(metadataFile)
+        def checksumFallbackEntries = new TreeSet<String>()
+        metadata.components.component.each { component ->
+            def id = "${component.@group}:${component.@name}:${component.@version}".toString()
+            component.artifact.each { artifact ->
+                def checksumOnly = artifact.sha256.any { checksum ->
+                    checksum.@reason.text() == 'Artifact is not signed'
+                }
+                if (checksumOnly) {
+                    checksumFallbackEntries.add("${id}\t${artifact.@name}".toString())
+                }
+            }
+        }
+
+        def unapprovedEntries = checksumFallbackEntries.findAll { !allowedEntries.contains(it) }
+        def staleEntries = allowedEntries.findAll { !checksumFallbackEntries.contains(it) }
+        if (!unapprovedEntries.empty || !staleEntries.empty) {
+            def message = new StringBuilder()
+            message << 'Dependency signature policy failed.'
+            if (!unapprovedEntries.empty) {
+                message << "\n\nUnapproved checksum-only dependency artifacts:\n - ${unapprovedEntries.join('\n - ')}"
+            }
+            if (!staleEntries.empty) {
+                message << "\n\nAllowlist entries that are no longer checksum-only artifacts:\n - ${staleEntries.join('\n - ')}"
+            }
+            message << "\n\nReview each checksum-only artifact, update ${allowlistFile}, and regenerate ${dependencySignatureReport.asFile}."
+            throw new GradleException(message.toString())
+        }
+
+        logger.lifecycle("Verified ${checksumFallbackEntries.size()} approved checksum-only dependency artifact(s).")
     }
 }
 

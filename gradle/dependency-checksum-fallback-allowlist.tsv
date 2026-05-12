@@ -1,0 +1,43 @@
+# Approved dependency artifacts that are checksum-only in gradle/verification-metadata.xml.
+# Format: <group:name:version>\t<artifact-file-name>
+# Keep this artifact-level list exact. A new unsigned artifact should be reviewed before it is added here.
+aopalliance:aopalliance:1.0	aopalliance-1.0.jar
+aopalliance:aopalliance:1.0	aopalliance-1.0.pom
+com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a	bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.jar
+com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a	bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.module
+com.github.bisq-network:jsocks:8bfc68c58d443b0ea03a8e8ec352e120fd020127	jsocks-8bfc68c58d443b0ea03a8e8ec352e120fd020127.jar
+com.github.bisq-network:jsocks:8bfc68c58d443b0ea03a8e8ec352e120fd020127	jsocks-8bfc68c58d443b0ea03a8e8ec352e120fd020127.pom
+com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1	jsonrpc4j-1.6.0.bisq.1.jar
+com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1	jsonrpc4j-1.6.0.bisq.1.module
+com.github.bisq-network:jtorctl:30db998d855ff351c6f74783ff386f15304e875a	jtorctl-30db998d855ff351c6f74783ff386f15304e875a.jar
+com.github.bisq-network:jtorctl:30db998d855ff351c6f74783ff386f15304e875a	jtorctl-30db998d855ff351c6f74783ff386f15304e875a.pom
+com.github.bisq-network.netlayer:parent:47ea493b9eb6df2cad64499d5b5076c83a0d786c	parent-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom
+com.github.bisq-network.netlayer:tor:47ea493b9eb6df2cad64499d5b5076c83a0d786c	tor-47ea493b9eb6df2cad64499d5b5076c83a0d786c.jar
+com.github.bisq-network.netlayer:tor:47ea493b9eb6df2cad64499d5b5076c83a0d786c	tor-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom
+com.github.bisq-network.netlayer:tor.external:47ea493b9eb6df2cad64499d5b5076c83a0d786c	tor.external-47ea493b9eb6df2cad64499d5b5076c83a0d786c.jar
+com.github.bisq-network.netlayer:tor.external:47ea493b9eb6df2cad64499d5b5076c83a0d786c	tor.external-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom
+com.github.bisq-network.netlayer:tor.native:47ea493b9eb6df2cad64499d5b5076c83a0d786c	tor.native-47ea493b9eb6df2cad64499d5b5076c83a0d786c.jar
+com.github.bisq-network.netlayer:tor.native:47ea493b9eb6df2cad64499d5b5076c83a0d786c	tor.native-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom
+com.github.bisq-network.tor-binary:tor-binary:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom
+com.github.bisq-network.tor-binary:tor-binary-geoip:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-geoip-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar
+com.github.bisq-network.tor-binary:tor-binary-geoip:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-geoip-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom
+com.github.bisq-network.tor-binary:tor-binary-linux32:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-linux32-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar
+com.github.bisq-network.tor-binary:tor-binary-linux32:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-linux32-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom
+com.github.bisq-network.tor-binary:tor-binary-linux64:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-linux64-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar
+com.github.bisq-network.tor-binary:tor-binary-linux64:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-linux64-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom
+com.github.bisq-network.tor-binary:tor-binary-macos:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-macos-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar
+com.github.bisq-network.tor-binary:tor-binary-macos:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-macos-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom
+com.github.bisq-network.tor-binary:tor-binary-windows:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-windows-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar
+com.github.bisq-network.tor-binary:tor-binary-windows:7358b044704548b70cf8db4e2dacbe1ff4aa2171	tor-binary-windows-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom
+com.google.protobuf:com.google.protobuf.gradle.plugin:0.9.5	com.google.protobuf.gradle.plugin-0.9.5.pom
+javax.inject:javax.inject:1	javax.inject-1.jar
+javax.inject:javax.inject:1	javax.inject-1.pom
+net.jcip:jcip-annotations:1.0	jcip-annotations-1.0.jar
+net.jcip:jcip-annotations:1.0	jcip-annotations-1.0.pom
+org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0	org.gradle.kotlin.kotlin-dsl.gradle.plugin-4.4.0.pom
+org.infinispan:infinispan-bom:11.0.15.Final	infinispan-bom-11.0.15.Final.pom
+org.infinispan:infinispan-build-configuration-parent:11.0.15.Final	infinispan-build-configuration-parent-11.0.15.Final.pom
+org.jboss:jboss-parent:36	jboss-parent-36.pom
+org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.jar
+org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.module
+org.sonatype.oss:oss-parent:7	oss-parent-7.pom
