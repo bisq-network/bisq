@@ -227,7 +227,9 @@ This writes:
 investigation aids for package internals. They use local tools such as `ar`,
 `file`, `dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, `xar`, and Windows PowerShell
 when available to record package metadata, archive member metadata, payload
-listings, file type metadata, and signature details. Debian reports include
+listings, file type metadata, and signature details. On Windows the structure
+report prefers Windows PowerShell and falls back to PowerShell Core (`pwsh`)
+when `powershell` is unavailable. Debian reports include
 listings for the outer archive, SHA-256 hashes for each outer archive member,
 package fields, package payload, and the inner `control.tar` and `data.tar`
 archives with full timestamps and numeric ownership when GNU tar is available.
