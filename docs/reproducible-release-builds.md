@@ -219,8 +219,10 @@ This writes:
 investigation aids for package internals. They use local tools such as `ar`,
 `file`, `dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, and Windows PowerShell when
 available to record package metadata, archive member metadata, payload listings,
-file type metadata, and signature details. Unsupported installer formats are
-listed as skipped rather than failing the evidence task.
+file type metadata, and signature details. Debian reports include listings for
+the outer archive, package fields, package payload, and the inner `control.tar`
+and `data.tar` archives. Unsupported installer formats are listed as skipped
+rather than failing the evidence task.
 
 The `status` column in `installer-structure-report.tsv` is diagnostic:
 

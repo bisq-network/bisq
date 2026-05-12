@@ -1557,6 +1557,9 @@ tasks.register('generateInstallerStructureReport') {
         def powershellSingleQuoted = { String value ->
             "'${value.replace("'", "''")}'"
         }
+        def shellSingleQuoted = { String value ->
+            "'${value.replace("'", "'\"'\"'")}'"
+        }
         def powershellInstallerMetadataCommand = { File file ->
             def literalPath = powershellSingleQuoted(file.absolutePath)
             [
@@ -1584,9 +1587,18 @@ tasks.register('generateInstallerStructureReport') {
             def message = ''
 
             if (extension == 'deb') {
+                def debTarListingCommand = { String dpkgDebOption ->
+                    [
+                            'sh',
+                            '-c',
+                            "dpkg-deb ${dpkgDebOption} ${shellSingleQuoted(installerFile.absolutePath)} | tar -tvf -"
+                    ]
+                }
                 commands << [label: 'Debian archive members', command: ['ar', 'tv', installerFile.absolutePath]]
                 commands << [label: 'Debian package fields', command: ['dpkg-deb', '--field', installerFile.absolutePath]]
                 commands << [label: 'Debian package contents', command: ['dpkg-deb', '--contents', installerFile.absolutePath]]
+                commands << [label: 'Debian control archive contents', command: debTarListingCommand('--ctrl-tarfile')]
+                commands << [label: 'Debian data archive contents', command: debTarListingCommand('--fsys-tarfile')]
             } else if (extension == 'rpm') {
                 commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
                 commands << [
@@ -1621,7 +1633,9 @@ tasks.register('generateInstallerStructureReport') {
                 def requiredCommands = commands.findAll { !it.optional }
 
                 commands.each { commandSpec ->
-                    def displayCommand = commandSpec.command.collect { it == installerFile.absolutePath ? artifactPath : it }
+                    def displayCommand = commandSpec.command.collect {
+                        normalizeReportOutput(it == installerFile.absolutePath ? artifactPath : it)
+                    }
                     def result = execResult(commandSpec.command)
                     report << "\n## ${commandSpec.label}\n\n"
                     report << "command: ${displayCommand.join(' ')}\n"
