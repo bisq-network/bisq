@@ -252,6 +252,24 @@ The `status` column in `installer-structure-report.tsv` is diagnostic:
   artifact on the current OS. The artifact can still be compared through
   `installer-manifest.tsv`.
 
+When installer manifests differ, compare the matching structure report files
+before changing package generation logic. Start with `installer-build-info.json`
+to confirm the OS, JDK, Gradle, timezone, locale, and package-tool versions.
+Then inspect the format-specific report sections:
+
+- For `.deb`, compare outer `ar` member metadata and member hashes first, then
+  compare the `control.tar` and `data.tar` listings for timestamp, ordering,
+  ownership, mode, or size differences.
+- For `.rpm`, compare package checks, build metadata, payload compressor and
+  flags, payload archive listings, and the package dump.
+- For `.dmg`, compare `hdiutil imageinfo`, verification output, and `hdiutil`
+  checksums.
+- For `.pkg`, compare signature output, payload file listings, and raw `xar`
+  archive members.
+- For Windows installers, compare file metadata, Authenticode output,
+  PE/COFF header timestamps for `.exe`, and MSI Property table entries for
+  `.msi`.
+
 To package the installer evidence files into one reproducible ZIP, run:
 
 ```bash
