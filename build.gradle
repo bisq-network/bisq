@@ -1112,7 +1112,8 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     ] : null,
                     macosInstallerTools: macos ? [
                             hdiutil: commandOutputInfo(['which', 'hdiutil']),
-                            pkgutil: commandOutputInfo(['which', 'pkgutil'])
+                            pkgutil: commandOutputInfo(['which', 'pkgutil']),
+                            xar    : commandVersionInfo(['xar', '--version'])
                     ] : null,
                     windowsInstallerTools: windows ? [
                             powershell: commandVersionInfo(['powershell', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()']),
@@ -1726,6 +1727,7 @@ tasks.register('generateInstallerStructureReport') {
             } else if (extension == 'pkg' && macos) {
                 commands << [label: 'macOS package signature', command: ['pkgutil', '--check-signature', installerFile.absolutePath]]
                 commands << [label: 'macOS package payload files', command: ['pkgutil', '--payload-files', installerFile.absolutePath]]
+                commands << [label: 'macOS package archive members', command: ['xar', '-tf', installerFile.absolutePath], optional: true]
             } else if ((extension == 'exe' || extension == 'msi') && windows) {
                 commands << [label: 'Windows installer metadata', command: powershellInstallerMetadataCommand(installerFile)]
             } else {

@@ -225,16 +225,18 @@ This writes:
 
 `installer-structure-report.tsv` and the `installer-structure/` reports are
 investigation aids for package internals. They use local tools such as `ar`,
-`file`, `dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, and Windows PowerShell when
-available to record package metadata, archive member metadata, payload listings,
-file type metadata, and signature details. Debian reports include listings for
-the outer archive, SHA-256 hashes for each outer archive member, package fields,
-package payload, and the inner `control.tar` and `data.tar` archives with full
-timestamps and numeric ownership when GNU tar is available. RPM reports include
-package digest/signature checks and payload archive listings when the local RPM
-and cpio tools can run them. DMG reports include image metadata and `hdiutil`
-verification output on macOS. Unsupported installer formats are listed as
-skipped rather than failing the evidence task.
+`file`, `dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, `xar`, and Windows PowerShell
+when available to record package metadata, archive member metadata, payload
+listings, file type metadata, and signature details. Debian reports include
+listings for the outer archive, SHA-256 hashes for each outer archive member,
+package fields, package payload, and the inner `control.tar` and `data.tar`
+archives with full timestamps and numeric ownership when GNU tar is available.
+RPM reports include package digest/signature checks and payload archive listings
+when the local RPM and cpio tools can run them. DMG reports include image
+metadata and `hdiutil` verification output on macOS. PKG reports include
+signature, payload, and raw `xar` archive member diagnostics when available.
+Unsupported installer formats are listed as skipped rather than failing the
+evidence task.
 
 The `status` column in `installer-structure-report.tsv` is diagnostic:
 
