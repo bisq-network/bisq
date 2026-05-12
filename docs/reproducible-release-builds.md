@@ -191,8 +191,8 @@ The bundle is written to:
 
 - `build/reports/release/installer-evidence.zip`
 
-The manual GitHub Actions workflow `Installer Evidence` can generate Linux
-installer evidence for a release commit or tag without making installer
+The manual GitHub Actions workflow `Installer Evidence` can generate Linux and
+macOS installer evidence for a release commit or tag without making installer
 generation part of the normal push or pull-request release build gate.
 
 Verify the generated installer checksum file locally:
@@ -279,7 +279,7 @@ The most important remaining gaps are:
 
 - deterministic OS installer internals for `dmg`, `deb`, `rpm`, and `exe`
 - package repository snapshot pinning for the Linux release-builder image
-- optional macOS and Windows installer evidence workflows
+- optional Windows installer evidence workflow
 - pinned release build images or dedicated release builders for macOS and
   Windows
 
