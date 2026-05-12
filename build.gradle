@@ -1109,12 +1109,14 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                             fakeroot : commandVersionInfo(['fakeroot', '--version'])
                     ] : null,
                     macosInstallerTools: macos ? [
-                            hdiutil: commandOutputInfo(['which', 'hdiutil'])
+                            hdiutil: commandOutputInfo(['which', 'hdiutil']),
+                            pkgutil: commandOutputInfo(['which', 'pkgutil'])
                     ] : null,
                     windowsInstallerTools: windows ? [
-                            candle: commandVersionInfo(['candle', '-?']),
-                            light : commandVersionInfo(['light', '-?']),
-                            wix   : commandVersionInfo(['wix', '--version'])
+                            powershell: commandVersionInfo(['powershell', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()']),
+                            candle    : commandVersionInfo(['candle', '-?']),
+                            light     : commandVersionInfo(['light', '-?']),
+                            wix       : commandVersionInfo(['wix', '--version'])
                     ] : null,
                     archives     : linux ? [
                             ar  : commandVersionInfo(['ar', '--version']),
@@ -1551,6 +1553,23 @@ tasks.register('generateInstallerStructureReport') {
         def normalizeReportOutput = { String value ->
             value == null ? null : value.replace(rootProject.projectDir.absolutePath, '<repo>')
         }
+        def powershellSingleQuoted = { String value ->
+            "'${value.replace("'", "''")}'"
+        }
+        def powershellInstallerMetadataCommand = { File file ->
+            def literalPath = powershellSingleQuoted(file.absolutePath)
+            [
+                    'powershell',
+                    '-NoProfile',
+                    '-ExecutionPolicy',
+                    'Bypass',
+                    '-Command',
+                    "\$item = Get-Item -LiteralPath ${literalPath}; \$item.VersionInfo | Format-List *; Get-AuthenticodeSignature -LiteralPath ${literalPath} | Format-List *"
+            ]
+        }
+        def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+        def macos = osName.contains('mac')
+        def windows = osName.contains('windows')
 
         def rows = ['artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage']
         installerFiles.each { installerFile ->
@@ -1569,8 +1588,13 @@ tasks.register('generateInstallerStructureReport') {
             } else if (extension == 'rpm') {
                 commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
                 commands << [label: 'RPM package dump', command: ['rpm', '-qp', '--dump', installerFile.absolutePath]]
-            } else if (extension == 'dmg') {
+            } else if (extension == 'dmg' && macos) {
                 commands << [label: 'DMG image info', command: ['hdiutil', 'imageinfo', installerFile.absolutePath]]
+            } else if (extension == 'pkg' && macos) {
+                commands << [label: 'macOS package signature', command: ['pkgutil', '--check-signature', installerFile.absolutePath]]
+                commands << [label: 'macOS package payload files', command: ['pkgutil', '--payload-files', installerFile.absolutePath]]
+            } else if ((extension == 'exe' || extension == 'msi') && windows) {
+                commands << [label: 'Windows installer metadata', command: powershellInstallerMetadataCommand(installerFile)]
             } else {
                 message = "No installer structure inspector is configured for .${extension ?: 'unknown'} artifacts."
             }
