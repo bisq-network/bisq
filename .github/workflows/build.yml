@@ -29,4 +29,14 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@v3.5.0
       with:
-        arguments: build --scan
+        arguments: build verifyReproducibleArchives generateReleaseManifest --scan
+
+    - name: Upload release manifests
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-manifests-${{ matrix.os }}-java-${{ matrix.java }}
+        path: |
+          build/reports/release/SHA256SUMS
+          build/reports/release/release-manifest.tsv
+          build/reports/release/build-info.json
+        if-no-files-found: error
