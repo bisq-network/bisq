@@ -1108,6 +1108,14 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                             rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
                             fakeroot : commandVersionInfo(['fakeroot', '--version'])
                     ] : null,
+                    macosInstallerTools: macos ? [
+                            hdiutil: commandOutputInfo(['which', 'hdiutil'])
+                    ] : null,
+                    windowsInstallerTools: windows ? [
+                            candle: commandVersionInfo(['candle', '-?']),
+                            light : commandVersionInfo(['light', '-?']),
+                            wix   : commandVersionInfo(['wix', '--version'])
+                    ] : null,
                     archives     : linux ? [
                             ar  : commandVersionInfo(['ar', '--version']),
                             tar : commandVersionInfo(['tar', '--version']),
