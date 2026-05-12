@@ -197,6 +197,24 @@ Build the OS-specific installer artifacts and write their manifest with:
 artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
 `installer-build-info.json` records the OS, JDK, Gradle, locale, timezone, and
 installer-relevant tool versions for explaining per-OS installer differences.
+
+To inspect installer package internals with the tools available on the current
+OS, run:
+
+```bash
+./gradlew generateInstallerStructureReport
+```
+
+This writes:
+
+- `build/reports/release/installer-structure-report.tsv`
+- `build/reports/release/installer-structure/`
+
+`installer-structure-report.tsv` and the `installer-structure/` reports are
+investigation aids for package internals. They use local tools such as
+`dpkg-deb`, `rpm`, and `hdiutil` when available; unsupported installer formats
+are listed as skipped rather than failing the evidence task.
+
 To package the installer evidence files into one reproducible ZIP, run:
 
 ```bash
@@ -237,6 +255,8 @@ artifacts:
 - `INSTALLER-SHA256SUMS`
 - `INSTALLER-SHA256SUMS.asc`
 - `installer-build-info.json`
+- `installer-structure-report.tsv`
+- `installer-structure/`
 
 ```bash
 gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-evidence.zip

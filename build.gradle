@@ -846,6 +846,8 @@ def installerSha256SumsFile = releaseReportDir.map { it.file('INSTALLER-SHA256SU
 def installerManifestFile = releaseReportDir.map { it.file('installer-manifest.tsv') }
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
 def installerBuildInfoFile = releaseReportDir.map { it.file('installer-build-info.json') }
+def installerStructureReportFile = releaseReportDir.map { it.file('installer-structure-report.tsv') }
+def installerStructureReportDir = releaseReportDir.map { it.dir('installer-structure') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
@@ -1478,11 +1480,104 @@ tasks.register('generateInstallerManifest') {
     }
 }
 
+tasks.register('generateInstallerStructureReport') {
+    group = 'verification'
+    description = 'Writes investigation reports for installer package internals where local tools are available.'
+
+    def desktopInstallerDir = project(':desktop').layout.buildDirectory.dir('packaging/jpackage/packages')
+
+    dependsOn tasks.named('generateInstallerManifest')
+
+    inputs.files(provider {
+        installerArtifactsIn(desktopInstallerDir.get().asFile)
+    })
+            .withPropertyName('installerArtifacts')
+            .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+    outputs.file(installerStructureReportFile)
+    outputs.dir(installerStructureReportDir)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def installerFiles = installerArtifactsIn(desktopInstallerDir.get().asFile)
+        def reportDir = installerStructureReportDir.get().asFile
+        project.delete(reportDir)
+        reportDir.mkdirs()
+        def normalizeReportOutput = { String value ->
+            value == null ? null : value.replace(rootProject.projectDir.absolutePath, '<repo>')
+        }
+
+        def rows = ['artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage']
+        installerFiles.each { installerFile ->
+            def artifactPath = canonicalPath(installerFile)
+            def extension = installerFile.name.contains('.')
+                    ? installerFile.name.substring(installerFile.name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                    : ''
+            def reportName = artifactPath.replaceAll(/[^A-Za-z0-9._-]/, '_') + '.txt'
+            def reportFile = new File(reportDir, reportName)
+            def commands = []
+            def message = ''
+
+            if (extension == 'deb') {
+                commands << [label: 'Debian package fields', command: ['dpkg-deb', '--field', installerFile.absolutePath]]
+                commands << [label: 'Debian package contents', command: ['dpkg-deb', '--contents', installerFile.absolutePath]]
+            } else if (extension == 'rpm') {
+                commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
+                commands << [label: 'RPM package dump', command: ['rpm', '-qp', '--dump', installerFile.absolutePath]]
+            } else if (extension == 'dmg') {
+                commands << [label: 'DMG image info', command: ['hdiutil', 'imageinfo', installerFile.absolutePath]]
+            } else {
+                message = "No installer structure inspector is configured for .${extension ?: 'unknown'} artifacts."
+            }
+
+            def status = 'skipped'
+            if (!commands.empty) {
+                def report = new StringBuilder()
+                report << "artifact: ${artifactPath}\n"
+                report << "sha256: ${sha256(installerFile)}\n"
+                report << "format: ${extension}\n"
+                def failures = []
+
+                commands.each { commandSpec ->
+                    def displayCommand = commandSpec.command.collect { it == installerFile.absolutePath ? artifactPath : it }
+                    def result = execResult(commandSpec.command)
+                    report << "\n## ${commandSpec.label}\n\n"
+                    report << "command: ${displayCommand.join(' ')}\n"
+                    report << "exitValue: ${result.exitValue == null ? 'not-run' : result.exitValue}\n"
+                    if (result.stdout) {
+                        report << "\nstdout:\n${normalizeReportOutput(result.stdout)}\n"
+                    }
+                    if (result.stderr) {
+                        report << "\nstderr:\n${normalizeReportOutput(result.stderr)}\n"
+                    }
+                    if (result.exitValue != 0) {
+                        failures << commandSpec.label
+                    }
+                }
+
+                reportFile.setText(report.toString(), StandardCharsets.UTF_8.name())
+                status = failures.empty ? 'generated' : 'failed'
+                message = failures.empty ? '' : "Inspector command failed: ${failures.join(', ')}"
+            }
+
+            def reportPath = reportFile.file ? canonicalPath(reportFile) : ''
+            rows << [artifactPath, sha256(installerFile), extension, status, reportPath, message]
+                    .collect { it.replace('\t', ' ').replace('\n', ' ') }
+                    .join('\t')
+        }
+
+        def structureReport = installerStructureReportFile.get().asFile
+        structureReport.parentFile.mkdirs()
+        structureReport.setText(rows.join('\n') + '\n', StandardCharsets.UTF_8.name())
+
+        logger.lifecycle("Wrote installer structure report to ${rootProject.relativePath(structureReport)}")
+    }
+}
+
 tasks.register('generateInstallerEvidenceBundle', Zip) {
     group = 'verification'
     description = 'Packages installer manifest evidence into one reproducible ZIP for signing and publishing.'
 
-    dependsOn tasks.named('generateInstallerManifest')
+    dependsOn tasks.named('generateInstallerStructureReport')
 
     archiveFileName = 'installer-evidence.zip'
     destinationDirectory = releaseReportDir
@@ -1492,6 +1587,10 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
     from(installerManifestFile)
     from(installerSha256SumsFile)
     from(installerBuildInfoFile)
+    from(installerStructureReportFile)
+    from(installerStructureReportDir) {
+        into 'installer-structure'
+    }
 
     doLast {
         def bundle = archiveFile.get().asFile
