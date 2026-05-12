@@ -664,9 +664,9 @@ def enabledJarTasks = {
 }
 
 def tasksNamedAcrossProjects = { String taskName ->
-    allprojects.collectMany { project ->
-        project.tasks.matching { task -> task.name == taskName }.toList()
-    }
+    allprojects.collect { project ->
+        project.tasks.names.contains(taskName) ? project.tasks.named(taskName) : null
+    }.findAll { it != null }
 }
 
 def manifestEntriesFor = { Collection<File> files ->

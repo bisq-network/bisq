@@ -2,6 +2,7 @@ package bisq.gradle.app_start_plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.GradleException
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
@@ -26,16 +27,32 @@ class AppStartPlugin @Inject constructor(private val javaToolchainService: JavaT
             dependsOn(installDistTask)
             javaLauncher.set(getJavaLauncher(project))
 
-            classpath = installDistTask.map {
-                val appLibsDir = File(it.destinationDir, "lib")
-                val allFiles = appLibsDir.listFiles()
-                project.files(allFiles)
-            }.get()
+            classpath = project.files(project.provider {
+                val appLibsDir = File(installDistTask.get().destinationDir, "lib")
+                appLibsDir.listFiles()
+                    ?.filter { it.isFile }
+                    ?.sortedBy { it.name }
+                    ?: emptyList()
+            })
 
             jvmArgs = javaApplicationExtension.applicationDefaultJvmArgs.toList()
 
             workingDir = project.projectDir.parentFile
             mainClass.set(javaApplicationExtension.mainClass)
+
+            doFirst {
+                if (!javaApplicationExtension.mainClass.isPresent) {
+                    throw GradleException("${project.path}:startBisqApp requires application.mainClass to be set")
+                }
+
+                val appLibsDir = File(installDistTask.get().destinationDir, "lib")
+                if (!appLibsDir.isDirectory) {
+                    throw GradleException("${project.path}:startBisqApp requires ${appLibsDir} to exist; run ${installDistTask.get().path} first")
+                }
+                if (classpath.files.isEmpty()) {
+                    throw GradleException("${project.path}:startBisqApp found no runtime files in ${appLibsDir}")
+                }
+            }
         }
     }
 
