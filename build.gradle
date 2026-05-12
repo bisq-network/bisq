@@ -7,6 +7,7 @@ buildscript {
 }
 
 import org.gradle.jvm.tasks.Jar
+import org.gradle.api.tasks.bundling.Zip
 
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -752,6 +753,7 @@ def releaseReportDir = layout.buildDirectory.dir('reports/release')
 def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
 def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
+def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
@@ -1134,21 +1136,46 @@ tasks.register('generateReleaseManifest') {
     }
 }
 
+tasks.register('generateReleaseEvidenceBundle', Zip) {
+    group = 'verification'
+    description = 'Packages release manifest evidence into one reproducible ZIP for signing and publishing.'
+
+    dependsOn tasks.named('generateReleaseManifest')
+
+    archiveFileName = 'release-evidence.zip'
+    destinationDirectory = releaseReportDir
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+
+    from(releaseManifestFile)
+    from(releaseSha256SumsFile)
+    from(releaseBuildInfoFile)
+    from(layout.buildDirectory.file('reports/checksums/jars.sha256')) {
+        into 'checksums'
+    }
+
+    doLast {
+        def bundle = archiveFile.get().asFile
+        logger.lifecycle("Wrote release evidence bundle to ${rootProject.relativePath(bundle)}")
+        logger.lifecycle("Release evidence bundle SHA-256: ${sha256(bundle)}")
+    }
+}
+
 tasks.register('verifyReleaseBuild') {
     group = 'verification'
-    description = 'Runs the full Java release payload verification and writes release manifest evidence.'
+    description = 'Runs the full Java release payload verification and writes release evidence.'
 
     dependsOn tasks.named('verifyReleaseEnvironment')
     dependsOn tasks.named('verifyGradleWrapperSecurity')
     dependsOn tasks.named('verifyGithubActionsSecurity')
     dependsOn tasks.named('verifyDependencySignaturePolicy')
-    dependsOn tasks.named('generateReleaseManifest')
+    dependsOn tasks.named('generateReleaseEvidenceBundle')
     dependsOn {
         tasksNamedAcrossProjects('build') + tasksNamedAcrossProjects('verifyReproducibleArchives')
     }
 
     doLast {
-        logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseManifestFile.get().asFile)}")
+        logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseEvidenceBundleFile.get().asFile)}")
     }
 }
 

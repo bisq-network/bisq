@@ -50,4 +50,5 @@ jobs:
           build/reports/release/SHA256SUMS
           build/reports/release/release-manifest.tsv
           build/reports/release/build-info.json
+          build/reports/release/release-evidence.zip
         if-no-files-found: error

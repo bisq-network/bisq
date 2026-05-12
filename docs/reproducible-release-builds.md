@@ -44,12 +44,15 @@ The release evidence is written to:
 - `build/reports/release/release-manifest.tsv`
 - `build/reports/release/SHA256SUMS`
 - `build/reports/release/build-info.json`
+- `build/reports/release/release-evidence.zip`
 - `build/reports/checksums/jars.sha256`
 
 `release-manifest.tsv` is the canonical reproducibility comparison file. It
 contains SHA-256, file size, and canonical repo-relative path. `SHA256SUMS` is a
 compatibility format for `shasum -c` and `sha256sum -c`. `build-info.json` is
 diagnostic metadata and is not itself part of the reproducibility comparison.
+`release-evidence.zip` packages the manifest, checksums, build info, and jar
+checksum report into one reproducible file for signing and publishing.
 
 Verify the generated checksum file locally.
 
@@ -68,7 +71,7 @@ Compare the local rebuild against a CI manifest.
 ./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/ci/release-manifest.tsv
 ```
 
-`-ReleaseManifest` can also point at an extracted CI artifact or evidence
+`-PreleaseManifest` can also point at an extracted CI artifact or evidence
 directory if it contains exactly one `release-manifest.tsv`.
 
 For stronger evidence, compare against every CI manifest that should represent
@@ -80,6 +83,8 @@ files first, then use `build-info.json` only to explain the environment.
 After the release manager has rebuilt locally and verified the CI manifests,
 publish the release evidence next to the signed release artifacts:
 
+- `release-evidence.zip`
+- `release-evidence.zip.asc`
 - `release-manifest.tsv`
 - `release-manifest.tsv.asc`
 - `SHA256SUMS`
@@ -89,6 +94,7 @@ publish the release evidence next to the signed release artifacts:
 Sign the canonical manifest and checksum file with the release signing key.
 
 ```bash
+gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/release-evidence.zip
 gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/release-manifest.tsv
 gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/SHA256SUMS
 ```
@@ -96,14 +102,15 @@ gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/SHA256SUMS
 Verify the signatures before upload.
 
 ```bash
+gpg --verify build/reports/release/release-evidence.zip.asc build/reports/release/release-evidence.zip
 gpg --verify build/reports/release/release-manifest.tsv.asc build/reports/release/release-manifest.tsv
 gpg --verify build/reports/release/SHA256SUMS.asc build/reports/release/SHA256SUMS
 ```
 
-The signed manifest is the main artifact for reproducible-build verification.
-`SHA256SUMS` is useful for common checksum tooling. Keep `build-info.json`
-published but unsigned unless the release process explicitly wants signed
-diagnostic metadata.
+The signed bundle is the preferred publication artifact. The signed manifest is
+the main artifact for reproducible-build verification. `SHA256SUMS` is useful
+for common checksum tooling. Keep the individual files published for direct
+inspection and simple verifier workflows.
 
 ## Independent Verifier Workflow
 
@@ -149,7 +156,6 @@ The most important remaining gaps are:
 - deterministic OS installer outputs for `dmg`, `deb`, `rpm`, and `exe`
 - a pinned release build image or dedicated release builder for each OS
 - a documented policy for which CI OS manifests must match before signing
-- optional signing of a complete release evidence bundle
 
 Those can be added incrementally without changing the current Java payload
 manifest format.
