@@ -34,12 +34,7 @@ shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 Build the release payload and run the policy gates.
 
 ```bash
-./gradlew clean build \
-  verifyGradleWrapperSecurity \
-  verifyGithubActionsSecurity \
-  verifyDependencySignaturePolicy \
-  verifyReproducibleArchives \
-  generateReleaseManifest
+./gradlew clean verifyReleaseBuild
 ```
 
 The release evidence is written to:
@@ -111,14 +106,14 @@ An independent verifier should:
 
 1. Check out the release tag.
 2. Verify the Gradle wrapper checksum manifest.
-3. Build with `generateReleaseManifest`.
+3. Build with `verifyReleaseBuild`.
 4. Verify the published manifest signature.
 5. Run `verifyReleaseManifest` against the published `release-manifest.tsv`.
 
 ```bash
 git submodule update --init --recursive
 shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
-./gradlew clean generateReleaseManifest
+./gradlew clean verifyReleaseBuild
 gpg --verify /path/to/release-manifest.tsv.asc /path/to/release-manifest.tsv
 ./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/release-manifest.tsv
 ```

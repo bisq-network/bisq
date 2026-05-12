@@ -662,6 +662,12 @@ def enabledJarTasks = {
     }
 }
 
+def tasksNamedAcrossProjects = { String taskName ->
+    allprojects.collectMany { project ->
+        project.tasks.matching { task -> task.name == taskName }.toList()
+    }
+}
+
 def manifestEntriesFor = { Collection<File> files ->
     files.findAll { it.exists() && it.isFile() }
             .collect { file ->
@@ -1046,6 +1052,23 @@ tasks.register('generateReleaseManifest') {
         logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${rootProject.relativePath(releaseManifest)}")
         logger.lifecycle("Wrote ${entries.size()} release checksums to ${rootProject.relativePath(sha256Sums)}")
         logger.lifecycle("Wrote release build info to ${rootProject.relativePath(buildInfoFile)}")
+    }
+}
+
+tasks.register('verifyReleaseBuild') {
+    group = 'verification'
+    description = 'Runs the full Java release payload verification and writes release manifest evidence.'
+
+    dependsOn tasks.named('verifyGradleWrapperSecurity')
+    dependsOn tasks.named('verifyGithubActionsSecurity')
+    dependsOn tasks.named('verifyDependencySignaturePolicy')
+    dependsOn tasks.named('generateReleaseManifest')
+    dependsOn {
+        tasksNamedAcrossProjects('build') + tasksNamedAcrossProjects('verifyReproducibleArchives')
+    }
+
+    doLast {
+        logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseManifestFile.get().asFile)}")
     }
 }
 
