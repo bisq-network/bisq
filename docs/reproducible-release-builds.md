@@ -216,10 +216,11 @@ This writes:
 - `build/reports/release/installer-structure/`
 
 `installer-structure-report.tsv` and the `installer-structure/` reports are
-investigation aids for package internals. They use local tools such as
-`dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, and Windows PowerShell when available;
-unsupported installer formats are listed as skipped rather than failing the
-evidence task.
+investigation aids for package internals. They use local tools such as `ar`,
+`dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, and Windows PowerShell when available
+to record package metadata, archive member metadata, payload listings, and
+signature details. Unsupported installer formats are listed as skipped rather
+than failing the evidence task.
 
 To package the installer evidence files into one reproducible ZIP, run:
 

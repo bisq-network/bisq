@@ -1583,10 +1583,21 @@ tasks.register('generateInstallerStructureReport') {
             def message = ''
 
             if (extension == 'deb') {
+                commands << [label: 'Debian archive members', command: ['ar', 'tv', installerFile.absolutePath]]
                 commands << [label: 'Debian package fields', command: ['dpkg-deb', '--field', installerFile.absolutePath]]
                 commands << [label: 'Debian package contents', command: ['dpkg-deb', '--contents', installerFile.absolutePath]]
             } else if (extension == 'rpm') {
                 commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
+                commands << [
+                        label  : 'RPM build metadata',
+                        command: [
+                                'rpm',
+                                '-qp',
+                                '--queryformat',
+                                'Name: %{NAME}\nVersion: %{VERSION}\nRelease: %{RELEASE}\nArchitecture: %{ARCH}\nBuild time: %{BUILDTIME:date}\nBuild host: %{BUILDHOST}\nSource RPM: %{SOURCERPM}\nPayload compressor: %{PAYLOADCOMPRESSOR}\nPayload flags: %{PAYLOADFLAGS}\n',
+                                installerFile.absolutePath
+                        ]
+                ]
                 commands << [label: 'RPM package dump', command: ['rpm', '-qp', '--dump', installerFile.absolutePath]]
             } else if (extension == 'dmg' && macos) {
                 commands << [label: 'DMG image info', command: ['hdiutil', 'imageinfo', installerFile.absolutePath]]
