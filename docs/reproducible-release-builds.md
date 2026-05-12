@@ -270,6 +270,47 @@ Compare a local rebuild against a signed or CI-generated installer manifest:
 `installer-evidence.zip` file if it contains exactly one
 `installer-manifest.tsv`.
 
+### Linux Installer Rebuild Comparison
+
+Use two isolated worktrees of the same release tag or commit when investigating
+whether Linux installers are deterministic. Build both inside the pinned Linux
+release-builder image and keep each evidence directory for comparison. Replace
+`HEAD` with the signed release tag or commit SHA when checking an actual
+release.
+
+```bash
+RELEASE_REF=HEAD
+git worktree add --detach ../bisq-installer-a "$RELEASE_REF"
+git worktree add --detach ../bisq-installer-b "$RELEASE_REF"
+git -C ../bisq-installer-a submodule update --init --recursive
+git -C ../bisq-installer-b submodule update --init --recursive
+
+docker run --rm --platform linux/amd64 \
+  --user "$(id -u):$(id -g)" \
+  -v "$PWD/../bisq-installer-a:/workspace" \
+  -w /workspace \
+  bisq-release-builder-linux:java-21.0.6 \
+  ./gradlew clean generateInstallerEvidenceBundle
+
+docker run --rm --platform linux/amd64 \
+  --user "$(id -u):$(id -g)" \
+  -v "$PWD/../bisq-installer-b:/workspace" \
+  -w /workspace \
+  bisq-release-builder-linux:java-21.0.6 \
+  ./gradlew clean generateInstallerEvidenceBundle
+
+diff -u \
+  ../bisq-installer-a/build/reports/release/installer-manifest.tsv \
+  ../bisq-installer-b/build/reports/release/installer-manifest.tsv
+```
+
+If the installer manifests differ, compare
+`installer-structure-report.tsv`, the files under `installer-structure/`, and
+`installer-build-info.json` from both worktrees before changing package
+generation logic. For Debian packages, start with the outer `ar` member
+metadata and the inner `control.tar` and `data.tar` listings because those
+reports expose timestamps, ordering, ownership, and mode differences.
+
 Publish and sign the installer evidence next to the corresponding binary
 artifacts:
 
