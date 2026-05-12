@@ -12,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: [ubuntu-latest, macOS-latest, windows-latest]
-            java: [ '21' ]
+            os: [ubuntu-24.04, macos-15, windows-2025]
+            java: [ '21.0.6' ]
     name: Test Java ${{ matrix.java }}, ${{ matrix.os }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -25,6 +25,7 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'
+        check-latest: false
 
     - name: Build with Gradle
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
