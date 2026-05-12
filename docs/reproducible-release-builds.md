@@ -42,12 +42,25 @@ in `docker/release-builder/linux/Dockerfile`. The image pins the linux/amd64
 Azul Zulu OpenJDK 21.0.6 base image by digest and sets the release-sensitive
 defaults `SOURCE_DATE_EPOCH=0`, `TZ=UTC`, `LANG=C.UTF-8`, and `LC_ALL=C.UTF-8`.
 It also installs the Linux package tools needed for Java payload verification
-and later installer investigation.
+and later installer investigation from a pinned Ubuntu package repository
+snapshot. The Dockerfile enables Ubuntu snapshot resolution for older Ubuntu
+base images before setting the apt snapshot value. The default snapshot is
+`20260501T000000Z`; update the `UBUNTU_APT_SNAPSHOT` build argument in a
+separate reviewed change when the release-builder package set needs refreshing.
 
 Build the image from its own small context:
 
 ```bash
 docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+```
+
+To test a newer Ubuntu package snapshot before changing the Dockerfile default:
+
+```bash
+docker build --pull=false \
+  --build-arg UBUNTU_APT_SNAPSHOT=20260501T000000Z \
+  -t bisq-release-builder-linux:java-21.0.6 \
+  docker/release-builder/linux
 ```
 
 Run it from a clean checkout of the release tag or release commit:
@@ -279,7 +292,6 @@ PGP signature verification whenever upstream publishes signatures.
 The most important remaining gaps are:
 
 - deterministic OS installer internals for `dmg`, `deb`, `rpm`, and `exe`
-- package repository snapshot pinning for the Linux release-builder image
 - pinned release build images or dedicated release builders for macOS and
   Windows
 
