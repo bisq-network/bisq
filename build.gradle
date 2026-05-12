@@ -23,6 +23,7 @@ def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/v
 def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/dependency-checksum-fallback-allowlist.tsv')
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
 def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
+def linuxReleaseBuilderDockerfile = layout.projectDirectory.file('docker/release-builder/linux/Dockerfile')
 def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
 
 def htmlEscape = { value ->
@@ -1271,6 +1272,96 @@ tasks.register('verifyGradleWrapperSecurity') {
     }
 }
 
+tasks.register('verifyReleaseBuilderImage') {
+    group = 'verification'
+    description = 'Verifies the Linux release-builder Dockerfile pins its base image and release-sensitive defaults.'
+
+    inputs.file(linuxReleaseBuilderDockerfile)
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def dockerfile = linuxReleaseBuilderDockerfile.asFile
+        if (!dockerfile.file) {
+            throw new GradleException("Missing Linux release-builder Dockerfile: ${dockerfile}")
+        }
+
+        def expectedJavaVersionValue = expectedReleaseJavaVersion.orNull
+        if (!expectedJavaVersionValue) {
+            throw new GradleException('Missing releaseBuild.javaVersion in gradle.properties')
+        }
+
+        def text = dockerfile.getText(StandardCharsets.UTF_8.name())
+        def trimmedLines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
+        def fromLine = trimmedLines.find { it.startsWith('FROM ') }
+        def snapshotLine = trimmedLines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
+        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaVersionValue}"
+        def violations = []
+
+        if (!(fromLine ==~ /^FROM --platform=linux\/amd64 ${java.util.regex.Pattern.quote(expectedBaseImage)}@sha256:[0-9a-f]{64}$/)) {
+            violations << "Dockerfile FROM must pin linux/amd64 ${expectedBaseImage} by lowercase sha256 digest"
+        }
+        if (!(snapshotLine ==~ /^ARG UBUNTU_APT_SNAPSHOT=\d{8}T\d{6}Z$/)) {
+            violations << 'Dockerfile must define UBUNTU_APT_SNAPSHOT as an exact UTC timestamp, for example 20260501T000000Z'
+        }
+        if (!text.contains('APT::Snapshot "%s";') || !text.contains('$UBUNTU_APT_SNAPSHOT')) {
+            violations << 'Dockerfile must write apt snapshot configuration from UBUNTU_APT_SNAPSHOT'
+        }
+        if (!(text =~ /\bapt-get install -y --no-install-recommends\b/)) {
+            violations << 'Dockerfile apt installs must use --no-install-recommends'
+        }
+        if (text =~ /\bapt(-get)?\s+(dist-)?upgrade\b/) {
+            violations << 'Dockerfile must not run apt upgrade or dist-upgrade'
+        }
+        if (!text.contains('rm -rf /var/lib/apt/lists/*')) {
+            violations << 'Dockerfile must remove apt package lists after installation'
+        }
+
+        [
+                'LANG=C.UTF-8',
+                'LC_ALL=C.UTF-8',
+                'TZ=UTC',
+                'SOURCE_DATE_EPOCH=0',
+                'HOME=/tmp/bisq-home',
+                'GRADLE_USER_HOME=/tmp/bisq-home/.gradle'
+        ].each { expectedText ->
+            if (!text.contains(expectedText)) {
+                violations << "Dockerfile must set ${expectedText}"
+            }
+        }
+
+        [
+                'binutils',
+                'coreutils',
+                'dpkg-dev',
+                'fakeroot',
+                'file',
+                'git',
+                'gnupg',
+                'gzip',
+                'rpm',
+                'tar',
+                'unzip',
+                'xz-utils',
+                'zip'
+        ].each { packageName ->
+            if (!(text =~ /(?m)^\s*${java.util.regex.Pattern.quote(packageName)}\s*;?\s*\\?$/)) {
+                violations << "Dockerfile must install ${packageName}"
+            }
+        }
+
+        if (!trimmedLines.contains('CMD ["./gradlew", "verifyReleaseBuild"]')) {
+            violations << 'Dockerfile default command must run ./gradlew verifyReleaseBuild'
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("Linux release-builder image verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified Linux release-builder Dockerfile: ${rootProject.relativePath(dockerfile)}")
+    }
+}
+
 tasks.register('verifyGithubActionsSecurity') {
     group = 'verification'
     description = 'Verifies GitHub Actions workflows use pinned actions and non-floating build environments.'
@@ -1790,6 +1881,7 @@ tasks.register('verifyReleaseBuild') {
 
     dependsOn tasks.named('verifyReleaseEnvironment')
     dependsOn tasks.named('verifyGradleWrapperSecurity')
+    dependsOn tasks.named('verifyReleaseBuilderImage')
     dependsOn tasks.named('verifyGithubActionsSecurity')
     dependsOn tasks.named('verifyDependencySignaturePolicy')
     dependsOn tasks.named('generateReleaseEvidenceBundle')

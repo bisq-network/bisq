@@ -79,7 +79,10 @@ payload. The manual GitHub Actions workflow `Linux Release Builder` builds this
 image, runs `verifyReleaseBuild` inside it, and uploads the Java payload
 evidence artifact `release-builder-linux-java-21.0.6`. The workflow is
 `workflow_dispatch` only, so it is not part of normal push or pull-request CI.
-The container does not make installer internals deterministic by itself.
+`verifyReleaseBuild` also runs `verifyReleaseBuilderImage`, which checks that
+the Dockerfile keeps its base image digest, apt snapshot, package-tool set, and
+release-sensitive environment defaults pinned. The container does not make
+installer internals deterministic by itself.
 
 Build the release payload and run the policy gates.
 
