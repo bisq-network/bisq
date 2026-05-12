@@ -68,6 +68,9 @@ Compare the local rebuild against a CI manifest.
 ./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/ci/release-manifest.tsv
 ```
 
+`-ReleaseManifest` can also point at an extracted CI artifact or evidence
+directory if it contains exactly one `release-manifest.tsv`.
+
 For stronger evidence, compare against every CI manifest that should represent
 the same Java payload. If one OS differs, inspect both `release-manifest.tsv`
 files first, then use `build-info.json` only to explain the environment.

@@ -681,6 +681,28 @@ def manifestEntriesFor = { Collection<File> files ->
             .sort { left, right -> left.path <=> right.path }
 }
 
+def resolveReleaseManifestFile = { File manifestPath ->
+    if (!manifestPath.directory) {
+        return manifestPath
+    }
+
+    def matchingManifests = fileTree(manifestPath) {
+        include '**/release-manifest.tsv'
+    }.files.sort { left, right -> left.path <=> right.path }
+
+    if (matchingManifests.empty) {
+        throw new GradleException("No release-manifest.tsv found under ${manifestPath}")
+    }
+    if (matchingManifests.size() > 1) {
+        throw new GradleException(
+                "Multiple release-manifest.tsv files found under ${manifestPath}:\n" +
+                        matchingManifests.collect { "  - ${it}" }.join('\n')
+        )
+    }
+
+    matchingManifests[0]
+}
+
 def readReleaseManifest = { File manifestFile ->
     if (!manifestFile.file) {
         throw new GradleException("Missing release manifest: ${manifestFile}")
@@ -1116,7 +1138,7 @@ tasks.register('verifyReleaseBuild') {
 
 tasks.register('verifyReleaseManifest') {
     group = 'verification'
-    description = 'Builds the desktop Java payload and verifies it against -PreleaseManifest=<path>.'
+    description = 'Builds the desktop Java payload and verifies it against -PreleaseManifest=<file-or-directory>.'
 
     def expectedReleaseManifestProperty = providers.gradleProperty('releaseManifest')
 
@@ -1129,10 +1151,10 @@ tasks.register('verifyReleaseManifest') {
     doLast {
         def expectedReleaseManifestPath = expectedReleaseManifestProperty.orNull
         if (!expectedReleaseManifestPath) {
-            throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv>')
+            throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv-or-directory>')
         }
 
-        def expectedManifest = file(expectedReleaseManifestPath)
+        def expectedManifest = resolveReleaseManifestFile(file(expectedReleaseManifestPath))
         def actualManifest = releaseManifestFile.get().asFile
         if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
             logger.warn("Expected release manifest points at the generated local manifest: ${expectedManifest}")
