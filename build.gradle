@@ -669,6 +669,61 @@ def loadGradleWrapperProperties = {
     wrapperProperties
 }
 
+tasks.register('verifyGithubActionsSecurity') {
+    group = 'verification'
+    description = 'Verifies GitHub Actions workflows use pinned actions and non-floating build environments.'
+
+    def workflowFiles = fileTree('.github/workflows') {
+        include '*.yml'
+        include '*.yaml'
+    }
+
+    inputs.files(workflowFiles)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def violations = []
+        workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
+            workflowFile.readLines(StandardCharsets.UTF_8.name()).eachWithIndex { line, index ->
+                def lineNumber = index + 1
+                def usesMatcher = line =~ /^\s*-?\s*uses:\s*([^#\s]+)/
+                if (usesMatcher.find()) {
+                    def actionRef = usesMatcher.group(1)
+                    if (!actionRef.startsWith('./')) {
+                        def atIndex = actionRef.lastIndexOf('@')
+                        def ref = atIndex >= 0 ? actionRef.substring(atIndex + 1) : ''
+                        if (!(ref ==~ /[0-9a-fA-F]{40}/)) {
+                            violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses '${actionRef}' without a full 40-character commit SHA"
+                        }
+                    }
+                }
+
+                if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
+                }
+
+                if (line ==~ /^\s*java-version:\s*['"]?\d+['"]?\s*$/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
+                }
+
+                if (line ==~ /^\s*java:\s*\[\s*['"]?\d+['"]?\s*\]\s*$/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
+                }
+
+                if (line ==~ /^\s*check-latest:\s*true\s*$/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} sets check-latest: true"
+                }
+            }
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("GitHub Actions security verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified ${workflowFiles.files.size()} GitHub Actions workflow files.")
+    }
+}
+
 tasks.register('generateJarHashes') {
     group = 'verification'
     description = 'Builds all project Jar task outputs and writes a canonical SHA-256 and size manifest.'
