@@ -29,7 +29,7 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends fakeroot rpm
+        sudo apt-get install -y --no-install-recommends cpio fakeroot rpm
 
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0

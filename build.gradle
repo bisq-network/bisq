@@ -1121,6 +1121,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     ] : null,
                     archives     : linux ? [
                             ar       : commandVersionInfo(['ar', '--version']),
+                            cpio     : commandVersionInfo(['cpio', '--version']),
                             file     : commandVersionInfo(['file', '--version']),
                             sha256sum: commandVersionInfo(['sha256sum', '--version']),
                             tar      : commandVersionInfo(['tar', '--version']),
@@ -1334,6 +1335,7 @@ tasks.register('verifyReleaseBuilderImage') {
         [
                 'binutils',
                 'coreutils',
+                'cpio',
                 'dpkg-dev',
                 'fakeroot',
                 'file',
@@ -1701,6 +1703,11 @@ tasks.register('generateInstallerStructureReport') {
             } else if (extension == 'rpm') {
                 commands << [label: 'RPM package checks', command: ['rpm', '-Kv', installerFile.absolutePath], optional: true]
                 commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
+                commands << [
+                        label   : 'RPM payload archive contents',
+                        command : ['sh', '-c', "rpm2cpio ${shellSingleQuoted(installerFile.absolutePath)} | cpio --list --verbose --numeric-uid-gid"],
+                        optional: true
+                ]
                 commands << [
                         label  : 'RPM build metadata',
                         command: [

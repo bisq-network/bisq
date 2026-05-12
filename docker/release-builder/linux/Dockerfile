@@ -21,6 +21,7 @@ RUN set -eux; \
         binutils \
         ca-certificates \
         coreutils \
+        cpio \
         dpkg-dev \
         fakeroot \
         file \
