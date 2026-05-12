@@ -1120,11 +1120,12 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                             wix       : commandVersionInfo(['wix', '--version'])
                     ] : null,
                     archives     : linux ? [
-                            ar  : commandVersionInfo(['ar', '--version']),
-                            file: commandVersionInfo(['file', '--version']),
-                            tar : commandVersionInfo(['tar', '--version']),
-                            gzip: commandVersionInfo(['gzip', '--version']),
-                            xz  : commandVersionInfo(['xz', '--version'])
+                            ar       : commandVersionInfo(['ar', '--version']),
+                            file     : commandVersionInfo(['file', '--version']),
+                            sha256sum: commandVersionInfo(['sha256sum', '--version']),
+                            tar      : commandVersionInfo(['tar', '--version']),
+                            gzip     : commandVersionInfo(['gzip', '--version']),
+                            xz       : commandVersionInfo(['xz', '--version'])
                     ] : null
             ]),
             gradleStart     : [
@@ -1678,14 +1679,21 @@ tasks.register('generateInstallerStructureReport') {
             def message = ''
 
             if (extension == 'deb') {
+                def debPath = shellSingleQuoted(installerFile.absolutePath)
                 def debTarListingCommand = { String dpkgDebOption ->
                     [
                             'sh',
                             '-c',
-                            "dpkg-deb ${dpkgDebOption} ${shellSingleQuoted(installerFile.absolutePath)} | tar --list --verbose --full-time --numeric-owner --file -"
+                            "dpkg-deb ${dpkgDebOption} ${debPath} | tar --list --verbose --full-time --numeric-owner --file -"
                     ]
                 }
+                def debArchiveMemberHashesCommand = [
+                        'sh',
+                        '-c',
+                        "ar t ${debPath} | while IFS= read -r member; do printf '%s  ' \"\$member\"; ar p ${debPath} \"\$member\" | sha256sum | cut -d ' ' -f 1; done"
+                ]
                 commands << [label: 'Debian archive members', command: ['ar', 'tv', installerFile.absolutePath]]
+                commands << [label: 'Debian archive member hashes', command: debArchiveMemberHashesCommand]
                 commands << [label: 'Debian package fields', command: ['dpkg-deb', '--field', installerFile.absolutePath]]
                 commands << [label: 'Debian package contents', command: ['dpkg-deb', '--contents', installerFile.absolutePath]]
                 commands << [label: 'Debian control archive contents', command: debTarListingCommand('--ctrl-tarfile')]
