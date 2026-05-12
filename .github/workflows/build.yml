@@ -20,6 +20,15 @@ jobs:
       with:
           submodules: 'true'
 
+    - name: Verify Gradle wrapper checksums
+      shell: bash
+      run: |
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+        else
+          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+        fi
+
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
       with:
@@ -30,7 +39,7 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
-        arguments: build verifyGithubActionsSecurity verifyDependencySignaturePolicy verifyReproducibleArchives generateReleaseManifest --scan
+        arguments: build verifyGradleWrapperSecurity verifyGithubActionsSecurity verifyDependencySignaturePolicy verifyReproducibleArchives generateReleaseManifest --scan
 
     - name: Upload release manifests
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -3,6 +3,8 @@
 * text=auto
 # These text files should retain Windows line endings (CRLF)
 *.bat           text eol=crlf
+gradlew         text eol=lf
+gradle/wrapper/gradle-wrapper.properties text eol=lf
 # These binary files should be left untouched
 # (binary is a macro for -text -diff)
 *.bmp           binary

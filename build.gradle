@@ -20,6 +20,7 @@ def dependencyVerificationKeyring = layout.projectDirectory.file('gradle/verific
 def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/verification-keyring.gpg')
 def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/dependency-checksum-fallback-allowlist.tsv')
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
+def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
 def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
 
 def htmlEscape = { value ->
@@ -743,6 +744,100 @@ def loadGradleWrapperProperties = {
         wrapperPropertiesFile.withInputStream { wrapperProperties.load(it) }
     }
     wrapperProperties
+}
+
+tasks.register('verifyGradleWrapperSecurity') {
+    group = 'verification'
+    description = 'Verifies Gradle wrapper checksums and pinned distribution metadata.'
+
+    def wrapperFiles = files(
+            'gradlew',
+            'gradlew.bat',
+            'gradle/wrapper/gradle-wrapper.jar',
+            'gradle/wrapper/gradle-wrapper.properties'
+    )
+
+    inputs.file(gradleWrapperChecksums)
+    inputs.files(wrapperFiles)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def checksumFile = gradleWrapperChecksums.asFile
+        if (!checksumFile.file) {
+            throw new GradleException("Missing ${checksumFile}. Record the approved Gradle wrapper file checksums first.")
+        }
+
+        def requiredPaths = [
+                'gradlew',
+                'gradlew.bat',
+                'gradle/wrapper/gradle-wrapper.jar',
+                'gradle/wrapper/gradle-wrapper.properties'
+        ] as Set
+        def expectedHashes = new TreeMap<String, String>()
+        def duplicatePaths = []
+
+        checksumFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
+            def trimmed = line.trim()
+            if (!trimmed || trimmed.startsWith('#')) {
+                return
+            }
+
+            def matcher = line =~ /^([0-9a-f]{64})\s{2}(.+)$/
+            if (!matcher.matches()) {
+                throw new GradleException("Invalid Gradle wrapper checksum entry at ${checksumFile}:${number}. Expected '<sha256>  <path>'.")
+            }
+
+            def path = matcher.group(2)
+            if (path.contains('\\') || path.startsWith('/') || path.contains('..')) {
+                throw new GradleException("Invalid Gradle wrapper checksum path at ${checksumFile}:${number}: ${path}")
+            }
+            if (expectedHashes.put(path, matcher.group(1)) != null) {
+                duplicatePaths << path
+            }
+        }
+
+        def missingExpectedPaths = requiredPaths.findAll { !expectedHashes.containsKey(it) }
+        def unexpectedPaths = expectedHashes.keySet().findAll { !requiredPaths.contains(it) }
+        def violations = []
+        if (!duplicatePaths.empty) {
+            violations << "Duplicate checksum entries: ${duplicatePaths.unique().sort().join(', ')}"
+        }
+        if (!missingExpectedPaths.empty) {
+            violations << "Missing checksum entries: ${missingExpectedPaths.sort().join(', ')}"
+        }
+        if (!unexpectedPaths.empty) {
+            violations << "Unexpected checksum entries: ${unexpectedPaths.sort().join(', ')}"
+        }
+
+        expectedHashes.each { path, expectedHash ->
+            def wrapperFile = file(path)
+            if (!wrapperFile.file) {
+                violations << "Missing Gradle wrapper file: ${path}"
+                return
+            }
+
+            def actualHash = sha256(wrapperFile)
+            if (actualHash != expectedHash) {
+                violations << "${path} expected ${expectedHash} but was ${actualHash}"
+            }
+        }
+
+        def wrapperProperties = loadGradleWrapperProperties()
+        def distributionUrl = wrapperProperties.getProperty('distributionUrl')
+        def distributionSha256Sum = wrapperProperties.getProperty('distributionSha256Sum')
+        if (!(distributionUrl ==~ /^https:\/\/services[.]gradle[.]org\/distributions\/gradle-[^\/]+-(bin|all)[.]zip$/)) {
+            violations << "Gradle wrapper distributionUrl must use https://services.gradle.org/distributions/gradle-<version>-bin.zip or -all.zip"
+        }
+        if (!(distributionSha256Sum ==~ /[0-9a-f]{64}/)) {
+            violations << 'Gradle wrapper distributionSha256Sum must be a pinned lowercase SHA-256 value'
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("Gradle wrapper security verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified Gradle wrapper checksums and distribution metadata.")
+    }
 }
 
 tasks.register('verifyGithubActionsSecurity') {
