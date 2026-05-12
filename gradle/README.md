@@ -62,3 +62,15 @@ To verify the current metadata without rewriting it run:
 To regenerate the dependency signature report run:
 
 - `./gradlew dependencySignatureReport`
+
+Checksum-only artifacts must be listed in
+`gradle/dependency-checksum-fallback-allowlist.tsv` with an artifact-level
+review rationale:
+
+```text
+<group:name:version>\t<artifact-file-name>\t<review-rationale>
+```
+
+Keep the list exact. `verifyDependencySignaturePolicy` fails when a
+checksum-only artifact is missing from the allowlist, when an allowlist entry is
+stale, or when an entry has no rationale.

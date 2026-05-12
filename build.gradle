@@ -287,6 +287,39 @@ def resolveConfigurations = { boolean collectComponents ->
     [resolvedComponents: resolvedComponents, directComponents: directComponents]
 }
 
+def readChecksumFallbackAllowlist = { File allowlistFile ->
+    if (!allowlistFile.exists()) {
+        throw new GradleException("Missing ${allowlistFile}. Review checksum-only dependencies and add the approved entries.")
+    }
+
+    def allowedEntries = new TreeSet<String>()
+    def rationaleByEntry = new TreeMap<String, String>()
+    def duplicateEntries = []
+    allowlistFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
+        def trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) {
+            return
+        }
+
+        def columns = line.split(/\t/, -1)
+        if (columns.size() != 3 || columns.any { !it.trim() }) {
+            throw new GradleException("Invalid checksum fallback allowlist entry at ${allowlistFile}:${number}. Expected '<group:name:version>\\t<artifact-file-name>\\t<review-rationale>'.")
+        }
+
+        def entry = "${columns[0].trim()}\t${columns[1].trim()}".toString()
+        if (!allowedEntries.add(entry)) {
+            duplicateEntries << entry
+        }
+        rationaleByEntry[entry] = columns[2].trim()
+    }
+
+    if (!duplicateEntries.empty) {
+        throw new GradleException("Duplicate checksum fallback allowlist entries:\n - ${duplicateEntries.unique().sort().join('\n - ')}")
+    }
+
+    [entries: allowedEntries, rationales: rationaleByEntry]
+}
+
 tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
     description = 'Resolves every resolvable configuration so Gradle dependency verification checks all dependency artifacts.'
@@ -312,32 +345,8 @@ tasks.register('verifyDependencySignaturePolicy') {
         if (!metadataFile.exists()) {
             throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
         }
-        if (!allowlistFile.exists()) {
-            throw new GradleException("Missing ${allowlistFile}. Review checksum-only dependencies and add the approved entries.")
-        }
-
-        def allowedEntries = new TreeSet<String>()
-        def duplicateEntries = []
-        allowlistFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
-            def trimmed = line.trim()
-            if (!trimmed || trimmed.startsWith('#')) {
-                return
-            }
-
-            def columns = line.split(/\t/, -1)
-            if (columns.size() != 2 || columns.any { !it.trim() }) {
-                throw new GradleException("Invalid checksum fallback allowlist entry at ${allowlistFile}:${number}. Expected '<group:name:version>\\t<artifact-file-name>'.")
-            }
-
-            def entry = "${columns[0].trim()}\t${columns[1].trim()}".toString()
-            if (!allowedEntries.add(entry)) {
-                duplicateEntries << entry
-            }
-        }
-
-        if (!duplicateEntries.empty) {
-            throw new GradleException("Duplicate checksum fallback allowlist entries:\n - ${duplicateEntries.unique().sort().join('\n - ')}")
-        }
+        def allowlist = readChecksumFallbackAllowlist(allowlistFile)
+        def allowedEntries = allowlist.entries
 
         def metadata = new XmlSlurper(false, false).parse(metadataFile)
         def checksumFallbackEntries = new TreeSet<String>()
@@ -413,6 +422,7 @@ tasks.register('dependencySignatureReport') {
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyVerificationKeyring).optional()
+    inputs.file(dependencyChecksumFallbackAllowlist)
     outputs.file(dependencySignatureReport)
     outputs.upToDateWhen { false }
 
@@ -423,6 +433,7 @@ tasks.register('dependencySignatureReport') {
         if (!metadataFile.exists()) {
             throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
         }
+        def allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist.asFile)
         def signerMetadata = loadSignerMetadata(keyringFile)
 
         def metadata = new XmlSlurper(false, false).parse(metadataFile)
@@ -517,7 +528,12 @@ tasks.register('dependencySignatureReport') {
                     signedCount      : signedCount,
                     checksumOnlyCount: checksumOnlyCount,
                     keyIds           : keyIds,
-                    checksumArtifacts: artifacts.findAll { it.checksumOnly }.collect { it.name }.sort()
+                    checksumArtifacts: artifacts.findAll { it.checksumOnly }.collect { artifact ->
+                        [
+                                name     : artifact.name,
+                                rationale: allowlist.rationales["${id}\t${artifact.name}".toString()] ?: 'Missing allowlist rationale'
+                        ]
+                    }.sort { it.name }
             ]
         }
 
@@ -574,6 +590,7 @@ tasks.register('dependencySignatureReport') {
         } else {
             markdown << 'Signer metadata is unavailable because `gradle/verification-keyring.keys` is missing.\n\n'
         }
+        markdown << 'Checksum fallback review rationales are loaded from `gradle/dependency-checksum-fallback-allowlist.tsv`.\n\n'
         markdown << 'Refresh the metadata before regenerating this report:\n\n'
         markdown << '```bash\n'
         markdown << './gradlew refreshDependencyVerificationKeyring\n'
@@ -602,10 +619,12 @@ tasks.register('dependencySignatureReport') {
         if (checksumRows.empty && mixedRows.empty) {
             markdown << 'All resolved modules have PGP-signed artifacts in the current metadata.\n\n'
         } else {
-            markdown << "| Dependency | Scope | Checksum-only artifacts |\n"
+            markdown << "| Dependency | Scope | Checksum-only artifacts and review rationale |\n"
             markdown << "| --- | --- | --- |\n"
             (checksumRows + mixedRows).sort { it.id }.each { row ->
-                def checksumArtifacts = row.checksumArtifacts.collect { artifactName -> "`$artifactName`" }.join('<br>')
+                def checksumArtifacts = row.checksumArtifacts.collect { artifact ->
+                    "`$artifact.name`<br>${htmlEscape(artifact.rationale)}"
+                }.join('<br><br>')
                 markdown << "| `${row.id}` | ${row.scope} | ${checksumArtifacts} |\n"
             }
             markdown << '\n'
