@@ -1120,6 +1120,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     ] : null,
                     archives     : linux ? [
                             ar  : commandVersionInfo(['ar', '--version']),
+                            file: commandVersionInfo(['file', '--version']),
                             tar : commandVersionInfo(['tar', '--version']),
                             gzip: commandVersionInfo(['gzip', '--version']),
                             xz  : commandVersionInfo(['xz', '--version'])
@@ -1579,7 +1580,7 @@ tasks.register('generateInstallerStructureReport') {
                     : ''
             def reportName = artifactPath.replaceAll(/[^A-Za-z0-9._-]/, '_') + '.txt'
             def reportFile = new File(reportDir, reportName)
-            def commands = []
+            def commands = [[label: 'File type', command: ['file', installerFile.absolutePath], optional: true]]
             def message = ''
 
             if (extension == 'deb') {
@@ -1617,6 +1618,7 @@ tasks.register('generateInstallerStructureReport') {
                 report << "sha256: ${sha256(installerFile)}\n"
                 report << "format: ${extension}\n"
                 def failures = []
+                def requiredCommands = commands.findAll { !it.optional }
 
                 commands.each { commandSpec ->
                     def displayCommand = commandSpec.command.collect { it == installerFile.absolutePath ? artifactPath : it }
@@ -1630,14 +1632,16 @@ tasks.register('generateInstallerStructureReport') {
                     if (result.stderr) {
                         report << "\nstderr:\n${normalizeReportOutput(result.stderr)}\n"
                     }
-                    if (result.exitValue != 0) {
+                    if (result.exitValue != 0 && !commandSpec.optional) {
                         failures << commandSpec.label
                     }
                 }
 
                 reportFile.setText(report.toString(), StandardCharsets.UTF_8.name())
-                status = failures.empty ? 'generated' : 'failed'
-                message = failures.empty ? '' : "Inspector command failed: ${failures.join(', ')}"
+                if (!requiredCommands.empty) {
+                    status = failures.empty ? 'generated' : 'failed'
+                    message = failures.empty ? '' : "Inspector command failed: ${failures.join(', ')}"
+                }
             }
 
             def reportPath = reportFile.file ? canonicalPath(reportFile) : ''

@@ -97,10 +97,10 @@ contains SHA-256, file size, and canonical repo-relative path. `SHA256SUMS` is a
 compatibility format for `shasum -c` and `sha256sum -c`. `build-info.json` is
 diagnostic metadata and is not itself part of the reproducibility comparison.
 It records the Gradle and Java runtime, installer-relevant tools such as
-`jpackage`, Linux package tools, macOS `hdiutil` and `pkgutil`, Windows
-PowerShell, and Windows WiX tools when available. It also records OS release
-data such as `uname`, `/etc/os-release`, and `sw_vers` when available, plus
-`SOURCE_DATE_EPOCH`, timezone, and locale data.
+`jpackage`, Linux package and archive tools, macOS `hdiutil` and `pkgutil`,
+Windows PowerShell, and Windows WiX tools when available. It also records OS
+release data such as `uname`, `/etc/os-release`, and `sw_vers` when available,
+plus `SOURCE_DATE_EPOCH`, timezone, and locale data.
 `release-evidence.zip` packages the manifest, checksums, build info, and jar
 checksum report into one reproducible file for signing and publishing.
 
@@ -199,8 +199,8 @@ Build the OS-specific installer artifacts and write their manifest with:
 `installer-manifest.tsv` is the canonical comparison file for installer
 artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
 `installer-build-info.json` records the OS, JDK, Gradle, locale, timezone, and
-installer-relevant tool diagnostics such as Linux package tools, macOS
-`hdiutil` and `pkgutil`, Windows PowerShell, and Windows WiX tools for
+installer-relevant tool diagnostics such as Linux package and archive tools,
+macOS `hdiutil` and `pkgutil`, Windows PowerShell, and Windows WiX tools for
 explaining per-OS installer differences.
 
 To inspect installer package internals with the tools available on the current
@@ -217,10 +217,10 @@ This writes:
 
 `installer-structure-report.tsv` and the `installer-structure/` reports are
 investigation aids for package internals. They use local tools such as `ar`,
-`dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, and Windows PowerShell when available
-to record package metadata, archive member metadata, payload listings, and
-signature details. Unsupported installer formats are listed as skipped rather
-than failing the evidence task.
+`file`, `dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, and Windows PowerShell when
+available to record package metadata, archive member metadata, payload listings,
+file type metadata, and signature details. Unsupported installer formats are
+listed as skipped rather than failing the evidence task.
 
 To package the installer evidence files into one reproducible ZIP, run:
 
