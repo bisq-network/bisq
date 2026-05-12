@@ -15,7 +15,14 @@
          </trusted-key>
          <trusted-key id="06FAAF08F9E322363ECA5C080F97219EA9EEA989" group="net.glxn" name="qrgen" version="1.4"/>
          <trusted-key id="0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5" group="org.apache.httpcomponents"/>
-         <trusted-key id="0B743A794876D3C78AB542A118D239B1CBCD2236" group="^org[.]glassfish[.]jersey($|([.].*))" regex="true"/>
+         <trusted-key id="0B743A794876D3C78AB542A118D239B1CBCD2236">
+            <trusting group="org.glassfish.jersey"/>
+            <trusting group="org.glassfish.jersey.containers"/>
+            <trusting group="org.glassfish.jersey.core"/>
+            <trusting group="org.glassfish.jersey.ext"/>
+            <trusting group="org.glassfish.jersey.inject"/>
+            <trusting group="org.glassfish.jersey.media"/>
+         </trusted-key>
          <trusted-key id="0CC641C3A62453AB390066C4A41F13C999945293" group="commons-logging" name="commons-logging" version="1.2"/>
          <trusted-key id="0F07D1201BDDAB67CFB84EB479752DB6C966F0B8" group="com.google.android" name="annotations" version="4.1.1.4"/>
          <trusted-key id="10F3C7A02ECA55E502BADCF3991EFB94DB91127D" group="org.ow2" name="ow2" version="1.5.1"/>
@@ -26,12 +33,36 @@
             <trusting group="gradle" name="gradle" version="8.9"/>
             <trusting group="org.gradle.kotlin" name="gradle-kotlin-dsl-plugins" version="4.4.0"/>
          </trusted-key>
-         <trusted-key id="1DBB44E80F61493D6369B5FB95C15058A5EDA4F1" group="^com[.]google($|([.].*))" regex="true"/>
+         <trusted-key id="1DBB44E80F61493D6369B5FB95C15058A5EDA4F1">
+            <trusting group="com.google"/>
+            <trusting group="com.google.android"/>
+            <trusting group="com.google.api.grpc"/>
+            <trusting group="com.google.auth"/>
+            <trusting group="com.google.cloud"/>
+            <trusting group="com.google.code.findbugs"/>
+            <trusting group="com.google.code.gson"/>
+            <trusting group="com.google.errorprone"/>
+            <trusting group="com.google.gradle"/>
+            <trusting group="com.google.guava"/>
+            <trusting group="com.google.http-client"/>
+            <trusting group="com.google.inject"/>
+            <trusting group="com.google.j2objc"/>
+            <trusting group="com.google.protobuf"/>
+            <trusting group="com.google.zxing"/>
+         </trusted-key>
          <trusted-key id="1F47744C9B6E14F2049C2857F1F111AF65925306" group="io.github.classgraph" name="classgraph" version="4.8.184"/>
          <trusted-key id="207EEB28C8E18344209ACFBA08D10FD8BAD264C9" group="com.natpryce" name="make-it-easy" version="4.0.1"/>
          <trusted-key id="21D09437979F5953FFEEA59C2753A900612D3FF1" group="jakarta.validation" name="jakarta.validation-api" version="3.1.0"/>
          <trusted-key id="22394BC36212ED3694AEF8DCFB2EA0369C925EE1" group="org.zeromq" name="jeromq" version="0.6.0"/>
-         <trusted-key id="28118C070CB22A0175A2E8D43D12CA2AC19F3181" group="^com[.]fasterxml($|([.].*))" regex="true"/>
+         <trusted-key id="28118C070CB22A0175A2E8D43D12CA2AC19F3181">
+            <trusting group="com.fasterxml"/>
+            <trusting group="com.fasterxml.jackson"/>
+            <trusting group="com.fasterxml.jackson.core"/>
+            <trusting group="com.fasterxml.jackson.dataformat"/>
+            <trusting group="com.fasterxml.jackson.datatype"/>
+            <trusting group="com.fasterxml.jackson.jakarta.rs"/>
+            <trusting group="com.fasterxml.jackson.module"/>
+         </trusted-key>
          <trusted-key id="284C69F182F53A95F3D57966CF152F806378D293" group="com.sparkjava" name="spark-core" version="2.9.4"/>
          <trusted-key id="2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB">
             <trusting group="commons-codec"/>
@@ -47,7 +78,23 @@
          <trusted-key id="4021EEEAFF5DE8404DCD0A270AA3E5C3D232E79B" group="jakarta.inject" name="jakarta.inject-api" version="2.0.1"/>
          <trusted-key id="41CD49B4EF5876F9E9F691DABAC30622339994C4" group="org.jspecify" name="jspecify" version="1.0.0"/>
          <trusted-key id="44FBDBBC1A00FE414F1C1873586654072EAD6677" group="org.sonatype.oss" name="oss-parent" version="9"/>
-         <trusted-key id="47504B76CF89C15C0512D9AFE16AB52D79FD224F" group="^com[.]google($|([.].*))" regex="true"/>
+         <trusted-key id="47504B76CF89C15C0512D9AFE16AB52D79FD224F">
+            <trusting group="com.google"/>
+            <trusting group="com.google.android"/>
+            <trusting group="com.google.api.grpc"/>
+            <trusting group="com.google.auth"/>
+            <trusting group="com.google.cloud"/>
+            <trusting group="com.google.code.findbugs"/>
+            <trusting group="com.google.code.gson"/>
+            <trusting group="com.google.errorprone"/>
+            <trusting group="com.google.gradle"/>
+            <trusting group="com.google.guava"/>
+            <trusting group="com.google.http-client"/>
+            <trusting group="com.google.inject"/>
+            <trusting group="com.google.j2objc"/>
+            <trusting group="com.google.protobuf"/>
+            <trusting group="com.google.zxing"/>
+         </trusted-key>
          <trusted-key id="47EB6836245D2D40E89DFB4136D4E9618F3ADAB5" group="io.github.oshai" name="kotlin-logging-jvm" version="8.0.02"/>
          <trusted-key id="4DB1A49729B053CAF015CEE9A6ADFC93EF34893E" group="org.hamcrest"/>
          <trusted-key id="4F7E32D440EF90A83011A8FC6425559C47CC79C4">
@@ -62,7 +109,15 @@
             <trusting group="ch.qos.logback"/>
             <trusting group="org.slf4j"/>
          </trusted-key>
-         <trusted-key id="6214760097DC5CFAD0175AC2C9FBAA83A8753994" group="^com[.]fasterxml($|([.].*))" regex="true"/>
+         <trusted-key id="6214760097DC5CFAD0175AC2C9FBAA83A8753994">
+            <trusting group="com.fasterxml"/>
+            <trusting group="com.fasterxml.jackson"/>
+            <trusting group="com.fasterxml.jackson.core"/>
+            <trusting group="com.fasterxml.jackson.dataformat"/>
+            <trusting group="com.fasterxml.jackson.datatype"/>
+            <trusting group="com.fasterxml.jackson.jakarta.rs"/>
+            <trusting group="com.fasterxml.jackson.module"/>
+         </trusted-key>
          <trusted-key id="64CD4D429F3BCD7F48BEE410E5CDB6E74294955A" group="org.bitbucket.cowwoc" name="diff-match-patch" version="1.2"/>
          <trusted-key id="694621A7227D8D5289699830ABE9F3126BB741C1" group="com.google.guava" name="guava-parent" version="26.0-android"/>
          <trusted-key id="6DD3B8C64EF75253BEB2C53AD908A43FB7EC07AC" group="jakarta.activation" name="jakarta.activation-api"/>
@@ -88,7 +143,10 @@
          <trusted-key id="A7892505CF1A58076453E52D7999BEFBA1039E8B" group="net.bytebuddy"/>
          <trusted-key id="AA70C7C433D501636392EC02153E7A3C2B4E5118" group="org.eclipse.ee4j" name="project"/>
          <trusted-key id="B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD" group="io.grpc"/>
-         <trusted-key id="B59B67FD7904984367F931800818D9D68FB67BAC" group="^org[.]eclipse[.]jetty($|([.].*))" regex="true"/>
+         <trusted-key id="B59B67FD7904984367F931800818D9D68FB67BAC">
+            <trusting group="org.eclipse.jetty"/>
+            <trusting group="org.eclipse.jetty.websocket"/>
+         </trusted-key>
          <trusted-key id="BCA1F17506AF088F3A964A9C0459A2B383ED8C11" group="org.eclipse.angus"/>
          <trusted-key id="BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE" group="com.google.guava"/>
          <trusted-key id="BE685132AFD2740D9095F9040CC0B712FEE75827" group="org.assertj" name="assertj-core" version="3.27.7"/>
@@ -98,10 +156,17 @@
          <trusted-key id="CE3285F320685193D11FEA01F6CE9695C9318406" group="com.google.zxing"/>
          <trusted-key id="D022218DCC08AAD6EF3AF876B3DE72E647D35161" group="org.testcontainers" name="testcontainers-bom" version="1.16.1"/>
          <trusted-key id="D421D1DF4570BFB13E485D0BF95ADD0A28D2F139" group="org.projectlombok" name="lombok" version="1.18.46"/>
-         <trusted-key id="D4A77129F00F736293BE5A51AFC18A2271EDDFE1" group="^org[.]glassfish[.]hk2($|([.].*))" regex="true"/>
+         <trusted-key id="D4A77129F00F736293BE5A51AFC18A2271EDDFE1">
+            <trusting group="org.glassfish.hk2"/>
+            <trusting group="org.glassfish.hk2.external"/>
+         </trusted-key>
          <trusted-key id="D6F1BC78607808EC8E9F69437A8860944FAD5F62" group="org.apache.commons" name="commons-parent" version="34"/>
          <trusted-key id="D98E48D9AB0116441BBC16CD0F64F95CEF5F0629" group="de.jensd" name="fontawesomefx" version="8.0.0"/>
-         <trusted-key id="DBD744ACE7ADE6AA50DD591F66B50994442D2D40" group="^com[.]squareup($|([.].*))" regex="true"/>
+         <trusted-key id="DBD744ACE7ADE6AA50DD591F66B50994442D2D40">
+            <trusting group="com.squareup.moshi"/>
+            <trusting group="com.squareup.okhttp3"/>
+            <trusting group="com.squareup.okio"/>
+         </trusted-key>
          <trusted-key id="E3A9F95079E84CE201F7CF60BEDE11EAF1164480" group="org.hamcrest" name="hamcrest" version="3.0"/>
          <trusted-key id="E82D2EAF2E83830CE1F7F6BE571A5291E827E1C7" group="net.java" name="jvnet-parent" version="3"/>
          <trusted-key id="E5C3B1929191DF06136CCB2B164779204E106A76" group="org.javassist" name="javassist" version="3.30.2-GA"/>
@@ -122,7 +187,9 @@
             <trusting group="junit" name="junit" version="4.13.2"/>
             <trusting group="org.apiguardian"/>
             <trusting group="org.opentest4j"/>
-            <trusting group="^org[.]junit($|([.].*))" regex="true"/>
+            <trusting group="org.junit"/>
+            <trusting group="org.junit.jupiter"/>
+            <trusting group="org.junit.platform"/>
          </trusted-key>
          <trusted-key id="FFD433E89FCB22C79A8DD011B4BF94F677CAA76F" group="jakarta.ws.rs"/>
       </trusted-keys>

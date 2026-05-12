@@ -4,10 +4,22 @@ buildscript {
         maven { url "https://jitpack.io" }
         maven { url "https://plugins.gradle.org/m2/" }
     }
+    dependencies {
+        classpath 'org.bouncycastle:bcpg-jdk18on:1.84'
+    }
 }
 
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import org.gradle.jvm.tasks.Jar
+import org.gradle.process.ExecOperations
 
+import javax.inject.Inject
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
@@ -19,7 +31,10 @@ def dependencyVerificationMetadata = layout.projectDirectory.file('gradle/verifi
 def dependencyVerificationKeyring = layout.projectDirectory.file('gradle/verification-keyring.keys')
 def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/verification-keyring.gpg')
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
-def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
+// ExecOperations cannot execute .bat files directly; wrap with cmd /c on Windows.
+def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
+        ? ['cmd', '/c', 'gradlew.bat']
+        : ['./gradlew']
 
 def htmlEscape = { value ->
     value == null
@@ -36,132 +51,6 @@ def keyIdSuffix = { String keyId ->
     normalized.length() > 16 ? normalized.substring(normalized.length() - 16) : normalized
 }
 
-def decodeArmoredPublicKey = { String armoredPublicKey ->
-    def base64Lines = []
-    def inBody = false
-    armoredPublicKey.eachLine { line ->
-        if (line.startsWith('-----BEGIN')) {
-            return
-        }
-        if (!inBody) {
-            if (line.trim().empty) {
-                inBody = true
-            }
-            return
-        }
-        if (line.startsWith('=') || line.startsWith('-----END')) {
-            return
-        }
-        if (!line.trim().empty) {
-            base64Lines << line.trim()
-        }
-    }
-
-    if (base64Lines.empty) {
-        return new byte[0]
-    }
-
-    try {
-        Base64.decoder.decode(base64Lines.join(''))
-    } catch (Exception ignored) {
-        new byte[0]
-    }
-}
-
-def parseOpenPgpPackets = { String armoredPublicKey ->
-    def packets = []
-
-    try {
-        byte[] bytes = decodeArmoredPublicKey(armoredPublicKey)
-        int offset = 0
-        while (offset < bytes.length) {
-            int ctb = bytes[offset++] & 0xff
-            if ((ctb & 0x80) == 0) {
-                return packets
-            }
-
-            int tag
-            long length
-            if ((ctb & 0x40) != 0) {
-                tag = ctb & 0x3f
-                int firstLengthOctet = bytes[offset++] & 0xff
-                if (firstLengthOctet < 192) {
-                    length = firstLengthOctet
-                } else if (firstLengthOctet <= 223) {
-                    length = ((firstLengthOctet - 192) << 8) + (bytes[offset++] & 0xff) + 192
-                } else if (firstLengthOctet == 255) {
-                    length = ((bytes[offset++] & 0xffL) << 24) |
-                            ((bytes[offset++] & 0xffL) << 16) |
-                            ((bytes[offset++] & 0xffL) << 8) |
-                            (bytes[offset++] & 0xffL)
-                } else {
-                    return packets
-                }
-            } else {
-                tag = (ctb >> 2) & 0x0f
-                int lengthType = ctb & 0x03
-                if (lengthType == 0) {
-                    length = bytes[offset++] & 0xff
-                } else if (lengthType == 1) {
-                    length = ((bytes[offset++] & 0xff) << 8) | (bytes[offset++] & 0xff)
-                } else if (lengthType == 2) {
-                    length = ((bytes[offset++] & 0xffL) << 24) |
-                            ((bytes[offset++] & 0xffL) << 16) |
-                            ((bytes[offset++] & 0xffL) << 8) |
-                            (bytes[offset++] & 0xffL)
-                } else {
-                    length = bytes.length - offset
-                }
-            }
-
-            if (length > Integer.MAX_VALUE || offset + (int) length > bytes.length) {
-                return packets
-            }
-
-            packets << [
-                    tag : tag,
-                    body: Arrays.copyOfRange(bytes, offset, offset + (int) length)
-            ]
-            offset += (int) length
-        }
-    } catch (Exception ignored) {
-        return packets
-    }
-
-    packets
-}
-
-def normalizeOpenPgpUserId = { String userId ->
-    userId
-            .replace('\uFFFDamonn McManus <eamonn@mcmanus.net>', '\u00C9amonn McManus <eamonn@mcmanus.net>')
-            .replace('\u003Famonn McManus <eamonn@mcmanus.net>', '\u00C9amonn McManus <eamonn@mcmanus.net>')
-}
-
-def parsePublicKeyUserIds = { String armoredPublicKey ->
-    parseOpenPgpPackets(armoredPublicKey)
-            .findAll { it.tag == 13 }
-            .collect { packet -> normalizeOpenPgpUserId(new String(packet.body, StandardCharsets.UTF_8).trim()) }
-            .findAll { it }
-}
-
-def parsePublicKeyCreatedDate = { String armoredPublicKey ->
-    def publicKeyPacket = parseOpenPgpPackets(armoredPublicKey).find { it.tag == 6 }
-    if (publicKeyPacket?.body == null || publicKeyPacket.body.length < 5) {
-        return null
-    }
-
-    byte[] body = publicKeyPacket.body
-    long created = ((body[1] & 0xffL) << 24) |
-            ((body[2] & 0xffL) << 16) |
-            ((body[3] & 0xffL) << 8) |
-            (body[4] & 0xffL)
-
-    java.time.Instant.ofEpochSecond(created)
-            .atZone(java.time.ZoneOffset.UTC)
-            .toLocalDate()
-            .toString()
-}
-
 def parseSignerUserId = { String userId ->
     def matcher = userId =~ /^(.*?)\s*<([^>]+)>$/
     matcher.matches()
@@ -169,68 +58,73 @@ def parseSignerUserId = { String userId ->
             : [name: userId, email: '', userId: userId]
 }
 
-def loadSignerMetadata = { File keyringFile ->
+// Workaround: the Maven Central key C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7
+// has its UID encoded as Latin-1 'É' (byte 0xC9) rather than UTF-8. When
+// Gradle exports the keyring, the byte is replaced with U+FFFD or '?'.
+// Restore the canonical user ID so the signature report remains readable.
+def normalizeOpenPgpUserId = { String userId ->
+    userId
+            .replace('�amonn McManus <eamonn@mcmanus.net>', 'Éamonn McManus <eamonn@mcmanus.net>')
+            .replace('?amonn McManus <eamonn@mcmanus.net>', 'Éamonn McManus <eamonn@mcmanus.net>')
+}
+
+def decodeUserIdBytes = { byte[] bytes ->
+    def utf8Decoder = StandardCharsets.UTF_8.newDecoder()
+            .onMalformedInput(java.nio.charset.CodingErrorAction.REPORT)
+            .onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT)
+    try {
+        utf8Decoder.decode(java.nio.ByteBuffer.wrap(bytes)).toString()
+    } catch (java.nio.charset.CharacterCodingException ignored) {
+        new String(bytes, StandardCharsets.ISO_8859_1)
+    }
+}
+
+def parsePgpPublicKeyBlock = { String armoredBlock, Map<String, Map> signers, org.gradle.api.logging.Logger taskLogger ->
+    def fingerprintCalculator = new org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator()
+    try {
+        def decoder = org.bouncycastle.openpgp.PGPUtil.getDecoderStream(
+                new ByteArrayInputStream(armoredBlock.getBytes(StandardCharsets.UTF_8)))
+        def rings = new org.bouncycastle.openpgp.PGPPublicKeyRingCollection(decoder, fingerprintCalculator)
+        rings.keyRings.each { ring ->
+            def primary = ring.publicKey
+            def userIds = []
+            primary.rawUserIDs.each { rawBytes ->
+                def uid = normalizeOpenPgpUserId(decodeUserIdBytes(rawBytes).trim())
+                if (uid) userIds << uid
+            }
+            def user = userIds ? parseSignerUserId(userIds[0]) : [name: '', email: '', userId: '']
+            ring.publicKeys.each { key ->
+                def created = key.creationTime
+                        ? key.creationTime.toInstant().atZone(java.time.ZoneOffset.UTC).toLocalDate().toString()
+                        : ''
+                signers[String.format('%016X', key.keyID)] =
+                        user + [keyId: String.format('%016X', key.keyID), created: created]
+            }
+        }
+    } catch (Exception ex) {
+        taskLogger.warn("Failed to parse PGP public key block: ${ex.message}")
+    }
+}
+
+def loadSignerMetadata = { File keyringFile, org.gradle.api.logging.Logger taskLogger ->
     def signers = [:]
     if (!keyringFile.exists()) {
         return signers
     }
 
-    def current = null
-    def saveCurrent = {
-        if (current?.keyId) {
-            def userIds = parsePublicKeyUserIds(current.armor.toString()) ?: current.userIds
-            def user = userIds ? parseSignerUserId(userIds[0]) : [name: '', email: '', userId: '']
-            def signer = user + [
-                    keyId  : current.keyId,
-                    created: parsePublicKeyCreatedDate(current.armor.toString()) ?: ''
-            ]
-            ([current.keyId] + current.subKeyIds).each { keyId ->
-                signers[keyId] = signer
-            }
-        }
-    }
-
+    def armor = null
     keyringFile.eachLine(StandardCharsets.UTF_8.name()) { line ->
-        def pubMatcher = line =~ /^pub\s+([0-9A-Fa-f]+)\s*$/
-        if (pubMatcher.matches()) {
-            saveCurrent()
-            current = [
-                    keyId    : keyIdSuffix(pubMatcher[0][1]),
-                    subKeyIds: [],
-                    userIds  : [],
-                    armor    : new StringBuilder(),
-                    inArmor  : false
-            ]
-            return
-        }
-
-        if (current == null) {
-            return
-        }
-
-        def uidMatcher = line =~ /^uid\s+(.*)$/
-        if (uidMatcher.matches()) {
-            current.userIds << uidMatcher[0][1].trim()
-            return
-        }
-
-        def subMatcher = line =~ /^sub\s+([0-9A-Fa-f]+)\s*$/
-        if (subMatcher.matches()) {
-            current.subKeyIds << keyIdSuffix(subMatcher[0][1])
-            return
-        }
-
         if (line.startsWith('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
-            current.inArmor = true
+            armor = new StringBuilder()
         }
-        if (current.inArmor) {
-            current.armor << line << '\n'
+        if (armor != null) {
+            armor << line << '\n'
         }
         if (line.startsWith('-----END PGP PUBLIC KEY BLOCK-----')) {
-            current.inArmor = false
+            parsePgpPublicKeyBlock(armor.toString(), signers, taskLogger)
+            armor = null
         }
     }
-    saveCurrent()
 
     signers
 }
@@ -294,39 +188,46 @@ tasks.register('resolveAndVerifyDependencies') {
     }
 }
 
-tasks.register('refreshDependencyVerificationKeyring') {
+abstract class RefreshDependencyVerificationKeyringTask extends DefaultTask {
+    @InputFile abstract RegularFileProperty getMetadataFile()
+    @OutputFile abstract RegularFileProperty getKeyringFile()
+    @Internal abstract RegularFileProperty getBinaryKeyringFile()
+    @Internal abstract ListProperty<String> getWrapperCommand()
+
+    @Inject abstract ExecOperations getExecOperations()
+
+    @TaskAction
+    void refresh() {
+        def keyring = keyringFile.get().asFile
+        def command = wrapperCommand.get() + ['--no-daemon', 'help', '--refresh-keys', '--export-keys']
+        def result = execOperations.exec {
+            commandLine command
+        }
+        result.assertNormalExitValue()
+
+        if (!keyring.exists()) {
+            throw new GradleException("Keyring export reported success but ${keyring} was not written. Check network access to the configured Gradle verification key servers.")
+        }
+
+        def binaryKeyring = binaryKeyringFile.get().asFile
+        if (binaryKeyring.exists()) {
+            logger.warn("Ignoring ${binaryKeyring}; dependency verification is configured to use the armored keyring.")
+        }
+
+        logger.lifecycle("Refreshed ${keyring}.")
+    }
+}
+
+tasks.register('refreshDependencyVerificationKeyring', RefreshDependencyVerificationKeyringTask) {
     group = 'verification'
     description = 'Refreshes dependency verification PGP public keys from key servers and exports the armored keyring.'
 
-    inputs.file(dependencyVerificationMetadata)
-    outputs.file(dependencyVerificationKeyring)
+    metadataFile.set(dependencyVerificationMetadata)
+    keyringFile.set(dependencyVerificationKeyring)
+    binaryKeyringFile.set(dependencyVerificationBinaryKeyring)
+    wrapperCommand.set(gradleWrapperCommand)
+
     outputs.upToDateWhen { false }
-
-    doLast {
-        def keyringFile = dependencyVerificationKeyring.asFile
-        def previousModified = keyringFile.exists() ? keyringFile.lastModified() : 0L
-        def result = exec {
-            commandLine gradleWrapperCommand, '--no-daemon', 'help', '--refresh-keys', '--export-keys'
-            ignoreExitValue = true
-        }
-
-        if (!keyringFile.exists()) {
-            throw new GradleException("Failed to write ${keyringFile}. Check network access to the configured Gradle verification key servers.")
-        }
-
-        if (result.exitValue != 0) {
-            if (keyringFile.lastModified() <= previousModified) {
-                throw new GradleException("Gradle --refresh-keys --export-keys failed with exit code ${result.exitValue} and did not update ${keyringFile}.")
-            }
-            logger.warn("Gradle --refresh-keys --export-keys exited with ${result.exitValue} after updating ${keyringFile}. This can happen in some Gradle/Bouncy Castle combinations.")
-        }
-
-        if (dependencyVerificationBinaryKeyring.asFile.exists()) {
-            logger.warn("Ignoring ${dependencyVerificationBinaryKeyring.asFile}; dependency verification is configured to use the armored keyring.")
-        }
-
-        logger.lifecycle("Refreshed ${keyringFile}.")
-    }
 }
 
 tasks.register('dependencySignatureReport') {
@@ -345,7 +246,7 @@ tasks.register('dependencySignatureReport') {
         if (!metadataFile.exists()) {
             throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
         }
-        def signerMetadata = loadSignerMetadata(keyringFile)
+        def signerMetadata = loadSignerMetadata(keyringFile, logger)
 
         def metadata = new XmlSlurper(false, false).parse(metadataFile)
         def componentsById = new TreeMap<String, Object>()
@@ -573,6 +474,31 @@ def sha256 = { File file ->
         }
     }
     digest.digest().collect { String.format('%02x', it) }.join()
+}
+
+def gradleWrapperJar = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.jar')
+def gradleWrapperJarSha256 = '14dfa961b6704bb3decdea06502781edaa796a82e6da41cd2e1962b14fbe21a3'
+
+tasks.register('verifyGradleWrapperJar') {
+    group = 'verification'
+    description = 'Verifies gradle/wrapper/gradle-wrapper.jar against a pinned SHA-256.'
+
+    inputs.file(gradleWrapperJar)
+    inputs.property('expectedSha256', gradleWrapperJarSha256)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def jar = gradleWrapperJar.asFile
+        if (!jar.exists()) {
+            throw new GradleException("Missing ${jar}.")
+        }
+        def actual = sha256(jar)
+        if (actual != gradleWrapperJarSha256) {
+            throw new GradleException(
+                    "Gradle wrapper JAR SHA-256 mismatch.\n  file:     ${jar}\n  expected: ${gradleWrapperJarSha256}\n  actual:   ${actual}\nIf the wrapper was intentionally updated, regenerate the pinned hash and require a supply-chain review.")
+        }
+        logger.lifecycle("Verified ${jar} (sha256=${actual}).")
+    }
 }
 
 tasks.register('generateJarHashes') {
