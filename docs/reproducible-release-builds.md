@@ -35,6 +35,36 @@ git submodule update --init --recursive
 shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 ```
 
+### Linux Release-Builder Container
+
+The Linux Java payload can be verified inside the release-builder image defined
+in `docker/release-builder/linux/Dockerfile`. The image pins the linux/amd64
+Azul Zulu OpenJDK 21.0.6 base image by digest and sets the release-sensitive
+defaults `SOURCE_DATE_EPOCH=0`, `TZ=UTC`, `LANG=C.UTF-8`, and `LC_ALL=C.UTF-8`.
+It also installs the Linux package tools needed for Java payload verification
+and later installer investigation.
+
+Build the image from its own small context:
+
+```bash
+docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+```
+
+Run it from a clean checkout of the release tag or release commit:
+
+```bash
+docker run --rm --platform linux/amd64 \
+  --user "$(id -u):$(id -g)" \
+  -v "$PWD:/workspace" \
+  -w /workspace \
+  bisq-release-builder-linux:java-21.0.6 \
+  ./gradlew verifyReleaseBuild
+```
+
+This container is an independent Linux verification environment for the Java
+payload. It is not wired into CI yet, and it does not make installer internals
+deterministic by itself.
+
 Build the release payload and run the policy gates.
 
 ```bash
@@ -210,7 +240,9 @@ verification whenever upstream publishes signatures.
 The most important remaining gaps are:
 
 - deterministic OS installer internals for `dmg`, `deb`, `rpm`, and `exe`
-- a pinned release build image or dedicated release builder for each OS
+- package repository snapshot pinning for the Linux release-builder image
+- pinned release build images or dedicated release builders for macOS and
+  Windows
 - a documented policy for which CI OS manifests must match before signing
 
 Those can be added incrementally without changing the current Java payload
