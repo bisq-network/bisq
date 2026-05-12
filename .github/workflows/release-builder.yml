@@ -1,0 +1,51 @@
+name: Linux Release Builder
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-release-builder:
+    name: Linux release-builder Java payload, Java 21.0.6
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+          submodules: 'true'
+          persist-credentials: false
+
+    - name: Verify Gradle wrapper checksums
+      shell: bash
+      run: |
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+        else
+          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+        fi
+
+    - name: Build Linux release-builder image
+      shell: bash
+      run: docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+
+    - name: Verify Java payload in release-builder
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew verifyReleaseBuild
+
+    - name: Upload release-builder evidence
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-builder-linux-java-21.0.6
+        path: |
+          build/reports/release/SHA256SUMS
+          build/reports/release/release-manifest.tsv
+          build/reports/release/build-info.json
+          build/reports/release/release-evidence.zip
+        if-no-files-found: error
