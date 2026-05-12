@@ -1664,7 +1664,7 @@ tasks.register('generateInstallerStructureReport') {
                     '-ExecutionPolicy',
                     'Bypass',
                     '-Command',
-                    "\$item = Get-Item -LiteralPath ${literalPath}; \$item.VersionInfo | Format-List *; Get-AuthenticodeSignature -LiteralPath ${literalPath} | Format-List *"
+                    "\$item = Get-Item -LiteralPath ${literalPath}; \$item | Select-Object FullName,Length,CreationTimeUtc,LastWriteTimeUtc,Attributes | Format-List *; \$item.VersionInfo | Format-List *; Get-AuthenticodeSignature -LiteralPath ${literalPath} | Format-List *"
             ]
         }
         def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)

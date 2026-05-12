@@ -235,8 +235,9 @@ RPM reports include package digest/signature checks and payload archive listings
 when the local RPM and cpio tools can run them. DMG reports include image
 metadata and `hdiutil` verification output on macOS. PKG reports include
 signature, payload, and raw `xar` archive member diagnostics when available.
-Unsupported installer formats are listed as skipped rather than failing the
-evidence task.
+Windows reports include basic file metadata, version info, and Authenticode
+signature details. Unsupported installer formats are listed as skipped rather
+than failing the evidence task.
 
 The `status` column in `installer-structure-report.tsv` is diagnostic:
 
