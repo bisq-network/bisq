@@ -682,26 +682,34 @@ def manifestEntriesFor = { Collection<File> files ->
             .sort { left, right -> left.path <=> right.path }
 }
 
-def resolveReleaseManifestFile = { File manifestPath ->
+def resolveManifestFile = { File manifestPath, String manifestFileName ->
     if (!manifestPath.directory) {
         return manifestPath
     }
 
     def matchingManifests = fileTree(manifestPath) {
-        include '**/release-manifest.tsv'
+        include "**/${manifestFileName}"
     }.files.sort { left, right -> left.path <=> right.path }
 
     if (matchingManifests.empty) {
-        throw new GradleException("No release-manifest.tsv found under ${manifestPath}")
+        throw new GradleException("No ${manifestFileName} found under ${manifestPath}")
     }
     if (matchingManifests.size() > 1) {
         throw new GradleException(
-                "Multiple release-manifest.tsv files found under ${manifestPath}:\n" +
+                "Multiple ${manifestFileName} files found under ${manifestPath}:\n" +
                         matchingManifests.collect { "  - ${it}" }.join('\n')
         )
     }
 
     matchingManifests[0]
+}
+
+def resolveReleaseManifestFile = { File manifestPath ->
+    resolveManifestFile(manifestPath, 'release-manifest.tsv')
+}
+
+def resolveInstallerManifestFile = { File manifestPath ->
+    resolveManifestFile(manifestPath, 'installer-manifest.tsv')
 }
 
 def readReleaseManifest = { File manifestFile ->
@@ -749,9 +757,74 @@ def readReleaseManifest = { File manifestFile ->
     entries
 }
 
+def verifyManifestMatches = { String manifestLabel, File expectedManifest, File actualManifest ->
+    def expectedEntries = readReleaseManifest(expectedManifest)
+    def actualEntries = readReleaseManifest(actualManifest)
+    def expectedPaths = expectedEntries.keySet() as Set
+    def actualPaths = actualEntries.keySet() as Set
+
+    def missingPaths = (expectedPaths - actualPaths).sort()
+    def extraPaths = (actualPaths - expectedPaths).sort()
+    def changedPaths = expectedPaths.intersect(actualPaths)
+            .findAll { path ->
+                expectedEntries[path].sha256 != actualEntries[path].sha256 ||
+                        expectedEntries[path].size != actualEntries[path].size
+            }
+            .sort()
+
+    if (!missingPaths.empty || !extraPaths.empty || !changedPaths.empty) {
+        def formatPaths = { Collection<String> paths ->
+            def lines = paths.take(20).collect { "  ${it}" }
+            if (paths.size() > 20) {
+                lines << "  ... ${paths.size() - 20} more"
+            }
+            lines.join('\n')
+        }
+
+        def message = new StringBuilder()
+        message << "${manifestLabel} verification failed against ${expectedManifest}\n"
+        if (!missingPaths.empty) {
+            message << "\nMissing files:\n${formatPaths(missingPaths)}\n"
+        }
+        if (!extraPaths.empty) {
+            message << "\nExtra files:\n${formatPaths(extraPaths)}\n"
+        }
+        if (!changedPaths.empty) {
+            message << "\nChanged files:\n"
+            changedPaths.take(20).each { path ->
+                def expected = expectedEntries[path]
+                def actual = actualEntries[path]
+                message << "  ${path}\n"
+                message << "    expected ${expected.sha256} ${expected.size}\n"
+                message << "    actual   ${actual.sha256} ${actual.size}\n"
+            }
+            if (changedPaths.size() > 20) {
+                message << "  ... ${changedPaths.size() - 20} more\n"
+            }
+        }
+        throw new GradleException(message.toString())
+    }
+
+    logger.lifecycle("Verified ${actualEntries.size()} ${manifestLabel.toLowerCase(Locale.ROOT)} entries against ${expectedManifest}")
+}
+
+def installerArtifactIncludes = ['*.dmg', '*.deb', '*.rpm', '*.exe', '*.msi', '*.pkg']
+
+def installerArtifactsIn = { File installerDir ->
+    installerDir.directory
+            ? fileTree(installerDir) {
+                installerArtifactIncludes.each { include it }
+            }.files
+                    .findAll { it.isFile() }
+                    .sort { left, right -> left.path <=> right.path }
+            : []
+}
+
 def releaseReportDir = layout.buildDirectory.dir('reports/release')
 def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
 def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
+def installerSha256SumsFile = releaseReportDir.map { it.file('INSTALLER-SHA256SUMS') }
+def installerManifestFile = releaseReportDir.map { it.file('installer-manifest.tsv') }
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
@@ -1161,6 +1234,58 @@ tasks.register('generateReleaseEvidenceBundle', Zip) {
     }
 }
 
+tasks.register('generateInstallerManifest') {
+    group = 'verification'
+    description = 'Builds desktop OS installer artifacts and writes canonical SHA-256 installer manifests.'
+
+    def desktopGenerateInstallers = project(':desktop').tasks.named('generateInstallers')
+    def desktopInstallerDir = project(':desktop').layout.buildDirectory.dir('packaging/jpackage/packages')
+
+    dependsOn tasks.named('verifyReleaseEnvironment')
+    dependsOn desktopGenerateInstallers
+
+    inputs.files(provider {
+        installerArtifactsIn(desktopInstallerDir.get().asFile)
+    })
+            .withPropertyName('installerArtifacts')
+            .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+    outputs.file(installerSha256SumsFile)
+    outputs.file(installerManifestFile)
+
+    doLast {
+        def installerDir = desktopInstallerDir.get().asFile
+        if (!installerDir.directory) {
+            throw new GradleException("Missing desktop installer directory: ${installerDir}")
+        }
+
+        def installerFiles = installerArtifactsIn(installerDir)
+        if (installerFiles.empty) {
+            throw new GradleException(
+                    "No installer artifacts found in ${installerDir}. Expected one of: ${installerArtifactIncludes.join(', ')}"
+            )
+        }
+
+        def entries = manifestEntriesFor(installerFiles)
+
+        def sha256Sums = installerSha256SumsFile.get().asFile
+        sha256Sums.parentFile.mkdirs()
+        sha256Sums.setText(
+                entries.collect { "${it.sha256}  ${it.path}" }.join('\n') + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
+        def installerManifest = installerManifestFile.get().asFile
+        installerManifest.setText(
+                (['sha256\tsize_bytes\tpath'] +
+                        entries.collect { "${it.sha256}\t${it.size}\t${it.path}" }).join('\n') + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
+        logger.lifecycle("Wrote ${entries.size()} installer manifest entries to ${rootProject.relativePath(installerManifest)}")
+        logger.lifecycle("Wrote ${entries.size()} installer checksums to ${rootProject.relativePath(sha256Sums)}")
+    }
+}
+
 tasks.register('verifyReleaseBuild') {
     group = 'verification'
     description = 'Runs the full Java release payload verification and writes release evidence.'
@@ -1176,6 +1301,33 @@ tasks.register('verifyReleaseBuild') {
 
     doLast {
         logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseEvidenceBundleFile.get().asFile)}")
+    }
+}
+
+tasks.register('verifyInstallerManifest') {
+    group = 'verification'
+    description = 'Builds desktop OS installer artifacts and verifies them against -PinstallerManifest=<file-or-directory>.'
+
+    def expectedInstallerManifestProperty = providers.gradleProperty('installerManifest')
+
+    dependsOn tasks.named('generateInstallerManifest')
+    inputs.property('expectedInstallerManifest', expectedInstallerManifestProperty.orElse(''))
+    inputs.file(installerManifestFile)
+            .withPropertyName('actualInstallerManifest')
+
+    doLast {
+        def expectedInstallerManifestPath = expectedInstallerManifestProperty.orNull
+        if (!expectedInstallerManifestPath) {
+            throw new GradleException('Missing required -PinstallerManifest=<path-to-installer-manifest.tsv-or-directory>')
+        }
+
+        def expectedManifest = resolveInstallerManifestFile(file(expectedInstallerManifestPath))
+        def actualManifest = installerManifestFile.get().asFile
+        if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
+            logger.warn("Expected installer manifest points at the generated local manifest: ${expectedManifest}")
+        }
+
+        verifyManifestMatches('Installer manifest', expectedManifest, actualManifest)
     }
 }
 
@@ -1203,53 +1355,6 @@ tasks.register('verifyReleaseManifest') {
             logger.warn("Expected release manifest points at the generated local manifest: ${expectedManifest}")
         }
 
-        def expectedEntries = readReleaseManifest(expectedManifest)
-        def actualEntries = readReleaseManifest(actualManifest)
-        def expectedPaths = expectedEntries.keySet() as Set
-        def actualPaths = actualEntries.keySet() as Set
-
-        def missingPaths = (expectedPaths - actualPaths).sort()
-        def extraPaths = (actualPaths - expectedPaths).sort()
-        def changedPaths = expectedPaths.intersect(actualPaths)
-                .findAll { path ->
-                    expectedEntries[path].sha256 != actualEntries[path].sha256 ||
-                            expectedEntries[path].size != actualEntries[path].size
-                }
-                .sort()
-
-        if (!missingPaths.empty || !extraPaths.empty || !changedPaths.empty) {
-            def formatPaths = { Collection<String> paths ->
-                def lines = paths.take(20).collect { "  ${it}" }
-                if (paths.size() > 20) {
-                    lines << "  ... ${paths.size() - 20} more"
-                }
-                lines.join('\n')
-            }
-
-            def message = new StringBuilder()
-            message << "Release manifest verification failed against ${expectedManifest}\n"
-            if (!missingPaths.empty) {
-                message << "\nMissing files:\n${formatPaths(missingPaths)}\n"
-            }
-            if (!extraPaths.empty) {
-                message << "\nExtra files:\n${formatPaths(extraPaths)}\n"
-            }
-            if (!changedPaths.empty) {
-                message << "\nChanged files:\n"
-                changedPaths.take(20).each { path ->
-                    def expected = expectedEntries[path]
-                    def actual = actualEntries[path]
-                    message << "  ${path}\n"
-                    message << "    expected ${expected.sha256} ${expected.size}\n"
-                    message << "    actual   ${actual.sha256} ${actual.size}\n"
-                }
-                if (changedPaths.size() > 20) {
-                    message << "  ... ${changedPaths.size() - 20} more\n"
-                }
-            }
-            throw new GradleException(message.toString())
-        }
-
-        logger.lifecycle("Verified ${actualEntries.size()} release manifest entries against ${expectedManifest}")
+        verifyManifestMatches('Release manifest', expectedManifest, actualManifest)
     }
 }

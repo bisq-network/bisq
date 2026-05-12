@@ -17,10 +17,12 @@ The current checks cover the Java release payload:
   dependency allowlist
 - reproducible archive settings and ZIP/JAR entry metadata
 
-The current checks do not prove that OS installer packages are reproducible.
-`dmg`, `deb`, `rpm`, and `exe` outputs should still be signed and checked as
-release artifacts, but installer reproducibility needs separate package-specific
-work.
+The installer manifest task covers the OS package files produced by
+`:desktop:generateInstallers`. It records SHA-256, byte size, and canonical
+repo-relative path for `dmg`, `deb`, `rpm`, and `exe` outputs. This gives the
+release manager and independent verifiers a signed comparison target for the
+actual binary artifacts, but it does not by itself prove that the installer
+formats are deterministic internally.
 
 ## Release Manager Workflow
 
@@ -112,6 +114,49 @@ the main artifact for reproducible-build verification. `SHA256SUMS` is useful
 for common checksum tooling. Keep the individual files published for direct
 inspection and simple verifier workflows.
 
+## Binary Installer Evidence
+
+Build the OS-specific installer artifacts and write their manifest with:
+
+```bash
+./gradlew generateInstallerManifest
+```
+
+`generateInstallerManifest` invokes `:desktop:generateInstallers` and writes:
+
+- `build/reports/release/installer-manifest.tsv`
+- `build/reports/release/INSTALLER-SHA256SUMS`
+
+`installer-manifest.tsv` is the canonical comparison file for installer
+artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
+Verify the generated installer checksum file locally:
+
+```bash
+shasum -a 256 -c build/reports/release/INSTALLER-SHA256SUMS
+```
+
+Compare a local rebuild against a signed or CI-generated installer manifest:
+
+```bash
+./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
+```
+
+`-PinstallerManifest` can also point at an extracted evidence directory if it
+contains exactly one `installer-manifest.tsv`.
+
+Publish and sign the installer evidence next to the corresponding binary
+artifacts:
+
+- `installer-manifest.tsv`
+- `installer-manifest.tsv.asc`
+- `INSTALLER-SHA256SUMS`
+- `INSTALLER-SHA256SUMS.asc`
+
+```bash
+gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-manifest.tsv
+gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/INSTALLER-SHA256SUMS
+```
+
 ## Independent Verifier Workflow
 
 An independent verifier should:
@@ -133,6 +178,14 @@ gpg --verify /path/to/release-manifest.tsv.asc /path/to/release-manifest.tsv
 If the task succeeds, the local Java payload manifest matches the signed release
 manifest. If it fails, inspect the reported missing, extra, and changed paths.
 
+To verify binary installers, also verify the signed installer manifest and
+compare a local installer rebuild:
+
+```bash
+gpg --verify /path/to/installer-manifest.tsv.asc /path/to/installer-manifest.tsv
+./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
+```
+
 ## Dependency Verification Maintenance
 
 When dependencies change, refresh and review Gradle verification metadata
@@ -153,7 +206,7 @@ verification whenever upstream publishes signatures.
 
 The most important remaining gaps are:
 
-- deterministic OS installer outputs for `dmg`, `deb`, `rpm`, and `exe`
+- deterministic OS installer internals for `dmg`, `deb`, `rpm`, and `exe`
 - a pinned release build image or dedicated release builder for each OS
 - a documented policy for which CI OS manifests must match before signing
 
