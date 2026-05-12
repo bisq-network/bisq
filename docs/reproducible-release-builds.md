@@ -236,8 +236,9 @@ when the local RPM and cpio tools can run them. DMG reports include image
 metadata and `hdiutil` verification output on macOS. PKG reports include
 signature, payload, and raw `xar` archive member diagnostics when available.
 Windows reports include basic file metadata, version info, and Authenticode
-signature details. Unsupported installer formats are listed as skipped rather
-than failing the evidence task.
+signature details, plus MSI Property table entries for `.msi` artifacts when
+PowerShell can read them. Unsupported installer formats are listed as skipped
+rather than failing the evidence task.
 
 The `status` column in `installer-structure-report.tsv` is diagnostic:
 

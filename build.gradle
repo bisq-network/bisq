@@ -1667,6 +1667,17 @@ tasks.register('generateInstallerStructureReport') {
                     "\$item = Get-Item -LiteralPath ${literalPath}; \$item | Select-Object FullName,Length,CreationTimeUtc,LastWriteTimeUtc,Attributes | Format-List *; \$item.VersionInfo | Format-List *; Get-AuthenticodeSignature -LiteralPath ${literalPath} | Format-List *"
             ]
         }
+        def powershellMsiPropertiesCommand = { File file ->
+            def literalPath = powershellSingleQuoted(file.absolutePath)
+            [
+                    'powershell',
+                    '-NoProfile',
+                    '-ExecutionPolicy',
+                    'Bypass',
+                    '-Command',
+                    "\$path = ${literalPath}; \$installer = New-Object -ComObject WindowsInstaller.Installer; \$database = \$installer.OpenDatabase(\$path, 0); \$view = \$database.OpenView('SELECT `Property`, `Value` FROM `Property` ORDER BY `Property`'); \$view.Execute(); while (\$record = \$view.Fetch()) { '{0}={1}' -f \$record.StringData(1), \$record.StringData(2) }"
+            ]
+        }
         def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
         def macos = osName.contains('mac')
         def windows = osName.contains('windows')
@@ -1730,6 +1741,9 @@ tasks.register('generateInstallerStructureReport') {
                 commands << [label: 'macOS package archive members', command: ['xar', '-tf', installerFile.absolutePath], optional: true]
             } else if ((extension == 'exe' || extension == 'msi') && windows) {
                 commands << [label: 'Windows installer metadata', command: powershellInstallerMetadataCommand(installerFile)]
+                if (extension == 'msi') {
+                    commands << [label: 'Windows MSI properties', command: powershellMsiPropertiesCommand(installerFile), optional: true]
+                }
             } else {
                 message = "No installer structure inspector is configured for .${extension ?: 'unknown'} artifacts."
             }
