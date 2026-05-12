@@ -12,6 +12,7 @@ The current checks cover the Java release payload:
 - the desktop application runtime libraries generated under
   `desktop/build/install/desktop/lib`
 - Gradle wrapper files and wrapper distribution metadata
+- pinned Gradle and Java runtime versions
 - Gradle dependency verification metadata, including the reviewed checksum-only
   dependency allowlist
 - reproducible archive settings and ZIP/JAR entry metadata
@@ -24,7 +25,8 @@ work.
 ## Release Manager Workflow
 
 Use a clean checkout of the release tag or release commit, with submodules
-initialized.
+initialized. The pinned release build environment is recorded in
+`gradle.properties`.
 
 ```bash
 git submodule update --init --recursive
@@ -143,7 +145,6 @@ The most important remaining gaps are:
 
 - deterministic OS installer outputs for `dmg`, `deb`, `rpm`, and `exe`
 - a pinned release build image or dedicated release builder for each OS
-- explicit Java distribution checks for release-manager machines
 - a documented policy for which CI OS manifests must match before signing
 - optional signing of a complete release evidence bundle
 

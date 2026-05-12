@@ -730,6 +730,9 @@ def releaseReportDir = layout.buildDirectory.dir('reports/release')
 def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
 def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
+def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
+def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
+def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
 
 def execText = { List<String> command ->
     def output = new ByteArrayOutputStream()
@@ -750,6 +753,41 @@ def loadGradleWrapperProperties = {
         wrapperPropertiesFile.withInputStream { wrapperProperties.load(it) }
     }
     wrapperProperties
+}
+
+tasks.register('verifyReleaseEnvironment') {
+    group = 'verification'
+    description = 'Verifies the local Gradle and Java runtime match the pinned release build environment.'
+
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
+    inputs.property('expectedReleaseJavaVendor', expectedReleaseJavaVendor)
+    inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def expectedJavaVersion = expectedReleaseJavaVersion.get()
+        def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
+        def expectedGradleVersion = expectedReleaseGradleVersion.get()
+        def actualJavaVersion = System.getProperty('java.version')
+        def actualJavaVendor = System.getProperty('java.vendor')
+        def violations = []
+
+        if (actualJavaVersion != expectedJavaVersion) {
+            violations << "Java version expected ${expectedJavaVersion} but was ${actualJavaVersion}"
+        }
+        if (actualJavaVendor != expectedJavaVendorValue) {
+            violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
+        }
+        if (gradle.gradleVersion != expectedGradleVersion) {
+            violations << "Gradle version expected ${expectedGradleVersion} but was ${gradle.gradleVersion}"
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("Release build environment verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified release build environment: Gradle ${gradle.gradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
+    }
 }
 
 tasks.register('verifyGradleWrapperSecurity') {
@@ -1018,7 +1056,8 @@ tasks.register('generateReleaseManifest') {
                 gradle          : [
                         version                       : gradle.gradleVersion,
                         wrapperDistributionUrl        : wrapperProperties.getProperty('distributionUrl'),
-                        wrapperDistributionSha256Sum  : wrapperProperties.getProperty('distributionSha256Sum')
+                        wrapperDistributionSha256Sum  : wrapperProperties.getProperty('distributionSha256Sum'),
+                        expectedVersion               : expectedReleaseGradleVersion.get()
                 ],
                 java            : [
                         version              : System.getProperty('java.version'),
@@ -1026,7 +1065,9 @@ tasks.register('generateReleaseManifest') {
                         runtimeVersion       : System.getProperty('java.runtime.version'),
                         vmName               : System.getProperty('java.vm.name'),
                         vmVersion            : System.getProperty('java.vm.version'),
-                        specificationVersion : System.getProperty('java.specification.version')
+                        specificationVersion : System.getProperty('java.specification.version'),
+                        expectedVersion      : expectedReleaseJavaVersion.get(),
+                        expectedVendor       : expectedReleaseJavaVendor.get()
                 ],
                 os              : [
                         name   : System.getProperty('os.name'),
@@ -1059,6 +1100,7 @@ tasks.register('verifyReleaseBuild') {
     group = 'verification'
     description = 'Runs the full Java release payload verification and writes release manifest evidence.'
 
+    dependsOn tasks.named('verifyReleaseEnvironment')
     dependsOn tasks.named('verifyGradleWrapperSecurity')
     dependsOn tasks.named('verifyGithubActionsSecurity')
     dependsOn tasks.named('verifyDependencySignaturePolicy')
@@ -1079,6 +1121,7 @@ tasks.register('verifyReleaseManifest') {
     def expectedReleaseManifestProperty = providers.gradleProperty('releaseManifest')
 
     dependsOn tasks.named('generateReleaseManifest')
+    dependsOn tasks.named('verifyReleaseEnvironment')
     inputs.property('expectedReleaseManifest', expectedReleaseManifestProperty.orElse(''))
     inputs.file(releaseManifestFile)
             .withPropertyName('actualReleaseManifest')
