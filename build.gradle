@@ -1117,6 +1117,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     ] : null,
                     windowsInstallerTools: windows ? [
                             powershell: commandVersionInfo(['powershell', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()']),
+                            pwsh      : commandVersionInfo(['pwsh', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()']),
                             candle    : commandVersionInfo(['candle', '-?']),
                             light     : commandVersionInfo(['light', '-?']),
                             wix       : commandVersionInfo(['wix', '--version'])

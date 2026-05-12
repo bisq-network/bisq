@@ -206,8 +206,8 @@ Build the OS-specific installer artifacts and write their manifest with:
 artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
 `installer-build-info.json` records the OS, JDK, Gradle, locale, timezone, and
 installer-relevant tool diagnostics such as Linux package and archive tools,
-macOS `hdiutil` and `pkgutil`, Windows PowerShell, and Windows WiX tools for
-explaining per-OS installer differences.
+macOS `hdiutil` and `pkgutil`, Windows PowerShell, PowerShell Core, and Windows
+WiX tools for explaining per-OS installer differences.
 Linux diagnostics include RPM payload extraction tools such as `rpm2cpio` and
 `cpio` when they are available.
 
