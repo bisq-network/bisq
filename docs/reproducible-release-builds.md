@@ -53,6 +53,9 @@ The release evidence is written to:
 contains SHA-256, file size, and canonical repo-relative path. `SHA256SUMS` is a
 compatibility format for `shasum -c` and `sha256sum -c`. `build-info.json` is
 diagnostic metadata and is not itself part of the reproducibility comparison.
+It records the Gradle and Java runtime, installer-relevant tool versions such
+as `jpackage`, OS release data such as `uname`, `/etc/os-release`, and
+`sw_vers` when available, plus `SOURCE_DATE_EPOCH`, timezone, and locale data.
 `release-evidence.zip` packages the manifest, checksums, build info, and jar
 checksum report into one reproducible file for signing and publishing.
 

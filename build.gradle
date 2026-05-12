@@ -831,16 +831,126 @@ def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVers
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
 
-def execText = { List<String> command ->
+def normalizeCommandOutput = { Object value ->
+    value == null
+            ? null
+            : value.toString()
+            .replace('\r\n', '\n')
+            .replace('\r', '\n')
+            .trim()
+}
+
+def firstNonEmptyLine = { String value ->
+    value == null
+            ? null
+            : value.readLines().collect { it.trim() }.find { !it.empty }
+}
+
+def compactMap = { Map<String, Object> values ->
+    values.findAll { entry ->
+        def value = entry.value
+        value != null &&
+                (!(value instanceof CharSequence) || value.length() > 0) &&
+                (!(value instanceof Map) || !value.empty)
+    }
+}
+
+def execResult = { List<String> command ->
     def output = new ByteArrayOutputStream()
     def errorOutput = new ByteArrayOutputStream()
-    def result = exec {
-        commandLine command
-        standardOutput = output
-        errorOutput = errorOutput
-        ignoreExitValue = true
+    try {
+        def result = exec {
+            commandLine command
+            standardOutput = output
+            errorOutput = errorOutput
+            ignoreExitValue = true
+        }
+        [
+                exitValue: result.exitValue,
+                stdout   : normalizeCommandOutput(output.toString(StandardCharsets.UTF_8.name())),
+                stderr   : normalizeCommandOutput(errorOutput.toString(StandardCharsets.UTF_8.name()))
+        ]
+    } catch (Exception ignored) {
+        [
+                exitValue: null,
+                stdout   : null,
+                stderr   : null
+        ]
     }
-    result.exitValue == 0 ? output.toString(StandardCharsets.UTF_8.name()).trim() : null
+}
+
+def execText = { List<String> command ->
+    def result = execResult(command)
+    result.exitValue == 0 ? result.stdout : null
+}
+
+def commandOutputInfo = { List<String> command, List<String> displayCommand = command ->
+    def result = execResult(command)
+    def output = result.stdout ?: result.stderr
+    compactMap([
+            command  : displayCommand,
+            available: result.exitValue == 0,
+            exitValue: result.exitValue,
+            output   : output
+    ])
+}
+
+def commandVersionInfo = { List<String> command, List<String> displayCommand = command ->
+    def result = execResult(command)
+    def output = result.stdout ?: result.stderr
+    compactMap([
+            command  : displayCommand,
+            available: result.exitValue == 0,
+            exitValue: result.exitValue,
+            version  : firstNonEmptyLine(output)
+    ])
+}
+
+def jdkToolVersionInfo = { String executable ->
+    def windows = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
+    def executableName = windows ? "${executable}.exe" : executable
+    def toolFile = new File(System.getProperty('java.home'), "bin/${executableName}")
+    def command = toolFile.file ? [toolFile.absolutePath, '--version'] : [executable, '--version']
+    def info = commandVersionInfo(command, [executable, '--version'])
+    info.source = toolFile.file ? 'java.home' : 'PATH'
+    info
+}
+
+def readOsRelease = {
+    def osReleaseFile = ['/etc/os-release', '/usr/lib/os-release']
+            .collect { new File(it) }
+            .find { it.file }
+    if (osReleaseFile == null) {
+        return null
+    }
+
+    def values = new TreeMap<String, String>()
+    osReleaseFile.eachLine(StandardCharsets.UTF_8.name()) { line ->
+        def trimmed = line.trim()
+        if (trimmed && !trimmed.startsWith('#') && trimmed.contains('=')) {
+            def parts = trimmed.split('=', 2)
+            def value = parts[1].trim()
+            if (value.startsWith('"') && value.endsWith('"')) {
+                value = value.substring(1, value.length() - 1)
+                        .replace('\\"', '"')
+                        .replace('\\\\', '\\')
+            } else if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length() - 1)
+            }
+            values[parts[0]] = value
+        }
+    }
+
+    [
+            path  : osReleaseFile.path,
+            values: values
+    ]
+}
+
+def localeEnvironment = {
+    ['LANG', 'LC_ALL', 'LC_COLLATE', 'LC_CTYPE', 'LC_MESSAGES', 'LC_MONETARY', 'LC_NUMERIC', 'LC_TIME']
+            .collectEntries { name -> [(name): System.getenv(name)] }
+            .findAll { entry -> entry.value != null }
 }
 
 def loadGradleWrapperProperties = {
@@ -1148,6 +1258,11 @@ tasks.register('generateReleaseManifest') {
 
         def gitStatus = execText(['git', 'status', '--porcelain'])
         def wrapperProperties = loadGradleWrapperProperties()
+        def defaultLocale = Locale.getDefault()
+        def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+        def linux = osName.contains('linux')
+        def macos = osName.contains('mac')
+        def windows = osName.contains('windows')
         def buildInfo = [
                 buildInfoVersion: 1,
                 manifest        : [
@@ -1183,13 +1298,54 @@ tasks.register('generateReleaseManifest') {
                         expectedVendor       : expectedReleaseJavaVendor.get()
                 ],
                 os              : [
-                        name   : System.getProperty('os.name'),
-                        version: System.getProperty('os.version'),
-                        arch   : System.getProperty('os.arch')
+                        name          : System.getProperty('os.name'),
+                        version       : System.getProperty('os.version'),
+                        arch          : System.getProperty('os.arch'),
+                        uname         : commandOutputInfo(['uname', '-a']),
+                        osRelease     : linux ? readOsRelease() : null,
+                        macosSwVers   : macos ? commandOutputInfo(['sw_vers']) : null,
+                        windowsVersion: windows ? commandOutputInfo(['cmd', '/c', 'ver']) : null
                 ],
                 environment     : [
-                        sourceDateEpoch: System.getenv('SOURCE_DATE_EPOCH')
+                        sourceDateEpoch: System.getenv('SOURCE_DATE_EPOCH'),
+                        timezone       : [
+                                id              : TimeZone.getDefault().getID(),
+                                zoneId          : java.time.ZoneId.systemDefault().getId(),
+                                userTimezone    : System.getProperty('user.timezone'),
+                                tz              : System.getenv('TZ')
+                        ],
+                        locale         : [
+                                defaultLocale: defaultLocale.toLanguageTag(),
+                                javaLocale   : defaultLocale.toString(),
+                                userLanguage : System.getProperty('user.language'),
+                                userCountry  : System.getProperty('user.country'),
+                                fileEncoding : System.getProperty('file.encoding'),
+                                environment  : localeEnvironment(),
+                                command      : commandOutputInfo(['locale'])
+                        ]
                 ],
+                tools           : compactMap([
+                        jdk          : [
+                                java    : jdkToolVersionInfo('java'),
+                                javac   : jdkToolVersionInfo('javac'),
+                                jlink   : jdkToolVersionInfo('jlink'),
+                                jpackage: jdkToolVersionInfo('jpackage')
+                        ],
+                        linuxPackages: linux ? [
+                                dpkg     : commandVersionInfo(['dpkg', '--version']),
+                                dpkgDeb  : commandVersionInfo(['dpkg-deb', '--version']),
+                                dpkgQuery: commandVersionInfo(['dpkg-query', '--version']),
+                                rpm      : commandVersionInfo(['rpm', '--version']),
+                                rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
+                                fakeroot : commandVersionInfo(['fakeroot', '--version'])
+                        ] : null,
+                        archives     : linux ? [
+                                ar  : commandVersionInfo(['ar', '--version']),
+                                tar : commandVersionInfo(['tar', '--version']),
+                                gzip: commandVersionInfo(['gzip', '--version']),
+                                xz  : commandVersionInfo(['xz', '--version'])
+                        ] : null
+                ]),
                 gradleStart     : [
                         taskNames          : gradle.startParameter.taskNames,
                         excludedTaskNames  : gradle.startParameter.excludedTaskNames,
