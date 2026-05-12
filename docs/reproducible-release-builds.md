@@ -222,6 +222,16 @@ available to record package metadata, archive member metadata, payload listings,
 file type metadata, and signature details. Unsupported installer formats are
 listed as skipped rather than failing the evidence task.
 
+The `status` column in `installer-structure-report.tsv` is diagnostic:
+
+- `generated` means at least one configured structure inspector ran and all
+  required inspector commands for that artifact exited successfully.
+- `failed` means a configured required inspector command exited unsuccessfully;
+  inspect the matching report file for stdout and stderr.
+- `skipped` means no required structure inspector is configured for that
+  artifact on the current OS. The artifact can still be compared through
+  `installer-manifest.tsv`.
+
 To package the installer evidence files into one reproducible ZIP, run:
 
 ```bash
