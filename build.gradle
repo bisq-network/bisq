@@ -827,6 +827,7 @@ def installerSha256SumsFile = releaseReportDir.map { it.file('INSTALLER-SHA256SU
 def installerManifestFile = releaseReportDir.map { it.file('installer-manifest.tsv') }
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
+def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
@@ -1439,6 +1440,27 @@ tasks.register('generateInstallerManifest') {
 
         logger.lifecycle("Wrote ${entries.size()} installer manifest entries to ${rootProject.relativePath(installerManifest)}")
         logger.lifecycle("Wrote ${entries.size()} installer checksums to ${rootProject.relativePath(sha256Sums)}")
+    }
+}
+
+tasks.register('generateInstallerEvidenceBundle', Zip) {
+    group = 'verification'
+    description = 'Packages installer manifest evidence into one reproducible ZIP for signing and publishing.'
+
+    dependsOn tasks.named('generateInstallerManifest')
+
+    archiveFileName = 'installer-evidence.zip'
+    destinationDirectory = releaseReportDir
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+
+    from(installerManifestFile)
+    from(installerSha256SumsFile)
+
+    doLast {
+        def bundle = archiveFile.get().asFile
+        logger.lifecycle("Wrote installer evidence bundle to ${rootProject.relativePath(bundle)}")
+        logger.lifecycle("Installer evidence bundle SHA-256: ${sha256(bundle)}")
     }
 }
 

@@ -181,6 +181,16 @@ Build the OS-specific installer artifacts and write their manifest with:
 
 `installer-manifest.tsv` is the canonical comparison file for installer
 artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
+To package both installer evidence files into one reproducible ZIP, run:
+
+```bash
+./gradlew generateInstallerEvidenceBundle
+```
+
+The bundle is written to:
+
+- `build/reports/release/installer-evidence.zip`
+
 Verify the generated installer checksum file locally:
 
 ```bash
@@ -199,12 +209,15 @@ contains exactly one `installer-manifest.tsv`.
 Publish and sign the installer evidence next to the corresponding binary
 artifacts:
 
+- `installer-evidence.zip`
+- `installer-evidence.zip.asc`
 - `installer-manifest.tsv`
 - `installer-manifest.tsv.asc`
 - `INSTALLER-SHA256SUMS`
 - `INSTALLER-SHA256SUMS.asc`
 
 ```bash
+gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-evidence.zip
 gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-manifest.tsv
 gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/INSTALLER-SHA256SUMS
 ```
@@ -234,6 +247,7 @@ To verify binary installers, also verify the signed installer manifest and
 compare a local installer rebuild:
 
 ```bash
+gpg --verify /path/to/installer-evidence.zip.asc /path/to/installer-evidence.zip
 gpg --verify /path/to/installer-manifest.tsv.asc /path/to/installer-manifest.tsv
 ./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
 ```
