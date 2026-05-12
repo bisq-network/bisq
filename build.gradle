@@ -646,6 +646,28 @@ def readReleaseManifest = { File manifestFile ->
 def releaseReportDir = layout.buildDirectory.dir('reports/release')
 def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
 def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
+def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
+
+def execText = { List<String> command ->
+    def output = new ByteArrayOutputStream()
+    def errorOutput = new ByteArrayOutputStream()
+    def result = exec {
+        commandLine command
+        standardOutput = output
+        errorOutput = errorOutput
+        ignoreExitValue = true
+    }
+    result.exitValue == 0 ? output.toString(StandardCharsets.UTF_8.name()).trim() : null
+}
+
+def loadGradleWrapperProperties = {
+    def wrapperProperties = new Properties()
+    def wrapperPropertiesFile = file('gradle/wrapper/gradle-wrapper.properties')
+    if (wrapperPropertiesFile.file) {
+        wrapperPropertiesFile.withInputStream { wrapperProperties.load(it) }
+    }
+    wrapperProperties
+}
 
 tasks.register('generateJarHashes') {
     group = 'verification'
@@ -713,6 +735,7 @@ tasks.register('generateReleaseManifest') {
 
     outputs.file(releaseSha256SumsFile)
     outputs.file(releaseManifestFile)
+    outputs.file(releaseBuildInfoFile)
 
     doLast {
         def jarFiles = jarTasks.get()
@@ -740,8 +763,63 @@ tasks.register('generateReleaseManifest') {
                 StandardCharsets.UTF_8.name()
         )
 
+        def gitStatus = execText(['git', 'status', '--porcelain'])
+        def wrapperProperties = loadGradleWrapperProperties()
+        def buildInfo = [
+                buildInfoVersion: 1,
+                manifest        : [
+                        entryCount: entries.size(),
+                        sha256   : sha256(releaseManifest),
+                        path     : canonicalPath(releaseManifest)
+                ],
+                checksums       : [
+                        sha256: sha256(sha256Sums),
+                        path  : canonicalPath(sha256Sums)
+                ],
+                git             : [
+                        commit    : execText(['git', 'rev-parse', 'HEAD']),
+                        branch    : execText(['git', 'rev-parse', '--abbrev-ref', 'HEAD']),
+                        describe  : execText(['git', 'describe', '--tags', '--always', '--dirty']),
+                        dirty     : gitStatus != null && !gitStatus.empty,
+                        submodules: execText(['git', 'submodule', 'status', '--recursive'])
+                ],
+                gradle          : [
+                        version                       : gradle.gradleVersion,
+                        wrapperDistributionUrl        : wrapperProperties.getProperty('distributionUrl'),
+                        wrapperDistributionSha256Sum  : wrapperProperties.getProperty('distributionSha256Sum')
+                ],
+                java            : [
+                        version              : System.getProperty('java.version'),
+                        vendor               : System.getProperty('java.vendor'),
+                        runtimeVersion       : System.getProperty('java.runtime.version'),
+                        vmName               : System.getProperty('java.vm.name'),
+                        vmVersion            : System.getProperty('java.vm.version'),
+                        specificationVersion : System.getProperty('java.specification.version')
+                ],
+                os              : [
+                        name   : System.getProperty('os.name'),
+                        version: System.getProperty('os.version'),
+                        arch   : System.getProperty('os.arch')
+                ],
+                environment     : [
+                        sourceDateEpoch: System.getenv('SOURCE_DATE_EPOCH')
+                ],
+                gradleStart     : [
+                        taskNames          : gradle.startParameter.taskNames,
+                        excludedTaskNames  : gradle.startParameter.excludedTaskNames,
+                        projectProperties  : gradle.startParameter.projectProperties.keySet().sort()
+                ]
+        ]
+
+        def buildInfoFile = releaseBuildInfoFile.get().asFile
+        buildInfoFile.setText(
+                groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(buildInfo)) + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
         logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${rootProject.relativePath(releaseManifest)}")
         logger.lifecycle("Wrote ${entries.size()} release checksums to ${rootProject.relativePath(sha256Sums)}")
+        logger.lifecycle("Wrote release build info to ${rootProject.relativePath(buildInfoFile)}")
     }
 }
 
@@ -752,9 +830,7 @@ tasks.register('verifyReleaseManifest') {
     def expectedReleaseManifestProperty = providers.gradleProperty('releaseManifest')
 
     dependsOn tasks.named('generateReleaseManifest')
-    inputs.file(expectedReleaseManifestProperty.map { file(it) })
-            .withPropertyName('expectedReleaseManifest')
-            .optional()
+    inputs.property('expectedReleaseManifest', expectedReleaseManifestProperty.orElse(''))
     inputs.file(releaseManifestFile)
             .withPropertyName('actualReleaseManifest')
 
