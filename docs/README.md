@@ -3,6 +3,7 @@
  - [CONTRIBUTING.md](../CONTRIBUTING.md): Understand Bisq's contribution and compensation guidelines
  - [build.md](build.md): Build and run Bisq at the command line
  - [dependency-signature-report.md](dependency-signature-report.md): Dependency PGP signature verification status
+ - [reproducible-release-builds.md](reproducible-release-builds.md): Verify release payload reproducibility
  - [idea-import.md](idea-import.md): Import Bisq sources into IntelliJ IDEA
  - [Makefile](../Makefile): (new) Set up a self-contained local Bisq network on Bitcoin regtest
  - [dev-setup.md](dev-setup.md): (deprecated) Set up a self-contained local Bisq network on Bitcoin regtest
