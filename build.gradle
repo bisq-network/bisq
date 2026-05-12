@@ -598,6 +598,55 @@ def manifestEntriesFor = { Collection<File> files ->
             .sort { left, right -> left.path <=> right.path }
 }
 
+def readReleaseManifest = { File manifestFile ->
+    if (!manifestFile.file) {
+        throw new GradleException("Missing release manifest: ${manifestFile}")
+    }
+
+    def lines = manifestFile.readLines(StandardCharsets.UTF_8.name())
+    if (lines.empty || lines[0] != 'sha256\tsize_bytes\tpath') {
+        throw new GradleException("Invalid release manifest header in ${manifestFile}. Expected: sha256\\tsize_bytes\\tpath")
+    }
+
+    def entries = new LinkedHashMap<String, Object>()
+    lines.drop(1).eachWithIndex { line, index ->
+        if (!line.trim().empty) {
+            def lineNumber = index + 2
+            def parts = line.split('\t', -1)
+            if (parts.length != 3) {
+                throw new GradleException("Invalid release manifest line ${lineNumber} in ${manifestFile}: ${line}")
+            }
+
+            def hash = parts[0]
+            def size = parts[1]
+            def path = parts[2]
+            if (!(hash ==~ /[0-9a-f]{64}/)) {
+                throw new GradleException("Invalid SHA-256 value on line ${lineNumber} in ${manifestFile}: ${hash}")
+            }
+            if (!(size ==~ /[0-9]+/)) {
+                throw new GradleException("Invalid file size on line ${lineNumber} in ${manifestFile}: ${size}")
+            }
+            if (!path || path.contains('\\')) {
+                throw new GradleException("Invalid path on line ${lineNumber} in ${manifestFile}: ${path}")
+            }
+            if (entries.containsKey(path)) {
+                throw new GradleException("Duplicate release manifest path on line ${lineNumber} in ${manifestFile}: ${path}")
+            }
+
+            entries[path] = [
+                    sha256: hash,
+                    size  : size as Long,
+                    path  : path
+            ]
+        }
+    }
+    entries
+}
+
+def releaseReportDir = layout.buildDirectory.dir('reports/release')
+def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
+def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
+
 tasks.register('generateJarHashes') {
     group = 'verification'
     description = 'Builds all project Jar task outputs and writes a canonical SHA-256 and size manifest.'
@@ -662,11 +711,7 @@ tasks.register('generateReleaseManifest') {
         jarFiles + desktopPayloadFiles
     })
 
-    def outputDir = layout.buildDirectory.dir('reports/release')
-    def sha256SumsFile = outputDir.map { it.file('SHA256SUMS') }
-    def releaseManifestFile = outputDir.map { it.file('release-manifest.tsv') }
-
-    outputs.file(sha256SumsFile)
+    outputs.file(releaseSha256SumsFile)
     outputs.file(releaseManifestFile)
 
     doLast {
@@ -681,7 +726,7 @@ tasks.register('generateReleaseManifest') {
         def desktopPayloadFiles = libDir.listFiles().findAll { it.isFile() }
         def entries = manifestEntriesFor(jarFiles + desktopPayloadFiles)
 
-        def sha256Sums = sha256SumsFile.get().asFile
+        def sha256Sums = releaseSha256SumsFile.get().asFile
         sha256Sums.parentFile.mkdirs()
         sha256Sums.setText(
                 entries.collect { "${it.sha256}  ${it.path}" }.join('\n') + '\n',
@@ -697,5 +742,81 @@ tasks.register('generateReleaseManifest') {
 
         logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${rootProject.relativePath(releaseManifest)}")
         logger.lifecycle("Wrote ${entries.size()} release checksums to ${rootProject.relativePath(sha256Sums)}")
+    }
+}
+
+tasks.register('verifyReleaseManifest') {
+    group = 'verification'
+    description = 'Builds the desktop Java payload and verifies it against -PreleaseManifest=<path>.'
+
+    def expectedReleaseManifestProperty = providers.gradleProperty('releaseManifest')
+
+    dependsOn tasks.named('generateReleaseManifest')
+    inputs.file(expectedReleaseManifestProperty.map { file(it) })
+            .withPropertyName('expectedReleaseManifest')
+            .optional()
+    inputs.file(releaseManifestFile)
+            .withPropertyName('actualReleaseManifest')
+
+    doLast {
+        def expectedReleaseManifestPath = expectedReleaseManifestProperty.orNull
+        if (!expectedReleaseManifestPath) {
+            throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv>')
+        }
+
+        def expectedManifest = file(expectedReleaseManifestPath)
+        def actualManifest = releaseManifestFile.get().asFile
+        if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
+            logger.warn("Expected release manifest points at the generated local manifest: ${expectedManifest}")
+        }
+
+        def expectedEntries = readReleaseManifest(expectedManifest)
+        def actualEntries = readReleaseManifest(actualManifest)
+        def expectedPaths = expectedEntries.keySet() as Set
+        def actualPaths = actualEntries.keySet() as Set
+
+        def missingPaths = (expectedPaths - actualPaths).sort()
+        def extraPaths = (actualPaths - expectedPaths).sort()
+        def changedPaths = expectedPaths.intersect(actualPaths)
+                .findAll { path ->
+                    expectedEntries[path].sha256 != actualEntries[path].sha256 ||
+                            expectedEntries[path].size != actualEntries[path].size
+                }
+                .sort()
+
+        if (!missingPaths.empty || !extraPaths.empty || !changedPaths.empty) {
+            def formatPaths = { Collection<String> paths ->
+                def lines = paths.take(20).collect { "  ${it}" }
+                if (paths.size() > 20) {
+                    lines << "  ... ${paths.size() - 20} more"
+                }
+                lines.join('\n')
+            }
+
+            def message = new StringBuilder()
+            message << "Release manifest verification failed against ${expectedManifest}\n"
+            if (!missingPaths.empty) {
+                message << "\nMissing files:\n${formatPaths(missingPaths)}\n"
+            }
+            if (!extraPaths.empty) {
+                message << "\nExtra files:\n${formatPaths(extraPaths)}\n"
+            }
+            if (!changedPaths.empty) {
+                message << "\nChanged files:\n"
+                changedPaths.take(20).each { path ->
+                    def expected = expectedEntries[path]
+                    def actual = actualEntries[path]
+                    message << "  ${path}\n"
+                    message << "    expected ${expected.sha256} ${expected.size}\n"
+                    message << "    actual   ${actual.sha256} ${actual.size}\n"
+                }
+                if (changedPaths.size() > 20) {
+                    message << "  ... ${changedPaths.size() - 20} more\n"
+                }
+            }
+            throw new GradleException(message.toString())
+        }
+
+        logger.lifecycle("Verified ${actualEntries.size()} release manifest entries against ${expectedManifest}")
     }
 }
