@@ -1682,7 +1682,7 @@ tasks.register('generateInstallerStructureReport') {
                     [
                             'sh',
                             '-c',
-                            "dpkg-deb ${dpkgDebOption} ${shellSingleQuoted(installerFile.absolutePath)} | tar -tvf -"
+                            "dpkg-deb ${dpkgDebOption} ${shellSingleQuoted(installerFile.absolutePath)} | tar --list --verbose --full-time --numeric-owner --file -"
                     ]
                 }
                 commands << [label: 'Debian archive members', command: ['ar', 'tv', installerFile.absolutePath]]
