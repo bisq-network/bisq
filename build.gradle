@@ -1678,6 +1678,17 @@ tasks.register('generateInstallerStructureReport') {
                     "\$path = ${literalPath}; \$installer = New-Object -ComObject WindowsInstaller.Installer; \$database = \$installer.OpenDatabase(\$path, 0); \$view = \$database.OpenView('SELECT `Property`, `Value` FROM `Property` ORDER BY `Property`'); \$view.Execute(); while (\$record = \$view.Fetch()) { '{0}={1}' -f \$record.StringData(1), \$record.StringData(2) }"
             ]
         }
+        def powershellPeHeaderCommand = { File file ->
+            def literalPath = powershellSingleQuoted(file.absolutePath)
+            [
+                    'powershell',
+                    '-NoProfile',
+                    '-ExecutionPolicy',
+                    'Bypass',
+                    '-Command',
+                    "\$bytes = [System.IO.File]::ReadAllBytes(${literalPath}); if (\$bytes.Length -lt 64) { throw 'File is too small to contain a PE header.' }; \$peOffset = [BitConverter]::ToInt32(\$bytes, 0x3c); if (\$peOffset -lt 0 -or \$peOffset + 24 -gt \$bytes.Length) { throw \"Invalid PE header offset: \$peOffset\" }; \$signature = [System.Text.Encoding]::ASCII.GetString(\$bytes, \$peOffset, 4); \$machine = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 4); \$sections = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 6); \$timestamp = [BitConverter]::ToUInt32(\$bytes, \$peOffset + 8); \$optionalHeaderSize = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 20); \$characteristics = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 22); [PSCustomObject]@{ PEHeaderOffset = \$peOffset; Signature = \$signature; Machine = ('0x{0:X4}' -f \$machine); NumberOfSections = \$sections; TimeDateStamp = \$timestamp; TimeDateStampUtc = [DateTimeOffset]::FromUnixTimeSeconds([int64]\$timestamp).UtcDateTime.ToString('o'); SizeOfOptionalHeader = \$optionalHeaderSize; Characteristics = ('0x{0:X4}' -f \$characteristics) } | Format-List *"
+            ]
+        }
         def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
         def macos = osName.contains('mac')
         def windows = osName.contains('windows')
@@ -1741,6 +1752,9 @@ tasks.register('generateInstallerStructureReport') {
                 commands << [label: 'macOS package archive members', command: ['xar', '-tf', installerFile.absolutePath], optional: true]
             } else if ((extension == 'exe' || extension == 'msi') && windows) {
                 commands << [label: 'Windows installer metadata', command: powershellInstallerMetadataCommand(installerFile)]
+                if (extension == 'exe') {
+                    commands << [label: 'Windows PE header', command: powershellPeHeaderCommand(installerFile), optional: true]
+                }
                 if (extension == 'msi') {
                     commands << [label: 'Windows MSI properties', command: powershellMsiPropertiesCommand(installerFile), optional: true]
                 }
