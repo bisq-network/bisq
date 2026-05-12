@@ -1745,6 +1745,7 @@ tasks.register('generateInstallerStructureReport') {
                 commands << [label: 'RPM package dump', command: ['rpm', '-qp', '--dump', installerFile.absolutePath]]
             } else if (extension == 'dmg' && macos) {
                 commands << [label: 'DMG image info', command: ['hdiutil', 'imageinfo', installerFile.absolutePath]]
+                commands << [label: 'DMG partition map', command: ['hdiutil', 'pmap', installerFile.absolutePath]]
                 commands << [label: 'DMG image verification', command: ['hdiutil', 'verify', installerFile.absolutePath]]
                 commands << [label: 'DMG SHA-256 checksum', command: ['hdiutil', 'checksum', '-type', 'SHA256', installerFile.absolutePath]]
             } else if (extension == 'pkg' && macos) {
