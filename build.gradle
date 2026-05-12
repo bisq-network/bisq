@@ -1106,6 +1106,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                             dpkgDeb  : commandVersionInfo(['dpkg-deb', '--version']),
                             dpkgQuery: commandVersionInfo(['dpkg-query', '--version']),
                             rpm      : commandVersionInfo(['rpm', '--version']),
+                            rpm2cpio : commandVersionInfo(['rpm2cpio', '--version']),
                             rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
                             fakeroot : commandVersionInfo(['fakeroot', '--version'])
                     ] : null,

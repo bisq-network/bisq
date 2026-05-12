@@ -208,6 +208,8 @@ artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
 installer-relevant tool diagnostics such as Linux package and archive tools,
 macOS `hdiutil` and `pkgutil`, Windows PowerShell, and Windows WiX tools for
 explaining per-OS installer differences.
+Linux diagnostics include RPM payload extraction tools such as `rpm2cpio` and
+`cpio` when they are available.
 
 To inspect installer package internals with the tools available on the current
 OS, run:
