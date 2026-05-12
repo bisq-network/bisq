@@ -1664,6 +1664,32 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
 
     dependsOn tasks.named('generateInstallerStructureReport')
 
+    def requiredEvidenceFiles = [
+            installerManifestFile,
+            installerSha256SumsFile,
+            installerBuildInfoFile,
+            installerStructureReportFile
+    ]
+    def structureReportFiles = {
+        def structureReport = installerStructureReportFile.get().asFile
+        if (!structureReport.file) {
+            return []
+        }
+        structureReport.readLines(StandardCharsets.UTF_8.name())
+                .drop(1)
+                .collect { it.split('\t', -1) }
+                .findAll { columns -> columns.length >= 5 && columns[4] }
+                .collect { columns -> file(columns[4]) }
+    }
+    def structureDirectoryFiles = {
+        def structureDir = installerStructureReportDir.get().asFile
+        structureDir.directory
+                ? fileTree(structureDir).files
+                .findAll { it.file }
+                .sort { left, right -> left.path <=> right.path }
+                : []
+    }
+
     archiveFileName = 'installer-evidence.zip'
     destinationDirectory = releaseReportDir
     preserveFileTimestamps = false
@@ -1677,8 +1703,68 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
         into 'installer-structure'
     }
 
+    doFirst {
+        def missingFiles = []
+        requiredEvidenceFiles.each { provider ->
+            def requiredFile = provider.get().asFile
+            if (!requiredFile.file) {
+                missingFiles << canonicalPath(requiredFile)
+            }
+        }
+
+        def structureDir = installerStructureReportDir.get().asFile
+        if (!structureDir.directory) {
+            missingFiles << canonicalPath(structureDir)
+        }
+
+        if (missingFiles.empty) {
+            structureReportFiles().each { reportFile ->
+                if (!reportFile.file) {
+                    missingFiles << canonicalPath(reportFile)
+                }
+            }
+        }
+
+        if (!missingFiles.empty) {
+            throw new GradleException(
+                    "Cannot package installer evidence because required files are missing:\n" +
+                            missingFiles.unique().sort().collect { "  - ${it}" }.join('\n') +
+                            "\nRun ./gradlew generateInstallerStructureReport to regenerate installer evidence."
+            )
+        }
+    }
+
     doLast {
         def bundle = archiveFile.get().asFile
+        def expectedEntries = new TreeSet<String>()
+        requiredEvidenceFiles.each { provider ->
+            expectedEntries << provider.get().asFile.name
+        }
+        def structureDir = installerStructureReportDir.get().asFile
+        structureDirectoryFiles().each { reportFile ->
+            def relativeStructurePath = structureDir.toPath()
+                    .relativize(reportFile.toPath())
+                    .toString()
+                    .replace(File.separatorChar, '/' as char)
+            expectedEntries << "installer-structure/${relativeStructurePath}"
+        }
+
+        def actualEntries = new TreeSet<String>()
+        new ZipFile(bundle).withCloseable { zipFile ->
+            zipFile.entries().each { entry ->
+                if (!entry.directory) {
+                    actualEntries << entry.name
+                }
+            }
+        }
+        def missingEntries = (expectedEntries - actualEntries).sort()
+        if (!missingEntries.empty) {
+            throw new GradleException(
+                    "Installer evidence bundle is missing required entries:\n" +
+                            missingEntries.collect { "  - ${it}" }.join('\n')
+            )
+        }
+
         logger.lifecycle("Wrote installer evidence bundle to ${rootProject.relativePath(bundle)}")
         logger.lifecycle("Installer evidence bundle SHA-256: ${sha256(bundle)}")
     }

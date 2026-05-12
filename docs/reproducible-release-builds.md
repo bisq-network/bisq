@@ -232,6 +232,11 @@ The bundle is written to:
 
 - `build/reports/release/installer-evidence.zip`
 
+`generateInstallerEvidenceBundle` checks that the installer manifest,
+checksums, build info, structure summary, and referenced structure reports are
+present before packaging. It also verifies the ZIP contains those required
+entries before reporting success.
+
 The manual GitHub Actions workflow `Installer Evidence` can generate Linux,
 macOS, and Windows installer evidence for a release commit or tag without
 making installer generation part of the normal push or pull-request release
