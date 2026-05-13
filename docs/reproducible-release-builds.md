@@ -282,6 +282,18 @@ The bundle is written to:
 
 - `build/reports/release/installer-evidence.zip`
 
+Expected ZIP entries:
+
+- `installer-manifest.tsv`: canonical installer artifact hashes, sizes, and
+  paths.
+- `INSTALLER-SHA256SUMS`: checksum-tool compatible installer hashes.
+- `installer-build-info.json`: build environment and installer tool
+  diagnostics.
+- `installer-structure-report.tsv`: per-artifact structure report summary.
+- `installer-structure/*.txt`: per-artifact structure diagnostics for rows in
+  `installer-structure-report.tsv` whose status is `generated` or `failed` and
+  whose `report_path` column is populated.
+
 `generateInstallerEvidenceBundle` checks that the installer manifest,
 checksums, build info, structure summary, and referenced structure reports are
 present before packaging. It also verifies the ZIP contains those required
