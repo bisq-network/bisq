@@ -1052,6 +1052,20 @@ def installerArtifactsIn = { File installerDir ->
             : []
 }
 
+def expectedInstallerArtifactExtensions = {
+    def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    if (osName.contains('linux')) {
+        return ['deb', 'rpm']
+    }
+    if (osName.contains('mac')) {
+        return ['dmg']
+    }
+    if (osName.contains('windows')) {
+        return ['exe']
+    }
+    []
+}
+
 def releaseReportDir = layout.buildDirectory.dir('reports/release')
 def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
 def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
@@ -1956,6 +1970,20 @@ tasks.register('generateInstallerManifest') {
         if (installerFiles.empty) {
             throw new GradleException(
                     "No installer artifacts found in ${installerDir}. Expected one of: ${installerArtifactIncludes.join(', ')}"
+            )
+        }
+
+        def actualExtensions = installerFiles.collect { installerFile ->
+            installerFile.name.contains('.')
+                    ? installerFile.name.substring(installerFile.name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                    : ''
+        } as Set
+        def missingExpectedExtensions = expectedInstallerArtifactExtensions().findAll { !actualExtensions.contains(it) }
+        if (!missingExpectedExtensions.empty) {
+            throw new GradleException(
+                    "Missing expected installer artifact(s) for ${System.getProperty('os.name')}: " +
+                            missingExpectedExtensions.collect { ".${it}" }.join(', ') +
+                            ". Found: " + actualExtensions.findAll { it }.sort().collect { ".${it}" }.join(', ')
             )
         }
 

@@ -235,6 +235,10 @@ Build the OS-specific installer artifacts and write their manifest with:
 - `build/reports/release/INSTALLER-SHA256SUMS`
 - `build/reports/release/installer-build-info.json`
 
+The manifest task verifies that the expected installer formats for the current
+OS were produced: `.deb` and `.rpm` on Linux, `.dmg` on macOS, and `.exe` on
+Windows.
+
 `installer-manifest.tsv` is the canonical comparison file for installer
 artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
 `installer-build-info.json` records the OS, JDK, Gradle, locale, timezone,

@@ -10,7 +10,6 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.security.MessageDigest
 
-
 abstract class Sha256HashTask : DefaultTask() {
 
     @get:InputDirectory
@@ -19,14 +18,13 @@ abstract class Sha256HashTask : DefaultTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
-    private val digest = MessageDigest.getInstance("SHA-256")
-
     @TaskAction
     fun run() {
         val fileHashes = inputDirFile.get().listFiles()!!
+            .filter { it.isFile }
+            .sortedBy { it.name }
             .map { file ->
-                val hash = digest.digest(file.readBytes())
-                Pair(file.name, Hex.encodeHexString(hash))
+                Pair(file.name, sha256(file))
             }
 
         // linux:file_name:sha256_hash
@@ -34,7 +32,22 @@ abstract class Sha256HashTask : DefaultTask() {
         val lines = fileHashes.map { nameAndHash -> "$osName:${nameAndHash.first}:${nameAndHash.second}" }
 
         outputFile.asFile.get()
-            .writeText(lines.joinToString(separator = "\n"))
+            .writeText(lines.joinToString(separator = "\n") + "\n")
+    }
+
+    private fun sha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) {
+                    break
+                }
+                digest.update(buffer, 0, read)
+            }
+        }
+        return Hex.encodeHexString(digest.digest())
     }
 
     private fun getOsName(): String =
