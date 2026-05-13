@@ -76,15 +76,16 @@ docker run --rm --platform linux/amd64 \
 
 This container is an independent Linux verification environment for the Java
 payload. The manual GitHub Actions workflow `Linux Release Builder` builds this
-image, runs `verifyReleaseBuild` and `verifyInstallerEvidenceBundle` inside it,
-and uploads the Java payload evidence artifact
-`release-builder-linux-java-21.0.6` plus the Linux installer evidence artifact
-`release-builder-linux-installers-java-21.0.6`. The workflow is
-`workflow_dispatch` only, so it is not part of normal push or pull-request CI.
-`verifyReleaseBuild` also runs `verifyReleaseBuilderImage`, which checks that
-the Dockerfile keeps its base image digest, apt snapshot, package-tool set, and
-release-sensitive environment defaults pinned. The container does not make
-installer internals deterministic by itself.
+image, creates two clean worktrees of the dispatch commit, runs
+`verifyReleaseBuild` and `verifyInstallerEvidenceBundle` inside the image for
+both worktrees, compares the two `release-evidence.zip` files, compares the two
+`installer-evidence.zip` files, and uploads the first worktree's Java payload
+evidence artifact `release-builder-linux-java-21.0.6` plus Linux installer
+evidence artifact `release-builder-linux-installers-java-21.0.6`. The workflow
+is `workflow_dispatch` only, so it is not part of normal push or pull-request
+CI. `verifyReleaseBuild` also runs `verifyReleaseBuilderImage`, which checks
+that the Dockerfile keeps its base image digest, apt snapshot, package-tool set,
+and release-sensitive environment defaults pinned.
 
 Build the release payload and run the policy gates.
 

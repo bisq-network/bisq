@@ -29,17 +29,36 @@ jobs:
       shell: bash
       run: docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
 
-    - name: Verify Java payload in release-builder
+    - name: Prepare clean release-builder worktrees
       shell: bash
       run: |
-        docker run --rm --platform linux/amd64 \
-          --user "$(id -u):$(id -g)" \
-          -v "$PWD:/workspace" \
-          -w /workspace \
-          bisq-release-builder-linux:java-21.0.6 \
-          ./gradlew verifyReleaseBuild
+        mkdir -p build/release-builder-worktrees
+        git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"
+        git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"
+        git -C build/release-builder-worktrees/a submodule update --init --recursive
+        git -C build/release-builder-worktrees/b submodule update --init --recursive
 
-    - name: Generate Linux installer evidence in release-builder
+    - name: Generate Linux evidence in release-builder worktree A
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD/build/release-builder-worktrees/a:/workspace" \
+          -w /workspace \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
+
+    - name: Generate Linux evidence in release-builder worktree B
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD/build/release-builder-worktrees/b:/workspace" \
+          -w /workspace \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
+
+    - name: Compare release-builder Java evidence
       shell: bash
       run: |
         docker run --rm --platform linux/amd64 \
@@ -47,17 +66,31 @@ jobs:
           -v "$PWD:/workspace" \
           -w /workspace \
           bisq-release-builder-linux:java-21.0.6 \
-          ./gradlew verifyInstallerEvidenceBundle
+          ./gradlew compareReleaseEvidenceBundles \
+            -PleftReleaseEvidence=build/release-builder-worktrees/a/build/reports/release/release-evidence.zip \
+            -PrightReleaseEvidence=build/release-builder-worktrees/b/build/reports/release/release-evidence.zip
+
+    - name: Compare release-builder installer evidence
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew compareInstallerEvidenceBundles \
+            -PleftInstallerEvidence=build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip \
+            -PrightInstallerEvidence=build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip
 
     - name: Upload release-builder evidence
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: release-builder-linux-java-21.0.6
         path: |
-          build/reports/release/SHA256SUMS
-          build/reports/release/release-manifest.tsv
-          build/reports/release/build-info.json
-          build/reports/release/release-evidence.zip
+          build/release-builder-worktrees/a/build/reports/release/SHA256SUMS
+          build/release-builder-worktrees/a/build/reports/release/release-manifest.tsv
+          build/release-builder-worktrees/a/build/reports/release/build-info.json
+          build/release-builder-worktrees/a/build/reports/release/release-evidence.zip
         if-no-files-found: error
 
     - name: Upload release-builder installer evidence
@@ -65,11 +98,11 @@ jobs:
       with:
         name: release-builder-linux-installers-java-21.0.6
         path: |
-          build/reports/release/INSTALLER-SHA256SUMS
-          build/reports/release/installer-manifest.tsv
-          build/reports/release/installer-build-info.json
-          build/reports/release/installer-structure-summary.txt
-          build/reports/release/installer-structure-report.tsv
-          build/reports/release/installer-structure/**
-          build/reports/release/installer-evidence.zip
+          build/release-builder-worktrees/a/build/reports/release/INSTALLER-SHA256SUMS
+          build/release-builder-worktrees/a/build/reports/release/installer-manifest.tsv
+          build/release-builder-worktrees/a/build/reports/release/installer-build-info.json
+          build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt
+          build/release-builder-worktrees/a/build/reports/release/installer-structure-report.tsv
+          build/release-builder-worktrees/a/build/reports/release/installer-structure/**
+          build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip
         if-no-files-found: error
