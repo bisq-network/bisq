@@ -889,9 +889,117 @@ def installerStructureReportFile = releaseReportDir.map { it.file('installer-str
 def installerStructureReportDir = releaseReportDir.map { it.dir('installer-structure') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
+def installerEvidenceRequiredEntries = [
+        'installer-manifest.tsv',
+        'INSTALLER-SHA256SUMS',
+        'installer-build-info.json',
+        'installer-structure-report.tsv'
+]
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
+
+def installerStructureZipEntryFor = { String reportPath ->
+    def normalizedReportPath = reportPath.replace('\\', '/')
+    def marker = 'installer-structure/'
+    if (normalizedReportPath.startsWith(marker)) {
+        return normalizedReportPath
+    }
+
+    def markerIndex = normalizedReportPath.indexOf("/${marker}")
+    markerIndex >= 0 ? normalizedReportPath.substring(markerIndex + 1) : null
+}
+
+def validateInstallerEvidenceBundle = { File bundle ->
+    if (!bundle.file) {
+        throw new GradleException("Missing installer evidence bundle: ${bundle}")
+    }
+
+    def actualEntries = new TreeSet<String>()
+    def missingEntries = new TreeSet<String>()
+    def structureReportText = null
+    def referencedStructureEntries = new TreeSet<String>()
+
+    new ZipFile(bundle).withCloseable { zipFile ->
+        zipFile.entries().each { entry ->
+            if (!entry.directory) {
+                actualEntries << entry.name
+            }
+        }
+
+        installerEvidenceRequiredEntries.each { entryName ->
+            def entry = zipFile.getEntry(entryName)
+            if (entry == null || entry.directory) {
+                missingEntries << entryName
+            }
+        }
+
+        def structureReportEntry = zipFile.getEntry('installer-structure-report.tsv')
+        if (structureReportEntry != null && !structureReportEntry.directory) {
+            zipFile.getInputStream(structureReportEntry).withCloseable { input ->
+                structureReportText = input.getText(StandardCharsets.UTF_8.name())
+            }
+        }
+    }
+
+    if (structureReportText != null) {
+        def lines = structureReportText.readLines()
+        def expectedHeader = 'artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage'
+        if (lines.empty || lines[0] != expectedHeader) {
+            throw new GradleException(
+                    "Invalid installer-structure-report.tsv header in ${bundle}. Expected: ${expectedHeader.replace('\t', '\\t')}"
+            )
+        }
+
+        lines.drop(1).eachWithIndex { line, index ->
+            if (!line.trim().empty) {
+                def lineNumber = index + 2
+                def columns = line.split('\t', -1)
+                if (columns.length != 6) {
+                    throw new GradleException("Invalid installer structure report line ${lineNumber} in ${bundle}: ${line}")
+                }
+
+                def status = columns[3]
+                def reportPath = columns[4]
+                if ((status == 'generated' || status == 'failed') && reportPath) {
+                    def structureEntry = installerStructureZipEntryFor(reportPath)
+                    if (structureEntry == null) {
+                        throw new GradleException(
+                                "Cannot map installer structure report path to a ZIP entry on line ${lineNumber} in ${bundle}: ${reportPath}"
+                        )
+                    }
+                    referencedStructureEntries << structureEntry
+                }
+            }
+        }
+    }
+
+    if (!referencedStructureEntries.empty) {
+        def structureTextEntries = actualEntries.findAll {
+            it.startsWith('installer-structure/') && it.endsWith('.txt')
+        }
+        if (structureTextEntries.empty) {
+            missingEntries << 'installer-structure/*.txt'
+        }
+        referencedStructureEntries.each { entryName ->
+            if (!actualEntries.contains(entryName)) {
+                missingEntries << entryName
+            }
+        }
+    }
+
+    if (!missingEntries.empty) {
+        throw new GradleException(
+                "Installer evidence bundle is missing required entries:\n" +
+                        missingEntries.collect { "  - ${it}" }.join('\n')
+        )
+    }
+
+    [
+            entryCount                    : actualEntries.size(),
+            referencedStructureEntryCount: referencedStructureEntries.size()
+    ]
+}
 
 def normalizeCommandOutput = { Object value ->
     value == null
@@ -1933,6 +2041,25 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
 
         logger.lifecycle("Wrote installer evidence bundle to ${rootProject.relativePath(bundle)}")
         logger.lifecycle("Installer evidence bundle SHA-256: ${sha256(bundle)}")
+    }
+}
+
+tasks.register('verifyInstallerEvidenceBundle') {
+    group = 'verification'
+    description = 'Verifies that the generated installer evidence ZIP contains the required evidence files.'
+
+    dependsOn tasks.named('generateInstallerEvidenceBundle')
+    inputs.file(installerEvidenceBundleFile)
+            .withPropertyName('installerEvidenceBundle')
+
+    doLast {
+        def bundle = installerEvidenceBundleFile.get().asFile
+        def validation = validateInstallerEvidenceBundle(bundle)
+        logger.lifecycle(
+                "Verified installer evidence bundle ${rootProject.relativePath(bundle)} " +
+                        "with ${validation.entryCount} entries and " +
+                        "${validation.referencedStructureEntryCount} referenced structure reports."
+        )
     }
 }
 

@@ -287,6 +287,17 @@ checksums, build info, structure summary, and referenced structure reports are
 present before packaging. It also verifies the ZIP contains those required
 entries before reporting success.
 
+To regenerate the bundle and explicitly validate the published ZIP layout, run:
+
+```bash
+./gradlew verifyInstallerEvidenceBundle
+```
+
+`verifyInstallerEvidenceBundle` opens `installer-evidence.zip` and checks for
+the manifest, checksum file, build info, structure summary, and any
+`installer-structure/*.txt` reports referenced by generated or failed structure
+report rows.
+
 The manual GitHub Actions workflow `Installer Evidence` can generate Linux,
 macOS, and Windows installer evidence for a release commit or tag without
 making installer generation part of the normal push or pull-request release
