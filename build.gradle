@@ -1457,7 +1457,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                             dpkgDeb  : commandVersionInfo(['dpkg-deb', '--version']),
                             dpkgQuery: commandVersionInfo(['dpkg-query', '--version']),
                             rpm      : commandVersionInfo(['rpm', '--version']),
-                            rpm2cpio : commandVersionInfo(['rpm2cpio', '--version']),
+                            rpm2cpio : commandOutputInfo(['sh', '-c', 'command -v rpm2cpio'], ['rpm2cpio']),
                             rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
                             fakeroot : commandVersionInfo(['fakeroot', '--version'])
                     ] : null,
@@ -2403,7 +2403,7 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
                     .relativize(reportFile.toPath())
                     .toString()
                     .replace(File.separatorChar, '/' as char)
-            expectedEntries << "installer-structure/${relativeStructurePath}"
+            expectedEntries << "installer-structure/${relativeStructurePath}".toString()
         }
 
         def actualEntries = new TreeSet<String>()
