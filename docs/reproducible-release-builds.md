@@ -337,6 +337,19 @@ Compare a local rebuild against a signed or CI-generated installer manifest:
 `installer-evidence.zip` file if it contains exactly one
 `installer-manifest.tsv`.
 
+Compare two installer evidence bundles or extracted evidence directories:
+
+```bash
+./gradlew compareInstallerEvidenceBundles \
+  -PleftInstallerEvidence=/path/to/local/installer-evidence.zip \
+  -PrightInstallerEvidence=/path/to/ci/installer-evidence.zip
+```
+
+`compareInstallerEvidenceBundles` compares `installer-manifest.tsv` from both
+inputs. If an artifact is missing, extra, or changed, the failure output shows
+the left and right hashes, sizes, and matching `installer-structure/*.txt`
+report references when `installer-structure-report.tsv` is present.
+
 ### Linux Installer Rebuild Comparison
 
 Use two isolated worktrees of the same release tag or commit when investigating
@@ -366,17 +379,18 @@ docker run --rm --platform linux/amd64 \
   bisq-release-builder-linux:java-21.0.6 \
   ./gradlew clean generateInstallerEvidenceBundle
 
-diff -u \
-  ../bisq-installer-a/build/reports/release/installer-manifest.tsv \
-  ../bisq-installer-b/build/reports/release/installer-manifest.tsv
+./gradlew compareInstallerEvidenceBundles \
+  -PleftInstallerEvidence=../bisq-installer-a/build/reports/release/installer-evidence.zip \
+  -PrightInstallerEvidence=../bisq-installer-b/build/reports/release/installer-evidence.zip
 ```
 
 If the installer manifests differ, compare
-`installer-structure-report.tsv`, the files under `installer-structure/`, and
-`installer-build-info.json` from both worktrees before changing package
-generation logic. For Debian packages, start with the outer `ar` member
-metadata and the inner `control.tar` and `data.tar` listings because those
-reports expose timestamps, ordering, ownership, and mode differences.
+`installer-structure-summary.txt`, `installer-structure-report.tsv`, the files
+under `installer-structure/`, and `installer-build-info.json` from both
+worktrees before changing package generation logic. For Debian packages, start
+with the outer `ar` member metadata and the inner `control.tar` and `data.tar`
+listings because those reports expose timestamps, ordering, ownership, and mode
+differences.
 
 Publish and sign the installer evidence next to the corresponding binary
 artifacts:

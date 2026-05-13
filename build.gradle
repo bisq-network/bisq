@@ -770,6 +770,70 @@ def resolveInstallerManifestFile = { File manifestPath ->
     resolveManifestFile(manifestPath, 'installer-manifest.tsv')
 }
 
+def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean required ->
+    def missingMessage = { String location ->
+        "No ${evidenceFileName} found ${location}"
+    }
+
+    if (evidencePath.file && evidencePath.name.toLowerCase(Locale.ROOT).endsWith('.zip')) {
+        def matchingEntries = []
+        def text = null
+        new ZipFile(evidencePath).withCloseable { zipFile ->
+            zipFile.entries().each { entry ->
+                if (!entry.directory && (entry.name == evidenceFileName || entry.name.endsWith("/${evidenceFileName}"))) {
+                    matchingEntries << entry.name
+                }
+            }
+
+            if (matchingEntries.empty) {
+                return
+            } else if (matchingEntries.size() > 1) {
+                throw new GradleException(
+                        "Multiple ${evidenceFileName} files found in ${evidencePath}:\n" +
+                                matchingEntries.collect { "  - ${it}" }.join('\n')
+                )
+            } else {
+                zipFile.getInputStream(zipFile.getEntry(matchingEntries[0])).withCloseable { input ->
+                    text = input.getText(StandardCharsets.UTF_8.name())
+                }
+            }
+        }
+        if (matchingEntries.empty && required) {
+            throw new GradleException(missingMessage("in ${evidencePath}"))
+        }
+        return text
+    }
+
+    if (evidencePath.directory) {
+        def matchingFiles = fileTree(evidencePath) {
+            include "**/${evidenceFileName}"
+        }.files.sort { left, right -> left.path <=> right.path }
+
+        if (matchingFiles.empty) {
+            if (required) {
+                throw new GradleException(missingMessage("under ${evidencePath}"))
+            }
+            return null
+        }
+        if (matchingFiles.size() > 1) {
+            throw new GradleException(
+                    "Multiple ${evidenceFileName} files found under ${evidencePath}:\n" +
+                            matchingFiles.collect { "  - ${it}" }.join('\n')
+            )
+        }
+        return matchingFiles[0].getText(StandardCharsets.UTF_8.name())
+    }
+
+    if (evidencePath.file && evidencePath.name == evidenceFileName) {
+        return evidencePath.getText(StandardCharsets.UTF_8.name())
+    }
+
+    if (required) {
+        throw new GradleException(missingMessage("at ${evidencePath}"))
+    }
+    null
+}
+
 def readReleaseManifest = { File manifestFile ->
     if (!manifestFile.file) {
         throw new GradleException("Missing release manifest: ${manifestFile}")
@@ -813,6 +877,91 @@ def readReleaseManifest = { File manifestFile ->
         }
     }
     entries
+}
+
+def readInstallerStructureReportRows = { File evidencePath ->
+    def reportText = readEvidenceTextFile(evidencePath, 'installer-structure-report.tsv', false)
+    if (reportText == null) {
+        return [:]
+    }
+
+    def lines = reportText.readLines()
+    def expectedHeader = 'artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage'
+    if (lines.empty || lines[0] != expectedHeader) {
+        throw new GradleException(
+                "Invalid installer-structure-report.tsv header in ${evidencePath}. Expected: ${expectedHeader.replace('\t', '\\t')}"
+        )
+    }
+
+    def rows = new LinkedHashMap<String, Object>()
+    lines.drop(1).eachWithIndex { line, index ->
+        if (!line.trim().empty) {
+            def lineNumber = index + 2
+            def columns = line.split('\t', -1)
+            if (columns.length != 6) {
+                throw new GradleException("Invalid installer structure report line ${lineNumber} in ${evidencePath}: ${line}")
+            }
+
+            def artifactPath = columns[0]
+            if (rows.containsKey(artifactPath)) {
+                throw new GradleException("Duplicate installer structure artifact path on line ${lineNumber} in ${evidencePath}: ${artifactPath}")
+            }
+
+            rows[artifactPath] = [
+                    artifactPath: artifactPath,
+                    sha256      : columns[1],
+                    format      : columns[2],
+                    status      : columns[3],
+                    reportPath  : columns[4],
+                    message     : columns[5]
+            ]
+        }
+    }
+    rows
+}
+
+def installerStructureReportReference = { File evidencePath, Map<String, Object> structureRow ->
+    if (structureRow == null || !structureRow.reportPath) {
+        return 'none'
+    }
+
+    def structureEntry = installerStructureZipEntryFor(structureRow.reportPath)
+    if (structureEntry == null) {
+        return structureRow.reportPath
+    }
+
+    if (evidencePath.file && evidencePath.name.toLowerCase(Locale.ROOT).endsWith('.zip')) {
+        return "${evidencePath}!${structureEntry}"
+    }
+    if (evidencePath.directory) {
+        return new File(evidencePath, structureEntry).path
+    }
+    structureRow.reportPath
+}
+
+def appendInstallerEvidenceArtifactDetails = {
+    StringBuilder message,
+    String label,
+    String artifactPath,
+    Map<String, Object> manifestEntry,
+    Map<String, Object> structureRow,
+    File evidencePath ->
+        if (manifestEntry == null) {
+            message << "    ${label}: missing\n"
+            return
+        }
+
+        message << "    ${label}: ${manifestEntry.sha256} ${manifestEntry.size}\n"
+        if (structureRow != null) {
+            message << "    ${label} structure: ${installerStructureReportReference(evidencePath, structureRow)}"
+            message << " (${structureRow.status ?: 'unknown'})"
+            if (structureRow.message) {
+                message << " - ${structureRow.message}"
+            }
+            message << "\n"
+        } else {
+            message << "    ${label} structure: none\n"
+        }
 }
 
 def verifyManifestMatches = { String manifestLabel, File expectedManifest, File actualManifest ->
@@ -2115,6 +2264,121 @@ tasks.register('verifyInstallerEvidenceBundle') {
                         "with ${validation.entryCount} entries and " +
                         "${validation.referencedStructureEntryCount} referenced structure reports."
         )
+    }
+}
+
+tasks.register('compareInstallerEvidenceBundles') {
+    group = 'verification'
+    description = 'Compares two installer evidence ZIPs or extracted evidence directories.'
+
+    def leftInstallerEvidenceProperty = providers.gradleProperty('leftInstallerEvidence')
+    def rightInstallerEvidenceProperty = providers.gradleProperty('rightInstallerEvidence')
+
+    inputs.property('leftInstallerEvidence', leftInstallerEvidenceProperty.orElse(''))
+    inputs.property('rightInstallerEvidence', rightInstallerEvidenceProperty.orElse(''))
+
+    doLast {
+        def leftInstallerEvidencePath = leftInstallerEvidenceProperty.orNull
+        def rightInstallerEvidencePath = rightInstallerEvidenceProperty.orNull
+        if (!leftInstallerEvidencePath || !rightInstallerEvidencePath) {
+            throw new GradleException(
+                    'Missing required -PleftInstallerEvidence=<installer-evidence.zip-or-directory> ' +
+                            'and -PrightInstallerEvidence=<installer-evidence.zip-or-directory>'
+            )
+        }
+
+        def leftEvidence = file(leftInstallerEvidencePath)
+        def rightEvidence = file(rightInstallerEvidencePath)
+        def leftManifest = resolveInstallerManifestFile(leftEvidence)
+        def rightManifest = resolveInstallerManifestFile(rightEvidence)
+        def leftEntries = readReleaseManifest(leftManifest)
+        def rightEntries = readReleaseManifest(rightManifest)
+        def leftStructureRows = readInstallerStructureReportRows(leftEvidence)
+        def rightStructureRows = readInstallerStructureReportRows(rightEvidence)
+        def leftPaths = leftEntries.keySet() as Set
+        def rightPaths = rightEntries.keySet() as Set
+        def missingFromRight = (leftPaths - rightPaths).sort()
+        def extraInRight = (rightPaths - leftPaths).sort()
+        def changedPaths = leftPaths.intersect(rightPaths)
+                .findAll { path ->
+                    leftEntries[path].sha256 != rightEntries[path].sha256 ||
+                            leftEntries[path].size != rightEntries[path].size
+                }
+                .sort()
+
+        if (missingFromRight.empty && extraInRight.empty && changedPaths.empty) {
+            logger.lifecycle("Installer evidence manifests match: ${leftEvidence} and ${rightEvidence}")
+            return
+        }
+
+        def message = new StringBuilder()
+        message << "Installer evidence comparison failed\n"
+        message << "left: ${leftEvidence}\n"
+        message << "right: ${rightEvidence}\n"
+
+        if (!changedPaths.empty) {
+            message << "\nChanged artifacts:\n"
+            changedPaths.take(20).each { path ->
+                message << "  ${path}\n"
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'left',
+                        path,
+                        leftEntries[path],
+                        leftStructureRows[path],
+                        leftEvidence
+                )
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'right',
+                        path,
+                        rightEntries[path],
+                        rightStructureRows[path],
+                        rightEvidence
+                )
+            }
+            if (changedPaths.size() > 20) {
+                message << "  ... ${changedPaths.size() - 20} more\n"
+            }
+        }
+
+        if (!missingFromRight.empty) {
+            message << "\nOnly in left:\n"
+            missingFromRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'left',
+                        path,
+                        leftEntries[path],
+                        leftStructureRows[path],
+                        leftEvidence
+                )
+            }
+            if (missingFromRight.size() > 20) {
+                message << "  ... ${missingFromRight.size() - 20} more\n"
+            }
+        }
+
+        if (!extraInRight.empty) {
+            message << "\nOnly in right:\n"
+            extraInRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'right',
+                        path,
+                        rightEntries[path],
+                        rightStructureRows[path],
+                        rightEvidence
+                )
+            }
+            if (extraInRight.size() > 20) {
+                message << "  ... ${extraInRight.size() - 20} more\n"
+            }
+        }
+
+        throw new GradleException(message.toString())
     }
 }
 
