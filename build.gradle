@@ -1666,6 +1666,16 @@ tasks.register('verifyReleaseBuilderImage') {
         if (!text.contains('/etc/apt/sources.list.d/ubuntu.sources') || !text.contains('Snapshot: yes')) {
             violations << 'Dockerfile must enable apt snapshots for deb822 ubuntu.sources files when present'
         }
+        if (!text.contains('rm -f /etc/apt/sources.list.d/zulu.list')) {
+            violations << 'Dockerfile must remove the unused Azul apt source before apt-get update'
+        }
+        if (!text.contains('apt-get install -y --no-install-recommends ca-certificates')) {
+            violations << 'Dockerfile must bootstrap ca-certificates from the pinned HTTPS apt snapshot'
+        }
+        if (!text.contains('Acquire::https::Verify-Peer "false"') ||
+                !text.contains('rm -f /etc/apt/apt.conf.d/49bootstrap-no-verify-peer')) {
+            violations << 'Dockerfile must remove the temporary HTTPS peer verification bootstrap override before the main apt install'
+        }
         if (!(text =~ /\bapt-get install -y --no-install-recommends\b/)) {
             violations << 'Dockerfile apt installs must use --no-install-recommends'
         }

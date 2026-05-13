@@ -12,13 +12,19 @@ ENV DEBIAN_FRONTEND=noninteractive \
     GRADLE_USER_HOME=/tmp/bisq-home/.gradle
 
 RUN set -eux; \
+    rm -f /etc/apt/sources.list.d/zulu.list; \
     if [ -f /etc/apt/sources.list ]; then \
-        sed -i -E 's|^deb (http://(archive|security).ubuntu.com/ubuntu/?[[:space:]])|deb [snapshot=yes] \1|' /etc/apt/sources.list; \
+        sed -i -E 's#^deb (http://(archive|security).ubuntu.com/ubuntu/?[[:space:]])#deb [snapshot=yes] \1#' /etc/apt/sources.list; \
     fi; \
     if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
         sed -i '/^Signed-By:/a Snapshot: yes' /etc/apt/sources.list.d/ubuntu.sources; \
     fi; \
     printf 'APT::Snapshot "%s";\n' "$UBUNTU_APT_SNAPSHOT" > /etc/apt/apt.conf.d/50snapshot; \
+    printf 'Acquire::https::Verify-Peer "false";\n' > /etc/apt/apt.conf.d/49bootstrap-no-verify-peer; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates; \
+    rm -f /etc/apt/apt.conf.d/49bootstrap-no-verify-peer; \
+    rm -rf /var/lib/apt/lists/*; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         binutils \

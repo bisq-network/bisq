@@ -45,8 +45,12 @@ It also installs the Linux package tools needed for Java payload verification
 and later installer investigation from a pinned Ubuntu package repository
 snapshot. The Dockerfile enables Ubuntu snapshot resolution for older Ubuntu
 base images that use `sources.list` and newer images that use deb822
-`ubuntu.sources` before setting the apt snapshot value. The default snapshot is
-`20260501T000000Z`; update the `UBUNTU_APT_SNAPSHOT` build argument in a
+`ubuntu.sources` before setting the apt snapshot value. The pinned Azul base
+image does not include CA certificates, so the Dockerfile removes the unused
+Azul apt source and bootstraps `ca-certificates` from the pinned Ubuntu
+snapshot with a temporary apt HTTPS peer-verification override. That temporary
+override is removed before the main package-tool install. The default snapshot
+is `20260501T000000Z`; update the `UBUNTU_APT_SNAPSHOT` build argument in a
 separate reviewed change when the release-builder package set needs refreshing.
 
 Build the image from its own small context:
