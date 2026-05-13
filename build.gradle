@@ -1227,6 +1227,22 @@ def commandVersionInfo = { List<String> command, List<String> displayCommand = c
     ])
 }
 
+def linuxReleaseBuilderInfo = {
+    def dockerfile = linuxReleaseBuilderDockerfile.asFile
+    if (!dockerfile.file) {
+        return [:]
+    }
+
+    def lines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
+    def snapshotLine = lines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
+    compactMap([
+            dockerfilePath   : canonicalPath(dockerfile),
+            dockerfileSha256 : sha256(dockerfile),
+            from             : lines.find { it.startsWith('FROM ') },
+            ubuntuAptSnapshot: snapshotLine?.replace('ARG UBUNTU_APT_SNAPSHOT=', '')
+    ])
+}
+
 def jdkToolVersionInfo = { String executable ->
     def windows = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
     def executableName = windows ? "${executable}.exe" : executable
@@ -1326,6 +1342,9 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     expectedVersion     : expectedReleaseJavaVersion.get(),
                     expectedVendor      : expectedReleaseJavaVendor.get()
             ],
+            releaseBuilder  : compactMap([
+                    linux: linuxReleaseBuilderInfo()
+            ]),
             os              : [
                     name          : System.getProperty('os.name'),
                     version       : System.getProperty('os.version'),
