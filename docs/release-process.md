@@ -3,8 +3,9 @@
 * Update translations [translation-process.md](translation-process.md#synchronising-translations).
 * Update data stores [data-stores.md](data-stores.md#update-stores).
 * Update bitcoinj checkpoint [bitcoinj-checkpoint](bitcoinj-checkpoint.md#update-checkpoint).
-* Verify the Java release payload against CI before signing
-  [reproducible-release-builds.md](reproducible-release-builds.md).
+* Verify reproducible-build evidence before signing
+  [overview](reproducible-release-builds.md) and
+  [usage](reproducible-builds-usage.md).
 * Write release notes (see below).
 * Webpage (Prepare PR)
     * Update version number in:

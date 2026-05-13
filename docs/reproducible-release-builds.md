@@ -1,522 +1,96 @@
-# Reproducible Release Build Verification
+# Reproducible Release Builds
 
-This document describes the reproducible-build evidence Bisq currently
-generates for release builds and how a release manager can compare a local build
-against GitHub Actions before signing release artifacts.
+This page is the entry point for Bisq reproducible-release-build
+documentation. It explains the project direction, the current trust model, and
+where to find operational and technical details.
+
+## Goal
+
+The reproducible-build project should let a release manager, CI runner, or
+independent verifier rebuild a release commit and answer three questions:
+
+1. Did the Java release payload match the published evidence?
+2. Did each OS installer match the published evidence for that same OS?
+3. Was the build performed in a release environment whose important inputs are
+   recorded and reviewable?
+
+The canonical comparison artifacts are manifests. They record SHA-256, byte
+size, and repo-relative path. Evidence ZIPs package those manifests with
+diagnostic build information. Installer evidence also includes package
+structure reports for investigation.
 
 ## Current Scope
 
-The current checks cover the Java release payload:
+The Java release payload check covers:
 
-- all enabled Gradle `Jar` task outputs
-- the desktop application runtime libraries generated under
-  `desktop/build/install/desktop/lib`
+- enabled Gradle `Jar` task outputs
+- desktop runtime libraries under `desktop/build/install/desktop/lib`
 - Gradle wrapper files and wrapper distribution metadata
 - pinned Gradle and Java runtime versions
-- Gradle dependency verification metadata, including the reviewed checksum-only
-  dependency allowlist
-- reproducible archive settings and ZIP/JAR entry metadata
-
-The installer manifest task covers the OS package files produced by
-`:desktop:generateInstallers`. It records SHA-256, byte size, and canonical
-repo-relative path for `dmg`, `deb`, `rpm`, and `exe` outputs. This gives the
-release manager and independent verifiers a signed comparison target for the
-actual binary artifacts, but it does not by itself prove that the installer
-formats are deterministic internally.
-
-## Release Manager Workflow
-
-Use a clean checkout of the release tag or release commit, with submodules
-initialized. The pinned release build environment is recorded in
-`gradle.properties`.
-
-```bash
-git submodule update --init --recursive
-shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
-```
-
-### Linux Release-Builder Container
-
-The Linux Java payload can be verified inside the release-builder image defined
-in `docker/release-builder/linux/Dockerfile`. The image pins the linux/amd64
-Azul Zulu OpenJDK 21.0.6 base image by digest and sets the release-sensitive
-defaults `SOURCE_DATE_EPOCH=0`, `TZ=UTC`, `LANG=C.UTF-8`, and `LC_ALL=C.UTF-8`.
-It also installs the Linux package tools needed for Java payload verification
-and later installer investigation from a pinned Ubuntu package repository
-snapshot. The Dockerfile enables Ubuntu snapshot resolution for older Ubuntu
-base images that use `sources.list` and newer images that use deb822
-`ubuntu.sources` before setting the apt snapshot value. The pinned Azul base
-image does not include CA certificates, so the Dockerfile removes the unused
-Azul apt source and bootstraps `ca-certificates` from the pinned Ubuntu
-snapshot with a temporary apt HTTPS peer-verification override. That temporary
-override is removed before the main package-tool install. The default snapshot
-is `20260501T000000Z`; update the `UBUNTU_APT_SNAPSHOT` build argument in a
-separate reviewed change when the release-builder package set needs refreshing.
-
-Build the image from its own small context:
-
-```bash
-docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
-```
-
-To test a newer Ubuntu package snapshot before changing the Dockerfile default:
-
-```bash
-docker build --pull=false \
-  --build-arg UBUNTU_APT_SNAPSHOT=20260501T000000Z \
-  -t bisq-release-builder-linux:java-21.0.6 \
-  docker/release-builder/linux
-```
-
-Run it from a clean checkout of the release tag or release commit:
-
-```bash
-docker run --rm --platform linux/amd64 \
-  --user "$(id -u):$(id -g)" \
-  -v "$PWD:/workspace" \
-  -w /workspace \
-  bisq-release-builder-linux:java-21.0.6 \
-  ./gradlew verifyReleaseBuild verifyInstallerEvidenceBundle
-```
-
-This container is an independent Linux verification environment for the Java
-payload and Linux installer evidence. The manual GitHub Actions workflow
-`Linux Release Builder` builds this image, creates two clean worktrees of the
-dispatch commit, runs `verifyReleaseBuild` and `verifyInstallerEvidenceBundle`
-inside the image for both worktrees, compares the two `release-evidence.zip`
-files, compares the two `installer-evidence.zip` files, and uploads the first
-worktree's Java payload evidence artifact `release-builder-linux-java-21.0.6`
-plus Linux installer evidence artifact
-`release-builder-linux-installers-java-21.0.6`. The workflow is
-`workflow_dispatch` only, so it is not part of normal push or pull-request CI.
-`verifyReleaseBuild` also runs `verifyReleaseBuilderImage`, which checks that
-the Dockerfile keeps its base image digest, apt snapshot, package-tool set, and
-release-sensitive environment defaults pinned.
-
-Build the release payload and run the policy gates.
-
-```bash
-./gradlew clean verifyReleaseBuild
-```
-
-The release evidence is written to:
-
-- `build/reports/release/release-manifest.tsv`
-- `build/reports/release/SHA256SUMS`
-- `build/reports/release/build-info.json`
-- `build/reports/release/release-evidence.zip`
-- `build/reports/checksums/jars.sha256`
-
-`release-manifest.tsv` is the canonical reproducibility comparison file. It
-contains SHA-256, file size, and canonical repo-relative path. `SHA256SUMS` is a
-compatibility format for `shasum -c` and `sha256sum -c`. `build-info.json` is
-diagnostic metadata and is not itself part of the reproducibility comparison.
-It records the Gradle and Java runtime, the Linux release-builder Dockerfile
-path, SHA-256, pinned base image line, and apt snapshot, installer-relevant
-tools such as `jpackage`, Linux package and archive tools, macOS `hdiutil` and
-`pkgutil`, Windows PowerShell, and Windows WiX tools when available. It also
-records OS release data such as `uname`, `/etc/os-release`, and `sw_vers` when
-available, plus `SOURCE_DATE_EPOCH`, timezone, and locale data.
-`release-evidence.zip` packages the manifest, checksums, build info, and jar
-checksum report into one reproducible file for signing and publishing.
-
-Expected release evidence ZIP entries:
-
-- `release-manifest.tsv`: canonical Java payload hashes, sizes, and paths.
-- `SHA256SUMS`: checksum-tool compatible Java payload hashes.
-- `build-info.json`: build environment and release-builder diagnostics.
-- `checksums/jars.sha256`: per-Jar checksum report used to build the manifest.
-
-`verifyReleaseBuild` runs `verifyReleaseEvidenceBundle`, which regenerates
-`release-evidence.zip` and checks that those required entries are present. To
-run only the bundle validation path, use:
-
-```bash
-./gradlew verifyReleaseEvidenceBundle
-```
-
-Verify the generated checksum file locally.
-
-```bash
-shasum -a 256 -c build/reports/release/SHA256SUMS
-```
-
-Download the matching GitHub Actions artifact named
-`release-manifests-<os>-java-21.0.6` from the release commit or tag build. The
-artifact contains the CI-generated `release-manifest.tsv`, `SHA256SUMS`, and
-`build-info.json`.
-
-Compare the local rebuild against a CI manifest.
-
-```bash
-./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/ci/release-manifest.tsv
-```
-
-`-PreleaseManifest` can also point at an extracted CI artifact, an evidence
-directory, or a `release-evidence.zip` file if it contains exactly one
-`release-manifest.tsv`.
-
-Compare two release evidence bundles or extracted evidence directories without
-building:
-
-```bash
-./gradlew compareReleaseEvidenceBundles \
-  -PleftReleaseEvidence=/path/to/local/release-evidence.zip \
-  -PrightReleaseEvidence=/path/to/ci/release-evidence.zip
-```
-
-`compareReleaseEvidenceBundles` compares `release-manifest.tsv` from both
-inputs and reports missing, extra, or changed Java payload files with their
-left and right hashes and sizes.
-
-For stronger evidence, compare against every CI manifest that should represent
-the same Java payload. If one OS differs, inspect both `release-manifest.tsv`
-files first, then use `build-info.json` only to explain the environment.
-
-### Manifest Match Policy
-
-Before signing release artifacts, the release manager must compare their local
-Java payload manifest against the Linux GitHub Actions Java payload manifest
-for the same release tag or commit and the pinned Java version. The manifests
-must match exactly.
-
-The macOS and Windows Java payload manifests are additional verification
-signals. Compare them as well when they are available for the same release tag
-or commit. Any mismatch must be explained before signing; if the mismatch is in
-a shared Java artifact rather than a platform-specific runtime dependency,
-treat it as a release blocker.
-
-Installer manifests are compared per OS. A Linux `.deb` or `.rpm` manifest is
-not expected to match a macOS `.dmg` manifest or a Windows `.exe` manifest.
-For each OS installer that will be published, the release manager should verify
-a local rebuild against the signed or CI-provided installer manifest for that
-same OS.
-
-## Signing And Publishing Evidence
-
-After the release manager has rebuilt locally and verified the CI manifests,
-publish the release evidence next to the signed release artifacts:
-
-- `release-evidence.zip`
-- `release-evidence.zip.asc`
-- `release-manifest.tsv`
-- `release-manifest.tsv.asc`
-- `SHA256SUMS`
-- `SHA256SUMS.asc`
-- `build-info.json`
-
-Sign the canonical manifest and checksum file with the release signing key.
-
-```bash
-gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/release-evidence.zip
-gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/release-manifest.tsv
-gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/SHA256SUMS
-```
-
-Verify the signatures before upload.
-
-```bash
-gpg --verify build/reports/release/release-evidence.zip.asc build/reports/release/release-evidence.zip
-gpg --verify build/reports/release/release-manifest.tsv.asc build/reports/release/release-manifest.tsv
-gpg --verify build/reports/release/SHA256SUMS.asc build/reports/release/SHA256SUMS
-```
-
-The signed bundle is the preferred publication artifact. The signed manifest is
-the main artifact for reproducible-build verification. `SHA256SUMS` is useful
-for common checksum tooling. Keep the individual files published for direct
-inspection and simple verifier workflows.
-
-## Binary Installer Evidence
-
-Build the OS-specific installer artifacts and write their manifest with:
-
-```bash
-./gradlew generateInstallerManifest
-```
-
-`generateInstallerManifest` invokes `:desktop:generateInstallers` and writes:
-
-- `build/reports/release/installer-manifest.tsv`
-- `build/reports/release/INSTALLER-SHA256SUMS`
-- `build/reports/release/installer-build-info.json`
-
-The manifest task verifies that the expected installer formats for the current
-OS were produced: `.deb` and `.rpm` on Linux, `.dmg` on macOS, and `.exe` on
-Windows.
-
-`installer-manifest.tsv` is the canonical comparison file for installer
-artifacts. `INSTALLER-SHA256SUMS` is compatible with common checksum tooling.
-`installer-build-info.json` records the OS, JDK, Gradle, locale, timezone,
-Linux release-builder Dockerfile identity, and installer-relevant tool
-diagnostics such as Linux package and archive tools, macOS `hdiutil` and
-`pkgutil`, Windows PowerShell, PowerShell Core, and Windows WiX tools for
-explaining per-OS installer differences.
-Linux diagnostics include RPM payload extraction tools such as `rpm2cpio` and
-`cpio` when they are available.
-
-To inspect installer package internals with the tools available on the current
-OS, run:
-
-```bash
-./gradlew generateInstallerStructureReport
-```
-
-This writes:
-
-- `build/reports/release/installer-structure-summary.txt`
-- `build/reports/release/installer-structure-report.tsv`
-- `build/reports/release/installer-structure/`
-
-`installer-structure-summary.txt`, `installer-structure-report.tsv`, and the
-`installer-structure/` reports are investigation aids for package internals.
-They use local tools such as `ar`, `file`, `dpkg-deb`, `rpm`, `hdiutil`,
-`pkgutil`, `xar`, and Windows PowerShell when available to record package
-metadata, archive member metadata, payload listings, file type metadata, and
-signature details. The summary records artifact counts, generated/failed/skipped
-status counts, and required versus optional inspector failures so release
-managers can triage incomplete evidence before opening individual reports. On
-Windows the structure report prefers Windows PowerShell and falls back to
-PowerShell Core (`pwsh`) when `powershell` is unavailable. Debian reports include
-listings for the outer archive, SHA-256 hashes for each outer archive member,
-package fields, package payload, and the inner `control.tar` and `data.tar`
-archives with full timestamps and numeric ownership when GNU tar is available.
-RPM reports include package digest/signature checks and payload archive listings
-when the local RPM and cpio tools can run them. DMG reports include image
-metadata, partition maps, `hdiutil` verification output, and `hdiutil` SHA-256
-checksums on macOS. PKG reports include
-signature, payload, and raw `xar` archive member diagnostics when available.
-Windows reports include basic file metadata, version info, and Authenticode
-signature details, PE/COFF header timestamp metadata for `.exe` artifacts, and
-MSI Property table entries for `.msi` artifacts when PowerShell can read them.
-Unsupported installer formats are listed as skipped rather than failing the
-evidence task.
-
-The `status` column in `installer-structure-report.tsv` is diagnostic:
-
-- `generated` means at least one configured structure inspector ran and all
-  required inspector commands for that artifact exited successfully.
-- `failed` means a configured required inspector command exited unsuccessfully;
-  inspect the matching report file for stdout and stderr.
-- `skipped` means no required structure inspector is configured for that
-  artifact on the current OS. The artifact can still be compared through
-  `installer-manifest.tsv`.
-
-When installer manifests differ, compare the matching structure report files
-before changing package generation logic. Start with `installer-build-info.json`
-to confirm the OS, JDK, Gradle, timezone, locale, and package-tool versions.
-Then inspect the format-specific report sections:
-
-- For `.deb`, compare outer `ar` member metadata and member hashes first, then
-  compare the `control.tar` and `data.tar` listings for timestamp, ordering,
-  ownership, mode, or size differences.
-- For `.rpm`, compare package checks, build metadata, payload compressor and
-  flags, payload archive listings, and the package dump.
-- For `.dmg`, compare `hdiutil imageinfo`, verification output, and `hdiutil`
-  checksums.
-- For `.pkg`, compare signature output, payload file listings, and raw `xar`
-  archive members.
-- For Windows installers, compare file metadata, Authenticode output,
-  PE/COFF header timestamps for `.exe`, and MSI Property table entries for
-  `.msi`.
-
-To package the installer evidence files into one reproducible ZIP, run:
-
-```bash
-./gradlew generateInstallerEvidenceBundle
-```
-
-The bundle is written to:
-
-- `build/reports/release/installer-evidence.zip`
-
-Expected ZIP entries:
-
-- `installer-manifest.tsv`: canonical installer artifact hashes, sizes, and
-  paths.
-- `INSTALLER-SHA256SUMS`: checksum-tool compatible installer hashes.
-- `installer-build-info.json`: build environment and installer tool
-  diagnostics.
-- `installer-structure-summary.txt`: status counts and required versus optional
-  inspector failures.
-- `installer-structure-report.tsv`: per-artifact structure report summary.
-- `installer-structure/*.txt`: per-artifact structure diagnostics for rows in
-  `installer-structure-report.tsv` whose status is `generated` or `failed` and
-  whose `report_path` column is populated.
-
-`generateInstallerEvidenceBundle` checks that the installer manifest,
-checksums, build info, structure summary, and referenced structure reports are
-present before packaging. It also verifies the ZIP contains those required
-entries before reporting success.
-
-To regenerate the bundle and explicitly validate the published ZIP layout, run:
-
-```bash
-./gradlew verifyInstallerEvidenceBundle
-```
-
-`verifyInstallerEvidenceBundle` opens `installer-evidence.zip` and checks for
-the manifest, checksum file, build info, structure summary file, structure
-report, and any `installer-structure/*.txt` reports referenced by generated or
-failed structure report rows.
-
-The manual GitHub Actions workflow `Installer Evidence` can generate Linux,
-macOS, and Windows installer evidence for a release commit or tag without
-making installer generation part of the normal push or pull-request release
-build gate. Each job runs `verifyInstallerEvidenceBundle`, so the uploaded
-artifact contains a validated `installer-evidence.zip` and its component
-evidence files.
-
-Verify the generated installer checksum file locally:
-
-```bash
-shasum -a 256 -c build/reports/release/INSTALLER-SHA256SUMS
-```
-
-Compare a local rebuild against a signed or CI-generated installer manifest:
-
-```bash
-./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
-```
-
-`-PinstallerManifest` can also point at an extracted evidence directory or an
-`installer-evidence.zip` file if it contains exactly one
-`installer-manifest.tsv`.
-
-Compare two installer evidence bundles or extracted evidence directories:
-
-```bash
-./gradlew compareInstallerEvidenceBundles \
-  -PleftInstallerEvidence=/path/to/local/installer-evidence.zip \
-  -PrightInstallerEvidence=/path/to/ci/installer-evidence.zip
-```
-
-`compareInstallerEvidenceBundles` compares `installer-manifest.tsv` from both
-inputs. If an artifact is missing, extra, or changed, the failure output shows
-the left and right hashes, sizes, and matching `installer-structure/*.txt`
-report references when `installer-structure-report.tsv` is present.
-
-### Linux Installer Rebuild Comparison
-
-Use two isolated worktrees of the same release tag or commit when investigating
-whether Linux installers are deterministic. Build both inside the pinned Linux
-release-builder image and keep each evidence directory for comparison. Replace
-`HEAD` with the signed release tag or commit SHA when checking an actual
-release.
-
-```bash
-RELEASE_REF=HEAD
-git worktree add --detach ../bisq-installer-a "$RELEASE_REF"
-git worktree add --detach ../bisq-installer-b "$RELEASE_REF"
-git -C ../bisq-installer-a submodule update --init --recursive
-git -C ../bisq-installer-b submodule update --init --recursive
-
-REPO_PARENT="$(cd .. && pwd)"
-
-docker run --rm --platform linux/amd64 \
-  --user "$(id -u):$(id -g)" \
-  -v "$REPO_PARENT:$REPO_PARENT" \
-  -w "$REPO_PARENT/bisq-installer-a" \
-  bisq-release-builder-linux:java-21.0.6 \
-  ./gradlew clean verifyInstallerEvidenceBundle
-
-docker run --rm --platform linux/amd64 \
-  --user "$(id -u):$(id -g)" \
-  -v "$REPO_PARENT:$REPO_PARENT" \
-  -w "$REPO_PARENT/bisq-installer-b" \
-  bisq-release-builder-linux:java-21.0.6 \
-  ./gradlew clean verifyInstallerEvidenceBundle
-
-./gradlew compareInstallerEvidenceBundles \
-  -PleftInstallerEvidence=../bisq-installer-a/build/reports/release/installer-evidence.zip \
-  -PrightInstallerEvidence=../bisq-installer-b/build/reports/release/installer-evidence.zip
-```
-
-If the installer manifests differ, compare
-`installer-structure-summary.txt`, `installer-structure-report.tsv`, the files
-under `installer-structure/`, and `installer-build-info.json` from both
-worktrees before changing package generation logic. For Debian packages, start
-with the outer `ar` member metadata and the inner `control.tar` and `data.tar`
-listings because those reports expose timestamps, ordering, ownership, and mode
-differences.
-
-Publish and sign the installer evidence next to the corresponding binary
-artifacts:
-
-- `installer-evidence.zip`
-- `installer-evidence.zip.asc`
-- `installer-manifest.tsv`
-- `installer-manifest.tsv.asc`
-- `INSTALLER-SHA256SUMS`
-- `INSTALLER-SHA256SUMS.asc`
-- `installer-build-info.json`
-- `installer-structure-report.tsv`
-- `installer-structure/`
-
-```bash
-gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-evidence.zip
-gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/installer-manifest.tsv
-gpg --digest-algo SHA256 --armor --detach-sign build/reports/release/INSTALLER-SHA256SUMS
-```
-
-## Independent Verifier Workflow
-
-An independent verifier should:
-
-1. Check out the release tag.
-2. Verify the Gradle wrapper checksum manifest.
-3. Build with `verifyReleaseBuild`.
-4. Verify the published manifest signature.
-5. Run `verifyReleaseManifest` against the published `release-manifest.tsv` or
-   `release-evidence.zip`.
-
-```bash
-git submodule update --init --recursive
-shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
-./gradlew clean verifyReleaseBuild
-gpg --verify /path/to/release-manifest.tsv.asc /path/to/release-manifest.tsv
-./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/release-manifest.tsv
-gpg --verify /path/to/release-evidence.zip.asc /path/to/release-evidence.zip
-./gradlew verifyReleaseManifest -PreleaseManifest=/path/to/release-evidence.zip
-```
-
-If the task succeeds, the local Java payload manifest matches the signed release
-manifest. If it fails, inspect the reported missing, extra, and changed paths.
-
-To verify binary installers, also verify the signed installer manifest and
-compare a local installer rebuild:
-
-```bash
-gpg --verify /path/to/installer-evidence.zip.asc /path/to/installer-evidence.zip
-gpg --verify /path/to/installer-manifest.tsv.asc /path/to/installer-manifest.tsv
-./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-manifest.tsv
-./gradlew verifyInstallerManifest -PinstallerManifest=/path/to/installer-evidence.zip
-```
-
-## Dependency Verification Maintenance
-
-When dependencies change, refresh and review Gradle verification metadata
-separately from ordinary code changes.
-
-```bash
-./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
-./gradlew verifyDependencySignaturePolicy
-./gradlew dependencySignatureReport
-```
-
-New checksum-only artifacts must be reviewed before they are added to
-`gradle/dependency-checksum-fallback-allowlist.tsv`. Each allowlist entry must
-include the exact dependency, artifact file name, and review rationale. Keep
-entries sorted by dependency and artifact name so review diffs stay stable.
-Prefer PGP signature verification whenever upstream publishes signatures.
-
-## Remaining Gaps
-
-The most important remaining gaps are:
-
-- deterministic OS installer internals for `dmg`, `deb`, `rpm`, and `exe`
-- pinned release build images or dedicated release builders for macOS and
-  Windows
-
-Those can be added incrementally without changing the current Java payload
-manifest format.
+- Gradle dependency verification metadata and the checksum-only allowlist
+- reproducible ZIP/JAR archive metadata
+
+Installer evidence covers the OS package files produced by
+`:desktop:generateInstallers`:
+
+- Linux: `.deb` and `.rpm`
+- macOS: `.dmg`
+- Windows: `.exe`
+
+Installer manifests prove that the produced binary installer files match a
+published or CI-generated target for the same OS. Installer structure reports
+help explain internal package differences.
+
+## Current Status
+
+Linux has the strongest support. The pinned Linux release-builder Docker image
+can build two clean worktrees of the same commit, verify Java release evidence,
+verify Linux installer evidence, and compare both outputs. This is wired as the
+manual GitHub Actions workflow `Linux Release Builder`.
+
+The standard `Build Bisq` workflow runs `verifyReleaseBuild` on Linux, macOS,
+and Windows for push and pull request builds. That verifies the Java release
+payload and policy gates, but it is not the full two-worktree Linux
+release-builder comparison.
+
+The manual `Installer Evidence` workflow can generate installer evidence on
+Linux, macOS, and Windows. It records useful per-OS installer diagnostics, but
+macOS and Windows do not yet have pinned, two-worktree release-builder
+environments equivalent to Linux.
+
+## Limitations
+
+- Reproducibility is proven by comparing manifests, not by trusting build logs.
+- Java payload evidence is comparable across build environments, but
+  platform-specific runtime dependency differences must still be explained.
+  Installer evidence is compared only against the same OS installer format.
+- Linux has a pinned release-builder image. macOS and Windows currently rely on
+  GitHub-hosted runner environments or local machines.
+- macOS `.dmg` and Windows `.exe` installer internals are diagnostic evidence
+  today; deterministic platform release builders are still future work.
+- Published evidence is only useful after the release manager signs it and
+  verifiers check those signatures.
+
+## Direction
+
+The project direction is:
+
+1. Keep Linux as the reference implementation for a pinned, isolated,
+   two-worktree reproducible release-builder.
+2. Publish signed Java release evidence and per-OS installer evidence next to
+   release artifacts.
+3. Treat unexplained Java payload mismatches as release blockers.
+4. Treat installer mismatches as OS-specific blockers for the affected
+   installer artifact.
+5. Extend the Linux model to macOS and Windows by adding pinned or otherwise
+   reviewable release-builder environments and A/B comparisons.
+6. Keep dependency verification maintenance separate from ordinary code changes
+   so new checksum-only artifacts receive explicit review.
+
+## Documentation Map
+
+- [How to use reproducible builds](reproducible-builds-usage.md)
+- [Technical details](reproducible-builds-technical.md)
+- [Linux reproducible builds](reproducible-builds-linux.md)
+- [macOS reproducible builds](reproducible-builds-macos.md)
+- [Windows reproducible builds](reproducible-builds-windows.md)
