@@ -1,6 +1,8 @@
 package bisq.gradle.packaging.jpackage
 
+import bisq.gradle.packaging.jpackage.package_formats.PackageFormat
 import org.gradle.api.GradleException
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Year
 import java.util.concurrent.TimeUnit
@@ -12,12 +14,15 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
         val packageFormatConfigs = jPackageConfig.packageFormatConfigs
         val perPackageCommand = packageFormatConfigs.packageFormats
-                .map { packageFormatConfigs.createArgumentsForJPackage(it) + listOf("--type", it.fileExtension) }
+                .map { packageFormat ->
+                    packageFormat to packageFormatConfigs.createArgumentsForJPackage(packageFormat) + listOf("--type", packageFormat.fileExtension)
+                }
 
         val absoluteBinaryPath = jPackagePath.toAbsolutePath().toString()
-        perPackageCommand.forEach { customCommands ->
+        perPackageCommand.forEach { (packageFormat, customCommands) ->
             val processBuilder = ProcessBuilder(absoluteBinaryPath)
                     .inheritIO()
+            configureReproducibleRpmEnvironment(processBuilder, packageFormat)
 
             val allCommands = processBuilder.command()
             allCommands.addAll(jPackageCommonArgs)
@@ -56,4 +61,24 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
                     "--runtime-image", jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
             )
+
+    private fun configureReproducibleRpmEnvironment(processBuilder: ProcessBuilder, packageFormat: PackageFormat) {
+        if (packageFormat != PackageFormat.RPM) {
+            return
+        }
+
+        val rpmHomePath = jPackageConfig.temporaryDirPath.resolve("rpm-home")
+        Files.createDirectories(rpmHomePath)
+        Files.writeString(
+                rpmHomePath.resolve(".rpmmacros"),
+                """
+                    %use_source_date_epoch_as_buildtime 1
+                    %clamp_mtime_to_source_date_epoch 1
+                    %_buildhost bisq-release-builder
+                """.trimIndent() + "\n"
+        )
+
+        processBuilder.environment()["HOME"] = rpmHomePath.toAbsolutePath().toString()
+        processBuilder.environment().putIfAbsent("SOURCE_DATE_EPOCH", "0")
+    }
 }

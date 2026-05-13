@@ -56,6 +56,7 @@ abstract class JPackageTask : DefaultTask() {
                 inputDirPath = distDirFile.get().toPath().resolve("lib"),
                 outputDirPath = outputDirectoryFile.toPath(),
                 runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
+                temporaryDirPath = temporaryDir.toPath(),
 
                 appConfig = JPackageAppConfig(
                         appVersion = appVersion.get(),

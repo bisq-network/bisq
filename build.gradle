@@ -934,6 +934,17 @@ def readInstallerStructureReportRows = { File evidencePath ->
     rows
 }
 
+def installerStructureZipEntryFor = { String reportPath ->
+    def normalizedReportPath = reportPath.replace('\\', '/')
+    def marker = 'installer-structure/'
+    if (normalizedReportPath.startsWith(marker)) {
+        return normalizedReportPath
+    }
+
+    def markerIndex = normalizedReportPath.indexOf("/${marker}")
+    markerIndex >= 0 ? normalizedReportPath.substring(markerIndex + 1) : null
+}
+
 def installerStructureReportReference = { File evidencePath, Map<String, Object> structureRow ->
     if (structureRow == null || !structureRow.reportPath) {
         return 'none'
@@ -1095,17 +1106,6 @@ def installerEvidenceRequiredEntries = [
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
-
-def installerStructureZipEntryFor = { String reportPath ->
-    def normalizedReportPath = reportPath.replace('\\', '/')
-    def marker = 'installer-structure/'
-    if (normalizedReportPath.startsWith(marker)) {
-        return normalizedReportPath
-    }
-
-    def markerIndex = normalizedReportPath.indexOf("/${marker}")
-    markerIndex >= 0 ? normalizedReportPath.substring(markerIndex + 1) : null
-}
 
 def validateReleaseEvidenceBundle = { File bundle ->
     if (!bundle.file) {
