@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   linux-release-builder:
-    name: Linux release-builder Java payload, Java 21.0.6
+    name: Linux release-builder evidence, Java 21.0.6
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -39,6 +39,16 @@ jobs:
           bisq-release-builder-linux:java-21.0.6 \
           ./gradlew verifyReleaseBuild
 
+    - name: Generate Linux installer evidence in release-builder
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD:/workspace" \
+          -w /workspace \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew verifyInstallerEvidenceBundle
+
     - name: Upload release-builder evidence
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
@@ -48,4 +58,18 @@ jobs:
           build/reports/release/release-manifest.tsv
           build/reports/release/build-info.json
           build/reports/release/release-evidence.zip
+        if-no-files-found: error
+
+    - name: Upload release-builder installer evidence
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-builder-linux-installers-java-21.0.6
+        path: |
+          build/reports/release/INSTALLER-SHA256SUMS
+          build/reports/release/installer-manifest.tsv
+          build/reports/release/installer-build-info.json
+          build/reports/release/installer-structure-summary.txt
+          build/reports/release/installer-structure-report.tsv
+          build/reports/release/installer-structure/**
+          build/reports/release/installer-evidence.zip
         if-no-files-found: error
