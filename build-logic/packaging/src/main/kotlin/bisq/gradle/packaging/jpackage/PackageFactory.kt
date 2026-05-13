@@ -1,9 +1,9 @@
 package bisq.gradle.packaging.jpackage
 
+import org.gradle.api.GradleException
 import java.nio.file.Path
 import java.time.Year
 import java.util.concurrent.TimeUnit
-
 
 class PackageFactory(private val jPackagePath: Path, private val jPackageConfig: JPackageConfig) {
 
@@ -24,7 +24,16 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             allCommands.addAll(customCommands)
 
             val process: Process = processBuilder.start()
-            process.waitFor(15, TimeUnit.MINUTES)
+            val finished = process.waitFor(15, TimeUnit.MINUTES)
+            if (!finished) {
+                process.destroyForcibly()
+                throw GradleException("jpackage timed out after 15 minutes: ${allCommands.joinToString(" ")}")
+            }
+
+            val exitCode = process.exitValue()
+            if (exitCode != 0) {
+                throw GradleException("jpackage failed with exit code $exitCode: ${allCommands.joinToString(" ")}")
+            }
         }
     }
 

@@ -16,9 +16,6 @@ class LinuxPackages(private val resourcesPath: Path) : JPackagePackageFormatConf
 
                 "--linux-menu-group", "Network",
                 "--linux-shortcut",
-
-                "--linux-deb-maintainer",
-                "noreply@bisq.network",
         )
 
         if (packageFormat == PackageFormat.DEB) {
