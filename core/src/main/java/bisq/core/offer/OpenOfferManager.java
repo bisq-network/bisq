@@ -79,6 +79,7 @@ import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Tuple2;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 
@@ -1032,7 +1033,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                 // - Capabilities changed?
                 // We rewrite our offer with the additional capabilities entry
-                Map<String, String> updatedExtraDataMap = new HashMap<>();
+                LegacyHashMap<String, String> updatedExtraDataMap = new LegacyHashMap<>();
                 if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
                         !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
                     Map<String, String> originalExtraDataMap = original.getExtraDataMap();

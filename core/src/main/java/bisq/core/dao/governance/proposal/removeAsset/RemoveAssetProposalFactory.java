@@ -27,12 +27,12 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 
 import bisq.asset.Asset;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,6 +74,6 @@ public class RemoveAssetProposalFactory extends BaseProposalFactory<RemoveAssetP
                 name,
                 link,
                 asset.getTickerSymbol(),
-                new HashMap<>());
+                new LegacyHashMap<>());
     }
 }

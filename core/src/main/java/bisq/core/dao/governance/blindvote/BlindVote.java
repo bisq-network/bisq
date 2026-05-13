@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.concurrent.Immutable;
+import bisq.common.util.LegacyHashMap;
 
 /**
  * Holds encryptedVotes, encryptedMeritList, txId of blindVote tx and stake.
@@ -61,14 +62,14 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     private final long date;
 
     // This hash map allows addition of data in future versions without breaking consensus
-    private final Map<String, String> extraDataMap;
+    private final LegacyHashMap<String, String> extraDataMap;
 
     public BlindVote(byte[] encryptedVotes,
                      String txId,
                      long stake,
                      byte[] encryptedMeritList,
                      long date,
-                     Map<String, String> extraDataMap) {
+                     LegacyHashMap<String, String> extraDataMap) {
         this.encryptedVotes = encryptedVotes;
         this.txId = txId;
         this.stake = stake;
@@ -107,7 +108,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 proto.getEncryptedMeritList().toByteArray(),
                 proto.getDate(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

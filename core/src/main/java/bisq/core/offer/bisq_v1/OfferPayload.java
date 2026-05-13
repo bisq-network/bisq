@@ -26,6 +26,7 @@ import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -170,7 +171,7 @@ public final class OfferPayload extends OfferPayloadBase {
                         long upperClosePrice,
                         boolean isPrivateOffer,
                         @Nullable String hashOfChallenge,
-                        @Nullable Map<String, String> extraDataMap,
+                        @Nullable LegacyHashMap<String, String> extraDataMap,
                         int protocolVersion) {
         super(id,
                 date,
@@ -289,8 +290,8 @@ public final class OfferPayload extends OfferPayloadBase {
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
                 null : new ArrayList<>(proto.getAcceptedCountryCodesList());
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : proto.getExtraDataMap();
+        LegacyHashMap<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                null : new LegacyHashMap<>(proto.getExtraDataMap());
 
         return new OfferPayload(proto.getId(),
                 proto.getDate(),

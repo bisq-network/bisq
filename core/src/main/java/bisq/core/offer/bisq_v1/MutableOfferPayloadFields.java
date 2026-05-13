@@ -16,6 +16,7 @@
  */
 
 package bisq.core.offer.bisq_v1;
+import bisq.common.util.LegacyHashMap;
 
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ public final class MutableOfferPayloadFields {
     @Nullable
     private final List<String> acceptedBankIds;
     @Nullable
-    private final Map<String, String> extraDataMap;
+    private final LegacyHashMap<String, String> extraDataMap;
 
     public MutableOfferPayloadFields(OfferPayload offerPayload) {
         this(offerPayload.getPrice(),
@@ -82,7 +83,7 @@ public final class MutableOfferPayloadFields {
                                      @Nullable List<String> acceptedCountryCodes,
                                      @Nullable String bankId,
                                      @Nullable List<String> acceptedBankIds,
-                                     @Nullable Map<String, String> extraDataMap) {
+                                     @Nullable LegacyHashMap<String, String> extraDataMap) {
         this.fixedPrice = fixedPrice;
         this.marketPriceMargin = marketPriceMargin;
         this.useMarketBasedPrice = useMarketBasedPrice;

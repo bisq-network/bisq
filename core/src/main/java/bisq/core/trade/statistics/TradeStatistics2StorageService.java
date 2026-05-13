@@ -23,13 +23,13 @@ import bisq.network.p2p.storage.persistence.MapStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
+import bisq.common.util.LegacyHashMap;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import java.io.File;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +67,7 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMap() {
         // As it is used for data request and response and we do not want to send any old trade stat data anymore.
-        return new HashMap<>();
+        return new LegacyHashMap<>();
     }
 
     // We overwrite that method to receive old trade stats from the network. As we deactivated getMap to not deliver

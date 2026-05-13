@@ -40,6 +40,7 @@ import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -75,7 +76,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     public static TradeStatistics2 from(Trade trade,
                                         @Nullable String referralId,
                                         boolean isTorNetworkNode) {
-        Map<String, String> extraDataMap = new HashMap<>();
+        LegacyHashMap<String, String> extraDataMap = new LegacyHashMap<>();
         if (referralId != null) {
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
         }
@@ -137,14 +138,14 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     @JsonExclude
-    private Map<String, String> extraDataMap;
+    private LegacyHashMap<String, String> extraDataMap;
 
     public TradeStatistics2(OfferPayload offerPayload,
                             Price tradePrice,
                             Coin tradeAmount,
                             Date tradeDate,
                             String depositTxId,
-                            Map<String, String> extraDataMap) {
+                            LegacyHashMap<String, String> extraDataMap) {
         this(offerPayload.getDirection(),
                 offerPayload.getBaseCurrencyCode(),
                 offerPayload.getCounterCurrencyCode(),
@@ -182,7 +183,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                             long tradeDate,
                             @Nullable String depositTxId,
                             @Nullable byte[] hash,
-                            @Nullable Map<String, String> extraDataMap) {
+                            @Nullable LegacyHashMap<String, String> extraDataMap) {
         this.direction = direction;
         this.baseCurrency = baseCurrency;
         this.counterCurrency = counterCurrency;
@@ -256,7 +257,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 proto.getTradeDate(),
                 ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()),
                 null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

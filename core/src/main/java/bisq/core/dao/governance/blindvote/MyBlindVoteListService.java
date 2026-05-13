@@ -56,6 +56,7 @@ import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
@@ -73,7 +74,6 @@ import java.io.IOException;
 
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -215,7 +215,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                     stake.value,
                     encryptedMeritList,
                     new Date().getTime(),
-                    new HashMap<>());
+                    new LegacyHashMap<>());
             addBlindVoteToList(blindVote);
 
             addToP2PNetwork(blindVote, errorMessage -> {

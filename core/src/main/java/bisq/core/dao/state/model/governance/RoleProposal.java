@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.LegacyHashMap;
 
 import java.util.Date;
 import java.util.Map;
@@ -43,7 +44,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private final long requiredBondUnit;
     private final int unlockTime; // in blocks
 
-    public RoleProposal(Role role, Map<String, String> extraDataMap) {
+    public RoleProposal(Role role, LegacyHashMap<String, String> extraDataMap) {
         this(role.getName(),
                 role.getLink(),
                 role,
@@ -68,7 +69,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                          byte version,
                          long creationDate,
                          String txId,
-                         Map<String, String> extraDataMap) {
+                         LegacyHashMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -101,7 +102,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 proto.getCreationDate(),
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

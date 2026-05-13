@@ -43,6 +43,7 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -382,7 +383,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public Optional<String> getAccountAgeWitnessHashAsHex() {
-        Map<String, String> extraDataMap = getExtraDataMap();
+        LegacyHashMap<String, String> extraDataMap = getExtraDataMap();
         if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
             return Optional.of(extraDataMap.get(OfferPayload.ACCOUNT_AGE_WITNESS_HASH));
         else
@@ -529,7 +530,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     @Nullable
-    public Map<String, String> getExtraDataMap() {
+    public LegacyHashMap<String, String> getExtraDataMap() {
         return offerPayloadBase.getExtraDataMap();
     }
 

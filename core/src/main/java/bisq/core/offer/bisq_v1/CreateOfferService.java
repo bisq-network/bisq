@@ -40,6 +40,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Tuple2;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 
@@ -169,7 +170,7 @@ public class CreateOfferService {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        Map<String, String> extraDataMap = offerUtil.getExtraDataMap(paymentAccount,
+        LegacyHashMap<String, String> extraDataMap = offerUtil.getExtraDataMap(paymentAccount,
                 currencyCode,
                 direction);
 

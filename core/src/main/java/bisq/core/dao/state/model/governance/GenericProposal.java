@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.LegacyHashMap;
 
 import java.util.Date;
 import java.util.Map;
@@ -42,7 +43,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
 
     public GenericProposal(String name,
                            String link,
-                           Map<String, String> extraDataMap) {
+                           LegacyHashMap<String, String> extraDataMap) {
         this(name,
                 link,
                 Version.PROPOSAL,
@@ -61,7 +62,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                             byte version,
                             long creationDate,
                             String txId,
-                            Map<String, String> extraDataMap) {
+                            LegacyHashMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -83,7 +84,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                 proto.getCreationDate(),
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

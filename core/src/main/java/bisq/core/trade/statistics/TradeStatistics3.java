@@ -44,6 +44,7 @@ import bisq.common.util.ComparableExt;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -90,7 +91,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
                                         boolean isTorNetworkNode) {
-        Map<String, String> extraDataMap = new HashMap<>();
+        LegacyHashMap<String, String> extraDataMap = new LegacyHashMap<>();
         if (referralId != null) {
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
         }
@@ -234,7 +235,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @Nullable
     @JsonExclude
     @Getter
-    private final Map<String, String> extraDataMap;
+    private final LegacyHashMap<String, String> extraDataMap;
 
     // We cache the date object to avoid reconstructing a new Date at each getDate call.
     @JsonExclude
@@ -252,7 +253,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long date,
                             String mediator,
                             String refundAgent,
-                            @Nullable Map<String, String> extraDataMap) {
+                            @Nullable LegacyHashMap<String, String> extraDataMap) {
         this(currency,
                 price,
                 amount,
@@ -296,7 +297,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long date,
                             @Nullable String mediator,
                             @Nullable String refundAgent,
-                            @Nullable Map<String, String> extraDataMap,
+                            @Nullable LegacyHashMap<String, String> extraDataMap,
                             @Nullable byte[] hash) {
         this.currency = currency;
         this.price = price;
@@ -357,7 +358,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 proto.getDate(),
                 ProtoUtil.stringOrNullFromProto(proto.getMediator()),
                 ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new LegacyHashMap<>(proto.getExtraDataMap()),
                 proto.getHash().toByteArray());
     }
 

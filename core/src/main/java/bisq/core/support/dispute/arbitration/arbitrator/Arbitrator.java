@@ -25,6 +25,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -56,7 +57,7 @@ public final class Arbitrator extends DisputeAgent {
                       String registrationSignature,
                       @Nullable String emailAddress,
                       @Nullable String info,
-                      @Nullable Map<String, String> extraDataMap) {
+                      @Nullable LegacyHashMap<String, String> extraDataMap) {
 
         super(nodeAddress,
                 pubKeyRing,
@@ -104,7 +105,7 @@ public final class Arbitrator extends DisputeAgent {
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
                 ProtoUtil.stringOrNullFromProto(proto.getInfo()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

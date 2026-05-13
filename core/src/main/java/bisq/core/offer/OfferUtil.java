@@ -52,6 +52,7 @@ import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -343,10 +344,10 @@ public class OfferUtil {
                 bsqFormatter);
     }
 
-    public Map<String, String> getExtraDataMap(PaymentAccount paymentAccount,
+    public LegacyHashMap<String, String> getExtraDataMap(PaymentAccount paymentAccount,
                                                String currencyCode,
                                                OfferDirection direction) {
-        Map<String, String> extraDataMap = new HashMap<>();
+        LegacyHashMap<String, String> extraDataMap = new LegacyHashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService
                     .getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());

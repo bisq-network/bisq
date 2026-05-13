@@ -23,6 +23,7 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 
@@ -46,7 +47,7 @@ public class OfferRestrictions {
             : Coin.parseCoin("0.01");
 
     static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
-        Map<String, String> extraDataMap = offer.getExtraDataMap();
+        LegacyHashMap<String, String> extraDataMap = offer.getExtraDataMap();
         if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.CAPABILITIES)) {
             String commaSeparatedOrdinals = extraDataMap.get(OfferPayload.CAPABILITIES);
             Capabilities capabilities = Capabilities.fromStringList(commaSeparatedOrdinals);

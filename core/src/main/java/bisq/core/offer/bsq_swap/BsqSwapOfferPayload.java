@@ -32,6 +32,7 @@ import bisq.common.crypto.ProofOfWork;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.LegacyHashMap;
 
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +78,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                                long amount,
                                long minAmount,
                                ProofOfWork proofOfWork,
-                               @Nullable Map<String, String> extraDataMap,
+                               @Nullable LegacyHashMap<String, String> extraDataMap,
                                String versionNr,
                                int protocolVersion) {
         super(id,
@@ -133,8 +134,8 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     }
 
     public static BsqSwapOfferPayload fromProto(protobuf.BsqSwapOfferPayload proto) {
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : proto.getExtraDataMap();
+        LegacyHashMap<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                null : new LegacyHashMap<>(proto.getExtraDataMap());
         return new BsqSwapOfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),

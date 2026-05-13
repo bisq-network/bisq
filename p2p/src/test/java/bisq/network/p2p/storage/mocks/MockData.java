@@ -19,6 +19,7 @@ package bisq.network.p2p.storage.mocks;
 
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import bisq.common.util.LegacyHashMap;
 
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -35,7 +36,7 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     public long ttl;
 
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LegacyHashMap<String, String> extraDataMap;
 
     public MockData(String msg, PublicKey publicKey) {
         this.msg = msg;
@@ -67,7 +68,7 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
 
     @Nullable
     @Override
-    public Map<String, String> getExtraDataMap() {
+    public LegacyHashMap<String, String> getExtraDataMap() {
         return extraDataMap;
     }
 

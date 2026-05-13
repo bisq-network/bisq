@@ -32,6 +32,7 @@ import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.common.app.Version;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -39,7 +40,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -79,9 +79,9 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
 
     @Override
     protected CompensationProposal createProposalWithoutTxId() {
-        Map<String, String> extraDataMap = null;
+        LegacyHashMap<String, String> extraDataMap = null;
         if (burningManReceiverAddress.isPresent()) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new LegacyHashMap<>();
             extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, burningManReceiverAddress.get());
         }
         return new CompensationProposal(

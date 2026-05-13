@@ -27,6 +27,7 @@ import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
+import bisq.common.util.LegacyHashMap;
 
 import java.util.Date;
 import java.util.Map;
@@ -56,14 +57,14 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
 
     // This hash map allows addition of data in future versions without breaking consensus
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final LegacyHashMap<String, String> extraDataMap;
 
     protected Proposal(String name,
                        String link,
                        byte version,
                        long creationDate,
                        @Nullable String txId,
-                       @Nullable Map<String, String> extraDataMap) {
+                       @Nullable LegacyHashMap<String, String> extraDataMap) {
         this.name = name;
         this.link = link;
         this.version = version;

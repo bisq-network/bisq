@@ -25,6 +25,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import java.security.PublicKey;
 
@@ -59,7 +60,7 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    protected Map<String, String> extraDataMap;
+    protected LegacyHashMap<String, String> extraDataMap;
 
     public DisputeAgent(NodeAddress nodeAddress,
                         PubKeyRing pubKeyRing,
@@ -69,7 +70,7 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
                         String registrationSignature,
                         @Nullable String emailAddress,
                         @Nullable String info,
-                        @Nullable Map<String, String> extraDataMap) {
+                        @Nullable LegacyHashMap<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;

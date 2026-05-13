@@ -25,12 +25,12 @@ import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.GenericProposal;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +64,6 @@ public class GenericProposalFactory extends BaseProposalFactory<GenericProposal>
 
     @Override
     protected GenericProposal createProposalWithoutTxId() {
-        return new GenericProposal(name, link, new HashMap<>());
+        return new GenericProposal(name, link, new LegacyHashMap<>());
     }
 }

@@ -34,6 +34,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.RangeUtils;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.inject.Inject;
 
@@ -51,7 +52,6 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -124,7 +124,7 @@ public class TradeStatisticsManager {
 
         // get the most recent price for each ccy and notify priceFeedService
         // (this relies on the trade statistics set being sorted by date)
-        Map<String, Price> newestPriceByCurrencyCode = new HashMap<>();
+        Map<String, Price> newestPriceByCurrencyCode = new LegacyHashMap<>();
         observableTradeStatisticsSet.forEach(e -> newestPriceByCurrencyCode.put(e.getCurrency(), e.getTradePrice()));
         priceFeedService.applyInitialBisqMarketPrice(newestPriceByCurrencyCode);
         maybeDumpStatistics();

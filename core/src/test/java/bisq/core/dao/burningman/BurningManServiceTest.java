@@ -30,6 +30,7 @@ import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
+import bisq.common.util.LegacyHashMap;
 
 import protobuf.BaseTx;
 import protobuf.BaseTxOutput;
@@ -362,7 +363,8 @@ public class BurningManServiceTest {
                                                                                     long amount,
                                                                                     String receiverAddress) {
         var issuance = new Issuance(txId, chainHeight, amount, null, IssuanceType.COMPENSATION);
-        var extraDataMap = Map.of(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, receiverAddress);
+        var extraDataMap = new LegacyHashMap<String, String>();
+        extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, receiverAddress);
         var proposal = new CompensationProposal(name, "link", Coin.valueOf(amount), "bsqAddress", extraDataMap);
         return new Tuple2<>(issuance, new ProposalPayload(proposal.cloneProposalAndAddTxId(txId)));
     }

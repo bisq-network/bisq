@@ -30,6 +30,7 @@ import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.ParamChange;
 
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.LegacyHashMap;
 import bisq.common.util.JsonExclude;
 
 import com.google.protobuf.Message;
@@ -193,13 +194,15 @@ public class DaoState implements PersistablePayload {
         protobuf.DaoState.Builder builder = protobuf.DaoState.newBuilder();
         builder.setChainHeight(chainHeight)
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
+                // Map suppliers pinned to LegacyHashMap to preserve pre-JDK19 HashMap
+                // iteration order in proto serialization (DAO consensus hash chain).
                 .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
+                        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage(), (a, b) -> a, LegacyHashMap::new)))
                 .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(), entry -> entry.getValue().toProtoMessage())))
+                        .collect(Collectors.toMap(e -> e.getKey().toString(), entry -> entry.getValue().toProtoMessage(), (a, b) -> a, LegacyHashMap::new)))
                 .addAllConfiscatedLockupTxList(confiscatedLockupTxList)
                 .putAllIssuanceMap(issuanceMap.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProtoMessage())))
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProtoMessage(), (a, b) -> a, LegacyHashMap::new)))
                 .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()))
                 .addAllEvaluatedProposalList(evaluatedProposalList.stream().map(EvaluatedProposal::toProtoMessage).collect(Collectors.toList()))
                 .addAllDecryptedBallotsWithMeritsList(decryptedBallotsWithMeritsList.stream().map(DecryptedBallotsWithMerits::toProtoMessage).collect(Collectors.toList()));

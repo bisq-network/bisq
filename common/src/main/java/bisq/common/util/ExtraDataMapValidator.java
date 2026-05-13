@@ -17,7 +17,6 @@
 
 package bisq.common.util;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,12 +37,15 @@ public class ExtraDataMapValidator {
     public final static int MAX_KEY_LENGTH = 100;
     public final static int MAX_VALUE_LENGTH = 100000; // 100 kb
 
-    public static Map<String, String> getValidatedExtraDataMap(@Nullable Map<String, String> extraDataMap) {
+    public static LegacyHashMap<String, String> getValidatedExtraDataMap(@Nullable Map<String, String> extraDataMap) {
         return getValidatedExtraDataMap(extraDataMap, MAX_SIZE, MAX_KEY_LENGTH, MAX_VALUE_LENGTH);
     }
 
-    public static Map<String, String> getValidatedExtraDataMap(@Nullable Map<String, String> extraDataMap, int maxSize,
-                                                               int maxKeyLength, int maxValueLength) {
+    // extraDataMap is serialized into protobuf payloads whose bytes are hashed/signed
+    // for network consensus. Returning LegacyHashMap pins pre-JDK19 HashMap iteration order
+    // across all JDKs, so payload bytes stay byte-identical regardless of host JDK.
+    public static LegacyHashMap<String, String> getValidatedExtraDataMap(@Nullable Map<String, String> extraDataMap, int maxSize,
+                                                                         int maxKeyLength, int maxValueLength) {
         if (extraDataMap == null)
             return null;
 
@@ -56,9 +58,11 @@ public class ExtraDataMapValidator {
                 checkArgument(value.length() <= maxValueLength,
                         "Length of value must not exceed " + maxValueLength);
             });
-            return extraDataMap;
+            return extraDataMap instanceof LegacyHashMap
+                    ? (LegacyHashMap<String, String>) extraDataMap
+                    : new LegacyHashMap<>(extraDataMap);
         } catch (Throwable t) {
-            return new HashMap<>();
+            return new LegacyHashMap<>();
         }
     }
 

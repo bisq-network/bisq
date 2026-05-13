@@ -26,12 +26,12 @@ import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,6 +67,6 @@ public class RoleProposalFactory extends BaseProposalFactory<RoleProposal> {
 
     @Override
     protected RoleProposal createProposalWithoutTxId() {
-        return new RoleProposal(role, new HashMap<>());
+        return new RoleProposal(role, new LegacyHashMap<>());
     }
 }

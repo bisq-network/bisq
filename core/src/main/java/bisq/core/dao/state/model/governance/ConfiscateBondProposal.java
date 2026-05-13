@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.LegacyHashMap;
 
 import java.util.Date;
 import java.util.Map;
@@ -44,7 +45,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     public ConfiscateBondProposal(String name,
                                   String link,
                                   String lockupTxId,
-                                  Map<String, String> extraDataMap) {
+                                  LegacyHashMap<String, String> extraDataMap) {
         this(name,
                 link,
                 lockupTxId,
@@ -65,7 +66,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                                    byte version,
                                    long creationDate,
                                    String txId,
-                                   Map<String, String> extraDataMap) {
+                                   LegacyHashMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -91,7 +92,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 proto.getCreationDate(),
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

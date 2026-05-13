@@ -29,6 +29,7 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.util.SingleThreadExecutorUtils;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.inject.Inject;
 
@@ -158,7 +159,7 @@ public class TradeStatisticsConverter {
 
     @SuppressWarnings("deprecation")
     private static TradeStatistics3 convertToTradeStatistics3(TradeStatistics2 tradeStatistics2) {
-        Map<String, String> extraDataMap = tradeStatistics2.getExtraDataMap();
+        LegacyHashMap<String, String> extraDataMap = tradeStatistics2.getExtraDataMap();
         String mediator = extraDataMap != null ? extraDataMap.get(TradeStatistics2.MEDIATOR_ADDRESS) : null;
         String refundAgent = extraDataMap != null ? extraDataMap.get(TradeStatistics2.REFUND_AGENT_ADDRESS) : null;
         long time = tradeStatistics2.getTradeDate().getTime();

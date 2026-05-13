@@ -32,6 +32,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.common.app.Version;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -39,7 +40,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,7 +80,7 @@ public class ReimbursementProposalFactory extends BaseProposalFactory<Reimbursem
                 link,
                 requestedBsq,
                 bsqAddress,
-                new HashMap<>());
+                new LegacyHashMap<>());
     }
 
     @Override

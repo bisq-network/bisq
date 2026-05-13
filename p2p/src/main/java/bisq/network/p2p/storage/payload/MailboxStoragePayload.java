@@ -23,6 +23,7 @@ import bisq.network.p2p.storage.messages.AddOncePayload;
 import bisq.common.crypto.Sig;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -70,7 +71,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
     // We add optional TTL entry in v 1.5.5 so we can support different TTL for trade messages and for AckMessages
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LegacyHashMap<String, String> extraDataMap;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                  @NotNull PublicKey senderPubKeyForAddOperation,
@@ -85,7 +86,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
         // We do not permit longer TTL as the default one
         if (ttl < TTL) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new LegacyHashMap<>();
             extraDataMap.put(EXTRA_MAP_KEY_TTL, String.valueOf(ttl));
         }
     }
@@ -98,7 +99,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     private MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                   byte[] senderPubKeyForAddOperationBytes,
                                   byte[] ownerPubKeyBytes,
-                                  @Nullable Map<String, String> extraDataMap) {
+                                  @Nullable LegacyHashMap<String, String> extraDataMap) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
@@ -123,7 +124,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
                 PrefixedSealedAndSignedMessage.fromPayloadProto(proto.getPrefixedSealedAndSignedMessage()),
                 proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

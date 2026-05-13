@@ -27,6 +27,7 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -67,7 +68,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final LegacyHashMap<String, String> extraDataMap;
 
     // Used just for caching. Don't persist.
     private final transient PublicKey ownerPubKey;
@@ -83,7 +84,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
 
     private TempProposalPayload(Proposal proposal,
                                 byte[] ownerPubPubKeyEncoded,
-                                @Nullable Map<String, String> extraDataMap) {
+                                @Nullable LegacyHashMap<String, String> extraDataMap) {
         this.proposal = proposal;
         this.ownerPubKeyEncoded = ownerPubPubKeyEncoded;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
@@ -107,7 +108,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     public static TempProposalPayload fromProto(protobuf.TempProposalPayload proto) {
         return new TempProposalPayload(Proposal.fromProto(proto.getProposal()),
                 proto.getOwnerPubKeyEncoded().toByteArray(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

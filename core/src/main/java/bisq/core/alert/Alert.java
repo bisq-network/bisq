@@ -27,6 +27,7 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -68,7 +69,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LegacyHashMap<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -92,7 +93,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                  String version,
                  byte[] ownerPubKeyBytes,
                  String signatureAsBase64,
-                 Map<String, String> extraDataMap) {
+                 LegacyHashMap<String, String> extraDataMap) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.isPreReleaseInfo = isPreReleaseInfo;
@@ -133,7 +134,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSignatureAsBase64(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 

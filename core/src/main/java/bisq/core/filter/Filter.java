@@ -29,6 +29,7 @@ import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import protobuf.StoragePayload;
 
@@ -96,7 +97,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LegacyHashMap<String, String> extraDataMap;
 
     private transient PublicKey ownerPubKey;
 
@@ -334,7 +335,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
-                  @Nullable Map<String, String> extraDataMap,
+                  @Nullable LegacyHashMap<String, String> extraDataMap,
                   @Nullable String signatureAsBase64,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
@@ -503,7 +504,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getCreationDate(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new LegacyHashMap<>(proto.getExtraDataMap()),
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),

@@ -25,12 +25,12 @@ import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,6 +72,6 @@ public class ConfiscateBondProposalFactory extends BaseProposalFactory<Confiscat
                 name,
                 link,
                 lockupTxId,
-                new HashMap<>());
+                new LegacyHashMap<>());
     }
 }

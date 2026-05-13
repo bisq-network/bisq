@@ -26,6 +26,7 @@ import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.JsonExclude;
+import bisq.common.util.LegacyHashMap;
 
 import java.security.PublicKey;
 
@@ -63,7 +64,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
     // cache
     protected transient byte[] hash;
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final LegacyHashMap<String, String> extraDataMap;
 
     public OfferPayloadBase(String id,
                             long date,
@@ -77,7 +78,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
                             long minAmount,
                             String paymentMethodId,
                             String makerPaymentAccountId,
-                            @Nullable Map<String, String> extraDataMap,
+                            @Nullable LegacyHashMap<String, String> extraDataMap,
                             String versionNr,
                             int protocolVersion) {
         this.id = id;

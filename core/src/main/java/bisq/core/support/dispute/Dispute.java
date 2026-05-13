@@ -37,6 +37,7 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import com.google.protobuf.ByteString;
 
@@ -157,7 +158,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     @Setter
-    private Map<String, String> extraDataMap;
+    private LegacyHashMap<String, String> extraDataMap;
 
     // We do not persist uid, it is only used by dispute agents to guarantee an uid.
     @Setter
@@ -426,7 +427,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
             return;
         }
         if (extraDataMap == null) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new LegacyHashMap<>();
         }
         extraDataMap.put(key, value);
     }

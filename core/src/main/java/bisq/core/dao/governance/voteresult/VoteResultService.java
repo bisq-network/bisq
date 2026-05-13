@@ -59,6 +59,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.PermutationUtil;
 import bisq.common.util.Utilities;
+import bisq.common.util.LegacyHashMap;
 
 import javax.inject.Inject;
 
@@ -430,7 +431,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private Map<P2PDataStorage.ByteArray, Long> getStakeByHashOfBlindVoteListMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
         // Don't use byte[] as key as byte[] uses object identity for equals and hashCode
-        Map<P2PDataStorage.ByteArray, Long> map = new HashMap<>();
+        Map<P2PDataStorage.ByteArray, Long> map = new LegacyHashMap<>();
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
             P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(decryptedBallotsWithMerits.getHashOfBlindVoteList());
             map.putIfAbsent(hash, 0L);
@@ -606,7 +607,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
     private Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
-        Map<Proposal, List<VoteWithStake>> voteWithStakeByProposalMap = new HashMap<>();
+        Map<Proposal, List<VoteWithStake>> voteWithStakeByProposalMap = new LegacyHashMap<>();
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> decryptedBallotsWithMerits.getBallotList()
                 .forEach(ballot -> {
                     Proposal proposal = ballot.getProposal();
@@ -668,7 +669,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
     private void applyParamChange(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
-        Map<String, List<EvaluatedProposal>> evaluatedProposalsByParam = new HashMap<>();
+        Map<String, List<EvaluatedProposal>> evaluatedProposalsByParam = new LegacyHashMap<>();
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof ChangeParamProposal) {
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) evaluatedProposal.getProposal();

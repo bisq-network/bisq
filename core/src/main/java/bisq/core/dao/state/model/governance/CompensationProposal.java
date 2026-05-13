@@ -25,6 +25,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.LegacyHashMap;
 
 import org.bitcoinj.core.Coin;
 
@@ -54,7 +55,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                 String link,
                                 Coin requestedBsq,
                                 String bsqAddress,
-                                @Nullable Map<String, String> extraDataMap) {
+                                @Nullable LegacyHashMap<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
@@ -77,7 +78,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                  byte version,
                                  long creationDate,
                                  String txId,
-                                 @Nullable Map<String, String> extraDataMap) {
+                                 @Nullable LegacyHashMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -107,7 +108,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 proto.getCreationDate(),
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new LegacyHashMap<>(proto.getExtraDataMap()));
     }
 
 
