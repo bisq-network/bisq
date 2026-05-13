@@ -149,6 +149,19 @@ Compare the local rebuild against a CI manifest.
 directory, or a `release-evidence.zip` file if it contains exactly one
 `release-manifest.tsv`.
 
+Compare two release evidence bundles or extracted evidence directories without
+building:
+
+```bash
+./gradlew compareReleaseEvidenceBundles \
+  -PleftReleaseEvidence=/path/to/local/release-evidence.zip \
+  -PrightReleaseEvidence=/path/to/ci/release-evidence.zip
+```
+
+`compareReleaseEvidenceBundles` compares `release-manifest.tsv` from both
+inputs and reports missing, extra, or changed Java payload files with their
+left and right hashes and sizes.
+
 For stronger evidence, compare against every CI manifest that should represent
 the same Java payload. If one OS differs, inspect both `release-manifest.tsv`
 files first, then use `build-info.json` only to explain the environment.

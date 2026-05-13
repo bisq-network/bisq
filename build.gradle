@@ -964,6 +964,18 @@ def appendInstallerEvidenceArtifactDetails = {
         }
 }
 
+def appendReleaseEvidenceArtifactDetails = {
+    StringBuilder message,
+    String label,
+    Map<String, Object> manifestEntry ->
+        if (manifestEntry == null) {
+            message << "    ${label}: missing\n"
+            return
+        }
+
+        message << "    ${label}: ${manifestEntry.sha256} ${manifestEntry.size}\n"
+}
+
 def verifyManifestMatches = { String manifestLabel, File expectedManifest, File actualManifest ->
     def expectedEntries = readReleaseManifest(expectedManifest)
     def actualEntries = readReleaseManifest(actualManifest)
@@ -2334,6 +2346,91 @@ tasks.register('verifyInstallerEvidenceBundle') {
                         "with ${validation.entryCount} entries and " +
                         "${validation.referencedStructureEntryCount} referenced structure reports."
         )
+    }
+}
+
+tasks.register('compareReleaseEvidenceBundles') {
+    group = 'verification'
+    description = 'Compares two release evidence ZIPs or extracted evidence directories.'
+
+    def leftReleaseEvidenceProperty = providers.gradleProperty('leftReleaseEvidence')
+    def rightReleaseEvidenceProperty = providers.gradleProperty('rightReleaseEvidence')
+
+    inputs.property('leftReleaseEvidence', leftReleaseEvidenceProperty.orElse(''))
+    inputs.property('rightReleaseEvidence', rightReleaseEvidenceProperty.orElse(''))
+
+    doLast {
+        def leftReleaseEvidencePath = leftReleaseEvidenceProperty.orNull
+        def rightReleaseEvidencePath = rightReleaseEvidenceProperty.orNull
+        if (!leftReleaseEvidencePath || !rightReleaseEvidencePath) {
+            throw new GradleException(
+                    'Missing required -PleftReleaseEvidence=<release-evidence.zip-or-directory> ' +
+                            'and -PrightReleaseEvidence=<release-evidence.zip-or-directory>'
+            )
+        }
+
+        def leftEvidence = file(leftReleaseEvidencePath)
+        def rightEvidence = file(rightReleaseEvidencePath)
+        def leftManifest = resolveReleaseManifestFile(leftEvidence)
+        def rightManifest = resolveReleaseManifestFile(rightEvidence)
+        def leftEntries = readReleaseManifest(leftManifest)
+        def rightEntries = readReleaseManifest(rightManifest)
+        def leftPaths = leftEntries.keySet() as Set
+        def rightPaths = rightEntries.keySet() as Set
+        def missingFromRight = (leftPaths - rightPaths).sort()
+        def extraInRight = (rightPaths - leftPaths).sort()
+        def changedPaths = leftPaths.intersect(rightPaths)
+                .findAll { path ->
+                    leftEntries[path].sha256 != rightEntries[path].sha256 ||
+                            leftEntries[path].size != rightEntries[path].size
+                }
+                .sort()
+
+        if (missingFromRight.empty && extraInRight.empty && changedPaths.empty) {
+            logger.lifecycle("Release evidence manifests match: ${leftEvidence} and ${rightEvidence}")
+            return
+        }
+
+        def message = new StringBuilder()
+        message << "Release evidence comparison failed\n"
+        message << "left: ${leftEvidence}\n"
+        message << "right: ${rightEvidence}\n"
+
+        if (!changedPaths.empty) {
+            message << "\nChanged files:\n"
+            changedPaths.take(20).each { path ->
+                message << "  ${path}\n"
+                appendReleaseEvidenceArtifactDetails(message, 'left', leftEntries[path])
+                appendReleaseEvidenceArtifactDetails(message, 'right', rightEntries[path])
+            }
+            if (changedPaths.size() > 20) {
+                message << "  ... ${changedPaths.size() - 20} more\n"
+            }
+        }
+
+        if (!missingFromRight.empty) {
+            message << "\nOnly in left:\n"
+            missingFromRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendReleaseEvidenceArtifactDetails(message, 'left', leftEntries[path])
+            }
+            if (missingFromRight.size() > 20) {
+                message << "  ... ${missingFromRight.size() - 20} more\n"
+            }
+        }
+
+        if (!extraInRight.empty) {
+            message << "\nOnly in right:\n"
+            extraInRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendReleaseEvidenceArtifactDetails(message, 'right', rightEntries[path])
+            }
+            if (extraInRight.size() > 20) {
+                message << "  ... ${extraInRight.size() - 20} more\n"
+            }
+        }
+
+        throw new GradleException(message.toString())
     }
 }
 
