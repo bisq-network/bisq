@@ -886,6 +886,7 @@ def installerManifestFile = releaseReportDir.map { it.file('installer-manifest.t
 def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
 def installerBuildInfoFile = releaseReportDir.map { it.file('installer-build-info.json') }
 def installerStructureReportFile = releaseReportDir.map { it.file('installer-structure-report.tsv') }
+def installerStructureSummaryFile = releaseReportDir.map { it.file('installer-structure-summary.txt') }
 def installerStructureReportDir = releaseReportDir.map { it.dir('installer-structure') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
@@ -893,6 +894,7 @@ def installerEvidenceRequiredEntries = [
         'installer-manifest.tsv',
         'INSTALLER-SHA256SUMS',
         'installer-build-info.json',
+        'installer-structure-summary.txt',
         'installer-structure-report.tsv'
 ]
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
@@ -1748,6 +1750,7 @@ tasks.register('generateInstallerStructureReport') {
             .withPropertyName('installerArtifacts')
             .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
     outputs.file(installerStructureReportFile)
+    outputs.file(installerStructureSummaryFile)
     outputs.dir(installerStructureReportDir)
     outputs.upToDateWhen { false }
 
@@ -1813,6 +1816,7 @@ tasks.register('generateInstallerStructureReport') {
         }
 
         def rows = ['artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage']
+        def summaryRows = []
         installerFiles.each { installerFile ->
             def artifactPath = canonicalPath(installerFile)
             def extension = installerFile.name.contains('.')
@@ -1884,13 +1888,17 @@ tasks.register('generateInstallerStructureReport') {
             }
 
             def status = 'skipped'
+            def requiredFailures = []
+            def optionalFailures = []
+            def requiredCommands = []
+            def optionalCommands = []
             if (!commands.empty) {
                 def report = new StringBuilder()
                 report << "artifact: ${artifactPath}\n"
                 report << "sha256: ${sha256(installerFile)}\n"
                 report << "format: ${extension}\n"
-                def failures = []
-                def requiredCommands = commands.findAll { !it.optional }
+                requiredCommands = commands.findAll { !it.optional }
+                optionalCommands = commands.findAll { it.optional }
 
                 commands.each { commandSpec ->
                     def displayCommand = commandSpec.command.collect {
@@ -1906,15 +1914,19 @@ tasks.register('generateInstallerStructureReport') {
                     if (result.stderr) {
                         report << "\nstderr:\n${normalizeReportOutput(result.stderr)}\n"
                     }
-                    if (result.exitValue != 0 && !commandSpec.optional) {
-                        failures << commandSpec.label
+                    if (result.exitValue != 0) {
+                        if (commandSpec.optional) {
+                            optionalFailures << commandSpec.label
+                        } else {
+                            requiredFailures << commandSpec.label
+                        }
                     }
                 }
 
                 reportFile.setText(report.toString(), StandardCharsets.UTF_8.name())
                 if (!requiredCommands.empty) {
-                    status = failures.empty ? 'generated' : 'failed'
-                    message = failures.empty ? '' : "Inspector command failed: ${failures.join(', ')}"
+                    status = requiredFailures.empty ? 'generated' : 'failed'
+                    message = requiredFailures.empty ? '' : "Inspector command failed: ${requiredFailures.join(', ')}"
                 }
             }
 
@@ -1922,13 +1934,54 @@ tasks.register('generateInstallerStructureReport') {
             rows << [artifactPath, sha256(installerFile), extension, status, reportPath, message]
                     .collect { it.replace('\t', ' ').replace('\n', ' ') }
                     .join('\t')
+            summaryRows << [
+                    artifactPath         : artifactPath,
+                    format               : extension,
+                    status               : status,
+                    reportPath           : reportPath,
+                    message              : message,
+                    requiredCommandCount : requiredCommands.size(),
+                    optionalCommandCount : optionalCommands.size(),
+                    requiredFailures     : requiredFailures,
+                    optionalFailures     : optionalFailures
+            ]
         }
 
         def structureReport = installerStructureReportFile.get().asFile
         structureReport.parentFile.mkdirs()
         structureReport.setText(rows.join('\n') + '\n', StandardCharsets.UTF_8.name())
 
+        def statusCounts = summaryRows.countBy { it.status }
+        def requiredFailureRows = summaryRows.findAll { !it.requiredFailures.empty }
+        def optionalFailureRows = summaryRows.findAll { !it.optionalFailures.empty }
+        def summary = new StringBuilder()
+        summary << "Installer structure summary\n"
+        summary << "artifact_count: ${summaryRows.size()}\n"
+        summary << "generated_count: ${statusCounts.generated ?: 0}\n"
+        summary << "failed_count: ${statusCounts.failed ?: 0}\n"
+        summary << "skipped_count: ${statusCounts.skipped ?: 0}\n"
+        summary << "required_failure_count: ${requiredFailureRows.sum { it.requiredFailures.size() } ?: 0}\n"
+        summary << "optional_failure_count: ${optionalFailureRows.sum { it.optionalFailures.size() } ?: 0}\n"
+        summary << "\nArtifacts\n"
+        summaryRows.each { row ->
+            summary << "\n${row.artifactPath}\n"
+            summary << "  format: ${row.format ?: 'unknown'}\n"
+            summary << "  status: ${row.status}\n"
+            summary << "  report_path: ${row.reportPath ?: 'none'}\n"
+            summary << "  required_inspectors: ${row.requiredCommandCount}\n"
+            summary << "  optional_inspectors: ${row.optionalCommandCount}\n"
+            summary << "  required_failures: ${row.requiredFailures.empty ? 'none' : row.requiredFailures.join(', ')}\n"
+            summary << "  optional_failures: ${row.optionalFailures.empty ? 'none' : row.optionalFailures.join(', ')}\n"
+            if (row.message) {
+                summary << "  message: ${row.message}\n"
+            }
+        }
+
+        def structureSummary = installerStructureSummaryFile.get().asFile
+        structureSummary.setText(summary.toString(), StandardCharsets.UTF_8.name())
+
         logger.lifecycle("Wrote installer structure report to ${rootProject.relativePath(structureReport)}")
+        logger.lifecycle("Wrote installer structure summary to ${rootProject.relativePath(structureSummary)}")
     }
 }
 
@@ -1942,6 +1995,7 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
             installerManifestFile,
             installerSha256SumsFile,
             installerBuildInfoFile,
+            installerStructureSummaryFile,
             installerStructureReportFile
     ]
     def structureReportFiles = {
@@ -1972,6 +2026,7 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
     from(installerManifestFile)
     from(installerSha256SumsFile)
     from(installerBuildInfoFile)
+    from(installerStructureSummaryFile)
     from(installerStructureReportFile)
     from(installerStructureReportDir) {
         into 'installer-structure'

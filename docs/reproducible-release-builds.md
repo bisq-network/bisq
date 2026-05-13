@@ -220,16 +220,20 @@ OS, run:
 
 This writes:
 
+- `build/reports/release/installer-structure-summary.txt`
 - `build/reports/release/installer-structure-report.tsv`
 - `build/reports/release/installer-structure/`
 
-`installer-structure-report.tsv` and the `installer-structure/` reports are
-investigation aids for package internals. They use local tools such as `ar`,
-`file`, `dpkg-deb`, `rpm`, `hdiutil`, `pkgutil`, `xar`, and Windows PowerShell
-when available to record package metadata, archive member metadata, payload
-listings, file type metadata, and signature details. On Windows the structure
-report prefers Windows PowerShell and falls back to PowerShell Core (`pwsh`)
-when `powershell` is unavailable. Debian reports include
+`installer-structure-summary.txt`, `installer-structure-report.tsv`, and the
+`installer-structure/` reports are investigation aids for package internals.
+They use local tools such as `ar`, `file`, `dpkg-deb`, `rpm`, `hdiutil`,
+`pkgutil`, `xar`, and Windows PowerShell when available to record package
+metadata, archive member metadata, payload listings, file type metadata, and
+signature details. The summary records artifact counts, generated/failed/skipped
+status counts, and required versus optional inspector failures so release
+managers can triage incomplete evidence before opening individual reports. On
+Windows the structure report prefers Windows PowerShell and falls back to
+PowerShell Core (`pwsh`) when `powershell` is unavailable. Debian reports include
 listings for the outer archive, SHA-256 hashes for each outer archive member,
 package fields, package payload, and the inner `control.tar` and `data.tar`
 archives with full timestamps and numeric ownership when GNU tar is available.
@@ -289,6 +293,8 @@ Expected ZIP entries:
 - `INSTALLER-SHA256SUMS`: checksum-tool compatible installer hashes.
 - `installer-build-info.json`: build environment and installer tool
   diagnostics.
+- `installer-structure-summary.txt`: status counts and required versus optional
+  inspector failures.
 - `installer-structure-report.tsv`: per-artifact structure report summary.
 - `installer-structure/*.txt`: per-artifact structure diagnostics for rows in
   `installer-structure-report.tsv` whose status is `generated` or `failed` and
@@ -306,9 +312,9 @@ To regenerate the bundle and explicitly validate the published ZIP layout, run:
 ```
 
 `verifyInstallerEvidenceBundle` opens `installer-evidence.zip` and checks for
-the manifest, checksum file, build info, structure summary, and any
-`installer-structure/*.txt` reports referenced by generated or failed structure
-report rows.
+the manifest, checksum file, build info, structure summary file, structure
+report, and any `installer-structure/*.txt` reports referenced by generated or
+failed structure report rows.
 
 The manual GitHub Actions workflow `Installer Evidence` can generate Linux,
 macOS, and Windows installer evidence for a release commit or tag without
