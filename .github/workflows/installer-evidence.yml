@@ -29,7 +29,18 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends cpio fakeroot rpm
+        sudo apt-get install -y --no-install-recommends \
+          binutils \
+          cpio \
+          dpkg \
+          dpkg-dev \
+          fakeroot \
+          file \
+          gzip \
+          rpm \
+          tar \
+          xz-utils \
+          zip
 
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -41,7 +52,7 @@ jobs:
     - name: Build Linux installer evidence
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
-        arguments: generateInstallerEvidenceBundle --scan
+        arguments: verifyInstallerEvidenceBundle --scan
 
     - name: Upload Linux installer evidence
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -51,6 +62,7 @@ jobs:
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
           build/reports/release/installer-build-info.json
+          build/reports/release/installer-structure-summary.txt
           build/reports/release/installer-structure-report.tsv
           build/reports/release/installer-structure/**
           build/reports/release/installer-evidence.zip
@@ -84,7 +96,7 @@ jobs:
     - name: Build macOS installer evidence
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
-        arguments: generateInstallerEvidenceBundle --scan
+        arguments: verifyInstallerEvidenceBundle --scan
 
     - name: Upload macOS installer evidence
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -94,6 +106,7 @@ jobs:
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
           build/reports/release/installer-build-info.json
+          build/reports/release/installer-structure-summary.txt
           build/reports/release/installer-structure-report.tsv
           build/reports/release/installer-structure/**
           build/reports/release/installer-evidence.zip
@@ -139,7 +152,7 @@ jobs:
     - name: Build Windows installer evidence
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
       with:
-        arguments: generateInstallerEvidenceBundle --scan
+        arguments: verifyInstallerEvidenceBundle --scan
 
     - name: Upload Windows installer evidence
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -149,6 +162,7 @@ jobs:
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
           build/reports/release/installer-build-info.json
+          build/reports/release/installer-structure-summary.txt
           build/reports/release/installer-structure-report.tsv
           build/reports/release/installer-structure/**
           build/reports/release/installer-evidence.zip

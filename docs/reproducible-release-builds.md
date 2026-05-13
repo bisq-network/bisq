@@ -353,7 +353,9 @@ failed structure report rows.
 The manual GitHub Actions workflow `Installer Evidence` can generate Linux,
 macOS, and Windows installer evidence for a release commit or tag without
 making installer generation part of the normal push or pull-request release
-build gate.
+build gate. Each job runs `verifyInstallerEvidenceBundle`, so the uploaded
+artifact contains a validated `installer-evidence.zip` and its component
+evidence files.
 
 Verify the generated installer checksum file locally:
 
