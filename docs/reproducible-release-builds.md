@@ -72,21 +72,22 @@ docker run --rm --platform linux/amd64 \
   -v "$PWD:/workspace" \
   -w /workspace \
   bisq-release-builder-linux:java-21.0.6 \
-  ./gradlew verifyReleaseBuild
+  ./gradlew verifyReleaseBuild verifyInstallerEvidenceBundle
 ```
 
 This container is an independent Linux verification environment for the Java
-payload. The manual GitHub Actions workflow `Linux Release Builder` builds this
-image, creates two clean worktrees of the dispatch commit, runs
-`verifyReleaseBuild` and `verifyInstallerEvidenceBundle` inside the image for
-both worktrees, compares the two `release-evidence.zip` files, compares the two
-`installer-evidence.zip` files, and uploads the first worktree's Java payload
-evidence artifact `release-builder-linux-java-21.0.6` plus Linux installer
-evidence artifact `release-builder-linux-installers-java-21.0.6`. The workflow
-is `workflow_dispatch` only, so it is not part of normal push or pull-request
-CI. `verifyReleaseBuild` also runs `verifyReleaseBuilderImage`, which checks
-that the Dockerfile keeps its base image digest, apt snapshot, package-tool set,
-and release-sensitive environment defaults pinned.
+payload and Linux installer evidence. The manual GitHub Actions workflow
+`Linux Release Builder` builds this image, creates two clean worktrees of the
+dispatch commit, runs `verifyReleaseBuild` and `verifyInstallerEvidenceBundle`
+inside the image for both worktrees, compares the two `release-evidence.zip`
+files, compares the two `installer-evidence.zip` files, and uploads the first
+worktree's Java payload evidence artifact `release-builder-linux-java-21.0.6`
+plus Linux installer evidence artifact
+`release-builder-linux-installers-java-21.0.6`. The workflow is
+`workflow_dispatch` only, so it is not part of normal push or pull-request CI.
+`verifyReleaseBuild` also runs `verifyReleaseBuilderImage`, which checks that
+the Dockerfile keeps its base image digest, apt snapshot, package-tool set, and
+release-sensitive environment defaults pinned.
 
 Build the release payload and run the policy gates.
 
@@ -410,14 +411,14 @@ docker run --rm --platform linux/amd64 \
   -v "$PWD/../bisq-installer-a:/workspace" \
   -w /workspace \
   bisq-release-builder-linux:java-21.0.6 \
-  ./gradlew clean generateInstallerEvidenceBundle
+  ./gradlew clean verifyInstallerEvidenceBundle
 
 docker run --rm --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
   -v "$PWD/../bisq-installer-b:/workspace" \
   -w /workspace \
   bisq-release-builder-linux:java-21.0.6 \
-  ./gradlew clean generateInstallerEvidenceBundle
+  ./gradlew clean verifyInstallerEvidenceBundle
 
 ./gradlew compareInstallerEvidenceBundles \
   -PleftInstallerEvidence=../bisq-installer-a/build/reports/release/installer-evidence.zip \
