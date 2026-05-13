@@ -43,8 +43,8 @@ jobs:
       run: |
         docker run --rm --platform linux/amd64 \
           --user "$(id -u):$(id -g)" \
-          -v "$PWD/build/release-builder-worktrees/a:/workspace" \
-          -w /workspace \
+          -v "$PWD:$PWD" \
+          -w "$PWD/build/release-builder-worktrees/a" \
           bisq-release-builder-linux:java-21.0.6 \
           ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 
@@ -53,8 +53,8 @@ jobs:
       run: |
         docker run --rm --platform linux/amd64 \
           --user "$(id -u):$(id -g)" \
-          -v "$PWD/build/release-builder-worktrees/b:/workspace" \
-          -w /workspace \
+          -v "$PWD:$PWD" \
+          -w "$PWD/build/release-builder-worktrees/b" \
           bisq-release-builder-linux:java-21.0.6 \
           ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 

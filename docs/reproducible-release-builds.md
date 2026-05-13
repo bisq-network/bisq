@@ -410,17 +410,19 @@ git worktree add --detach ../bisq-installer-b "$RELEASE_REF"
 git -C ../bisq-installer-a submodule update --init --recursive
 git -C ../bisq-installer-b submodule update --init --recursive
 
+REPO_PARENT="$(cd .. && pwd)"
+
 docker run --rm --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
-  -v "$PWD/../bisq-installer-a:/workspace" \
-  -w /workspace \
+  -v "$REPO_PARENT:$REPO_PARENT" \
+  -w "$REPO_PARENT/bisq-installer-a" \
   bisq-release-builder-linux:java-21.0.6 \
   ./gradlew clean verifyInstallerEvidenceBundle
 
 docker run --rm --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
-  -v "$PWD/../bisq-installer-b:/workspace" \
-  -w /workspace \
+  -v "$REPO_PARENT:$REPO_PARENT" \
+  -w "$REPO_PARENT/bisq-installer-b" \
   bisq-release-builder-linux:java-21.0.6 \
   ./gradlew clean verifyInstallerEvidenceBundle
 
