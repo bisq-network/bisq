@@ -19,6 +19,14 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
 
 @Getter
 public class DtoPubKeyScript {
+    // Pay-to-anchor (P2A) script: OP_1 followed by the two-byte witness program 0x4e73.
+    // Bitcoin Core 29 reports this script as type "anchor", but legacy nodes did not.
+    private static final String PAY_TO_ANCHOR_HEX = "51024e73";
+    // Verified with Bitcoin Knots v27.1.knots20240801:
+    // `decodescript 51024e73` returns asm "1 29518" and type "witness_unknown".
+    // Keep this legacy asm because PubKeyScript.asm is serialized into the DAO state hash.
+    private static final String PAY_TO_ANCHOR_LEGACY_ASM = "1 29518";
+
     private final String asm;
     private final String hex;
     private final ScriptType type;
@@ -26,6 +34,17 @@ public class DtoPubKeyScript {
     private final List<String> addresses;
 
     public DtoPubKeyScript(BitcoindScriptPubKey bitcoindScriptPubKey) {
+        if (isPayToAnchor(bitcoindScriptPubKey)) {
+            // Bitcoin Core 29 returns type "anchor" for the P2A script, while older Core versions returned
+            // "witness_unknown". The DAO state hash must keep the older representation.
+            this.asm = PAY_TO_ANCHOR_LEGACY_ASM;
+            this.hex = PAY_TO_ANCHOR_HEX;
+            this.type = ScriptType.WITNESS_UNKNOWN;
+            this.addresses = Collections.emptyList();
+            this.reqSigs = 0;
+            return;
+        }
+
         this.asm = bitcoindScriptPubKey.getAsm();
         this.hex = bitcoindScriptPubKey.getHex();
         this.type = ScriptType.fromScriptPubKey(bitcoindScriptPubKey);
@@ -55,5 +74,10 @@ public class DtoPubKeyScript {
             // in that case do not provide an address to the RawTxOutput
             return Optional.empty();
         }
+    }
+
+    private boolean isPayToAnchor(BitcoindScriptPubKey bitcoindScriptPubKey) {
+        return PAY_TO_ANCHOR_HEX.equalsIgnoreCase(bitcoindScriptPubKey.getHex()) ||
+                "anchor".equals(bitcoindScriptPubKey.getType());
     }
 }
