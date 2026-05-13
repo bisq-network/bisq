@@ -1039,6 +1039,12 @@ def installerStructureSummaryFile = releaseReportDir.map { it.file('installer-st
 def installerStructureReportDir = releaseReportDir.map { it.dir('installer-structure') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
+def releaseEvidenceRequiredEntries = [
+        'release-manifest.tsv',
+        'SHA256SUMS',
+        'build-info.json',
+        'checksums/jars.sha256'
+]
 def installerEvidenceRequiredEntries = [
         'installer-manifest.tsv',
         'INSTALLER-SHA256SUMS',
@@ -1059,6 +1065,33 @@ def installerStructureZipEntryFor = { String reportPath ->
 
     def markerIndex = normalizedReportPath.indexOf("/${marker}")
     markerIndex >= 0 ? normalizedReportPath.substring(markerIndex + 1) : null
+}
+
+def validateReleaseEvidenceBundle = { File bundle ->
+    if (!bundle.file) {
+        throw new GradleException("Missing release evidence bundle: ${bundle}")
+    }
+
+    def actualEntries = new TreeSet<String>()
+    new ZipFile(bundle).withCloseable { zipFile ->
+        zipFile.entries().each { entry ->
+            if (!entry.directory) {
+                actualEntries << entry.name
+            }
+        }
+    }
+
+    def missingEntries = (releaseEvidenceRequiredEntries as Set) - actualEntries
+    if (!missingEntries.empty) {
+        throw new GradleException(
+                "Release evidence bundle is missing required entries:\n" +
+                        missingEntries.sort().collect { "  - ${it}" }.join('\n')
+        )
+    }
+
+    [
+            entryCount: actualEntries.size()
+    ]
 }
 
 def validateInstallerEvidenceBundle = { File bundle ->
@@ -1846,6 +1879,24 @@ tasks.register('generateReleaseEvidenceBundle', Zip) {
     }
 }
 
+tasks.register('verifyReleaseEvidenceBundle') {
+    group = 'verification'
+    description = 'Verifies that the generated release evidence ZIP contains the required evidence files.'
+
+    dependsOn tasks.named('generateReleaseEvidenceBundle')
+    inputs.file(releaseEvidenceBundleFile)
+            .withPropertyName('releaseEvidenceBundle')
+
+    doLast {
+        def bundle = releaseEvidenceBundleFile.get().asFile
+        def validation = validateReleaseEvidenceBundle(bundle)
+        logger.lifecycle(
+                "Verified release evidence bundle ${rootProject.relativePath(bundle)} " +
+                        "with ${validation.entryCount} entries."
+        )
+    }
+}
+
 tasks.register('generateInstallerManifest') {
     group = 'verification'
     description = 'Builds desktop OS installer artifacts and writes canonical SHA-256 installer manifests.'
@@ -2410,7 +2461,7 @@ tasks.register('verifyReleaseBuild') {
     dependsOn tasks.named('verifyReleaseBuilderImage')
     dependsOn tasks.named('verifyGithubActionsSecurity')
     dependsOn tasks.named('verifyDependencySignaturePolicy')
-    dependsOn tasks.named('generateReleaseEvidenceBundle')
+    dependsOn tasks.named('verifyReleaseEvidenceBundle')
     dependsOn {
         tasksNamedAcrossProjects('build') + tasksNamedAcrossProjects('verifyReproducibleArchives')
     }

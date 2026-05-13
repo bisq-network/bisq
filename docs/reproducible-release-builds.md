@@ -113,6 +113,21 @@ available, plus `SOURCE_DATE_EPOCH`, timezone, and locale data.
 `release-evidence.zip` packages the manifest, checksums, build info, and jar
 checksum report into one reproducible file for signing and publishing.
 
+Expected release evidence ZIP entries:
+
+- `release-manifest.tsv`: canonical Java payload hashes, sizes, and paths.
+- `SHA256SUMS`: checksum-tool compatible Java payload hashes.
+- `build-info.json`: build environment and release-builder diagnostics.
+- `checksums/jars.sha256`: per-Jar checksum report used to build the manifest.
+
+`verifyReleaseBuild` runs `verifyReleaseEvidenceBundle`, which regenerates
+`release-evidence.zip` and checks that those required entries are present. To
+run only the bundle validation path, use:
+
+```bash
+./gradlew verifyReleaseEvidenceBundle
+```
+
 Verify the generated checksum file locally.
 
 ```bash
