@@ -294,8 +294,14 @@ def readChecksumFallbackAllowlist = { File allowlistFile ->
         throw new GradleException("Missing ${allowlistFile}. Review checksum-only dependencies and add the approved entries.")
     }
 
+    def sortKey = { String entry ->
+        def columns = entry.split(/\t/, -1)
+        def module = columns[0].split(':', -1)
+        "${module[0]}\t${module[1]}\t${module[2]}\t${columns[1]}".toString()
+    }
     def allowedEntries = new TreeSet<String>()
     def rationaleByEntry = new TreeMap<String, String>()
+    def entryOrder = []
     def duplicateEntries = []
     allowlistFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
         def trimmed = line.trim()
@@ -309,6 +315,7 @@ def readChecksumFallbackAllowlist = { File allowlistFile ->
         }
 
         def entry = "${columns[0].trim()}\t${columns[1].trim()}".toString()
+        entryOrder << entry
         if (!allowedEntries.add(entry)) {
             duplicateEntries << entry
         }
@@ -317,6 +324,12 @@ def readChecksumFallbackAllowlist = { File allowlistFile ->
 
     if (!duplicateEntries.empty) {
         throw new GradleException("Duplicate checksum fallback allowlist entries:\n - ${duplicateEntries.unique().sort().join('\n - ')}")
+    }
+    if (entryOrder != entryOrder.sort(false) { left, right -> sortKey(left) <=> sortKey(right) }) {
+        throw new GradleException(
+                "Checksum fallback allowlist entries must be sorted by module and artifact:\n" +
+                        allowlistFile
+        )
     }
 
     [entries: allowedEntries, rationales: rationaleByEntry]

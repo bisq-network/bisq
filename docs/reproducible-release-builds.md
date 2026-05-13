@@ -491,8 +491,9 @@ separately from ordinary code changes.
 
 New checksum-only artifacts must be reviewed before they are added to
 `gradle/dependency-checksum-fallback-allowlist.tsv`. Each allowlist entry must
-include the exact dependency, artifact file name, and review rationale. Prefer
-PGP signature verification whenever upstream publishes signatures.
+include the exact dependency, artifact file name, and review rationale. Keep
+entries sorted by dependency and artifact name so review diffs stay stable.
+Prefer PGP signature verification whenever upstream publishes signatures.
 
 ## Remaining Gaps
 
