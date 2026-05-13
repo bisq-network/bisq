@@ -24,6 +24,7 @@ def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/d
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
 def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
 def linuxReleaseBuilderDockerfile = layout.projectDirectory.file('docker/release-builder/linux/Dockerfile')
+def linuxReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/release-builder.yml')
 def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
 
 def htmlEscape = { value ->
@@ -1782,6 +1783,44 @@ tasks.register('verifyGithubActionsSecurity') {
                 if (line ==~ /^\s*check-latest:\s*true\s*$/) {
                     violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} sets check-latest: true"
                 }
+            }
+        }
+
+        def releaseBuilderWorkflowFile = linuxReleaseBuilderWorkflow.asFile
+        if (!releaseBuilderWorkflowFile.file) {
+            violations << "Missing Linux release-builder workflow: ${rootProject.relativePath(releaseBuilderWorkflowFile)}"
+        } else {
+            def releaseBuilderWorkflowText = releaseBuilderWorkflowFile.getText(StandardCharsets.UTF_8.name())
+            def releaseBuilderWorkflowLines = releaseBuilderWorkflowFile.readLines(StandardCharsets.UTF_8.name())
+            def releaseBuilderWorkflowPath = rootProject.relativePath(releaseBuilderWorkflowFile)
+            [
+                    'name: Linux Release Builder',
+                    '  workflow_dispatch:',
+                    'runs-on: ubuntu-24.04',
+                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux',
+                    'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
+                    'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
+                    'git -C build/release-builder-worktrees/a submodule update --init --recursive',
+                    'git -C build/release-builder-worktrees/b submodule update --init --recursive',
+                    './gradlew compareReleaseEvidenceBundles \\',
+                    './gradlew compareInstallerEvidenceBundles \\',
+                    'release-builder-linux-java-21.0.6',
+                    'release-builder-linux-installers-java-21.0.6',
+                    'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
+                    'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
+                    'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',
+                    'build/release-builder-worktrees/a/build/reports/release/installer-structure/**'
+            ].each { requiredText ->
+                if (!releaseBuilderWorkflowText.contains(requiredText)) {
+                    violations << "${releaseBuilderWorkflowPath} must contain '${requiredText}'"
+                }
+            }
+
+            def cleanEvidenceRuns = releaseBuilderWorkflowLines.count {
+                it.trim() == './gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle'
+            }
+            if (cleanEvidenceRuns < 2) {
+                violations << "${releaseBuilderWorkflowPath} must run clean verifyReleaseBuild verifyInstallerEvidenceBundle in both release-builder worktrees"
             }
         }
 
