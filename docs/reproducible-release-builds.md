@@ -44,7 +44,8 @@ defaults `SOURCE_DATE_EPOCH=0`, `TZ=UTC`, `LANG=C.UTF-8`, and `LC_ALL=C.UTF-8`.
 It also installs the Linux package tools needed for Java payload verification
 and later installer investigation from a pinned Ubuntu package repository
 snapshot. The Dockerfile enables Ubuntu snapshot resolution for older Ubuntu
-base images before setting the apt snapshot value. The default snapshot is
+base images that use `sources.list` and newer images that use deb822
+`ubuntu.sources` before setting the apt snapshot value. The default snapshot is
 `20260501T000000Z`; update the `UBUNTU_APT_SNAPSHOT` build argument in a
 separate reviewed change when the release-builder package set needs refreshing.
 

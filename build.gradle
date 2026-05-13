@@ -1648,6 +1648,9 @@ tasks.register('verifyReleaseBuilderImage') {
         if (!text.contains('APT::Snapshot "%s";') || !text.contains('$UBUNTU_APT_SNAPSHOT')) {
             violations << 'Dockerfile must write apt snapshot configuration from UBUNTU_APT_SNAPSHOT'
         }
+        if (!text.contains('/etc/apt/sources.list.d/ubuntu.sources') || !text.contains('Snapshot: yes')) {
+            violations << 'Dockerfile must enable apt snapshots for deb822 ubuntu.sources files when present'
+        }
         if (!(text =~ /\bapt-get install -y --no-install-recommends\b/)) {
             violations << 'Dockerfile apt installs must use --no-install-recommends'
         }
@@ -1675,6 +1678,7 @@ tasks.register('verifyReleaseBuilderImage') {
                 'binutils',
                 'coreutils',
                 'cpio',
+                'dpkg',
                 'dpkg-dev',
                 'fakeroot',
                 'file',

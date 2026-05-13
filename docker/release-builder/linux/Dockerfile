@@ -15,6 +15,9 @@ RUN set -eux; \
     if [ -f /etc/apt/sources.list ]; then \
         sed -i -E 's|^deb (http://(archive|security).ubuntu.com/ubuntu/?[[:space:]])|deb [snapshot=yes] \1|' /etc/apt/sources.list; \
     fi; \
+    if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
+        sed -i '/^Signed-By:/a Snapshot: yes' /etc/apt/sources.list.d/ubuntu.sources; \
+    fi; \
     printf 'APT::Snapshot "%s";\n' "$UBUNTU_APT_SNAPSHOT" > /etc/apt/apt.conf.d/50snapshot; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -22,6 +25,7 @@ RUN set -eux; \
         ca-certificates \
         coreutils \
         cpio \
+        dpkg \
         dpkg-dev \
         fakeroot \
         file \
