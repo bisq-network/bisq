@@ -89,8 +89,8 @@ The project direction is:
 
 ## Documentation Map
 
-- [How to use reproducible builds](reproducible-builds-usage.md)
-- [Technical details](reproducible-builds-technical.md)
-- [Linux reproducible builds](reproducible-builds-linux.md)
-- [macOS reproducible builds](reproducible-builds-macos.md)
-- [Windows reproducible builds](reproducible-builds-windows.md)
+- [How to use reproducible builds](usage.md)
+- [Technical details](technical.md)
+- [Linux reproducible builds](linux.md)
+- [macOS reproducible builds](macos.md)
+- [Windows reproducible builds](windows.md)

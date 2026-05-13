@@ -1,7 +1,7 @@
 # Reproducible Builds: How To Use
 
 Use this page when running or verifying release-build evidence. For
-implementation details, see [technical details](reproducible-builds-technical.md).
+implementation details, see [technical details](technical.md).
 
 ## Prepare A Checkout
 
@@ -13,7 +13,7 @@ shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 ```
 
 On Linux, prefer the pinned release-builder image described in
-[Linux reproducible builds](reproducible-builds-linux.md).
+[Linux reproducible builds](linux.md).
 
 ## Build Java Release Evidence
 
