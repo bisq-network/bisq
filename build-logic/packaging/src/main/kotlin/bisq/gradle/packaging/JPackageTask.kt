@@ -6,8 +6,10 @@ import bisq.gradle.packaging.jpackage.PackageFactory
 import bisq.gradle.packaging.jpackage.package_formats.JPackagePackageFormatConfigs
 import bisq.gradle.packaging.jpackage.package_formats.LinuxPackages
 import bisq.gradle.packaging.jpackage.package_formats.MacPackage
+import bisq.gradle.packaging.jpackage.package_formats.PackageFormat
 import bisq.gradle.packaging.jpackage.package_formats.WindowsPackage
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -47,10 +49,12 @@ abstract class JPackageTask : DefaultTask() {
     @TaskAction
     fun run() {
         val jPackagePath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jpackage")
+        val outputDirectoryFile = outputDirectory.asFile.get()
+        deleteExistingInstallerArtifacts(outputDirectoryFile)
 
         val jPackageConfig = JPackageConfig(
                 inputDirPath = distDirFile.get().toPath().resolve("lib"),
-                outputDirPath = outputDirectory.asFile.get().toPath(),
+                outputDirPath = outputDirectoryFile.toPath(),
                 runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
 
                 appConfig = JPackageAppConfig(
@@ -65,6 +69,20 @@ abstract class JPackageTask : DefaultTask() {
 
         val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
         packageFactory.createPackages()
+    }
+
+    private fun deleteExistingInstallerArtifacts(outputDirectoryFile: File) {
+        outputDirectoryFile.mkdirs()
+        val installerExtensions = PackageFormat.values()
+                .map { it.fileExtension }
+                .toSet()
+        outputDirectoryFile.listFiles()
+                ?.filter { it.isFile && it.extension.lowercase() in installerExtensions }
+                ?.forEach { installerArtifact ->
+                    if (!installerArtifact.delete()) {
+                        throw GradleException("Failed to delete stale installer artifact: ${installerArtifact.absolutePath}")
+                    }
+                }
     }
 
     private fun getPackageFormatConfigs(): JPackagePackageFormatConfigs {
