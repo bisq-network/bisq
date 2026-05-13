@@ -1,7 +1,7 @@
 # macOS Reproducible Builds
 
-macOS currently supports Java release evidence and `.dmg` installer evidence.
-It does not yet have a pinned release-builder environment equivalent to Linux.
+macOS supports Java release evidence, `.dmg` installer evidence, and a manual
+two-worktree release-builder workflow on the fixed `macos-15` GitHub runner.
 
 ## Status
 
@@ -10,14 +10,14 @@ Supported:
 - Java release payload evidence through `verifyReleaseBuild`
 - `.dmg` installer evidence through `verifyInstallerEvidenceBundle`
 - manual CI installer evidence upload through `Installer Evidence`
+- manual two-worktree CI comparison through `macOS Release Builder`
 - installer diagnostics using macOS tools such as `hdiutil` and `pkgutil`
 
 Remaining gaps:
 
-- no pinned macOS release-builder image
-- no two-worktree macOS reproducibility workflow equivalent to Linux
-- `.dmg` internals are diagnostic evidence today, not a completed deterministic
-  release-builder guarantee
+- no pinned macOS release-builder image equivalent to the Linux Docker image
+- `.dmg` internals are diagnostic evidence; the release-builder gate compares
+  the installer manifest
 
 ## Local Java Evidence
 
@@ -69,7 +69,10 @@ The manual `Installer Evidence` workflow has a macOS job on `macos-15`. It
 runs `verifyInstallerEvidenceBundle --scan` and uploads
 `installer-evidence-macos-15-java-21.0.6`.
 
-There is no dedicated macOS release-builder A/B workflow yet.
+The manual `macOS Release Builder` workflow runs on `macos-15`, creates two
+clean worktrees at the selected commit, runs
+`clean verifyReleaseBuild verifyInstallerEvidenceBundle` in both, compares Java
+and installer evidence bundles, and uploads the first worktree's evidence.
 
 ## macOS Installer Diagnostics
 
@@ -94,10 +97,6 @@ listings, and raw `xar` archive member diagnostics.
 
 ## Direction
 
-The macOS target should follow the Linux model once a suitable pinned or
-otherwise reviewable macOS builder strategy exists:
-
-1. Build two clean worktrees of the same commit.
-2. Generate Java and macOS installer evidence in both.
-3. Compare release evidence and installer evidence.
-4. Upload the first worktree's signed evidence candidates.
+The macOS target now follows the Linux two-worktree comparison model, but its
+environment is the fixed GitHub-hosted `macos-15` runner instead of a pinned
+container image. Future work should keep reducing unpinned runner inputs.

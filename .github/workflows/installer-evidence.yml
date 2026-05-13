@@ -137,7 +137,7 @@ jobs:
     - name: Install WiX Toolset
       shell: pwsh
       run: |
-        choco install wixtoolset --no-progress -y
+        choco install wixtoolset --version=3.14.1.20250415 --no-progress -y
         $wixDirectory = Get-ChildItem "${env:ProgramFiles(x86)}" -Directory -Filter "WiX Toolset v3*" |
           Sort-Object Name -Descending |
           Select-Object -First 1

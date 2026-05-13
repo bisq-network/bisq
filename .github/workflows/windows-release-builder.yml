@@ -1,0 +1,117 @@
+name: Windows Release Builder
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-release-builder:
+    name: Windows release-builder evidence, Java 21.0.6
+    runs-on: windows-2025
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+          submodules: 'true'
+          persist-credentials: false
+
+    - name: Verify Gradle wrapper checksums
+      shell: bash
+      run: |
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+        else
+          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+        fi
+
+    - name: Install WiX Toolset
+      shell: pwsh
+      run: |
+        choco install wixtoolset --version=3.14.1.20250415 --no-progress -y
+        $wixDirectory = Get-ChildItem "${env:ProgramFiles(x86)}" -Directory -Filter "WiX Toolset v3*" |
+          Sort-Object Name -Descending |
+          Select-Object -First 1
+        if ($null -eq $wixDirectory) {
+          throw "WiX Toolset installation directory was not found."
+        }
+        "$($wixDirectory.FullName)\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+
+    - name: Set up JDK
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '21.0.6'
+        distribution: 'zulu'
+        check-latest: false
+
+    - name: Prepare clean release-builder worktrees
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force build/release-builder-worktrees | Out-Null
+        git worktree add --detach build/release-builder-worktrees/windows-a $env:GITHUB_SHA
+        git worktree add --detach build/release-builder-worktrees/windows-b $env:GITHUB_SHA
+        git -C build/release-builder-worktrees/windows-a submodule update --init --recursive
+        git -C build/release-builder-worktrees/windows-b submodule update --init --recursive
+
+    - name: Generate Windows evidence in release-builder worktree A
+      shell: pwsh
+      run: |
+        try {
+          Push-Location build/release-builder-worktrees/windows-a
+          .\gradlew.bat clean verifyReleaseBuild verifyInstallerEvidenceBundle
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } finally {
+          Pop-Location
+        }
+
+    - name: Generate Windows evidence in release-builder worktree B
+      shell: pwsh
+      run: |
+        try {
+          Push-Location build/release-builder-worktrees/windows-b
+          .\gradlew.bat clean verifyReleaseBuild verifyInstallerEvidenceBundle
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } finally {
+          Pop-Location
+        }
+
+    - name: Compare release-builder Java evidence
+      shell: pwsh
+      run: |
+        .\gradlew.bat compareReleaseEvidenceBundles `
+          -PleftReleaseEvidence=build/release-builder-worktrees/windows-a/build/reports/release/release-evidence.zip `
+          -PrightReleaseEvidence=build/release-builder-worktrees/windows-b/build/reports/release/release-evidence.zip
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Compare release-builder installer evidence
+      shell: pwsh
+      run: |
+        .\gradlew.bat compareInstallerEvidenceBundles `
+          -PleftInstallerEvidence=build/release-builder-worktrees/windows-a/build/reports/release/installer-evidence.zip `
+          -PrightInstallerEvidence=build/release-builder-worktrees/windows-b/build/reports/release/installer-evidence.zip
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Upload release-builder evidence
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-builder-windows-java-21.0.6
+        path: |
+          build/release-builder-worktrees/windows-a/build/reports/release/SHA256SUMS
+          build/release-builder-worktrees/windows-a/build/reports/release/release-manifest.tsv
+          build/release-builder-worktrees/windows-a/build/reports/release/build-info.json
+          build/release-builder-worktrees/windows-a/build/reports/release/release-evidence.zip
+        if-no-files-found: error
+
+    - name: Upload release-builder installer evidence
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-builder-windows-installers-java-21.0.6
+        path: |
+          build/release-builder-worktrees/windows-a/build/reports/release/INSTALLER-SHA256SUMS
+          build/release-builder-worktrees/windows-a/build/reports/release/installer-manifest.tsv
+          build/release-builder-worktrees/windows-a/build/reports/release/installer-build-info.json
+          build/release-builder-worktrees/windows-a/build/reports/release/installer-structure-summary.txt
+          build/release-builder-worktrees/windows-a/build/reports/release/installer-structure-report.tsv
+          build/release-builder-worktrees/windows-a/build/reports/release/installer-structure/**
+          build/release-builder-worktrees/windows-a/build/reports/release/installer-evidence.zip
+        if-no-files-found: error

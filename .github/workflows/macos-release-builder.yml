@@ -1,0 +1,93 @@
+name: macOS Release Builder
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos-release-builder:
+    name: macOS release-builder evidence, Java 21.0.6
+    runs-on: macos-15
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+          submodules: 'true'
+          persist-credentials: false
+
+    - name: Verify Gradle wrapper checksums
+      shell: bash
+      run: |
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+        else
+          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+        fi
+
+    - name: Set up JDK
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '21.0.6'
+        distribution: 'zulu'
+        check-latest: false
+
+    - name: Prepare clean release-builder worktrees
+      shell: bash
+      run: |
+        mkdir -p build/release-builder-worktrees
+        git worktree add --detach build/release-builder-worktrees/macos-a "$GITHUB_SHA"
+        git worktree add --detach build/release-builder-worktrees/macos-b "$GITHUB_SHA"
+        git -C build/release-builder-worktrees/macos-a submodule update --init --recursive
+        git -C build/release-builder-worktrees/macos-b submodule update --init --recursive
+
+    - name: Generate macOS evidence in release-builder worktree A
+      shell: bash
+      run: |
+        cd build/release-builder-worktrees/macos-a
+        ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
+
+    - name: Generate macOS evidence in release-builder worktree B
+      shell: bash
+      run: |
+        cd build/release-builder-worktrees/macos-b
+        ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
+
+    - name: Compare release-builder Java evidence
+      shell: bash
+      run: |
+        ./gradlew compareReleaseEvidenceBundles \
+          -PleftReleaseEvidence=build/release-builder-worktrees/macos-a/build/reports/release/release-evidence.zip \
+          -PrightReleaseEvidence=build/release-builder-worktrees/macos-b/build/reports/release/release-evidence.zip
+
+    - name: Compare release-builder installer evidence
+      shell: bash
+      run: |
+        ./gradlew compareInstallerEvidenceBundles \
+          -PleftInstallerEvidence=build/release-builder-worktrees/macos-a/build/reports/release/installer-evidence.zip \
+          -PrightInstallerEvidence=build/release-builder-worktrees/macos-b/build/reports/release/installer-evidence.zip
+
+    - name: Upload release-builder evidence
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-builder-macos-java-21.0.6
+        path: |
+          build/release-builder-worktrees/macos-a/build/reports/release/SHA256SUMS
+          build/release-builder-worktrees/macos-a/build/reports/release/release-manifest.tsv
+          build/release-builder-worktrees/macos-a/build/reports/release/build-info.json
+          build/release-builder-worktrees/macos-a/build/reports/release/release-evidence.zip
+        if-no-files-found: error
+
+    - name: Upload release-builder installer evidence
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: release-builder-macos-installers-java-21.0.6
+        path: |
+          build/release-builder-worktrees/macos-a/build/reports/release/INSTALLER-SHA256SUMS
+          build/release-builder-worktrees/macos-a/build/reports/release/installer-manifest.tsv
+          build/release-builder-worktrees/macos-a/build/reports/release/installer-build-info.json
+          build/release-builder-worktrees/macos-a/build/reports/release/installer-structure-summary.txt
+          build/release-builder-worktrees/macos-a/build/reports/release/installer-structure-report.tsv
+          build/release-builder-worktrees/macos-a/build/reports/release/installer-structure/**
+          build/release-builder-worktrees/macos-a/build/reports/release/installer-evidence.zip
+        if-no-files-found: error

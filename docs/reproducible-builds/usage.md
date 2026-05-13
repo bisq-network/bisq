@@ -115,6 +115,12 @@ image, creates two clean worktrees of the selected commit, runs
 `clean verifyReleaseBuild verifyInstallerEvidenceBundle` in both worktrees, and
 compares the Java and installer evidence bundles.
 
+`macOS Release Builder` and `Windows Release Builder` are manual
+(`workflow_dispatch`). They create two clean worktrees on fixed GitHub-hosted
+runner labels, run `clean verifyReleaseBuild verifyInstallerEvidenceBundle` in
+both, compare Java and installer evidence bundles, and upload evidence from the
+first worktree.
+
 To trigger a manual workflow, open the repository's GitHub Actions tab, choose
 the workflow, click `Run workflow`, and select the branch or tag to verify.
 

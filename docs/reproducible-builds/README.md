@@ -54,9 +54,10 @@ payload and policy gates, but it is not the full two-worktree Linux
 release-builder comparison.
 
 The manual `Installer Evidence` workflow can generate installer evidence on
-Linux, macOS, and Windows. It records useful per-OS installer diagnostics, but
-macOS and Windows do not yet have pinned, two-worktree release-builder
-environments equivalent to Linux.
+Linux, macOS, and Windows. The manual `macOS Release Builder` and `Windows
+Release Builder` workflows now build two clean worktrees of the same commit,
+verify Java and installer evidence in both, compare the evidence bundles, and
+upload the first worktree's evidence.
 
 ## Limitations
 
@@ -64,10 +65,11 @@ environments equivalent to Linux.
 - Java payload evidence is comparable across build environments, but
   platform-specific runtime dependency differences must still be explained.
   Installer evidence is compared only against the same OS installer format.
-- Linux has a pinned release-builder image. macOS and Windows currently rely on
-  GitHub-hosted runner environments or local machines.
-- macOS `.dmg` and Windows `.exe` installer internals are diagnostic evidence
-  today; deterministic platform release builders are still future work.
+- Linux has a pinned release-builder image. macOS and Windows release-builder
+  workflows rely on fixed GitHub-hosted runner labels, pinned Java, and
+  recorded build information rather than a hermetic image.
+- macOS `.dmg` and Windows `.exe` installer internals are still diagnostic
+  evidence; the canonical reproducibility gate compares installer manifests.
 - Published evidence is only useful after the release manager signs it and
   verifiers check those signatures.
 
@@ -82,8 +84,8 @@ The project direction is:
 3. Treat unexplained Java payload mismatches as release blockers.
 4. Treat installer mismatches as OS-specific blockers for the affected
    installer artifact.
-5. Extend the Linux model to macOS and Windows by adding pinned or otherwise
-   reviewable release-builder environments and A/B comparisons.
+5. Keep tightening macOS and Windows builder inputs where GitHub-hosted runners
+   expose additional pinning controls.
 6. Keep dependency verification maintenance separate from ordinary code changes
    so new checksum-only artifacts receive explicit review.
 

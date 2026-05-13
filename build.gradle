@@ -26,6 +26,8 @@ def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle
 def linuxReleaseBuilderDockerfile = layout.projectDirectory.file('docker/release-builder/linux/Dockerfile')
 def linuxReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/release-builder.yml')
 def installerEvidenceWorkflow = layout.projectDirectory.file('.github/workflows/installer-evidence.yml')
+def macosReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/macos-release-builder.yml')
+def windowsReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/windows-release-builder.yml')
 def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
 
 def htmlEscape = { value ->
@@ -1798,55 +1800,133 @@ tasks.register('verifyGithubActionsSecurity') {
             }
         }
 
-        def releaseBuilderWorkflowFile = linuxReleaseBuilderWorkflow.asFile
-        if (!releaseBuilderWorkflowFile.file) {
-            violations << "Missing Linux release-builder workflow: ${rootProject.relativePath(releaseBuilderWorkflowFile)}"
-        } else {
-            def releaseBuilderWorkflowText = releaseBuilderWorkflowFile.getText(StandardCharsets.UTF_8.name())
-            def releaseBuilderWorkflowLines = releaseBuilderWorkflowFile.readLines(StandardCharsets.UTF_8.name())
-            def releaseBuilderWorkflowPath = rootProject.relativePath(releaseBuilderWorkflowFile)
-            [
-                    'name: Linux Release Builder',
-                    '  workflow_dispatch:',
-                    'runs-on: ubuntu-24.04',
-                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux',
-                    'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
-                    'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
-                    'git -C build/release-builder-worktrees/a submodule update --init --recursive',
-                    'git -C build/release-builder-worktrees/b submodule update --init --recursive',
-                    '-v "$PWD/.git:$PWD/.git"',
-                    '-v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a"',
-                    '-v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b"',
-                    '-v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro"',
-                    '-w "$PWD/build/release-builder-worktrees/a"',
-                    '-w "$PWD/build/release-builder-worktrees/b"',
-                    './gradlew compareReleaseEvidenceBundles \\',
-                    './gradlew compareInstallerEvidenceBundles \\',
-                    '-PleftReleaseEvidence=build/reports/release/release-evidence.zip \\',
-                    '-PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"',
-                    '-PleftInstallerEvidence=build/reports/release/installer-evidence.zip \\',
-                    '-PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"',
-                    'release-builder-linux-java-21.0.6',
-                    'release-builder-linux-installers-java-21.0.6',
-                    'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
-                    'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
-                    'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',
-                    'build/release-builder-worktrees/a/build/reports/release/installer-structure/**'
-            ].each { requiredText ->
-                if (!releaseBuilderWorkflowText.contains(requiredText)) {
-                    violations << "${releaseBuilderWorkflowPath} must contain '${requiredText}'"
-                }
-            }
-            if (releaseBuilderWorkflowText.contains('-v "$PWD:$PWD"') ||
-                    releaseBuilderWorkflowText.contains('-v "$PWD:/workspace"')) {
-                violations << "${releaseBuilderWorkflowPath} must not mount the full checkout into release-builder containers"
+        def verifyReleaseBuilderWorkflowContract = { File workflowFile,
+                                                     String label,
+                                                     List<String> requiredTexts,
+                                                     String cleanEvidenceRun ->
+            if (!workflowFile.file) {
+                violations << "Missing ${label} release-builder workflow: ${rootProject.relativePath(workflowFile)}"
+                return
             }
 
-            def cleanEvidenceRuns = releaseBuilderWorkflowLines.count {
-                it.trim() == './gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle'
+            def workflowText = workflowFile.getText(StandardCharsets.UTF_8.name())
+            def workflowLines = workflowFile.readLines(StandardCharsets.UTF_8.name())
+            def workflowPath = rootProject.relativePath(workflowFile)
+
+            requiredTexts.each { requiredText ->
+                if (!workflowText.contains(requiredText)) {
+                    violations << "${workflowPath} must contain '${requiredText}'"
+                }
+            }
+            if (workflowText.contains('-v "$PWD:$PWD"') ||
+                    workflowText.contains('-v "$PWD:/workspace"')) {
+                violations << "${workflowPath} must not mount the full checkout into release-builder containers"
+            }
+
+            def cleanEvidenceRuns = workflowLines.count {
+                it.trim() == cleanEvidenceRun
             }
             if (cleanEvidenceRuns < 2) {
-                violations << "${releaseBuilderWorkflowPath} must run clean verifyReleaseBuild verifyInstallerEvidenceBundle in both release-builder worktrees"
+                violations << "${workflowPath} must run ${cleanEvidenceRun} in both release-builder worktrees"
+            }
+        }
+
+        verifyReleaseBuilderWorkflowContract(
+                linuxReleaseBuilderWorkflow.asFile,
+                'Linux',
+                [
+                        'name: Linux Release Builder',
+                        '  workflow_dispatch:',
+                        'runs-on: ubuntu-24.04',
+                        'docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux',
+                        'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
+                        'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
+                        'git -C build/release-builder-worktrees/a submodule update --init --recursive',
+                        'git -C build/release-builder-worktrees/b submodule update --init --recursive',
+                        '-v "$PWD/.git:$PWD/.git"',
+                        '-v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a"',
+                        '-v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b"',
+                        '-v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro"',
+                        '-w "$PWD/build/release-builder-worktrees/a"',
+                        '-w "$PWD/build/release-builder-worktrees/b"',
+                        './gradlew compareReleaseEvidenceBundles \\',
+                        './gradlew compareInstallerEvidenceBundles \\',
+                        '-PleftReleaseEvidence=build/reports/release/release-evidence.zip \\',
+                        '-PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"',
+                        '-PleftInstallerEvidence=build/reports/release/installer-evidence.zip \\',
+                        '-PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"',
+                        'release-builder-linux-java-21.0.6',
+                        'release-builder-linux-installers-java-21.0.6',
+                        'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
+                        'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
+                        'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',
+                        'build/release-builder-worktrees/a/build/reports/release/installer-structure/**'
+                ],
+                './gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle'
+        )
+
+        verifyReleaseBuilderWorkflowContract(
+                macosReleaseBuilderWorkflow.asFile,
+                'macOS',
+                [
+                        'name: macOS Release Builder',
+                        '  workflow_dispatch:',
+                        'runs-on: macos-15',
+                        "java-version: '21.0.6'",
+                        "distribution: 'zulu'",
+                        'git worktree add --detach build/release-builder-worktrees/macos-a "$GITHUB_SHA"',
+                        'git worktree add --detach build/release-builder-worktrees/macos-b "$GITHUB_SHA"',
+                        'git -C build/release-builder-worktrees/macos-a submodule update --init --recursive',
+                        'git -C build/release-builder-worktrees/macos-b submodule update --init --recursive',
+                        'cd build/release-builder-worktrees/macos-a',
+                        'cd build/release-builder-worktrees/macos-b',
+                        './gradlew compareReleaseEvidenceBundles \\',
+                        './gradlew compareInstallerEvidenceBundles \\',
+                        'release-builder-macos-java-21.0.6',
+                        'release-builder-macos-installers-java-21.0.6',
+                        'build/release-builder-worktrees/macos-a/build/reports/release/release-evidence.zip',
+                        'build/release-builder-worktrees/macos-a/build/reports/release/installer-evidence.zip',
+                        'build/release-builder-worktrees/macos-a/build/reports/release/installer-structure-summary.txt',
+                        'build/release-builder-worktrees/macos-a/build/reports/release/installer-structure/**'
+                ],
+                './gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle'
+        )
+
+        verifyReleaseBuilderWorkflowContract(
+                windowsReleaseBuilderWorkflow.asFile,
+                'Windows',
+                [
+                        'name: Windows Release Builder',
+                        '  workflow_dispatch:',
+                        'runs-on: windows-2025',
+                        "java-version: '21.0.6'",
+                        "distribution: 'zulu'",
+                        'choco install wixtoolset --version=3.14.1.20250415 --no-progress -y',
+                        'git worktree add --detach build/release-builder-worktrees/windows-a $env:GITHUB_SHA',
+                        'git worktree add --detach build/release-builder-worktrees/windows-b $env:GITHUB_SHA',
+                        'git -C build/release-builder-worktrees/windows-a submodule update --init --recursive',
+                        'git -C build/release-builder-worktrees/windows-b submodule update --init --recursive',
+                        'Push-Location build/release-builder-worktrees/windows-a',
+                        'Push-Location build/release-builder-worktrees/windows-b',
+                        '.\\gradlew.bat compareReleaseEvidenceBundles `',
+                        '.\\gradlew.bat compareInstallerEvidenceBundles `',
+                        'release-builder-windows-java-21.0.6',
+                        'release-builder-windows-installers-java-21.0.6',
+                        'build/release-builder-worktrees/windows-a/build/reports/release/release-evidence.zip',
+                        'build/release-builder-worktrees/windows-a/build/reports/release/installer-evidence.zip',
+                        'build/release-builder-worktrees/windows-a/build/reports/release/installer-structure-summary.txt',
+                        'build/release-builder-worktrees/windows-a/build/reports/release/installer-structure/**'
+                ],
+                '.\\gradlew.bat clean verifyReleaseBuild verifyInstallerEvidenceBundle'
+        )
+
+        def installerEvidenceWorkflowFile = layout.projectDirectory.file('.github/workflows/installer-evidence.yml').asFile
+        if (!installerEvidenceWorkflowFile.file) {
+            violations << "Missing installer evidence workflow: ${rootProject.relativePath(installerEvidenceWorkflowFile)}"
+        } else {
+            def installerEvidenceWorkflowText = installerEvidenceWorkflowFile.getText(StandardCharsets.UTF_8.name())
+            if (!installerEvidenceWorkflowText.contains('choco install wixtoolset --version=3.14.1.20250415 --no-progress -y')) {
+                violations << "${rootProject.relativePath(installerEvidenceWorkflowFile)} must install pinned WiX Toolset 3.14.1.20250415"
             }
         }
 

@@ -1,7 +1,8 @@
 # Windows Reproducible Builds
 
-Windows currently supports Java release evidence and `.exe` installer evidence.
-It does not yet have a pinned release-builder environment equivalent to Linux.
+Windows supports Java release evidence, `.exe` installer evidence, and a manual
+two-worktree release-builder workflow on the fixed `windows-2025` GitHub
+runner.
 
 ## Status
 
@@ -10,14 +11,14 @@ Supported:
 - Java release payload evidence through `verifyReleaseBuild`
 - `.exe` installer evidence through `verifyInstallerEvidenceBundle`
 - manual CI installer evidence upload through `Installer Evidence`
+- manual two-worktree CI comparison through `Windows Release Builder`
 - installer diagnostics using PowerShell and WiX-related tools when available
 
 Remaining gaps:
 
-- no pinned Windows release-builder image
-- no two-worktree Windows reproducibility workflow equivalent to Linux
-- `.exe` installer internals are diagnostic evidence today, not a completed
-  deterministic release-builder guarantee
+- no pinned Windows release-builder image equivalent to the Linux Docker image
+- `.exe` installer internals are diagnostic evidence; the release-builder gate
+  compares the installer manifest
 
 ## Local Java Evidence
 
@@ -76,11 +77,15 @@ The standard `Build Bisq` workflow runs `verifyReleaseBuild --scan` on
 `windows-2025` for push and pull request builds.
 
 The manual `Installer Evidence` workflow has a Windows job on `windows-2025`.
-It installs WiX Toolset with Chocolatey, runs
+It installs pinned WiX Toolset with Chocolatey, runs
 `verifyInstallerEvidenceBundle --scan`, and uploads
 `installer-evidence-windows-2025-java-21.0.6`.
 
-There is no dedicated Windows release-builder A/B workflow yet.
+The manual `Windows Release Builder` workflow runs on `windows-2025`, installs
+pinned WiX Toolset with Chocolatey, creates two clean worktrees at the selected
+commit, runs `clean verifyReleaseBuild verifyInstallerEvidenceBundle` in both,
+compares Java and installer evidence bundles, and uploads the first worktree's
+evidence.
 
 ## Windows Installer Diagnostics
 
@@ -100,10 +105,6 @@ entries as well.
 
 ## Direction
 
-The Windows target should follow the Linux model once a suitable pinned or
-otherwise reviewable Windows builder strategy exists:
-
-1. Build two clean worktrees of the same commit.
-2. Generate Java and Windows installer evidence in both.
-3. Compare release evidence and installer evidence.
-4. Upload the first worktree's signed evidence candidates.
+The Windows target now follows the Linux two-worktree comparison model, but its
+environment is the fixed GitHub-hosted `windows-2025` runner instead of a
+pinned container image. Future work should keep reducing unpinned runner inputs.
