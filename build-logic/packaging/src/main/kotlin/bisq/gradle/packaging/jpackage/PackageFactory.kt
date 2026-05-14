@@ -288,12 +288,16 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             }
 
             val buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, size)
-            buffer.order(ByteOrder.LITTLE_ENDIAN)
+            try {
+                buffer.order(ByteOrder.LITTLE_ENDIAN)
 
-            normalizeWindowsInstallerFileRecordTimestamps(buffer)
-            normalizeWindowsInstallerOleDirectoryTimestamps(buffer)
-            normalizeWindowsInstallerSummaryInformation(buffer, appConfig)
-            buffer.force()
+                normalizeWindowsInstallerFileRecordTimestamps(buffer)
+                normalizeWindowsInstallerOleDirectoryTimestamps(buffer)
+                normalizeWindowsInstallerSummaryInformation(buffer, appConfig)
+                buffer.force()
+            } finally {
+                unmapMappedBuffer(buffer)
+            }
         }
         normalizePathTimestamps(exePath)
     }
@@ -481,7 +485,16 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         val timestamp = FileTime.from(Instant.ofEpochSecond(sourceDateEpochSeconds()))
         Files.walk(path).use { paths ->
             paths.sorted(Comparator.reverseOrder()).forEach { entry ->
-                Files.setLastModifiedTime(entry, timestamp)
+                val attributeView = Files.getFileAttributeView(
+                        entry,
+                        BasicFileAttributeView::class.java,
+                        LinkOption.NOFOLLOW_LINKS
+                )
+                if (attributeView != null) {
+                    attributeView.setTimes(timestamp, timestamp, timestamp)
+                } else {
+                    Files.setLastModifiedTime(entry, timestamp)
+                }
             }
         }
     }
@@ -957,6 +970,18 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         }
         if (buffer.getLong(position) != 0L) {
             buffer.putLong(position, fileTime)
+        }
+    }
+
+    private fun unmapMappedBuffer(buffer: ByteBuffer) {
+        try {
+            val unsafeClass = Class.forName("sun.misc.Unsafe")
+            val unsafeField = unsafeClass.getDeclaredField("theUnsafe")
+            unsafeField.isAccessible = true
+            val unsafe = unsafeField.get(null)
+            unsafeClass.getMethod("invokeCleaner", ByteBuffer::class.java).invoke(unsafe, buffer)
+        } catch (exception: Exception) {
+            System.gc()
         }
     }
 
