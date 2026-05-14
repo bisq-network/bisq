@@ -4,5 +4,5 @@ data class JPackageAppConfig(
         val appVersion: String,
         val mainJarFileName: String,
         val mainClassName: String,
-        val jvmArgs: Set<String>,
+        val jvmArgs: List<String>,
 )

@@ -12,6 +12,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.toolchain.*
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
+import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
 import javax.inject.Inject
 
@@ -35,7 +36,9 @@ class AppStartPlugin @Inject constructor(private val javaToolchainService: JavaT
                     ?: emptyList()
             })
 
-            jvmArgs = javaApplicationExtension.applicationDefaultJvmArgs.toList()
+            jvmArgumentProviders.add(CommandLineArgumentProvider {
+                javaApplicationExtension.applicationDefaultJvmArgs.toList()
+            })
 
             workingDir = project.projectDir.parentFile
             mainClass.set(javaApplicationExtension.mainClass)

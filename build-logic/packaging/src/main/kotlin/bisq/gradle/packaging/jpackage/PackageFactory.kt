@@ -99,11 +99,15 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                     "--input", jPackageConfig.inputDirPath.toAbsolutePath().toString(),
                     "--main-jar", appConfig.mainJarFileName,
 
-                    "--main-class", appConfig.mainClassName,
-                    "--java-options", appConfig.jvmArgs.joinToString(separator = " "),
-
-                    "--runtime-image", jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
-            )
+                    "--main-class", appConfig.mainClassName
+            ).apply {
+                appConfig.jvmArgs.forEach { jvmArg ->
+                    add("--java-options")
+                    add(jvmArg)
+                }
+                add("--runtime-image")
+                add(jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString())
+            }
 
     private fun configureReproducibleRpmEnvironment(processBuilder: ProcessBuilder, packageFormat: PackageFormat) {
         if (packageFormat != PackageFormat.RPM) {
@@ -477,7 +481,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
     private fun findHfsVolumeHeaderOffsetsInRegion(channel: FileChannel, regionStart: Long, regionSize: Long): List<Long> {
         val buffer = ByteArray(regionSize.toInt())
-        channel.read(ByteBuffer.wrap(buffer), regionStart)
+        readChannelFully(channel, ByteBuffer.wrap(buffer), regionStart)
         val offsets = mutableListOf<Long>()
         for (index in 0..buffer.size - 12) {
             if (buffer[index] == 0x48.toByte() &&
@@ -645,9 +649,9 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         while (destinationOffset < length) {
             val (physicalOffset, availableBytes) = hfsForkPhysicalRange(fork, currentLogicalOffset)
                     ?: throw GradleException("HFS+ catalog logical offset $currentLogicalOffset is not mapped by the first extent record")
-            val bytesToRead = minOf(length - destinationOffset, availableBytes.toInt())
+            val bytesToRead = minOf((length - destinationOffset).toLong(), availableBytes).toInt()
             val buffer = ByteBuffer.wrap(bytes, destinationOffset, bytesToRead)
-            channel.read(buffer, physicalOffset)
+            readChannelFully(channel, buffer, physicalOffset)
             destinationOffset += bytesToRead
             currentLogicalOffset += bytesToRead
         }
@@ -660,9 +664,9 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         while (sourceOffset < bytes.size) {
             val (physicalOffset, availableBytes) = hfsForkPhysicalRange(fork, currentLogicalOffset)
                     ?: throw GradleException("HFS+ catalog logical offset $currentLogicalOffset is not mapped by the first extent record")
-            val bytesToWrite = minOf(bytes.size - sourceOffset, availableBytes.toInt())
+            val bytesToWrite = minOf((bytes.size - sourceOffset).toLong(), availableBytes).toInt()
             val buffer = ByteBuffer.wrap(bytes, sourceOffset, bytesToWrite)
-            channel.write(buffer, physicalOffset)
+            writeChannelFully(channel, buffer, physicalOffset)
             sourceOffset += bytesToWrite
             currentLogicalOffset += bytesToWrite
         }
@@ -692,7 +696,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             }
             val trailerOffset = fileSize - 512
             val trailer = ByteArray(512)
-            channel.read(ByteBuffer.wrap(trailer), trailerOffset)
+            readChannelFully(channel, ByteBuffer.wrap(trailer), trailerOffset)
             val signature = byteArrayOf('k'.code.toByte(), 'o'.code.toByte(), 'l'.code.toByte(), 'y'.code.toByte())
             if (!trailer.copyOfRange(0, 4).contentEquals(signature)) {
                 throw GradleException("DMG does not contain the expected UDIF trailer: ${imagePath.toAbsolutePath()}")
@@ -703,8 +707,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
     private fun patchFileBytes(path: Path, offset: Long, bytes: ByteArray) {
         FileChannel.open(path, StandardOpenOption.WRITE).use { channel ->
-            channel.position(offset)
-            channel.write(ByteBuffer.wrap(bytes))
+            writeChannelFully(channel, ByteBuffer.wrap(bytes), offset)
         }
     }
 
@@ -728,8 +731,33 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
     private fun readChannelBytes(channel: FileChannel, offset: Long, length: Int): ByteArray {
         val bytes = ByteArray(length)
-        channel.read(ByteBuffer.wrap(bytes), offset)
+        readChannelFully(channel, ByteBuffer.wrap(bytes), offset)
         return bytes
+    }
+
+    private fun readChannelFully(channel: FileChannel, buffer: ByteBuffer, position: Long) {
+        var currentPosition = position
+        while (buffer.hasRemaining()) {
+            val read = channel.read(buffer, currentPosition)
+            if (read < 0) {
+                throw GradleException("Unexpected end of file while reading binary image data")
+            }
+            if (read == 0) {
+                throw GradleException("Could not make progress while reading binary image data at offset $currentPosition")
+            }
+            currentPosition += read
+        }
+    }
+
+    private fun writeChannelFully(channel: FileChannel, buffer: ByteBuffer, position: Long) {
+        var currentPosition = position
+        while (buffer.hasRemaining()) {
+            val written = channel.write(buffer, currentPosition)
+            if (written == 0) {
+                throw GradleException("Could not make progress while writing binary image data at offset $currentPosition")
+            }
+            currentPosition += written
+        }
     }
 
     private fun readUnsignedShort(bytes: ByteArray, offset: Int): Int {

@@ -12,8 +12,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -32,7 +32,7 @@ abstract class JPackageTask : DefaultTask() {
     abstract val mainClassName: Property<String>
 
     @get:Input
-    abstract val jvmArgs: SetProperty<String>
+    abstract val jvmArgs: ListProperty<String>
 
     @get:Input
     abstract val appVersion: Property<String>

@@ -48,7 +48,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
 
             mainClassName.set(javaApplicationExtension.mainClass)
-            jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
+            jvmArgs.set(project.provider { javaApplicationExtension.applicationDefaultJvmArgs.toList() })
 
             appVersion.set(APP_VERSION)
 
