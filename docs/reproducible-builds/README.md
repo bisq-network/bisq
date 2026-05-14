@@ -68,8 +68,10 @@ upload the first worktree's evidence.
 - Linux has a pinned release-builder image. macOS and Windows release-builder
   workflows rely on fixed GitHub-hosted runner labels, pinned Java, and
   recorded build information rather than a hermetic image.
-- macOS `.dmg` and Windows `.exe` installer internals are still diagnostic
-  evidence; the canonical reproducibility gate compares installer manifests.
+- macOS `.dmg` installers are normalized after `jpackage` so the two-worktree
+  release-builder check compares byte-identical DMG artifacts. Windows `.exe`
+  installer internals are still diagnostic evidence; the canonical
+  reproducibility gate compares installer manifests.
 - Published evidence is only useful after the release manager signs it and
   verifiers check those signatures.
 

@@ -11,13 +11,12 @@ Supported:
 - `.dmg` installer evidence through `verifyInstallerEvidenceBundle`
 - manual CI installer evidence upload through `Installer Evidence`
 - manual two-worktree CI comparison through `macOS Release Builder`
+- deterministic `.dmg` normalization after `jpackage`
 - installer diagnostics using macOS tools such as `hdiutil` and `pkgutil`
 
 Remaining gaps:
 
 - no pinned macOS release-builder image equivalent to the Linux Docker image
-- `.dmg` internals are diagnostic evidence; the release-builder gate compares
-  the installer manifest
 
 ## Local Java Evidence
 
@@ -91,6 +90,11 @@ For `.dmg` differences, compare:
 - partition map output
 - `hdiutil verify`
 - `hdiutil` SHA-256 checksum output
+
+Bisq normalizes generated DMGs by copying the mounted `jpackage` volume into a
+clean staging tree, excluding `.fseventsd`, rebuilding a raw HFS image,
+normalizing HFS+ volume/catalog metadata, zeroing unused catalog B-tree node
+space, converting to UDZO, and normalizing the UDIF trailer UUID.
 
 If a `.pkg` appears in future evidence, compare signature output, payload file
 listings, and raw `xar` archive member diagnostics.
