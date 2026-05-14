@@ -94,12 +94,14 @@ The Linux release-builder image is defined in
 
 - `linux/amd64` Azul Zulu OpenJDK 21.0.6 base image by digest
 - Ubuntu apt snapshot timestamp
-- `SOURCE_DATE_EPOCH=0`
 - `TZ=UTC`
 - `LANG=C.UTF-8`
 - `LC_ALL=C.UTF-8`
 - `HOME=/tmp/bisq-home`
 - `GRADLE_USER_HOME=/tmp/bisq-home/.gradle`
+
+Installer packaging derives `SOURCE_DATE_EPOCH` from an explicitly supplied
+positive environment value, or falls back to the current Git commit timestamp.
 
 It installs Linux package and archive tools used for release and installer
 evidence: `binutils`, `coreutils`, `cpio`, `dpkg`, `dpkg-dev`, `fakeroot`,

@@ -7,7 +7,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     TZ=UTC \
-    SOURCE_DATE_EPOCH=0 \
     HOME=/tmp/bisq-home \
     GRADLE_USER_HOME=/tmp/bisq-home/.gradle
 

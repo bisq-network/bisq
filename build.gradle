@@ -1689,12 +1689,14 @@ tasks.register('verifyReleaseBuilderImage') {
         if (!text.contains('rm -rf /var/lib/apt/lists/*')) {
             violations << 'Dockerfile must remove apt package lists after installation'
         }
+        if (text.contains('SOURCE_DATE_EPOCH=0')) {
+            violations << 'Dockerfile must not hard-code SOURCE_DATE_EPOCH=0; packaging derives the fallback timestamp from the Git commit'
+        }
 
         [
                 'LANG=C.UTF-8',
                 'LC_ALL=C.UTF-8',
                 'TZ=UTC',
-                'SOURCE_DATE_EPOCH=0',
                 'HOME=/tmp/bisq-home',
                 'GRADLE_USER_HOME=/tmp/bisq-home/.gradle'
         ].each { expectedText ->

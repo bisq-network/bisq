@@ -2,6 +2,7 @@ package bisq.gradle.packaging
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.GradleException
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaApplication
@@ -17,6 +18,7 @@ import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import java.io.File
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
@@ -51,6 +53,10 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             jvmArgs.set(project.provider { javaApplicationExtension.applicationDefaultJvmArgs.toList() })
 
             appVersion.set(APP_VERSION)
+            val sourceDateEpochOverride = project.providers.environmentVariable("SOURCE_DATE_EPOCH")
+            sourceDateEpochSeconds.set(project.provider {
+                releaseSourceDateEpochSeconds(project.rootDir, sourceDateEpochOverride.orNull)
+            })
 
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
@@ -90,5 +96,40 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
         return launcherProvider.map { it.metadata.installationPath }
+    }
+
+    private fun releaseSourceDateEpochSeconds(rootDir: File, sourceDateEpochOverride: String?): Long {
+        val environmentValue = sourceDateEpochOverride?.trim()
+        if (!environmentValue.isNullOrEmpty()) {
+            val parsed = environmentValue.toLongOrNull()
+                    ?: throw GradleException("SOURCE_DATE_EPOCH must be an integer Unix timestamp: ${environmentValue}")
+            if (parsed > 0) {
+                return parsed
+            }
+        }
+
+        val process = ProcessBuilder(
+                "git",
+                "-C", rootDir.absolutePath,
+                "log",
+                "-1",
+                "--format=%ct",
+                "HEAD"
+        )
+                .redirectErrorStream(true)
+                .start()
+
+        if (!process.waitFor(10, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            throw GradleException("Timed out while reading Git commit timestamp for SOURCE_DATE_EPOCH")
+        }
+
+        val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
+        if (process.exitValue() != 0) {
+            throw GradleException("Failed to read Git commit timestamp for SOURCE_DATE_EPOCH: ${output}")
+        }
+
+        return output.toLongOrNull()?.takeIf { it > 0 }
+                ?: throw GradleException("Git returned an invalid commit timestamp for SOURCE_DATE_EPOCH: ${output}")
     }
 }

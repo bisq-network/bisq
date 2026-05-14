@@ -16,6 +16,13 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.time.Instant
+import java.time.ZoneOffset
+import java.util.Comparator
 
 abstract class JPackageTask : DefaultTask() {
 
@@ -37,6 +44,9 @@ abstract class JPackageTask : DefaultTask() {
     @get:Input
     abstract val appVersion: Property<String>
 
+    @get:Input
+    abstract val sourceDateEpochSeconds: Property<Long>
+
     @get:InputDirectory
     abstract val packageResourcesDir: DirectoryProperty
 
@@ -50,6 +60,7 @@ abstract class JPackageTask : DefaultTask() {
     fun run() {
         val jPackagePath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jpackage")
         val outputDirectoryFile = outputDirectory.asFile.get()
+        val sourceDateEpoch = sourceDateEpochSeconds.get()
         deleteExistingInstallerArtifacts(outputDirectoryFile)
 
         val jPackageConfig = JPackageConfig(
@@ -57,6 +68,7 @@ abstract class JPackageTask : DefaultTask() {
                 outputDirPath = outputDirectoryFile.toPath(),
                 runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
                 temporaryDirPath = temporaryDir.toPath(),
+                sourceDateEpochSeconds = sourceDateEpoch,
 
                 appConfig = JPackageAppConfig(
                         appVersion = appVersion.get(),
@@ -65,7 +77,7 @@ abstract class JPackageTask : DefaultTask() {
                         jvmArgs = jvmArgs.get()
                 ),
 
-                packageFormatConfigs = getPackageFormatConfigs()
+                packageFormatConfigs = getPackageFormatConfigs(sourceDateEpoch)
         )
 
         val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
@@ -86,7 +98,7 @@ abstract class JPackageTask : DefaultTask() {
                 }
     }
 
-    private fun getPackageFormatConfigs(): JPackagePackageFormatConfigs {
+    private fun getPackageFormatConfigs(sourceDateEpochSeconds: Long): JPackagePackageFormatConfigs {
         val packagePath = packageResourcesDir.asFile.get().toPath()
         return when (getOS()) {
             OS.WINDOWS -> {
@@ -96,7 +108,7 @@ abstract class JPackageTask : DefaultTask() {
 
             OS.MAC_OS -> {
                 val resourcesPath = packagePath.resolve("macosx")
-                MacPackage(resourcesPath)
+                MacPackage(prepareMacPackageResources(resourcesPath, sourceDateEpochSeconds))
             }
 
             OS.LINUX -> {
@@ -104,5 +116,44 @@ abstract class JPackageTask : DefaultTask() {
                 LinuxPackages(resourcesPath)
             }
         }
+    }
+
+    private fun prepareMacPackageResources(resourcesPath: Path, sourceDateEpochSeconds: Long): Path {
+        val preparedResourcesPath = temporaryDir.toPath().resolve("macosx-resources")
+        preparedResourcesPath.toFile().deleteRecursively()
+
+        val copyrightYear = Instant.ofEpochSecond(sourceDateEpochSeconds)
+                .atZone(ZoneOffset.UTC)
+                .year
+                .toString()
+
+        Files.walk(resourcesPath).use { paths ->
+            paths.sorted(Comparator.comparing { path -> resourcesPath.relativize(path).toString() })
+                    .forEach { source ->
+                        if (source == resourcesPath) {
+                            return@forEach
+                        }
+
+                        val target = preparedResourcesPath.resolve(resourcesPath.relativize(source).toString())
+                        if (Files.isDirectory(source)) {
+                            Files.createDirectories(target)
+                        } else {
+                            Files.createDirectories(target.parent)
+                            if (source.fileName.toString() == "Info.plist") {
+                                val infoPlist = Files.readString(source, StandardCharsets.UTF_8)
+                                        .replace("@BISQ_COPYRIGHT_YEAR@", copyrightYear)
+                                        .replace(
+                                                Regex("""Copyright © 2013-\d{4} - The Bisq developers"""),
+                                                "Copyright © 2013-${copyrightYear} - The Bisq developers"
+                                        )
+                                Files.writeString(target, infoPlist, StandardCharsets.UTF_8)
+                            } else {
+                                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
+                            }
+                        }
+                    }
+        }
+
+        return preparedResourcesPath
     }
 }

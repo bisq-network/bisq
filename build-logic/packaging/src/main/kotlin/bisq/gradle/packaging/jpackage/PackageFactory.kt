@@ -12,7 +12,6 @@ import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributeView
 import java.nio.file.attribute.FileTime
 import java.time.Instant
-import java.time.Year
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Comparator
@@ -23,7 +22,6 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
     companion object {
         private const val SOURCE_DATE_EPOCH = "SOURCE_DATE_EPOCH"
-        private const val DEFAULT_SOURCE_DATE_EPOCH = "0"
         private const val HFS_EPOCH_OFFSET_SECONDS = 2_082_844_800L
         private const val HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START = 1024L
         private const val HFS_VOLUME_HEADER_SIZE = 512
@@ -62,7 +60,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         perPackageCommand.forEach { (packageFormat, customCommands) ->
             val processBuilder = ProcessBuilder(jPackagePath.toAbsolutePath().toString())
                     .inheritIO()
-            processBuilder.environment().putIfAbsent(SOURCE_DATE_EPOCH, DEFAULT_SOURCE_DATE_EPOCH)
+            processBuilder.environment()[SOURCE_DATE_EPOCH] = sourceDateEpochSeconds().toString()
             configureReproducibleRpmEnvironment(processBuilder, packageFormat)
 
             val allCommands = processBuilder.command()
@@ -96,7 +94,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
                     "--name", "Bisq",
                     "--description", "A decentralized bitcoin exchange network.",
-                    "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
+                    "--copyright", "Copyright © 2013-${sourceDateEpochYear()} - The Bisq developers",
                     "--vendor", "Bisq",
 
                     "--app-version", appConfig.appVersion,
@@ -335,7 +333,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
     private fun runProcess(processBuilder: ProcessBuilder, description: String, rpmHome: Boolean = true) {
         processBuilder.inheritIO()
-        processBuilder.environment().putIfAbsent(SOURCE_DATE_EPOCH, DEFAULT_SOURCE_DATE_EPOCH)
+        processBuilder.environment()[SOURCE_DATE_EPOCH] = sourceDateEpochSeconds().toString()
         processBuilder.environment().putIfAbsent("TZ", "UTC")
         if (rpmHome) {
             processBuilder.environment()["HOME"] = createRpmHome().toAbsolutePath().toString()
@@ -884,8 +882,13 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     }
 
     private fun sourceDateEpochSeconds(): Long {
-        val sourceDateEpoch = System.getenv(SOURCE_DATE_EPOCH) ?: DEFAULT_SOURCE_DATE_EPOCH
-        return sourceDateEpoch.toLongOrNull() ?: DEFAULT_SOURCE_DATE_EPOCH.toLong()
+        return jPackageConfig.sourceDateEpochSeconds
+    }
+
+    private fun sourceDateEpochYear(): Int {
+        return Instant.ofEpochSecond(sourceDateEpochSeconds())
+                .atZone(ZoneOffset.UTC)
+                .year
     }
 
     private fun sourceDateEpochForSetFile(): String {

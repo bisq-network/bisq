@@ -8,6 +8,7 @@ data class JPackageConfig(
         val outputDirPath: Path,
         val runtimeImageDirPath: Path,
         val temporaryDirPath: Path,
+        val sourceDateEpochSeconds: Long,
         val appConfig: JPackageAppConfig,
         val packageFormatConfigs: JPackagePackageFormatConfigs
 )
