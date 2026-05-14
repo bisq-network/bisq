@@ -3,6 +3,7 @@ package bisq.gradle.packaging.jpackage
 import bisq.gradle.packaging.jpackage.package_formats.PackageFormat
 import org.gradle.api.GradleException
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -16,12 +17,16 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Comparator
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class PackageFactory(private val jPackagePath: Path, private val jPackageConfig: JPackageConfig) {
 
     companion object {
         private const val SOURCE_DATE_EPOCH = "SOURCE_DATE_EPOCH"
+        private const val WINDOWS_FILETIME_EPOCH_OFFSET_SECONDS = 11_644_473_600L
+        private const val DOS_MIN_YEAR = 1980
+        private const val DOS_MAX_YEAR = 2107
         private const val HFS_EPOCH_OFFSET_SECONDS = 2_082_844_800L
         private const val HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START = 1024L
         private const val HFS_VOLUME_HEADER_SIZE = 512
@@ -42,6 +47,18 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
         private val FIXED_HFS_VOLUME_UUID = "BisqVol1".toByteArray(Charsets.US_ASCII)
         private val FIXED_UDIF_UUID = "BisqUDIFVolume01".toByteArray(Charsets.US_ASCII)
+        private val CFB_SIGNATURE = byteArrayOf(
+                0xd0.toByte(),
+                0xcf.toByte(),
+                0x11,
+                0xe0.toByte(),
+                0xa1.toByte(),
+                0xb1.toByte(),
+                0x1a,
+                0xe1.toByte()
+        )
+        private val WINDOWS_INSTALLER_FILE_PREFIX = "file".toByteArray(Charsets.US_ASCII)
+        private val WINDOWS_INSTALLER_XML_TOOLSET = "Windows Installer XML Toolset".toByteArray(Charsets.US_ASCII)
     }
 
     private data class HfsExtent(val startBlock: Long, val blockCount: Long)
@@ -84,6 +101,9 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             }
             if (packageFormat == PackageFormat.DMG) {
                 normalizeDmgPackage()
+            }
+            if (packageFormat == PackageFormat.EXE) {
+                normalizeWindowsExePackage(jPackageConfig.appConfig)
             }
         }
     }
@@ -257,6 +277,110 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
         Files.move(compressedImagePath, dmgPath, StandardCopyOption.REPLACE_EXISTING)
         normalizePathTimestamps(dmgPath)
+    }
+
+    private fun normalizeWindowsExePackage(appConfig: JPackageAppConfig) {
+        val exePath = findSinglePackageArtifact(PackageFormat.EXE)
+        FileChannel.open(exePath, StandardOpenOption.READ, StandardOpenOption.WRITE).use { channel ->
+            val size = channel.size()
+            if (size > Int.MAX_VALUE) {
+                throw GradleException("Windows EXE is too large to normalize in one mapped buffer: ${exePath.toAbsolutePath()}")
+            }
+
+            val buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, size)
+            buffer.order(ByteOrder.LITTLE_ENDIAN)
+
+            normalizeWindowsInstallerFileRecordTimestamps(buffer)
+            normalizeWindowsInstallerOleDirectoryTimestamps(buffer)
+            normalizeWindowsInstallerSummaryInformation(buffer, appConfig)
+            buffer.force()
+        }
+        normalizePathTimestamps(exePath)
+    }
+
+    private fun normalizeWindowsInstallerFileRecordTimestamps(buffer: ByteBuffer) {
+        val (dosDate, dosTime) = sourceDateEpochDosDateTime()
+        var position = 4
+        while (position + 6 <= buffer.limit()) {
+            val attributes = buffer.get(position).toInt() and 0xff
+            val highAttributes = buffer.get(position + 1).toInt() and 0xff
+            if ((attributes and 0x20) == 0x20 &&
+                    highAttributes == 0 &&
+                    matchesBytes(buffer, position + 2, WINDOWS_INSTALLER_FILE_PREFIX)) {
+                buffer.putShort(position - 4, dosDate.toShort())
+                buffer.putShort(position - 2, dosTime.toShort())
+                position += 6
+            } else {
+                position++
+            }
+        }
+    }
+
+    private fun normalizeWindowsInstallerOleDirectoryTimestamps(buffer: ByteBuffer) {
+        val fileTime = sourceDateEpochFileTime()
+        forEachBytePattern(buffer, CFB_SIGNATURE) { cfbOffset ->
+            if (cfbOffset + 52 > buffer.limit()) {
+                return@forEachBytePattern
+            }
+
+            val sectorShift = buffer.getShort(cfbOffset + 30).toInt() and 0xffff
+            if (sectorShift !in 9..20) {
+                return@forEachBytePattern
+            }
+
+            val sectorSize = 1 shl sectorShift
+            val firstDirectorySector = buffer.getInt(cfbOffset + 48)
+            if (firstDirectorySector < 0) {
+                return@forEachBytePattern
+            }
+
+            val directoryOffset = cfbOffset.toLong() + (firstDirectorySector.toLong() + 1) * sectorSize
+            if (directoryOffset < 0 || directoryOffset + sectorSize > buffer.limit()) {
+                return@forEachBytePattern
+            }
+
+            val entriesPerSector = sectorSize / 128
+            repeat(entriesPerSector) { entryIndex ->
+                val entryOffset = directoryOffset.toInt() + entryIndex * 128
+                val objectType = buffer.get(entryOffset + 66).toInt() and 0xff
+                if (objectType != 0) {
+                    normalizeNonZeroFileTime(buffer, entryOffset + 100, fileTime)
+                    normalizeNonZeroFileTime(buffer, entryOffset + 108, fileTime)
+                }
+            }
+        }
+    }
+
+    private fun normalizeWindowsInstallerSummaryInformation(buffer: ByteBuffer, appConfig: JPackageAppConfig) {
+        val fixedPackageCode = windowsInstallerPackageCode(appConfig)
+                .toByteArray(Charsets.US_ASCII)
+        val fileTime = sourceDateEpochFileTime()
+
+        var position = 0
+        while (position + fixedPackageCode.size <= buffer.limit()) {
+            if (isAsciiGuid(buffer, position) &&
+                    containsBytes(buffer, position, 512, WINDOWS_INSTALLER_XML_TOOLSET)) {
+                fixedPackageCode.forEachIndexed { index, byte ->
+                    buffer.put(position + index, byte)
+                }
+
+                var patchedFileTimes = 0
+                var propertyPosition = position + fixedPackageCode.size
+                val propertyLimit = minOf(buffer.limit() - 12, position + 512)
+                while (propertyPosition <= propertyLimit && patchedFileTimes < 2) {
+                    val propertyType = buffer.getInt(propertyPosition)
+                    if (propertyType == 0x40 && buffer.getLong(propertyPosition + 4) != 0L) {
+                        buffer.putLong(propertyPosition + 4, fileTime)
+                        patchedFileTimes++
+                    }
+                    propertyPosition++
+                }
+
+                position += fixedPackageCode.size
+            } else {
+                position++
+            }
+        }
     }
 
     private fun createNormalizedRpmSpec(appConfig: JPackageAppConfig, payloadRoot: Path): String {
@@ -825,6 +949,116 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             bytes.copyInto(repeated, destinationOffset = index * bytes.size)
         }
         return repeated
+    }
+
+    private fun normalizeNonZeroFileTime(buffer: ByteBuffer, position: Int, fileTime: Long) {
+        if (position + Long.SIZE_BYTES > buffer.limit()) {
+            return
+        }
+        if (buffer.getLong(position) != 0L) {
+            buffer.putLong(position, fileTime)
+        }
+    }
+
+    private fun sourceDateEpochFileTime(): Long {
+        return (sourceDateEpochSeconds() + WINDOWS_FILETIME_EPOCH_OFFSET_SECONDS) * 10_000_000L
+    }
+
+    private fun sourceDateEpochDosDateTime(): Pair<Int, Int> {
+        val dateTime = Instant.ofEpochSecond(sourceDateEpochSeconds())
+                .atZone(ZoneOffset.UTC)
+
+        if (dateTime.year !in DOS_MIN_YEAR..DOS_MAX_YEAR) {
+            throw GradleException("SOURCE_DATE_EPOCH year ${dateTime.year} is outside the DOS date range")
+        }
+
+        val dosDate = ((dateTime.year - DOS_MIN_YEAR) shl 9) or
+                (dateTime.monthValue shl 5) or
+                dateTime.dayOfMonth
+        val dosTime = (dateTime.hour shl 11) or
+                (dateTime.minute shl 5) or
+                (dateTime.second / 2)
+        return dosDate to dosTime
+    }
+
+    private fun windowsInstallerPackageCode(appConfig: JPackageAppConfig): String {
+        val uuid = UUID.nameUUIDFromBytes(
+                "bisq-windows-installer-package-code:${appConfig.appVersion}".toByteArray(Charsets.UTF_8)
+        )
+        return "{${uuid.toString().uppercase(Locale.ROOT)}}"
+    }
+
+    private fun forEachBytePattern(buffer: ByteBuffer, pattern: ByteArray, action: (Int) -> Unit) {
+        var position = 0
+        val limit = buffer.limit() - pattern.size
+        while (position <= limit) {
+            if (matchesBytes(buffer, position, pattern)) {
+                action(position)
+                position += pattern.size
+            } else {
+                position++
+            }
+        }
+    }
+
+    private fun matchesBytes(buffer: ByteBuffer, position: Int, pattern: ByteArray): Boolean {
+        if (position < 0 || position + pattern.size > buffer.limit()) {
+            return false
+        }
+        pattern.indices.forEach { index ->
+            if (buffer.get(position + index) != pattern[index]) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun containsBytes(buffer: ByteBuffer, position: Int, length: Int, pattern: ByteArray): Boolean {
+        val lastPosition = minOf(buffer.limit(), position + length) - pattern.size
+        var candidatePosition = position
+        while (candidatePosition <= lastPosition) {
+            if (matchesBytes(buffer, candidatePosition, pattern)) {
+                return true
+            }
+            candidatePosition++
+        }
+        return false
+    }
+
+    private fun isAsciiGuid(buffer: ByteBuffer, position: Int): Boolean {
+        if (position + 38 > buffer.limit()) {
+            return false
+        }
+        val requiredCharacters = mapOf(
+                0 to '{',
+                9 to '-',
+                14 to '-',
+                19 to '-',
+                24 to '-',
+                37 to '}'
+        )
+        requiredCharacters.forEach { (index, character) ->
+            if (buffer.get(position + index).toInt() != character.code) {
+                return false
+            }
+        }
+
+        (1 until 37)
+                .filterNot { index -> index in setOf(9, 14, 19, 24) }
+                .forEach { index ->
+                    if (!isAsciiHexDigit(buffer.get(position + index))) {
+                        return false
+                    }
+                }
+
+        return true
+    }
+
+    private fun isAsciiHexDigit(byte: Byte): Boolean {
+        val value = byte.toInt()
+        return value in '0'.code..'9'.code ||
+                value in 'A'.code..'F'.code ||
+                value in 'a'.code..'f'.code
     }
 
     private fun readChannelBytes(channel: FileChannel, offset: Long, length: Int): ByteArray {
