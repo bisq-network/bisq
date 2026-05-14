@@ -691,6 +691,27 @@ def sha256 = { File file ->
     digest.digest().collect { String.format('%02x', it) }.join()
 }
 
+def sha256Bytes = { byte[] bytes ->
+    MessageDigest digest = MessageDigest.getInstance('SHA-256')
+    digest.update(bytes)
+    digest.digest().collect { String.format('%02x', it) }.join()
+}
+
+def sha256WithCrLfNormalizedToLf = { File file ->
+    ByteArrayOutputStream normalizedBytes = new ByteArrayOutputStream()
+    byte[] bytes = file.bytes
+    for (int index = 0; index < bytes.length; index++) {
+        int current = bytes[index] & 0xff
+        if (current == 13 && index + 1 < bytes.length && ((bytes[index + 1] & 0xff) == 10)) {
+            normalizedBytes.write(10)
+            index++
+        } else {
+            normalizedBytes.write(current)
+        }
+    }
+    sha256Bytes(normalizedBytes.toByteArray())
+}
+
 def canonicalPath = { File file ->
     rootProject.relativePath(file).replace(File.separatorChar, '/' as char)
 }
@@ -1559,6 +1580,10 @@ tasks.register('verifyGradleWrapperSecurity') {
                 'gradle/wrapper/gradle-wrapper.jar',
                 'gradle/wrapper/gradle-wrapper.properties'
         ] as Set
+        def lfNormalizedPaths = [
+                'gradlew',
+                'gradle/wrapper/gradle-wrapper.properties'
+        ] as Set
         def expectedHashes = new TreeMap<String, String>()
         def duplicatePaths = []
 
@@ -1604,6 +1629,11 @@ tasks.register('verifyGradleWrapperSecurity') {
 
             def actualHash = sha256(wrapperFile)
             if (actualHash != expectedHash) {
+                if (lfNormalizedPaths.contains(path) && sha256WithCrLfNormalizedToLf(wrapperFile) == expectedHash) {
+                    logger.lifecycle("Verified ${path} after normalizing CRLF working-tree line endings to LF.")
+                    return
+                }
+
                 violations << "${path} expected ${expectedHash} but was ${actualHash}"
             }
         }
