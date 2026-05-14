@@ -511,7 +511,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 chatPopupStage.xProperty().removeListener(xPositionListener);
             }
             if (yPositionListener != null) {
-                chatPopupStage.xProperty().removeListener(yPositionListener);
+                chatPopupStage.yProperty().removeListener(yPositionListener);
             }
 
             trade.disputeStateProperty().addListener(disputeStateListener);
