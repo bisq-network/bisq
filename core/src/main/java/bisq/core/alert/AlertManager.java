@@ -137,6 +137,10 @@ public class AlertManager {
         return isKeyValid;
     }
 
+    public boolean hasDevelopersAlert() {
+        return user.getDevelopersAlert() != null;
+    }
+
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
         Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
