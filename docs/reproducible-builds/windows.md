@@ -48,7 +48,8 @@ Compare the resulting Java evidence with signed or CI-generated evidence:
 
 ## Local Installer Evidence
 
-Windows installer generation expects WiX Toolset on `PATH`.
+Windows installer generation must run on Windows because `jpackage` builds
+native packages only for the host OS. It also expects WiX Toolset on `PATH`.
 
 Build and validate Windows installer evidence:
 
