@@ -6,7 +6,7 @@ Visit the [Gradle website](https://gradle.org/releases/) and decide the:
  - desired distribution type
  - what is the sha256 for the version and type chosen above
 
-Adjust the following command with tha arguments above and execute it twice:
+Adjust the following command with the arguments above and execute it twice:
 
     ./gradlew wrapper --gradle-version 6.6.1 \
         --distribution-type all \
