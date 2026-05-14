@@ -26,8 +26,14 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         private const val DEFAULT_SOURCE_DATE_EPOCH = "0"
         private const val HFS_EPOCH_OFFSET_SECONDS = 2_082_844_800L
         private const val HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START = 1024L
+        private const val HFS_VOLUME_HEADER_SIZE = 512
         private const val HFS_VOLUME_HEADER_SCAN_BYTES = 1024 * 1024
+        private const val HFS_SIGNATURE = 0x482b
+        private const val HFS_VERSION = 0x0004
+        private const val HFS_BLOCK_SIZE_OFFSET = 40
+        private const val HFS_TOTAL_BLOCKS_OFFSET = 44
         private const val HFS_CATALOG_FILE_OFFSET = 272L
+        private const val HFS_FORK_EXTENTS_OFFSET = 16
         private const val HFS_EXTENT_COUNT = 8
         private const val HFS_BTREE_NODE_DESCRIPTOR_SIZE = 14
         private const val HFS_BTREE_HEADER_NODE_KIND = 0x01.toByte()
@@ -36,7 +42,6 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         private const val HFS_CATALOG_FILE_RECORD = 0x0002
         private const val HFS_CATALOG_RECORD_DATES_OFFSET = 12
 
-        private val HFS_LAST_MOUNTED_VERSION = byteArrayOf('c'.code.toByte(), 'e'.code.toByte(), 'r'.code.toByte(), 'd'.code.toByte())
         private val FIXED_HFS_VOLUME_UUID = "BisqVol1".toByteArray(Charsets.US_ASCII)
         private val FIXED_UDIF_UUID = "BisqUDIFVolume01".toByteArray(Charsets.US_ASCII)
     }
@@ -480,19 +485,110 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     }
 
     private fun findHfsVolumeHeaderOffsetsInRegion(channel: FileChannel, regionStart: Long, regionSize: Long): List<Long> {
+        if (regionSize < 4) {
+            return emptyList()
+        }
+
         val buffer = ByteArray(regionSize.toInt())
         readChannelFully(channel, ByteBuffer.wrap(buffer), regionStart)
         val offsets = mutableListOf<Long>()
-        for (index in 0..buffer.size - 12) {
-            if (buffer[index] == 0x48.toByte() &&
-                    buffer[index + 1] == 0x2b.toByte() &&
-                    buffer[index + 2] == 0x00.toByte() &&
-                    buffer[index + 3] == 0x04.toByte() &&
-                    buffer.copyOfRange(index + 8, index + 12).contentEquals(HFS_LAST_MOUNTED_VERSION)) {
-                offsets += regionStart + index
+        for (index in 0..buffer.size - 4) {
+            if (readUnsignedShort(buffer, index) == HFS_SIGNATURE &&
+                    readUnsignedShort(buffer, index + 2) == HFS_VERSION) {
+                val headerOffset = regionStart + index
+                if (isValidHfsVolumeHeaderCandidate(channel, headerOffset)) {
+                    offsets += headerOffset
+                }
             }
         }
         return offsets
+    }
+
+    private fun isValidHfsVolumeHeaderCandidate(channel: FileChannel, headerOffset: Long): Boolean {
+        return try {
+            val fileSize = channel.size()
+            if (headerOffset < 0 || headerOffset + HFS_VOLUME_HEADER_SIZE > fileSize) {
+                return false
+            }
+
+            val volumeHeader = readChannelBytes(channel, headerOffset, HFS_VOLUME_HEADER_SIZE)
+            if (readUnsignedShort(volumeHeader, 0) != HFS_SIGNATURE ||
+                    readUnsignedShort(volumeHeader, 2) != HFS_VERSION) {
+                return false
+            }
+
+            val blockSize = readUnsignedInt(volumeHeader, HFS_BLOCK_SIZE_OFFSET)
+            val totalBlocks = readUnsignedInt(volumeHeader, HFS_TOTAL_BLOCKS_OFFSET)
+            val volumeBytes = hfsVolumeByteSize(blockSize, totalBlocks) ?: return false
+            possibleHfsVolumeStarts(headerOffset, volumeBytes, fileSize).any { volumeStart ->
+                hasSaneHfsCatalogFork(volumeHeader, volumeStart, blockSize, totalBlocks, fileSize)
+            }
+        } catch (ignored: Exception) {
+            false
+        }
+    }
+
+    private fun hfsVolumeByteSize(blockSize: Long, totalBlocks: Long): Long? {
+        if (!isSaneHfsBlockSize(blockSize) || totalBlocks <= 0 || blockSize > Long.MAX_VALUE / totalBlocks) {
+            return null
+        }
+        return blockSize * totalBlocks
+    }
+
+    private fun isSaneHfsBlockSize(blockSize: Long): Boolean {
+        return blockSize >= 512 &&
+                blockSize <= 1024 * 1024 &&
+                blockSize and (blockSize - 1) == 0L
+    }
+
+    private fun possibleHfsVolumeStarts(headerOffset: Long, volumeBytes: Long, fileSize: Long): List<Long> {
+        return listOf(
+                headerOffset - HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START,
+                headerOffset + HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START - volumeBytes
+        ).distinct().filter { volumeStart ->
+            volumeStart >= 0 &&
+                    volumeBytes <= fileSize - volumeStart &&
+                    (headerOffset == volumeStart + HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START ||
+                            headerOffset == volumeStart + volumeBytes - HFS_VOLUME_HEADER_OFFSET_FROM_VOLUME_START)
+        }
+    }
+
+    private fun hasSaneHfsCatalogFork(
+            volumeHeader: ByteArray,
+            volumeStart: Long,
+            blockSize: Long,
+            totalBlocks: Long,
+            fileSize: Long
+    ): Boolean {
+        val logicalSize = readLong(volumeHeader, HFS_CATALOG_FILE_OFFSET.toInt())
+        if (logicalSize <= 0) {
+            return false
+        }
+
+        val extents = hfsCatalogExtents(volumeHeader)
+        if (extents.isEmpty()) {
+            return false
+        }
+
+        val volumeBytes = blockSize * totalBlocks
+        val mappedBytes = extents.fold(0L) { total, extent ->
+            if (extent.startBlock >= totalBlocks ||
+                    extent.blockCount > totalBlocks - extent.startBlock ||
+                    extent.blockCount > Long.MAX_VALUE / blockSize) {
+                return false
+            }
+
+            val extentBytes = extent.blockCount * blockSize
+            val extentOffset = volumeStart + (extent.startBlock * blockSize)
+            if (extentOffset < volumeStart ||
+                    extentBytes > fileSize - extentOffset ||
+                    total > Long.MAX_VALUE - extentBytes) {
+                return false
+            }
+            total + extentBytes
+        }
+
+        return mappedBytes > 0 && logicalSize <= volumeBytes
     }
 
     private fun normalizeHfsCatalogDateFields(imagePath: Path, volumeHeaderOffset: Long, fixedCatalogDateFields: ByteArray) {
@@ -611,24 +707,15 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     }
 
     private fun readHfsCatalogFile(channel: FileChannel, volumeHeaderOffset: Long): HfsCatalogFile {
-        val volumeHeader = readChannelBytes(channel, volumeHeaderOffset, 512)
-        val blockSize = readUnsignedInt(volumeHeader, 40)
-        if (blockSize <= 0) {
+        val volumeHeader = readChannelBytes(channel, volumeHeaderOffset, HFS_VOLUME_HEADER_SIZE)
+        val blockSize = readUnsignedInt(volumeHeader, HFS_BLOCK_SIZE_OFFSET)
+        if (!isSaneHfsBlockSize(blockSize)) {
             throw GradleException("Invalid HFS+ block size $blockSize")
         }
 
         val catalogFileOffset = HFS_CATALOG_FILE_OFFSET.toInt()
         val logicalSize = readLong(volumeHeader, catalogFileOffset)
-        val extentsOffset = catalogFileOffset + 16
-        val extents = (0 until HFS_EXTENT_COUNT)
-                .map { extentIndex ->
-                    val extentOffset = extentsOffset + (extentIndex * 8)
-                    HfsExtent(
-                            startBlock = readUnsignedInt(volumeHeader, extentOffset),
-                            blockCount = readUnsignedInt(volumeHeader, extentOffset + 4)
-                    )
-                }
-                .filter { extent -> extent.blockCount > 0 }
+        val extents = hfsCatalogExtents(volumeHeader)
 
         if (logicalSize <= 0 || extents.isEmpty()) {
             throw GradleException("Invalid HFS+ catalog fork metadata")
@@ -640,6 +727,19 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                 logicalSize = logicalSize,
                 extents = extents
         )
+    }
+
+    private fun hfsCatalogExtents(volumeHeader: ByteArray): List<HfsExtent> {
+        val extentsOffset = HFS_CATALOG_FILE_OFFSET.toInt() + HFS_FORK_EXTENTS_OFFSET
+        return (0 until HFS_EXTENT_COUNT)
+                .map { extentIndex ->
+                    val extentOffset = extentsOffset + (extentIndex * 8)
+                    HfsExtent(
+                            startBlock = readUnsignedInt(volumeHeader, extentOffset),
+                            blockCount = readUnsignedInt(volumeHeader, extentOffset + 4)
+                    )
+                }
+                .filter { extent -> extent.blockCount > 0 }
     }
 
     private fun readHfsForkBytes(channel: FileChannel, fork: HfsCatalogFile, logicalOffset: Long, length: Int): ByteArray {
