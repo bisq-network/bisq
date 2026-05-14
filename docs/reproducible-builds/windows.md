@@ -24,12 +24,11 @@ Remaining gaps:
 
 From a clean checkout of the release tag or release commit:
 
-Use Git Bash or another shell with `shasum` available to verify the wrapper
-checksum file:
+Verify the wrapper checksum file from Windows PowerShell:
 
-```bash
+```powershell
 git submodule update --init --recursive
-shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+.\tools\verify-sha256sums.ps1 gradle\wrapper\gradle-wrapper.sha256
 ```
 
 Then run the build:

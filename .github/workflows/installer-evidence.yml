@@ -126,13 +126,8 @@ jobs:
           persist-credentials: false
 
     - name: Verify Gradle wrapper checksums
-      shell: bash
-      run: |
-        if command -v sha256sum >/dev/null 2>&1; then
-          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
-        else
-          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
-        fi
+      shell: pwsh
+      run: .\tools\verify-sha256sums.ps1 gradle\wrapper\gradle-wrapper.sha256
 
     - name: Install WiX Toolset
       shell: pwsh

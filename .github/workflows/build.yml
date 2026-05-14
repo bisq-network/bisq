@@ -22,6 +22,7 @@ jobs:
           persist-credentials: false
 
     - name: Verify Gradle wrapper checksums
+      if: runner.os != 'Windows'
       shell: bash
       run: |
         if command -v sha256sum >/dev/null 2>&1; then
@@ -29,6 +30,11 @@ jobs:
         else
           shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
         fi
+
+    - name: Verify Gradle wrapper checksums
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: .\tools\verify-sha256sums.ps1 gradle\wrapper\gradle-wrapper.sha256
 
     - name: Set up JDK
       uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0

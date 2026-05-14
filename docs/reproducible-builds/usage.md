@@ -7,9 +7,25 @@ implementation details, see [technical details](technical.md).
 
 Use a clean checkout of the release tag or release commit.
 
+On Linux:
+
+```bash
+git submodule update --init --recursive
+sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+```
+
+On macOS:
+
 ```bash
 git submodule update --init --recursive
 shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+```
+
+On Windows PowerShell:
+
+```powershell
+git submodule update --init --recursive
+.\tools\verify-sha256sums.ps1 gradle\wrapper\gradle-wrapper.sha256
 ```
 
 On Linux, prefer the pinned release-builder image described in
@@ -33,8 +49,22 @@ The main outputs are:
 
 Verify the generated checksum file:
 
+On Linux:
+
+```bash
+sha256sum -c build/reports/release/SHA256SUMS
+```
+
+On macOS:
+
 ```bash
 shasum -a 256 -c build/reports/release/SHA256SUMS
+```
+
+On Windows PowerShell:
+
+```powershell
+.\tools\verify-sha256sums.ps1 build\reports\release\SHA256SUMS
 ```
 
 Compare a local rebuild against a published or CI-generated manifest:
@@ -76,8 +106,22 @@ This builds the current OS installer artifacts and writes:
 
 Verify installer checksums:
 
+On Linux:
+
+```bash
+sha256sum -c build/reports/release/INSTALLER-SHA256SUMS
+```
+
+On macOS:
+
 ```bash
 shasum -a 256 -c build/reports/release/INSTALLER-SHA256SUMS
+```
+
+On Windows PowerShell:
+
+```powershell
+.\tools\verify-sha256sums.ps1 build\reports\release\INSTALLER-SHA256SUMS
 ```
 
 Compare a local installer rebuild against published or CI-generated evidence:
@@ -170,6 +214,19 @@ An independent verifier should:
 5. Verify the published evidence signatures.
 6. Compare the local evidence against the signed published evidence.
 
+On Linux:
+
+```bash
+git submodule update --init --recursive
+sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+./gradlew clean verifyReleaseBuild
+gpg --verify /path/to/release-evidence.zip.asc /path/to/release-evidence.zip
+./gradlew verifyReleaseManifest \
+  -PreleaseManifest=/path/to/release-evidence.zip
+```
+
+On macOS:
+
 ```bash
 git submodule update --init --recursive
 shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
@@ -177,6 +234,17 @@ shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 gpg --verify /path/to/release-evidence.zip.asc /path/to/release-evidence.zip
 ./gradlew verifyReleaseManifest \
   -PreleaseManifest=/path/to/release-evidence.zip
+```
+
+On Windows PowerShell:
+
+```powershell
+git submodule update --init --recursive
+.\tools\verify-sha256sums.ps1 gradle\wrapper\gradle-wrapper.sha256
+.\gradlew.bat clean verifyReleaseBuild
+gpg --verify C:\path\to\release-evidence.zip.asc C:\path\to\release-evidence.zip
+.\gradlew.bat verifyReleaseManifest `
+  -PreleaseManifest=C:\path\to\release-evidence.zip
 ```
 
 To verify installers, also rebuild or download installer evidence for the same
