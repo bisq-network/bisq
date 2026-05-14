@@ -161,6 +161,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         });
 
         Button removeAlertMessageButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.remove"));
+        removeAlertMessageButton.setDisable(!alertManager.hasDevelopersAlert());
         removeAlertMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (alertManager.removeAlertMessageIfKeyIsValid(keyInputTextField.getText()))
