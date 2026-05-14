@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release-builder-macos-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   macos-release-builder:
     name: macOS release-builder evidence, Java 21.0.6

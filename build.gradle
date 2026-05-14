@@ -1935,6 +1935,14 @@ tasks.register('verifyGithubActionsSecurity') {
                         'group: release-builder-${{ github.ref }}',
                         'cancel-in-progress: false'
                 ],
+                (macosReleaseBuilderWorkflow.asFile): [
+                        'group: release-builder-macos-${{ github.ref }}',
+                        'cancel-in-progress: false'
+                ],
+                (windowsReleaseBuilderWorkflow.asFile): [
+                        'group: release-builder-windows-${{ github.ref }}',
+                        'cancel-in-progress: false'
+                ],
                 (installerEvidenceWorkflow.asFile)  : [
                         'group: installer-evidence-${{ github.ref }}',
                         'cancel-in-progress: false'

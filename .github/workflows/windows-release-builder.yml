@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release-builder-windows-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   windows-release-builder:
     name: Windows release-builder evidence, Java 21.0.6
