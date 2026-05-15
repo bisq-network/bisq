@@ -29,7 +29,7 @@ Related commits:
 
 ## Offer Safety, Limits, And Trade Failure Handling
 
-The release lowers risk around offer taking and trade bounds. Prices are constrained to a 25% maximum deviation, the maximum trade amount is limited to 0.125 BTC, maker change is validated before taker signing, offer availability responses are checked against the expected peer, BSQ swap trading can be disabled independently by filter, and failed take-offer requests now release the reserved open offer.
+The release lowers risk around offer taking and trade bounds. Prices are constrained to a 25% maximum deviation, the maximum trade amount is limited to 0.125 BTC, maker change is validated before taker signing, offer availability responses are checked against the expected peer, BSQ swap trading can be disabled independently by filter, failed take-offer requests now release the reserved open offer
 
 Related commits:
 - [4877e4b94e](https://github.com/bisq-network/bisq/commit/4877e4b94e8a94d38c8cd3078b37f167cf250785) - Reduce maximum price deviation to 25%.
@@ -54,7 +54,7 @@ Related commits:
 
 ## User-Facing UX, Chat, And Support Changes
 
-Several user-visible annoyances and failure modes are addressed. Disk-space warnings no longer repeat, a cold-storage reminder is shown for high wallet balances, the exit warning popup is removed, chat scroll/window sizing issues are fixed, trader chat listener cleanup is improved, and dispute chat file/log transfers are removed.
+Several user-visible annoyances and failure modes are addressed. Disk-space warnings no longer repeat, a cold-storage reminder is shown for high wallet balances, the exit warning popup is removed, chat scroll/window sizing issues are fixed, update text is scrollable, trader chat listener cleanup is improved, and dispute chat file/log transfers are removed.
 
 Related commits:
 - [488fd0a406](https://github.com/bisq-network/bisq/commit/488fd0a406b60b6fcdd495e1f74bf132dca8caa9) - Show disk-space warning only once.
@@ -65,6 +65,7 @@ Related commits:
 - [9cafc7c9f7](https://github.com/bisq-network/bisq/commit/9cafc7c9f7ce7b12859e84e4960fd2c9587fcde7) - Fix chat scroll OOM and window sizing.
 - [bd505b7425](https://github.com/bisq-network/bisq/commit/bd505b742599f583b67a65e0a2ec24473de364ea) - Fix trader chat y-position listener cleanup.
 - [728654ccb1](https://github.com/bisq-network/bisq/commit/728654ccb102dafb6c0da4293878885bfccbfa54) - Disable the dev-alert remove button when no alert is selected.
+- [a4cd0d9a2a](https://github.com/bisq-network/bisq/commit/a4cd0d9a2a3553b45a50465182b135a7ec0f9588) - Show update text in a scroll pane.
 
 ## Payment Accounts, Wallet Exports, And Payment Methods
 
@@ -97,7 +98,7 @@ Related commits:
 
 ## Runtime, Dependencies, And Network Stack
 
-The build/runtime stack moves to Java 21 with JavaFX 21 and broad dependency updates. bitcoinj, bitcoind, netlayer/Tor, Kotlin, logging, protobuf, Jackson, Guava, Lombok, Jersey, JUnit, Hamcrest, and other libraries are updated or aligned. macOS releases support both Apple Silicon and Intel Macs, and JavaFX/JFoenix packaging receives follow-up fixes.
+The build/runtime stack moves to Java 21 with JavaFX 21 and broad dependency updates. bitcoinj, bitcoind, netlayer/Tor, Kotlin, logging, protobuf, Jackson, Guava, Lombok, Jersey, JUnit, Hamcrest, and other libraries are updated or aligned. macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and release hash files, the in-app updater selects the matching macOS installer architecture, JavaFX variants publish native architecture attributes, and JavaFX/JFoenix packaging receives follow-up fixes.
 
 Related commits:
 - [cb0c7ba2f1](https://github.com/bisq-network/bisq/commit/cb0c7ba2f1437ec6c835108f7f13a8680d273fe9) - Merge broad dependency and JavaFX update work.
@@ -110,10 +111,13 @@ Related commits:
 - [7f952fb1e8](https://github.com/bisq-network/bisq/commit/7f952fb1e8a4537acc6ae7fb380baa7ae03f4f87) - Update bitcoind and verification metadata.
 - [1f6ebda67a](https://github.com/bisq-network/bisq/commit/1f6ebda67a9bdc98c913626d6b9acb873a5bde2f) - Fix packaged macOS JavaFX/JFoenix exports.
 - [081124c57f](https://github.com/bisq-network/bisq/commit/081124c57f87e600c2b4c865d8b31c41dab10b9c) - Update netlayer to the latest target in this range.
+- [3fce2c0bf5](https://github.com/bisq-network/bisq/commit/3fce2c0bf5106a053daaddff0555b213518ad2df) - Add dual-architecture macOS release packaging support.
+- [3ad2682a8c](https://github.com/bisq-network/bisq/commit/3ad2682a8c4606a93907a5600fc46ccbd8d58f4e) - Publish native attributes for JavaFX variants.
+- [370b48b37c](https://github.com/bisq-network/bisq/commit/370b48b37c1c1cd57a9c85d78f3b24b07df180aa) - Select the correct macOS installer architecture in the updater.
 
 ## Release Integrity And Reproducible Builds
 
-Release verification is expanded substantially. The release process now includes Java payload and installer manifests, evidence bundles, Gradle wrapper verification, dependency signature reporting, checksum fallback controls, pinned CI actions and runner images, a Linux release-builder image, installer evidence workflows, deterministic Linux package handling, and reproducible-build documentation.
+Release verification is expanded substantially. The release process now includes Java payload and installer manifests, evidence bundles, Gradle wrapper verification, dependency signature reporting, checksum fallback controls, pinned CI actions and runner images, a Linux release-builder image, installer evidence workflows, deterministic Linux package handling, reproducible-build documentation, deterministic macOS release finalization fixes, and a manual GitHub release-readiness check for assets, download URLs, and signer keys.
 
 Related commits:
 - [46cf4a096d](https://github.com/bisq-network/bisq/commit/46cf4a096d2dabce553c5d3fba7d965811dbfc8b) - Add Gradle dependency signature verification reporting.
@@ -129,3 +133,6 @@ Related commits:
 - [fc7f809585](https://github.com/bisq-network/bisq/commit/fc7f809585b75076a6d6ea7be9ea86e624032db6) - Add installer manifest verification.
 - [423a2f5986](https://github.com/bisq-network/bisq/commit/423a2f5986932def92c4ecd2653d2ac2868eb6bd) - Compare release evidence bundles.
 - [31a7cad15f](https://github.com/bisq-network/bisq/commit/31a7cad15f41677c40b5748757142ab18bdda8c1) - Repack Linux RPM installers deterministically.
+- [f245f8e46a](https://github.com/bisq-network/bisq/commit/f245f8e46a300bb9481fb75e54c3d1a91bbd7e5b) - Use deterministic source and target paths for macOS DMG renaming.
+- [544b0337b6](https://github.com/bisq-network/bisq/commit/544b0337b676edd6d06c6330c008a6f15dc8ce6d) - Reconcile the dependency checksum fallback allowlist.
+- [c2850685c5](https://github.com/bisq-network/bisq/commit/c2850685c5c92762d32554b441134b9547f94913) - Add the GitHub release-readiness check.
