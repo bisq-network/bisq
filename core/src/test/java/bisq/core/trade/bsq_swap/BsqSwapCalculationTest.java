@@ -33,6 +33,8 @@ public class BsqSwapCalculationTest {
         assertEquals(100_001_850, BsqSwapCalculation.getSellersBtcInputValue(100_000_000, 1_850).value);
         assertEquals(4_999_850, BsqSwapCalculation.getSellersBsqPayoutValue(5_000_000, 150).value);
         assertEquals(1_950, BsqSwapCalculation.getAdjustedTxFee(10, 200, 50));
+        // 0 trade fee is allowed a seller has no trade fee
+        assertEquals(2_000, BsqSwapCalculation.getAdjustedTxFee(10, 200, 0));
     }
 
     @Test
@@ -44,6 +46,6 @@ public class BsqSwapCalculationTest {
         assertThrows(ArithmeticException.class,
                 () -> BsqSwapCalculation.getSellersBsqPayoutValue(Long.MIN_VALUE, 1));
         assertThrows(IllegalArgumentException.class,
-                () -> BsqSwapCalculation.getAdjustedTxFee(Long.MAX_VALUE, 2, 0));
+                () -> BsqSwapCalculation.getAdjustedTxFee(Long.MAX_VALUE, 2, -1));
     }
 }
