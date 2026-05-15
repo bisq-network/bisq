@@ -82,7 +82,7 @@ Related commits:
 
 ## DAO, Burning Man, API, And Service Updates
 
-The release adds bridge/gRPC service work, account timestamp support, DAO snapshot/resync fixes, refreshed DAO/network resource snapshots, Burning Man address-list and receiver validation, updated node/mediator/refund-agent metadata, bitcoind RPC changes, and API/CLI cleanup. Version-tagged resource files are omitted for this release so older seed nodes do not trigger avoidable resource requests.
+The release adds bridge/gRPC service work, account timestamp support, DAO snapshot/resync fixes, refreshed DAO/network resource snapshots, Burning Man address-list and receiver validation, updated node/mediator/refund-agent metadata, bitcoind RPC changes, DAO CLI/gRPC test coverage, and API/CLI cleanup. Version-tagged resource files are omitted for this release so older seed nodes do not trigger avoidable resource requests.
 
 Related commits:
 - [397b5a26a9](https://github.com/bisq-network/bisq/commit/397b5a26a91de669e0507831f0d74bab7408a1f7) - Merge the bridge module and gRPC API work.
@@ -92,6 +92,7 @@ Related commits:
 - [93911b999e](https://github.com/bisq-network/bisq/commit/93911b999e0745b6ea6da89bcad98e93aabc7c83) - Add Burning Man address-list checkpoint support.
 - [66f04a4d77](https://github.com/bisq-network/bisq/commit/66f04a4d7756fff5d473ad19b1825a004a352b3d) - Refresh DAO and network resource snapshots.
 - [c2a4c8d2de](https://github.com/bisq-network/bisq/commit/c2a4c8d2de4dffd936c76dee8bb62aae78ce64a1) - Remove version-tagged resources for seed-node compatibility.
+- [3f51f9b850](https://github.com/bisq-network/bisq/commit/3f51f9b850fd71cae0777ccca892c5b44c085b98) - Add Docker-based DAO and trade end-to-end tests.
 - [9d89d01a4e](https://github.com/bisq-network/bisq/commit/9d89d01a4ecfb5fdbf00f4d222c383ba7f98935d) - Use payment-account-id parameter naming consistently.
 - [72e178920a](https://github.com/bisq-network/bisq/commit/72e178920ac7e63413784674948b5bf969694697) - Improve CLI take-offer available-offer lookup.
 - [be58e349c5](https://github.com/bisq-network/bisq/commit/be58e349c5f1faf0987dc71a562af2fa93e3c4b7) - Allow filtering BTC addresses with positive balances.
@@ -119,7 +120,7 @@ Related commits:
 
 ## Release Integrity And Reproducible Builds
 
-Release verification is expanded substantially. The release process now includes Java payload and installer manifests, evidence bundles, Gradle wrapper verification, dependency signature reporting, checksum fallback controls, pinned CI actions and runner images, a Linux release-builder image, installer evidence workflows, deterministic Linux package handling, reproducible-build documentation, deterministic macOS release finalization fixes, and a manual GitHub release-readiness check for assets, download URLs, and signer keys.
+Release verification is expanded substantially. The release process now includes Java payload and installer manifests, evidence bundles, Gradle wrapper verification, dependency signature reporting, checksum fallback controls, pinned CI actions and runner images, a Linux release-builder image, installer evidence workflows, deterministic Linux package handling, reproducible-build documentation, deterministic macOS release finalization fixes, Docker-based DAO/trade end-to-end coverage, and a manual GitHub release-readiness check for assets, download URLs, and signer keys.
 
 Related commits:
 - [46cf4a096d](https://github.com/bisq-network/bisq/commit/46cf4a096d2dabce553c5d3fba7d965811dbfc8b) - Add Gradle dependency signature verification reporting.
@@ -137,4 +138,5 @@ Related commits:
 - [31a7cad15f](https://github.com/bisq-network/bisq/commit/31a7cad15f41677c40b5748757142ab18bdda8c1) - Repack Linux RPM installers deterministically.
 - [f245f8e46a](https://github.com/bisq-network/bisq/commit/f245f8e46a300bb9481fb75e54c3d1a91bbd7e5b) - Use deterministic source and target paths for macOS DMG renaming.
 - [544b0337b6](https://github.com/bisq-network/bisq/commit/544b0337b676edd6d06c6330c008a6f15dc8ce6d) - Reconcile the dependency checksum fallback allowlist.
+- [3f51f9b850](https://github.com/bisq-network/bisq/commit/3f51f9b850fd71cae0777ccca892c5b44c085b98) - Add Docker-based DAO and trade end-to-end tests in GitHub Actions.
 - [c2850685c5](https://github.com/bisq-network/bisq/commit/c2850685c5c92762d32554b441134b9547f94913) - Add the GitHub release-readiness check.

@@ -36,5 +36,6 @@ Short text for GitHub release notes and the in-app update message.
 
 - Release builds now produce and verify payload and installer manifests.
 - Dependency signatures, Gradle wrapper inputs, CI workflows, and release-builder images are more tightly verified.
+- Docker-based DAO and trade end-to-end tests were added to GitHub Actions.
 - A manual GitHub release-readiness task checks release assets, download URLs, and signer keys.
 - CVE scanning and reproducible-build documentation were added.

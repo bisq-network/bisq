@@ -2,11 +2,11 @@
 
 These notes are written in the same practical style used by Bitcoin Core release notes: user and operator impact first, followed by a complete auditable commit inventory.
 
-Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `284fe9d14ab155c6e6d94e19e664c576ae4f405d`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `284fe9d14a`. The inventory includes merge commits as separate entries because they are part of the release history.
+Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `a33ece9a915dc1eadb45e50960b8dc608a0f09a9`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `a33ece9a91`. The inventory includes merge commits as separate entries because they are part of the release history.
 
-- Total commits: 739
-- Non-merge commits: 540
-- Merge commits: 199
+- Total commits: 743
+- Non-merge commits: 542
+- Merge commits: 201
 - Generated on: 2026-05-15
 
 ## Compatibility Notes
@@ -39,7 +39,7 @@ Payment-account handling is safer and more robust. Swish account creation no lon
 
 ### DAO, Burning Man, API, And Services
 
-The release includes bridge module work with gRPC APIs, account timestamp service support, DAO resync/snapshot fixes, refreshed DAO/network resource snapshots, bitcoind RPC migration work, Burning Man address list and delayed payout receiver validation, and updates to mediator/refund-agent/network node metadata. Version-tagged resource files are intentionally not bundled in this release to avoid extra requests against seed nodes that still run older versions.
+The release includes bridge module work with gRPC APIs, account timestamp service support, DAO resync/snapshot fixes, refreshed DAO/network resource snapshots, bitcoind RPC migration work, Burning Man address list and delayed payout receiver validation, DAO CLI/gRPC test coverage, and updates to mediator/refund-agent/network node metadata. Version-tagged resource files are intentionally not bundled in this release to avoid extra requests against seed nodes that still run older versions.
 
 API and CLI changes include consistent `payment-account-id` naming, improved `findAvailableOffer`, API-level filtering for BTC addresses with positive balances, support for multiple `btcNodes` command-line values, and removal of the deprecated `getmyoffer` command.
 
@@ -47,7 +47,7 @@ API and CLI changes include consistent `payment-account-id` naming, improved `fi
 
 The build and runtime stack is updated to Java 21/JavaFX 21 with broad dependency updates, newer bitcoinj/bitcoind/netlayer targets, Kotlin alignment, and updated test/build libraries. CI and packaging receive JVM export fixes for JavaFX/JFoenix on macOS, JavaFX variants publish native architecture attributes, and macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and hash outputs.
 
-Release verification is significantly expanded. The build now creates and verifies Java payload and installer manifests, records release and installer evidence bundles, pins GitHub Actions and runner/JDK versions, verifies Gradle wrapper inputs, adds dependency signature reporting, adds CVE scanning, documents reproducible release verification, hardens Linux release-builder evidence for Debian/RPM packages, and adds a manual GitHub release-readiness check for uploaded assets, download URLs, and signing keys.
+Release verification is significantly expanded. The build now creates and verifies Java payload and installer manifests, records release and installer evidence bundles, pins GitHub Actions and runner/JDK versions, verifies Gradle wrapper inputs, adds dependency signature reporting, adds CVE scanning, documents reproducible release verification, hardens Linux release-builder evidence for Debian/RPM packages, adds a Docker-based DAO/trade end-to-end test workflow, and adds a manual GitHub release-readiness check for uploaded assets, download URLs, and signing keys.
 
 ## Complete Commit Inventory
 
@@ -794,6 +794,10 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 | 2026-05-15 | [66f04a4d77](https://github.com/bisq-network/bisq/commit/66f04a4d7756fff5d473ad19b1825a004a352b3d) | Commit | Update resources | HenrikJannsen |
 | 2026-05-15 | [c2a4c8d2de](https://github.com/bisq-network/bisq/commit/c2a4c8d2de4dffd936c76dee8bb62aae78ce64a1) | Commit | Remove the tagged resources as the seed nodes run on old version and it would trigger lots of requests if the user app has the historical resource file but the seed node not. | HenrikJannsen |
 | 2026-05-15 | [284fe9d14a](https://github.com/bisq-network/bisq/commit/284fe9d14ab155c6e6d94e19e664c576ae4f405d) | Merge | Merge pull request #7810 from HenrikJannsen/update-resources | HenrikJannsen |
+| 2026-05-15 | [3f51f9b850](https://github.com/bisq-network/bisq/commit/3f51f9b850fd71cae0777ccca892c5b44c085b98) | Commit | Add e2e DAO + trade test suite running in Docker via GitHub Actions | wodoro |
+| 2026-05-15 | [b8561d775f](https://github.com/bisq-network/bisq/commit/b8561d775fd1121734c9b4989d2cf76fa3d1a734) | Commit | Update release notes | HenrikJannsen |
+| 2026-05-15 | [4ad31f29e1](https://github.com/bisq-network/bisq/commit/4ad31f29e1575b701937e2a45a36ab4667ebd1c6) | Merge | Merge pull request #7812 from HenrikJannsen/update_release_notes | HenrikJannsen |
+| 2026-05-15 | [a33ece9a91](https://github.com/bisq-network/bisq/commit/a33ece9a915dc1eadb45e50960b8dc608a0f09a9) | Merge | Merge pull request #7802 from wodoro/automate_dao_test | HenrikJannsen |
 
 ## Credits
 
