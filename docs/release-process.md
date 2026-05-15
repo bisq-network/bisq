@@ -101,9 +101,11 @@ Use VirtualBox > 6.1 with following configuration:
 
 Build output expected in shared folder:
 
-1. `Bisq-${NEW_VERSION}.dmg` macOS installer
-2. `desktop-${NEW_VERSION}-all-mac.jar.SHA-256` sha256 sum of fat jar
-3. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
+1. `Bisq-x86_64-${NEW_VERSION}.dmg` macOS Intel installer
+2. `Bisq-aarch64-${NEW_VERSION}.dmg` macOS Apple Silicon installer
+3. `desktop-${NEW_VERSION}-all-mac-x86_64.jar.SHA-256` sha256 sum of Intel macOS fat jar
+4. `desktop-${NEW_VERSION}-all-mac-aarch64.jar.SHA-256` sha256 sum of Apple Silicon macOS fat jar
+5. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
 
 * Before building the other binaries install the generated Bisq app on macOS and verify that everything works as
   expected.
