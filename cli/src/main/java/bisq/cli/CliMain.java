@@ -61,6 +61,7 @@ import bisq.cli.opts.ArgumentList;
 import bisq.cli.opts.CancelOfferOptionParser;
 import bisq.cli.opts.CreateCryptoCurrencyPaymentAcctOptionParser;
 import bisq.cli.opts.CreateOfferOptionParser;
+import bisq.cli.opts.DaoCommandOptionParser;
 import bisq.cli.opts.CreatePaymentAcctOptionParser;
 import bisq.cli.opts.EditOfferOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
@@ -790,6 +791,145 @@ public class CliMain {
                     out.println("server shutdown signal received");
                     return;
                 }
+                case getcycleinfo: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var reply = client.getCycleInfo();
+                    out.println(reply);
+                    return;
+                }
+                case getcycles: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    out.println(client.getCycles());
+                    return;
+                }
+                case getproposals: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    bisq.proto.grpc.GetProposalsRequest.Filter filter;
+                    switch (opts.getFilter().toLowerCase()) {
+                        case "my":        filter = bisq.proto.grpc.GetProposalsRequest.Filter.MY; break;
+                        case "all":       filter = bisq.proto.grpc.GetProposalsRequest.Filter.ALL; break;
+                        case "for-cycle": filter = bisq.proto.grpc.GetProposalsRequest.Filter.FOR_CYCLE; break;
+                        case "active":    filter = bisq.proto.grpc.GetProposalsRequest.Filter.ACTIVE_OR_MY_UNCONFIRMED; break;
+                        default:
+                            throw new IllegalArgumentException(
+                                    "unknown --filter '" + opts.getFilter()
+                                            + "'; expected one of: active, my, all, for-cycle");
+                    }
+                    out.println(client.getProposals(filter, opts.getCycleIndex()));
+                    return;
+                }
+                case getballots: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    out.println(client.getBallots());
+                    return;
+                }
+                case getmyvotes: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    out.println(client.getMyVotes());
+                    return;
+                }
+                case getvoteresults: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    out.println(client.getVoteResults(opts.getCycleIndex()));
+                    return;
+                }
+                case getbondedroles: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    out.println(client.getBondedRoles());
+                    return;
+                }
+                case getdaoparam: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    out.println(client.getDaoParamValue(opts.getParam()));
+                    return;
+                }
+                case createcompensationproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createCompensationProposal(opts.getName(), opts.getLink(),
+                            opts.getRequestedBsq(), opts.getBurningManReceiver());
+                    out.println(reply);
+                    return;
+                }
+                case createreimbursementproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createReimbursementProposal(opts.getName(), opts.getLink(),
+                            opts.getRequestedBsq());
+                    out.println(reply);
+                    return;
+                }
+                case createchangeparamproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createChangeParamProposal(opts.getName(), opts.getLink(),
+                            opts.getParam(), opts.getParamValue());
+                    out.println(reply);
+                    return;
+                }
+                case createbondedroleproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createBondedRoleProposal(opts.getBondedRoleType(),
+                            opts.getName(), opts.getLink());
+                    out.println(reply);
+                    return;
+                }
+                case createconfiscatebondproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createConfiscateBondProposal(opts.getName(), opts.getLink(),
+                            opts.getLockupTxId());
+                    out.println(reply);
+                    return;
+                }
+                case creategenericproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createGenericProposal(opts.getName(), opts.getLink());
+                    out.println(reply);
+                    return;
+                }
+                case createremoveassetproposal: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var reply = client.createRemoveAssetProposal(opts.getName(), opts.getLink(),
+                            opts.getAssetCode());
+                    out.println(reply);
+                    return;
+                }
+                case setvote: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    client.setVote(opts.getProposalTxId(), opts.getVote());
+                    out.println("vote set");
+                    return;
+                }
+                case publishblindvote: {
+                    var opts = new DaoCommandOptionParser(args).parse();
+                    if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
+                    var txId = client.publishBlindVote(opts.getStake());
+                    out.println("blind vote published, txId=" + txId);
+                    return;
+                }
                 default: {
                     throw new RuntimeException(format("unhandled method '%s'", method));
                 }
@@ -988,6 +1128,57 @@ public class CliMain {
             stream.format(rowFormat, "", "[--new-wallet-password=<new-password>]", "");
             stream.println();
             stream.format(rowFormat, stop.name(), "", "Shut down the server");
+            stream.println();
+            stream.format(rowFormat, "DAO governance", "", "");
+            stream.format(rowFormat, "--------------", "", "");
+            stream.format(rowFormat, getcycleinfo.name(), "", "Get current DAO cycle index, phase, blocks remaining");
+            stream.println();
+            stream.format(rowFormat, getcycles.name(), "", "List all DAO cycles");
+            stream.println();
+            stream.format(rowFormat, getproposals.name(), "[--filter=<active|my|all|for-cycle>] \\", "List proposals");
+            stream.format(rowFormat, "", "[--cycle-index=<n>]", "");
+            stream.println();
+            stream.format(rowFormat, getballots.name(), "", "List ballots for current cycle");
+            stream.println();
+            stream.format(rowFormat, getmyvotes.name(), "", "List my published blind votes");
+            stream.println();
+            stream.format(rowFormat, getvoteresults.name(), "[--cycle-index=<n>]", "List evaluated proposals (all cycles by default)");
+            stream.println();
+            stream.format(rowFormat, getbondedroles.name(), "", "List bonded roles");
+            stream.println();
+            stream.format(rowFormat, getdaoparam.name(), "--param=<name>", "Get current DAO parameter value");
+            stream.println();
+            stream.format(rowFormat, createcompensationproposal.name(), "--name=<name> --link=<url> --bsq=<sats> \\",
+                    "Create a compensation request proposal");
+            stream.format(rowFormat, "", "[--burning-man-address=<btc-address>]", "");
+            stream.println();
+            stream.format(rowFormat, createreimbursementproposal.name(), "--name=<name> --link=<url> --bsq=<sats>",
+                    "Create a reimbursement request proposal");
+            stream.println();
+            stream.format(rowFormat, createchangeparamproposal.name(),
+                    "--name=<name> --link=<url> --param=<name> --param-value=<v>",
+                    "Create a change-param proposal");
+            stream.println();
+            stream.format(rowFormat, createbondedroleproposal.name(),
+                    "--bonded-role-type=<TYPE> --name=<name> --link=<url>",
+                    "Create a bonded-role proposal");
+            stream.println();
+            stream.format(rowFormat, createconfiscatebondproposal.name(),
+                    "--name=<name> --link=<url> --lockup-tx-id=<txid>",
+                    "Create a confiscate-bond proposal");
+            stream.println();
+            stream.format(rowFormat, creategenericproposal.name(), "--name=<name> --link=<url>", "Create a generic proposal");
+            stream.println();
+            stream.format(rowFormat, createremoveassetproposal.name(),
+                    "--name=<name> --link=<url> --asset-code=<code>",
+                    "Create a remove-asset proposal");
+            stream.println();
+            stream.format(rowFormat, setvote.name(),
+                    "--proposal-tx-id=<txid> --vote=<accept|reject|ignore>",
+                    "Cast a vote on a proposal ballot");
+            stream.println();
+            stream.format(rowFormat, publishblindvote.name(), "--stake=<bsq-sats>",
+                    "Publish blind vote for current cycle's ballots");
             stream.println();
             stream.println("Method Help Usage: bisq-cli [options] <method> --help");
             stream.println();

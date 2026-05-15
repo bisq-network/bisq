@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1.6
+#
+# Single image used for all four Bisq roles (seednode, arb, alice, bob).
+# Bakes in Alice and Bob's pre-synced app data dirs from dao-setup.zip; entrypoint
+# seeds the per-role appDataDir from /opt/dao-setup on first boot.
+
+FROM eclipse-temurin:21-jre-jammy
+
+# Cheap+stable layer: apt deps.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bash curl ncat netcat-openbsd ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pre-fetch the Linux-classifier javafx jars (Gradle install-dist ships empty
+# placeholders). Cached unless JAVAFX_VERSION changes.
+ARG JAVAFX_VERSION=21.0.10
+RUN set -eux; \
+    mkdir -p /opt/openjfx; \
+    for mod in javafx-base javafx-graphics; do \
+      curl -fSL --retry 3 \
+        -o "/opt/openjfx/${mod}-${JAVAFX_VERSION}.jar" \
+        "https://repo1.maven.org/maven2/org/openjfx/${mod}/${JAVAFX_VERSION}/${mod}-${JAVAFX_VERSION}-linux.jar"; \
+    done
+
+COPY apitest/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /bisq
+
+# Bisq install dists (largest, changes each gradle build).
+COPY seednode/build/install/seednode /bisq/seednode
+COPY daemon/build/install/daemon     /bisq/daemon
+COPY cli/build/install/cli           /bisq/cli
+
+# Bake Alice/Bob preconfigured app dirs from dao-setup.zip. We strip the `_dao`
+# suffix at COPY time to match the user's known-working appName naming
+# (`bisq-BTC_REGTEST_Alice`, `bisq-BTC_REGTEST_Bob`). Entrypoint copies the right
+# subdir into APP_DATA_DIR/APP_NAME on first boot.
+COPY apitest/src/main/resources/bisq-BTC_REGTEST_Alice_dao /opt/dao-setup/bisq-BTC_REGTEST_Alice
+COPY apitest/src/main/resources/bisq-BTC_REGTEST_Bob_dao   /opt/dao-setup/bisq-BTC_REGTEST_Bob
+
+# Fix-ups: exec bits + javafx jar replacement.
+RUN set -eux; \
+    chmod +x /bisq/seednode/bin/* /bisq/daemon/bin/* /bisq/cli/bin/*; \
+    for app in seednode daemon cli; do \
+      for mod in javafx-base javafx-graphics; do \
+        target="/bisq/${app}/lib/${mod}-${JAVAFX_VERSION}.jar"; \
+        [ -f "${target}" ] && cp "/opt/openjfx/${mod}-${JAVAFX_VERSION}.jar" "${target}" || true; \
+      done; \
+    done
+
+ENV PATH="/bisq/seednode/bin:/bisq/daemon/bin:/bisq/cli/bin:${PATH}"
+ENV APP_DATA_DIR=/bisq/data
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

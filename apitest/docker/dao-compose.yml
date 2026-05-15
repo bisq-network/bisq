@@ -1,0 +1,126 @@
+# Bisq DAO test stack. All data lives in docker-managed named volumes seeded on
+# first boot from baked-in dao-setup.zip contents.
+
+services:
+  bitcoind:
+    image: bisq-bitcoind:ci
+    build:
+      context: ../..
+      dockerfile: apitest/docker/Dockerfile.bitcoind
+    container_name: bitcoind
+    hostname: bitcoind
+    networks: [bisqnet]
+    # Match the user's reference compose: lnliz default datadir is /data/.bitcoin.
+    volumes:
+      - bitcoind-data:/data/.bitcoin
+    ports:
+      - "18443:18443"   # RPC
+      - "18444:18444"   # bitcoinj P2P (intra-bridge works without publish, but
+                        # exposing matches the user's reference setup)
+    healthcheck:
+      test: ["CMD-SHELL", "bitcoin-cli -regtest -rpcuser=bisqdao -rpcpassword=bsq getrawtransaction 30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  seednode:
+    image: bisq-daemon:ci
+    build:
+      context: ../..
+      dockerfile: apitest/docker/Dockerfile.bisq
+    container_name: seednode
+    hostname: seednode
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+    networks: [bisqnet]
+    environment:
+      ROLE: seednode
+      APP_NAME: bisq-BTC_REGTEST_seednode
+      NODE_PORT: "2002"
+      RPC_BLOCK_NOTIFICATION_PORT: "5120"
+      BISQ_P2P_LOCALHOST_NAME: "seednode"
+    volumes:
+      - seednode-data:/bisq/data
+
+  arb:
+    image: bisq-daemon:ci
+    container_name: arb
+    hostname: arb
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+      seednode:
+        condition: service_started
+    networks: [bisqnet]
+    environment:
+      ROLE: daemon
+      APP_NAME: bisq-BTC_REGTEST_Arb_dao
+      NODE_PORT: "9999"
+      API_PORT: "9997"
+      API_PASSWORD: "xyz"
+      RPC_BLOCK_NOTIFICATION_PORT: "5121"
+      REGISTER_DISPUTE_AGENT: "true"
+      BISQ_P2P_LOCALHOST_NAME: "arb"
+    ports:
+      - "9997:9997"
+    volumes:
+      - arb-data:/bisq/data
+
+  alice:
+    image: bisq-daemon:ci
+    container_name: alice
+    hostname: alice
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+      seednode:
+        condition: service_started
+    networks: [bisqnet]
+    environment:
+      ROLE: daemon
+      APP_NAME: bisq-BTC_REGTEST_Alice
+      NODE_PORT: "7777"
+      API_PORT: "9998"
+      API_PASSWORD: "xyz"
+      RPC_BLOCK_NOTIFICATION_PORT: "5122"
+      BISQ_P2P_LOCALHOST_NAME: "alice"
+    ports:
+      - "9998:9998"
+    volumes:
+      - alice-data:/bisq/data
+
+  bob:
+    image: bisq-daemon:ci
+    container_name: bob
+    hostname: bob
+    depends_on:
+      bitcoind:
+        condition: service_healthy
+      seednode:
+        condition: service_started
+    networks: [bisqnet]
+    environment:
+      ROLE: daemon
+      APP_NAME: bisq-BTC_REGTEST_Bob
+      NODE_PORT: "8888"
+      API_PORT: "9999"
+      API_PASSWORD: "xyz"
+      RPC_BLOCK_NOTIFICATION_PORT: "5123"
+      BISQ_P2P_LOCALHOST_NAME: "bob"
+    ports:
+      - "9999:9999"
+    volumes:
+      - bob-data:/bisq/data
+
+networks:
+  bisqnet:
+    driver: bridge
+
+volumes:
+  bitcoind-data:
+  seednode-data:
+  arb-data:
+  alice-data:
+  bob-data:

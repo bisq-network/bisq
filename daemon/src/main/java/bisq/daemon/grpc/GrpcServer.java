@@ -49,6 +49,7 @@ public class GrpcServer {
     public GrpcServer(CoreContext coreContext,
                       Config config,
                       PasswordAuthInterceptor passwordAuthInterceptor,
+                      GrpcDaoService daoService,
                       GrpcDisputeAgentsService disputeAgentsService,
                       GrpcHelpService helpService,
                       GrpcOffersService offersService,
@@ -60,6 +61,7 @@ public class GrpcServer {
                       GrpcWalletsService walletsService) {
         this.server = ServerBuilder.forPort(config.apiPort)
                 .executor(UserThread.getExecutor())
+                .addService(interceptForward(daoService, daoService.interceptors()))
                 .addService(interceptForward(disputeAgentsService, disputeAgentsService.interceptors()))
                 .addService(interceptForward(helpService, helpService.interceptors()))
                 .addService(interceptForward(offersService, offersService.interceptors()))

@@ -20,6 +20,13 @@ package bisq.core.api;
 import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.TxFeeRateInfo;
+import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.governance.myvote.MyVote;
+import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -70,6 +77,7 @@ public class CoreApi {
 
     @Getter
     private final Config config;
+    private final CoreDaoService coreDaoService;
     private final CoreDisputeAgentsService coreDisputeAgentsService;
     private final CoreHelpService coreHelpService;
     private final CoreOffersService coreOffersService;
@@ -81,6 +89,7 @@ public class CoreApi {
 
     @Inject
     public CoreApi(Config config,
+                   CoreDaoService coreDaoService,
                    CoreDisputeAgentsService coreDisputeAgentsService,
                    CoreHelpService coreHelpService,
                    CoreOffersService coreOffersService,
@@ -90,6 +99,7 @@ public class CoreApi {
                    CoreWalletsService walletsService,
                    TradeStatisticsManager tradeStatisticsManager) {
         this.config = config;
+        this.coreDaoService = coreDaoService;
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreHelpService = coreHelpService;
         this.coreOffersService = coreOffersService;
@@ -457,5 +467,119 @@ public class CoreApi {
 
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {
         return walletsService.getNumConfirmationsForMostRecentTransaction(addressString);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DAO
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public CoreDaoService.CycleSnapshot getDaoCycleSnapshot() {
+        return coreDaoService.getCycleSnapshot();
+    }
+
+    public List<Cycle> getDaoCycles() {
+        return coreDaoService.getCycles();
+    }
+
+    public int getDaoCycleIndex(Cycle cycle) {
+        return coreDaoService.getCycleIndex(cycle);
+    }
+
+    public List<Proposal> getDaoActiveOrMyUnconfirmedProposals() {
+        return coreDaoService.getActiveOrMyUnconfirmedProposals();
+    }
+
+    public List<Proposal> getDaoMyProposals() {
+        return coreDaoService.getMyProposals();
+    }
+
+    public List<Proposal> getDaoAllValidatedProposals() {
+        return coreDaoService.getAllValidatedProposals();
+    }
+
+    public List<Proposal> getDaoProposalsForCycle(int cycleIndex) {
+        return coreDaoService.getProposalsForCycle(cycleIndex);
+    }
+
+    public List<Ballot> getDaoBallots() {
+        return coreDaoService.getBallots();
+    }
+
+    public List<MyVote> getDaoMyVotes() {
+        return coreDaoService.getMyVotes();
+    }
+
+    public List<EvaluatedProposal> getDaoVoteResults(int cycleIndex) {
+        return coreDaoService.getVoteResults(cycleIndex);
+    }
+
+    public List<BondedRole> getDaoBondedRoles() {
+        return coreDaoService.getBondedRoles();
+    }
+
+    public long getDaoRequiredBond(BondedRoleType bondedRoleType) {
+        return coreDaoService.getRequiredBond(bondedRoleType);
+    }
+
+    public String getDaoParamValue(String paramName) {
+        return coreDaoService.getParamValue(paramName);
+    }
+
+    public void daoCreateCompensationProposal(String name, String link, long requestedBsqSats,
+                                              String burningManReceiverAddress,
+                                              Consumer<Proposal> resultHandler,
+                                              ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createCompensationProposal(name, link, requestedBsqSats, burningManReceiverAddress,
+                resultHandler, errorMessageHandler);
+    }
+
+    public void daoCreateReimbursementProposal(String name, String link, long requestedBsqSats,
+                                               Consumer<Proposal> resultHandler,
+                                               ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createReimbursementProposal(name, link, requestedBsqSats, resultHandler, errorMessageHandler);
+    }
+
+    public void daoCreateChangeParamProposal(String name, String link, String paramName, String paramValue,
+                                             Consumer<Proposal> resultHandler,
+                                             ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createChangeParamProposal(name, link, paramName, paramValue, resultHandler, errorMessageHandler);
+    }
+
+    public void daoCreateBondedRoleProposal(String bondedRoleTypeName, String name, String link,
+                                            Consumer<Proposal> resultHandler,
+                                            ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createBondedRoleProposal(bondedRoleTypeName, name, link, resultHandler, errorMessageHandler);
+    }
+
+    public void daoCreateConfiscateBondProposal(String name, String link, String lockupTxId,
+                                                Consumer<Proposal> resultHandler,
+                                                ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createConfiscateBondProposal(name, link, lockupTxId, resultHandler, errorMessageHandler);
+    }
+
+    public void daoCreateGenericProposal(String name, String link,
+                                         Consumer<Proposal> resultHandler,
+                                         ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createGenericProposal(name, link, resultHandler, errorMessageHandler);
+    }
+
+    public void daoCreateRemoveAssetProposal(String name, String link, String assetCode,
+                                             Consumer<Proposal> resultHandler,
+                                             ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.createRemoveAssetProposal(name, link, assetCode, resultHandler, errorMessageHandler);
+    }
+
+    public void daoSetVote(String proposalTxId, String vote) {
+        coreDaoService.setVote(proposalTxId, vote);
+    }
+
+    public void daoPublishBlindVote(long stakeSats,
+                                    Consumer<String> resultHandler,
+                                    ErrorMessageHandler errorMessageHandler) {
+        coreDaoService.publishBlindVote(stakeSats, resultHandler, errorMessageHandler);
+    }
+
+    public String daoGetRawTransactionHex(String txId) {
+        return coreDaoService.getRawTransactionHex(txId);
     }
 }

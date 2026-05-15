@@ -1,0 +1,104 @@
+name: e2e-tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "core/**"
+      - "daemon/**"
+      - "cli/**"
+      - "proto/**"
+      - "apitest/**"
+      - "seednode/**"
+      - ".github/workflows/e2e-tests.yml"
+
+jobs:
+  e2e-tests:
+    name: Run end-to-end DAO + trade test suite
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: zulu
+          java-version: '21.0.6'
+          check-latest: false
+
+      # Cache Gradle deps + wrapper. Single biggest speedup per re-run (~2 min).
+      - name: Gradle cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Pre-pull bitcoind base image in parallel with the gradle build below.
+      - name: Pre-pull bitcoind image
+        run: docker pull lnliz/bitcoind:29.3 &
+
+      # Build the gradle install dists and extract dao-setup. We split this out so
+      # the subsequent docker build can use buildx cache without rebuilding Bisq.
+      - name: Build install dists + dao-setup
+        run: |
+          ./gradlew --no-daemon \
+            :seednode:installDist :daemon:installDist :cli:installDist \
+            :apitest:installDaoSetup
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # Cache the stable Docker layers (apt deps, javafx jar fetch). Bisq install
+      # dists are COPYed in late layers; they invalidate on every source change
+      # but the heavy bottom layers survive → ~1 min saved per run.
+      - name: Cache Docker image layers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('apitest/docker/Dockerfile.*', 'apitest/docker/*entrypoint.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build docker images with layer cache
+        run: |
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t bisq-bitcoind:ci \
+            -f apitest/docker/Dockerfile.bitcoind .
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t bisq-daemon:ci \
+            -f apitest/docker/Dockerfile.bisq .
+          # actions/cache only saves /tmp/.buildx-cache; rotate the new layers in.
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Run e2e test stack (compose up + test)
+        run: apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build
+
+      - name: Upload container logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-tests-logs
+          path: apitest/docker/logs
+          retention-days: 7
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-tests-reports
+          path: apitest/build/reports/tests
+          retention-days: 7

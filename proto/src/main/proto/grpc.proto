@@ -1011,3 +1011,307 @@ message GetVersionRequest {
 message GetVersionReply {
     string version = 1;     // The version of the Bisq software release.
 }
+
+/*
+* The Dao service exposes Bisq DAO governance operations: making proposals of every type,
+* voting on ballots, publishing blind votes, and inspecting the current cycle, proposals,
+* ballots, votes, evaluated results, and DAO parameters. All operations target the locally
+* running daemon. Most write operations are only meaningful inside their corresponding
+* DAO phase (Proposal phase for proposal creation, Blind Vote phase for setVote/publishBlindVote).
+*/
+service Dao {
+    // Get the current cycle's index, phase, chain height, and per-phase block ranges.
+    rpc GetCycleInfo (GetCycleInfoRequest) returns (GetCycleInfoReply) {
+    }
+    // Get every past cycle with its index and first/last block height.
+    rpc GetCycles (GetCyclesRequest) returns (GetCyclesReply) {
+    }
+    // Get proposals; filter selects between current cycle proposals, my own proposals,
+    // all validated proposals, or proposals belonging to a specific past cycle.
+    rpc GetProposals (GetProposalsRequest) returns (GetProposalsReply) {
+    }
+    // Get all ballots for the current cycle, each annotated with the user's current vote state.
+    rpc GetBallots (GetBallotsRequest) returns (GetBallotsReply) {
+    }
+    // Get the local user's blind votes for the current cycle.
+    rpc GetMyVotes (GetMyVotesRequest) returns (GetMyVotesReply) {
+    }
+    // Get evaluated proposals (with thresholds, quorum, and accepted/rejected flag) for a cycle.
+    // If cycle_index is negative the most recent completed cycle is used.
+    rpc GetVoteResults (GetVoteResultsRequest) returns (GetVoteResultsReply) {
+    }
+    // List bonded roles with their bondedRoleType, name, and acceptance state.
+    rpc GetBondedRoles (GetBondedRolesRequest) returns (GetBondedRolesReply) {
+    }
+    // Get the current value of a DAO parameter (by Param enum name, e.g. "BONDED_ROLE_FACTOR").
+    rpc GetDaoParamValue (GetDaoParamValueRequest) returns (GetDaoParamValueReply) {
+    }
+
+    // Create and publish a compensation request proposal.
+    rpc CreateCompensationProposal (CreateCompensationProposalRequest) returns (CreateProposalReply) {
+    }
+    // Create and publish a reimbursement request proposal.
+    rpc CreateReimbursementProposal (CreateReimbursementProposalRequest) returns (CreateProposalReply) {
+    }
+    // Create and publish a change-parameter proposal.
+    rpc CreateChangeParamProposal (CreateChangeParamProposalRequest) returns (CreateProposalReply) {
+    }
+    // Create and publish a bonded-role proposal.
+    rpc CreateBondedRoleProposal (CreateBondedRoleProposalRequest) returns (CreateProposalReply) {
+    }
+    // Create and publish a confiscate-bond proposal.
+    rpc CreateConfiscateBondProposal (CreateConfiscateBondProposalRequest) returns (CreateProposalReply) {
+    }
+    // Create and publish a generic proposal.
+    rpc CreateGenericProposal (CreateGenericProposalRequest) returns (CreateProposalReply) {
+    }
+    // Create and publish a remove-asset proposal.
+    rpc CreateRemoveAssetProposal (CreateRemoveAssetProposalRequest) returns (CreateProposalReply) {
+    }
+
+    // Set or clear the local vote on a ballot (by proposal tx id). "accept", "reject", or "ignore".
+    rpc SetVote (SetVoteRequest) returns (SetVoteReply) {
+    }
+    // Encrypt, sign and publish the local blind vote tx and payload with a given BSQ stake (sats).
+    rpc PublishBlindVote (PublishBlindVoteRequest) returns (PublishBlindVoteReply) {
+    }
+    // Get the serialized raw transaction hex for a tx known to the local wallet.
+    // Used by tests to inject the tx into bitcoind via sendrawtransaction so that
+    // confirmation is deterministic and not subject to bitcoinj P2P relay timing.
+    rpc GetRawTransaction (GetRawTransactionRequest) returns (GetRawTransactionReply) {
+    }
+}
+
+// DAO phase enum mirroring bisq.core.dao.state.model.governance.DaoPhase.Phase.
+// Values match the Java enum's declaration order.
+enum DaoPhaseEnum {
+    DAO_PHASE_UNDEFINED = 0;
+    DAO_PHASE_PROPOSAL = 1;
+    DAO_PHASE_BREAK1 = 2;
+    DAO_PHASE_BLIND_VOTE = 3;
+    DAO_PHASE_BREAK2 = 4;
+    DAO_PHASE_VOTE_REVEAL = 5;
+    DAO_PHASE_BREAK3 = 6;
+    DAO_PHASE_RESULT = 7;
+}
+
+message GetCycleInfoRequest {
+}
+
+message GetCycleInfoReply {
+    int32 cycle_index = 1;                 // Zero-based index of the cycle currently active.
+    int32 chain_height = 2;                // Daemon's current DAO chain height.
+    DaoPhaseEnum phase = 3;                // The phase the chain height is currently in.
+    int32 first_block_of_cycle = 4;        // Height of the first block in the current cycle.
+    int32 last_block_of_cycle = 5;         // Height of the last block in the current cycle.
+    int32 first_block_of_phase = 6;        // Height of the first block in the current phase.
+    int32 last_block_of_phase = 7;         // Height of the last block in the current phase.
+    int32 duration_of_phase = 8;           // Number of blocks in the current phase.
+    int32 blocks_remaining_in_phase = 9;   // Blocks remaining until next phase starts (max 0).
+    bool is_dao_state_in_sync = 10;        // Whether the daemon believes its DAO state is fully synced.
+    int32 num_blind_votes_in_current_cycle = 11;  // Count of blind-vote payloads visible to this daemon in the current cycle (use to await P2P propagation).
+    int32 num_proposals_in_current_cycle = 12;    // Count of proposals (validated tempProposals) the daemon sees in the current cycle.
+}
+
+message GetCyclesRequest {
+}
+
+message CycleInfo {
+    int32 cycle_index = 1;
+    int32 height_of_first_block = 2;
+    int32 height_of_last_block = 3;
+    int32 duration = 4;
+}
+
+message GetCyclesReply {
+    repeated CycleInfo cycles = 1;
+}
+
+message GetProposalsRequest {
+    enum Filter {
+        // Proposals visible in the current cycle plus the user's unconfirmed proposals.
+        ACTIVE_OR_MY_UNCONFIRMED = 0;
+        // Only the local user's proposals.
+        MY = 1;
+        // All evaluated proposals across past cycles. A proposal only becomes evaluated
+        // after its cycle reaches the RESULT phase; for proposals in cycles still in
+        // PROPOSAL/BLIND_VOTE/VOTE_REVEAL, use ACTIVE_OR_MY_UNCONFIRMED.
+        ALL = 2;
+        // Evaluated proposals in the cycle identified by cycle_index. Returns an empty
+        // list for the current cycle until it reaches the RESULT phase.
+        FOR_CYCLE = 3;
+    }
+    Filter filter = 1;
+    int32 cycle_index = 2;   // Used only when filter == FOR_CYCLE.
+}
+
+// Summary of a Proposal. The full Proposal protobuf is not exposed to keep the API stable;
+// most automation needs only these fields. The original Proposal proto is still available
+// via the daemon's persistence layer for power users.
+message ProposalInfo {
+    string tx_id = 1;                 // Tx id of the proposal transaction.
+    string proposal_type = 2;         // ProposalType enum name (COMPENSATION_REQUEST, CHANGE_PARAM, etc.).
+    string name = 3;                  // User-supplied proposal name.
+    string link = 4;                  // User-supplied proposal link (GitHub PR url, etc.).
+    int64 tx_block_height = 5;        // Block height the proposal tx was mined at; -1 if unconfirmed.
+    string version = 6;               // Proposal payload version.
+    int64 creation_date = 7;          // Wall-clock creation date in milliseconds since epoch.
+    // Proposal-type specific fields. Empty if not applicable.
+    int64 requested_bsq = 10;         // Compensation / Reimbursement: requested BSQ amount in sats.
+    string param = 11;                // ChangeParam: Param enum name.
+    string param_value = 12;          // ChangeParam: new value as string.
+    string bonded_role_type = 13;     // BondedRole: BondedRoleType enum name.
+    string lockup_tx_id = 14;         // ConfiscateBond: lockup tx id being confiscated.
+    string asset_code = 15;           // RemoveAsset: asset code being removed.
+    string burning_man_receiver_address = 16; // Compensation: optional receiver address.
+}
+
+message GetProposalsReply {
+    repeated ProposalInfo proposals = 1;
+}
+
+message GetBallotsRequest {
+}
+
+message BallotInfo {
+    ProposalInfo proposal = 1;
+    // Vote state: "accept", "reject", or "ignore". "ignore" indicates the ballot has no vote
+    // (the user has not set one, or the user explicitly removed their vote).
+    string vote = 2;
+    bool has_vote = 3;       // True when the ballot has any non-null vote object.
+    bool vote_accept = 4;    // Meaningful only when has_vote is true.
+}
+
+message GetBallotsReply {
+    repeated BallotInfo ballots = 1;
+}
+
+message GetMyVotesRequest {
+}
+
+message MyVoteInfo {
+    int64 date = 1;                  // Creation timestamp of the blind vote (millis since epoch).
+    string blind_vote_tx_id = 2;     // Blind vote tx id.
+    string reveal_tx_id = 3;         // Reveal tx id; empty until the reveal phase completes.
+    int64 stake = 4;                 // Vote stake in BSQ sats.
+    int32 cycle_index = 5;           // Index of the cycle the vote belongs to.
+}
+
+message GetMyVotesReply {
+    repeated MyVoteInfo votes = 1;
+}
+
+message GetVoteResultsRequest {
+    int32 cycle_index = 1; // Negative value selects the most recent completed cycle.
+}
+
+message EvaluatedProposalInfo {
+    ProposalInfo proposal = 1;
+    bool is_accepted = 2;            // Whether the proposal passed quorum and threshold.
+    int64 required_quorum = 3;       // Required BSQ quorum in sats.
+    int64 required_threshold = 4;    // Required threshold in basis points (e.g. 5000 = 50%).
+    int64 stake_of_all_votes = 5;    // Total stake (BSQ sats) of votes counted for this proposal.
+    int64 num_accepted_votes = 6;    // Count of accept votes.
+    int64 num_rejected_votes = 7;    // Count of reject votes.
+    int64 num_ignored_votes = 8;     // Count of ignored (abstain) votes.
+}
+
+message GetVoteResultsReply {
+    repeated EvaluatedProposalInfo evaluated_proposals = 1;
+}
+
+message GetBondedRolesRequest {
+}
+
+message BondedRoleInfo {
+    string bonded_role_type = 1;     // BondedRoleType enum name.
+    string name = 2;                 // Role name.
+    string link = 3;                 // Role link.
+    bool is_accepted = 4;            // Whether the role has been accepted by the DAO.
+    int64 required_bond = 5;         // Required BSQ bond in sats.
+}
+
+message GetBondedRolesReply {
+    repeated BondedRoleInfo roles = 1;
+}
+
+message GetDaoParamValueRequest {
+    string param = 1;     // Param enum name.
+}
+
+message GetDaoParamValueReply {
+    string value = 1;
+}
+
+message CreateCompensationProposalRequest {
+    string name = 1;
+    string link = 2;
+    int64 requested_bsq = 3;                  // Requested BSQ in sats.
+    string burning_man_receiver_address = 4;  // Optional; empty for not set.
+}
+
+message CreateReimbursementProposalRequest {
+    string name = 1;
+    string link = 2;
+    int64 requested_bsq = 3;
+}
+
+message CreateChangeParamProposalRequest {
+    string name = 1;
+    string link = 2;
+    string param = 3;        // Param enum name.
+    string param_value = 4;  // New value (as string; format depends on Param).
+}
+
+message CreateBondedRoleProposalRequest {
+    string bonded_role_type = 1;   // BondedRoleType enum name.
+    string name = 2;
+    string link = 3;
+}
+
+message CreateConfiscateBondProposalRequest {
+    string name = 1;
+    string link = 2;
+    string lockup_tx_id = 3;
+}
+
+message CreateGenericProposalRequest {
+    string name = 1;
+    string link = 2;
+}
+
+message CreateRemoveAssetProposalRequest {
+    string name = 1;
+    string link = 2;
+    string asset_code = 3;
+}
+
+message CreateProposalReply {
+    ProposalInfo proposal = 1;     // The newly created proposal.
+}
+
+message SetVoteRequest {
+    string proposal_tx_id = 1;
+    // One of: "accept", "reject", "ignore". "ignore" clears the ballot's vote.
+    string vote = 2;
+}
+
+message SetVoteReply {
+}
+
+message PublishBlindVoteRequest {
+    int64 stake = 1;   // BSQ stake in sats.
+}
+
+message PublishBlindVoteReply {
+    string blind_vote_tx_id = 1;
+}
+
+message GetRawTransactionRequest {
+    string tx_id = 1;
+}
+
+message GetRawTransactionReply {
+    // Hex-encoded serialized transaction. Empty if the local wallet does not know the tx.
+    string raw_tx_hex = 1;
+}

@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.DaoGrpc;
 import bisq.proto.grpc.DisputeAgentsGrpc;
 import bisq.proto.grpc.GetVersionGrpc;
 import bisq.proto.grpc.HelpGrpc;
@@ -34,6 +35,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class GrpcStubs {
 
+    public final DaoGrpc.DaoBlockingStub daoService;
     public final DisputeAgentsGrpc.DisputeAgentsBlockingStub disputeAgentsService;
     public final HelpGrpc.HelpBlockingStub helpService;
     public final GetVersionGrpc.GetVersionBlockingStub versionService;
@@ -56,6 +58,7 @@ public final class GrpcStubs {
             }
         }));
 
+        this.daoService = DaoGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.disputeAgentsService = DisputeAgentsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.helpService = HelpGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.versionService = GetVersionGrpc.newBlockingStub(channel).withCallCredentials(credentials);

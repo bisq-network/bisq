@@ -441,6 +441,135 @@ public final class GrpcClient {
         grpcStubs.disputeAgentsService.registerDisputeAgent(request);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DAO. All calls use the blocking gRPC stub: the daemon only signals onCompleted after
+    // the underlying tx has been broadcast (proposal/vote publish flows wait on a
+    // CountDownLatch fed by the core ResultHandler/ExceptionHandler), so these methods are
+    // safe to chain with subsequent commands without race conditions.
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public bisq.proto.grpc.GetCycleInfoReply getCycleInfo() {
+        return grpcStubs.daoService.getCycleInfo(
+                bisq.proto.grpc.GetCycleInfoRequest.newBuilder().build());
+    }
+
+    public bisq.proto.grpc.GetCyclesReply getCycles() {
+        return grpcStubs.daoService.getCycles(
+                bisq.proto.grpc.GetCyclesRequest.newBuilder().build());
+    }
+
+    public bisq.proto.grpc.GetProposalsReply getProposals(
+            bisq.proto.grpc.GetProposalsRequest.Filter filter, int cycleIndex) {
+        return grpcStubs.daoService.getProposals(
+                bisq.proto.grpc.GetProposalsRequest.newBuilder()
+                        .setFilter(filter)
+                        .setCycleIndex(cycleIndex)
+                        .build());
+    }
+
+    public bisq.proto.grpc.GetBallotsReply getBallots() {
+        return grpcStubs.daoService.getBallots(
+                bisq.proto.grpc.GetBallotsRequest.newBuilder().build());
+    }
+
+    public bisq.proto.grpc.GetMyVotesReply getMyVotes() {
+        return grpcStubs.daoService.getMyVotes(
+                bisq.proto.grpc.GetMyVotesRequest.newBuilder().build());
+    }
+
+    public bisq.proto.grpc.GetVoteResultsReply getVoteResults(int cycleIndex) {
+        return grpcStubs.daoService.getVoteResults(
+                bisq.proto.grpc.GetVoteResultsRequest.newBuilder()
+                        .setCycleIndex(cycleIndex)
+                        .build());
+    }
+
+    public bisq.proto.grpc.GetBondedRolesReply getBondedRoles() {
+        return grpcStubs.daoService.getBondedRoles(
+                bisq.proto.grpc.GetBondedRolesRequest.newBuilder().build());
+    }
+
+    public String getDaoParamValue(String param) {
+        return grpcStubs.daoService.getDaoParamValue(
+                bisq.proto.grpc.GetDaoParamValueRequest.newBuilder().setParam(param).build())
+                .getValue();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createCompensationProposal(String name, String link,
+                                                                   long requestedBsq,
+                                                                   String burningManReceiverAddress) {
+        return grpcStubs.daoService.createCompensationProposal(
+                bisq.proto.grpc.CreateCompensationProposalRequest.newBuilder()
+                        .setName(name)
+                        .setLink(link)
+                        .setRequestedBsq(requestedBsq)
+                        .setBurningManReceiverAddress(
+                                burningManReceiverAddress == null ? "" : burningManReceiverAddress)
+                        .build())
+                .getProposal();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createReimbursementProposal(String name, String link, long requestedBsq) {
+        return grpcStubs.daoService.createReimbursementProposal(
+                bisq.proto.grpc.CreateReimbursementProposalRequest.newBuilder()
+                        .setName(name).setLink(link).setRequestedBsq(requestedBsq).build())
+                .getProposal();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createChangeParamProposal(String name, String link,
+                                                                  String param, String paramValue) {
+        return grpcStubs.daoService.createChangeParamProposal(
+                bisq.proto.grpc.CreateChangeParamProposalRequest.newBuilder()
+                        .setName(name).setLink(link).setParam(param).setParamValue(paramValue).build())
+                .getProposal();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createBondedRoleProposal(String bondedRoleType, String name, String link) {
+        return grpcStubs.daoService.createBondedRoleProposal(
+                bisq.proto.grpc.CreateBondedRoleProposalRequest.newBuilder()
+                        .setBondedRoleType(bondedRoleType).setName(name).setLink(link).build())
+                .getProposal();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createConfiscateBondProposal(String name, String link, String lockupTxId) {
+        return grpcStubs.daoService.createConfiscateBondProposal(
+                bisq.proto.grpc.CreateConfiscateBondProposalRequest.newBuilder()
+                        .setName(name).setLink(link).setLockupTxId(lockupTxId).build())
+                .getProposal();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createGenericProposal(String name, String link) {
+        return grpcStubs.daoService.createGenericProposal(
+                bisq.proto.grpc.CreateGenericProposalRequest.newBuilder()
+                        .setName(name).setLink(link).build())
+                .getProposal();
+    }
+
+    public bisq.proto.grpc.ProposalInfo createRemoveAssetProposal(String name, String link, String assetCode) {
+        return grpcStubs.daoService.createRemoveAssetProposal(
+                bisq.proto.grpc.CreateRemoveAssetProposalRequest.newBuilder()
+                        .setName(name).setLink(link).setAssetCode(assetCode).build())
+                .getProposal();
+    }
+
+    public void setVote(String proposalTxId, String vote) {
+        grpcStubs.daoService.setVote(
+                bisq.proto.grpc.SetVoteRequest.newBuilder()
+                        .setProposalTxId(proposalTxId).setVote(vote).build());
+    }
+
+    public String publishBlindVote(long stake) {
+        return grpcStubs.daoService.publishBlindVote(
+                bisq.proto.grpc.PublishBlindVoteRequest.newBuilder().setStake(stake).build())
+                .getBlindVoteTxId();
+    }
+
+    public String getRawTransaction(String txId) {
+        return grpcStubs.daoService.getRawTransaction(
+                bisq.proto.grpc.GetRawTransactionRequest.newBuilder().setTxId(txId).build())
+                .getRawTxHex();
+    }
+
     public void stopServer() {
         var request = StopRequest.newBuilder().build();
         grpcStubs.shutdownService.stop(request);

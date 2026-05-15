@@ -58,4 +58,19 @@ public class OptLabel {
     public final static String OPT_NEW_WALLET_PASSWORD = "new-wallet-password";
     public final static String OPT_TX_ID = "tx-id";
     public final static String OPT_TX_KEY = "tx-key";
+    // DAO opts.
+    public final static String OPT_NAME = "name";
+    public final static String OPT_LINK = "link";
+    public final static String OPT_REQUESTED_BSQ = "bsq";
+    public final static String OPT_PARAM = "param";
+    public final static String OPT_PARAM_VALUE = "param-value";
+    public final static String OPT_BONDED_ROLE_TYPE = "bonded-role-type";
+    public final static String OPT_LOCKUP_TX_ID = "lockup-tx-id";
+    public final static String OPT_ASSET_CODE = "asset-code";
+    public final static String OPT_BURNINGMAN_RECEIVER = "burningman-receiver";
+    public final static String OPT_PROPOSAL_TX_ID = "proposal-tx-id";
+    public final static String OPT_VOTE = "vote";
+    public final static String OPT_STAKE = "stake";
+    public final static String OPT_CYCLE_INDEX = "cycle-index";
+    public final static String OPT_FILTER = "filter";
 }

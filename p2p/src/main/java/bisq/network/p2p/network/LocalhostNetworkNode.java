@@ -68,7 +68,12 @@ public class LocalhostNetworkNode extends NetworkNode {
 
         // simulate tor connection delay
         UserThread.runAfter(() -> {
-            nodeAddressProperty.set(new NodeAddress("localhost", servicePort));
+            // In Docker / multi-host test setups, each daemon must announce a hostname
+            // that its peers can resolve. The system property `bisq.p2p.localhostName`
+            // (or env var BISQ_P2P_LOCALHOST_NAME) overrides the hardcoded "localhost".
+            String hostname = System.getProperty("bisq.p2p.localhostName",
+                    System.getenv().getOrDefault("BISQ_P2P_LOCALHOST_NAME", "localhost"));
+            nodeAddressProperty.set(new NodeAddress(hostname, servicePort));
 
             setupListeners.stream().forEach(SetupListener::onTorNodeReady);
 
