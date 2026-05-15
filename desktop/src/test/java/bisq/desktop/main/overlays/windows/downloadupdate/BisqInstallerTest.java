@@ -64,6 +64,17 @@ public class BisqInstallerTest {
 
     @Test
     public void getFileName() {
+        withSystemProperties("Mac OS X", "x86_64", () ->
+                assertEquals("Bisq-x86_64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+
+        withSystemProperties("Mac OS X", "amd64", () ->
+                assertEquals("Bisq-x86_64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+
+        withSystemProperties("Mac OS X", "aarch64", () ->
+                assertEquals("Bisq-aarch64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+
+        withSystemProperties("Mac OS X", "arm64", () ->
+                assertEquals("Bisq-aarch64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
     }
 
     @Test
@@ -85,5 +96,25 @@ public class BisqInstallerTest {
         sigFileDescriptors = bisqInstaller.getSigFileDescriptors(installerFileDescriptor, Lists.newArrayList(key1, key2));
         assertEquals(2, sigFileDescriptors.size());
         log.info("test");
+    }
+
+    private void withSystemProperties(String osName, String osArch, Runnable assertion) {
+        String originalOsName = System.getProperty("os.name");
+        String originalOsArch = System.getProperty("os.arch");
+        try {
+            System.setProperty("os.name", osName);
+            System.setProperty("os.arch", osArch);
+            assertion.run();
+        } finally {
+            restoreSystemProperty("os.name", originalOsName);
+            restoreSystemProperty("os.arch", originalOsArch);
+        }
+    }
+
+    private void restoreSystemProperty(String key, String value) {
+        if (value == null)
+            System.clearProperty(key);
+        else
+            System.setProperty(key, value);
     }
 }

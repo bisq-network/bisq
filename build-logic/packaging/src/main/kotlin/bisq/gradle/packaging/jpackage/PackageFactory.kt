@@ -1,5 +1,8 @@
 package bisq.gradle.packaging.jpackage
 
+import bisq.gradle.packaging.OS
+import bisq.gradle.packaging.getArchitecture
+import bisq.gradle.packaging.getOS
 import bisq.gradle.packaging.jpackage.package_formats.PackageFormat
 import org.gradle.api.GradleException
 import java.nio.file.Files
@@ -51,6 +54,9 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
             if (packageFormat == PackageFormat.RPM) {
                 normalizeRpmPackage(jPackageConfig.appConfig)
+            }
+            if (packageFormat == PackageFormat.DMG && getOS() == OS.MAC_OS) {
+                renameMacOsDmgPackage(jPackageConfig.appConfig)
             }
         }
     }
@@ -150,6 +156,16 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
         Files.move(rebuiltRpmPath, rpmPath, StandardCopyOption.REPLACE_EXISTING)
         normalizePathTimestamps(rpmPath)
+    }
+
+    private fun renameMacOsDmgPackage(appConfig: JPackageAppConfig) {
+        val dmgPath = findSinglePackageArtifact(PackageFormat.DMG)
+        val targetName = "Bisq-${getArchitecture().installerClassifier}-${appConfig.appVersion}.dmg"
+        if (dmgPath.fileName.toString() == targetName) {
+            return
+        }
+
+        Files.move(dmgPath, dmgPath.resolveSibling(targetName), StandardCopyOption.REPLACE_EXISTING)
     }
 
     private fun createNormalizedRpmSpec(appConfig: JPackageAppConfig, payloadRoot: Path): String {
