@@ -236,7 +236,7 @@ public class BsqSwapCalculation {
     public static long getAdjustedTxFee(long txFeePerVbyte, int vBytes, long tradeFee) {
         Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
         Validator.checkIsPositive(vBytes, "vBytes");
-        Validator.checkIsPositive(tradeFee, "tradeFee");
+        Validator.checkIsNotNegative(tradeFee, "tradeFee");
         // tradeFee must be strictly less than miner-fee portion; otherwise buyer payout inverts
         // (or zeroes buyer fee contribution) and sum-of-outputs >= sum-of-inputs, producing
         // an unbroadcastable tx. Coin.multiply/subtract use Math.*Exact internally, so overflow

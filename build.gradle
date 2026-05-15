@@ -689,6 +689,13 @@ def sha256 = { File file ->
     digest.digest().collect { String.format('%02x', it) }.join()
 }
 
+def sha256Bytes = { byte[] bytes ->
+    MessageDigest.getInstance('SHA-256')
+            .digest(bytes)
+            .collect { String.format('%02x', it & 0xff) }
+            .join()
+}
+
 def canonicalPath = { File file ->
     rootProject.relativePath(file).replace(File.separatorChar, '/' as char)
 }
@@ -1091,6 +1098,7 @@ def installerStructureSummaryFile = releaseReportDir.map { it.file('installer-st
 def installerStructureReportDir = releaseReportDir.map { it.dir('installer-structure') }
 def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
 def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
+def githubReleaseReadinessReportFile = releaseReportDir.map { it.file('github-release-readiness.md') }
 def releaseEvidenceRequiredEntries = [
         'release-manifest.tsv',
         'SHA256SUMS',
@@ -2698,6 +2706,553 @@ tasks.register('verifyReleaseBuild') {
 
     doLast {
         logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseEvidenceBundleFile.get().asFile)}")
+    }
+}
+
+tasks.register('verifyGithubReleaseReadiness') {
+    group = 'verification'
+    description = 'Manually verifies GitHub release assets, Bisq download URLs, versions, and signer keys for -PreleaseVersion=<version>.'
+
+    def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+
+    inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
+    outputs.file(githubReleaseReadinessReportFile)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def rawReleaseVersion = releaseVersionProperty.orNull
+        if (rawReleaseVersion == null || rawReleaseVersion.trim().empty) {
+            throw new GradleException('Missing required -PreleaseVersion=<version>, for example -PreleaseVersion=1.10.0')
+        }
+
+        def releaseVersion = rawReleaseVersion.trim()
+        if (releaseVersion.startsWith('v')) {
+            releaseVersion = releaseVersion.substring(1)
+        }
+        if (!(releaseVersion ==~ /\d+\.\d+\.\d+([.-][A-Za-z0-9_.-]+)?/)) {
+            throw new GradleException("Invalid release version '${rawReleaseVersion}'. Expected a version such as 1.10.0 or v1.10.0.")
+        }
+
+        def releaseTag = "v${releaseVersion}".toString()
+        def results = []
+        def addResult = { String status, String name, String details ->
+            results << [
+                    status : status,
+                    name   : name,
+                    details: details ?: ''
+            ]
+        }
+        def pass = { String name, String details -> addResult('PASS', name, details) }
+        def warn = { String name, String details -> addResult('WARN', name, details) }
+        def fail = { String name, String details -> addResult('FAIL', name, details) }
+
+        def escapeMarkdownCell = { value ->
+            htmlEscape(value)
+                    .replace('\r\n', '\n')
+                    .replace('\r', '\n')
+                    .replace('\n', '<br>')
+        }
+
+        def httpRequest = { String requestUrl, String method, Map<String, String> headers, boolean readBody ->
+            def currentUrl = requestUrl
+            int redirectCount = 0
+            while (true) {
+                def connection = (java.net.HttpURLConnection) new URL(currentUrl).openConnection()
+                connection.setInstanceFollowRedirects(false)
+                connection.setRequestMethod(method)
+                connection.setConnectTimeout(15_000)
+                connection.setReadTimeout(30_000)
+                connection.setRequestProperty('User-Agent', 'Bisq release readiness Gradle task')
+                headers.each { name, value ->
+                    if (value != null && !value.toString().empty) {
+                        connection.setRequestProperty(name, value.toString())
+                    }
+                }
+
+                int status = connection.responseCode
+                if ([301, 302, 303, 307, 308].contains(status)) {
+                    def location = connection.getHeaderField('Location')
+                    connection.disconnect()
+                    if (!location) {
+                        return [status: status, url: currentUrl, body: new byte[0]]
+                    }
+                    if (++redirectCount > 5) {
+                        throw new GradleException("Too many redirects while requesting ${requestUrl}")
+                    }
+                    currentUrl = new URL(new URL(currentUrl), location).toString()
+                    if (status == 303) {
+                        method = 'GET'
+                    }
+                    continue
+                }
+
+                byte[] body = new byte[0]
+                if (readBody) {
+                    def stream = status >= 400 ? connection.errorStream : connection.inputStream
+                    if (stream != null) {
+                        try {
+                            body = stream.bytes
+                        } finally {
+                            stream.close()
+                        }
+                    }
+                }
+                connection.disconnect()
+                return [status: status, url: currentUrl, body: body]
+            }
+        }
+
+        def httpGetBytes = { String url, Map<String, String> headers = [:] ->
+            def response = httpRequest(url, 'GET', headers, true)
+            if (response.status < 200 || response.status >= 300) {
+                def body = response.body ? new String(response.body, StandardCharsets.UTF_8).trim() : ''
+                if (body.length() > 300) {
+                    body = body.substring(0, 300) + '...'
+                }
+                throw new GradleException("GET ${url} returned HTTP ${response.status}${body ? ': ' + body : ''}")
+            }
+            response.body as byte[]
+        }
+
+        def httpProbe = { String url ->
+            def headFailure = null
+            try {
+                def response = httpRequest(url, 'HEAD', [:], false)
+                if (response.status >= 200 && response.status < 400) {
+                    return [ok: true, status: response.status, method: 'HEAD']
+                }
+                if (![403, 405].contains(response.status)) {
+                    return [ok: false, status: response.status, method: 'HEAD']
+                }
+            } catch (Exception exception) {
+                headFailure = exception.message
+            }
+
+            try {
+                def response = httpRequest(url, 'GET', ['Range': 'bytes=0-0'], false)
+                return [
+                        ok     : response.status >= 200 && response.status < 400,
+                        status : response.status,
+                        method : 'GET Range',
+                        details: headFailure
+                ]
+            } catch (Exception exception) {
+                return [ok: false, status: 'n/a', method: 'GET Range', details: exception.message ?: headFailure]
+            }
+        }
+
+        def checkVersionValue = { String label, File sourceFile, String regex ->
+            if (!sourceFile.file) {
+                fail(label, "Missing ${rootProject.relativePath(sourceFile)}")
+                return
+            }
+            def matcher = sourceFile.getText(StandardCharsets.UTF_8.name()) =~ regex
+            if (!matcher.find()) {
+                fail(label, "Could not find version declaration in ${rootProject.relativePath(sourceFile)}")
+                return
+            }
+            def actualVersion = matcher.group(1)
+            if (actualVersion == releaseVersion) {
+                pass(label, "${rootProject.relativePath(sourceFile)} is set to ${actualVersion}")
+            } else {
+                fail(label, "${rootProject.relativePath(sourceFile)} is ${actualVersion}, expected ${releaseVersion}")
+            }
+        }
+
+        checkVersionValue(
+                'Version.VERSION',
+                file('common/src/main/java/bisq/common/app/Version.java'),
+                /public\s+static\s+final\s+String\s+VERSION\s*=\s*"([^"]+)"/
+        )
+        checkVersionValue(
+                'PackagingPlugin.APP_VERSION',
+                file('build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt'),
+                /const\s+val\s+APP_VERSION\s*=\s*"([^"]+)"/
+        )
+        checkVersionValue(
+                'finalize.sh version',
+                file('desktop/package/macosx/finalize.sh'),
+                /(?m)^\s*version="([^"]+)"/
+        )
+
+        def installerSourceFile = file('desktop/src/main/java/bisq/desktop/main/overlays/windows/downloadupdate/BisqInstaller.java')
+        if (!installerSourceFile.file) {
+            fail('Updater source resources', "Missing ${rootProject.relativePath(installerSourceFile)}")
+        } else {
+            def installerSource = installerSourceFile.getText(StandardCharsets.UTF_8.name())
+            if (installerSource.contains('DOWNLOAD_HOST_URL = "https://bisq.network/downloads/"') &&
+                    installerSource.contains('PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/"')) {
+                pass('Updater source URLs', 'BisqInstaller points to bisq.network download and pubkey hosts')
+            } else {
+                fail('Updater source URLs', 'BisqInstaller does not contain the expected bisq.network download/pubkey hosts')
+            }
+        }
+
+        def expectedAssets = [
+                '387C8307.asc',
+                '4A133008.asc',
+                'E222AA02.asc',
+                'signingkey.asc',
+                "Bisq-x86_64-${releaseVersion}.dmg".toString(),
+                "Bisq-x86_64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-${releaseVersion}.jar.txt".toString(),
+                "Bisq-64bit-${releaseVersion}.deb".toString(),
+                "Bisq-64bit-${releaseVersion}.deb.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.exe".toString(),
+                "Bisq-64bit-${releaseVersion}.exe.asc".toString(),
+                "bisq-cli-${releaseVersion}.zip".toString(),
+                "bisq-cli-${releaseVersion}.zip.asc".toString(),
+                "bisq-daemon-${releaseVersion}.zip".toString(),
+                "bisq-daemon-${releaseVersion}.zip.asc".toString(),
+                "bisq-${releaseVersion}.tar.gz.asc".toString()
+        ].sort()
+
+        def updaterDownloadAssets = [
+                "Bisq-x86_64-${releaseVersion}.dmg".toString(),
+                "Bisq-x86_64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.deb".toString(),
+                "Bisq-64bit-${releaseVersion}.deb.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.exe".toString(),
+                "Bisq-64bit-${releaseVersion}.exe.asc".toString(),
+                "Bisq-${releaseVersion}.jar.txt".toString(),
+                'signingkey.asc'
+        ].sort()
+
+        def githubToken = providers.gradleProperty('githubToken').orNull ?: providers.environmentVariable('GITHUB_TOKEN').orNull
+        def githubHeaders = [
+                'Accept'              : 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+        ]
+        if (githubToken) {
+            githubHeaders['Authorization'] = "Bearer ${githubToken}".toString()
+        }
+
+        def releaseAssetsByName = [:]
+        def githubReleaseApiUrl = "https://api.github.com/repos/bisq-network/bisq/releases/tags/${releaseTag}".toString()
+        try {
+            def releaseJson = new String(httpGetBytes(githubReleaseApiUrl, githubHeaders), StandardCharsets.UTF_8)
+            def release = new groovy.json.JsonSlurper().parseText(releaseJson)
+            if (release.tag_name == releaseTag) {
+                pass('GitHub release tag', "Found ${releaseTag} on GitHub release page")
+            } else {
+                fail('GitHub release tag', "GitHub API returned tag '${release.tag_name}', expected '${releaseTag}'")
+            }
+            if (release.draft) {
+                warn('GitHub release state', "${releaseTag} is still marked as a draft")
+            } else {
+                pass('GitHub release state', "${releaseTag} is published")
+            }
+            if (release.prerelease) {
+                warn('GitHub prerelease flag', "${releaseTag} is marked as a prerelease")
+            }
+
+            releaseAssetsByName = release.assets.collectEntries { asset ->
+                [(asset.name.toString()): asset]
+            }
+            pass('GitHub release API', "Loaded ${releaseAssetsByName.size()} uploaded asset(s) from ${githubReleaseApiUrl}")
+        } catch (Exception exception) {
+            fail('GitHub release API', exception.message)
+        }
+
+        if (!releaseAssetsByName.empty) {
+            expectedAssets.each { assetName ->
+                def asset = releaseAssetsByName[assetName]
+                if (asset == null) {
+                    fail("GitHub asset ${assetName}", 'Missing from uploaded release assets')
+                    return
+                }
+                if (!asset.browser_download_url) {
+                    fail("GitHub asset ${assetName}", 'Missing browser_download_url')
+                    return
+                }
+                def assetSize = asset.size instanceof Number ? asset.size : 0
+                if (assetSize <= 0) {
+                    fail("GitHub asset ${assetName}", "Asset exists but size is ${asset.size}")
+                    return
+                }
+                pass("GitHub asset ${assetName}", "Present, ${assetSize} byte(s)")
+
+                def probe = httpProbe(asset.browser_download_url.toString())
+                if (probe.ok) {
+                    pass("GitHub download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}")
+                } else {
+                    fail("GitHub download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}${probe.details ? ': ' + probe.details : ''}")
+                }
+            }
+
+            def extraAssets = (releaseAssetsByName.keySet() as Set) - (expectedAssets as Set)
+            if (!extraAssets.empty) {
+                warn('GitHub extra assets', "Unexpected uploaded asset(s): ${extraAssets.sort().join(', ')}")
+            }
+        }
+
+        updaterDownloadAssets.each { assetName ->
+            def downloadUrl = "https://bisq.network/downloads/${releaseTag}/${assetName}".toString()
+            def probe = httpProbe(downloadUrl)
+            if (probe.ok) {
+                pass("Bisq download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}")
+            } else {
+                fail("Bisq download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}${probe.details ? ': ' + probe.details : ''}")
+            }
+        }
+
+        def keyIds = ['387C8307', '4A133008', 'E222AA02']
+        def signingKeyFile = file('desktop/package/signingkey.asc')
+        def activeSigningKeyId = ''
+        if (!signingKeyFile.file) {
+            fail('signingkey.asc local file', "Missing ${rootProject.relativePath(signingKeyFile)}")
+        } else {
+            activeSigningKeyId = signingKeyFile.getText(StandardCharsets.UTF_8.name()).trim().toUpperCase(Locale.ROOT)
+            if (keyIds.contains(activeSigningKeyId)) {
+                pass('Active signing key id', "desktop/package/signingkey.asc points to ${activeSigningKeyId}")
+            } else {
+                fail('Active signing key id', "desktop/package/signingkey.asc points to ${activeSigningKeyId ?: '<blank>'}, expected one of ${keyIds.join(', ')}")
+            }
+        }
+
+        def resourceKeyFiles = [:]
+        keyIds.each { keyId ->
+            def resourceFile = file("desktop/src/main/resources/keys/${keyId}.asc")
+            def packageFile = file("desktop/package/${keyId}.asc")
+            resourceKeyFiles[keyId] = resourceFile
+
+            def sourceBytesByName = [:]
+            if (resourceFile.file) {
+                sourceBytesByName['app resources'] = resourceFile.bytes
+            } else {
+                fail("Public key ${keyId} app resource", "Missing ${rootProject.relativePath(resourceFile)}")
+            }
+            if (packageFile.file) {
+                sourceBytesByName['release package'] = packageFile.bytes
+            } else {
+                fail("Public key ${keyId} package resource", "Missing ${rootProject.relativePath(packageFile)}")
+            }
+
+            try {
+                sourceBytesByName['bisq.network/pubkey'] = httpGetBytes("https://bisq.network/pubkey/${keyId}.asc".toString())
+            } catch (Exception exception) {
+                fail("Public key ${keyId} webpage", exception.message)
+            }
+
+            def githubAsset = releaseAssetsByName[keyId + '.asc']
+            if (githubAsset?.browser_download_url) {
+                try {
+                    sourceBytesByName['GitHub release'] = httpGetBytes(githubAsset.browser_download_url.toString())
+                } catch (Exception exception) {
+                    fail("Public key ${keyId} GitHub asset", exception.message)
+                }
+            } else if (!releaseAssetsByName.empty) {
+                fail("Public key ${keyId} GitHub asset", "Missing ${keyId}.asc from GitHub release")
+            }
+
+            def expectedKeySourceCount = releaseAssetsByName.empty ? 3 : 4
+            if (sourceBytesByName.size() == expectedKeySourceCount) {
+                def hashes = sourceBytesByName.collectEntries { name, bytes ->
+                    [(name): sha256Bytes(bytes as byte[])]
+                }
+                def uniqueHashes = hashes.values().toSet()
+                if (uniqueHashes.size() == 1) {
+                    pass("Public key ${keyId} exact content", "All checked sources match SHA-256 ${uniqueHashes.first()}")
+                } else {
+                    fail("Public key ${keyId} exact content", hashes.collect { name, hash -> "${name}=${hash}" }.join(', '))
+                }
+            }
+        }
+
+        if (signingKeyFile.file) {
+            def signingKeySources = ['release package': signingKeyFile.bytes]
+            def signingKeyAsset = releaseAssetsByName['signingkey.asc']
+            if (signingKeyAsset?.browser_download_url) {
+                try {
+                    signingKeySources['GitHub release'] = httpGetBytes(signingKeyAsset.browser_download_url.toString())
+                } catch (Exception exception) {
+                    fail('signingkey.asc GitHub asset', exception.message)
+                }
+            } else if (!releaseAssetsByName.empty) {
+                fail('signingkey.asc GitHub asset', 'Missing signingkey.asc from GitHub release')
+            }
+            try {
+                signingKeySources['bisq.network/downloads'] = httpGetBytes("https://bisq.network/downloads/${releaseTag}/signingkey.asc".toString())
+            } catch (Exception exception) {
+                fail('signingkey.asc download URL', exception.message)
+            }
+
+            def expectedSigningKeySourceCount = releaseAssetsByName.empty ? 2 : 3
+            if (signingKeySources.size() == expectedSigningKeySourceCount) {
+                def hashes = signingKeySources.collectEntries { name, bytes ->
+                    [(name): sha256Bytes(bytes as byte[])]
+                }
+                def uniqueHashes = hashes.values().toSet()
+                if (uniqueHashes.size() == 1) {
+                    pass('signingkey.asc exact content', "All checked sources match SHA-256 ${uniqueHashes.first()}")
+                } else {
+                    fail('signingkey.asc exact content', hashes.collect { name, hash -> "${name}=${hash}" }.join(', '))
+                }
+            }
+        }
+
+        def runCommand = { List<String> command ->
+            def stdout = new ByteArrayOutputStream()
+            def stderr = new ByteArrayOutputStream()
+            try {
+                def processResult = exec {
+                    commandLine command
+                    standardOutput = stdout
+                    errorOutput = stderr
+                    ignoreExitValue = true
+                }
+                return [
+                        exitValue: processResult.exitValue,
+                        stdout   : stdout.toString(StandardCharsets.UTF_8.name()),
+                        stderr   : stderr.toString(StandardCharsets.UTF_8.name())
+                ]
+            } catch (Exception exception) {
+                return [
+                        exitValue: -1,
+                        stdout   : stdout.toString(StandardCharsets.UTF_8.name()),
+                        stderr   : exception.message
+                ]
+            }
+        }
+
+        def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
+                providers.environmentVariable('GPG_EXECUTABLE').orNull
+        def gpgExecutable = configuredGpgExecutable ?: [
+                '/opt/homebrew/bin/gpg',
+                '/usr/local/bin/gpg',
+                '/usr/bin/gpg'
+        ].find { new File(it).canExecute() } ?: 'gpg'
+
+        def parseGpgKeyInfo = { String gpgOutput ->
+            def lines = gpgOutput.readLines()
+            def pubLine = lines.find { it.startsWith('pub:') }
+            def fprLine = lines.find { it.startsWith('fpr:') }
+            if (!pubLine || !fprLine) {
+                return null
+            }
+            def pubFields = pubLine.split(':', -1)
+            def fprFields = fprLine.split(':', -1)
+            [
+                    keyId      : pubFields.size() > 4 ? pubFields[4] : '',
+                    created    : pubFields.size() > 5 ? pubFields[5] : '',
+                    expires    : pubFields.size() > 6 ? pubFields[6] : '',
+                    fingerprint: fprFields.size() > 9 ? fprFields[9] : ''
+            ]
+        }
+
+        keyIds.each { keyId ->
+            def keyFile = resourceKeyFiles[keyId]
+            if (!keyFile?.file) {
+                return
+            }
+
+            def gpgResult = runCommand([gpgExecutable, '--show-keys', '--with-colons', '--fingerprint', keyFile.absolutePath])
+            if (gpgResult.exitValue != 0) {
+                fail(
+                        "Public key ${keyId} metadata",
+                        "${gpgExecutable} --show-keys failed. Install GnuPG or set -PgpgExecutable=/path/to/gpg. ${gpgResult.stderr?.trim()}"
+                )
+                return
+            }
+            def keyInfo = parseGpgKeyInfo(gpgResult.stdout)
+            if (keyInfo == null || !keyInfo.fingerprint) {
+                fail("Public key ${keyId} metadata", 'Could not parse fingerprint from gpg --show-keys output')
+                return
+            }
+
+            def isActiveSigningKey = activeSigningKeyId && (
+                    keyId.equalsIgnoreCase(activeSigningKeyId) ||
+                            keyInfo.keyId?.toUpperCase(Locale.ROOT)?.endsWith(activeSigningKeyId)
+            )
+            def now = java.time.Instant.now()
+            if (!keyInfo.expires) {
+                pass("Public key ${keyId} expiry", "Fingerprint ${keyInfo.fingerprint} has no expiry date")
+            } else {
+                def expiryInstant = java.time.Instant.ofEpochSecond(keyInfo.expires as long)
+                def expiryDate = expiryInstant.atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                def daysRemaining = java.time.Duration.between(now, expiryInstant).toDays()
+                if (!expiryInstant.isAfter(now)) {
+                    def report = isActiveSigningKey ? fail : warn
+                    report(
+                            "Public key ${keyId} expiry",
+                            "${isActiveSigningKey ? 'Active signing key' : 'Bundled non-active key'} expired on ${expiryDate}"
+                    )
+                } else if (daysRemaining <= 90) {
+                    warn("Public key ${keyId} expiry", "Expires on ${expiryDate} (${daysRemaining} day(s) remaining)")
+                } else {
+                    pass("Public key ${keyId} expiry", "Expires on ${expiryDate} (${daysRemaining} day(s) remaining)")
+                }
+            }
+
+            def keyserverUrls = [
+                    'keys.openpgp.org'     : "https://keys.openpgp.org/vks/v1/by-fingerprint/${keyInfo.fingerprint}".toString(),
+                    'keyserver.ubuntu.com': "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${keyInfo.fingerprint}".toString()
+            ]
+            def foundKeyservers = []
+            keyserverUrls.each { name, url ->
+                try {
+                    def body = new String(httpGetBytes(url), StandardCharsets.UTF_8)
+                    if (body.contains('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+                        foundKeyservers << name
+                    }
+                } catch (Exception ignored) {
+                    // Report a combined result below to keep the release report readable.
+                }
+            }
+
+            if (foundKeyservers.size() == keyserverUrls.size()) {
+                pass("Public key ${keyId} keyservers", "Found on ${foundKeyservers.join(', ')}")
+            } else if (!foundKeyservers.empty) {
+                warn("Public key ${keyId} keyservers", "Found on ${foundKeyservers.join(', ')}; missing from ${(keyserverUrls.keySet() - foundKeyservers).join(', ')}")
+            } else {
+                def report = isActiveSigningKey ? fail : warn
+                report(
+                        "Public key ${keyId} keyservers",
+                        "Fingerprint ${keyInfo.fingerprint} was not found on ${keyserverUrls.keySet().join(', ')}" +
+                                (isActiveSigningKey ? '' : ' (bundled non-active key)')
+                )
+            }
+        }
+
+        def reportFile = githubReleaseReadinessReportFile.get().asFile
+        reportFile.parentFile.mkdirs()
+        def markdown = new StringBuilder()
+        markdown << "# GitHub Release Readiness\n\n"
+        markdown << "- Release version: `${releaseVersion}`\n"
+        markdown << "- GitHub tag: `${releaseTag}`\n"
+        markdown << "- Generated at: `${java.time.Instant.now()}`\n\n"
+        markdown << "This report is generated by `./gradlew verifyGithubReleaseReadiness -PreleaseVersion=${releaseVersion}`. "
+        markdown << "The task is read-only: it checks local release metadata, GitHub release assets, bisq.network download URLs, public key consistency, key expiry, and common keyserver availability.\n\n"
+        markdown << "## Summary\n\n"
+        markdown << "| Status | Count |\n"
+        markdown << "| --- | ---: |\n"
+        ['PASS', 'WARN', 'FAIL'].each { status ->
+            markdown << "| ${status} | ${results.count { it.status == status }} |\n"
+        }
+        markdown << "\n## Checks\n\n"
+        markdown << "| Status | Check | Details |\n"
+        markdown << "| --- | --- | --- |\n"
+        results.each { result ->
+            markdown << "| ${result.status} | ${escapeMarkdownCell(result.name)} | ${escapeMarkdownCell(result.details)} |\n"
+        }
+        markdown << '\n'
+        reportFile.setText(markdown.toString(), StandardCharsets.UTF_8.name())
+        logger.lifecycle("Wrote ${rootProject.relativePath(reportFile)}")
+
+        def failures = results.findAll { it.status == 'FAIL' }
+        if (!failures.empty) {
+            throw new GradleException("GitHub release readiness failed with ${failures.size()} failure(s). See ${rootProject.relativePath(reportFile)}")
+        }
+
+        logger.lifecycle("GitHub release readiness passed with ${results.count { it.status == 'WARN' }} warning(s).")
     }
 }
 

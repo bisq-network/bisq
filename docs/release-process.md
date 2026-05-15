@@ -204,6 +204,18 @@ If all was successful:
 
 * Add all files including signingkey.asc and the gpg pub keys to GitHub release page
 
+* After the GitHub assets are uploaded and the webpage pubkeys/downloads are deployed, run the release readiness check:
+
+```
+./gradlew verifyGithubReleaseReadiness -PreleaseVersion=${NEW_VERSION}
+```
+
+  The task writes `build/reports/release/github-release-readiness.md` and verifies version declarations, the GitHub
+  release tag, uploaded release assets, dual macOS DMGs, bisq.network download URLs, local/web/GitHub public key
+  consistency, signing key consistency, key expiry, and common keyserver availability. If the release is not public yet,
+  set `GITHUB_TOKEN` in the environment before running the task. If Gradle cannot find GnuPG, pass
+  `-PgpgExecutable=/path/to/gpg`.
+
 * Check all uploaded files with [virustotal.com](https://www.virustotal.com)
 
 * Select the release tag as the source for the GitHub release.
