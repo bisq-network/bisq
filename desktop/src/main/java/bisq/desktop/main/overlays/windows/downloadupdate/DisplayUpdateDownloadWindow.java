@@ -200,13 +200,16 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         BisqInstaller installer = new BisqInstaller();
         String downloadFailedString = Res.get("displayUpdateDownloadWindow.download.failed");
         downloadButton.setOnAction(e -> {
-            if (installer.isSupportedOS()) {
+            Optional<String> installerFileNameOptional = installer.findInstallerFileName(alert.getVersion());
+            if (installerFileNameOptional.isPresent()) {
+                String installerFileName = installerFileNameOptional.get();
                 List<String> downloadedFiles = new ArrayList<>();
                 List<String> verifiedSigs = new ArrayList<>();
                 downloadButton.setDisable(true);
                 progressBar.setVisible(true);
                 downloadedFilesLabel.setOpacity(1);
                 downloadingFileLabel.setOpacity(1);
+                downloadingFileLabel.setText(Res.get("displayUpdateDownloadWindow.downloadingFile", installerFileName));
                 busyAnimation.play();
                 statusLabel.setText(Res.get("displayUpdateDownloadWindow.status.downloading"));
 
@@ -234,7 +237,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                         statusLabel.setText(Res.get("displayUpdateDownloadWindow.status.verifying"));
 
                         List<BisqInstaller.FileDescriptor> downloadResults = downloadTask.getValue();
-                        Optional<BisqInstaller.FileDescriptor> downloadFailed = downloadResults.stream()
+                        Optional<BisqInstaller.FileDescriptor> downloadFailed = downloadResults == null
+                                ? Optional.empty()
+                                : downloadResults.stream()
                                 .filter(fileDescriptor -> !BisqInstaller.DownloadStatusEnum.OK.equals(fileDescriptor.getDownloadStatus()))
                                 .findFirst();
                         downloadedFilesLabel.getStyleClass().removeAll("error-text", "success-text");
@@ -261,8 +266,11 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
                                 List<BisqInstaller.VerifyDescriptor> verifyResults = verifyTask.getValue();
                                 // check that there are no failed verifications
-                                Optional<BisqInstaller.VerifyDescriptor> verifyFailed = verifyResults.stream()
-                                        .filter(verifyDescriptor -> !BisqInstaller.VerifyStatusEnum.OK.equals(verifyDescriptor.getVerifyStatusEnum())).findFirst();
+                                Optional<BisqInstaller.VerifyDescriptor> verifyFailed = verifyResults == null
+                                        ? Optional.empty()
+                                        : verifyResults.stream()
+                                        .filter(verifyDescriptor -> !BisqInstaller.VerifyStatusEnum.OK.equals(verifyDescriptor.getVerifyStatusEnum()))
+                                        .findFirst();
                                 if (verifyResults == null || verifyResults.isEmpty() || verifyFailed.isPresent()) {
                                     showErrorMessage(downloadButton, statusLabel, Res.get("displayUpdateDownloadWindow.verify.failed"));
                                 } else {
@@ -372,4 +380,3 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
             busyAnimation.stop();
     }
 }
-

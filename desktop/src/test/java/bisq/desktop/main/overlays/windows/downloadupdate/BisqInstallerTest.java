@@ -31,7 +31,9 @@ import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BisqInstallerTest {
     @Test
@@ -73,6 +75,34 @@ public class BisqInstallerTest {
 
         withSystemProperties("Mac OS X", "arm64", () ->
                 assertEquals("Bisq-aarch64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+    }
+
+    @Test
+    public void findInstallerFileNameReturnsSelectedMacInstaller() {
+        withSystemProperties("Mac OS X", "x86_64", () -> {
+            BisqInstaller bisqInstaller = new BisqInstaller();
+
+            assertTrue(bisqInstaller.isSupportedOS());
+            assertEquals("Bisq-x86_64-1.2.3.dmg", bisqInstaller.findInstallerFileName("1.2.3").orElseThrow());
+        });
+
+        withSystemProperties("Mac OS X", "aarch64", () -> {
+            BisqInstaller bisqInstaller = new BisqInstaller();
+
+            assertTrue(bisqInstaller.isSupportedOS());
+            assertEquals("Bisq-aarch64-1.2.3.dmg", bisqInstaller.findInstallerFileName("1.2.3").orElseThrow());
+        });
+    }
+
+    @Test
+    public void unsupportedMacArchitectureDoesNotStartDownload() {
+        withSystemProperties("Mac OS X", "sparc", () -> {
+            BisqInstaller bisqInstaller = new BisqInstaller();
+
+            assertFalse(bisqInstaller.isSupportedOS());
+            assertFalse(bisqInstaller.findInstallerFileName("1.2.3").isPresent());
+            assertFalse(bisqInstaller.download("1.2.3").isPresent());
+        });
     }
 
     @Test

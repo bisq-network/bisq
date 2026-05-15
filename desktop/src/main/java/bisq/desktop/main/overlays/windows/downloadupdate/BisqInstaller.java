@@ -64,14 +64,27 @@ public class BisqInstaller {
     private static final String DOWNLOAD_HOST_URL = "https://bisq.network/downloads/";
 
     public boolean isSupportedOS() {
-        return Utilities.isOSX() || Utilities.isWindows() || Utilities.isDebianLinux() || Utilities.isRedHatLinux();
+        return findInstallerFileName("0").isPresent();
+    }
+
+    public Optional<String> findInstallerFileName(String version) {
+        try {
+            return Optional.of(getInstallerFileName(version));
+        } catch (RuntimeException exception) {
+            log.warn("Unable to determine installer file name for version {}: {}", version, exception.getMessage());
+            return Optional.empty();
+        }
     }
 
     public Optional<DownloadTask> download(String version) {
         String partialUrl = DOWNLOAD_HOST_URL + "v" + version + "/";
 
         // Get installer filename on all platforms
-        FileDescriptor installerFileDescriptor = getInstallerDescriptor(version, partialUrl);
+        Optional<FileDescriptor> installerFileDescriptorOptional = getInstallerDescriptor(version, partialUrl);
+        if (!installerFileDescriptorOptional.isPresent()) {
+            return Optional.empty();
+        }
+        FileDescriptor installerFileDescriptor = installerFileDescriptorOptional.get();
 
         // tells us which key was used for signing
         FileDescriptor signingKeyDescriptor = getSigningKeyDescriptor(partialUrl);
@@ -198,15 +211,19 @@ public class BisqInstaller {
     }
 
     @NotNull
-    private FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
-        String fileName = getInstallerFileName(version);
+    private Optional<FileDescriptor> getInstallerDescriptor(String version, String partialUrl) {
+        Optional<String> fileNameOptional = findInstallerFileName(version);
+        if (!fileNameOptional.isPresent()) {
+            return Optional.empty();
+        }
 
-        return FileDescriptor.builder()
+        String fileName = fileNameOptional.get();
+        return Optional.of(FileDescriptor.builder()
                 .type(DownloadType.INSTALLER)
                 .fileName(fileName)
                 .id(fileName)
                 .loadUrl(partialUrl.concat(fileName))
-                .build();
+                .build());
     }
 
     static String getInstallerFileName(String version) {
