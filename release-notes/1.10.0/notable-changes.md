@@ -29,7 +29,7 @@ Related commits:
 
 ## Offer Safety, Limits, And Trade Failure Handling
 
-The release lowers risk around offer taking and trade bounds. Prices are constrained to a 25% maximum deviation, the maximum trade amount is limited to 0.125 BTC, maker change is validated before taker signing, offer availability responses are checked against the expected peer, BSQ swap trading can be disabled independently by filter, failed take-offer requests now release the reserved open offer
+The release lowers risk around offer taking and trade bounds. Prices are constrained to a 25% maximum deviation, the maximum trade amount is limited to 0.125 BTC, maker change is validated before taker signing, offer availability responses are checked against the expected peer, BSQ swap trading can be disabled independently by filter, and failed take-offer requests now release the reserved open offer.
 
 Related commits:
 - [4877e4b94e](https://github.com/bisq-network/bisq/commit/4877e4b94e8a94d38c8cd3078b37f167cf250785) - Reduce maximum price deviation to 25%.
@@ -82,7 +82,7 @@ Related commits:
 
 ## DAO, Burning Man, API, And Service Updates
 
-The release adds bridge/gRPC service work, account timestamp support, DAO snapshot/resync fixes, Burning Man address-list and receiver validation, updated node/mediator/refund-agent metadata, bitcoind RPC changes, and API/CLI cleanup.
+The release adds bridge/gRPC service work, account timestamp support, DAO snapshot/resync fixes, refreshed DAO/network resource snapshots, Burning Man address-list and receiver validation, updated node/mediator/refund-agent metadata, bitcoind RPC changes, and API/CLI cleanup. Version-tagged resource files are omitted for this release so older seed nodes do not trigger avoidable resource requests.
 
 Related commits:
 - [397b5a26a9](https://github.com/bisq-network/bisq/commit/397b5a26a91de669e0507831f0d74bab7408a1f7) - Merge the bridge module and gRPC API work.
@@ -90,6 +90,8 @@ Related commits:
 - [a49488a3c8](https://github.com/bisq-network/bisq/commit/a49488a3c81f40ffec14eed034f864db99c4a272) - Fix applying DAO snapshots during resync.
 - [81d375ea64](https://github.com/bisq-network/bisq/commit/81d375ea643f611a1c8690bd3c58cf57046a1c78) - Add bitcoind v29.2 support.
 - [93911b999e](https://github.com/bisq-network/bisq/commit/93911b999e0745b6ea6da89bcad98e93aabc7c83) - Add Burning Man address-list checkpoint support.
+- [66f04a4d77](https://github.com/bisq-network/bisq/commit/66f04a4d7756fff5d473ad19b1825a004a352b3d) - Refresh DAO and network resource snapshots.
+- [c2a4c8d2de](https://github.com/bisq-network/bisq/commit/c2a4c8d2de4dffd936c76dee8bb62aae78ce64a1) - Remove version-tagged resources for seed-node compatibility.
 - [9d89d01a4e](https://github.com/bisq-network/bisq/commit/9d89d01a4ecfb5fdbf00f4d222c383ba7f98935d) - Use payment-account-id parameter naming consistently.
 - [72e178920a](https://github.com/bisq-network/bisq/commit/72e178920ac7e63413784674948b5bf969694697) - Improve CLI take-offer available-offer lookup.
 - [be58e349c5](https://github.com/bisq-network/bisq/commit/be58e349c5f1faf0987dc71a562af2fa93e3c4b7) - Allow filtering BTC addresses with positive balances.

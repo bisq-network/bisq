@@ -2,11 +2,11 @@
 
 These notes are written in the same practical style used by Bitcoin Core release notes: user and operator impact first, followed by a complete auditable commit inventory.
 
-Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `20a0f78019437bf8dbe880732d740cec82a23f71`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `20a0f78019`. The inventory includes merge commits as separate entries because they are part of the release history.
+Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `284fe9d14ab155c6e6d94e19e664c576ae4f405d`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `284fe9d14a`. The inventory includes merge commits as separate entries because they are part of the release history.
 
-- Total commits: 732
-- Non-merge commits: 536
-- Merge commits: 196
+- Total commits: 739
+- Non-merge commits: 540
+- Merge commits: 199
 - Generated on: 2026-05-15
 
 ## Compatibility Notes
@@ -23,7 +23,7 @@ Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `20a0f7801
 
 This release contains a large validation hardening pass for Bisq v1 trades. Peer-provided inputs, deposit transactions, payout transactions, delayed payout transactions, mediated payout transactions, fees, trade amounts, prices, multisig public keys, and payment-account hashes are checked earlier and more consistently. Invalid peer data is rejected closer to the point where it enters the trade flow.
 
-The release also rejects legacy UTXOs for deposit funding, bounds and deduplicates peer-supplied inputs, validates canonical deposit transaction shapes at final boundaries, re-verifies multisig outputs before payout signing, hardens BSQ swap arithmetic, allows the valid zero seller fee case in BSQ swaps, hardens Monero transaction proof handling, and unreserves offers when a take-offer request fails.
+The release also rejects legacy UTXOs for deposit funding, bounds and deduplicates peer-supplied inputs, validates canonical deposit transaction shapes at final boundaries, re-verifies multisig outputs before payout signing, hardens BSQ swap arithmetic, hardens Monero transaction proof handling, and unreserves offers when a take-offer request fails.
 
 ### Network, HTTP, And Privacy Hardening
 
@@ -39,7 +39,7 @@ Payment-account handling is safer and more robust. Swish account creation no lon
 
 ### DAO, Burning Man, API, And Services
 
-The release includes bridge module work with gRPC APIs, account timestamp service support, DAO resync/snapshot fixes, bitcoind RPC migration work, Burning Man address list and delayed payout receiver validation, and updates to mediator/refund-agent/network node metadata.
+The release includes bridge module work with gRPC APIs, account timestamp service support, DAO resync/snapshot fixes, refreshed DAO/network resource snapshots, bitcoind RPC migration work, Burning Man address list and delayed payout receiver validation, and updates to mediator/refund-agent/network node metadata. Version-tagged resource files are intentionally not bundled in this release to avoid extra requests against seed nodes that still run older versions.
 
 API and CLI changes include consistent `payment-account-id` naming, improved `findAvailableOffer`, API-level filtering for BTC addresses with positive balances, support for multiple `btcNodes` command-line values, and removal of the deprecated `getmyoffer` command.
 
@@ -787,6 +787,13 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 | 2026-05-15 | [c2850685c5](https://github.com/bisq-network/bisq/commit/c2850685c5c92762d32554b441134b9547f94913) | Commit | Add GitHub release readiness check | HenrikJannsen |
 | 2026-05-15 | [97b470fb60](https://github.com/bisq-network/bisq/commit/97b470fb609016d3420b00e22fa7ad17fae829e3) | Commit | The sellers trade fee is 0 in BSQ swaps. | HenrikJannsen |
 | 2026-05-15 | [20a0f78019](https://github.com/bisq-network/bisq/commit/20a0f78019437bf8dbe880732d740cec82a23f71) | Merge | Merge pull request #7808 from HenrikJannsen/fix-fee-validation | HenrikJannsen |
+| 2026-05-15 | [8c9aa932f3](https://github.com/bisq-network/bisq/commit/8c9aa932f3ea3a80233d0c22db328010af04d8d1) | Commit | Update release notes | HenrikJannsen |
+| 2026-05-15 | [aafa01e291](https://github.com/bisq-network/bisq/commit/aafa01e291bb43f6492101c08b6c334574117f15) | Merge | Merge pull request #7809 from HenrikJannsen/update-release-notes | HenrikJannsen |
+| 2026-05-15 | [df514f1603](https://github.com/bisq-network/bisq/commit/df514f1603b190cbe693264fc68b1bf909ef4208) | Commit | Fix test | HenrikJannsen |
+| 2026-05-15 | [0247920168](https://github.com/bisq-network/bisq/commit/024792016800be67ee0ae37180255996bcb857d5) | Merge | Merge pull request #7811 from HenrikJannsen/fix-test | HenrikJannsen |
+| 2026-05-15 | [66f04a4d77](https://github.com/bisq-network/bisq/commit/66f04a4d7756fff5d473ad19b1825a004a352b3d) | Commit | Update resources | HenrikJannsen |
+| 2026-05-15 | [c2a4c8d2de](https://github.com/bisq-network/bisq/commit/c2a4c8d2de4dffd936c76dee8bb62aae78ce64a1) | Commit | Remove the tagged resources as the seed nodes run on old version and it would trigger lots of requests if the user app has the historical resource file but the seed node not. | HenrikJannsen |
+| 2026-05-15 | [284fe9d14a](https://github.com/bisq-network/bisq/commit/284fe9d14ab155c6e6d94e19e664c576ae4f405d) | Merge | Merge pull request #7810 from HenrikJannsen/update-resources | HenrikJannsen |
 
 ## Credits
 

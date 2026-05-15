@@ -27,6 +27,7 @@ Short text for GitHub release notes and the in-app update message.
 
 - Tor/netlayer, bitcoinj, bitcoind, Java, JavaFX, and major libraries were updated.
 - The app version is `1.10.0`; release builds use the Java 21 release build stack.
+- Bundled DAO and network resource snapshots were refreshed for the release.
 - macOS releases now support both Apple Silicon and Intel Macs.
 - The in-app updater now selects the matching macOS Intel or Apple Silicon installer.
 - macOS JavaFX/JFoenix packaging issues were fixed.
