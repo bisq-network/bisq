@@ -53,7 +53,7 @@ abstract class Sha256HashTask : DefaultTask() {
     private fun getOsName(): String =
         when (getOS()) {
             OS.LINUX -> "linux"
-            OS.MAC_OS -> "macOS"
+            OS.MAC_OS -> "macOS-${getArchitecture().installerClassifier}"
             OS.WINDOWS -> "windows"
         }
 }

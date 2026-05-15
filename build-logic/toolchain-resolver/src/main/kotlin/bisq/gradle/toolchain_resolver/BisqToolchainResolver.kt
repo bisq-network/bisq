@@ -7,6 +7,8 @@ import org.gradle.platform.OperatingSystem
 import java.net.URI
 import java.util.*
 
+private const val OS_ARCH_PROPERTY = "os.arch"
+
 @Suppress("UnstableApiUsage")
 abstract class BisqToolchainResolver : JavaToolchainResolver {
     override fun resolve(toolchainRequest: JavaToolchainRequest): Optional<JavaToolchainDownload> {
@@ -52,11 +54,28 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
         }
 
     private fun getMacOsArchitectureClassifier(): String {
-        val architecture = System.getProperty("os.arch").toLowerCase(Locale.US)
-        return if (architecture.contains("aarch") || architecture.contains("arm")) {
-            "aarch64"
-        } else {
-            "x64"
+        val osArch = getOsArch()
+        if (osArch.isBlank()) {
+            throw IllegalStateException("Cannot choose macOS JDK toolchain because os.arch is missing or blank (value='$osArch').")
+        }
+
+        val architecture = osArch.trim().lowercase(Locale.US)
+        if (architecture == "aarch64" || architecture == "arm64") {
+            return "aarch64"
+        }
+        if (architecture == "x86_64" || architecture == "amd64" || architecture == "x64" ||
+            architecture == "x86" || architecture == "i386" || architecture == "i686") {
+            return "x64"
+        }
+
+        throw IllegalStateException("Cannot choose macOS JDK toolchain for unsupported os.arch value: '$osArch'.")
+    }
+
+    private fun getOsArch(): String {
+        return try {
+            System.getProperty(OS_ARCH_PROPERTY, "")
+        } catch (e: SecurityException) {
+            throw IllegalStateException("Cannot choose macOS JDK toolchain because os.arch cannot be read.", e)
         }
     }
 }

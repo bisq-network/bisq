@@ -1,7 +1,27 @@
+import org.gradle.nativeplatform.MachineArchitecture
+import org.gradle.nativeplatform.OperatingSystemFamily
+
 plugins {
     id 'org.openjfx.javafxplugin'
 }
 
 javafx {
     version = libs.versions.javafx.get()
+}
+
+plugins.withId('java') {
+    afterEvaluate {
+        def javafxPlatform = extensions.getByName('javafx').platform
+        def operatingSystem = objects.named(OperatingSystemFamily, javafxPlatform.osFamily)
+        def architecture = objects.named(MachineArchitecture, javafxPlatform.arch)
+
+        ['apiElements', 'runtimeElements'].each { configurationName ->
+            configurations.named(configurationName) {
+                attributes {
+                    attribute(OperatingSystemFamily.OPERATING_SYSTEM_ATTRIBUTE, operatingSystem)
+                    attribute(MachineArchitecture.ARCHITECTURE_ATTRIBUTE, architecture)
+                }
+            }
+        }
+    }
 }

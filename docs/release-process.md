@@ -101,9 +101,11 @@ Use VirtualBox > 6.1 with following configuration:
 
 Build output expected in shared folder:
 
-1. `Bisq-${NEW_VERSION}.dmg` macOS installer
-2. `desktop-${NEW_VERSION}-all-mac.jar.SHA-256` sha256 sum of fat jar
-3. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
+1. `Bisq-x86_64-${NEW_VERSION}.dmg` macOS Intel installer
+2. `Bisq-aarch64-${NEW_VERSION}.dmg` macOS Apple Silicon installer
+3. `desktop-${NEW_VERSION}-all-mac-x86_64.jar.SHA-256` sha256 sum of Intel macOS fat jar
+4. `desktop-${NEW_VERSION}-all-mac-aarch64.jar.SHA-256` sha256 sum of Apple Silicon macOS fat jar
+5. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
 
 * Before building the other binaries install the generated Bisq app on macOS and verify that everything works as
   expected.
@@ -120,7 +122,7 @@ Build output expected in shared folder:
 Build output expected:
 
 1. `bisq_${NEW_VERSION}-1_amd64.deb` package for distributions that derive from Debian
-2. `bisq-${NEW_VERSION}-1.x86_64.rpm` package for distributions that derive from Redhat based distros
+2. `bisq-${NEW_VERSION}-1.x86_64.rpm` package for distributions that derive from Red Hat based distros
 3. `desktop-${NEW_VERSION}-all-linux.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
@@ -155,14 +157,17 @@ Build output expected:
 1. `E222AA02.asc` Sig key of Alejandro García
 2. `4A133008.asc` Sig key of Gabriel Bernard
 3. `signingkey.asc` Fingerprint of key that was used for these builds
-4. `Bisq-${NEW_VERSION}.dmg` macOS installer
-5. `Bisq-${NEW_VERSION}.dmg.asc` Signature for macOS installer
-6. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
-7. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
-8. `Bisq-64bit-${NEW_VERSION}.rpm` Redhat based distro package
-9. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
-10. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
-11. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
+4. `Bisq-x86_64-${NEW_VERSION}.dmg` macOS Intel installer
+5. `Bisq-x86_64-${NEW_VERSION}.dmg.asc` Signature for macOS Intel installer
+6. `Bisq-aarch64-${NEW_VERSION}.dmg` macOS Apple Silicon installer
+7. `Bisq-aarch64-${NEW_VERSION}.dmg.asc` Signature for macOS Apple Silicon installer
+8. `Bisq-${NEW_VERSION}.jar.txt` Aggregated SHA-256 file for macOS, Linux, and Windows jar libraries
+9. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
+10. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
+11. `Bisq-64bit-${NEW_VERSION}.rpm` Red Hat based distro package
+12. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Red Hat based distro package
+13. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
+14. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
 
 * Run an AV scan over all files on the Windows VM where the files got copied over.
 

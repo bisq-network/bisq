@@ -18,14 +18,14 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 204 |
-| Modules with PGP-signed artifacts only | 187 |
-| Modules using checksum fallback only | 17 |
+| Resolved external modules | 205 |
+| Modules with PGP-signed artifacts only | 191 |
+| Modules using checksum fallback only | 14 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 426 |
-| PGP-signed artifacts | 393 |
-| Checksum-fallback artifacts | 33 |
+| Verified artifacts | 428 |
+| PGP-signed artifacts | 401 |
+| Checksum-fallback artifacts | 27 |
 | Signer keys found in exported keyring | 73 / 73 |
 | Signer keys with name or email | 53 / 73 |
 | Signer keys with creation date | 73 / 73 |
@@ -39,9 +39,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum-only artifacts and review rationale |
 | --- | --- | --- |
 | `aopalliance:aopalliance:1.0` | transitive | `aopalliance-1.0.jar`<br>Legacy Maven Central artifact without published detached signatures.<br><br>`aopalliance-1.0.pom`<br>Legacy Maven Central artifact without published detached signatures. |
-| `com.github.bisq-network.netlayer:tor.external:47ea493b9eb6df2cad64499d5b5076c83a0d786c` | direct | `tor.external-47ea493b9eb6df2cad64499d5b5076c83a0d786c.jar`<br>Bisq-maintained JitPack Tor dependency pinned to an immutable commit.<br><br>`tor.external-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom`<br>Bisq-maintained JitPack Tor dependency pinned to an immutable commit. |
-| `com.github.bisq-network.netlayer:tor.native:47ea493b9eb6df2cad64499d5b5076c83a0d786c` | direct | `tor.native-47ea493b9eb6df2cad64499d5b5076c83a0d786c.jar`<br>Bisq-maintained JitPack Tor dependency pinned to an immutable commit.<br><br>`tor.native-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom`<br>Bisq-maintained JitPack Tor dependency pinned to an immutable commit. |
-| `com.github.bisq-network.netlayer:tor:47ea493b9eb6df2cad64499d5b5076c83a0d786c` | transitive | `tor-47ea493b9eb6df2cad64499d5b5076c83a0d786c.jar`<br>Bisq-maintained JitPack Tor dependency pinned to an immutable commit.<br><br>`tor-47ea493b9eb6df2cad64499d5b5076c83a0d786c.pom`<br>Bisq-maintained JitPack Tor dependency pinned to an immutable commit. |
 | `com.github.bisq-network.tor-binary:tor-binary-geoip:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-geoip-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-geoip-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
 | `com.github.bisq-network.tor-binary:tor-binary-linux32:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-linux32-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux32-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
 | `com.github.bisq-network.tor-binary:tor-binary-linux64:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-linux64-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux64-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
@@ -81,12 +78,13 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:2.21.2` | transitive | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson:jackson-bom:2.21.1` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson:jackson-bom:2.21.2` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
-| `com.github.bisq-network.netlayer:tor.external:47ea493b9eb6df2cad64499d5b5076c83a0d786c` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.netlayer:tor.native:47ea493b9eb6df2cad64499d5b5076c83a0d786c` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.netlayer:tor:47ea493b9eb6df2cad64499d5b5076c83a0d786c` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor.external:09c287b4573020a19f84507cb4fbbc9e78001383` | direct | PGP signed | 2 signed / 0 checksum | - |
+| `com.github.bisq-network.netlayer:tor.native:09c287b4573020a19f84507cb4fbbc9e78001383` | direct | PGP signed | 2 signed / 0 checksum | - |
+| `com.github.bisq-network.netlayer:tor:09c287b4573020a19f84507cb4fbbc9e78001383` | transitive | PGP signed | 2 signed / 0 checksum | - |
 | `com.github.bisq-network.tor-binary:tor-binary-geoip:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network.tor-binary:tor-binary-linux32:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network.tor-binary:tor-binary-linux64:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | PGP signed | 2 signed / 0 checksum | - |
 | `com.github.bisq-network.tor-binary:tor-binary-macos:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network.tor-binary:tor-binary-windows:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a` | direct | checksum fallback | 0 signed / 2 checksum | - |

@@ -67,7 +67,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
     private fun getHashFileForOs(project: Project): Provider<RegularFile> {
         val osName = when (getOS()) {
             OS.LINUX -> "linux"
-            OS.MAC_OS -> "mac"
+            OS.MAC_OS -> "mac-${getArchitecture().installerClassifier}"
             OS.WINDOWS -> "win"
         }
 

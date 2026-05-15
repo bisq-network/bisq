@@ -27,14 +27,12 @@ import java.io.File;
 
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Slf4j
 public class BisqInstallerTest {
     @Test
     public void call() {
@@ -64,6 +62,39 @@ public class BisqInstallerTest {
 
     @Test
     public void getFileName() {
+        withSystemProperties("Mac OS X", "x86_64", () ->
+                assertEquals("Bisq-x86_64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+
+        withSystemProperties("Mac OS X", "amd64", () ->
+                assertEquals("Bisq-x86_64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+
+        withSystemProperties("Mac OS X", "aarch64", () ->
+                assertEquals("Bisq-aarch64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+
+        withSystemProperties("Mac OS X", "arm64", () ->
+                assertEquals("Bisq-aarch64-1.2.3.dmg", BisqInstaller.getInstallerFileName("1.2.3")));
+    }
+
+    @Test
+    public void getFileNameFailsClearlyWhenMacArchitectureIsMissing() {
+        withSystemProperties("Mac OS X", null, () -> {
+            IllegalStateException exception = assertThrows(IllegalStateException.class,
+                    () -> BisqInstaller.getInstallerFileName("1.2.3"));
+
+            assertEquals("No suitable macOS install package available because os.arch is missing or blank: null",
+                    exception.getMessage());
+        });
+    }
+
+    @Test
+    public void getFileNameFailsClearlyWhenMacArchitectureIsBlank() {
+        withSystemProperties("Mac OS X", "  ", () -> {
+            IllegalStateException exception = assertThrows(IllegalStateException.class,
+                    () -> BisqInstaller.getInstallerFileName("1.2.3"));
+
+            assertEquals("No suitable macOS install package available because os.arch is missing or blank:   ",
+                    exception.getMessage());
+        });
     }
 
     @Test
@@ -84,6 +115,25 @@ public class BisqInstallerTest {
         assertEquals(1, sigFileDescriptors.size());
         sigFileDescriptors = bisqInstaller.getSigFileDescriptors(installerFileDescriptor, Lists.newArrayList(key1, key2));
         assertEquals(2, sigFileDescriptors.size());
-        log.info("test");
+    }
+
+    private void withSystemProperties(String osName, String osArch, Runnable assertion) {
+        String originalOsName = System.getProperty("os.name");
+        String originalOsArch = System.getProperty("os.arch");
+        try {
+            System.setProperty("os.name", osName);
+            restoreSystemProperty("os.arch", osArch);
+            assertion.run();
+        } finally {
+            restoreSystemProperty("os.name", originalOsName);
+            restoreSystemProperty("os.arch", originalOsArch);
+        }
+    }
+
+    private void restoreSystemProperty(String key, String value) {
+        if (value == null)
+            System.clearProperty(key);
+        else
+            System.setProperty(key, value);
     }
 }

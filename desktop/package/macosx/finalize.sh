@@ -8,11 +8,14 @@ target_dir="desktop/releases/$version"
 
 # Set BISQ_GPG_USER as environment var to the email address used for gpg signing. e.g. BISQ_GPG_USER=manfred@bitsquare.io
 # Set BISQ_VM_PATH as environment var to the directory where your shared folders for virtual box are residing
+# Optional: Set BISQ_MACOS_X86_64_PATH and BISQ_MACOS_AARCH64_PATH to override the macOS build artifact directories.
 
 vmPath=$BISQ_VM_PATH
 linux64=$vmPath/vm_shared_ubuntu
 win64=$vmPath/vm_shared_windows
 macos=$vmPath/vm_shared_macosx
+macos_x86_64=${BISQ_MACOS_X86_64_PATH:-$macos}
+macos_aarch64=${BISQ_MACOS_AARCH64_PATH:-$vmPath/vm_shared_macosx_aarch64}
 
 deployDir=deploy
 
@@ -64,8 +67,10 @@ cp -v "./desktop/package/387C8307.asc" "$target_dir/"
 # signing key
 cp -v "./desktop/package/signingkey.asc" "$target_dir/"
 
-dmg="Bisq-$version.dmg"
-cp "$macos/$dmg" "$target_dir/"
+dmg_x86_64="Bisq-x86_64-$version.dmg"
+dmg_aarch64="Bisq-aarch64-$version.dmg"
+cp "$macos_x86_64/$dmg_x86_64" "$target_dir/"
+cp "$macos_aarch64/$dmg_aarch64" "$target_dir/"
 
 deb="bisq_$version-1_amd64.deb"
 deb64="Bisq-64bit-$version.deb"
@@ -83,14 +88,16 @@ cli="bisq-cli-$version.zip"
 daemon="bisq-daemon-$version.zip"
 
 # create file with jar signatures
-cat "$macos/desktop-$version-all-mac.jar.SHA-256" \
+cat "$macos_x86_64/desktop-$version-all-mac-x86_64.jar.SHA-256" \
+"$macos_aarch64/desktop-$version-all-mac-aarch64.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
 "$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/Bisq-$version.jar.txt"
 
-cd -v "$script_working_directory/$target_dir"
+cd "$script_working_directory/$target_dir" || exit 1
 
 echo Create signatures
-gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg.asc" --detach-sig --armor "$dmg"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg_x86_64.asc" --detach-sig --armor "$dmg_x86_64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg_aarch64.asc" --detach-sig --armor "$dmg_aarch64"
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$deb64.asc" --detach-sig --armor "$deb64"
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$rpm64.asc" --detach-sig --armor "$rpm64"
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$exe64.asc" --detach-sig --armor "$exe64"
@@ -98,7 +105,8 @@ gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$cli.asc" --det
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$daemon.asc" --detach-sig --armor "$daemon"
 
 echo Verify signatures
-gpg --digest-algo SHA256 --verify $dmg{.asc*,}
+gpg --digest-algo SHA256 --verify $dmg_x86_64{.asc*,}
+gpg --digest-algo SHA256 --verify $dmg_aarch64{.asc*,}
 gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpm64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}

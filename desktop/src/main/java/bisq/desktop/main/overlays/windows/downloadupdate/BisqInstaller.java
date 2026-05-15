@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import lombok.Builder;
@@ -198,19 +199,7 @@ public class BisqInstaller {
 
     @NotNull
     private FileDescriptor getInstallerDescriptor(String version, String partialUrl) {
-        String fileName;
-        String prefix = "Bisq-";
-        // https://github.com/bisq-network/exchange/releases/download/v0.5.1/Bisq-0.5.1.dmg
-        if (Utilities.isOSX())
-            fileName = prefix + version + ".dmg";
-        else if (Utilities.isWindows())
-            fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".exe";
-        else if (Utilities.isDebianLinux())
-            fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".deb";
-        else if (Utilities.isRedHatLinux())
-            fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".rpm";
-        else
-            throw new RuntimeException("No suitable install package available for your OS.");
+        String fileName = getInstallerFileName(version);
 
         return FileDescriptor.builder()
                 .type(DownloadType.INSTALLER)
@@ -218,6 +207,44 @@ public class BisqInstaller {
                 .id(fileName)
                 .loadUrl(partialUrl.concat(fileName))
                 .build();
+    }
+
+    static String getInstallerFileName(String version) {
+        String prefix = "Bisq-";
+        if (Utilities.isOSX())
+            return prefix + getMacOsInstallerArchitecture() + "-" + version + ".dmg";
+        else if (Utilities.isWindows())
+            return prefix + Utilities.getOSArchitecture() + "bit-" + version + ".exe";
+        else if (Utilities.isDebianLinux())
+            return prefix + Utilities.getOSArchitecture() + "bit-" + version + ".deb";
+        else if (Utilities.isRedHatLinux())
+            return prefix + Utilities.getOSArchitecture() + "bit-" + version + ".rpm";
+        else
+            throw new RuntimeException("No suitable install package available for your OS.");
+    }
+
+    private static String getMacOsInstallerArchitecture() {
+        String osArch = getOsArch();
+        if (osArch == null || osArch.trim().isEmpty())
+            throw new IllegalStateException("No suitable macOS install package available because os.arch is missing or blank: " +
+                    String.valueOf(osArch));
+
+        String architecture = osArch.trim().toLowerCase(Locale.US);
+        if (architecture.equals("aarch64") || architecture.equals("arm64"))
+            return "aarch64";
+        if (architecture.equals("x86_64") || architecture.equals("amd64") || architecture.equals("x64") ||
+                architecture.equals("x86") || architecture.equals("i386") || architecture.equals("i686"))
+            return "x86_64";
+
+        throw new RuntimeException("No suitable macOS install package available for architecture: " + osArch);
+    }
+
+    private static String getOsArch() {
+        try {
+            return System.getProperty("os.arch");
+        } catch (SecurityException e) {
+            throw new IllegalStateException("No suitable macOS install package available because os.arch cannot be read.", e);
+        }
     }
 
     @NotNull
@@ -334,4 +361,3 @@ public class BisqInstaller {
         MISC
     }
 }
-
