@@ -20,7 +20,7 @@ Short text for GitHub release notes and the in-app update message.
 
 - Disk-space warnings are shown only once.
 - A cold-storage reminder is shown for high wallet balances.
-- Chat scrolling, chat window sizing, and trader chat cleanup issues were fixed.
+- Chat scrolling, chat window sizing, update-text scrolling, and trader chat cleanup issues were fixed.
 - Dispute chat attachments and dispute log file transfer were removed.
 
 ## Network And Runtime
@@ -28,10 +28,12 @@ Short text for GitHub release notes and the in-app update message.
 - Tor/netlayer, bitcoinj, bitcoind, Java, JavaFX, and major libraries were updated.
 - The app version is `1.10.0`; release builds use the Java 21 release build stack.
 - macOS releases now support both Apple Silicon and Intel Macs.
+- The in-app updater now selects the matching macOS Intel or Apple Silicon installer.
 - macOS JavaFX/JFoenix packaging issues were fixed.
 
 ## Release Integrity
 
 - Release builds now produce and verify payload and installer manifests.
 - Dependency signatures, Gradle wrapper inputs, CI workflows, and release-builder images are more tightly verified.
+- A manual GitHub release-readiness task checks release assets, download URLs, and signer keys.
 - CVE scanning and reproducible-build documentation were added.

@@ -2,11 +2,11 @@
 
 These notes are written in the same practical style used by Bitcoin Core release notes: user and operator impact first, followed by a complete auditable commit inventory.
 
-Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `218ca92123bf2be3e98739073fa714cdf3bb8991`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `218ca92123`. The inventory includes merge commits as separate entries because they are part of the release history.
+Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `20a0f78019437bf8dbe880732d740cec82a23f71`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `20a0f78019`. The inventory includes merge commits as separate entries because they are part of the release history.
 
-- Total commits: 711
-- Non-merge commits: 519
-- Merge commits: 192
+- Total commits: 732
+- Non-merge commits: 536
+- Merge commits: 196
 - Generated on: 2026-05-15
 
 ## Compatibility Notes
@@ -23,7 +23,7 @@ Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `218ca9212
 
 This release contains a large validation hardening pass for Bisq v1 trades. Peer-provided inputs, deposit transactions, payout transactions, delayed payout transactions, mediated payout transactions, fees, trade amounts, prices, multisig public keys, and payment-account hashes are checked earlier and more consistently. Invalid peer data is rejected closer to the point where it enters the trade flow.
 
-The release also rejects legacy UTXOs for deposit funding, bounds and deduplicates peer-supplied inputs, validates canonical deposit transaction shapes at final boundaries, re-verifies multisig outputs before payout signing, hardens BSQ swap arithmetic, hardens Monero transaction proof handling, and unreserves offers when a take-offer request fails.
+The release also rejects legacy UTXOs for deposit funding, bounds and deduplicates peer-supplied inputs, validates canonical deposit transaction shapes at final boundaries, re-verifies multisig outputs before payout signing, hardens BSQ swap arithmetic, allows the valid zero seller fee case in BSQ swaps, hardens Monero transaction proof handling, and unreserves offers when a take-offer request fails.
 
 ### Network, HTTP, And Privacy Hardening
 
@@ -33,7 +33,7 @@ Dispute log transfer and chat attachments are removed. This reduces the amount o
 
 ### User Interface And Payment Account Fixes
 
-Several visible user-facing fixes are included: disk-space warnings are shown only once, the exit warning popup is removed, high-balance wallets receive a cold-storage reminder, chat scroll/window sizing problems are fixed, and trader chat listener cleanup is improved.
+Several visible user-facing fixes are included: disk-space warnings are shown only once, the exit warning popup is removed, high-balance wallets receive a cold-storage reminder, chat scroll/window sizing problems are fixed, update messages are shown in a scroll pane, trader chat listener cleanup is improved, and default user values avoid a startup/test null-pointer failure.
 
 Payment-account handling is safer and more robust. Swish account creation no longer fails due to missing validator initialization, payment-account deserialization is fixed, payout address validation is hardened, BSQ wallet CSV transaction type mapping is corrected, and payment method/currency lists are cleaned up.
 
@@ -45,9 +45,9 @@ API and CLI changes include consistent `payment-account-id` naming, improved `fi
 
 ### Build, Dependencies, And Release Integrity
 
-The build and runtime stack is updated to Java 21/JavaFX 21 with broad dependency updates, newer bitcoinj/bitcoind/netlayer targets, Kotlin alignment, and updated test/build libraries. CI and packaging receive JVM export fixes for JavaFX/JFoenix on macOS, and macOS releases support both Apple Silicon and Intel Macs.
+The build and runtime stack is updated to Java 21/JavaFX 21 with broad dependency updates, newer bitcoinj/bitcoind/netlayer targets, Kotlin alignment, and updated test/build libraries. CI and packaging receive JVM export fixes for JavaFX/JFoenix on macOS, JavaFX variants publish native architecture attributes, and macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and hash outputs.
 
-Release verification is significantly expanded. The build now creates and verifies Java payload and installer manifests, records release and installer evidence bundles, pins GitHub Actions and runner/JDK versions, verifies Gradle wrapper inputs, adds dependency signature reporting, adds CVE scanning, documents reproducible release verification, and hardens Linux release-builder evidence for Debian/RPM packages.
+Release verification is significantly expanded. The build now creates and verifies Java payload and installer manifests, records release and installer evidence bundles, pins GitHub Actions and runner/JDK versions, verifies Gradle wrapper inputs, adds dependency signature reporting, adds CVE scanning, documents reproducible release verification, hardens Linux release-builder evidence for Debian/RPM packages, and adds a manual GitHub release-readiness check for uploaded assets, download URLs, and signing keys.
 
 ## Complete Commit Inventory
 
@@ -765,7 +765,28 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 | 2026-05-14 | [1f6ebda67a](https://github.com/bisq-network/bisq/commit/1f6ebda67a9bdc98c913626d6b9acb873a5bde2f) | Merge | Merge PR #7795: add missing jvm arg | HenrikJannsen |
 | 2026-05-15 | [b12e2273df](https://github.com/bisq-network/bisq/commit/b12e2273dff72066110d3f1490672bc9cd9a48ff) | Commit | Update netlayer to commit 09c287b4573020a19f84507cb4fbbc9e78001383 | HenrikJannsen |
 | 2026-05-15 | [081124c57f](https://github.com/bisq-network/bisq/commit/081124c57f87e600c2b4c865d8b31c41dab10b9c) | Merge | Merge PR #7796: update netlayer | HenrikJannsen |
-| 2026-05-15 | [218ca92123](https://github.com/bisq-network/bisq/commit/218ca92123bf2be3e98739073fa714cdf3bb8991) | Commit | Add 1.10.0 release notes | HenrikJannsen |
+| 2026-05-15 | [4690a9f5ad](https://github.com/bisq-network/bisq/commit/4690a9f5ade798322b5072f08e34d950ef9ed2f3) | Commit | # macOS Dual Architecture Support | HenrikJannsen |
+| 2026-05-15 | [f245f8e46a](https://github.com/bisq-network/bisq/commit/f245f8e46a300bb9481fb75e54c3d1a91bbd7e5b) | Commit | Use deterministic macOS DMG rename paths | HenrikJannsen |
+| 2026-05-15 | [d05fcd9142](https://github.com/bisq-network/bisq/commit/d05fcd914278e4e0ba0f6bd50a904acf8bbc8661) | Commit | Clarify finalized macOS hash outputs | HenrikJannsen |
+| 2026-05-15 | [431134e868](https://github.com/bisq-network/bisq/commit/431134e8689124c2c3865dacc430918717161934) | Commit | Remove noisy installer test log | HenrikJannsen |
+| 2026-05-15 | [544b0337b6](https://github.com/bisq-network/bisq/commit/544b0337b676edd6d06c6330c008a6f15dc8ce6d) | Commit | Reconcile dependency checksum fallback allowlist | HenrikJannsen |
+| 2026-05-15 | [b9aff0e559](https://github.com/bisq-network/bisq/commit/b9aff0e559d8cb87da0f7e7577c98aeeaa9bff17) | Commit | Fix finalize release directory change | HenrikJannsen |
+| 2026-05-15 | [756bdc7fe9](https://github.com/bisq-network/bisq/commit/756bdc7fe9ce05773cb736007da63dab0a5ba840) | Commit | Align macOS release build outputs | HenrikJannsen |
+| 2026-05-15 | [3ad2682a8c](https://github.com/bisq-network/bisq/commit/3ad2682a8c4606a93907a5600fc46ccbd8d58f4e) | Commit | Publish native attributes for JavaFX variants | HenrikJannsen |
+| 2026-05-15 | [da29be9a5e](https://github.com/bisq-network/bisq/commit/da29be9a5e0d9be62295b9385a083985302fe0b2) | Commit | Use Red Hat instead of Redhat | HenrikJannsen |
+| 2026-05-15 | [4d03efe2cf](https://github.com/bisq-network/bisq/commit/4d03efe2cf62cf51c95a4b50811149f05909a41d) | Commit | Handle missing macOS updater architecture | HenrikJannsen |
+| 2026-05-15 | [496aa3724b](https://github.com/bisq-network/bisq/commit/496aa3724b9590fefaaf49a98c3889a2edec08e4) | Commit | Handle missing Gradle architecture property | HenrikJannsen |
+| 2026-05-15 | [3fce2c0bf5](https://github.com/bisq-network/bisq/commit/3fce2c0bf5106a053daaddff0555b213518ad2df) | Merge | Merge pull request #7797 from HenrikJannsen/macOS-Dual-Architecture-Support | HenrikJannsen |
+| 2026-05-15 | [ba2ed271d1](https://github.com/bisq-network/bisq/commit/ba2ed271d14610df973dfb065e7fd0aca06e8b26) | Commit | Add 1.10.0 release notes | HenrikJannsen |
+| 2026-05-15 | [96c0dc400a](https://github.com/bisq-network/bisq/commit/96c0dc400ab35efc6b7ddc4124e057cb79265ee7) | Merge | Merge pull request #7801 from HenrikJannsen/Add-1.10.0-release-notes | HenrikJannsen |
+| 2026-05-15 | [a4cd0d9a2a](https://github.com/bisq-network/bisq/commit/a4cd0d9a2a3553b45a50465182b135a7ec0f9588) | Commit | Use scroll pane for update text | HenrikJannsen |
+| 2026-05-15 | [2eb52a7a14](https://github.com/bisq-network/bisq/commit/2eb52a7a148ece631d949157742bae8df5ee47f1) | Commit | Document in-app update download flow | HenrikJannsen |
+| 2026-05-15 | [370b48b37c](https://github.com/bisq-network/bisq/commit/370b48b37c1c1cd57a9c85d78f3b24b07df180aa) | Commit | Support dual macOS installer selection in updater | HenrikJannsen |
+| 2026-05-15 | [0da22a184b](https://github.com/bisq-network/bisq/commit/0da22a184b139718a7a71bb0b3a396e3a701579f) | Commit | Add default values in User (got a NP at testing) | HenrikJannsen |
+| 2026-05-15 | [eba31cf3ef](https://github.com/bisq-network/bisq/commit/eba31cf3efbe4351ca59f9057bd768af23360623) | Merge | Merge pull request #7803 from HenrikJannsen/add-support-for-dual-osx-in-app-download | HenrikJannsen |
+| 2026-05-15 | [c2850685c5](https://github.com/bisq-network/bisq/commit/c2850685c5c92762d32554b441134b9547f94913) | Commit | Add GitHub release readiness check | HenrikJannsen |
+| 2026-05-15 | [97b470fb60](https://github.com/bisq-network/bisq/commit/97b470fb609016d3420b00e22fa7ad17fae829e3) | Commit | The sellers trade fee is 0 in BSQ swaps. | HenrikJannsen |
+| 2026-05-15 | [20a0f78019](https://github.com/bisq-network/bisq/commit/20a0f78019437bf8dbe880732d740cec82a23f71) | Merge | Merge pull request #7808 from HenrikJannsen/fix-fee-validation | HenrikJannsen |
 
 ## Credits
 
