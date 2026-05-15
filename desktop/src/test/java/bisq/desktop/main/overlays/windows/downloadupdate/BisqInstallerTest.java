@@ -27,14 +27,11 @@ import java.io.File;
 
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Slf4j
 public class BisqInstallerTest {
     @Test
     public void call() {
@@ -95,7 +92,6 @@ public class BisqInstallerTest {
         assertEquals(1, sigFileDescriptors.size());
         sigFileDescriptors = bisqInstaller.getSigFileDescriptors(installerFileDescriptor, Lists.newArrayList(key1, key2));
         assertEquals(2, sigFileDescriptors.size());
-        log.info("test");
     }
 
     private void withSystemProperties(String osName, String osArch, Runnable assertion) {
