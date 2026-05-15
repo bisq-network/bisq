@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BisqInstallerTest {
     @Test
@@ -75,6 +76,28 @@ public class BisqInstallerTest {
     }
 
     @Test
+    public void getFileNameFailsClearlyWhenMacArchitectureIsMissing() {
+        withSystemProperties("Mac OS X", null, () -> {
+            IllegalStateException exception = assertThrows(IllegalStateException.class,
+                    () -> BisqInstaller.getInstallerFileName("1.2.3"));
+
+            assertEquals("No suitable macOS install package available because os.arch is missing or blank: null",
+                    exception.getMessage());
+        });
+    }
+
+    @Test
+    public void getFileNameFailsClearlyWhenMacArchitectureIsBlank() {
+        withSystemProperties("Mac OS X", "  ", () -> {
+            IllegalStateException exception = assertThrows(IllegalStateException.class,
+                    () -> BisqInstaller.getInstallerFileName("1.2.3"));
+
+            assertEquals("No suitable macOS install package available because os.arch is missing or blank:   ",
+                    exception.getMessage());
+        });
+    }
+
+    @Test
     public void getDownloadType() {
     }
 
@@ -99,7 +122,7 @@ public class BisqInstallerTest {
         String originalOsArch = System.getProperty("os.arch");
         try {
             System.setProperty("os.name", osName);
-            System.setProperty("os.arch", osArch);
+            restoreSystemProperty("os.arch", osArch);
             assertion.run();
         } finally {
             restoreSystemProperty("os.name", originalOsName);

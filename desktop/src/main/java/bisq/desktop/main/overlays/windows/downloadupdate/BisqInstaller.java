@@ -224,14 +224,27 @@ public class BisqInstaller {
     }
 
     private static String getMacOsInstallerArchitecture() {
-        String architecture = System.getProperty("os.arch").toLowerCase(Locale.US);
+        String osArch = getOsArch();
+        if (osArch == null || osArch.trim().isEmpty())
+            throw new IllegalStateException("No suitable macOS install package available because os.arch is missing or blank: " +
+                    String.valueOf(osArch));
+
+        String architecture = osArch.trim().toLowerCase(Locale.US);
         if (architecture.equals("aarch64") || architecture.equals("arm64"))
             return "aarch64";
         if (architecture.equals("x86_64") || architecture.equals("amd64") || architecture.equals("x64") ||
                 architecture.equals("x86") || architecture.equals("i386") || architecture.equals("i686"))
             return "x86_64";
 
-        throw new RuntimeException("No suitable macOS install package available for architecture: " + architecture);
+        throw new RuntimeException("No suitable macOS install package available for architecture: " + osArch);
+    }
+
+    private static String getOsArch() {
+        try {
+            return System.getProperty("os.arch");
+        } catch (SecurityException e) {
+            throw new IllegalStateException("No suitable macOS install package available because os.arch cannot be read.", e);
+        }
     }
 
     @NotNull
