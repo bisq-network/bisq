@@ -7,8 +7,15 @@ enum class Architecture(val installerClassifier: String) {
     AARCH64("aarch64")
 }
 
+private const val OS_ARCH_PROPERTY = "os.arch"
+
 fun getArchitecture(): Architecture {
-    val architecture = System.getProperty("os.arch").lowercase(Locale.US)
+    val osArch = getOsArch()
+    if (osArch.isBlank()) {
+        throw IllegalStateException("Running on unsupported Architecture: os.arch is missing or blank (value='$osArch')")
+    }
+
+    val architecture = osArch.trim().lowercase(Locale.US)
     if (architecture == "aarch64" || architecture == "arm64") {
         return Architecture.AARCH64
     }
@@ -17,5 +24,13 @@ fun getArchitecture(): Architecture {
         return Architecture.X86_64
     }
 
-    throw IllegalStateException("Running on unsupported Architecture: $architecture")
+    throw IllegalStateException("Running on unsupported Architecture: os.arch='$osArch'")
+}
+
+private fun getOsArch(): String {
+    return try {
+        System.getProperty(OS_ARCH_PROPERTY, "")
+    } catch (e: SecurityException) {
+        throw IllegalStateException("Cannot determine Architecture because os.arch cannot be read.", e)
+    }
 }
