@@ -23,6 +23,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.Layout;
 
 import bisq.core.alert.Alert;
 import bisq.core.locale.Res;
@@ -39,10 +40,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -61,7 +64,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addLabel;
-import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -77,6 +79,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public DisplayUpdateDownloadWindow(Alert alert, Config config, User user) {
@@ -101,11 +104,27 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
+
+
+        Label messageLabel = new AutoTooltipLabel(alert.getMessage());
+        messageLabel.setStyle("-fx-background-color: white;");
+        messageLabel.setWrapText(true);
+        messageLabel.setMaxWidth(Double.MAX_VALUE);
+
+        ScrollPane messageBox = new ScrollPane(messageLabel);
+        messageBox.setStyle("-fx-background-color: white;");
+        messageBox.setMaxHeight(200);
+        messageBox.setFitToWidth(true);
+        GridPane.setHalignment(messageBox, HPos.LEFT);
+        GridPane.setHgrow(messageBox, Priority.ALWAYS);
+        GridPane.setRowIndex(messageBox, rowIndex);
+        GridPane.setMargin(messageBox, new Insets(30 + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(messageBox);
 
         Separator separator = new Separator();
         separator.setMouseTransparent(true);
