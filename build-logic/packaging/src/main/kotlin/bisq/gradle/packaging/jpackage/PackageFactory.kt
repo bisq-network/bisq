@@ -159,13 +159,17 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     }
 
     private fun renameMacOsDmgPackage(appConfig: JPackageAppConfig) {
-        val dmgPath = findSinglePackageArtifact(PackageFormat.DMG)
-        val targetName = "Bisq-${getArchitecture().installerClassifier}-${appConfig.appVersion}.dmg"
-        if (dmgPath.fileName.toString() == targetName) {
+        val sourcePath = jPackageConfig.outputDirPath.resolve("Bisq-${appConfig.appVersion}.dmg")
+        val targetPath = jPackageConfig.outputDirPath.resolve("Bisq-${getArchitecture().installerClassifier}-${appConfig.appVersion}.dmg")
+        if (!Files.exists(sourcePath) && Files.exists(targetPath)) {
             return
         }
 
-        Files.move(dmgPath, dmgPath.resolveSibling(targetName), StandardCopyOption.REPLACE_EXISTING)
+        if (!Files.exists(sourcePath)) {
+            throw GradleException("Expected macOS DMG not found: ${sourcePath.toAbsolutePath()}")
+        }
+
+        Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
     }
 
     private fun createNormalizedRpmSpec(appConfig: JPackageAppConfig, payloadRoot: Path): String {
