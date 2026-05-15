@@ -122,7 +122,7 @@ Build output expected in shared folder:
 Build output expected:
 
 1. `bisq_${NEW_VERSION}-1_amd64.deb` package for distributions that derive from Debian
-2. `bisq-${NEW_VERSION}-1.x86_64.rpm` package for distributions that derive from Redhat based distros
+2. `bisq-${NEW_VERSION}-1.x86_64.rpm` package for distributions that derive from Red Hat based distros
 3. `desktop-${NEW_VERSION}-all-linux.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
@@ -164,8 +164,8 @@ Build output expected:
 8. `Bisq-${NEW_VERSION}.jar.txt` Aggregated SHA-256 file for macOS, Linux, and Windows jar libraries
 9. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
 10. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
-11. `Bisq-64bit-${NEW_VERSION}.rpm` Redhat based distro package
-12. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
+11. `Bisq-64bit-${NEW_VERSION}.rpm` Red Hat based distro package
+12. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Red Hat based distro package
 13. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
 14. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
 
