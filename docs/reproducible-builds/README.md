@@ -90,6 +90,7 @@ The project direction is:
 ## Documentation Map
 
 - [How to use reproducible builds](usage.md)
+- [Reproducible build attestations](attestations.md)
 - [Technical details](technical.md)
 - [Linux reproducible builds](linux.md)
 - [macOS reproducible builds](macos.md)
