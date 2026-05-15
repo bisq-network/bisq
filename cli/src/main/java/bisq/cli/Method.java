@@ -64,5 +64,23 @@ public enum Method {
     withdrawfunds,
     stop,
     getdaostatus,
-    confirmpaymentstartedxmr
+    confirmpaymentstartedxmr,
+    // DAO governance verbs.
+    getcycleinfo,
+    getcycles,
+    getproposals,
+    getballots,
+    getmyvotes,
+    getvoteresults,
+    getbondedroles,
+    getdaoparam,
+    createcompensationproposal,
+    createreimbursementproposal,
+    createchangeparamproposal,
+    createbondedroleproposal,
+    createconfiscatebondproposal,
+    creategenericproposal,
+    createremoveassetproposal,
+    setvote,
+    publishblindvote
 }
