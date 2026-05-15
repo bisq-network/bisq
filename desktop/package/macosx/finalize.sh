@@ -93,7 +93,7 @@ cat "$macos_x86_64/desktop-$version-all-mac-x86_64.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
 "$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/Bisq-$version.jar.txt"
 
-cd -v "$script_working_directory/$target_dir"
+cd "$script_working_directory/$target_dir" || exit 1
 
 echo Create signatures
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg_x86_64.asc" --detach-sig --armor "$dmg_x86_64"
