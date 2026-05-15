@@ -215,7 +215,11 @@ class GrpcWalletsService extends WalletsImplBase {
 
                         @Override
                         public void onFailure(TxBroadcastException ex) {
-                            throw new IllegalStateException(ex);
+                            // Runs on the broadcast thread, NOT the gRPC handler thread, so a
+                            // thrown exception here is invisible to the surrounding try/catch
+                            // and would leave the gRPC stream open forever. Surface via the
+                            // gRPC observer instead so the client sees the failure.
+                            exceptionHandler.handleException(log, ex, responseObserver);
                         }
                     });
         } catch (Throwable cause) {
@@ -246,14 +250,17 @@ class GrpcWalletsService extends WalletsImplBase {
                                 responseObserver.onNext(reply);
                                 responseObserver.onCompleted();
                             } else {
-                                throw new IllegalStateException("btc transaction is null");
+                                exceptionHandler.handleException(log,
+                                        new IllegalStateException("btc transaction is null"),
+                                        responseObserver);
                             }
                         }
 
                         @Override
                         public void onFailure(@NotNull Throwable t) {
-                            log.error("", t);
-                            throw new IllegalStateException(t);
+                            // Async callback thread — see sendBsq.onFailure note. Throwing here
+                            // would leak; route the failure back through the gRPC observer.
+                            exceptionHandler.handleException(log, t, responseObserver);
                         }
                     });
         } catch (Throwable cause) {

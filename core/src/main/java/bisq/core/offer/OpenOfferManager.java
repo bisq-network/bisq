@@ -671,6 +671,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             offersToBeEdited.remove(openOffer.getId());
             resultHandler.handleResult();
         } else {
+            // Offer vanished between editOpenOfferStart and editOpenOfferPublish (cancel
+            // / shutdown race). Without clearing the offersToBeEdited entry that Start
+            // added, the next editOpenOfferStart for this id would short-circuit on
+            // the containsKey check, log a warning, signal success without editing, and
+            // leave the offer stuck in edit mode until daemon restart.
+            offersToBeEdited.remove(editedOffer.getId());
             errorMessageHandler.handleErrorMessage("There is no offer with this id existing to be published.");
         }
     }

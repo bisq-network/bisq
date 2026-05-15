@@ -10,6 +10,10 @@ on:
       - "proto/**"
       - "apitest/**"
       - "seednode/**"
+      - "build-logic/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
       - ".github/workflows/e2e-tests.yml"
 
 jobs:

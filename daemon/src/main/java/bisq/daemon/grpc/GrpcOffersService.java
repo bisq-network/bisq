@@ -249,7 +249,8 @@ class GrpcOffersService extends OffersImplBase {
                                 .build();
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();
-                    });
+                    },
+                    errorMessage -> exceptionHandler.handleErrorMessage(log, errorMessage, responseObserver));
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -280,7 +281,8 @@ class GrpcOffersService extends OffersImplBase {
                                 .build();
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();
-                    });
+                    },
+                    errorMessage -> exceptionHandler.handleErrorMessage(log, errorMessage, responseObserver));
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -296,10 +298,13 @@ class GrpcOffersService extends OffersImplBase {
                     req.getMarketPriceMarginPct(),
                     req.getTriggerPrice(),
                     req.getEnable(),
-                    req.getEditType());
-            var reply = EditOfferReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+                    req.getEditType(),
+                    () -> {
+                        var reply = EditOfferReply.newBuilder().build();
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    },
+                    errorMessage -> exceptionHandler.handleErrorMessage(log, errorMessage, responseObserver));
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -309,10 +314,13 @@ class GrpcOffersService extends OffersImplBase {
     public void cancelOffer(CancelOfferRequest req,
                             StreamObserver<CancelOfferReply> responseObserver) {
         try {
-            coreApi.cancelOffer(req.getId());
-            var reply = CancelOfferReply.newBuilder().build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
+            coreApi.cancelOffer(req.getId(),
+                    () -> {
+                        var reply = CancelOfferReply.newBuilder().build();
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    },
+                    errorMessage -> exceptionHandler.handleErrorMessage(log, errorMessage, responseObserver));
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
