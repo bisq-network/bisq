@@ -74,7 +74,7 @@ public class User implements PersistedDataHost {
     private final PersistenceManager<UserPayload> persistenceManager;
     private final KeyRing keyRing;
 
-    private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.emptyObservableSet();
+    private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet();
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>();
 
     private UserPayload userPayload = new UserPayload();
