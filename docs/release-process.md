@@ -139,7 +139,7 @@ Build output expected:
 Build output expected:
 
 1. `Bisq-${NEW_VERSION}.exe` Windows installer
-2. `desktop-${NEW_VERSION}-all-windows.jar.SHA-256` sha256 sum of fat jar
+2. `desktop-${NEW_VERSION}-all-win.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
 
@@ -162,12 +162,38 @@ Build output expected:
 6. `Bisq-aarch64-${NEW_VERSION}.dmg` macOS Apple Silicon installer
 7. `Bisq-aarch64-${NEW_VERSION}.dmg.asc` Signature for macOS Apple Silicon installer
 8. `Bisq-${NEW_VERSION}.jar.txt` Aggregated SHA-256 file for macOS, Linux, and Windows jar libraries
-9. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
-10. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
-11. `Bisq-64bit-${NEW_VERSION}.rpm` Red Hat based distro package
-12. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Red Hat based distro package
-13. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
-14. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
+9. `Bisq-${NEW_VERSION}.jar.txt.asc` Signature for aggregated SHA-256 file
+10. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
+11. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
+12. `Bisq-64bit-${NEW_VERSION}.rpm` Red Hat based distro package
+13. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Red Hat based distro package
+14. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
+15. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
+
+If you need to create and sign the final release directory manually, use the Gradle tasks below. The
+`Bisq-${NEW_VERSION}.jar.txt` file is the concatenation of the four platform jar SHA-256 files produced by
+`./gradlew packageInstallers`; those files are in the VM shared folders / package output directories listed in the
+macOS, Linux, and Windows build sections above. When using `finalize.sh`, the generated file is written to
+`desktop/releases/${NEW_VERSION}/Bisq-${NEW_VERSION}.jar.txt`.
+
+```
+./gradlew createReleaseJarTxt \
+  -PreleaseVersion=${NEW_VERSION} \
+  -PreleaseDir=/path/to/final-release-dir \
+  -PmacosX86_64JarSha256=/path/to/desktop-${NEW_VERSION}-all-mac-x86_64.jar.SHA-256 \
+  -PmacosAarch64JarSha256=/path/to/desktop-${NEW_VERSION}-all-mac-aarch64.jar.SHA-256 \
+  -PlinuxJarSha256=/path/to/desktop-${NEW_VERSION}-all-linux.jar.SHA-256 \
+  -PwindowsJarSha256=/path/to/desktop-${NEW_VERSION}-all-win.jar.SHA-256
+
+./gradlew signReleaseArtifacts \
+  -PreleaseVersion=${NEW_VERSION} \
+  -PreleaseDir=/path/to/final-release-dir \
+  -PgpgUser=${BISQ_GPG_USER}
+```
+
+`signReleaseArtifacts` creates detached armored `.asc` signatures for release binaries (`.dmg`, `.deb`, `.rpm`,
+`.exe`, `.zip`, `.pkg`, `.msi`, `.tar.gz`, `.tgz`) and for `Bisq-${NEW_VERSION}.jar.txt`, then verifies every
+signature it created.
 
 * Run an AV scan over all files on the Windows VM where the files got copied over.
 

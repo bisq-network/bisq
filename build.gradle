@@ -700,6 +700,32 @@ def canonicalPath = { File file ->
     rootProject.relativePath(file).replace(File.separatorChar, '/' as char)
 }
 
+def normalizeReleaseVersion = { String rawReleaseVersion ->
+    if (rawReleaseVersion == null || rawReleaseVersion.trim().empty) {
+        throw new GradleException('Missing required -PreleaseVersion=<version>, for example -PreleaseVersion=1.10.0')
+    }
+
+    def releaseVersion = rawReleaseVersion.trim()
+    if (releaseVersion.startsWith('v')) {
+        releaseVersion = releaseVersion.substring(1)
+    }
+    if (!(releaseVersion ==~ /\d+\.\d+\.\d+([.-][A-Za-z0-9_.-]+)?/)) {
+        throw new GradleException("Invalid release version '${rawReleaseVersion}'. Expected a version such as 1.10.0 or v1.10.0.")
+    }
+
+    releaseVersion
+}
+
+def resolveGpgExecutable = {
+    def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
+            providers.environmentVariable('GPG_EXECUTABLE').orNull
+    configuredGpgExecutable ?: [
+            '/opt/homebrew/bin/gpg',
+            '/usr/local/bin/gpg',
+            '/usr/bin/gpg'
+    ].find { new File(it).canExecute() } ?: 'gpg'
+}
+
 def enabledJarTasks = {
     allprojects.collectMany { project ->
         project.tasks.withType(Jar).findAll { it.enabled }
@@ -2709,6 +2735,179 @@ tasks.register('verifyReleaseBuild') {
     }
 }
 
+tasks.register('createReleaseJarTxt') {
+    group = 'distribution'
+    description = 'Creates Bisq-<version>.jar.txt from the four platform jar SHA-256 files.'
+
+    def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+    def releaseDirProperty = providers.gradleProperty('releaseDir')
+    def jarSha256Inputs = [
+            [property: 'macosX86_64JarSha256', label: 'macOS Intel'],
+            [property: 'macosAarch64JarSha256', label: 'macOS Apple Silicon'],
+            [property: 'linuxJarSha256', label: 'Linux'],
+            [property: 'windowsJarSha256', label: 'Windows']
+    ]
+
+    inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
+    inputs.property('releaseDir', releaseDirProperty.orElse(''))
+    jarSha256Inputs.each { inputSpec ->
+        inputs.property(inputSpec.property, providers.gradleProperty(inputSpec.property).orElse(''))
+    }
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def releaseVersion = normalizeReleaseVersion(releaseVersionProperty.orNull)
+        def rawReleaseDir = releaseDirProperty.orNull
+        if (rawReleaseDir == null || rawReleaseDir.trim().empty) {
+            throw new GradleException('Missing required -PreleaseDir=<directory>, for example -PreleaseDir=/Users/ben/Documents/v1.10.0')
+        }
+
+        def releaseDir = file(rawReleaseDir.trim())
+        if (!releaseDir.exists() && !releaseDir.mkdirs()) {
+            throw new GradleException("Could not create release directory: ${releaseDir}")
+        }
+        if (!releaseDir.directory) {
+            throw new GradleException("Release directory is not a directory: ${releaseDir}")
+        }
+
+        def sourceFiles = jarSha256Inputs.collect { inputSpec ->
+            def rawPath = providers.gradleProperty(inputSpec.property).orNull
+            if (rawPath == null || rawPath.trim().empty) {
+                throw new GradleException("Missing required -P${inputSpec.property}=<path> for the ${inputSpec.label} jar SHA-256 file.")
+            }
+
+            def sourceFile = file(rawPath.trim())
+            if (!sourceFile.file) {
+                throw new GradleException("Missing ${inputSpec.label} jar SHA-256 file: ${sourceFile}")
+            }
+            sourceFile
+        }
+
+        def outputFile = new File(releaseDir, "Bisq-${releaseVersion}.jar.txt")
+        outputFile.withOutputStream { output ->
+            sourceFiles.each { sourceFile ->
+                def bytes = sourceFile.bytes
+                output.write(bytes)
+                if (bytes.length == 0 || bytes[bytes.length - 1] != ((byte) 10)) {
+                    output.write('\n'.getBytes(StandardCharsets.UTF_8.name()))
+                }
+            }
+        }
+
+        logger.lifecycle("Wrote ${outputFile.absolutePath}")
+        logger.lifecycle("Aggregated jar checksum sources:")
+        sourceFiles.each { sourceFile ->
+            logger.lifecycle("  - ${sourceFile.absolutePath}")
+        }
+    }
+}
+
+tasks.register('signReleaseArtifacts') {
+    group = 'distribution'
+    description = 'Signs release binary artifacts and Bisq-<version>.jar.txt in -PreleaseDir with detached armored GPG signatures.'
+
+    def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+    def releaseDirProperty = providers.gradleProperty('releaseDir')
+    def gpgUserProperty = providers.gradleProperty('gpgUser')
+    def bisqGpgUserProperty = providers.gradleProperty('bisqGpgUser')
+    def bisqGpgUserEnvironment = providers.environmentVariable('BISQ_GPG_USER')
+    def gpgExecutableProperty = providers.gradleProperty('gpgExecutable')
+    def gpgExecutableEnvironment = providers.environmentVariable('GPG_EXECUTABLE')
+    def binaryExtensions = ['dmg', 'deb', 'rpm', 'exe', 'zip', 'pkg', 'msi', 'tar.gz', 'tgz']
+
+    inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
+    inputs.property('releaseDir', releaseDirProperty.orElse(''))
+    inputs.property('gpgUser', gpgUserProperty.orElse(bisqGpgUserProperty).orElse(bisqGpgUserEnvironment).orElse(''))
+    inputs.property('gpgExecutable', gpgExecutableProperty.orElse(gpgExecutableEnvironment).orElse(''))
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def releaseVersion = normalizeReleaseVersion(releaseVersionProperty.orNull)
+        def rawReleaseDir = releaseDirProperty.orNull
+        if (rawReleaseDir == null || rawReleaseDir.trim().empty) {
+            throw new GradleException('Missing required -PreleaseDir=<directory>, for example -PreleaseDir=/Users/ben/Documents/v1.10.0')
+        }
+
+        def gpgUser = gpgUserProperty.orNull ?:
+                bisqGpgUserProperty.orNull ?:
+                        bisqGpgUserEnvironment.orNull
+        if (gpgUser == null || gpgUser.trim().empty) {
+            throw new GradleException('Missing required -PgpgUser=<key-id-or-email>. You can also use -PbisqGpgUser=<key-id-or-email> or BISQ_GPG_USER.')
+        }
+        gpgUser = gpgUser.trim()
+
+        def releaseDir = file(rawReleaseDir.trim())
+        if (!releaseDir.directory) {
+            throw new GradleException("Release directory is not a directory: ${releaseDir}")
+        }
+
+        def jarTxtFileName = "Bisq-${releaseVersion}.jar.txt"
+        def jarTxtFile = new File(releaseDir, jarTxtFileName)
+        if (!jarTxtFile.file) {
+            throw new GradleException(
+                    "Missing ${jarTxtFileName} in ${releaseDir}. Create it with the createReleaseJarTxt task or desktop/package/macosx/finalize.sh before signing."
+            )
+        }
+
+        def artifacts = releaseDir.listFiles()
+                .findAll { candidate ->
+                    def signableFile = candidate.file &&
+                            !candidate.name.startsWith('.') &&
+                            !candidate.name.endsWith('.asc')
+                    def lowerName = candidate.name.toLowerCase(Locale.ROOT)
+                    signableFile &&
+                            (candidate.name == jarTxtFileName ||
+                                    binaryExtensions.any { extension -> lowerName.endsWith(".${extension}") })
+                }
+                .sort { left, right -> left.name <=> right.name }
+
+        if (artifacts.empty) {
+            throw new GradleException("No release artifacts found to sign in ${releaseDir}")
+        }
+
+        def gpgExecutable = resolveGpgExecutable()
+        def failureDetails = { result ->
+            [result.stderr, result.stdout]
+                    .findAll { it != null && !it.trim().empty }
+                    .join('\n')
+                    .trim()
+        }
+
+        logger.lifecycle("Signing ${artifacts.size()} release artifact(s) in ${releaseDir.absolutePath}")
+        artifacts.each { artifact ->
+            def signatureFile = new File(artifact.parentFile, "${artifact.name}.asc")
+            def signResult = execResult([
+                    gpgExecutable,
+                    '--yes',
+                    '--digest-algo', 'SHA256',
+                    '--local-user', gpgUser,
+                    '--output', signatureFile.absolutePath,
+                    '--detach-sig',
+                    '--armor',
+                    artifact.absolutePath
+            ])
+            if (signResult.exitValue != 0) {
+                throw new GradleException("Failed to sign ${artifact.name}: ${failureDetails(signResult)}")
+            }
+            if (!signatureFile.file || signatureFile.length() == 0) {
+                throw new GradleException("GPG did not create a non-empty signature file for ${artifact.name}: ${signatureFile}")
+            }
+
+            def verifyResult = execResult([
+                    gpgExecutable,
+                    '--verify',
+                    signatureFile.absolutePath,
+                    artifact.absolutePath
+            ])
+            if (verifyResult.exitValue != 0) {
+                throw new GradleException("Failed to verify ${signatureFile.name}: ${failureDetails(verifyResult)}")
+            }
+
+            logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
+        }
+    }
+}
+
 tasks.register('verifyGithubReleaseReadiness') {
     group = 'verification'
     description = 'Manually verifies GitHub release assets, Bisq download URLs, versions, and signer keys for -PreleaseVersion=<version>.'
@@ -2898,6 +3097,7 @@ tasks.register('verifyGithubReleaseReadiness') {
                 "Bisq-aarch64-${releaseVersion}.dmg".toString(),
                 "Bisq-aarch64-${releaseVersion}.dmg.asc".toString(),
                 "Bisq-${releaseVersion}.jar.txt".toString(),
+                "Bisq-${releaseVersion}.jar.txt.asc".toString(),
                 "Bisq-64bit-${releaseVersion}.deb".toString(),
                 "Bisq-64bit-${releaseVersion}.deb.asc".toString(),
                 "Bisq-64bit-${releaseVersion}.rpm".toString(),
@@ -2923,6 +3123,7 @@ tasks.register('verifyGithubReleaseReadiness') {
                 "Bisq-64bit-${releaseVersion}.exe".toString(),
                 "Bisq-64bit-${releaseVersion}.exe.asc".toString(),
                 "Bisq-${releaseVersion}.jar.txt".toString(),
+                "Bisq-${releaseVersion}.jar.txt.asc".toString(),
                 'signingkey.asc'
         ].sort()
 

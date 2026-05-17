@@ -86,12 +86,13 @@ cp "$win64/$exe" "$target_dir/$exe64"
 
 cli="bisq-cli-$version.zip"
 daemon="bisq-daemon-$version.zip"
+jar_txt="Bisq-$version.jar.txt"
 
-# create file with jar signatures
+# create file with jar checksums
 cat "$macos_x86_64/desktop-$version-all-mac-x86_64.jar.SHA-256" \
 "$macos_aarch64/desktop-$version-all-mac-aarch64.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
-"$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/Bisq-$version.jar.txt"
+"$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/$jar_txt"
 
 cd "$script_working_directory/$target_dir" || exit 1
 
@@ -103,6 +104,7 @@ gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$rpm64.asc" --d
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$exe64.asc" --detach-sig --armor "$exe64"
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$cli.asc" --detach-sig --armor "$cli"
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$daemon.asc" --detach-sig --armor "$daemon"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$jar_txt.asc" --detach-sig --armor "$jar_txt"
 
 echo Verify signatures
 gpg --digest-algo SHA256 --verify $dmg_x86_64{.asc*,}
@@ -112,6 +114,7 @@ gpg --digest-algo SHA256 --verify $rpm64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 gpg --digest-algo SHA256 --verify $cli{.asc*,}
 gpg --digest-algo SHA256 --verify $daemon{.asc*,}
+gpg --digest-algo SHA256 --verify $jar_txt{.asc*,}
 
 mkdir $win64/$version
 cp -r . $win64/$version
