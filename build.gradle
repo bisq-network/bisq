@@ -2849,7 +2849,12 @@ tasks.register('signReleaseArtifacts') {
             )
         }
 
-        def artifacts = releaseDir.listFiles()
+        def releaseDirFiles = releaseDir.listFiles()
+        if (releaseDirFiles == null) {
+            throw new GradleException("Cannot list release directory: ${releaseDir}. Check that it is readable.")
+        }
+
+        def artifacts = releaseDirFiles
                 .findAll { candidate ->
                     def signableFile = candidate.file &&
                             !candidate.name.startsWith('.') &&
