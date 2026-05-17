@@ -180,6 +180,9 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void requestNewOffer() {
+        // Clear any error from a prior failed PoW mint so a successful retry doesn't
+        // keep showing a stale message. Mirrors onPlaceOffer's clear-on-entry pattern.
+        errorMessage.set(null);
         // We delay display a bit as pow is mostly very low so it would show flicker quickly
         miningPowTimer = UserThread.runAfter(() -> {
             miningPoW.set(true);
@@ -192,6 +195,13 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
                 miningPowTimer.stop();
             }
             miningPoW.set(false);
+            updateButtonDisableState();
+        }, errorMsg -> {
+            if (miningPowTimer != null) {
+                miningPowTimer.stop();
+            }
+            miningPoW.set(false);
+            errorMessage.set(errorMsg);
             updateButtonDisableState();
         });
     }

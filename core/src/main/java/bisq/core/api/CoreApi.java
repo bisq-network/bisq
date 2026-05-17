@@ -192,12 +192,14 @@ public class CoreApi {
                                            long amountAsLong,
                                            long minAmountAsLong,
                                            String priceAsString,
-                                           Consumer<Offer> resultHandler) {
+                                           Consumer<Offer> resultHandler,
+                                           Consumer<String> errorHandler) {
         coreOffersService.createAndPlaceBsqSwapOffer(directionAsString,
                 amountAsLong,
                 minAmountAsLong,
                 priceAsString,
-                resultHandler);
+                resultHandler,
+                errorHandler);
     }
 
     public void createAndPlaceOffer(String currencyCode,
@@ -211,7 +213,8 @@ public class CoreApi {
                                     String triggerPrice,
                                     String paymentAccountId,
                                     String makerFeeCurrencyCode,
-                                    Consumer<Offer> resultHandler) {
+                                    Consumer<Offer> resultHandler,
+                                    Consumer<String> errorHandler) {
         coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
                 useMarketBasedPrice ? "0" : price,
@@ -223,7 +226,8 @@ public class CoreApi {
                 triggerPrice,
                 paymentAccountId,
                 makerFeeCurrencyCode,
-                resultHandler);
+                resultHandler,
+                errorHandler);
     }
 
     public void editOffer(String offerId,
@@ -232,18 +236,22 @@ public class CoreApi {
                           double marketPriceMargin,
                           String triggerPrice,
                           int enable,
-                          EditType editType) {
+                          EditType editType,
+                          Runnable resultHandler,
+                          Consumer<String> errorHandler) {
         coreOffersService.editOffer(offerId,
                 price,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 triggerPrice,
                 enable,
-                editType);
+                editType,
+                resultHandler,
+                errorHandler);
     }
 
-    public void cancelOffer(String id) {
-        coreOffersService.cancelOffer(id);
+    public void cancelOffer(String id, Runnable resultHandler, Consumer<String> errorHandler) {
+        coreOffersService.cancelOffer(id, resultHandler, errorHandler);
     }
 
     public boolean isMyOffer(Offer offer) {

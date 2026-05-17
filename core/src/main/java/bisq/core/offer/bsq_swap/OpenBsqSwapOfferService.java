@@ -184,7 +184,8 @@ public class OpenBsqSwapOfferService {
                                 Coin amount,
                                 Coin minAmount,
                                 Price price,
-                                Consumer<Offer> resultHandler) {
+                                Consumer<Offer> resultHandler,
+                                Consumer<String> errorHandler) {
         log.info("offerId={}, \n" +
                         "direction={}, \n" +
                         "price={}, \n" +
@@ -205,7 +206,11 @@ public class OpenBsqSwapOfferService {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
                         if (throwable != null) {
-                            log.error(throwable.toString());
+                            // PoW mint runs on a CompletableFuture executor. Without surfacing
+                            // the failure here neither resultHandler nor errorHandler fires
+                            // and the gRPC create-offer call would hang forever.
+                            log.error("PoW mint failed for {}: {}", offerId, throwable.toString(), throwable);
+                            errorHandler.accept("PoW mint failed: " + throwable.getMessage());
                             return;
                         }
 
@@ -234,12 +239,64 @@ public class OpenBsqSwapOfferService {
         PlaceBsqSwapOfferProtocol protocol = new PlaceBsqSwapOfferProtocol(model,
                 () -> {
                     OpenOffer openOffer = new OpenOffer(offer);
+                    // Run the per-service ctor synchronously before signalling success so the
+                    // gRPC reply reflects whether the offer is fully tracked (wallet listeners
+                    // attached, funded-state evaluable). If we let the offerListChangeListener
+                    // do this on UserThread after addOpenBsqSwapOffer, a ctor exception (e.g.
+                    // "tradeFee must be positive") would be logged by the global uncaught-
+                    // exception handler but the gRPC call would still return success on a
+                    // broken offer — the contract has to carry the failure to the caller.
+                    try {
+                        registerOpenBsqSwapOffer(openOffer);
+                    } catch (RuntimeException e) {
+                        log.error("Failed to register OpenBsqSwapOffer for {}: {}",
+                                offer.getId(), e.toString(), e);
+                        if (model.isOfferAddedToOfferBook()) {
+                            offerBookService.removeOffer(offer.getOfferPayloadBase(),
+                                    () -> log.info("Rolled back offer publish after registration failure: {}",
+                                            offer.getId()),
+                                    err -> log.error("Failed to roll back offer publish for {}: {}",
+                                            offer.getId(), err));
+                        }
+                        errorMessageHandler.handleErrorMessage(
+                                "Failed to register open BSQ swap offer: " + e.getMessage());
+                        return;
+                    }
                     openOfferManager.addOpenBsqSwapOffer(openOffer);
                     resultHandler.run();
                 },
                 errorMessageHandler
         );
         protocol.placeOffer();
+    }
+
+    /**
+     * Builds, tracks, and initialises the funded-state of an OpenBsqSwapOffer for
+     * a given OpenOffer. Throws if either the ctor or applyFundingState fails; in
+     * the applyFundingState failure case the map entry + wallet/fee listeners
+     * attached by the ctor are torn down before the exception propagates so a
+     * failed register never leaves orphan state behind. Caller decides whether
+     * to surface the failure (gRPC create path) or let it propagate to the
+     * global UncaughtExceptionHandler (listener path).
+     */
+    private OpenBsqSwapOffer registerOpenBsqSwapOffer(OpenOffer openOffer) {
+        OpenBsqSwapOffer openBsqSwapOffer = new OpenBsqSwapOffer(openOffer,
+                this,
+                feeService,
+                btcWalletService,
+                bsqWalletService);
+        OpenBsqSwapOffer prev = openBsqSwapOffersById.put(openOffer.getId(), openBsqSwapOffer);
+        if (prev != null) {
+            prev.removeListeners();
+        }
+        try {
+            openBsqSwapOffer.applyFundingState();
+        } catch (RuntimeException e) {
+            openBsqSwapOffersById.remove(openOffer.getId(), openBsqSwapOffer);
+            openBsqSwapOffer.removeListeners();
+            throw e;
+        }
+        return openBsqSwapOffer;
     }
 
     public void activateOpenOffer(OpenOffer openOffer,
@@ -297,19 +354,17 @@ public class OpenBsqSwapOfferService {
                     if (isProofOfWorkInvalid(openOffer.getOffer())) {
                         // Avoiding ConcurrentModificationException
                         UserThread.execute(() -> redoProofOfWorkAndRepublish(openOffer));
-                    } else {
-                        OpenBsqSwapOffer openBsqSwapOffer = new OpenBsqSwapOffer(openOffer,
-                                this,
-                                feeService,
-                                btcWalletService,
-                                bsqWalletService);
-                        String offerId = openOffer.getId();
-                        if (openBsqSwapOffersById.containsKey(offerId)) {
-                            openBsqSwapOffersById.get(offerId).removeListeners();
-                        }
-                        openBsqSwapOffersById.put(offerId, openBsqSwapOffer);
-                        openBsqSwapOffer.applyFundingState();
+                        return;
                     }
+                    if (openBsqSwapOffersById.containsKey(openOffer.getId())) {
+                        // Already tracked by placeBsqSwapOffer's synchronous path; skip
+                        // to avoid re-running the ctor + leaking wallet listeners.
+                        return;
+                    }
+                    // No gRPC reply pending on this path. Let any failure propagate to
+                    // CommonSetup's global UncaughtExceptionHandler. The helper itself
+                    // cleans up map/listener state on throw so nothing is orphaned.
+                    registerOpenBsqSwapOffer(openOffer);
                 });
     }
 

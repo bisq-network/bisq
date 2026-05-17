@@ -103,7 +103,7 @@ class BsqSwapCreateOfferDataModel extends BsqSwapOfferDataModel {
         applyTradeCurrency();
     }
 
-    protected void requestNewOffer(Consumer<Offer> resultHandler) {
+    protected void requestNewOffer(Consumer<Offer> resultHandler, Consumer<String> errorHandler) {
         openBsqSwapOfferService.requestNewOffer(getOfferId(),
                 getDirection(),
                 getBtcAmount().get(),
@@ -112,7 +112,8 @@ class BsqSwapCreateOfferDataModel extends BsqSwapOfferDataModel {
                 offer -> {
                     this.offer = offer;
                     resultHandler.accept(offer);
-                });
+                },
+                errorHandler);
     }
 
 

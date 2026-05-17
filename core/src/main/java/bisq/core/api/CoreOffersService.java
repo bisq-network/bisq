@@ -315,7 +315,8 @@ class CoreOffersService {
                                     long amountAsLong,
                                     long minAmountAsLong,
                                     String priceAsString,
-                                    Consumer<Offer> resultHandler) {
+                                    Consumer<Offer> resultHandler,
+                                    Consumer<String> errorHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
@@ -330,7 +331,10 @@ class CoreOffersService {
                 amount,
                 minAmount,
                 price,
-                offer -> placeBsqSwapOffer(offer, () -> resultHandler.accept(offer)));
+                offer -> placeBsqSwapOffer(offer,
+                        () -> resultHandler.accept(offer),
+                        errorHandler),
+                errorHandler);
     }
 
     void createAndPlaceOffer(String currencyCode,
@@ -344,7 +348,8 @@ class CoreOffersService {
                              String triggerPrice,
                              String paymentAccountId,
                              String makerFeeCurrencyCode,
-                             Consumer<Offer> resultHandler) {
+                             Consumer<Offer> resultHandler,
+                             Consumer<String> errorHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         offerUtil.maybeSetFeePaymentCurrencyPreference(makerFeeCurrencyCode);
@@ -394,7 +399,8 @@ class CoreOffersService {
                 scaledBuyerSecurityDepositPct,
                 triggerPrice,
                 useSavingsWallet,
-                transaction -> resultHandler.accept(offer));
+                transaction -> resultHandler.accept(offer),
+                errorHandler);
     }
 
     // Edit a placed offer.
@@ -404,7 +410,9 @@ class CoreOffersService {
                    double editedMarketPriceMargin,
                    String editedTriggerPrice,
                    int editedEnable,
-                   EditType editType) {
+                   EditType editType,
+                   Runnable resultHandler,
+                   Consumer<String> errorHandler) {
         OpenOffer openOffer = getMyOpenOffer(offerId);
         var validator = new EditOfferValidator(openOffer,
                 editedPrice,
@@ -431,39 +439,54 @@ class CoreOffersService {
         priceFeedService.setCurrencyCode(openOffer.getOffer().getCurrencyCode());
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(State.AVAILABLE);
-        openOfferManager.editOpenOfferStart(openOffer,
-                () -> log.info("EditOpenOfferStart: offer {}", openOffer.getId()),
-                log::error);
         long triggerPriceAsLong = getMarketPriceAsLong(editedTriggerPrice, editedOffer.getCurrencyCode());
-        openOfferManager.editOpenOfferPublish(editedOffer,
-                triggerPriceAsLong,
-                newOfferState,
-                () -> log.info("EditOpenOfferPublish: offer {}", openOffer.getId()),
-                log::error);
+        openOfferManager.editOpenOfferStart(openOffer,
+                () -> {
+                    log.info("EditOpenOfferStart: offer {}", openOffer.getId());
+                    openOfferManager.editOpenOfferPublish(editedOffer,
+                            triggerPriceAsLong,
+                            newOfferState,
+                            () -> {
+                                log.info("EditOpenOfferPublish: offer {}", openOffer.getId());
+                                resultHandler.run();
+                            },
+                            errorMessage -> {
+                                log.error("EditOpenOfferPublish error for {}: {}",
+                                        openOffer.getId(), errorMessage);
+                                errorHandler.accept(errorMessage);
+                            });
+                },
+                errorMessage -> {
+                    log.error("EditOpenOfferStart error for {}: {}", openOffer.getId(), errorMessage);
+                    errorHandler.accept(errorMessage);
+                });
     }
 
-    void cancelOffer(String id) {
+    void cancelOffer(String id, Runnable resultHandler, Consumer<String> errorHandler) {
         OpenOffer openOffer = getMyOffer(id);
         openOfferManager.removeOffer(openOffer.getOffer(),
-                () -> {
-                },
-                log::error);
+                resultHandler::run,
+                errorMessage -> {
+                    log.error("cancelOffer error for {}: {}", id, errorMessage);
+                    errorHandler.accept(errorMessage);
+                });
     }
 
-    private void placeBsqSwapOffer(Offer offer, Runnable resultHandler) {
+    private void placeBsqSwapOffer(Offer offer, Runnable resultHandler, Consumer<String> errorHandler) {
         openBsqSwapOfferService.placeBsqSwapOffer(offer,
                 resultHandler,
-                log::error);
-
-        if (offer.getErrorMessage() != null)
-            throw new IllegalStateException(offer.getErrorMessage());
+                errorMessage -> {
+                    log.error("placeBsqSwapOffer error: {}", errorMessage);
+                    errorHandler.accept(errorMessage);
+                });
     }
 
     private void placeOffer(Offer offer,
                             double buyerSecurityDepositPct,
                             String triggerPrice,
                             boolean useSavingsWallet,
-                            Consumer<Transaction> resultHandler) {
+                            Consumer<Transaction> resultHandler,
+                            Consumer<String> errorHandler) {
         var triggerPriceAsLong = getMarketPriceAsLong(triggerPrice, offer.getCurrencyCode());
         openOfferManager.placeOffer(offer,
                 buyerSecurityDepositPct,
@@ -471,10 +494,10 @@ class CoreOffersService {
                 false,
                 triggerPriceAsLong,
                 resultHandler::accept,
-                log::error);
-
-        if (offer.getErrorMessage() != null)
-            throw new IllegalStateException(offer.getErrorMessage());
+                errorMessage -> {
+                    log.error("placeOffer error for {}: {}", offer.getId(), errorMessage);
+                    errorHandler.accept(errorMessage);
+                });
     }
 
     private OfferPayload getMergedOfferPayload(EditOfferValidator editOfferValidator,
