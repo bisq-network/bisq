@@ -176,20 +176,18 @@ If you need to create and sign the final release directory manually, use the Gra
 macOS, Linux, and Windows build sections above. When using `finalize.sh`, the generated file is written to
 `desktop/releases/${NEW_VERSION}/Bisq-${NEW_VERSION}.jar.txt`.
 
-```
-./gradlew createReleaseJarTxt \
-  -PreleaseVersion=${NEW_VERSION} \
-  -PreleaseDir=/path/to/final-release-dir \
-  -PmacosX86_64JarSha256=/path/to/desktop-${NEW_VERSION}-all-mac-x86_64.jar.SHA-256 \
-  -PmacosAarch64JarSha256=/path/to/desktop-${NEW_VERSION}-all-mac-aarch64.jar.SHA-256 \
-  -PlinuxJarSha256=/path/to/desktop-${NEW_VERSION}-all-linux.jar.SHA-256 \
-  -PwindowsJarSha256=/path/to/desktop-${NEW_VERSION}-all-win.jar.SHA-256
+    ./gradlew createReleaseJarTxt \
+      -PreleaseVersion=${NEW_VERSION} \
+      -PreleaseDir=/path/to/final-release-dir \
+      -PmacosX86_64JarSha256=/path/to/desktop-${NEW_VERSION}-all-mac-x86_64.jar.SHA-256 \
+      -PmacosAarch64JarSha256=/path/to/desktop-${NEW_VERSION}-all-mac-aarch64.jar.SHA-256 \
+      -PlinuxJarSha256=/path/to/desktop-${NEW_VERSION}-all-linux.jar.SHA-256 \
+      -PwindowsJarSha256=/path/to/desktop-${NEW_VERSION}-all-win.jar.SHA-256
 
-./gradlew signReleaseArtifacts \
-  -PreleaseVersion=${NEW_VERSION} \
-  -PreleaseDir=/path/to/final-release-dir \
-  -PgpgUser=${BISQ_GPG_USER}
-```
+    ./gradlew signReleaseArtifacts \
+      -PreleaseVersion=${NEW_VERSION} \
+      -PreleaseDir=/path/to/final-release-dir \
+      -PgpgUser=${BISQ_GPG_USER}
 
 `signReleaseArtifacts` creates detached armored `.asc` signatures for release binaries (`.dmg`, `.deb`, `.rpm`,
 `.exe`, `.zip`, `.pkg`, `.msi`, `.tar.gz`, `.tgz`) and for `Bisq-${NEW_VERSION}.jar.txt`, then verifies every
