@@ -4,10 +4,10 @@ This file filters the full release notes down to the most relevant engineering a
 
 ## Trade And Transaction Validation Hardening
 
-Bisq v1 trade handling now validates peer-supplied data much earlier and across more protocol steps. The release adds and reorganizes validation for deposit transactions, payout transactions, delayed payout transactions, mediated payouts, trade amounts, trade prices, maker/taker fees, miner fees, multisig public keys, serialized transactions, raw inputs, signatures, payment-account hashes, and canonical transaction structure.
+Bisq v1 trade handling now validates peer-supplied data much earlier and across more protocol steps. The release adds and reorganizes validation for deposit transactions, payout transactions, delayed payout transactions, mediated payouts, trade amounts, trade prices, maker/taker fees, miner fees, multisig public keys, serialized transactions, raw inputs, signatures, payment-account hashes, and canonical transaction structure. Maker/taker deposit setup now checks peer raw transaction input values, change output values, and expected peer contribution amounts before deposit construction continues.
 
 Related commits:
-- [797836cc9d](https://github.com/bisq-network/bisq/commit/797836cc9d3ef0891a1bd349e18127fe252eb860) - Validate peer deposit inputs during maker/taker deposit setup.
+- [797836cc9d](https://github.com/bisq-network/bisq/commit/797836cc9d3ef0891a1bd349e18127fe252eb860) - Apply @hiciefte patch validating peer deposit inputs and expected contribution amounts during maker/taker deposit setup.
 - [89171806e8](https://github.com/bisq-network/bisq/commit/89171806e8d3ae7a74c34fe6e40948245e1bf761) - Merge the initial exploit-fix validation patch.
 - [3b5ae98849](https://github.com/bisq-network/bisq/commit/3b5ae98849d93ec1570066da8c289ec627a4cb9b) - Require peer inputs to use the expected P2W format.
 - [844aec628f](https://github.com/bisq-network/bisq/commit/844aec628f1c80d6f53fc9dbf1098395ecb04b33) - Prevent invalid delayed payout transactions.
@@ -80,15 +80,17 @@ Related commits:
 - [80f5ed863c](https://github.com/bisq-network/bisq/commit/80f5ed863cbc9ed88131556ac7905817c764450c) - Deprecate VERSE for new payment-account creation.
 - [39e6caa5c1](https://github.com/bisq-network/bisq/commit/39e6caa5c1c4684c0fb49ff5b13f79630e473b5c) - Harden payout address validation.
 
-## DAO, Burning Man, API, And Service Updates
+## DAO, Bitcoind RPC, Burning Man, API, And Services Updates
 
-The release adds bridge/gRPC service work, account timestamp support, DAO snapshot/resync fixes, refreshed DAO/network resource snapshots, Burning Man address-list and receiver validation, updated node/mediator/refund-agent metadata, bitcoind RPC changes, DAO CLI/gRPC test coverage, and API/CLI cleanup. Version-tagged resource files are omitted for this release so older seed nodes do not trigger avoidable resource requests.
+The release adds bridge/gRPC service work, account timestamp support, DAO snapshot/resync fixes, refreshed DAO/network resource snapshots, Burning Man address-list and receiver validation, updated node/mediator/refund-agent metadata, DAO CLI/gRPC test coverage, and API/CLI cleanup. The main 1.9.23 infrastructure work is included here: Bisq's DAO full-node bitcoind RPC path was migrated to the new implementation that supports Bitcoin Core 29.2, the old core-side bitcoind DTO/client code was removed, bitcoind submodule targets and dependency verification metadata were refreshed, and regtest coverage gained a second bitcoind node for reorg testing. Version-tagged resource files are omitted for this release so older seed nodes do not trigger avoidable resource requests.
 
 Related commits:
 - [397b5a26a9](https://github.com/bisq-network/bisq/commit/397b5a26a91de669e0507831f0d74bab7408a1f7) - Merge the bridge module and gRPC API work.
 - [3d4cbe8a83](https://github.com/bisq-network/bisq/commit/3d4cbe8a8347c13abab1c4f081b68a3fb8ca0683) - Add AccountTimestampGrpcService.
 - [a49488a3c8](https://github.com/bisq-network/bisq/commit/a49488a3c81f40ffec14eed034f864db99c4a272) - Fix applying DAO snapshots during resync.
-- [81d375ea64](https://github.com/bisq-network/bisq/commit/81d375ea643f611a1c8690bd3c58cf57046a1c78) - Add bitcoind v29.2 support.
+- [d5df6a9359](https://github.com/bisq-network/bisq/commit/d5df6a9359137961cf45d923224b267d97449041) - Migrate to the new bitcoind RPC implementation for Bitcoin Core 29.2.
+- [81d375ea64](https://github.com/bisq-network/bisq/commit/81d375ea643f611a1c8690bd3c58cf57046a1c78) - Merge bitcoind v29.2 support.
+- [888872e7c9](https://github.com/bisq-network/bisq/commit/888872e7c92b72e92afad59a4a633db25ee7629b) - Add a second bitcoind node for reorg testing.
 - [93911b999e](https://github.com/bisq-network/bisq/commit/93911b999e0745b6ea6da89bcad98e93aabc7c83) - Add Burning Man address-list checkpoint support.
 - [66f04a4d77](https://github.com/bisq-network/bisq/commit/66f04a4d7756fff5d473ad19b1825a004a352b3d) - Refresh DAO and network resource snapshots.
 - [c2a4c8d2de](https://github.com/bisq-network/bisq/commit/c2a4c8d2de4dffd936c76dee8bb62aae78ce64a1) - Remove version-tagged resources for seed-node compatibility.
@@ -101,9 +103,11 @@ Related commits:
 
 ## Runtime, Dependencies, And Network Stack
 
-The build/runtime stack moves to Java 21 with JavaFX 21 and broad dependency updates. bitcoinj, bitcoind, netlayer/Tor, Kotlin, logging, protobuf, Jackson, Guava, Lombok, Jersey, JUnit, Hamcrest, and other libraries are updated or aligned. macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and release hash files, the in-app updater selects the matching macOS installer architecture, JavaFX variants publish native architecture attributes, and JavaFX/JFoenix packaging receives follow-up fixes.
+The build/runtime stack moves to Java 21 with JavaFX 21 and broad dependency updates. bitcoinj, bitcoind, netlayer/Tor, Kotlin, logging, protobuf, Jackson, Guava, Lombok, Jersey, JUnit, Hamcrest, and other libraries are updated or aligned. The range now starts after v1.9.21 because v1.9.22 was a hotfix branch based on v1.9.21; it only backported the bitcoinj chainwork fix and did not include the rest of the post-v1.9.21 development work. macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and release hash files, the in-app updater selects the matching macOS installer architecture, JavaFX variants publish native architecture attributes, and JavaFX/JFoenix packaging receives follow-up fixes.
 
 Related commits:
+- [04c3ef41f4](https://github.com/bisq-network/bisq/commit/04c3ef41f4b993229fcc32841f754c6fa5bd9669) - Backport the bitcoinj chainwork fix on the v1.9.22 hotfix branch.
+- [cf887ddf9f](https://github.com/bisq-network/bisq/commit/cf887ddf9fce5dea6307a46c8a6d1b94eb9a670a) - Merge the v1.9.22 bitcoinj hotfix branch based on v1.9.21.
 - [cb0c7ba2f1](https://github.com/bisq-network/bisq/commit/cb0c7ba2f1437ec6c835108f7f13a8680d273fe9) - Merge broad dependency and JavaFX update work.
 - [b6170834c2](https://github.com/bisq-network/bisq/commit/b6170834c285ea8f18452c67e8e52d4dde9201e9) - Update bitcoinj to include the P2WPKH verification fix.
 - [936eeb2e4f](https://github.com/bisq-network/bisq/commit/936eeb2e4f25fed634e43b5c041c037b9e7896e4) - Use updated bitcoinj and metadata.
@@ -111,7 +115,7 @@ Related commits:
 - [d122fdd733](https://github.com/bisq-network/bisq/commit/d122fdd73347344114010dadea9c33e972c0cc48) - Align Kotlin version and dependency verification metadata.
 - [5970e84f75](https://github.com/bisq-network/bisq/commit/5970e84f75a55751525c5e81b121e7f9e12271a2) - Update logback/slf4j and bitcoind target.
 - [62642fb2cd](https://github.com/bisq-network/bisq/commit/62642fb2cd7d745ba09f4f0970d239dfd922cc3f) - Update Guava and Lombok.
-- [7f952fb1e8](https://github.com/bisq-network/bisq/commit/7f952fb1e8a4537acc6ae7fb380baa7ae03f4f87) - Update bitcoind and verification metadata.
+- [7f952fb1e8](https://github.com/bisq-network/bisq/commit/7f952fb1e8a4537acc6ae7fb380baa7ae03f4f87) - Update the bitcoind submodule and dependency verification metadata.
 - [1f6ebda67a](https://github.com/bisq-network/bisq/commit/1f6ebda67a9bdc98c913626d6b9acb873a5bde2f) - Fix packaged macOS JavaFX/JFoenix exports.
 - [081124c57f](https://github.com/bisq-network/bisq/commit/081124c57f87e600c2b4c865d8b31c41dab10b9c) - Update netlayer to the latest target in this range.
 - [3fce2c0bf5](https://github.com/bisq-network/bisq/commit/3fce2c0bf5106a053daaddff0555b213518ad2df) - Add dual-architecture macOS release packaging support.

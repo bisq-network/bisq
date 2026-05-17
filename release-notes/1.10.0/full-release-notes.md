@@ -2,17 +2,19 @@
 
 These notes are written in the same practical style used by Bitcoin Core release notes: user and operator impact first, followed by a complete auditable commit inventory.
 
-Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `a33ece9a915dc1eadb45e50960b8dc608a0f09a9`, generated with `git log --reverse 797836cc9d3ef0891a1bd349e18127fe252eb860^..HEAD`. This includes the starting commit `797836cc9d` and ends at `a33ece9a91`. The inventory includes merge commits as separate entries because they are part of the release history.
+Commit range: after `f50c5a4176b5d5ecac864ddf3d52a6ca760996a9` through `a33ece9a915dc1eadb45e50960b8dc608a0f09a9`, generated with `git log --reverse f50c5a4176b5d5ecac864ddf3d52a6ca760996a9..a33ece9a915dc1eadb45e50960b8dc608a0f09a9`. This excludes the v1.9.21 release commit `f50c5a4176` and includes the v1.9.22 hotfix merge `cf887ddf9f` plus the later commits through `a33ece9a91`. The inventory includes merge commits as separate entries because they are part of the release history.
 
-- Total commits: 743
-- Non-merge commits: 542
-- Merge commits: 201
-- Generated on: 2026-05-15
+- Total commits: 748
+- Non-merge commits: 546
+- Merge commits: 202
+- Generated on: 2026-05-17
 
 ## Compatibility Notes
 
 - Bisq version is set to `1.10.0`.
+- The release-note range starts after v1.9.21 because v1.9.22 was a hotfix release based on v1.9.21. v1.9.22 only carried the backported bitcoinj chainwork fix, version/signing-key updates, and its merge; the remaining post-v1.9.21 development changes are included here for v1.10.0.
 - Release builds use Gradle `8.9` and an Azul Java `21.0.6` toolchain. JavaFX is updated to `21.0.10`.
+- The DAO full-node path uses the new bitcoind RPC integration for Bitcoin Core `29.2`.
 - The maximum trade amount is limited to `0.125 BTC` and offer/trade prices are constrained to a `25%` maximum deviation.
 - Dispute chat file attachments and dispute log file transfer are removed.
 - VERSE is deprecated for new payment-account creation, and HRK is removed from active currency lists.
@@ -21,7 +23,7 @@ Commit range: from `797836cc9d3ef0891a1bd349e18127fe252eb860` through `a33ece9a9
 
 ### Trade, Wallet, And Offer Safety
 
-This release contains a large validation hardening pass for Bisq v1 trades. Peer-provided inputs, deposit transactions, payout transactions, delayed payout transactions, mediated payout transactions, fees, trade amounts, prices, multisig public keys, and payment-account hashes are checked earlier and more consistently. Invalid peer data is rejected closer to the point where it enters the trade flow.
+This release contains a large validation hardening pass for Bisq v1 trades. Peer-provided inputs, deposit transactions, payout transactions, delayed payout transactions, mediated payout transactions, fees, trade amounts, prices, multisig public keys, and payment-account hashes are checked earlier and more consistently. Deposit setup now validates peer raw transaction input values, change output values, and expected contribution amounts before maker/taker deposit construction proceeds. Invalid peer data is rejected closer to the point where it enters the trade flow.
 
 The release also rejects legacy UTXOs for deposit funding, bounds and deduplicates peer-supplied inputs, validates canonical deposit transaction shapes at final boundaries, re-verifies multisig outputs before payout signing, hardens BSQ swap arithmetic, hardens Monero transaction proof handling, and unreserves offers when a take-offer request fails.
 
@@ -39,13 +41,13 @@ Payment-account handling is safer and more robust. Swish account creation no lon
 
 ### DAO, Burning Man, API, And Services
 
-The release includes bridge module work with gRPC APIs, account timestamp service support, DAO resync/snapshot fixes, refreshed DAO/network resource snapshots, bitcoind RPC migration work, Burning Man address list and delayed payout receiver validation, DAO CLI/gRPC test coverage, and updates to mediator/refund-agent/network node metadata. Version-tagged resource files are intentionally not bundled in this release to avoid extra requests against seed nodes that still run older versions.
+The release includes bridge module work with gRPC APIs, account timestamp service support, DAO resync/snapshot fixes, refreshed DAO/network resource snapshots, Burning Man address list and delayed payout receiver validation, DAO CLI/gRPC test coverage, and updates to mediator/refund-agent/network node metadata. The 1.9.23 bitcoind work is included: Bisq's DAO full-node RPC path was migrated to the new bitcoind RPC implementation for Bitcoin Core 29.2, older core-side bitcoind DTO/client code was removed, the bitcoind submodule and verification metadata were refreshed through the later release-candidate targets, and regtest coverage gained a second bitcoind node for reorg testing. Version-tagged resource files are intentionally not bundled in this release to avoid extra requests against seed nodes that still run older versions.
 
 API and CLI changes include consistent `payment-account-id` naming, improved `findAvailableOffer`, API-level filtering for BTC addresses with positive balances, support for multiple `btcNodes` command-line values, and removal of the deprecated `getmyoffer` command.
 
 ### Build, Dependencies, And Release Integrity
 
-The build and runtime stack is updated to Java 21/JavaFX 21 with broad dependency updates, newer bitcoinj/bitcoind/netlayer targets, Kotlin alignment, and updated test/build libraries. CI and packaging receive JVM export fixes for JavaFX/JFoenix on macOS, JavaFX variants publish native architecture attributes, and macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and hash outputs.
+The build and runtime stack is updated to Java 21/JavaFX 21 with broad dependency updates, newer bitcoinj/bitcoind/netlayer targets, Kotlin alignment, and updated test/build libraries. This range also includes the v1.9.22 hotfix branch, which backported the bitcoinj chainwork fix onto the v1.9.21 base without taking the rest of the development branch. CI and packaging receive JVM export fixes for JavaFX/JFoenix on macOS, JavaFX variants publish native architecture attributes, and macOS releases support both Apple Silicon and Intel Macs with architecture-qualified DMGs and hash outputs.
 
 Release verification is significantly expanded. The build now creates and verifies Java payload and installer manifests, records release and installer evidence bundles, pins GitHub Actions and runner/JDK versions, verifies Gradle wrapper inputs, adds dependency signature reporting, adds CVE scanning, documents reproducible release verification, hardens Linux release-builder evidence for Debian/RPM packages, adds a Docker-based DAO/trade end-to-end test workflow, and adds a manual GitHub release-readiness check for uploaded assets, download URLs, and signing keys.
 
@@ -71,6 +73,7 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 | 2025-07-28 | [20a8c4ee69](https://github.com/bisq-network/bisq/commit/20a8c4ee696c85a7fb2f8ce6038660f72ab0206f) | Commit | Apply bridge code-review suggestions | HenrikJannsen |
 | 2025-08-26 | [2b542e04d9](https://github.com/bisq-network/bisq/commit/2b542e04d93091d855b75664442cf7e2a19bfd86) | Commit | Bump actions/setup-java from 4.7.1 to 5.0.0 | dependabot[bot] |
 | 2025-09-08 | [70900e2a76](https://github.com/bisq-network/bisq/commit/70900e2a7624d2840ecf788b9641858101ae9d45) | Commit | Bump actions/stale from 9.1.0 to 10.0.0 | dependabot[bot] |
+| 2025-09-16 | [7ee70ec6cc](https://github.com/bisq-network/bisq/commit/7ee70ec6cc4194af836ba8f04adff5588820c341) | Commit | Revert to SNAPSHOT version | Alejandro García |
 | 2025-09-17 | [4c32a4fb99](https://github.com/bisq-network/bisq/commit/4c32a4fb9997b8df88cd4f21fd6e6f23ba3cc124) | Merge | Merge PR #7505: v1.9.21 | Alejandro García |
 | 2025-09-17 | [223403a7d6](https://github.com/bisq-network/bisq/commit/223403a7d64683f30f9d23a86db6070769624981) | Merge | Merge PR #7476: update seed nodes for inventory monitor | Alejandro García |
 | 2025-09-17 | [397b5a26a9](https://github.com/bisq-network/bisq/commit/397b5a26a91de669e0507831f0d74bab7408a1f7) | Merge | Merge PR #7492: add bridge module | Alejandro García |
@@ -192,6 +195,10 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 | 2025-12-23 | [45df4ce695](https://github.com/bisq-network/bisq/commit/45df4ce6952fe65df424e9a16a3a03c42ee1b5da) | Commit | Set version 1.9.22 | HenrikJannsen |
 | 2025-12-23 | [b3faaf7e43](https://github.com/bisq-network/bisq/commit/b3faaf7e43e866b7c2e30bcca089812c1eac342d) | Commit | Add Henrik Jannsen's pgp key (387C8307.asc) | HenrikJannsen |
 | 2025-12-23 | [f2fe13d07d](https://github.com/bisq-network/bisq/commit/f2fe13d07def5cf7c57f15d0365c2052d3b9f88d) | Merge | Merge PR #7567: use backported bitcoinj fix | HenrikJannsen |
+| 2025-12-23 | [04c3ef41f4](https://github.com/bisq-network/bisq/commit/04c3ef41f4b993229fcc32841f754c6fa5bd9669) | Commit | Use bitcoinj commit 7dc0851a807857ba19f76824e48d75ab0390eca7 with the backport of the chainwork bugfix. | HenrikJannsen |
+| 2025-12-23 | [158eb02f24](https://github.com/bisq-network/bisq/commit/158eb02f240bc3c0e5ca406216a52a45fd370417) | Commit | Set version 1.9.22 | HenrikJannsen |
+| 2025-12-23 | [98593bfa15](https://github.com/bisq-network/bisq/commit/98593bfa1585a5eadf6683bc482c1a08a62e0ce9) | Commit | Add Henrik Jannsen's pgp key (387C8307.asc) | HenrikJannsen |
+| 2025-12-23 | [cf887ddf9f](https://github.com/bisq-network/bisq/commit/cf887ddf9fce5dea6307a46c8a6d1b94eb9a670a) | Merge | Merge PR #7570: backported bitcoinj hotfix | HenrikJannsen |
 | 2026-01-20 | [d5df6a9359](https://github.com/bisq-network/bisq/commit/d5df6a9359137961cf45d923224b267d97449041) | Commit | Migrate to new bitcoind RPC implementation | Alva Swanson |
 | 2026-01-20 | [2f11a93c6f](https://github.com/bisq-network/bisq/commit/2f11a93c6fafeffa300282d0cfa24bc4f6727739) | Commit | core: Remove unused jackson.databind dependency | Alva Swanson |
 | 2026-01-26 | [a7167cc001](https://github.com/bisq-network/bisq/commit/a7167cc001a13f4276f437eb5aebdc3748a8f814) | Commit | Bump actions/checkout from 6.0.1 to 6.0.2 | dependabot[bot] |
@@ -243,7 +250,7 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 | 2026-04-13 | [ba29397860](https://github.com/bisq-network/bisq/commit/ba29397860dceefeb06ce597c3e1f7454ac2d0a4) | Merge | Merge PR #7597: fix bisq launch scripts | Alejandro García |
 | 2026-04-13 | [18dee23785](https://github.com/bisq-network/bisq/commit/18dee2378543f5d4e4e4f40eebb464917abeba81) | Merge | Merge PR #7598: Move seednode JVM arguments to global configuration | Alejandro García |
 | 2026-04-13 | [32c825a393](https://github.com/bisq-network/bisq/commit/32c825a393de64a1f34ecffd5bfcdb69398bfa12) | Merge | Merge PR #7613: update data stores for v1.9.23 | Alejandro García |
-| 2026-05-02 | [797836cc9d](https://github.com/bisq-network/bisq/commit/797836cc9d3ef0891a1bd349e18127fe252eb860) | Commit | Validate trade peer deposit inputs during maker/taker deposit setup | HenrikJannsen |
+| 2026-05-02 | [797836cc9d](https://github.com/bisq-network/bisq/commit/797836cc9d3ef0891a1bd349e18127fe252eb860) | Commit | Apply @hiciefte patch validating trade peer deposit inputs during maker/taker deposit setup | HenrikJannsen |
 | 2026-05-02 | [3ce703d741](https://github.com/bisq-network/bisq/commit/3ce703d74117db0667c90153d517ffac487e0f10) | Commit | Add instruction how to update submodule if not cloned newly | HenrikJannsen |
 | 2026-05-02 | [382e438a87](https://github.com/bisq-network/bisq/commit/382e438a8763fa7b934d99971c7d2052e84014f1) | Commit | Check that changeOutputAddress is not null if changeOutputValue is > 0. | HenrikJannsen |
 | 2026-05-02 | [95fff711ef](https://github.com/bisq-network/bisq/commit/95fff711efdc16fece6c4b62f9afa82f9c3283d1) | Commit | Refactor: rename and extract variable | HenrikJannsen |
@@ -801,4 +808,4 @@ Rows are ordered by `git log --reverse` over the release range. Some commit date
 
 ## Credits
 
-Contributors represented in this commit range: Alejandro García, Alva Swanson, bisqadmin, Christoph Atteneder, dependabot[bot], helixx87, HenrikJannsen, KimStrand, M. Caviar, mustardcaviar, Steven Barclay, suddenwhipvapor, Takahiro Nagasawa, tat twam asi, thecockatiel, viresinnumer1s, wodoro.
+Contributors represented in this commit range: Alejandro García, Alva Swanson, bisqadmin, Christoph Atteneder, dependabot[bot], helixx87, HenrikJannsen, hiciefte, KimStrand, M. Caviar, mustardcaviar, Steven Barclay, suddenwhipvapor, Takahiro Nagasawa, tat twam asi, thecockatiel, viresinnumer1s, wodoro.

@@ -5,6 +5,7 @@ Short text for GitHub release notes and the in-app update message.
 ## Security And Trade Safety
 
 - Stronger checks before accepting trade messages, deposit transactions, payout transactions, and peer-provided wallet data.
+- Deposit setup verifies peer raw transaction inputs, change outputs, and expected contribution amounts before maker/taker deposit construction continues.
 - Safer offer taking: invalid peer data is rejected earlier, and failed take-offer attempts release the offer again.
 - Additional protection around payment-account matching, payout addresses, trade fees, and trade limits.
 - HTTP and P2P message handling now rejects more unsafe or unexpected network inputs.
@@ -26,6 +27,8 @@ Short text for GitHub release notes and the in-app update message.
 ## Network And Runtime
 
 - Tor/netlayer, bitcoinj, bitcoind, Java, JavaFX, and major libraries were updated.
+- The v1.9.22 bitcoinj chainwork hotfix is included; other post-v1.9.21 development changes were not part of that hotfix release and are covered here.
+- The DAO full-node bitcoind RPC layer was migrated for Bitcoin Core 29.2 support, with updated bitcoind targets and reorg-test coverage.
 - The app version is `1.10.0`; release builds use the Java 21 release build stack.
 - Bundled DAO and network resource snapshots were refreshed for the release.
 - macOS releases now support both Apple Silicon and Intel Macs.
