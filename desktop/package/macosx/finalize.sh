@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 cd ../../../
 
@@ -19,9 +20,9 @@ macos_aarch64=${BISQ_MACOS_AARCH64_PATH:-$vmPath/vm_shared_macosx_aarch64}
 
 deployDir=deploy
 
-rm -r $target_dir
+rm -rf "$target_dir"
 
-mkdir -p $target_dir
+mkdir -p "$target_dir"
 
 # make sure the releases are ready
 ./gradlew cli:build
@@ -93,6 +94,10 @@ cat "$macos_x86_64/desktop-$version-all-mac-x86_64.jar.SHA-256" \
 "$macos_aarch64/desktop-$version-all-mac-aarch64.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
 "$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/$jar_txt"
+if [[ ! -s "$target_dir/$jar_txt" ]]; then
+    echo "Missing or empty jar checksum file: $target_dir/$jar_txt" >&2
+    exit 1
+fi
 
 cd "$script_working_directory/$target_dir" || exit 1
 
@@ -116,7 +121,7 @@ gpg --digest-algo SHA256 --verify $cli{.asc*,}
 gpg --digest-algo SHA256 --verify $daemon{.asc*,}
 gpg --digest-algo SHA256 --verify $jar_txt{.asc*,}
 
-mkdir $win64/$version
-cp -r . $win64/$version
+mkdir -p "$win64/$version"
+cp -r . "$win64/$version"
 
 open "./desktop/releases/$version"
