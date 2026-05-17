@@ -56,7 +56,6 @@ import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXToggleButton;
 
@@ -65,7 +64,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Control;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -681,11 +679,7 @@ public class FormBuilder {
                                                                   int columnIndex,
                                                                   String title,
                                                                   double top) {
-        DatePicker datePicker = new JFXDatePicker();
-        // fix display issue from github.com/bisq-network/bisq/issues/6216 and github.com/sshahine/JFoenix/issues/1245
-        datePicker.getEditor().setMinWidth(250);
-        datePicker.getEditor().setMaxWidth(Control.USE_PREF_SIZE);
-        datePicker.getEditor().setPrefWidth(Control.USE_PREF_SIZE);
+        DatePicker datePicker = new DatePicker();
         Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, columnIndex, title, datePicker, top);
         return new Tuple2<>(topLabelWithVBox.first, datePicker);
     }
