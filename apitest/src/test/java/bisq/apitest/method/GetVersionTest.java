@@ -19,42 +19,17 @@ package bisq.apitest.method;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.common.app.Version.VERSION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-@Disabled
 @Slf4j
-@TestMethodOrder(OrderAnnotation.class)
-public class GetVersionTest extends MethodTest {
-
-    @BeforeAll
-    public static void setUp() {
-        try {
-            setUpScaffold(alicedaemon);
-        } catch (Exception ex) {
-            fail(ex);
-        }
-    }
+public class GetVersionTest extends DockerMethodTest {
 
     @Test
-    @Order(1)
     public void testGetVersion() {
         var version = aliceClient.getVersion();
         assertEquals(VERSION, version);
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        tearDownScaffold();
     }
 }

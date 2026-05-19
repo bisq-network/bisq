@@ -1,127 +1,156 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.apitest.method.wallet;
+
+import bisq.apitest.method.DockerMethodTest;
 
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-
-
-import bisq.apitest.method.MethodTest;
-
-@SuppressWarnings("ResultOfMethodCallIgnored")
-@Disabled
+/**
+ * Fresh-stack test: mutates Alice's wallet encryption state. The runner resets
+ * the docker stack before this class runs, so encrypted-state leak between tests
+ * is bounded to this class. {@link #removePasswordIfSet()} is the belt-and-braces
+ * cleanup that tries to leave Alice's wallet unlocked even if a test mid-flow fails.
+ */
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
-public class WalletProtectionTest extends MethodTest {
+@Tag("freshstack")
+public class WalletProtectionTest extends DockerMethodTest {
 
-    @BeforeAll
-    public static void setUp() {
-        try {
-            setUpScaffold(alicedaemon);
-            MILLISECONDS.sleep(2000);
-        } catch (Exception ex) {
-            fail(ex);
-        }
-    }
+    private static final String PW1 = "first-password";
+    private static final String PW2 = "second-password";
 
     @Test
     @Order(1)
     public void testSetWalletPassword() {
-        aliceClient.setWalletPassword("first-password");
+        aliceClient.setWalletPassword(PW1);
     }
 
     @Test
     @Order(2)
     public void testGetBalanceOnEncryptedWalletShouldThrowException() {
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
+        Throwable ex = assertThrows(StatusRuntimeException.class, aliceClient::getBtcBalances);
+        assertEquals("FAILED_PRECONDITION: wallet is locked", ex.getMessage());
     }
 
     @Test
     @Order(3)
-    public void testUnlockWalletFor4Seconds() {
-        aliceClient.unlockWallet("first-password", 4);
-        aliceClient.getBtcBalances(); // should not throw 'wallet locked' exception
-        sleep(4500); // let unlock timeout expire
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
-    }
-
-    @Test
-    @Order(4)
-    public void testGetBalanceAfterUnlockTimeExpiryShouldThrowException() {
-        aliceClient.unlockWallet("first-password", 3);
-        sleep(4000); // let unlock timeout expire
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
+    public void testUnlockWalletForShortPeriod() {
+        aliceClient.unlockWallet(PW1, 1);
+        aliceClient.getBtcBalances(); // works while unlocked
+        // Gate on the wallet re-locking — poll instead of sleeping past a fixed window.
+        // Safety net inside awaitCond is 60s, but real wait is ~1s.
+        awaitWalletLocked();
     }
 
     @Test
     @Order(5)
     public void testLockWalletBeforeUnlockTimeoutExpiry() {
-        aliceClient.unlockWallet("first-password", 60);
+        aliceClient.unlockWallet(PW1, 60);
         aliceClient.lockWallet();
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
+        Throwable ex = assertThrows(StatusRuntimeException.class, aliceClient::getBtcBalances);
+        assertEquals("FAILED_PRECONDITION: wallet is locked", ex.getMessage());
     }
 
     @Test
     @Order(6)
-    public void testLockWalletWhenWalletAlreadyLockedShouldThrowException() {
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.lockWallet());
-        assertEquals("ALREADY_EXISTS: wallet is already locked", exception.getMessage());
+    public void testLockAlreadyLockedWalletShouldThrowException() {
+        Throwable ex = assertThrows(StatusRuntimeException.class, aliceClient::lockWallet);
+        assertEquals("ALREADY_EXISTS: wallet is already locked", ex.getMessage());
     }
 
     @Test
     @Order(7)
     public void testUnlockWalletTimeoutOverride() {
-        aliceClient.unlockWallet("first-password", 2);
-        sleep(500); // override unlock timeout after 0.5s
-        aliceClient.unlockWallet("first-password", 6);
-        sleep(5000);
-        aliceClient.getBtcBalances(); // getbalance 5s after overriding timeout to 6s
+        // Override a short unlock window with a longer one before the first expires;
+        // wallet must remain unlocked past the original timeout. The 1s sleep below
+        // sits past the original 1s window but before the new 3s window — the only
+        // way to observe the override actually took effect.
+        aliceClient.unlockWallet(PW1, 1);
+        aliceClient.unlockWallet(PW1, 3); // override before 1s expires
+        sleep(1_500);                     // past original (1s), inside new (3s)
+        aliceClient.getBtcBalances();     // must succeed
     }
 
     @Test
     @Order(8)
     public void testSetNewWalletPassword() {
-        aliceClient.setWalletPassword("first-password", "second-password");
-        sleep(2500); // allow time for wallet save
-        aliceClient.unlockWallet("second-password", 2);
+        aliceClient.setWalletPassword(PW1, PW2);
+        // Setting a new password persists the wallet asynchronously. Gate on the new
+        // password actually being usable instead of guessing a fixed save delay.
+        awaitCond(() -> {
+            try {
+                aliceClient.unlockWallet(PW2, 30);
+                return true;
+            } catch (StatusRuntimeException ex) {
+                return false;
+            }
+        }, "new wallet password becomes effective");
         aliceClient.getBtcBalances();
     }
 
     @Test
     @Order(9)
-    public void testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException() {
-        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                aliceClient.setWalletPassword("bad old password", "irrelevant"));
-        assertEquals("INVALID_ARGUMENT: incorrect old password", exception.getMessage());
+    public void testSetNewWalletPasswordWithWrongOldShouldThrowException() {
+        Throwable ex = assertThrows(StatusRuntimeException.class,
+                () -> aliceClient.setWalletPassword("bad old password", "irrelevant"));
+        assertEquals("INVALID_ARGUMENT: incorrect old password", ex.getMessage());
     }
 
     @Test
     @Order(10)
-    public void testRemoveNewWalletPassword() {
-        aliceClient.removeWalletPassword("second-password");
-        aliceClient.getBtcBalances();  // should not throw 'wallet locked' exception
+    public void testRemoveWalletPassword() {
+        aliceClient.removeWalletPassword(PW2);
+        aliceClient.getBtcBalances();
+    }
+
+    /** Block until getBtcBalances throws "wallet is locked" — the deterministic signal
+     *  that the unlock timeout has fired daemon-side. */
+    private static void awaitWalletLocked() {
+        awaitCond(() -> {
+            try {
+                aliceClient.getBtcBalances();
+                return false;
+            } catch (StatusRuntimeException ex) {
+                return ex.getMessage().contains("wallet is locked");
+            }
+        }, "wallet relocks after unlock timeout");
     }
 
     @AfterAll
-    public static void tearDown() {
-        tearDownScaffold();
+    public static void removePasswordIfSet() {
+        for (String pw : new String[]{PW2, PW1}) {
+            try {
+                aliceClient.removeWalletPassword(pw);
+                return;
+            } catch (RuntimeException ignored) { }
+        }
     }
 }

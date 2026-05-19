@@ -17,127 +17,86 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.apitest.dao.DaoTestUtils;
+import bisq.proto.grpc.OfferInfo;
+import bisq.proto.grpc.TradeInfo;
+
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestMethodOrder;
 
+import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.apitest.config.ApiTestConfig.USD;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static protobuf.OfferDirection.BUY;
+import static protobuf.OfferDirection.SELL;
 
-
-
-import bisq.apitest.method.offer.AbstractOfferTest;
-
-@Disabled
+/**
+ * Fresh-stack test: drives a trade up to the deposit-confirmed phase, then
+ * exercises {@code failTrade} / {@code unFailTrade} admin API on both v1 BUY
+ * and v1 SELL flows.
+ */
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class FailUnfailTradeTest extends AbstractTradeTest {
-
-    @BeforeAll
-    public static void setUp() {
-        AbstractOfferTest.setUp();
-    }
-
-    @BeforeEach
-    public void init() {
-        EXPECTED_PROTOCOL_STATUS.init();
-    }
-
+@Tag("freshstack")
+public class FailUnfailTradeTest extends DockerTradeTest {
 
     @Test
-    @Order(1)
-    public void testFailAndUnFailBuyBTCTrade(final TestInfo testInfo) {
-        TakeBuyBTCOfferTest test = new TakeBuyBTCOfferTest();
-        test.testTakeAlicesBuyOffer(testInfo);
-
-        var tradeId = AbstractTradeTest.getTradeId();
-        aliceClient.failTrade(tradeId);
-
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
-        assertEquals(expectedExceptionMessage, exception.getMessage());
-
-        try {
-            aliceClient.unFailTrade(tradeId);
-            aliceClient.getTrade(tradeId); //Throws ex if trade is still failed.
-        } catch (Exception ex) {
-            fail(ex);
-        }
+    public void testFailAndUnFailBuyBTCTrade() {
+        ensureF2FAccounts("US");
+        OfferInfo offer = aliceClient.createFixedPricedOffer(BUY.name(),
+                USD, 1_250_000L, 1_250_000L, "50000",
+                defaultBuyerSecurityDepositPct.get(), alicesF2F.getId(), BTC);
+        TradeInfo trade = driveUpToDepositConfirmed(offer);
+        assertFailUnfailCycle(trade.getTradeId());
     }
 
     @Test
-    @Order(2)
-    public void testFailAndUnFailSellBTCTrade(final TestInfo testInfo) {
-        TakeSellBTCOfferTest test = new TakeSellBTCOfferTest();
-        test.testTakeAlicesSellOffer(testInfo);
-
-        var tradeId = AbstractTradeTest.getTradeId();
-        aliceClient.failTrade(tradeId);
-
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
-        assertEquals(expectedExceptionMessage, exception.getMessage());
-
-        try {
-            aliceClient.unFailTrade(tradeId);
-            aliceClient.getTrade(tradeId);  //Throws ex if trade is still failed.
-        } catch (Exception ex) {
-            fail(ex);
-        }
+    public void testFailAndUnFailSellBTCTrade() {
+        ensureF2FAccounts("US");
+        OfferInfo offer = aliceClient.createFixedPricedOffer(SELL.name(),
+                USD, 1_250_000L, 1_250_000L, "50000",
+                defaultBuyerSecurityDepositPct.get(), alicesF2F.getId(), BTC);
+        TradeInfo trade = driveUpToDepositConfirmed(offer);
+        assertFailUnfailCycle(trade.getTradeId());
     }
 
-    @Test
-    @Order(3)
-    public void testFailAndUnFailBuyXmrTrade(final TestInfo testInfo) {
-        TakeBuyXMROfferTest test = new TakeBuyXMROfferTest();
-        createXmrPaymentAccounts();
-        test.testTakeAlicesSellBTCForXMROffer(testInfo);
-
-        var tradeId = AbstractTradeTest.getTradeId();
-        aliceClient.failTrade(tradeId);
-
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
-        assertEquals(expectedExceptionMessage, exception.getMessage());
-
-        try {
-            aliceClient.unFailTrade(tradeId);
-            aliceClient.getTrade(tradeId); //Throws ex if trade is still failed.
-        } catch (Exception ex) {
-            fail(ex);
+    private TradeInfo driveUpToDepositConfirmed(OfferInfo offer) {
+        if (!offer.getOfferFeePaymentTxId().isEmpty()) {
+            chain.confirmTx(aliceClient, offer.getOfferFeePaymentTxId());
         }
+        DaoTestUtils.await(() -> bobClient.getOffers("BUY", USD).stream()
+                        .anyMatch(o -> o.getId().equals(offer.getId()))
+                        || bobClient.getOffers("SELL", USD).stream()
+                        .anyMatch(o -> o.getId().equals(offer.getId())),
+                60_000, "bob sees offer " + offer.getId());
+        TradeInfo trade = bobClient.takeOffer(offer.getId(), bobsF2F.getId(), BTC, offer.getAmount());
+        assertNotNull(trade);
+        DaoTestUtils.await(() -> !bobClient.getTrade(trade.getTradeId()).getTakerFeeTxId().isEmpty(),
+                30_000, "bob has taker_fee_tx_id");
+        chain.confirmTx(bobClient, bobClient.getTrade(trade.getTradeId()).getTakerFeeTxId());
+        DaoTestUtils.await(() -> !bobClient.getTrade(trade.getTradeId()).getDepositTxId().isEmpty(),
+                30_000, "bob has deposit_tx_id");
+        chain.confirmTx(bobClient, bobClient.getTrade(trade.getTradeId()).getDepositTxId());
+        DaoTestUtils.await(() -> bobClient.getTrade(trade.getTradeId()).getIsDepositConfirmed(),
+                30_000, "deposit confirmed");
+        return trade;
     }
 
-    @Test
-    @Order(4)
-    public void testFailAndUnFailTakeSellXMRTrade(final TestInfo testInfo) {
-        TakeSellXMROfferTest test = new TakeSellXMROfferTest();
-        createXmrPaymentAccounts();
-        test.testTakeAlicesBuyBTCForXMROffer(testInfo);
-
-        var tradeId = AbstractTradeTest.getTradeId();
+    private void assertFailUnfailCycle(String tradeId) {
         aliceClient.failTrade(tradeId);
+        Throwable ex = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
+        assertEquals(format("NOT_FOUND: trade with id '%s' not found", tradeId), ex.getMessage());
 
-        Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
-        assertEquals(expectedExceptionMessage, exception.getMessage());
-
-        try {
+        assertDoesNotThrow(() -> {
             aliceClient.unFailTrade(tradeId);
-            aliceClient.getTrade(tradeId); //Throws ex if trade is still failed.
-        } catch (Exception ex) {
-            fail(ex);
-        }
+            aliceClient.getTrade(tradeId);
+        });
     }
 }

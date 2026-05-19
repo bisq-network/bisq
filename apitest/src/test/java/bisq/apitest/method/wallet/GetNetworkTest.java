@@ -17,48 +17,20 @@
 
 package bisq.apitest.method.wallet;
 
+import bisq.apitest.method.DockerMethodTest;
+
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-
-
-import bisq.apitest.method.MethodTest;
-
-@SuppressWarnings("ConstantConditions")
-@Disabled
 @Slf4j
-@TestMethodOrder(OrderAnnotation.class)
-public class GetNetworkTest extends MethodTest {
-
-    @BeforeAll
-    public static void setUp() {
-        try {
-            setUpScaffold(alicedaemon);
-        } catch (Exception ex) {
-            fail(ex);
-        }
-    }
+public class GetNetworkTest extends DockerMethodTest {
 
     @Test
-    @Order(1)
     public void testGetNetwork() {
         var network = aliceClient.getNetwork();
         assertEquals("regtest", network);
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        tearDownScaffold();
     }
 }

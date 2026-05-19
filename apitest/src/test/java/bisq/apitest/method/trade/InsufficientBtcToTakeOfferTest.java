@@ -17,138 +17,69 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.core.payment.PaymentAccount;
-
-import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.OfferInfo;
 
 import io.grpc.StatusRuntimeException;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.USD;
 import static bisq.cli.CurrencyFormat.formatBtc;
-import static bisq.cli.table.builder.TableType.BTC_BALANCE_TBL;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
 
-
-
-import bisq.cli.table.builder.TableBuilder;
-
 /**
- * This test should not be @Disabled, nor run from the scenario package's TradeTest suite.
- * The risk of causing all test suites to fail due to insufficient funds is too great,
- * as of 22-May-2022.
+ * Fresh-stack test: drains Bob's BTC wallet, then asserts takeOffer fails with
+ * UNAVAILABLE. The drain mutates global state irreversibly within the run, hence
+ * the fresh-stack requirement.
  */
-@SuppressWarnings("ConstantConditions")
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class InsufficientBtcToTakeOfferTest extends AbstractTradeTest {
-
-    private static final String TRADE_FEE_CURRENCY_CODE = BSQ;
-
-    // Bob's BTC wallet is nearly emptied in the test case:  most is sent to Alice,
-    // then Bob tries to take an offer, resulting in a NotAvailableException.
-    // Alice returns the exchanged BTC at the end of the test.
-    private String sendAmount = "0";
+@Tag("freshstack")
+public class InsufficientBtcToTakeOfferTest extends DockerTradeTest {
 
     @Test
-    @Order(1)
     public void testTakeOfferWithInsufficientBTC() {
-        try {
-            PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
-            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
+        ensureF2FAccounts("US");
 
-            // Empty Bob's BTC wallet; send almost all of it to Alice.
-            long bobsAvailableSats = bobClient.getBtcBalances().getAvailableBalance();
-            long satsToLeaveInBobsWallet = 2000000;
-            long statsToSendToAlice = abs(satsToLeaveInBobsWallet - bobsAvailableSats);
-            sendAmount = formatBtc(statsToSendToAlice);
-            String aliceAddress = aliceClient.getUnusedBtcAddress();
-            bobClient.sendBtc(aliceAddress, sendAmount, "", "");
-            genBtcBlocksThenWait(1, 2_500);
-            showBalances("after emptying Bob's BTC wallet");
+        // Drain Bob's BTC wallet to below the deposit + amount + fee requirement
+        // (offer is 0.0125 BTC, needs ~0.0145 BTC available to take). Leave 0.001 BTC.
+        long bobsAvailable = bobClient.getBtcBalances().getAvailableBalance();
+        long toLeave = 100_000L;
+        String sendAmount = formatBtc(abs(toLeave - bobsAvailable));
+        bobClient.sendBtc(aliceClient.getUnusedBtcAddress(), sendAmount, "", "");
+        mineBlocks(1);
+        // Gate on Bob's available balance dropping below the required amount instead of
+        // sleeping for the wallet to register the send.
+        awaitCond(() -> bobClient.getBtcBalances().getAvailableBalance() < 1_450_000L,
+                "bob's available BTC drops below take-offer threshold");
 
-            var alicesOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
-                    USD,
-                    12_500_000L,
-                    12_500_000L, // min-amount = amount
-                    0.00,
-                    defaultBuyerSecurityDepositPct.get(),
-                    alicesUsdAccount.getId(),
-                    TRADE_FEE_CURRENCY_CODE,
-                    NO_TRIGGER_PRICE);
-            var offerId = alicesOffer.getId();
-            assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
+        OfferInfo offer = aliceClient.createFixedPricedOffer(BUY.name(),
+                USD, 1_250_000L, 1_250_000L, "50000",
+                defaultBuyerSecurityDepositPct.get(),
+                alicesF2F.getId(), BSQ);
+        assertFalse(offer.getIsCurrencyForMakerFeeBtc());
+        awaitCond(() -> aliceClient.getMyOffersSortedByDate(BUY.name(), USD).size() == 1,
+                "alice's USD offer book has the new offer");
+        awaitBobSeesOffer(offer.getId(), USD);
 
-            // Wait for Alice's AddToOfferBook task.
-            // Wait times vary;  my logs show >= 2-second delay.
-            sleep(3_000); // TODO loop instead of hard code a wait time
-            List<OfferInfo> alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
-            assertEquals(1, alicesUsdOffers.size());
-
-            // Try to take the offer 5x, fail each time, assert offer remains available.
-            for (int i = 0; i < 5; i++) {
-                Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                        takeAlicesOffer(offerId,
-                                bobsUsdAccount.getId(),
-                                TRADE_FEE_CURRENCY_CODE,
-                                12_500_000L,
-                                false));
-                String expectedExceptionMessage =
-                        format("UNAVAILABLE: wallet has insufficient btc to take offer with id '%s'", offerId);
-                log.debug(exception.getMessage());
-                assertEquals(expectedExceptionMessage, exception.getMessage());
-
-                // Alice's offer can still be looked up by Alice.
-                alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
-                assertEquals(1, alicesUsdOffers.size());
-                // Offer should still be available to Bob.
-                var availableOffer = bobClient.getOffer(offerId);
-                log.debug("Offer still available:\n{}", toOfferTable.apply(availableOffer));
-
-                sleep(3_000);
-            }
-
-        } catch (StatusRuntimeException e) {
-            fail(e);
-        }
-
-        showBalances("after failed take offer attempts");
-
-        // Send Bob's BTC back to him.
-        String bobsAddress = bobClient.getUnusedBtcAddress();
-        aliceClient.sendBtc(bobsAddress, sendAmount, "", "");
-        genBtcBlocksThenWait(1, 2_500);
-
-        showBalances("after returning Bob's BTC");
-    }
-
-    private void showBalances(String msg) {
-        if (log.isDebugEnabled()) {
-            BtcBalanceInfo alicesBalances = aliceClient.getBtcBalances();
-            log.debug("Alice's BTC Balances {}:\n{}",
-                    msg,
-                    new TableBuilder(BTC_BALANCE_TBL, alicesBalances).build());
-
-            BtcBalanceInfo bobsBalances = bobClient.getBtcBalances();
-            log.debug("Bob's BTC Balances {}:\n{}",
-                    msg,
-                    new TableBuilder(BTC_BALANCE_TBL, bobsBalances).build());
+        // Try 5 times back-to-back; each must fail with UNAVAILABLE. Daemon state is
+        // already deterministic at this point (offer activated, bob underfunded), so
+        // no inter-attempt wait is needed.
+        for (int i = 0; i < 5; i++) {
+            Throwable ex = assertThrows(StatusRuntimeException.class,
+                    () -> bobClient.takeOffer(offer.getId(), bobsF2F.getId(), BSQ, 1_250_000L));
+            assertEquals(format("UNAVAILABLE: wallet has insufficient btc to take offer with id '%s'",
+                    offer.getId()), ex.getMessage());
+            assertEquals(1, aliceClient.getMyOffersSortedByDate(BUY.name(), USD).size());
+            assertEquals(offer.getId(), bobClient.getOffer(offer.getId()).getId());
         }
     }
 }

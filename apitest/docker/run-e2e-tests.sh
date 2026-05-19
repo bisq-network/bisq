@@ -25,7 +25,12 @@ set -euo pipefail
 KEEP_UP=0
 SKIP_BUILD=0
 SKIP_DOCKER_BUILD=0
-TEST_PATTERN="${TEST_PATTERN:-bisq.apitest.dao.*}"
+# Space-separated list of patterns; each becomes its own --tests arg.
+# `bisq.apitest.method.*` covers the read-only / idempotent method tests that
+# were ported off the legacy Scaffold and re-enabled to run against this stack;
+# `bisq.apitest.dao.*` covers DAO governance + v1 trade scenarios.
+TEST_PATTERN="${TEST_PATTERN:-bisq.apitest.method.* bisq.apitest.dao.*}"
+# Fresh-stack test discovery happens after SCRIPT_DIR/REPO_ROOT are set below.
 GLOBAL_TIMEOUT_SECS="${GLOBAL_TIMEOUT_SECS:-1800}"
 READY_TIMEOUT_SECS="${READY_TIMEOUT_SECS:-300}"
 
@@ -49,6 +54,25 @@ COMPOSE_FILE="${SCRIPT_DIR}/dao-compose.yml"
 LOGS_DIR="${SCRIPT_DIR}/logs"
 GRADLE="${GRADLE:-${REPO_ROOT}/gradlew}"
 PID_FILE="${PID_FILE:-/tmp/bisq-e2e-tests.pid}"
+
+# Auto-discover fresh-stack test classes from source: anything tagged
+# `@Tag("freshstack")` in apitest/src/test/java/bisq/apitest. Single source of truth
+# is the test source itself — no list to keep in sync. Each discovered class is run
+# in a freshly reset stack via reset_stack; the shared-stack pass excludes them via
+# JUnit Platform tag filter (-PexcludeFreshStack in apitest/build.gradle).
+#
+# Override the discovery with FRESH_STACK_TESTS=<space-separated FQCNs>; empty
+# value = skip the fresh-stack phase entirely.
+if [[ -n "${FRESH_STACK_TESTS+x}" ]]; then
+  read -r -a FRESH_STACK_TESTS_ARR <<< "${FRESH_STACK_TESTS}"
+else
+  TEST_SRC="${REPO_ROOT}/apitest/src/test/java"
+  mapfile -t FRESH_STACK_TESTS_ARR < <(
+    grep -rlE '@Tag\("freshstack"\)' "${TEST_SRC}/bisq/apitest" 2>/dev/null \
+      | sed -E "s|^${TEST_SRC}/||; s|\.java\$||; s|/|.|g" \
+      | sort
+  )
+fi
 
 # Refuse to run if another instance is alive (kill -0 confirms PID belongs to a live proc).
 if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}" 2>/dev/null || echo 0)" 2>/dev/null; then
@@ -84,6 +108,99 @@ log()  { printf '[%s] %s\n' "$(date +%H:%M:%S)" "$*"; }
 step() { echo; log "==> $*"; }
 err()  { printf '[%s] [ERROR] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }
 fatal() { err "$*"; exit 1; }
+
+###############################################################################
+# Stack lifecycle helpers (used by initial bring-up AND the fresh-stack reset
+# loop). Defined up here so the cleanup trap + reset loop can both call them.
+###############################################################################
+
+cli_in() {
+  local container="$1"; shift
+  docker exec "${container}" /bisq/cli/bin/cli "$@"
+}
+
+container_status() {
+  docker inspect --format '{{.State.Status}}' "$1" 2>/dev/null || true
+}
+
+assert_all_running() {
+  local context="$1"
+  for c in "${ALL_CONTAINERS[@]}"; do
+    local s; s="$(container_status "${c}")"
+    if [[ "${s}" != "running" ]]; then
+      err "container '${c}' is in state '${s:-missing}' (expected running) during: ${context}"
+      err "Last 80 log lines from ${c}:"
+      docker logs --tail 80 "${c}" >&2 || true
+      docker inspect --format='{{json .State.Health}}' "${c}" 2>&1 | tail -c 2000 >&2 || true
+      fatal "container '${c}' is not running (${s:-missing}) — see logs above"
+    fi
+  done
+}
+
+# Stop containers + remove volumes + sweep any straggler containers by name.
+teardown_stack() {
+  docker compose -f "${COMPOSE_FILE}" down -v --remove-orphans 2>/dev/null || true
+  # Belt-and-braces: catch any leftover containers (e.g. from a run with a different
+  # COMPOSE_PROJECT_NAME) that would otherwise block the port reclaim below.
+  for c in "${ALL_CONTAINERS[@]}"; do
+    docker rm -f "$c" >/dev/null 2>&1 || true
+  done
+}
+
+# Bring the compose stack up and block until every service reports healthy
+# (or 'started' if no healthcheck). On failure, dump per-container state + logs
+# and fatal-exit.
+start_stack() {
+  if ! docker compose -f "${COMPOSE_FILE}" up -d --wait --wait-timeout 240; then
+    err "compose up failed; showing state + last 80 log lines for every container:"
+    for c in "${ALL_CONTAINERS[@]}"; do
+      local s; s="$(container_status "${c}")"
+      err "----- ${c} (state=${s:-missing}) -----"
+      docker inspect --format='{{json .State.Health}}' "${c}" 2>&1 | tail -c 1500 >&2 || true
+      docker logs --tail 80 "${c}" >&2 || true
+    done
+    fatal "compose up failed — see per-container output above"
+  fi
+}
+
+# Block until a single Bisq daemon answers `getversion` on its gRPC port. Catches
+# stack crashes during the wait by re-checking every container's state each poll.
+wait_daemon() {
+  local label="$1" port="$2"
+  local deadline=$(( $(date +%s) + READY_TIMEOUT_SECS ))
+  while : ; do
+    assert_all_running "waiting for ${label} gRPC"
+    if cli_in "${label}" --port="${port}" --password=xyz getversion >/dev/null 2>&1; then
+      log "  ${label} gRPC ready"
+      return 0
+    fi
+    if [[ $(date +%s) -ge ${deadline} ]]; then
+      err "${label} (:${port}) never reported ready within ${READY_TIMEOUT_SECS}s"
+      err "Last 80 log lines from ${label}:"
+      docker logs --tail 80 "${label}" >&2 || true
+      fatal "${label} readiness timeout"
+    fi
+    sleep 3
+  done
+}
+
+wait_for_daemons() {
+  wait_daemon arb   9997
+  wait_daemon alice 9998
+  wait_daemon bob   9999
+  assert_all_running "after daemon readiness"
+}
+
+# Full chain: teardown → bring up → wait healthy. Used by the fresh-stack loop
+# between test classes that mutate persistent wallet/trade state.
+reset_stack() {
+  step "Tearing down stack"
+  teardown_stack
+  step "Bringing stack back up"
+  start_stack
+  step "Waiting for Bisq daemons (gRPC)"
+  wait_for_daemons
+}
 
 # Global timeout: send SIGTERM to ourselves (triggers cleanup trap below) if total
 # run exceeds GLOBAL_TIMEOUT_SECS. Using kill on $$ (not -$$) so trap fires before
@@ -134,11 +251,7 @@ done
 ###############################################################################
 
 step "Cleaning prior stack state"
-docker compose -f "${COMPOSE_FILE}" down -v --remove-orphans 2>/dev/null || true
-# Belt-and-braces: also remove any leftover containers by name (e.g. someone ran without COMPOSE_PROJECT_NAME).
-for c in "${ALL_CONTAINERS[@]}"; do
-  docker rm -f "$c" >/dev/null 2>&1 || true
-done
+teardown_stack
 
 ###############################################################################
 # Build artifacts
@@ -224,7 +337,7 @@ cleanup() {
   done
   if [[ "${KEEP_UP}" -eq 0 ]]; then
     step "Tearing down stack"
-    docker compose -f "${COMPOSE_FILE}" down -v --remove-orphans || true
+    teardown_stack
   else
     log "Stack left running (--keep-up). Tear down with:"
     log "  docker compose -f ${COMPOSE_FILE} down -v"
@@ -236,35 +349,8 @@ cleanup() {
 trap cleanup EXIT INT TERM HUP QUIT
 
 ###############################################################################
-# Bring up stack
+# Build images + initial bring up
 ###############################################################################
-
-###############################################################################
-# Container helpers (defined before compose up so error paths can call them).
-###############################################################################
-
-cli_in() {
-  local container="$1"; shift
-  docker exec "${container}" /bisq/cli/bin/cli "$@"
-}
-
-container_status() {
-  docker inspect --format '{{.State.Status}}' "$1" 2>/dev/null || true
-}
-
-assert_all_running() {
-  local context="$1"
-  for c in "${ALL_CONTAINERS[@]}"; do
-    local s; s="$(container_status "${c}")"
-    if [[ "${s}" != "running" ]]; then
-      err "container '${c}' is in state '${s:-missing}' (expected running) during: ${context}"
-      err "Last 80 log lines from ${c}:"
-      docker logs --tail 80 "${c}" >&2 || true
-      docker inspect --format='{{json .State.Health}}' "${c}" 2>&1 | tail -c 2000 >&2 || true
-      fatal "container '${c}' is not running (${s:-missing}) — see logs above"
-    fi
-  done
-}
 
 if [[ "${SKIP_DOCKER_BUILD}" -eq 1 ]]; then
   step "Skipping docker build (--skip-docker-build); verifying images present"
@@ -282,65 +368,76 @@ else
 fi
 
 step "Starting compose stack (with bitcoind healthcheck gating Bisq containers)"
-# --wait blocks until all services are healthy (or 'started' if no healthcheck).
-# Healthcheck on bitcoind verifies RPC + chain parsing + genesis tx present.
-if ! docker compose -f "${COMPOSE_FILE}" up -d --wait --wait-timeout 240; then
-  err "compose up failed; showing state + last 80 log lines for every container:"
-  for c in "${ALL_CONTAINERS[@]}"; do
-    s="$(container_status "${c}")"
-    err "----- ${c} (state=${s:-missing}) -----"
-    docker inspect --format='{{json .State.Health}}' "${c}" 2>&1 | tail -c 1500 >&2 || true
-    docker logs --tail 80 "${c}" >&2 || true
-  done
-  fatal "compose up failed — see per-container output above"
-fi
-
-###############################################################################
-# Wait for Bisq daemons to answer gRPC.
-# Uses docker exec into each container (no per-poll docker run, no extra network).
-###############################################################################
-
-wait_daemon() {
-  local label="$1" port="$2"
-  local deadline=$(( $(date +%s) + READY_TIMEOUT_SECS ))
-  while : ; do
-    # Catch any crash across the entire stack, not just this daemon.
-    assert_all_running "waiting for ${label} gRPC"
-    if cli_in "${label}" --port="${port}" --password=xyz getversion >/dev/null 2>&1; then
-      log "  ${label} gRPC ready"
-      return 0
-    fi
-    if [[ $(date +%s) -ge ${deadline} ]]; then
-      err "${label} (:${port}) never reported ready within ${READY_TIMEOUT_SECS}s"
-      err "Last 80 log lines from ${label}:"
-      docker logs --tail 80 "${label}" >&2 || true
-      fatal "${label} readiness timeout"
-    fi
-    sleep 3
-  done
-}
+start_stack
 step "Waiting for Bisq daemons (gRPC)"
-wait_daemon arb   9997
-wait_daemon alice 9998
-wait_daemon bob   9999
-assert_all_running "after daemon readiness, before gradle test"
+wait_for_daemons
 
 ###############################################################################
 # Run tests
 ###############################################################################
 
-step "Running tests: ${TEST_PATTERN}"
+step "Running shared-stack tests: ${TEST_PATTERN}"
+# Expand each space-delimited pattern into its own `--tests` arg so Gradle can OR them.
+TESTS_ARGS=()
+for p in ${TEST_PATTERN}; do
+  TESTS_ARGS+=(--tests "${p}")
+done
+# Phase 1 excludes @Tag("freshstack")-tagged tests via -PexcludeFreshStack.
+# Phase 2 invocations (one per fresh-stack class) omit the property → tag included.
+JVM_PROPS=(
+  -DrunApiTests=true
+  -DapiHost.alice=localhost -DapiPort.alice=9998
+  -DapiHost.bob=localhost   -DapiPort.bob=9999
+  -DapiHost.arb=localhost   -DapiPort.arb=9997
+  -DapiPassword=xyz
+  -DbitcoindContainer=bitcoind
+)
 set +e
 "${GRADLE}" --no-daemon :apitest:test \
-  --tests "${TEST_PATTERN}" \
-  -DrunApiTests=true \
-  -DapiHost.alice=localhost -DapiPort.alice=9998 \
-  -DapiHost.bob=localhost   -DapiPort.bob=9999 \
-  -DapiHost.arb=localhost   -DapiPort.arb=9997 \
-  -DapiPassword=xyz \
-  -DbitcoindContainer=bitcoind
+  "${TESTS_ARGS[@]}" \
+  -PexcludeFreshStack \
+  "${JVM_PROPS[@]}"
 TEST_EXIT=$?
 set -e
+
+# Fresh-stack phase: one stack reset per test class. Any failure here flips TEST_EXIT
+# but lets the loop finish so we collect logs for every failing class, not just the first.
+if [[ ${#FRESH_STACK_TESTS_ARR[@]} -gt 0 ]]; then
+  for cls in "${FRESH_STACK_TESTS_ARR[@]}"; do
+    step "Resetting stack for ${cls}"
+    # reset_stack fatal-exits on its own bring-up failure; wrap so a stack-reset
+    # failure flips TEST_EXIT and we continue on to collect logs for other classes
+    # instead of taking the whole CI run down.
+    if ! ( set -e; reset_stack ); then
+      err "stack reset failed before ${cls}; skipping"
+      TEST_EXIT=1
+      continue
+    fi
+    step "Running fresh-stack test: ${cls}"
+    set +e
+    "${GRADLE}" --no-daemon :apitest:test \
+      --tests "${cls}" \
+      "${JVM_PROPS[@]}"
+    CLS_EXIT=$?
+    set -e
+    # Copy this invocation's test report aside so the next gradle :apitest:test
+    # call doesn't overwrite it. Without this only the last fresh-stack class's
+    # HTML report would survive in apitest/build/reports/tests/test/.
+    if [[ -d "${REPO_ROOT}/apitest/build/reports/tests/test" ]]; then
+      mkdir -p "${REPO_ROOT}/apitest/build/reports/tests/freshstack/${cls}"
+      cp -r "${REPO_ROOT}/apitest/build/reports/tests/test/." \
+            "${REPO_ROOT}/apitest/build/reports/tests/freshstack/${cls}/" || true
+    fi
+    if [[ ${CLS_EXIT} -ne 0 ]]; then
+      err "${cls} failed (exit ${CLS_EXIT}); collecting logs"
+      mkdir -p "${LOGS_DIR}/freshstack/${cls}"
+      for c in "${ALL_CONTAINERS[@]}"; do
+        docker logs "$c" > "${LOGS_DIR}/freshstack/${cls}/${c}.log" 2>&1 || true
+      done
+      TEST_EXIT=${CLS_EXIT}
+    fi
+  done
+fi
 
 if [[ ${TEST_EXIT} -ne 0 ]]; then
   err "tests failed (exit ${TEST_EXIT}). Inspect:"
