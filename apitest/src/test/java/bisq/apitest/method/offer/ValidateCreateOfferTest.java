@@ -17,57 +17,57 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.payment.PaymentAccount;
+import bisq.apitest.method.DockerMethodTest;
+import protobuf.PaymentAccount;
 
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferDirection.BUY;
 
-@Disabled
+/**
+ * Pure negative-path tests: every call to {@code createFixedPricedOffer} is
+ * expected to throw, so no real offers are persisted on Alice's daemon. Only
+ * F2F payment accounts are added, which is additive and harmless.
+ */
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ValidateCreateOfferTest extends AbstractOfferTest {
+public class ValidateCreateOfferTest extends DockerMethodTest {
 
     @Test
-    @Order(1)
     public void testAmtTooLargeShouldThrowException() {
         PaymentAccount usdAccount = createDummyF2FAccount(aliceClient, "US");
         @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.createFixedPricedOffer(BUY.name(),
                         "usd",
-                        100000000000L, // exceeds amount limit
+                        100000000000L,
                         100000000000L,
                         "10000.0000",
                         defaultBuyerSecurityDepositPct.get(),
                         usdAccount.getId(),
                         BSQ));
-        assertEquals("UNKNOWN: An error occurred at task: ValidateOffer", exception.getMessage());
+        assertTrue(exception.getMessage().toLowerCase().contains("validateoffer"),
+                "expected validateoffer rejection, got: " + exception.getMessage());
     }
 
     @Test
-    @Order(2)
     public void testNoMatchingEURPaymentAccountShouldThrowException() {
         PaymentAccount chfAccount = createDummyF2FAccount(aliceClient, "ch");
         @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.createFixedPricedOffer(BUY.name(),
                         "eur",
-                        10000000L,
-                        10000000L,
+                        1250000L,
+                        1250000L,
                         "40000.0000",
                         defaultBuyerSecurityDepositPct.get(),
                         chfAccount.getId(),
@@ -77,15 +77,14 @@ public class ValidateCreateOfferTest extends AbstractOfferTest {
     }
 
     @Test
-    @Order(2)
     public void testNoMatchingCADPaymentAccountShouldThrowException() {
         PaymentAccount audAccount = createDummyF2FAccount(aliceClient, "au");
         @SuppressWarnings("ResultOfMethodCallIgnored")
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.createFixedPricedOffer(BUY.name(),
                         "cad",
-                        10000000L,
-                        10000000L,
+                        1250000L,
+                        1250000L,
                         "63000.0000",
                         defaultBuyerSecurityDepositPct.get(),
                         audAccount.getId(),

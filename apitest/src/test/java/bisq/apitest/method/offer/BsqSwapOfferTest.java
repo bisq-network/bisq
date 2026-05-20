@@ -19,15 +19,12 @@ package bisq.apitest.method.offer;
 
 import bisq.proto.grpc.OfferInfo;
 
+import io.grpc.StatusRuntimeException;
+
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
@@ -39,137 +36,64 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
 
-@Disabled
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BsqSwapOfferTest extends AbstractOfferTest {
-
+public class BsqSwapOfferTest extends DockerOfferTest {
 
     @BeforeEach
-    public void generateBtcBlock() {
-        genBtcBlocksThenWait(1, 2000);
+    public void mineOneBlock() {
+        // mineBlocks already waits until both alice and bob observe the new chain tip,
+        // so confirmed-BSQ outputs become spendable before the next test's offer prep.
+        mineBlocks(1);
     }
 
     @Test
-    @Order(1)
-    public void testGetBalancesBeforeCreateOffers() {
-        var alicesBalances = aliceClient.getBalances();
-        log.debug("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
-        var bobsBalances = bobClient.getBalances();
-        log.debug("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
-    }
-
-    @Test
-    @Order(2)
-    public void testAliceCreateBsqSwapBuyOffer1() {
-        createBsqSwapOffer();
-    }
-
-    @Test
-    @Order(3)
-    public void testAliceCreateBsqSwapBuyOffer2() {
-        createBsqSwapOffer();
-    }
-
-    @Test
-    @Order(4)
-    public void testAliceCreateBsqSwapBuyOffer3() {
-        createBsqSwapOffer();
-    }
-
-    @Test
-    @Order(5)
-    public void testAliceCreateBsqSwapBuyOffer4() {
-        createBsqSwapOffer();
-    }
-
-    @Test
-    @Order(6)
-    public void testGetMyBsqSwapOffers() {
-        var offers = aliceClient.getMyBsqSwapBsqOffersSortedByDate();
-        assertEquals(4, offers.size());
-    }
-
-    @Test
-    @Order(7)
-    public void testGetAvailableBsqSwapOffers() {
-        var offers = bobClient.getBsqSwapOffersSortedByDate();
-        assertEquals(4, offers.size());
-    }
-
-    @Test
-    @Order(8)
-    public void testGetBalancesAfterCreateOffers() {
-        var alicesBalances = aliceClient.getBalances();
-        log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
-        var bobsBalances = bobClient.getBalances();
-        log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
-    }
-
-    private void createBsqSwapOffer() {
-        var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
-                1_000_000L,
-                1_000_000L,
-                "0.00005");
-        log.debug("BsqSwap SELL BSQ (BUY BTC) Offer:\n{}", toOfferTable.apply(bsqSwapOffer));
-        var newOfferId = bsqSwapOffer.getId();
-        assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), bsqSwapOffer.getDirection());
-        assertEquals("0.00005000", bsqSwapOffer.getPrice());
-        assertEquals(1_000_000L, bsqSwapOffer.getAmount());
-        assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
-        assertEquals("200.00", bsqSwapOffer.getVolume());
-        assertEquals("200.00", bsqSwapOffer.getMinVolume());
-        assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
-        assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
-
-        testGetMyBsqSwapOffer(bsqSwapOffer);
-        testGetBsqSwapOffer(bsqSwapOffer);
-    }
-
-    private void testGetMyBsqSwapOffer(OfferInfo bsqSwapOffer) {
-        int numFetchAttempts = 0;
-        while (true) {
-            try {
-                numFetchAttempts++;
-                var fetchedBsqSwapOffer = aliceClient.getOffer(bsqSwapOffer.getId());
-                assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
-                assertTrue(fetchedBsqSwapOffer.getIsActivated());
-                log.debug("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
-                break;
-            } catch (Exception ex) {
-                log.warn(ex.getMessage());
-                var statusCode = getStatusRuntimeExceptionStatusCode(ex);
-                assertEquals(NOT_FOUND, statusCode, "Expected a NOT_FOUND status code from server");
-
-                if (numFetchAttempts >= 9)
-                    fail(format("Alice giving up on fetching her (my) bsq swap offer after %d attempts.", numFetchAttempts), ex);
-
-                sleep(1500);
-            }
+    public void testCreateMultipleBsqSwapOffersAndListThem() {
+        int n = 4;
+        for (int i = 0; i < n; i++) {
+            createAndVerifyBsqSwapOffer();
         }
+        assertEquals(n, aliceClient.getMyBsqSwapBsqOffersSortedByDate().size());
+        assertEquals(n, bobClient.getBsqSwapOffersSortedByDate().size());
     }
 
-    private void testGetBsqSwapOffer(OfferInfo bsqSwapOffer) {
-        int numFetchAttempts = 0;
-        while (true) {
+    @Test
+    public void testCreateSingleBsqSwapOfferAndFetchOnBothSides() {
+        createAndVerifyBsqSwapOffer();
+    }
+
+    private void createAndVerifyBsqSwapOffer() {
+        OfferInfo offer = aliceClient.createBsqSwapOffer(BUY.name(),
+                1_000_000L, 1_000_000L, "0.00005");
+        assertNotEquals("", offer.getId());
+        assertEquals(BUY.name(), offer.getDirection());
+        assertEquals("0.00005000", offer.getPrice());
+        assertEquals(1_000_000L, offer.getAmount());
+        assertEquals(1_000_000L, offer.getMinAmount());
+        assertEquals("200.00", offer.getVolume());
+        assertEquals("200.00", offer.getMinVolume());
+        assertEquals(BSQ, offer.getBaseCurrencyCode());
+        assertEquals(BTC, offer.getCounterCurrencyCode());
+
+        awaitOfferVisible(aliceClient, offer.getId(), "alice (maker)");
+        awaitOfferVisible(bobClient, offer.getId(), "bob (taker)");
+    }
+
+    /**
+     * Block until peer {@code c} can fetch the offer by id and reports it activated.
+     * Gates on the daemon's own propagation signal — NOT on wall-clock — so this
+     * passes the moment p2p delivers, regardless of CI box speed.
+     */
+    private void awaitOfferVisible(bisq.cli.GrpcClient c, String offerId, String label) {
+        awaitCond(() -> {
             try {
-                numFetchAttempts++;
-                var fetchedBsqSwapOffer = bobClient.getOffer(bsqSwapOffer.getId());
-                assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
-                assertTrue(fetchedBsqSwapOffer.getIsActivated());
-                log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
-                break;
-            } catch (Exception ex) {
-                log.warn(ex.getMessage());
-                var statusCode = getStatusRuntimeExceptionStatusCode(ex);
-                assertEquals(NOT_FOUND, statusCode, "Expected a NOT_FOUND status code from server");
-
-                if (numFetchAttempts > 9)
-                    fail(format("Bob gave up on fetching available bsq swap offer after %d attempts.", numFetchAttempts), ex);
-
-                sleep(1500);
+                OfferInfo fetched = c.getOffer(offerId);
+                return offerId.equals(fetched.getId()) && fetched.getIsActivated();
+            } catch (StatusRuntimeException ex) {
+                if (ex.getStatus().getCode() != NOT_FOUND) {
+                    fail(format("%s saw unexpected gRPC error for offer %s", label, offerId), ex);
+                }
+                return false;
             }
-        }
+        }, label + " sees activated bsq swap offer " + offerId);
     }
 }

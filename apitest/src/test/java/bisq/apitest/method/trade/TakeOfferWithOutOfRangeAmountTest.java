@@ -17,92 +17,57 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.core.payment.PaymentAccount;
-
 import bisq.proto.grpc.OfferInfo;
 
 import io.grpc.StatusRuntimeException;
 
 import org.bitcoinj.core.Coin;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestConfig.USD;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
 
-@Disabled
-@SuppressWarnings("ConstantConditions")
+/**
+ * Fresh-stack negative-path test: takeOffer must reject amounts outside the
+ * offer's min/max range. Does not complete a trade — offer is left open and the
+ * stack reset before the next class handles cleanup.
+ */
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TakeOfferWithOutOfRangeAmountTest extends AbstractTradeTest {
+@Tag("freshstack")
+public class TakeOfferWithOutOfRangeAmountTest extends DockerTradeTest {
 
     @Test
-    @Order(1)
-    public void testTakeOfferWithInvalidAmountParam(final TestInfo testInfo) {
-        try {
-            PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
-            PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
+    public void testTakeOfferWithInvalidAmountParam() {
+        ensureF2FAccounts("US");
 
-            var alicesOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
-                    USD,
-                    10_000_000L,
-                    8_000_000L,
-                    0.00,
-                    defaultBuyerSecurityDepositPct.get(),
-                    alicesUsdAccount.getId(),
-                    BTC,
-                    NO_TRIGGER_PRICE);
+        OfferInfo offer = aliceClient.createFixedPricedOffer(BUY.name(),
+                USD, 1_250_000L, 1_000_000L, "50000",
+                defaultBuyerSecurityDepositPct.get(),
+                alicesF2F.getId(), BTC);
 
-            // Wait for Alice's AddToOfferBook task.
-            // Wait times vary;  my logs show >= 2-second delay.
-            sleep(3_000); // TODO loop instead of hard code a wait time
-            List<OfferInfo> alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
-            assertEquals(1, alicesUsdOffers.size());
+        awaitOfferActivated(offer.getId());
+        awaitBobSeesOffer(offer.getId(), USD);
 
-            var intendedTradeAmountTooLow = 7_000_000L;
-            takeOfferWithInvalidAmountParam(bobsUsdAccount, alicesOffer, intendedTradeAmountTooLow);
-
-            var intendedTradeAmountTooHigh = 11_000_000L;
-            takeOfferWithInvalidAmountParam(bobsUsdAccount, alicesOffer, intendedTradeAmountTooHigh);
-        } catch (StatusRuntimeException e) {
-            fail(e);
-        }
+        assertOutOfRangeRejected(offer, 500_000L);     // below min (1.0M)
+        assertOutOfRangeRejected(offer, 5_000_000L);   // above max (1.25M)
     }
 
-    private void takeOfferWithInvalidAmountParam(PaymentAccount paymentAccount,
-                                                 OfferInfo offer,
-                                                 long invalidTakeOfferAmount) {
-        Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                takeAlicesOffer(offer.getId(),
-                        paymentAccount.getId(),
-                        BTC,
-                        invalidTakeOfferAmount,
-                        false));
-
-        var invalidAmount = Coin.valueOf(invalidTakeOfferAmount);
-        var minAmount = Coin.valueOf(offer.getMinAmount());
-        var maxAmount = Coin.valueOf(offer.getAmount());
-        String expectedExceptionMessage =
-                format("INVALID_ARGUMENT: intended trade amount %s is outside offer's min - max amount range of %s - %s",
-                        invalidAmount.toPlainString(),
-                        minAmount.toPlainString(),
-                        maxAmount.toPlainString());
-        log.info(exception.getMessage());
-        assertEquals(expectedExceptionMessage, exception.getMessage());
+    private void assertOutOfRangeRejected(OfferInfo offer, long invalidAmount) {
+        Throwable ex = assertThrows(StatusRuntimeException.class,
+                () -> bobClient.takeOffer(offer.getId(), bobsF2F.getId(), BTC, invalidAmount));
+        String expected = format(
+                "INVALID_ARGUMENT: intended trade amount %s is outside offer's min - max amount range of %s - %s",
+                Coin.valueOf(invalidAmount).toPlainString(),
+                Coin.valueOf(offer.getMinAmount()).toPlainString(),
+                Coin.valueOf(offer.getAmount()).toPlainString());
+        assertEquals(expected, ex.getMessage());
     }
-
 }

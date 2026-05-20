@@ -38,6 +38,15 @@ sourceSets {
 
 test {
     outputs.upToDateWhen { false }          // Don't use previously cached test outputs.
+
+    // Classes annotated with @Tag("freshstack") are run by run-e2e-tests.sh in a
+    // dedicated gradle invocation per class (against a freshly reset docker stack).
+    // Pass -PexcludeFreshStack on the shared-stack invocation to keep them out.
+    if (project.hasProperty('excludeFreshStack')) {
+        useJUnitPlatform {
+            excludeTags 'freshstack'
+        }
+    }
     testLogging {
         showStackTraces = true              // Show full stack traces in the console.
         exceptionFormat = "full"

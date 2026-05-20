@@ -17,72 +17,57 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.payment.PaymentAccount;
-
+import protobuf.PaymentAccount;
 import bisq.proto.grpc.OfferInfo;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static protobuf.OfferDirection.BUY;
 
-@Disabled
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CancelOfferTest extends AbstractOfferTest {
+public class CancelOfferTest extends DockerOfferTest {
 
     private static final String DIRECTION = BUY.name();
-    private static final String CURRENCY_CODE = "cad";
-    private static final int MAX_OFFERS = 3;
-
-    private final Consumer<String> createOfferToCancel = (paymentAccountId) -> {
-        aliceClient.createMarketBasedPricedOffer(DIRECTION,
-                CURRENCY_CODE,
-                10000000L,
-                10000000L,
-                0.00,
-                defaultBuyerSecurityDepositPct.get(),
-                paymentAccountId,
-                BSQ,
-                NO_TRIGGER_PRICE);
-    };
+    private static final String CURRENCY_CODE = "CAD";
+    private static final int N_OFFERS = 3;
 
     @Test
-    @Order(1)
     public void testCancelOffer() {
-        PaymentAccount cadAccount = createDummyF2FAccount(aliceClient, "CA");
-
-        // Create some offers.
-        for (int i = 1; i <= MAX_OFFERS; i++) {
-            createOfferToCancel.accept(cadAccount.getId());
-            // Wait for Alice's AddToOfferBook task.
-            // Wait times vary;  my logs show >= 2 second delay.
-            sleep(2500);
+        PaymentAccount cadAccount = getOrCreateF2F("CA");
+        List<String> created = new ArrayList<>();
+        for (int i = 0; i < N_OFFERS; i++) {
+            OfferInfo o = aliceClient.createFixedPricedOffer(DIRECTION,
+                    CURRENCY_CODE, 1_250_000L, 1_250_000L, "50000",
+                    defaultBuyerSecurityDepositPct.get(),
+                    cadAccount.getId(), BSQ);
+            created.add(o.getId());
+            // Wait for AddToOfferBook to land before creating the next, so the
+            // post-create list count is deterministic.
+            awaitOfferActivated(o.getId());
         }
 
-        List<OfferInfo> offers = aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE);
-        assertEquals(MAX_OFFERS, offers.size());
+        assertEquals(N_OFFERS,
+                aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE).size(),
+                "all N offers must appear in alice's offer book");
 
-        // Cancel the offers, checking the open offer count after each offer removal.
-        for (int i = 1; i <= MAX_OFFERS; i++) {
-            aliceClient.cancelOffer(offers.remove(0).getId());
-            offers = aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE);
-            assertEquals(MAX_OFFERS - i, offers.size());
+        for (int i = 0; i < N_OFFERS; i++) {
+            String id = created.remove(0);
+            aliceClient.cancelOffer(id);
+            int expectedRemaining = N_OFFERS - i - 1;
+            awaitCond(
+                    () -> aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE).size() == expectedRemaining,
+                    "alice's offer book shrinks to " + expectedRemaining + " after cancelling " + id);
         }
 
-        sleep(1000);  // wait for offer removal
-
-        offers = aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE);
-        assertEquals(0, offers.size());
+        assertEquals(0,
+                aliceClient.getMyOffersSortedByDate(DIRECTION, CURRENCY_CODE).size(),
+                "alice's offer book empty after all cancels");
     }
 }

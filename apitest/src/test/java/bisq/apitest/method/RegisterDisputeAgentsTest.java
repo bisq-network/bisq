@@ -23,42 +23,26 @@ import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.ApiTestConfig.ARBITRATOR;
 import static bisq.apitest.config.ApiTestConfig.MEDIATOR;
 import static bisq.apitest.config.ApiTestConfig.REFUND_AGENT;
-import static bisq.apitest.config.BisqAppConfig.arbdaemon;
-import static bisq.apitest.config.BisqAppConfig.seednode;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-
-@SuppressWarnings("ResultOfMethodCallIgnored")
-@Disabled
+/**
+ * Runs against the docker-compose stack. Mediator + refund-agent are already
+ * registered by the arb container's entrypoint, so the positive cases here only
+ * verify that re-registration is idempotent. The negative cases (arbitrator
+ * type, unknown type, bad key) remain meaningful regardless of prior state.
+ */
 @Slf4j
-@TestMethodOrder(OrderAnnotation.class)
-public class RegisterDisputeAgentsTest extends MethodTest {
-
-    @BeforeAll
-    public static void setUp() {
-        try {
-            setUpScaffold(bitcoind, seednode, arbdaemon);
-        } catch (Exception ex) {
-            fail(ex);
-        }
-    }
+@SuppressWarnings("ResultOfMethodCallIgnored")
+public class RegisterDisputeAgentsTest extends DockerMethodTest {
 
     @Test
-    @Order(1)
     public void testRegisterArbitratorShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 arbClient.registerDisputeAgent(ARBITRATOR, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
@@ -67,7 +51,6 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     }
 
     @Test
-    @Order(2)
     public void testInvalidDisputeAgentTypeArgShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 arbClient.registerDisputeAgent("badagent", DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
@@ -76,7 +59,6 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     }
 
     @Test
-    @Order(3)
     public void testInvalidRegistrationKeyArgShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 arbClient.registerDisputeAgent(REFUND_AGENT, "invalid" + DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
@@ -85,19 +67,14 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     }
 
     @Test
-    @Order(4)
-    public void testRegisterMediator() {
-        arbClient.registerDisputeAgent(MEDIATOR, DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
+    public void testRegisterMediatorIsIdempotent() {
+        assertDoesNotThrow(() ->
+                arbClient.registerDisputeAgent(MEDIATOR, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
     }
 
     @Test
-    @Order(5)
-    public void testRegisterRefundAgent() {
-        arbClient.registerDisputeAgent(REFUND_AGENT, DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        tearDownScaffold();
+    public void testRegisterRefundAgentIsIdempotent() {
+        assertDoesNotThrow(() ->
+                arbClient.registerDisputeAgent(REFUND_AGENT, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
     }
 }

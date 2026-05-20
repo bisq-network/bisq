@@ -1,22 +1,35 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.apitest.method.wallet;
 
+import bisq.apitest.method.DockerMethodTest;
 import bisq.core.api.model.TxFeeRateInfo;
 
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
-import static bisq.apitest.config.BisqAppConfig.alicedaemon;
-import static bisq.apitest.config.BisqAppConfig.seednode;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,21 +37,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
-
-
-import bisq.apitest.method.MethodTest;
-
-@Disabled
 @Slf4j
 @TestMethodOrder(OrderAnnotation.class)
-public class BtcTxFeeRateTest extends MethodTest {
+public class BtcTxFeeRateTest extends DockerMethodTest {
 
-    @BeforeAll
-    public static void setUp() {
-        startSupportingApps(false,
-                bitcoind,
-                seednode,
-                alicedaemon);
+    @AfterEach
+    public void resetFeeRate() {
+        // Restore the daemon's default fee preference so later tests are unaffected.
+        // Failure here is meaningful — it indicates a daemon regression or leaked
+        // custom fee state — so surface it as an AssertionError rather than swallow.
+        try {
+            aliceClient.unsetTxFeeRate();
+        } catch (RuntimeException ex) {
+            throw new AssertionError("failed to reset tx fee rate in @AfterEach", ex);
+        }
     }
 
     @Test
@@ -85,8 +97,7 @@ public class BtcTxFeeRateTest extends MethodTest {
         assertTrue(txFeeRateInfo.getFeeServiceRate() > 0);
     }
 
-    @AfterAll
-    public static void tearDown() {
-        tearDownScaffold();
+    private String testName(TestInfo testInfo) {
+        return testInfo.getTestMethod().map(java.lang.reflect.Method::getName).orElse("unknown");
     }
 }

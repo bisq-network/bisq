@@ -19,16 +19,10 @@ package bisq.apitest.method.offer;
 
 import bisq.proto.grpc.OfferInfo;
 
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
@@ -39,254 +33,58 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static protobuf.OfferDirection.BUY;
 import static protobuf.OfferDirection.SELL;
 
-@Disabled
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CreateBSQOffersTest extends AbstractOfferTest {
-
-    private static final String MAKER_FEE_CURRENCY_CODE = BSQ;
+public class CreateBSQOffersTest extends DockerOfferTest {
 
     @BeforeAll
-    public static void setUp() {
-        AbstractOfferTest.setUp();
+    public static void setupAccounts() {
+        ensureLegacyBsqAccounts();
     }
 
     @Test
-    @Order(1)
-    public void testCreateBuy1BTCFor20KBSQOffer() {
-        // Remember alt coin trades are BTC trades.  When placing an offer, you are
-        // offering to buy or sell BTC, not BSQ, XMR, etc.  In this test case,
-        // Alice places an offer to BUY BTC with BSQ.
-        var newOffer = aliceClient.createFixedPricedOffer(BUY.name(),
-                BSQ,
-                100_000_000L,
-                100_000_000L,
-                "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
+    public void testCreateBuyBsqOffer() {
+        verifyBsqOffer(BUY.name(), 1_250_000L, 1_250_000L);
+    }
+
+    @Test
+    public void testCreateSellBsqOffer() {
+        verifyBsqOffer(SELL.name(), 1_250_000L, 1_250_000L);
+    }
+
+    @Test
+    public void testCreateBuyBsqOfferWithMinAmountBelowAmount() {
+        verifyBsqOffer(BUY.name(), 1_250_000L, 1_000_000L);
+    }
+
+    private void verifyBsqOffer(String direction, long amount, long minAmount) {
+        OfferInfo o = aliceClient.createFixedPricedOffer(direction,
+                BSQ, amount, minAmount, "0.00005",
                 defaultBuyerSecurityDepositPct.get(),
                 alicesLegacyBsqAcct.getId(),
-                MAKER_FEE_CURRENCY_CODE);
-        log.debug("Sell BSQ (Buy BTC) Offer:\n{}", toOfferTable.apply(newOffer));
-        assertTrue(newOffer.getIsMyOffer());
-        assertTrue(newOffer.getIsMyPendingOffer());
-        assertFalse(newOffer.getIsActivated());
+                BSQ);
+        assertTrue(o.getIsMyOffer());
+        assertTrue(o.getIsMyPendingOffer());
+        assertFalse(o.getIsActivated());
+        assertNotEquals("", o.getId());
+        assertEquals(direction, o.getDirection());
+        assertFalse(o.getUseMarketBasedPrice());
+        assertEquals("0.00005000", o.getPrice());
+        assertEquals(amount, o.getAmount());
+        assertEquals(minAmount, o.getMinAmount());
+        assertTrue(o.getBuyerSecurityDeposit() > 0);
+        assertEquals(alicesLegacyBsqAcct.getId(), o.getPaymentAccountId());
+        assertEquals(BSQ, o.getBaseCurrencyCode());
+        assertEquals(BTC, o.getCounterCurrencyCode());
+        assertFalse(o.getIsCurrencyForMakerFeeBtc());
 
-        String newOfferId = newOffer.getId();
-        assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(100_000_000L, newOffer.getAmount());
-        assertEquals(100_000_000L, newOffer.getMinAmount());
-        assertEquals("20000.00", newOffer.getVolume());
-        assertEquals("20000.00", newOffer.getMinVolume());
-        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
+        // BSQ offer prep needs a confirmed BSQ output to pay the maker fee; mine 1 block
+        // then poll until the daemon reports the offer activated (i.e. AddToOfferBook
+        // ran). This is the deterministic signal.
+        mineBlocks(1);
+        awaitOfferActivated(o.getId());
 
-        genBtcBlockAndWaitForOfferPreparation();
-
-        newOffer = aliceClient.getOffer(newOfferId);
-        assertTrue(newOffer.getIsMyOffer());
-        assertFalse(newOffer.getIsMyPendingOffer());
-        assertTrue(newOffer.getIsActivated());
-        assertEquals(newOfferId, newOffer.getId());
-        assertEquals(BUY.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(100_000_000L, newOffer.getAmount());
-        assertEquals(100_000_000L, newOffer.getMinAmount());
-        assertEquals("20000.00", newOffer.getVolume());
-        assertEquals("20000.00", newOffer.getMinVolume());
-        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-    }
-
-    @Test
-    @Order(2)
-    public void testCreateSell1BTCFor20KBSQOffer() {
-        // Alice places an offer to SELL BTC for BSQ.
-        var newOffer = aliceClient.createFixedPricedOffer(SELL.name(),
-                BSQ,
-                100_000_000L,
-                100_000_000L,
-                "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
-                defaultBuyerSecurityDepositPct.get(),
-                alicesLegacyBsqAcct.getId(),
-                MAKER_FEE_CURRENCY_CODE);
-        log.debug("SELL 20K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
-        assertTrue(newOffer.getIsMyOffer());
-        assertTrue(newOffer.getIsMyPendingOffer());
-        assertFalse(newOffer.getIsActivated());
-
-        String newOfferId = newOffer.getId();
-        assertNotEquals("", newOfferId);
-        assertEquals(SELL.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(100_000_000L, newOffer.getAmount());
-        assertEquals(100_000_000L, newOffer.getMinAmount());
-        assertEquals("20000.00", newOffer.getVolume());
-        assertEquals("20000.00", newOffer.getMinVolume());
-        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-
-        genBtcBlockAndWaitForOfferPreparation();
-
-        newOffer = aliceClient.getOffer(newOfferId);
-        assertTrue(newOffer.getIsMyOffer());
-        assertFalse(newOffer.getIsMyPendingOffer());
-        assertTrue(newOffer.getIsActivated());
-        assertEquals(newOfferId, newOffer.getId());
-        assertEquals(SELL.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(100_000_000L, newOffer.getAmount());
-        assertEquals(100_000_000L, newOffer.getMinAmount());
-        assertEquals("20000.00", newOffer.getVolume());
-        assertEquals("20000.00", newOffer.getMinVolume());
-        assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-    }
-
-    @Test
-    @Order(3)
-    public void testCreateBuyBTCWith1To2KBSQOffer() {
-        // Alice places an offer to BUY 0.05 - 0.10 BTC with BSQ.
-        var newOffer = aliceClient.createFixedPricedOffer(BUY.name(),
-                BSQ,
-                10_000_000L,
-                5_000_000L,
-                "0.00005",   // FIXED PRICE IN BTC sats FOR 1 BSQ
-                defaultBuyerSecurityDepositPct.get(),
-                alicesLegacyBsqAcct.getId(),
-                MAKER_FEE_CURRENCY_CODE);
-        log.debug("BUY 1-2K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
-        assertTrue(newOffer.getIsMyOffer());
-        assertTrue(newOffer.getIsMyPendingOffer());
-        assertFalse(newOffer.getIsActivated());
-
-        String newOfferId = newOffer.getId();
-        assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(10_000_000L, newOffer.getAmount());
-        assertEquals(5_000_000L, newOffer.getMinAmount());
-        assertEquals("2000.00", newOffer.getVolume());
-        assertEquals("1000.00", newOffer.getMinVolume());
-        assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-
-        genBtcBlockAndWaitForOfferPreparation();
-
-        newOffer = aliceClient.getOffer(newOfferId);
-        assertTrue(newOffer.getIsMyOffer());
-        assertFalse(newOffer.getIsMyPendingOffer());
-        assertTrue(newOffer.getIsActivated());
-        assertEquals(newOfferId, newOffer.getId());
-        assertEquals(BUY.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(10_000_000L, newOffer.getAmount());
-        assertEquals(5_000_000L, newOffer.getMinAmount());
-        assertEquals("2000.00", newOffer.getVolume());
-        assertEquals("1000.00", newOffer.getMinVolume());
-        assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-    }
-
-    @Test
-    @Order(4)
-    public void testCreateSellBTCFor5To10KBSQOffer() {
-        // Alice places an offer to SELL 0.25 - 0.50 BTC for BSQ.
-        var newOffer = aliceClient.createFixedPricedOffer(SELL.name(),
-                BSQ,
-                50_000_000L,
-                25_000_000L,
-                "0.00005",   // FIXED PRICE IN BTC sats FOR 1 BSQ
-                defaultBuyerSecurityDepositPct.get(),
-                alicesLegacyBsqAcct.getId(),
-                MAKER_FEE_CURRENCY_CODE);
-        log.debug("SELL 5-10K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
-        assertTrue(newOffer.getIsMyOffer());
-        assertTrue(newOffer.getIsMyPendingOffer());
-        assertFalse(newOffer.getIsActivated());
-
-        String newOfferId = newOffer.getId();
-        assertNotEquals("", newOfferId);
-        assertEquals(SELL.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(50_000_000L, newOffer.getAmount());
-        assertEquals(25_000_000L, newOffer.getMinAmount());
-        assertEquals("10000.00", newOffer.getVolume());
-        assertEquals("5000.00", newOffer.getMinVolume());
-        assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-
-        genBtcBlockAndWaitForOfferPreparation();
-
-        newOffer = aliceClient.getOffer(newOfferId);
-        assertTrue(newOffer.getIsMyOffer());
-        assertFalse(newOffer.getIsMyPendingOffer());
-        assertTrue(newOffer.getIsActivated());
-        assertEquals(newOfferId, newOffer.getId());
-        assertEquals(SELL.name(), newOffer.getDirection());
-        assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals("0.00005000", newOffer.getPrice());
-        assertEquals(50_000_000L, newOffer.getAmount());
-        assertEquals(25_000_000L, newOffer.getMinAmount());
-        assertEquals("10000.00", newOffer.getVolume());
-        assertEquals("5000.00", newOffer.getMinVolume());
-        assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
-        assertEquals(BSQ, newOffer.getBaseCurrencyCode());
-        assertEquals(BTC, newOffer.getCounterCurrencyCode());
-        assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
-    }
-
-    @Test
-    @Order(5)
-    public void testGetAllMyBsqOffers() {
-        List<OfferInfo> offers = aliceClient.getMyOffersSortedByDate(BSQ);
-        log.debug("All Alice's BSQ Offers:\n{}", toOffersTable.apply(offers));
-        assertEquals(4, offers.size());
-        log.debug("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
-    }
-
-    @Test
-    @Order(6)
-    public void testGetAvailableBsqOffers() {
-        List<OfferInfo> offers = bobClient.getOffersSortedByDate(BSQ);
-        log.debug("All Bob's Available BSQ Offers:\n{}", toOffersTable.apply(offers));
-        assertEquals(4, offers.size());
-        log.debug("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));
-    }
-
-    private void genBtcBlockAndWaitForOfferPreparation() {
-        // Extra time is needed for the OfferUtils#isBsqForMakerFeeAvailable, which
-        // can sometimes return an incorrect false value if the BsqWallet's
-        // available confirmed balance is temporarily = zero during BSQ offer prep.
-        genBtcBlocksThenWait(1, 5_000);
+        OfferInfo refetched = aliceClient.getOffer(o.getId());
+        assertTrue(refetched.getIsActivated());
+        assertFalse(refetched.getIsMyPendingOffer());
     }
 }

@@ -4,16 +4,28 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      # Modules whose source is directly compiled into the e2e stack.
+      - "apitest/**"
       - "core/**"
       - "daemon/**"
       - "cli/**"
-      - "proto/**"
-      - "apitest/**"
       - "seednode/**"
+      - "proto/**"
+      # Transitive deps of core/daemon/cli — a regression here lands in the stack
+      # without touching the modules above.
+      - "common/**"
+      - "p2p/**"
+      - "persistence/**"
+      - "assets/**"
+      - "bridge/**"
+      - "bitcoind/**"
+      # Build/version plumbing — any change here can swap dep versions or compile
+      # behavior under us.
       - "build-logic/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle.properties"
+      - "gradle/libs.versions.toml"
       - ".github/workflows/e2e-tests.yml"
 
 jobs:
