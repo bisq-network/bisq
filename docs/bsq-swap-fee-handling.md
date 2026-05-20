@@ -187,8 +187,16 @@ The maker validates the take-offer request before reserving the offer:
 - the offer exists and is available,
 - the trade amount is inside the offer bounds,
 - the trade date is recent,
-- the peer fee rate is in tolerance against the local fee rate,
+- the peer fee rate is not below the stored minimum and is in tolerance against the local fee rate,
 - `makerFee` and `takerFee` match the expected BSQ trade fees for the selected amount.
+
+`FeeService` clamps provider-supplied fee rates into Bisq's accepted range before storing them. The stored invariant is:
+
+```text
+maxFeePerVbyte >= txFeePerVbyte >= minFeePerVbyte >= networkMin
+```
+
+This protects the `getAdjustedTxFee` zero-clamp logic from underpaying relay minimums when a BSQ trade fee alone covers a side's miner portion, and avoids overflow in fee estimators if a bad fee provider returns absurdly high rates.
 
 During protocol execution, each side verifies the peer-supplied inputs and change against locally calculated values. Peer change is allowed to be less than the exact expected change, because dust or coin-selection excess can fall through to miner fee. Peer change must not be greater than expected, because that would let the peer reclaim value that should have paid fees.
 
