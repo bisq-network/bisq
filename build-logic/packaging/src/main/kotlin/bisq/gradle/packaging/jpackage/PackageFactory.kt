@@ -326,7 +326,8 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             return dep
         }
         val baseName = pkgName.dropLast(3)
-        return "$dep | $baseName"
+        val suffix = dep.removePrefix(pkgName)
+        return "$dep | $baseName$suffix"
     }
 
     private fun findSinglePackageArtifact(packageFormat: PackageFormat): Path {
