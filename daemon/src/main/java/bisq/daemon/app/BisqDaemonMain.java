@@ -30,6 +30,12 @@ import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 
 
 import bisq.daemon.grpc.GrpcServer;
@@ -40,8 +46,69 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     private GrpcServer grpcServer;
 
     public static void main(String[] args) {
+        // Check for existing instance
+        if (!checkForExistingInstance()) {
+            System.exit(1);
+        }
+        
         new BisqDaemonMain().execute(args);
     }
+
+   private static boolean checkForExistingInstance() {
+    try {
+        String appDataDir = System.getProperty("user.dir");
+        String lockFileName = "bisq-daemon.lock";
+        File lockFile = new File(appDataDir, lockFileName);
+
+        // If lock file exists, check if that PID is still running
+        if (lockFile.exists()) {
+            String pidString = Files.readString(Paths.get(lockFile.getPath()));
+            long pid = -1; // default invalid PID
+            try {
+                pid = Long.parseLong(pidString);
+                boolean isRunning = ProcessHandle.of(pid)
+                        .map(ProcessHandle::isAlive)
+                        .orElse(false);
+
+                if (isRunning) {
+                    log.warn("Another instance of Bisq daemon is already running with PID: " + pid);
+                    return false;
+                } else {
+                    // Process not running, remove stale lock file
+                    log.info("Stale lock file found with PID: " + pid + ", removing it");
+                    lockFile.delete();
+                }
+            } catch (NumberFormatException e) {
+                log.info("Invalid PID in lock file, removing stale lock file");
+                lockFile.delete();
+            } catch (Exception e) {
+                log.info("Could not verify process with PID: " + pid + ", removing stale lock file");
+                lockFile.delete();
+            }
+        }
+
+        // Create new lock file with current PID
+        long currentPid = ProcessHandle.current().pid();
+        try (FileWriter writer = new FileWriter(lockFile)) {
+            writer.write(String.valueOf(currentPid));
+        }
+        log.info("Created lock file with PID: " + currentPid);
+
+        // Ensure lock file is deleted on exit
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (lockFile.exists()) {
+                lockFile.delete();
+                log.info("Removed lock file");
+            }
+        }));
+
+        return true;
+    } catch (IOException e) {
+        log.error("Failed to check for existing instance", e);
+        return false;
+    }
+}
+
 
     /////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks

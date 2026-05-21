@@ -35,11 +35,18 @@ import bisq.core.user.User;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
@@ -59,8 +66,64 @@ public class BisqAppMain extends BisqExecutable {
         // realMain method:
         Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
 
+        // Check for existing instance
+        if (!checkForExistingInstance()) {
+            System.exit(1);
+        }
+
         new BisqAppMain().execute(args);
     }
+
+    private static boolean checkForExistingInstance() {
+    try {
+        String appDataDir = Utilities.getUserDataDir().getPath();
+        String lockFileName = "bisq-desktop.lock";
+        File lockFile = new File(appDataDir, lockFileName);
+
+        if (lockFile.exists()) {
+            String pidString = Files.readString(Paths.get(lockFile.getPath()));
+            long pid = -1; // declare PID before try/catch
+            try {
+                pid = Long.parseLong(pidString);
+                boolean isRunning = ProcessHandle.of(pid)
+                        .map(ProcessHandle::isAlive)
+                        .orElse(false);
+
+                if (isRunning) {
+                    log.warn("Another instance of Bisq desktop is already running with PID: " + pid);
+                    return false;
+                } else {
+                    log.info("Stale lock file found with PID: " + pid + ", removing it");
+                    lockFile.delete();
+                }
+            } catch (NumberFormatException e) {
+                log.info("Invalid PID in lock file, removing stale lock file");
+                lockFile.delete();
+            } catch (Exception e) {
+                log.info("Could not verify process with PID: " + pid + ", removing stale lock file");
+                lockFile.delete();
+            }
+        }
+
+        long currentPid = ProcessHandle.current().pid();
+        try (FileWriter writer = new FileWriter(lockFile)) {
+            writer.write(String.valueOf(currentPid));
+        }
+        log.info("Created lock file with PID: " + currentPid);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (lockFile.exists()) {
+                lockFile.delete();
+                log.info("Removed lock file");
+            }
+        }));
+
+        return true;
+    } catch (IOException e) {
+        log.error("Failed to check for existing instance", e);
+        return false;
+    }
+}
 
     @Override
     public void onSetupComplete() {
