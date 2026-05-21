@@ -50,3 +50,6 @@ deploy
 /build-logic/toolchain-resolver/out/*
 /build-logic/tor-binary/out/*
 .env
+
+# Directory for temp files
+/temp
