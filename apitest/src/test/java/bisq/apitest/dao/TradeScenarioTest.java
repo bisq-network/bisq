@@ -234,33 +234,42 @@ public class TradeScenarioTest extends DaoTestBase {
         assertEquals(BTC_AMOUNT_SATS, bob.getTrade(trade.getTradeId())
                 .getBsqSwapTradeInfo().getBtcTradeAmount());
 
-        // Mine a confirmation so the swap outputs count toward available_balance.
+        // Mine a confirmation so the swap outputs count toward available_balance, then
+        // await each expected balance movement. The BSQ parser updates the confirmed
+        // BSQ balance asynchronously after the block arrives, so a single one-shot read
+        // can race the parser and observe stale values — gate on the observable state
+        // change instead, with the timeout acting as the safety net.
         dao.generateBlocks(1);
-        long aliceBtcAfter = totalBtc(alice);
-        long bobBtcAfter = totalBtc(bob);
-        long aliceBsqAfter = alice.getBalances().getBsq().getAvailableConfirmedBalance();
-        long bobBsqAfter = bob.getBalances().getBsq().getAvailableConfirmedBalance();
         boolean aliceSellsBtc = "SELL".equalsIgnoreCase(direction);
         if (aliceSellsBtc) {
             // Alice sends BTC, receives BSQ. Bob sends BSQ, receives BTC.
-            assertTrue(aliceBtcAfter < aliceBtcBefore,
-                    "alice BTC must decrease: before=" + aliceBtcBefore + " after=" + aliceBtcAfter);
-            assertTrue(bobBtcAfter > bobBtcBefore,
-                    "bob BTC must increase: before=" + bobBtcBefore + " after=" + bobBtcAfter);
-            assertTrue(aliceBsqAfter > aliceBsqBefore,
-                    "alice BSQ must increase: before=" + aliceBsqBefore + " after=" + aliceBsqAfter);
-            assertTrue(bobBsqAfter < bobBsqBefore,
-                    "bob BSQ must decrease: before=" + bobBsqBefore + " after=" + bobBsqAfter);
+            awaitBalanceMove("alice BTC must decrease", aliceBtcBefore,
+                    () -> totalBtc(alice), false);
+            awaitBalanceMove("bob BTC must increase", bobBtcBefore,
+                    () -> totalBtc(bob), true);
+            awaitBalanceMove("alice BSQ must increase", aliceBsqBefore,
+                    () -> alice.getBalances().getBsq().getAvailableConfirmedBalance(), true);
+            awaitBalanceMove("bob BSQ must decrease", bobBsqBefore,
+                    () -> bob.getBalances().getBsq().getAvailableConfirmedBalance(), false);
         } else {
             // Alice buys BTC with BSQ. Bob sells BTC for BSQ.
-            assertTrue(aliceBtcAfter > aliceBtcBefore,
-                    "alice BTC must increase: before=" + aliceBtcBefore + " after=" + aliceBtcAfter);
-            assertTrue(bobBtcAfter < bobBtcBefore,
-                    "bob BTC must decrease: before=" + bobBtcBefore + " after=" + bobBtcAfter);
-            assertTrue(aliceBsqAfter < aliceBsqBefore,
-                    "alice BSQ must decrease: before=" + aliceBsqBefore + " after=" + aliceBsqAfter);
-            assertTrue(bobBsqAfter > bobBsqBefore,
-                    "bob BSQ must increase: before=" + bobBsqBefore + " after=" + bobBsqAfter);
+            awaitBalanceMove("alice BTC must increase", aliceBtcBefore,
+                    () -> totalBtc(alice), true);
+            awaitBalanceMove("bob BTC must decrease", bobBtcBefore,
+                    () -> totalBtc(bob), false);
+            awaitBalanceMove("alice BSQ must decrease", aliceBsqBefore,
+                    () -> alice.getBalances().getBsq().getAvailableConfirmedBalance(), false);
+            awaitBalanceMove("bob BSQ must increase", bobBsqBefore,
+                    () -> bob.getBalances().getBsq().getAvailableConfirmedBalance(), true);
         }
+    }
+
+    private static void awaitBalanceMove(String label, long before,
+                                         java.util.function.LongSupplier reader,
+                                         boolean expectIncrease) {
+        DaoTestUtils.await(() -> {
+            long now = reader.getAsLong();
+            return expectIncrease ? now > before : now < before;
+        }, 30_000, label + " (before=" + before + ")");
     }
 }
