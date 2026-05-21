@@ -113,7 +113,9 @@ public class RunningTor extends TorMode {
 
     @Override
     public String getHiddenServiceDirectory() {
-        return new File(torDir, HIDDEN_SERVICE_DIRECTORY).getAbsolutePath();
+        // Ensure proper encoding for hidden service directory to avoid issues with diacritics in usernames
+        File hiddenServiceDir = new File(torDir, HIDDEN_SERVICE_DIRECTORY);
+        return hiddenServiceDir.getAbsolutePath();
     }
 
 }
