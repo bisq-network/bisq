@@ -2446,3 +2446,368 @@ textfield */
     -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
     -fx-fill: -bs-background-color !important;
 }
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Tac                                                                                                             *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.tac-agreement-root {
+    -fx-background-color: transparent;
+}
+
+.tac-agreement-window {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 18, 0, 0, 0);
+}
+
+.tac-agreement-title-bar {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-background-radius: 6 6 0 0;
+    -fx-min-height: 40;
+    -fx-pref-height: 40;
+    -fx-padding: 0 12 0 12;
+    -fx-border-color: transparent transparent -bs-rd-separator transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tac-agreement-title {
+    -fx-font-size: 1.28em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-content {
+    -fx-background-color: transparent;
+}
+
+.tac-agreement-page-container {
+    -fx-background-color: transparent;
+}
+
+.tac-agreement-page {
+    -fx-padding: 0;
+}
+
+.tac-agreement-risk-page,
+.tac-agreement-legal-page {
+    -fx-padding: 2 0 0 0;
+}
+
+.tac-agreement-risk-overview {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.tac-agreement-header-section {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.tac-agreement-page-header {
+    -fx-padding: 0;
+}
+
+.tac-agreement-header-title-box {
+    -fx-alignment: center-left;
+}
+
+.tac-agreement-header-icon-box {
+    -fx-min-height: 54;
+    -fx-pref-height: 54;
+    -fx-max-height: 54;
+}
+
+.tac-agreement-header-title {
+    -fx-font-size: 1.18em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-color-primary;
+}
+
+.tac-agreement-header-subtitle {
+    -fx-font-size: 0.92em;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-header-divider {
+    -fx-background-color: -bs-color-primary;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.tac-agreement-risk-detail-row {
+    -fx-padding: 3 24 3 24;
+}
+
+.tac-agreement-risk-detail-icon-box {
+    -fx-background-color: rgba(37, 177, 53, 0.08);
+    -fx-background-radius: 22;
+    -fx-min-width: 44;
+    -fx-pref-width: 44;
+    -fx-max-width: 44;
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-max-height: 44;
+}
+
+.tac-agreement-risk-detail-title {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-risk-detail-body {
+    -fx-font-size: 0.94em;
+    -fx-line-spacing: 0;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-risk-separator {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.tac-agreement-important-callout {
+    -fx-background-color: rgba(248, 178, 73, 0.10);
+    -fx-background-radius: 4;
+    -fx-border-color: rgba(248, 178, 73, 0.30);
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+    -fx-padding: 5 14 5 14;
+}
+
+.tac-agreement-important-icon-box {
+    -fx-min-width: 64;
+    -fx-pref-width: 64;
+}
+
+.tac-agreement-important-divider {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-width: 1;
+    -fx-pref-width: 1;
+    -fx-max-width: 1;
+    -fx-min-height: 30;
+}
+
+.tac-agreement-important-bullets {
+    -fx-alignment: center-left;
+}
+
+.tac-agreement-important-bullet {
+    -fx-font-size: 0.92em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-confirm-panel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 9 0 0 0;
+}
+
+.tac-agreement-confirm-headline {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-color-primary;
+}
+
+.tac-agreement-check-box {
+    -fx-font-size: 0.92em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -jfx-checked-color: -bs-color-primary;
+}
+
+.tac-agreement-check-box:error {
+    -fx-text-fill: -bs-rd-error-red;
+    -jfx-unchecked-color: -bs-rd-error-red;
+}
+
+.tac-agreement-check-box:error .text {
+    -fx-fill: -bs-rd-error-red;
+}
+
+.tac-agreement-check-box .box {
+    -fx-border-color: -bs-color-gray-6;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+}
+
+.tac-agreement-check-box:error .box {
+    -fx-border-color: -bs-rd-error-red;
+    -fx-border-width: 1.5;
+}
+
+.tac-agreement-check-row-container {
+    -fx-padding: 0;
+}
+
+.tac-agreement-check-row {
+    -fx-alignment: center-left;
+    -fx-padding: 0;
+}
+
+.tac-agreement-legal-panel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+}
+
+.tac-agreement-legal-scroll-pane {
+    -fx-font-size: 0.9em;
+    -fx-background-color: -bs-color-gray-0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
+    -fx-border-radius: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-padding: 0;
+}
+
+.tac-agreement-legal-scroll-pane .viewport {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.tac-agreement-legal-scroll-content {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-padding: 14 16 14 16;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar,
+.tac-agreement-legal-scroll-pane .scroll-bar .track,
+.tac-agreement-legal-scroll-pane .scroll-bar .track-background,
+.tac-agreement-legal-scroll-pane .scroll-bar .increment-button,
+.tac-agreement-legal-scroll-pane .scroll-bar .decrement-button {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-border-color: -bs-color-gray-0;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: -bs-color-gray-3;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: -bs-color-gray-4;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .increment-arrow,
+.tac-agreement-legal-scroll-pane .scroll-bar .decrement-arrow {
+    -fx-background-color: -bs-color-gray-0;
+}
+
+.tac-agreement-legal-section-number,
+.tac-agreement-legal-section-title {
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-legal-section-number {
+    -fx-min-width: 18;
+    -fx-pref-width: 18;
+    -fx-font-size: 1em;
+}
+
+.tac-agreement-legal-section-title {
+    -fx-font-size: 1em;
+}
+
+.tac-agreement-legal-section-body {
+    -fx-font-size: 1em;
+    -fx-line-spacing: 1;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-legal-acknowledgment {
+    -fx-background-color: rgba(37, 177, 53, 0.07);
+    -fx-background-radius: 4;
+    -fx-padding: 10 16 10 16;
+}
+
+.tac-agreement-legal-acknowledgment-text {
+    -fx-font-size: 0.98em;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-legal-check-box {
+    -fx-padding: 0 0 0 8;
+    -fx-label-padding: 0 0 0 8;
+}
+
+.tac-agreement-legal-check-row {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0 0 16 0;
+}
+
+.tac-agreement-footer-separator {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.tac-agreement-footer {
+    -fx-padding: 6 0 8 0;
+}
+
+.tac-agreement-secondary-button {
+    -fx-font-size: 0.9em;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: -bs-color-gray-3;
+    -fx-border-width: 1;
+    -fx-padding: 0 18 0 18;
+    -jfx-rippler-fill: transparent;
+}
+
+.tac-agreement-secondary-button.tac-agreement-reject-button,
+.tac-agreement-secondary-button.tac-agreement-reject-button:hover,
+.tac-agreement-secondary-button.tac-agreement-reject-button:focused,
+.tac-agreement-secondary-button.tac-agreement-reject-button:armed,
+.tac-agreement-secondary-button.tac-agreement-reject-button:pressed {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-border-color: -bs-rd-error-red;
+    -fx-background-color: -bs-background-color;
+}
+
+.tac-agreement-secondary-button.tac-agreement-back-button {
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+}
+
+.action-button.tac-agreement-action-button {
+    -fx-font-size: 0.9em;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 6;
+    -fx-padding: 0 28 0 28;
+}
+
+.action-button.tac-agreement-action-button:disabled {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-text-fill: -bs-rd-font-light;
+}

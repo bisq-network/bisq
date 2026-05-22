@@ -1935,7 +1935,7 @@ message PreferencesPayload {
     string backup_directory = 8;
     bool auto_select_arbitrators = 9;
     map<string, bool> dont_show_again_map = 10;
-    bool tac_accepted = 11;
+    bool tac_accepted = 11 [deprecated = true];
     bool use_tor_for_bitcoin_j = 12;
     bool show_own_offers_in_offer_book = 13;
     TradeCurrency preferred_trade_currency = 14;
@@ -1978,7 +1978,7 @@ message PreferencesPayload {
     double buyer_security_deposit_as_percent_for_crypto = 52;
     int32 block_notify_port = 53;
     int32 css_theme = 54;
-    bool tac_accepted_v120 = 55;
+    bool tac_accepted_v120 = 55 [deprecated = true];
     repeated AutoConfirmSettings auto_confirm_settings = 56;
     double bsq_average_trim_threshold = 57;
     bool hide_non_account_payment_methods = 58;
@@ -1995,6 +1995,7 @@ message PreferencesPayload {
     bool process_burning_man_accounting_data = 69;
     bool is_full_b_m_accounting_node = 70;
     bool use_bisq_wallet_funding = 71;
+    bool tac_accepted_v1_10_1 = 72;
 }
 
 message AutoConfirmSettings {

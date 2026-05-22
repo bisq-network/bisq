@@ -469,13 +469,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setBlockChainExplorerTestNet(blockChainExplorer);
     }
 
-    public void setTacAccepted(boolean tacAccepted) {
-        prefPayload.setTacAccepted(tacAccepted);
-        requestPersistence();
-    }
-
-    public void setTacAcceptedV120(boolean tacAccepted) {
-        prefPayload.setTacAcceptedV120(tacAccepted);
+    public void setTacAcceptedV1_10_1(boolean tacAccepted) {
+        prefPayload.setTacAcceptedV1_10_1(tacAccepted);
         requestPersistence();
     }
 
@@ -1066,8 +1061,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     private interface ExcludesDelegateMethods {
-        void setTacAccepted(boolean tacAccepted);
-
         void setUseAnimations(boolean useAnimations);
 
         void setCssTheme(int cssTheme);
@@ -1190,8 +1183,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         int getBlockNotifyPort();
 
-        void setTacAcceptedV120(boolean tacAccepted);
-
         void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold);
 
         void setAutoConfirmSettings(AutoConfirmSettings autoConfirmSettings);
@@ -1223,5 +1214,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setFullBMAccountingNode(boolean isFullBMAccountingNode);
 
         boolean isUseFullModeDaoMonitor();
+
+        void setTacAcceptedV1_10_1(boolean tacAccepted);
     }
 }

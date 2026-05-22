@@ -64,7 +64,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
     private Map<String, Boolean> dontShowAgainMap = new HashMap<>();
-    private boolean tacAccepted;
     private boolean useTorForBitcoinJ = true;
     private boolean showOwnOffersInOfferBook = true;
     @Nullable
@@ -127,7 +126,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private int clearDataAfterDays = Preferences.CLEAR_DATA_AFTER_DAYS_INITIAL;
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent();
     private int blockNotifyPort;
-    private boolean tacAcceptedV120;
     private double bsqAverageTrimThreshold = 0.05;
 
     // Added at 1.3.8
@@ -151,6 +149,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean isFullBMAccountingNode = false;
 
     private boolean useBisqWalletFunding = false;
+
+    //Added at 1.10.1
+    private boolean tacAcceptedV1_10_1;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -179,7 +181,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setBlockChainExplorerTestNet((protobuf.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
                 .setAutoSelectArbitrators(autoSelectArbitrators)
                 .putAllDontShowAgainMap(dontShowAgainMap)
-                .setTacAccepted(tacAccepted)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
                 .setWithdrawalTxFeeInVbytes(withdrawalTxFeeInVbytes)
@@ -210,7 +211,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setClearDataAfterDays(clearDataAfterDays)
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort)
-                .setTacAcceptedV120(tacAcceptedV120)
                 .setBsqAverageTrimThreshold(bsqAverageTrimThreshold)
                 .addAllAutoConfirmSettings(autoConfirmSettingsList.stream()
                         .map(autoConfirmSettings -> ((protobuf.AutoConfirmSettings) autoConfirmSettings.toProtoMessage()))
@@ -225,7 +225,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUserHasRaisedTradeLimit(userHasRaisedTradeLimit)
                 .setProcessBurningManAccountingData(processBurningManAccountingData)
                 .setIsFullBMAccountingNode(isFullBMAccountingNode)
-                .setUseBisqWalletFunding(useBisqWalletFunding);
+                .setUseBisqWalletFunding(useBisqWalletFunding)
+                .setTacAcceptedV1101(tacAcceptedV1_10_1);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -278,7 +279,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 ProtoUtil.stringOrNullFromProto(proto.getBackupDirectory()),
                 proto.getAutoSelectArbitrators(),
                 Maps.newHashMap(proto.getDontShowAgainMapMap()),
-                proto.getTacAccepted(),
                 proto.getUseTorForBitcoinJ(),
                 proto.getShowOwnOffersInOfferBook(),
                 proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
@@ -324,7 +324,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getClearDataAfterDays(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
-                proto.getTacAcceptedV120(),
                 proto.getBsqAverageTrimThreshold(),
                 proto.getAutoConfirmSettingsList().isEmpty() ? new ArrayList<>() :
                         new ArrayList<>(proto.getAutoConfirmSettingsList().stream()
@@ -340,7 +339,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUserHasRaisedTradeLimit(),
                 proto.getProcessBurningManAccountingData(),
                 proto.getIsFullBMAccountingNode(),
-                proto.getUseBisqWalletFunding()
+                proto.getUseBisqWalletFunding(),
+                proto.getTacAcceptedV1101()
         );
     }
 }
