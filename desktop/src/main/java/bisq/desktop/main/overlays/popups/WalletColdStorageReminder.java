@@ -24,12 +24,14 @@ import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
-import org.bitcoinj.core.Coin;
+import bisq.common.app.DevEnv;
 
-import javax.inject.Named;
+import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import javax.inject.Named;
 
 import java.util.concurrent.TimeUnit;
 
@@ -82,6 +84,10 @@ public class WalletColdStorageReminder {
     private void maybeShow(boolean ignoreCooldown) {
         Coin total = totalBalance();
         if (!total.isGreaterThan(THRESHOLD)) return;
+
+        if (DevEnv.isIgnorePopupsInDevMode()) {
+            return;
+        }
 
         long now = System.currentTimeMillis();
         if (!ignoreCooldown && now - lastShownMs < COOLDOWN_MS) return;
