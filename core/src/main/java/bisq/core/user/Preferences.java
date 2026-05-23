@@ -474,6 +474,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setTradeRulesAccepted(boolean tradeRulesAccepted) {
+        prefPayload.setTradeRulesAccepted(tradeRulesAccepted);
+        requestPersistence();
+    }
+
     public void setBsqAverageTrimThreshold(double bsqAverageTrimThreshold) {
         prefPayload.setBsqAverageTrimThreshold(bsqAverageTrimThreshold);
         requestPersistence();
@@ -1216,5 +1221,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         boolean isUseFullModeDaoMonitor();
 
         void setTacAcceptedV1_10_1(boolean tacAccepted);
+
+        void setTradeRulesAccepted(boolean tradeRulesAccepted);
     }
 }

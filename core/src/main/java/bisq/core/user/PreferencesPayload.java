@@ -152,6 +152,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
 
     //Added at 1.10.1
     private boolean tacAcceptedV1_10_1;
+    private boolean tradeRulesAccepted;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +227,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setProcessBurningManAccountingData(processBurningManAccountingData)
                 .setIsFullBMAccountingNode(isFullBMAccountingNode)
                 .setUseBisqWalletFunding(useBisqWalletFunding)
-                .setTacAcceptedV1101(tacAcceptedV1_10_1);
+                .setTacAcceptedV1101(tacAcceptedV1_10_1)
+                .setTradeRulesAccepted(tradeRulesAccepted);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -340,7 +342,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getProcessBurningManAccountingData(),
                 proto.getIsFullBMAccountingNode(),
                 proto.getUseBisqWalletFunding(),
-                proto.getTacAcceptedV1101()
+                proto.getTacAcceptedV1101(),
+                proto.getTradeRulesAccepted()
         );
     }
 }

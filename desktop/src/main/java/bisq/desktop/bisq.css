@@ -2745,7 +2745,7 @@ textfield */
 }
 
 .tac-agreement-legal-acknowledgment-text {
-    -fx-font-size: 0.98em;
+    -fx-font-size: 1em;
     -fx-text-fill: -bs-rd-font-dark;
 }
 
@@ -2759,6 +2759,91 @@ textfield */
     -fx-background-radius: 0;
     -fx-border-width: 0;
     -fx-padding: 0 0 16 0;
+}
+
+.trade-rules-page {
+    -fx-padding: 2 0 0 0;
+}
+
+.trade-rules-list {
+    -fx-background-color: -bs-background-color;
+    -fx-padding: 2 16 2 0;
+}
+
+.trade-rules-header-title {
+    -fx-font-size: 1.8em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-color-primary;
+}
+
+
+.trade-rules-scroll-pane .scroll-bar,
+.trade-rules-scroll-pane .scroll-bar .track,
+.trade-rules-scroll-pane .scroll-bar .track-background,
+.trade-rules-scroll-pane .scroll-bar .increment-button,
+.trade-rules-scroll-pane .scroll-bar .decrement-button {
+    -fx-background-color: -bs-background-color;
+    -fx-border-color: -bs-background-color;
+}
+
+.trade-rules-scroll-pane .scroll-bar:vertical {
+    -fx-pref-width: 12;
+}
+
+.trade-rules-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: -bs-color-gray-3;
+    -fx-background-radius: 5;
+}
+
+.trade-rules-scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: -bs-color-gray-4;
+}
+
+.trade-rules-scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.trade-rules-scroll-pane .scroll-bar .increment-arrow,
+.trade-rules-scroll-pane .scroll-bar .decrement-arrow {
+    -fx-background-color: -bs-background-color;
+}
+
+.trade-rules-row {
+    -fx-padding: 7 22 7 24;
+}
+
+.trade-rules-row-icon-box {
+    -fx-background-color: rgba(37, 177, 53, 0.08);
+    -fx-background-radius: 22;
+    -fx-min-width: 44;
+    -fx-pref-width: 44;
+    -fx-max-width: 44;
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-max-height: 44;
+}
+
+.trade-rules-row-title {
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.trade-rules-row-body {
+    -fx-font-size: 1em;
+    -fx-line-spacing: 0;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.trade-rules-separator {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.trade-rules-check-row {
+    -fx-padding: 0 0 8 0;
 }
 
 .tac-agreement-footer-separator {

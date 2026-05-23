@@ -598,8 +598,6 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         createOfferButton.setDisable(true);
         disabledCreateOfferButtonTooltip.setManaged(true);
         disabledCreateOfferButtonTooltip.setVisible(true);
-
-        model.onCreateOffer();
     }
 
     public void setDirection(OfferDirection direction) {
@@ -652,7 +650,15 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                 return;
             }
 
-            disableCreateOfferButton();
+            if (model.isTradeRulesAccepted()) {
+                model.onCreateOffer();
+                disableCreateOfferButton();
+            } else {
+                model.showTradeRulesWindow(() -> {
+                    model.onCreateOffer();
+                    disableCreateOfferButton();
+                }, () -> root.requestFocus());
+            }
         }
     }
 
@@ -721,16 +727,26 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             if (offer.getDirection() == OfferDirection.SELL &&
                     offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
                 if (DevEnv.isIgnorePopupsInDevMode()) {
-                    model.onTakeOffer(offer);
+                    doTakeOffer(offer);
                     return;
                 }
                 new Popup().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
                         .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
-                        .onAction(() -> model.onTakeOffer(offer))
+                        .onAction(() -> doTakeOffer(offer))
                         .show();
             } else {
-                model.onTakeOffer(offer);
+                doTakeOffer(offer);
             }
+        }
+    }
+
+    private void doTakeOffer(Offer offer) {
+        if (model.isTradeRulesAccepted()) {
+            model.onTakeOffer(offer);
+        } else {
+            model.showTradeRulesWindow(() -> {
+                model.onTakeOffer(offer);
+            }, () -> root.requestFocus());
         }
     }
 
@@ -796,7 +812,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             if (DevEnv.isIgnorePopupsInDevMode()) {
                 var bsqAccount = model.createBsqAccount(offer);
                 log.info("Created BSQ account {} while skipping popup in dev mode.", bsqAccount.getAccountName());
-                model.onTakeOffer(offer);
+                doTakeOffer(offer);
                 return;
             }
             new Popup().headLine(headline)
@@ -811,7 +827,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                         message += Res.get("offerbook.info.accountCreated.takeOffer");
                         new Popup().headLine(Res.get("offerbook.info.accountCreated.headline"))
                                 .information(message)
-                                .onClose(() -> model.onTakeOffer(offer))
+                                .onClose(() -> doTakeOffer(offer))
                                 .show();
                     }).show();
         } else {

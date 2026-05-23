@@ -1996,6 +1996,7 @@ message PreferencesPayload {
     bool is_full_b_m_accounting_node = 70;
     bool use_bisq_wallet_funding = 71;
     bool tac_accepted_v1_10_1 = 72;
+    bool trade_rules_accepted = 73;
 }
 
 message AutoConfirmSettings {
