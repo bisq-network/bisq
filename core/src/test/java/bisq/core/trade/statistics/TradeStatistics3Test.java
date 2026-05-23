@@ -21,7 +21,10 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import com.google.common.collect.Sets;
 
+import org.bitcoinj.core.Coin;
+
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,8 +32,38 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TradeStatistics3Test {
+    @Test
+    public void isValidAcceptsHistoricalTradeAboveCurrentTradeLimit() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
+                50_000_000,
+                Coin.parseCoin("0.25").value,
+                "SEPA",
+                System.currentTimeMillis(),
+                null,
+                null,
+                (Map<String, String>) null);
+
+        assertTrue(tradeStatistics.isValid());
+    }
+
+    @Test
+    public void isValidRejectsTradeAboveHistoricalSanityLimit() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
+                50_000_000,
+                TradeStatistics3.HISTORICAL_MAX_TRADE_AMOUNT + 1,
+                "SEPA",
+                System.currentTimeMillis(),
+                null,
+                null,
+                (Map<String, String>) null);
+
+        assertFalse(tradeStatistics.isValid());
+    }
+
     @Disabled("Not fixed yet")
     @Test
     public void allPaymentMethodsCoveredByWrapper() {
