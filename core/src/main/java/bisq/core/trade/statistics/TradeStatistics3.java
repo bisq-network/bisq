@@ -23,7 +23,6 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.bisq_v1.OfferPayload;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.JsonUtil;
@@ -86,6 +85,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
     @JsonExclude
     private static final long STRICT_FILTER_DATE = new GregorianCalendar(2021, Calendar.NOVEMBER, 1).getTime().getTime();
+    @JsonExclude
+    @VisibleForTesting
+    static final long HISTORICAL_MAX_TRADE_AMOUNT = Coin.COIN.multiply(2).value;
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
@@ -450,30 +452,24 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
             return false;
         }
 
-        boolean validMaxTradeLimit = true;
+        boolean validHistoricalTradeAmount = true;
         boolean currencyFound = true;
         // We had historically higher trade limits and assets which are not in the currency list anymore, so we apply
         // the filter only for data after STRICT_FILTER_DATE.
         if (date > STRICT_FILTER_DATE) {
-            long maxTradeLimit = Coin.COIN.multiply(2).value;
-            try {
-                // We cover only active payment methods. Retired ones will not be found by getActivePaymentMethodById.
-                String paymentMethodId = getPaymentMethodId();
-                Optional<PaymentMethod> optionalPaymentMethod = PaymentMethod.getActivePaymentMethod(paymentMethodId);
-                if (optionalPaymentMethod.isPresent()) {
-                    maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
-                }
-            } catch (Exception e) {
-                log.warn("Error at isValid().", e);
-            }
-            validMaxTradeLimit = amount <= maxTradeLimit;
+            // Trade statistics are historical facts. Do not validate them against the
+            // current payment-method or DAO trade limit: those limits can be lowered after
+            // a trade was executed, which would make old valid statistics disappear from
+            // storage, charts and republishing. Keep only a stable sanity cap based on the
+            // historical global trade limit.
+            validHistoricalTradeAmount = amount <= HISTORICAL_MAX_TRADE_AMOUNT;
 
             currencyFound = CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
                     CurrencyUtil.getFiatCurrency(currency).isPresent();
         }
 
         return amount > 0 &&
-                validMaxTradeLimit &&
+                validHistoricalTradeAmount &&
                 price > 0 &&
                 date > 0 &&
                 paymentMethod != null &&
