@@ -20,6 +20,7 @@ package bisq.core.trade.validation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.validation.ValidationTestUtils.InputsForDepositTxRequestValidationFixture;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 
 import org.bitcoinj.core.Coin;
@@ -66,8 +67,14 @@ class InputsForDepositTxRequestValidationTest {
 
     @Test
     void checkInputsForDepositTxRequestRejectsTxFeeOutsideAllowedTolerance() throws CryptoException {
+        // Fixture builds the request at a low txFeePerVbyte which FeeService.updateFeeInfo
+        // clamps up to the network minimum. To stay outside the 2x deviation tolerance we
+        // override the validator's FeeService above 2 * networkMin, derived from Config so
+        // the test does not silently lose its assertion if the network minimum changes.
         InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
-        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), 10);
+        long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+        long txFeeOutsideTolerance = 2 * networkMin + 1;
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), txFeeOutsideTolerance);
 
         assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
                 fixture.offer,

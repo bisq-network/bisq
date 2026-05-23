@@ -80,6 +80,10 @@ public class BsqSwapTakeOfferRequestVerification {
 
             long peersMinerFeeRate = request.getTxFeePerVbyte();
             long expectedMinerFeeRate = feeService.getTxFeePerVbyte().getValue();
+            long minMinerFeeRate = feeService.getMinFeePerVByte();
+            Validator.checkIsPositive(minMinerFeeRate, "minMinerFeeRate");
+            checkArgument(peersMinerFeeRate >= minMinerFeeRate,
+                    "Peer miner fee rate is below minimum. peer=%s, min=%s", peersMinerFeeRate, minMinerFeeRate);
             MinerFeeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
 
             checkMakerFee(request.getMakerFee(), false, amountAsCoin);

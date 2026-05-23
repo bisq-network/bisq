@@ -47,6 +47,7 @@ public class FeeService {
     // Miner fees are between 1-600 sat/vbyte. We try to stay on the safe side. BTC_DEFAULT_TX_FEE is only used if our
     // fee service would not deliver data.
     private static final long BTC_DEFAULT_TX_FEE = 50;
+    static final long BTC_MAX_TX_FEE = 600;
     private static DaoStateService daoStateService;
     private static PeriodService periodService;
     private static FilterManager filterManager = null;
@@ -143,10 +144,27 @@ public class FeeService {
     }
 
     public void updateFeeInfo(long txFeePerVbyte, long minFeePerVByte) {
-        this.txFeePerVbyte = txFeePerVbyte;
-        this.minFeePerVByte = minFeePerVByte;
+        // Defense-in-depth: a misbehaving or malicious fee provider could push values outside
+        // the realistic range downstream code assumes. Clamp both fields to the network
+        // default min and cap them at the documented high-water mark so the invariant
+        // BTC_MAX_TX_FEE >= txFeePerVbyte >= minFeePerVByte >= networkMin holds for every
+        // consumer. This matters for BSQ-swap arithmetic where getAdjustedTxFee relies on
+        // txFeePerVbyte >= minFeePerVByte to guarantee total tx fee meets relay minimum
+        // when one side's BSQ trade fee exceeds its miner-portion (see BsqSwapCalculation),
+        // and avoids multiply overflow in fee estimators if a bad feed returns absurd values.
+        long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+        long clampedMinFee = Math.min(Math.max(minFeePerVByte, networkMin), BTC_MAX_TX_FEE);
+        long clampedTxFee = Math.min(Math.max(txFeePerVbyte, clampedMinFee), BTC_MAX_TX_FEE);
+        if (clampedTxFee != txFeePerVbyte || clampedMinFee != minFeePerVByte) {
+            log.warn("Fee provider returned txFeePerVbyte={}, minFeePerVbyte={}, networkMin={}, maxFeePerVbyte={}; " +
+                            "clamped to txFeePerVbyte={}, minFeePerVbyte={} to enforce " +
+                            "maxFeePerVbyte>=txFeePerVbyte>=minFeePerVbyte>=networkMin",
+                    txFeePerVbyte, minFeePerVByte, networkMin, BTC_MAX_TX_FEE, clampedTxFee, clampedMinFee);
+        }
+        this.txFeePerVbyte = clampedTxFee;
+        this.minFeePerVByte = clampedMinFee;
         feeUpdateCounter.set(feeUpdateCounter.get() + 1);
         lastRequest = Instant.now().getEpochSecond();
-        log.info("BTC tx fee: txFeePerVbyte={} minFeePerVbyte={}", txFeePerVbyte, minFeePerVByte);
+        log.info("BTC tx fee: txFeePerVbyte={} minFeePerVbyte={}", this.txFeePerVbyte, this.minFeePerVByte);
     }
 }

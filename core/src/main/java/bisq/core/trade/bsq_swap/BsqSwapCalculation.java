@@ -24,7 +24,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.monetary.Volume;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.validation.MinerFeeValidation;
 import bisq.core.util.Validator;
 
 import bisq.common.util.MathUtils;
@@ -115,7 +114,7 @@ public class BsqSwapCalculation {
                                                         long buyerTradeFee) {
         // Use estimated size. This is used in case the wallet has not enough fund so we cannot calculate the exact
         // amount but we still want to provide some estimated value.
-        long buyersTxFee = getAdjustedTxFeeForEstimate(txFeePerVbyte, ESTIMATED_V_BYTES, buyerTradeFee);
+        long buyersTxFee = getAdjustedTxFee(txFeePerVbyte, ESTIMATED_V_BYTES, buyerTradeFee);
         return getBuyersBtcPayoutValue(btcTradeAmount.getValue(), buyersTxFee);
     }
 
@@ -154,7 +153,7 @@ public class BsqSwapCalculation {
                                                         long sellersTradeFee) {
         // Use estimated size. This is used in case the wallet has not enough fund so we cannot calculate the exact
         // amount but we still want to provide some estimated value.
-        long sellersTxFee = getAdjustedTxFeeForEstimate(txFeePerVbyte, ESTIMATED_V_BYTES, sellersTradeFee);
+        long sellersTxFee = getAdjustedTxFee(txFeePerVbyte, ESTIMATED_V_BYTES, sellersTradeFee);
         return getSellersBtcInputValue(btcTradeAmount.getValue(), sellersTxFee);
     }
 
@@ -237,38 +236,31 @@ public class BsqSwapCalculation {
         Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
         Validator.checkIsPositive(vBytes, "vBytes");
         Validator.checkIsNotNegative(tradeFee, "tradeFee");
-        // tradeFee must be strictly less than miner-fee portion; otherwise buyer payout inverts
-        // (or zeroes buyer fee contribution) and sum-of-outputs >= sum-of-inputs, producing
-        // an unbroadcastable tx. Coin.multiply/subtract use Math.*Exact internally, so overflow
-        // trips loudly if future callers relax current input bounds.
-        Coin adjustedTxFee = Coin.valueOf(txFeePerVbyte)
-                .multiply(vBytes)
-                .subtract(Coin.valueOf(tradeFee));
-        Validator.checkIsPositive(adjustedTxFee, "adjustedTxFee");
-        return adjustedTxFee.value;
-    }
-
-    // Lenient variant for UI estimation paths where a precise value is not required and
-    // throwing would break display when wallet is underfunded. Saturates the output (not
-    // the inputs) at the documented trade-tx-fee upper bound on multiply overflow or
-    // absurd magnitudes, and clamps subtraction underflow to 0.
-    private static long getAdjustedTxFeeForEstimate(long txFeePerVbyte, int vBytes, long tradeFee) {
-        // Coin.multiply uses Math.multiplyExact internally; saturate on overflow at the
-        // documented trade-tx-fee upper bound rather than throwing.
-        Coin minerFeePortion;
-        try {
-            minerFeePortion = Coin.valueOf(txFeePerVbyte).multiply(vBytes);
-        } catch (ArithmeticException e) {
-            minerFeePortion = Coin.valueOf(MinerFeeValidation.MAX_TRADE_TX_FEE_SAT);
-        }
-        // tradeFee is expected to be non-negative; clamp defensively so a negative input
-        // cannot make the subtraction overflow upward. Coin.subtract throws on underflow,
-        // so guard before subtracting and clamp the result to zero.
-        Coin safeTradeFee = Coin.valueOf(Math.max(0L, tradeFee));
-        if (minerFeePortion.isLessThan(safeTradeFee)) {
+        // BSQ trade fees burn into the miner-fee pool: BSQ-colored input sats that are not
+        // claimed by any BSQ output fall through into the tx fee. If this side's trade fee
+        // already covers its share of the miner cost, our BTC miner contribution is 0 and
+        // the excess BSQ simply makes the tx slightly overpay — still valid, still
+        // broadcastable. Clamping at 0 (rather than throwing on a negative result) is what
+        // keeps BSQ offers takable at low fee rates with small inputs, where the BSQ trade
+        // fee alone can exceed vBytes * txFeePerVbyte. The DAO still records the full trade
+        // fee as burnt regardless of whether the miner ends up overpaid. Coin.multiply uses
+        // Math.multiplyExact so an absurd txFeePerVbyte still trips loudly upstream.
+        //
+        // Min-relay viability: assuming Bisq's standing invariant txFeePerVbyte >=
+        // FeeService.getMinFeePerVByte(), clamping at 0 is provably equivalent to clamping
+        // at the per-side min-fee floor. Proof: the clamp branch fires only when
+        // tradeFee > vBytes * txFeePerVbyte, which under the invariant implies
+        // tradeFee > vBytes * minFeePerVbyte; the BSQ trade fee on its own already covers
+        // this side's share of the network minimum, so adding any positive BTC contribution
+        // would over-pay. A separate min-fee floor on the result would force a large BTC
+        // over-payment for no protocol benefit. The invariant on the input itself is
+        // out of scope for this calculator and is owned by FeeService / offer-create paths.
+        Coin minerFeePortion = Coin.valueOf(txFeePerVbyte).multiply(vBytes);
+        Coin tradeFeeCoin = Coin.valueOf(tradeFee);
+        if (minerFeePortion.isLessThan(tradeFeeCoin)) {
             return 0L;
         }
-        return minerFeePortion.subtract(safeTradeFee).value;
+        return minerFeePortion.subtract(tradeFeeCoin).value;
     }
 
     // Convert BTC trade amount to BSQ amount
