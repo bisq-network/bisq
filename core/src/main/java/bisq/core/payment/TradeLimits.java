@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class TradeLimits implements DaoStateListener {
-    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("0.125");
+    public static final Coin MAX_TRADE_AMOUNT = Coin.parseCoin("0.250");
 
     @Nullable
     @Getter
@@ -84,8 +84,6 @@ public class TradeLimits implements DaoStateListener {
         return clamp(limit);
     }
 
-    // TODO: Remove this temporary 0.125 BTC cap once the DAO-adjusted MAX_TRADE_LIMIT
-    // makes this hard-coded mitigation unnecessary.
     public static Coin clamp(Coin amount) {
         return amount.isGreaterThan(MAX_TRADE_AMOUNT) ? MAX_TRADE_AMOUNT : amount;
     }
@@ -113,11 +111,9 @@ public class TradeLimits implements DaoStateListener {
      */
     @VisibleForTesting
     long getFirstMonthRiskBasedTradeLimit(long maxLimit, long riskFactor) {
-        // The first month we use 1/4 of the max limit. We multiply with riskFactor, so 1/ (4 * 8) is smallest limit in
-        // first month of a maxTradeLimitHighRisk method
-        long smallestLimit = maxLimit / (4 * riskFactor);  // e.g. 100000000 / 32 = 3125000
-        // We want to avoid more than 4 decimal places (100000000 / 32 = 3125000 or 1 BTC / 32 = 0.03125 BTC).
-        // We want rounding to 0.0313 BTC
+        // The first month uses 1/4 of the max limit, adjusted by the risk factor.
+        long smallestLimit = maxLimit / (4 * riskFactor);  // e.g. 25000000 / 16 = 1562500
+        // We want to avoid more than 4 decimal places. For example, 0.25 BTC / 16 rounds to 0.0156 BTC.
         return ((smallestLimit + 5000L) / 10000L) * 10000L;
     }
 }

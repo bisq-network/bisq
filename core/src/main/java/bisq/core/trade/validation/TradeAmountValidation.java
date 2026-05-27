@@ -47,7 +47,7 @@ public final class TradeAmountValidation {
         checkArgument(!tradeAmount.isGreaterThan(offerMaxAmount),
                 "Trade amount must not be higher than maximum offer amount. tradeAmount=%s, offerMaxAmount=%s",
                 tradeAmount.toFriendlyString(), offerMaxAmount.toFriendlyString());
-        // Re-clamp against the post-hotfix max trade amount. The 0.125 BTC cap is enforced at
+        // Re-clamp against the post-hotfix max trade amount. The max trade amount is enforced at
         // offer creation, but pre-hotfix offers persisted with a larger amount must not be
         // takeable above the cap. Without this, the legacy offer's offerMaxAmount bound is
         // the only ceiling.
