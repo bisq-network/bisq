@@ -165,6 +165,15 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public static final int CLEAR_DATA_AFTER_DAYS_INITIAL = 99999; // feature effectively disabled until user agrees to settings notification
     public static final int CLEAR_DATA_AFTER_DAYS_DEFAULT = 60; // used when user has agreed to settings notification
     public static final long INITIAL_TRADE_LIMIT = 10000000L;
+    public static final long INITIAL_COLD_STORAGE_REMINDER_THRESHOLD = 20000000L;
+    public static final long MAX_COLD_STORAGE_REMINDER_THRESHOLD = 200000000L;
+
+    public static long getClampedColdStorageReminderThreshold(long threshold) {
+        if (threshold <= 0) {
+            return INITIAL_COLD_STORAGE_REMINDER_THRESHOLD;
+        }
+        return Math.min(threshold, MAX_COLD_STORAGE_REMINDER_THRESHOLD);
+    }
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -378,6 +387,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         if (prefPayload.getClearDataAfterDays() < 1) {
             setClearDataAfterDays(Preferences.CLEAR_DATA_AFTER_DAYS_INITIAL);
+        }
+
+        long coldStorageReminderThreshold = prefPayload.getColdStorageReminderThreshold();
+        long clampedColdStorageReminderThreshold = getClampedColdStorageReminderThreshold(coldStorageReminderThreshold);
+        if (coldStorageReminderThreshold != clampedColdStorageReminderThreshold) {
+            setColdStorageReminderThreshold(clampedColdStorageReminderThreshold);
         }
 
         // For users from old versions the 4 flags a false but we want to have it true by default
@@ -856,6 +871,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setColdStorageReminderThreshold(long value) {
+        prefPayload.setColdStorageReminderThreshold(getClampedColdStorageReminderThreshold(value));
+        requestPersistence();
+    }
+
     public void setProcessBurningManAccountingData(boolean processBurningManAccountingData) {
         prefPayload.setProcessBurningManAccountingData(processBurningManAccountingData);
         requestPersistence();
@@ -1213,6 +1233,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setUserDefinedTradeLimit(long userDefinedTradeLimit);
 
         void setUserHasRaisedTradeLimit(boolean userHasRaisedTradeLimit);
+
+        void setColdStorageReminderThreshold(long coldStorageReminderThreshold);
 
         void setProcessBurningManAccountingData(boolean processBurningManAccountingData);
 

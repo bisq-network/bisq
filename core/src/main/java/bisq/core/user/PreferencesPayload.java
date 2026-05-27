@@ -153,6 +153,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     //Added at 1.10.1
     private boolean tacAcceptedV1_10_1;
     private boolean tradeRulesAccepted;
+    private long coldStorageReminderThreshold = Preferences.INITIAL_COLD_STORAGE_REMINDER_THRESHOLD;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +229,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setIsFullBMAccountingNode(isFullBMAccountingNode)
                 .setUseBisqWalletFunding(useBisqWalletFunding)
                 .setTacAcceptedV1101(tacAcceptedV1_10_1)
-                .setTradeRulesAccepted(tradeRulesAccepted);
+                .setTradeRulesAccepted(tradeRulesAccepted)
+                .setColdStorageReminderThreshold(coldStorageReminderThreshold);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -343,7 +345,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getIsFullBMAccountingNode(),
                 proto.getUseBisqWalletFunding(),
                 proto.getTacAcceptedV1101(),
-                proto.getTradeRulesAccepted()
+                proto.getTradeRulesAccepted(),
+                Preferences.getClampedColdStorageReminderThreshold(proto.getColdStorageReminderThreshold())
         );
     }
 }
