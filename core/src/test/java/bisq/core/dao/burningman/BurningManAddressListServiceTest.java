@@ -17,7 +17,9 @@
 
 package bisq.core.dao.burningman;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,13 +32,20 @@ class BurningManAddressListServiceTest {
     void loadsBundledAddressListsByVersion() {
         BurningManAddressListService service = new BurningManAddressListService();
 
-        assertEquals(List.of(1), service.getSupportedVersions());
+        List<Integer> supportedVersions = service.getSupportedVersions();
+        assertEquals(new ArrayList<>(new TreeSet<>(supportedVersions)), supportedVersions);
+        assertTrue(supportedVersions.contains(1));
 
         BurningManAddressList addressList = service.getAddressList(1);
         assertEquals(1, addressList.getListVersion());
         assertEquals("BTC_MAINNET", addressList.getNetwork());
         assertEquals(20, addressList.getReceiverAddresses().size());
         assertTrue(addressList.getAllowedAddresses().contains("34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC"));
+
+        BurningManAddressList latestAddressList = service.getAddressList(service.getLatestVersion());
+        assertEquals(service.getLatestVersion(), latestAddressList.getListVersion());
+        assertEquals("BTC_MAINNET", latestAddressList.getNetwork());
+        assertTrue(!latestAddressList.getReceiverAddresses().isEmpty());
     }
 
     @Test
@@ -44,6 +53,7 @@ class BurningManAddressListServiceTest {
         BurningManAddressListService service = new BurningManAddressListService();
 
         assertEquals(1, service.selectHighestCommonVersion(List.of(1)));
+        assertEquals(service.getLatestVersion(), service.selectHighestCommonVersion(service.getSupportedVersions()));
     }
 
     @Test
