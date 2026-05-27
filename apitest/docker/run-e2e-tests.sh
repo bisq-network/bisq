@@ -31,7 +31,11 @@ SKIP_DOCKER_BUILD=0
 # `bisq.apitest.dao.*` covers DAO governance + v1 trade scenarios.
 TEST_PATTERN="${TEST_PATTERN:-bisq.apitest.method.* bisq.apitest.dao.*}"
 # Fresh-stack test discovery happens after SCRIPT_DIR/REPO_ROOT are set below.
-GLOBAL_TIMEOUT_SECS="${GLOBAL_TIMEOUT_SECS:-1800}"
+# 2-core CI runners run the 5-container stack ~3-4x slower than a dev box and do 9
+# fresh-stack resets on top of the shared phase, so a healthy run can approach 30min.
+# 1800s sat right on that edge → legit runs tripped the ceiling. 3600s gives headroom
+# while staying well under GitHub's 6h job cap. A trip now hard-fails (see TIMEOUT_MARKER).
+GLOBAL_TIMEOUT_SECS="${GLOBAL_TIMEOUT_SECS:-3600}"
 READY_TIMEOUT_SECS="${READY_TIMEOUT_SECS:-300}"
 
 while [[ $# -gt 0 ]]; do
@@ -54,6 +58,12 @@ COMPOSE_FILE="${SCRIPT_DIR}/dao-compose.yml"
 LOGS_DIR="${SCRIPT_DIR}/logs"
 GRADLE="${GRADLE:-${REPO_ROOT}/gradlew}"
 PID_FILE="${PID_FILE:-/tmp/bisq-e2e-tests.pid}"
+# Marker dropped by the global-timeout watchdog before it SIGTERMs us, so cleanup
+# can distinguish a timeout-abort (must fail CI) from a clean exit. Without it the
+# trap captures $? of whatever trivial command was mid-flight (often 0) and the
+# aborted run reports success.
+TIMEOUT_MARKER="${TIMEOUT_MARKER:-/tmp/bisq-e2e-tests.timedout}"
+rm -f "${TIMEOUT_MARKER}"
 
 # Auto-discover fresh-stack test classes from source: anything tagged
 # `@Tag("freshstack")` in apitest/src/test/java/bisq/apitest. Single source of truth
@@ -86,7 +96,7 @@ echo $$ > "${PID_FILE}"
 # but any fatal/exit before then would otherwise leave a stale PID file and an
 # orphan watchdog sleep. Replaced by the full trap at the bottom of the script.
 early_cleanup() {
-  rm -f "${PID_FILE}"
+  rm -f "${PID_FILE}" "${TIMEOUT_MARKER}"
   if [[ -n "${TIMEOUT_PID:-}" ]]; then
     pkill -P "${TIMEOUT_PID}" 2>/dev/null || true
     kill "${TIMEOUT_PID}" 2>/dev/null || true
@@ -205,7 +215,7 @@ reset_stack() {
 # Global timeout: send SIGTERM to ourselves (triggers cleanup trap below) if total
 # run exceeds GLOBAL_TIMEOUT_SECS. Using kill on $$ (not -$$) so trap fires before
 # child processes get reaped.
-( sleep "${GLOBAL_TIMEOUT_SECS}" && err "global timeout ${GLOBAL_TIMEOUT_SECS}s exceeded; aborting" && kill -TERM $$ ) &
+( sleep "${GLOBAL_TIMEOUT_SECS}" && err "global timeout ${GLOBAL_TIMEOUT_SECS}s exceeded; aborting" && touch "${TIMEOUT_MARKER}" && kill -TERM $$ ) &
 TIMEOUT_PID=$!
 
 ###############################################################################
@@ -317,6 +327,12 @@ fi
 
 cleanup() {
   local exit_code=$?
+  # A timeout-abort SIGTERMs us mid-command; $? is then whatever trivial command was
+  # running (often 0). Force a non-zero code so the aborted run fails CI.
+  if [[ -f "${TIMEOUT_MARKER}" ]]; then
+    exit_code=124
+    err "run aborted by global timeout — forcing exit ${exit_code}"
+  fi
   # Disable the trap so re-entrant signals (e.g. user hammers Ctrl-C) don't loop.
   trap - EXIT INT TERM HUP QUIT
   # Cancel the global-timeout watchdog so it doesn't fire mid-cleanup. Also kill its
@@ -342,7 +358,7 @@ cleanup() {
     log "Stack left running (--keep-up). Tear down with:"
     log "  docker compose -f ${COMPOSE_FILE} down -v"
   fi
-  rm -f "${PID_FILE}"
+  rm -f "${PID_FILE}" "${TIMEOUT_MARKER}"
   log "==> Exiting with code ${exit_code}"
   exit "${exit_code}"
 }
@@ -399,6 +415,18 @@ set +e
   "${JVM_PROPS[@]}"
 TEST_EXIT=$?
 set -e
+
+# Capture the shared-stack containers' logs NOW if the phase failed. The fresh-stack
+# loop below tears this stack down on its first reset_stack, and the final cleanup()
+# would otherwise only see the last reset's containers — losing the logs for the very
+# failure we care about. Saved aside so cleanup()'s top-level dump doesn't clobber them.
+if [[ ${TEST_EXIT} -ne 0 ]]; then
+  err "shared-stack phase failed (exit ${TEST_EXIT}); capturing its container logs before reset"
+  mkdir -p "${LOGS_DIR}/shared"
+  for c in "${ALL_CONTAINERS[@]}"; do
+    docker logs "$c" > "${LOGS_DIR}/shared/${c}.log" 2>&1 || true
+  done
+fi
 
 # Fresh-stack phase: one stack reset per test class. Any failure here flips TEST_EXIT
 # but lets the loop finish so we collect logs for every failing class, not just the first.
