@@ -89,6 +89,9 @@ public class Config {
     public static final String NODE_PORT = "nodePort";
     public static final String USE_LOCALHOST_FOR_P2P = "useLocalhostForP2P";
     public static final String MAX_CONNECTIONS = "maxConnections";
+    public static final String GET_DATA_REQUEST_HANDLER_MAX_ENTRIES = "getDataRequestHandlerMaxEntries";
+    public static final String TRADE_STATISTICS_MAX_ITEMS = "tradeStatisticsMaxItems";
+    public static final String P2P_DATA_STORAGE_MAX_SIZE = "p2pDataStorageMaxSize";
     public static final String SOCKS_5_PROXY_BTC_ADDRESS = "socks5ProxyBtcAddress";
     public static final String SOCKS_5_PROXY_HTTP_ADDRESS = "socks5ProxyHttpAddress";
     public static final String USE_TOR_FOR_BTC = "useTorForBtc";
@@ -152,12 +155,15 @@ public class Config {
     public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC_PROVIDED = 7; // down from BitcoinJ default of 12
     public static final int DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC = 9;
     public static final boolean DEFAULT_FULL_DAO_NODE = false;
+    public static final int DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES = 20_000;
+    public static final int DEFAULT_TRADE_STATISTICS_MAX_ITEMS = 15_000;
     static final String DEFAULT_CONFIG_FILE_NAME = "bisq.properties";
 
     // Static fields that provide access to Config properties in locations where injecting
     // a Config instance is not feasible. See Javadoc for corresponding static accessors.
     private static File APP_DATA_DIR_VALUE;
     private static BaseCurrencyNetwork BASE_CURRENCY_NETWORK_VALUE = BaseCurrencyNetwork.BTC_MAINNET;
+    private static int TRADE_STATISTICS_MAX_ITEMS_VALUE = DEFAULT_TRADE_STATISTICS_MAX_ITEMS;
 
     // Default "data dir properties", i.e. properties that can determine the location of
     // Bisq's application data directory (appDataDir)
@@ -201,6 +207,10 @@ public class Config {
     public final List<String> banList;
     public final boolean useLocalhostForP2P;
     public final int maxConnections;
+    public final int getDataRequestHandlerMaxEntries;
+    public final int tradeStatistics3MaxItems;
+    public final double p2pDataStorageMaxSize;
+    public final boolean p2pDataStorageMaxSizeOptionSetExplicitly;
     public final String socks5ProxyBtcAddress;
     public final String socks5ProxyHttpAddress;
     public final File torrcFile;
@@ -492,6 +502,27 @@ public class Config {
                         .withRequiredArg()
                         .ofType(int.class)
                         .defaultsTo(12);
+
+        ArgumentAcceptingOptionSpec<Integer> getDataRequestHandlerMaxEntriesOpt =
+                parser.accepts(GET_DATA_REQUEST_HANDLER_MAX_ENTRIES,
+                                "Max. entries per payload type in a GetDataResponse")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES);
+
+        ArgumentAcceptingOptionSpec<Integer> tradeStatistics3MaxItemsOpt =
+                parser.accepts(TRADE_STATISTICS_MAX_ITEMS,
+                                "Max. TradeStatistics3 items included in a GetDataResponse")
+                        .withRequiredArg()
+                        .ofType(int.class)
+                        .defaultsTo(DEFAULT_TRADE_STATISTICS_MAX_ITEMS);
+
+        ArgumentAcceptingOptionSpec<Double> p2pDataStorageMaxSizeOpt =
+                parser.accepts(P2P_DATA_STORAGE_MAX_SIZE,
+                                "Max. P2PDataStorage GetDataResponse payload size in bytes")
+                        .withRequiredArg()
+                        .ofType(double.class)
+                        .defaultsTo(0D);
 
         ArgumentAcceptingOptionSpec<String> socks5ProxyBtcAddressOpt =
                 parser.accepts(SOCKS_5_PROXY_BTC_ADDRESS, "A proxy address to be used for Bitcoin network.")
@@ -899,6 +930,10 @@ public class Config {
             this.banList = options.valuesOf(banListOpt);
             this.useLocalhostForP2P = !this.baseCurrencyNetwork.isMainnet() && options.valueOf(useLocalhostForP2POpt);
             this.maxConnections = options.valueOf(maxConnectionsOpt);
+            this.getDataRequestHandlerMaxEntries = options.valueOf(getDataRequestHandlerMaxEntriesOpt);
+            this.tradeStatistics3MaxItems = options.valueOf(tradeStatistics3MaxItemsOpt);
+            this.p2pDataStorageMaxSize = options.valueOf(p2pDataStorageMaxSizeOpt);
+            this.p2pDataStorageMaxSizeOptionSetExplicitly = options.has(p2pDataStorageMaxSizeOpt);
             this.socks5ProxyBtcAddress = options.valueOf(socks5ProxyBtcAddressOpt);
             this.socks5ProxyHttpAddress = options.valueOf(socks5ProxyHttpAddressOpt);
             this.msgThrottlePerSec = options.valueOf(msgThrottlePerSecOpt);
@@ -961,6 +996,7 @@ public class Config {
         // Assign values to special-case static fields
         APP_DATA_DIR_VALUE = appDataDir;
         BASE_CURRENCY_NETWORK_VALUE = baseCurrencyNetwork;
+        TRADE_STATISTICS_MAX_ITEMS_VALUE = tradeStatistics3MaxItems;
     }
 
     private static File absoluteConfigFile(File parentDir, String relativeConfigFilePath) {
@@ -1096,5 +1132,9 @@ public class Config {
      */
     public static NetworkParameters baseCurrencyNetworkParameters() {
         return BASE_CURRENCY_NETWORK_VALUE.getParameters();
+    }
+
+    public static int tradeStatistics3MaxItems() {
+        return TRADE_STATISTICS_MAX_ITEMS_VALUE;
     }
 }

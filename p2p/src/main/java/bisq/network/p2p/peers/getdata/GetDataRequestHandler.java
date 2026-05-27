@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -43,7 +44,7 @@ import org.jetbrains.annotations.NotNull;
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 240;
 
-    private static final int MAX_ENTRIES = 20_000; // Tradestatistics are about 20 000 in 2 months.
+    private static final int MAX_ENTRIES = Config.DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -63,6 +64,7 @@ public class GetDataRequestHandler {
     private final NetworkNode networkNode;
     private final P2PDataStorage dataStorage;
     private final Listener listener;
+    private final int maxEntries;
     private Timer timeoutTimer;
     private boolean stopped;
 
@@ -72,9 +74,17 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public GetDataRequestHandler(NetworkNode networkNode, P2PDataStorage dataStorage, Listener listener) {
+        this(networkNode, dataStorage, listener, MAX_ENTRIES);
+    }
+
+    public GetDataRequestHandler(NetworkNode networkNode,
+                                 P2PDataStorage dataStorage,
+                                 Listener listener,
+                                 int maxEntries) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.listener = listener;
+        this.maxEntries = maxEntries;
     }
 
 
@@ -92,7 +102,7 @@ public class GetDataRequestHandler {
         AtomicBoolean wasProtectedStorageEntriesTruncated = new AtomicBoolean(false);
         GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(
                 getDataRequest,
-                MAX_ENTRIES,
+                maxEntries,
                 wasPersistableNetworkPayloadsTruncated,
                 wasProtectedStorageEntriesTruncated,
                 connection.getCapabilities());

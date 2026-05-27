@@ -92,7 +92,8 @@ public class TestState {
                 this.mockSeqNrPersistenceManager,
                 removedPayloadsService,
                 this.clockFake,
-                MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
+                MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE,
+                P2PDataStorage.getDefaultMaxSize());
 
         this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
         this.hashMapChangedListener = mock(HashMapChangedListener.class);
@@ -149,7 +150,8 @@ public class TestState {
                 sequenceNrMapPersistenceManager,
                 removedPayloadsService,
                 clock,
-                MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
+                MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE,
+                P2PDataStorage.getDefaultMaxSize());
 
         // Currently TestState only supports reading ProtectedStorageEntries off disk.
         p2PDataStorage.readFromResourcesSync("unused");

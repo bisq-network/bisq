@@ -82,6 +82,14 @@ public class P2PModule extends AppModule {
         bind(int.class).annotatedWith(named(NODE_PORT)).toInstance(config.nodePort);
 
         bindConstant().annotatedWith(named(MAX_CONNECTIONS)).to(config.maxConnections);
+        bindConstant().annotatedWith(named(GET_DATA_REQUEST_HANDLER_MAX_ENTRIES))
+                .to(config.getDataRequestHandlerMaxEntries);
+        bindConstant().annotatedWith(named(TRADE_STATISTICS_MAX_ITEMS))
+                .to(config.tradeStatistics3MaxItems);
+        bindConstant().annotatedWith(named(P2P_DATA_STORAGE_MAX_SIZE))
+                .to(config.p2pDataStorageMaxSizeOptionSetExplicitly ?
+                        config.p2pDataStorageMaxSize :
+                        P2PDataStorage.getDefaultMaxSize());
 
         bind(new TypeLiteral<List<String>>(){}).annotatedWith(named(BAN_LIST)).toInstance(config.banList);
         bindConstant().annotatedWith(named(SOCKS_5_PROXY_BTC_ADDRESS)).to(config.socks5ProxyBtcAddress);

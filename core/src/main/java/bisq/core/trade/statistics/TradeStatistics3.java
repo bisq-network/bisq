@@ -36,6 +36,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
@@ -403,7 +404,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
     @Override
     public int maxItems() {
-        return 15000;
+        return Config.tradeStatistics3MaxItems();
     }
 
     public void pruneOptionalData() {
@@ -493,10 +494,10 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TradeStatistics3 that = (TradeStatistics3) o;
         return date != that.date ? Long.compare(date, that.date)
                 : amount != that.amount ? Long.compare(amount, that.amount)
-                : !Objects.equals(currency, that.currency) ? nullsFirstCompare(currency, that.currency)
-                : price != that.price ? Long.compare(price, that.price)
-                : !Objects.equals(paymentMethod, that.paymentMethod) ? nullsFirstCompare(paymentMethod, that.paymentMethod)
-                : Arrays.compare(hash, that.hash);
+                  : !Objects.equals(currency, that.currency) ? nullsFirstCompare(currency, that.currency)
+                    : price != that.price ? Long.compare(price, that.price)
+                      : !Objects.equals(paymentMethod, that.paymentMethod) ? nullsFirstCompare(paymentMethod, that.paymentMethod)
+                        : Arrays.compare(hash, that.hash);
     }
 
     @Override
