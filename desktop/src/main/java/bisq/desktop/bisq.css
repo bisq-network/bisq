@@ -2812,17 +2812,6 @@ textfield */
     -fx-padding: 7 22 7 24;
 }
 
-.trade-rules-row-icon-box {
-    -fx-background-color: rgba(37, 177, 53, 0.08);
-    -fx-background-radius: 22;
-    -fx-min-width: 44;
-    -fx-pref-width: 44;
-    -fx-max-width: 44;
-    -fx-min-height: 44;
-    -fx-pref-height: 44;
-    -fx-max-height: 44;
-}
-
 .trade-rules-row-title {
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Medium";

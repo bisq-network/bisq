@@ -20,14 +20,12 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.util.ImageUtil;
 
 import bisq.core.locale.Res;
 
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -58,21 +56,19 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
             RULE_ROW_HORIZONTAL_PADDING -
             RULE_ROW_ICON_BOX_WIDTH -
             RULE_ROW_TEXT_GAP;
-    private static final double RULE_ICON_SIZE = 25;
     private static final PseudoClass ERROR_PSEUDO_CLASS = PseudoClass.getPseudoClass("error");
-
-    private static final String TRADE_RULES_SCALES_ICON_ID = "image-trade-rules-scales";
-    private static final String TRADE_RULES_CLOCK_ICON_ID = "image-trade-rules-clock";
-    private static final String TRADE_RULES_BANK_ICON_ID = "image-trade-rules-bank";
-    private static final String TRADE_RULES_USERS_ICON_ID = "image-trade-rules-users";
-    private static final String TRADE_RULES_GAVEL_ICON_ID = "image-trade-rules-gavel";
-    private static final String TRADE_RULES_GLOBE_ICON_ID = "image-trade-rules-globe";
 
     private StackPane rootContainer;
     private CheckBox acceptCheckBox;
     private boolean validationRequested;
+    private final boolean wasAccepted;
 
     public TradeRulesWindow() {
+        this(false);
+    }
+
+    public TradeRulesWindow(boolean wasAccepted) {
+        this.wasAccepted = wasAccepted;
         type = Type.Attention;
         width = WINDOW_WIDTH;
     }
@@ -152,6 +148,8 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
         actionButton.setDefaultButton(true);
         actionButton.getStyleClass().add("action-button");
         actionButton.setOnAction(event -> handleContinue());
+        actionButton.setVisible(!wasAccepted);
+        actionButton.setManaged(!wasAccepted);
 
         acceptCheckBox = new AutoTooltipCheckBox(Res.get("tradeRules.accept"));
         acceptCheckBox.getStyleClass().addAll("tac-agreement-check-box");
@@ -161,6 +159,8 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
                 updateCheckBoxErrorState();
             }
         });
+        acceptCheckBox.setSelected(wasAccepted);
+        acceptCheckBox.setDisable(wasAccepted);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -210,13 +210,6 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
         header.setPrefWidth(PAGE_WIDTH);
         header.setMaxWidth(Double.MAX_VALUE);
 
-        StackPane iconBox = new StackPane(createImageIcon(TRADE_RULES_SCALES_ICON_ID, 50, 50,
-                "tac-agreement-header-image"));
-        iconBox.getStyleClass().add("tac-agreement-header-icon-box");
-        iconBox.setMinWidth(HEADER_ICON_BOX_WIDTH);
-        iconBox.setPrefWidth(HEADER_ICON_BOX_WIDTH);
-        iconBox.setMaxWidth(HEADER_ICON_BOX_WIDTH);
-
         VBox titleBox = new VBox(3);
         titleBox.getStyleClass().add("tac-agreement-header-title-box");
         titleBox.setAlignment(Pos.CENTER);
@@ -256,31 +249,31 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
         VBox content = new VBox();
         content.getStyleClass().add("trade-rules-list");
         content.getChildren().addAll(
-                createRuleRow(1, TRADE_RULES_CLOCK_ICON_ID,
+                createRuleRow(1,
                         Res.get("tradeRules.trading.title"),
                         Res.get("tradeRules.trading.body")),
                 createRuleSeparator(),
-                createRuleRow(2, TRADE_RULES_BANK_ICON_ID,
+                createRuleRow(2,
                         Res.get("tradeRules.fees.title"),
                         Res.get("tradeRules.fees.body")),
                 createRuleSeparator(),
 
-                createRuleRow(3, TRADE_RULES_USERS_ICON_ID,
+                createRuleRow(3,
                         Res.get("tradeRules.mediation.title"),
                         Res.get("tradeRules.mediation.body")),
                 createRuleSeparator(),
 
-                createRuleRow(4, TRADE_RULES_GLOBE_ICON_ID,
+                createRuleRow(4,
                         Res.get("tradeRules.arbitration.title"),
                         Res.get("tradeRules.arbitration.body")),
                 createRuleSeparator(),
 
-                createRuleRow(5, TRADE_RULES_GLOBE_ICON_ID,
+                createRuleRow(5,
                         Res.get("tradeRules.refund.title"),
                         Res.get("tradeRules.refund.body")),
                 createRuleSeparator(),
 
-                createRuleRow(6, TRADE_RULES_GLOBE_ICON_ID,
+                createRuleRow(6,
                         Res.get("tradeRules.reimbursement.title"),
                         Res.get("tradeRules.reimbursement.body")),
                 createRuleSeparator()
@@ -288,17 +281,13 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
         return content;
     }
 
-    private HBox createRuleRow(int number, String iconId, String title, String body) {
+    private HBox createRuleRow(int number, String title, String body) {
         HBox row = new HBox(RULE_ROW_TEXT_GAP);
         row.getStyleClass().add("trade-rules-row");
         row.setAlignment(Pos.CENTER_LEFT);
         row.setFillHeight(false);
         row.setMinHeight(Region.USE_PREF_SIZE);
         row.setMaxWidth(Double.MAX_VALUE);
-
-        StackPane iconBox = new StackPane(createImageIcon(iconId, RULE_ICON_SIZE, RULE_ICON_SIZE,
-                "trade-rules-row-image"));
-        iconBox.getStyleClass().add("trade-rules-row-icon-box");
 
         VBox textBox = new VBox(3);
         textBox.setPrefWidth(RULE_ROW_TEXT_WIDTH);
@@ -334,17 +323,6 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
         return separator;
     }
 
-    private ImageView createImageIcon(String iconId, double fitWidth, double fitHeight, String styleClass) {
-        ImageView imageView = ImageUtil.getImageViewById(iconId);
-        imageView.getStyleClass().add(styleClass);
-        imageView.setFitWidth(fitWidth);
-        imageView.setFitHeight(fitHeight);
-        imageView.setPreserveRatio(true);
-        imageView.setSmooth(true);
-        imageView.setMouseTransparent(true);
-        return imageView;
-    }
-
     private void handleContinue() {
         if (acceptCheckBox.isSelected()) {
             validationRequested = false;
@@ -355,12 +333,6 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
             validationRequested = true;
             updateCheckBoxErrorState();
         }
-    }
-
-    private void setFixedHeight(Region region, double height) {
-        region.setMinHeight(height);
-        region.setPrefHeight(height);
-        region.setMaxHeight(height);
     }
 
     private void updateCheckBoxErrorState() {

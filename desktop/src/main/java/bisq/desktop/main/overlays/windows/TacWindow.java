@@ -25,10 +25,8 @@ import bisq.desktop.util.ImageUtil;
 
 import bisq.core.locale.Res;
 
-import com.google.inject.Inject;
-
 import javafx.application.Platform;
-import javafx.css.PseudoClass;
+
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -44,6 +42,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+
+import javafx.css.PseudoClass;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -84,6 +84,7 @@ public class TacWindow extends Overlay<TacWindow> {
     private static final String WARNING_GREEN_ICON_ID = "image-warning-green";
     private static final String WARNING_YELLOW_ICON_ID = "image-warning-yellow";
     private static final String INFO_GREEN_ICON_ID = "image-info-green";
+    private final boolean wasAccepted;
 
     private StackPane rootContainer;
     private VBox riskPage;
@@ -96,8 +97,12 @@ public class TacWindow extends Overlay<TacWindow> {
     private boolean legalValidationRequested;
     private boolean isLegalPageVisible;
 
-    @Inject
     public TacWindow() {
+        this(false);
+    }
+
+    public TacWindow(boolean wasAccepted) {
+        this.wasAccepted = wasAccepted;
         type = Type.Attention;
         width = WINDOW_WIDTH;
     }
@@ -108,9 +113,14 @@ public class TacWindow extends Overlay<TacWindow> {
         riskValidationRequested = false;
         legalValidationRequested = false;
         isLegalPageVisible = false;
-        actionButtonText(getNextButtonText());
-        closeButtonText(getRejectButtonText());
-        onClose(BisqApp.getShutDownHandler());
+        actionButtonText(Res.get("tacWindow.risk.next"));
+
+        if (wasAccepted) {
+            closeButtonText(Res.get("shared.close"));
+        } else {
+            closeButtonText(Res.get("tacWindow.disagree"));
+            onClose(BisqApp.getShutDownHandler());
+        }
 
         super.show();
     }
@@ -161,7 +171,8 @@ public class TacWindow extends Overlay<TacWindow> {
 
         HBox importantCallout = createImportantCallout();
         VBox.setMargin(importantCallout, new Insets(9, 0, 0, 0));
-        riskPage.getChildren().addAll(createRiskOverview(), importantCallout, createConfirmationsPanel());
+        VBox confirmationsPanel = createConfirmationsPanel();
+        riskPage.getChildren().addAll(createRiskOverview(), importantCallout, confirmationsPanel);
 
         legalPage = new VBox(12);
         legalPage.getStyleClass().addAll("tac-agreement-page", "tac-agreement-legal-page");
@@ -201,7 +212,10 @@ public class TacWindow extends Overlay<TacWindow> {
         backButton.setOnAction(event -> setLegalPageVisible(false));
 
         closeButton = new AutoTooltipButton(closeButtonText);
-        closeButton.getStyleClass().addAll("tac-agreement-secondary-button", "tac-agreement-reject-button");
+        closeButton.getStyleClass().addAll("tac-agreement-secondary-button");
+        if (!wasAccepted) {
+            closeButton.getStyleClass().addAll("tac-agreement-reject-button");
+        }
         closeButton.setMinWidth(190);
         closeButton.setFocusTraversable(false);
         closeButton.setOnAction(event -> doClose());
@@ -362,7 +376,9 @@ public class TacWindow extends Overlay<TacWindow> {
         VBox panel = new VBox(6);
         panel.getStyleClass().add("tac-agreement-confirm-panel");
 
-        Label headline = new Label(Res.get("tacWindow.risk.confirm.headline"));
+        Label headline = new Label(wasAccepted
+                ? Res.get("tacWindow.risk.confirm.headline.accepted")
+                : Res.get("tacWindow.risk.confirm.headline"));
         headline.getStyleClass().add("tac-agreement-confirm-headline");
 
         lossOfFundsCheckBox = createConfirmCheckBox(Res.get("tacWindow.risk.accept1"));
@@ -510,6 +526,8 @@ public class TacWindow extends Overlay<TacWindow> {
     private VBox createLegalConfirmationRow() {
         legalTermsCheckBox = createConfirmCheckBox(Res.get("tacWindow.legal.accept3"));
         legalTermsCheckBox.getStyleClass().add("tac-agreement-legal-check-box");
+        legalTermsCheckBox.setSelected(wasAccepted);
+        legalTermsCheckBox.setDisable(wasAccepted);
 
         VBox row = createConfirmRow(legalTermsCheckBox);
         row.getStyleClass().add("tac-agreement-legal-check-row");
@@ -527,6 +545,9 @@ public class TacWindow extends Overlay<TacWindow> {
                 updateCheckBoxErrorStates();
             }
         });
+
+        checkBox.setSelected(wasAccepted);
+        checkBox.setDisable(wasAccepted);
         return checkBox;
     }
 
@@ -608,11 +629,17 @@ public class TacWindow extends Overlay<TacWindow> {
 
         if (closeButton != null) {
             closeButton.disarm();
-            closeButton.setText(getRejectButtonText());
             closeButton.setOnAction(event -> doClose());
         }
         if (actionButton != null) {
-            actionButton.setText(visible ? getAcceptButtonText() : getNextButtonText());
+            actionButton.setText(visible ? Res.get("tacWindow.agree") : Res.get("tacWindow.risk.next"));
+            if (visible) {
+                actionButton.setVisible(!wasAccepted);
+                actionButton.setManaged(!wasAccepted);
+            } else {
+                actionButton.setVisible(true);
+                actionButton.setManaged(true);
+            }
         }
         if (backButton != null) {
             backButton.setManaged(visible);
@@ -628,18 +655,6 @@ public class TacWindow extends Overlay<TacWindow> {
             page.setManaged(visible);
             page.setVisible(visible);
         }
-    }
-
-    private String getAcceptButtonText() {
-        return Res.get("tacWindow.agree");
-    }
-
-    private String getRejectButtonText() {
-        return Res.get("tacWindow.disagree");
-    }
-
-    private String getNextButtonText() {
-        return Res.get("tacWindow.risk.next");
     }
 
     private void setFixedHeight(Region region, double height) {
