@@ -139,7 +139,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
             autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, clearDataAfterDaysInputTextField,
-            rpcUserTextField, blockNotifyPortTextField, tradeLimitTf;
+            coldStorageReminderThresholdInputTextField, rpcUserTextField, blockNotifyPortTextField, tradeLimitTf;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
@@ -168,7 +168,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField;
     private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, ignoreTradersListListener, ignoreDustThresholdListener,
-            rpcUserListener, rpcPwListener, blockNotifyPortListener, clearDataAfterDaysListener,
+            rpcUserListener, rpcPwListener, blockNotifyPortListener, clearDataAfterDaysListener, coldStorageReminderThresholdListener,
             autoConfTradeLimitListener, autoConfServiceAddressListener, userDefinedTradeLimitListener;
     private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
@@ -288,7 +288,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        int titledGroupBgRowSpan = displayStandbyModeFeature ? 12 : 11;
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 13 : 12;
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
@@ -433,6 +433,19 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     preferences.setClearDataAfterDays(value);
                 }
             } catch (Throwable ignore) {
+            }
+        };
+
+        coldStorageReminderThresholdInputTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.coldStorageReminderThreshold"));
+        BtcValidator coldStorageReminderThresholdValidator = new BtcValidator(formatter);
+        coldStorageReminderThresholdValidator.setMaxValue(Coin.valueOf(Preferences.MAX_COLD_STORAGE_REMINDER_THRESHOLD));
+        coldStorageReminderThresholdInputTextField.setValidator(coldStorageReminderThresholdValidator);
+        coldStorageReminderThresholdListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue) &&
+                    coldStorageReminderThresholdInputTextField.getValidator().validate(newValue).isValid) {
+                Coin amountAsCoin = ParsingUtils.parseToCoin(newValue, formatter);
+                preferences.setColdStorageReminderThreshold(amountAsCoin.value);
             }
         };
 
@@ -951,6 +964,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));*/
         ignoreDustThresholdInputTextField.setText(String.valueOf(preferences.getIgnoreDustThreshold()));
         clearDataAfterDaysInputTextField.setText(String.valueOf(preferences.getClearDataAfterDays()));
+        coldStorageReminderThresholdInputTextField.setText(formatter.formatCoin(
+                Coin.valueOf(preferences.getColdStorageReminderThreshold())));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
         userLanguageComboBox.setConverter(new StringConverter<>() {
@@ -1024,6 +1039,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         //referralIdInputTextField.textProperty().addListener(referralIdListener);
         ignoreDustThresholdInputTextField.textProperty().addListener(ignoreDustThresholdListener);
         clearDataAfterDaysInputTextField.textProperty().addListener(clearDataAfterDaysListener);
+        coldStorageReminderThresholdInputTextField.textProperty().addListener(coldStorageReminderThresholdListener);
     }
 
     private Coin getTxFeeForWithdrawalPerVbyte() {
@@ -1401,6 +1417,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         //referralIdInputTextField.textProperty().removeListener(referralIdListener);
         ignoreDustThresholdInputTextField.textProperty().removeListener(ignoreDustThresholdListener);
         clearDataAfterDaysInputTextField.textProperty().removeListener(clearDataAfterDaysListener);
+        coldStorageReminderThresholdInputTextField.textProperty().removeListener(coldStorageReminderThresholdListener);
     }
 
     private void deactivateDisplayCurrencies() {

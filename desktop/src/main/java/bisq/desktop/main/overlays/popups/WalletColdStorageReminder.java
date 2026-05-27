@@ -21,6 +21,7 @@ import bisq.desktop.Navigation;
 
 import bisq.core.btc.Balances;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -47,14 +48,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WalletColdStorageReminder {
 
-    // Threshold above which the reminder fires. Tune by editing this constant.
-    private static final Coin THRESHOLD = Coin.parseCoin("0.5");
-
     // Re-show interval for the navigation trigger.
     private static final long COOLDOWN_MS = TimeUnit.HOURS.toMillis(6);
 
     private final Balances balances;
     private final Navigation navigation;
+    private final Preferences preferences;
     private final CoinFormatter btcFormatter;
 
     private long lastShownMs = 0L;
@@ -63,9 +62,11 @@ public class WalletColdStorageReminder {
     @Inject
     public WalletColdStorageReminder(Balances balances,
                                      Navigation navigation,
+                                     Preferences preferences,
                                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.balances = balances;
         this.navigation = navigation;
+        this.preferences = preferences;
         this.btcFormatter = btcFormatter;
     }
 
@@ -83,7 +84,8 @@ public class WalletColdStorageReminder {
 
     private void maybeShow(boolean ignoreCooldown) {
         Coin total = totalBalance();
-        if (!total.isGreaterThan(THRESHOLD)) return;
+        Coin threshold = Coin.valueOf(preferences.getColdStorageReminderThreshold());
+        if (!total.isGreaterThan(threshold)) return;
 
         if (DevEnv.isIgnorePopupsInDevMode()) {
             return;
@@ -97,7 +99,7 @@ public class WalletColdStorageReminder {
                 .headLine(Res.get("popup.warning.coldStorage.headline"))
                 .warning(Res.get("popup.warning.coldStorage.msg",
                         btcFormatter.formatCoinWithCode(total),
-                        btcFormatter.formatCoinWithCode(THRESHOLD)))
+                        btcFormatter.formatCoinWithCode(threshold)))
                 .show();
     }
 

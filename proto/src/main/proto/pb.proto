@@ -1997,6 +1997,7 @@ message PreferencesPayload {
     bool use_bisq_wallet_funding = 71;
     bool tac_accepted_v1_10_1 = 72;
     bool trade_rules_accepted = 73;
+    int64 cold_storage_reminder_threshold = 74;
 }
 
 message AutoConfirmSettings {
