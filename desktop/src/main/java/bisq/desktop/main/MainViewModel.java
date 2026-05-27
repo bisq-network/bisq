@@ -147,7 +147,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final PrivateNotificationManager privateNotificationManager;
     private final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
-    private final TacWindow tacWindow;
     @Getter
     private final PriceFeedService priceFeedService;
     private final Config config;
@@ -197,7 +196,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          PrivateNotificationManager privateNotificationManager,
                          WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter,
-                         TacWindow tacWindow,
                          FeeService feeService,
                          PriceFeedService priceFeedService,
                          Config config,
@@ -227,7 +225,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.privateNotificationManager = privateNotificationManager;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
-        this.tacWindow = tacWindow;
         this.priceFeedService = priceFeedService;
         this.config = config;
         this.localBitcoinNode = localBitcoinNode;
@@ -386,8 +383,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     private void setupHandlers() {
         bisqSetup.setDisplayTacHandler(acceptedHandler -> UserThread.runAfter(() -> {
-            //noinspection FunctionalExpressionCanBeFolded
-            tacWindow.onAction(acceptedHandler::run).show();
+            new TacWindow().onAction(acceptedHandler).show();
         }, 1));
 
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {

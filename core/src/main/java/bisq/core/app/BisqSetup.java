@@ -57,7 +57,6 @@ import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
@@ -216,6 +215,7 @@ public class BisqSetup {
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
     private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
+    boolean hasShownStorageWarning = false;
 
     @Inject
     public BisqSetup(DomainInitialisation domainInitialisation,
@@ -361,17 +361,16 @@ public class BisqSetup {
                 // BSQ balance state after the SPV resync.
                 unconfirmedBsqChangeOutputListService.onSpvResync();
             } catch (IOException e) {
-                log.error(e.toString());
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }
         }
     }
 
     private void maybeShowTac(Runnable nextStep) {
-        if (!preferences.isTacAcceptedV120() && !DevEnv.isIgnorePopupsInDevMode()) {
+        if (!preferences.isTacAcceptedV1_10_1()) {
             if (displayTacHandler != null)
                 displayTacHandler.accept(() -> {
-                    preferences.setTacAcceptedV120(true);
+                    preferences.setTacAcceptedV1_10_1(true);
                     nextStep.run();
                 });
         } else {
@@ -558,8 +557,7 @@ public class BisqSetup {
             }
         });
     }
-    
-    boolean hasShownStorageWarning = false;
+
     private void checkFreeDiskSpace() {
         long TWO_GIGABYTES = 2147483648L;
         long usableSpace = new File(Config.appDataDir(), VERSION_FILE_NAME).getUsableSpace();

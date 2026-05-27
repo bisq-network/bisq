@@ -21,6 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.overlays.windows.TradeRulesWindow;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.DisplayUtils;
@@ -98,6 +99,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -134,7 +136,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     private OfferDirection direction;
 
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-
+    @Setter
     private OfferView.OfferActionHandler offerActionHandler;
 
     // If id is empty string we ignore filter (display all methods)
@@ -607,6 +609,10 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
                 GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
+    boolean isTradeRulesAccepted() {
+        return preferences.isTradeRulesAccepted();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Filters
@@ -705,8 +711,14 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
                 isInstantPaymentMethod(offer));
     }
 
-    public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
-        this.offerActionHandler = offerActionHandler;
+    public void showTradeRulesWindow(Runnable confirmedHandler, Runnable closeHandler) {
+        new TradeRulesWindow()
+                .onAction(() -> {
+                    preferences.setTradeRulesAccepted(true);
+                    confirmedHandler.run();
+                })
+                .onClose(closeHandler)
+                .show();
     }
 
     public void onCreateOffer() {

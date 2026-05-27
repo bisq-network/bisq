@@ -61,6 +61,35 @@
     -fx-image: url("../../images/collapse.png");
 }
 
+/* tac */
+#image-tac-decentr {
+    -fx-image: url("../../images/tac_decentr.png");
+}
+
+#image-tac-refund {
+    -fx-image: url("../../images/tac_refund.png");
+}
+
+#image-tac-shield {
+    -fx-image: url("../../images/tac_shield.png");
+}
+
+#image-tac-legal {
+    -fx-image: url("../../images/tac_legal.png");
+}
+
+#image-warning-green {
+    -fx-image: url("../../images/warning-green.png");
+}
+
+#image-warning-yellow {
+    -fx-image: url("../../images/warning-yellow.png");
+}
+
+#image-info-green {
+    -fx-image: url("../../images/info-green.png");
+}
+
 /* navigation buttons */
 #image-nav-market {
     -fx-image: url("../../images/nav/market.png");

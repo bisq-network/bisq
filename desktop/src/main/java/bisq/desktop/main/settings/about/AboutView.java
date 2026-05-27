@@ -19,10 +19,14 @@ package bisq.desktop.main.settings.about;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.main.overlays.windows.TacWindow;
+import bisq.desktop.main.overlays.windows.TradeRulesWindow;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 
 import bisq.common.app.Version;
 
@@ -32,6 +36,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 
 import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;
@@ -41,31 +46,48 @@ import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 @FxmlView
 public class AboutView extends ActivatableView<GridPane, Void> {
 
+    private final Preferences preferences;
     private int gridRow = 0;
 
     @Inject
-    public AboutView() {
+    public AboutView(Preferences preferences) {
         super();
+        this.preferences = preferences;
     }
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 4, Res.get("setting.about.aboutBisq"));
+        addTitledGroupBg(root, gridRow, 6, Res.get("setting.about.resources"));
 
-        Label label = addLabel(root, gridRow, Res.get("setting.about.about"), Layout.TWICE_FIRST_ROW_DISTANCE);
-        label.setWrapText(true);
-        GridPane.setColumnSpan(label, 2);
-        GridPane.setHalignment(label, HPos.LEFT);
-        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.web"), "https://bisq.network");
+        HyperlinkWithIcon tac = new ExternalHyperlink(Res.get("setting.about.resources.tac"));
+        tac.setOnAction(e -> new TacWindow(preferences.isTacAcceptedV1_10_1())
+                .onAction(() -> preferences.setTacAcceptedV1_10_1(true))
+                .show());
+        GridPane.setMargin(tac, new Insets(Layout.TWICE_FIRST_ROW_DISTANCE, 0, 0, 0));
+        GridPane.setRowIndex(tac, ++gridRow);
+        GridPane.setHalignment(tac, HPos.LEFT);
+        root.getChildren().add(tac);
+
+        HyperlinkWithIcon tradeGuide = new ExternalHyperlink(Res.get("setting.about.resources.tradeRules"));
+        tradeGuide.setOnAction(e -> new TradeRulesWindow(preferences.isTradeRulesAccepted())
+                .onAction(() -> preferences.setTradeRulesAccepted(true))
+                .show());
+        GridPane.setRowIndex(tradeGuide, ++gridRow);
+        GridPane.setHalignment(tradeGuide, HPos.LEFT);
+        root.getChildren().add(tradeGuide);
+
+        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://bisq.network/source/bisq/blob/master/LICENSE");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
+
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.code"), "https://bisq.network/source/bisq");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://bisq.network/source/bisq/blob/master/LICENSE");
+
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.web"), "https://bisq.network");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
         addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.support"), Layout.GROUP_DISTANCE);
 
-        label = addLabel(root, gridRow, Res.get("setting.about.def"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
+        Label label = addLabel(root, gridRow, Res.get("setting.about.def"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
