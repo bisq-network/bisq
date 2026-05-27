@@ -417,11 +417,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_LOW_RISK.value)
             riskFactor = 2;
         else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_MID_RISK.value)
-            riskFactor = 4;
+            riskFactor = 3;
         else if (maxTradeLimit == DEFAULT_TRADE_LIMIT_HIGH_RISK.value)
-            riskFactor = 8;
+            riskFactor = 4;
         else {
-            riskFactor = 8;
+            riskFactor = 4;
             log.warn("maxTradeLimit is not matching one of our default values. We use highest risk factor. " +
                             "maxTradeLimit={}. PaymentMethod={}",
                     Coin.valueOf(maxTradeLimit).toFriendlyString(), this);
