@@ -211,6 +211,31 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenP2PDataLimitOptionsAreUnset_thenDefaultValuesAreUsed() {
+        Config config = new Config();
+        assertThat(config.getDataRequestHandlerMaxEntries, equalTo(DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES));
+        assertThat(config.tradeStatistics3MaxItems, equalTo(DEFAULT_TRADE_STATISTICS_MAX_ITEMS));
+        assertThat(config.p2pDataStorageMaxSize, equalTo(0D));
+        assertFalse(config.p2pDataStorageMaxSizeOptionSetExplicitly);
+    }
+
+    @Test
+    public void whenP2PDataLimitOptionsAreSet_thenPropertiesReflectTheirValues() {
+        try {
+            Config config = configWithOpts(
+                    opt(GET_DATA_REQUEST_HANDLER_MAX_ENTRIES, 1234),
+                    opt(TRADE_STATISTICS_MAX_ITEMS, 5678),
+                    opt(P2P_DATA_STORAGE_MAX_SIZE, 7_000_000D));
+            assertThat(config.getDataRequestHandlerMaxEntries, equalTo(1234));
+            assertThat(config.tradeStatistics3MaxItems, equalTo(5678));
+            assertThat(config.p2pDataStorageMaxSize, equalTo(7_000_000D));
+            assertTrue(config.p2pDataStorageMaxSizeOptionSetExplicitly);
+        } finally {
+            new Config();
+        }
+    }
+
+    @Test
     public void whenConfigIsConstructed_thenNoConsoleOutputSideEffectsShouldOccur() {
         PrintStream outOrig = System.out;
         PrintStream errOrig = System.err;

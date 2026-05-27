@@ -32,7 +32,10 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkEnvelope;
+
+import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
@@ -98,6 +101,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final NetworkNode networkNode;
     private final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
+    private final int getDataRequestHandlerMaxEntries;
     private final List<NodeAddress> seedNodeAddresses;
     private final List<ResponseListener> responseListeners = new CopyOnWriteArrayList<>();
 
@@ -122,10 +126,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public RequestDataManager(NetworkNode networkNode,
                               SeedNodeRepository seedNodeRepository,
                               P2PDataStorage dataStorage,
-                              PeerManager peerManager) {
+                              PeerManager peerManager,
+                              @Named(Config.GET_DATA_REQUEST_HANDLER_MAX_ENTRIES) int getDataRequestHandlerMaxEntries) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
+        this.getDataRequestHandlerMaxEntries = getDataRequestHandlerMaxEntries;
 
         this.networkNode.addMessageListener(this);
         this.networkNode.addConnectionListener(this);
@@ -308,7 +314,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                         log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
                                     }
                                 }
-                            });
+                            },
+                            getDataRequestHandlerMaxEntries);
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
                     getDataRequestHandler.handle(getDataRequest, connection);
                 } else {

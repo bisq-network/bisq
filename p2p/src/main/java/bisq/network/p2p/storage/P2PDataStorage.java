@@ -59,6 +59,7 @@ import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -134,6 +135,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     @VisibleForTesting
     public static final int CHECK_TTL_INTERVAL_SEC = 60;
 
+    public static double getDefaultMaxSize() {
+        return Connection.getMaxPermittedMessageSize() * 0.6;
+    }
+
     private boolean initialRequestApplied = false;
 
     private final Broadcaster broadcaster;
@@ -159,6 +164,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /// The maximum number of items that must exist in the SequenceNumberMap before it is scheduled for a purge
     /// which removes entries after PURGE_AGE_DAYS.
     private final int maxSequenceNumberMapSizeBeforePurge;
+    private final double maxGetDataResponseSize;
 
     // Don't convert to local variable as it might get GC'ed.
     private MonadicBinding<Boolean> readFromResourcesCompleteBinding;
@@ -180,7 +186,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           PersistenceManager<SequenceNumberMap> persistenceManager,
                           RemovedPayloadsService removedPayloadsService,
                           Clock clock,
-                          @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
+                          @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge,
+                          @Named(Config.P2P_DATA_STORAGE_MAX_SIZE) double maxGetDataResponseSize) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
@@ -189,6 +196,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         this.removedPayloadsService = removedPayloadsService;
         this.clock = clock;
         this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
+        this.maxGetDataResponseSize = maxGetDataResponseSize;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -316,8 +324,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
 
         // Give a bit of tolerance for message overhead
-        double maxSize = Connection.getMaxPermittedMessageSize() * 0.6;
-
+        double maxSize = maxGetDataResponseSize;
         // 25% of space is allocated for PersistableNetworkPayloads
         long limit = Math.round(maxSize * 0.25);
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
