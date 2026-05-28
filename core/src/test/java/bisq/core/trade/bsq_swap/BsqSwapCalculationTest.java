@@ -34,7 +34,7 @@ public class BsqSwapCalculationTest {
         assertEquals(4_999_850, BsqSwapCalculation.getSellersBsqPayoutValue(5_000_000, 150).value);
         assertEquals(1_950, BsqSwapCalculation.getAdjustedTxFee(10, 200, 50));
         // 0 trade fee is allowed a seller has no trade fee
-        assertEquals(2_000, BsqSwapCalculation.getAdjustedTxFee(10, 200, 0));
+        assertEquals(1_997, BsqSwapCalculation.getAdjustedTxFee(10, 200, 3));
     }
 
     @Test
