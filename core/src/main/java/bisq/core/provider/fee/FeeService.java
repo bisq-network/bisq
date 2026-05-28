@@ -21,6 +21,7 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
+import bisq.core.util.Validator;
 
 import bisq.common.config.Config;
 
@@ -144,6 +145,8 @@ public class FeeService {
     }
 
     public void updateFeeInfo(long txFeePerVbyte, long minFeePerVByte) {
+        Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
+        Validator.checkIsPositive(minFeePerVByte, "minFeePerVByte");
         // Defense-in-depth: a misbehaving or malicious fee provider could push values outside
         // the realistic range downstream code assumes. Clamp both fields to the network
         // default min and cap them at the documented high-water mark so the invariant
