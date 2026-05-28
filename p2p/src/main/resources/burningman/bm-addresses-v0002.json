@@ -2,97 +2,101 @@
   "schemaVersion": 1,
   "listVersion": 2,
   "network": "BTC_MAINNET",
-  "chainHeight": 951279,
-  "burningManSelectionHeight": 951270,
+  "chainHeight": 951295,
+  "burningManSelectionHeight": 951290,
   "legacyBurningManAddress": "34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC",
   "entries": [
     {
       "receiverAddress": "13SgZBKsUtShvymUyJ5GZe7PWytorfdBhF",
-      "cappedBurnAmountShare": 0.0018933067641562443
+      "cappedBurnAmountShare": 0.0018936599853511386
     },
     {
       "receiverAddress": "bc1q0nets5gp759parfzvpdjc860nk026dqx9s4229",
-      "cappedBurnAmountShare": 0.039550986351808766
+      "cappedBurnAmountShare": 0.03833711805301434
     },
     {
       "receiverAddress": "bc1q4u5hcp3h9shh6samvyhqkvvvenw8935lkgg5d9",
-      "cappedBurnAmountShare": 0.04712620425370252
+      "cappedBurnAmountShare": 0.045674682487118576
     },
     {
       "receiverAddress": "bc1q52xu4pz29g58277gwr6t9yf24qflefgn3m87xp",
-      "cappedBurnAmountShare": 0.05963452583431409
+      "cappedBurnAmountShare": 0.05780447800773087
     },
     {
       "receiverAddress": "bc1q6w0lyxj3x9mca5vstcafcmzhvhhrzxp6vls0vs",
-      "cappedBurnAmountShare": 0.014044237420798725
+      "cappedBurnAmountShare": 0.013614484513769945
     },
     {
       "receiverAddress": "bc1q7r6mg67a8verfjj205qnznvk425dlj9krduuuu",
-      "cappedBurnAmountShare": 2.3998390751141352E-4
+      "cappedBurnAmountShare": 2.3219100147252146E-4
     },
     {
       "receiverAddress": "bc1q9vx0qffryadadjv3t5k3sz46rfxgp7s0mmqa52",
-      "cappedBurnAmountShare": 0.10553199741586687
+      "cappedBurnAmountShare": 0.10228310436978685
     },
     {
       "receiverAddress": "bc1qa9n5347hvg0qwm9zkzep3zf00p6qqj5l6dqls6",
-      "cappedBurnAmountShare": 0.1083071605252501
+      "cappedBurnAmountShare": 0.10497106454862712
     },
     {
       "receiverAddress": "bc1qcraad8k7jvqzjjz7pm6lpl5sl9zs6n9tjh28cg",
-      "cappedBurnAmountShare": 0.06258322687524721
+      "cappedBurnAmountShare": 0.06064900804635523
     },
     {
       "receiverAddress": "bc1qg5yf89a75g94yqya9z5fmzn3c75v9dgtsu4mnj",
-      "cappedBurnAmountShare": 0.015999136413139933
+      "cappedBurnAmountShare": 0.01548957830604699
+    },
+    {
+      "receiverAddress": "bc1qh88u54ask7s4u6yjx53ut2pgvnh53k3m6ltl52",
+      "cappedBurnAmountShare": 0.03074772669296534
     },
     {
       "receiverAddress": "bc1qkz6mc2ngeuvp7xvqgpzm8rll8hmv59ps84knyf",
-      "cappedBurnAmountShare": 0.02618332401737102
+      "cappedBurnAmountShare": 0.025366113439352522
     },
     {
       "receiverAddress": "bc1ql976ltcylekvmpg3uln7ut474cklqh9rpy65en",
-      "cappedBurnAmountShare": 0.011194499139528613
+      "cappedBurnAmountShare": 0.010848315513272014
     },
     {
       "receiverAddress": "bc1qltcdkwryjde3t3kaxl70np70306qcql2y2c3hq",
-      "cappedBurnAmountShare": 0.01963806582316586
+      "cappedBurnAmountShare": 0.01903442587422083
     },
     {
       "receiverAddress": "bc1qltx64wft0gkuddprgw3m0ygzxg3wex7rv9hmlp",
-      "cappedBurnAmountShare": 0.0900443726088888
+      "cappedBurnAmountShare": 0.08728600722682114
     },
     {
       "receiverAddress": "bc1qmafvhrek2euluajs4jyurreep99g9zw7h7wfg2",
-      "cappedBurnAmountShare": 0.061240214657289356
+      "cappedBurnAmountShare": 0.059354559195875144
     },
     {
       "receiverAddress": "bc1qn3td94zx9u5j75sf09wq7lzq9ugl5j27zhrvse",
-      "cappedBurnAmountShare": 0.025677462045443022
+      "cappedBurnAmountShare": 0.024882186841816506
     },
     {
       "receiverAddress": "bc1qn7k90ez5slduuuz39c5xlwlephv4rxtysjndqm",
-      "cappedBurnAmountShare": 0.07525281412637849
+      "cappedBurnAmountShare": 0.07293269441690113
     },
     {
       "receiverAddress": "bc1qngfeng667rz2mh496tdcc9un885aj5js4xs393",
-      "cappedBurnAmountShare": 0.008142755047541334
+      "cappedBurnAmountShare": 0.007891480163983944
     },
     {
       "receiverAddress": "bc1qrvwaas072xtgkag6ujjsxeyadvtvryeuq20qkl",
-      "cappedBurnAmountShare": 0.07116436215247884
+      "cappedBurnAmountShare": 0.0689653548179897
     },
     {
       "receiverAddress": "bc1qw3qrhfrmpywx5ujg3vvm9txzq7hwdqty0rrk5z",
-      "cappedBurnAmountShare": 0.04542987018813074
+      "cappedBurnAmountShare": 0.044048005971885684
     },
     {
       "receiverAddress": "bc1qx2x082vglnfnkes8saqa0wg5w7y6natawgu2zf",
-      "cappedBurnAmountShare": 0.0011861093205409777
+      "cappedBurnAmountShare": 0.0011500258649044146
     },
     {
       "receiverAddress": "bc1qzd32m5f3q8rnf03jg9hasg0fg2rxsjhh0569vx",
-      "cappedBurnAmountShare": 0.10993538511144708
+      "cappedBurnAmountShare": 0.10654373466073792
     }
   ]
 }
