@@ -23,8 +23,9 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.monetary.Volume;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.validation.MinerFeeValidation;
+import bisq.core.trade.validation.TradeFeeValidation;
 import bisq.core.util.Validator;
 
 import bisq.common.util.MathUtils;
@@ -37,6 +38,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -72,10 +74,18 @@ public class BsqSwapCalculation {
 
     // Buyer
     public static Coin getBuyersBsqInputValue(BsqSwapTrade trade, long buyersTradeFee) {
+        if (buyersTradeFee == 0) {
+            log.warn("We got a bsqTradeFee of 0. We ignore that and use the default value of 3 sat (0.03 BSQ)");
+            buyersTradeFee = FeeService.getMinMakerFee(false).value;
+        }
         return getBuyersBsqInputValue(trade.getBsqTradeAmount(), buyersTradeFee);
     }
 
     public static Coin getBuyersBsqInputValue(long bsqTradeAmount, long buyersTradeFee) {
+        if (buyersTradeFee == 0) {
+            log.warn("We got a bsqTradeFee of 0. We ignore that and use the default value of 3 sat (0.03 BSQ)");
+            buyersTradeFee = FeeService.getMinMakerFee(false).value;
+        }
         return Coin.valueOf(bsqTradeAmount).add(Coin.valueOf(buyersTradeFee));
     }
 
@@ -115,7 +125,7 @@ public class BsqSwapCalculation {
                                                         long buyerTradeFee) {
         // Use estimated size. This is used in case the wallet has not enough fund so we cannot calculate the exact
         // amount but we still want to provide some estimated value.
-        long buyersTxFee = getAdjustedTxFeeForEstimate(txFeePerVbyte, ESTIMATED_V_BYTES, buyerTradeFee);
+        long buyersTxFee = getAdjustedTxFee(txFeePerVbyte, ESTIMATED_V_BYTES, buyerTradeFee);
         return getBuyersBtcPayoutValue(btcTradeAmount.getValue(), buyersTxFee);
     }
 
@@ -154,7 +164,7 @@ public class BsqSwapCalculation {
                                                         long sellersTradeFee) {
         // Use estimated size. This is used in case the wallet has not enough fund so we cannot calculate the exact
         // amount but we still want to provide some estimated value.
-        long sellersTxFee = getAdjustedTxFeeForEstimate(txFeePerVbyte, ESTIMATED_V_BYTES, sellersTradeFee);
+        long sellersTxFee = getAdjustedTxFee(txFeePerVbyte, ESTIMATED_V_BYTES, sellersTradeFee);
         return getSellersBtcInputValue(btcTradeAmount.getValue(), sellersTxFee);
     }
 
@@ -229,46 +239,27 @@ public class BsqSwapCalculation {
         return size;
     }
 
-    public static long getAdjustedTxFee(BsqSwapTrade trade, int vBytes, long tradeFee) {
-        return getAdjustedTxFee(trade.getTxFeePerVbyte(), vBytes, tradeFee);
-    }
-
-    public static long getAdjustedTxFee(long txFeePerVbyte, int vBytes, long tradeFee) {
+    // We use the burned BSQ trade fee for funding the miner fee.
+    // In case the trade fee is higher than the miner fee, the effective fee is negative, which will lead
+    // to a reduction of the required BTC input.
+    public static long getAdjustedTxFee(long txFeePerVbyte, int vBytes, long bsqTradeFee) {
+        if (bsqTradeFee == 0) {
+            log.warn("We got a bsqTradeFee of 0. We ignore that and use the default value of 3 sat (0.03 BSQ)");
+            bsqTradeFee = FeeService.getMinMakerFee(false).value;
+        }
+        // txFeePerVbyte is currently min. 10
         Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
-        Validator.checkIsPositive(vBytes, "vBytes");
-        Validator.checkIsNotNegative(tradeFee, "tradeFee");
-        // tradeFee must be strictly less than miner-fee portion; otherwise buyer payout inverts
-        // (or zeroes buyer fee contribution) and sum-of-outputs >= sum-of-inputs, producing
-        // an unbroadcastable tx. Coin.multiply/subtract use Math.*Exact internally, so overflow
-        // trips loudly if future callers relax current input bounds.
+
+        checkArgument(vBytes >= MIN_SELLERS_TX_SIZE,
+                "vBytes must be at least MIN_SELLERS_TX_SIZE (104)");
+
+        bsqTradeFee = TradeFeeValidation.checkBsqTradeFee(bsqTradeFee);
         Coin adjustedTxFee = Coin.valueOf(txFeePerVbyte)
                 .multiply(vBytes)
-                .subtract(Coin.valueOf(tradeFee));
-        Validator.checkIsPositive(adjustedTxFee, "adjustedTxFee");
-        return adjustedTxFee.value;
-    }
+                .subtract(Coin.valueOf(bsqTradeFee));
 
-    // Lenient variant for UI estimation paths where a precise value is not required and
-    // throwing would break display when wallet is underfunded. Saturates the output (not
-    // the inputs) at the documented trade-tx-fee upper bound on multiply overflow or
-    // absurd magnitudes, and clamps subtraction underflow to 0.
-    private static long getAdjustedTxFeeForEstimate(long txFeePerVbyte, int vBytes, long tradeFee) {
-        // Coin.multiply uses Math.multiplyExact internally; saturate on overflow at the
-        // documented trade-tx-fee upper bound rather than throwing.
-        Coin minerFeePortion;
-        try {
-            minerFeePortion = Coin.valueOf(txFeePerVbyte).multiply(vBytes);
-        } catch (ArithmeticException e) {
-            minerFeePortion = Coin.valueOf(MinerFeeValidation.MAX_TRADE_TX_FEE_SAT);
-        }
-        // tradeFee is expected to be non-negative; clamp defensively so a negative input
-        // cannot make the subtraction overflow upward. Coin.subtract throws on underflow,
-        // so guard before subtracting and clamp the result to zero.
-        Coin safeTradeFee = Coin.valueOf(Math.max(0L, tradeFee));
-        if (minerFeePortion.isLessThan(safeTradeFee)) {
-            return 0L;
-        }
-        return minerFeePortion.subtract(safeTradeFee).value;
+        // Negative value is possible
+        return adjustedTxFee.value;
     }
 
     // Convert BTC trade amount to BSQ amount
