@@ -85,3 +85,9 @@ dependencies {
 test {
     systemProperty 'jdk.attach.allowAttachSelf', true
 }
+
+tasks.register('daoHashToolClasspath') {
+    doLast {
+        println sourceSets.test.runtimeClasspath.asPath
+    }
+}
