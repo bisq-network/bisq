@@ -26,6 +26,7 @@ import protobuf.PaymentAccount;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * After the DAO suite runs, exercise the trade flow Alice→Bob across four offer kinds:
+ * Exercise the trade flow Alice→Bob across four offer kinds:
  *   - v1 BTC sell (Alice maker BTC seller / fiat buyer; Bob taker)
  *   - v1 BTC buy  (Alice maker BTC buyer  / fiat seller; Bob taker)
  *   - BSQ swap sell (Alice maker sells BTC for BSQ; Bob taker)
@@ -44,7 +45,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * Note: trade completion needs mediator + refund agent registered. The arb container's
  * entrypoint does this on startup; DisputeAgentBootstrapTest verifies it.
+ *
+ * Runs on a freshly reset stack (@Tag("freshstack")), like the sibling method.trade.*
+ * take-offer tests. The shared-stack DAO governance tests churn proposals/votes whose
+ * payloads propagate to the seed node and Alice on slightly different schedules, leaving
+ * Alice's DaoStateMonitoringService in a persistent block-hash conflict with the seed
+ * node (isInConflictWithSeedNode). A maker in that state fails isDaoStateReadyAndInSync,
+ * so OpenOfferManager.handleOfferAvailabilityRequest answers a take with only a NACK and
+ * no OfferAvailabilityResponse — the taker then hits the 90s "peer has not responded"
+ * timeout. A pristine stack has no such divergence, so the maker responds. The
+ * awaitMakerReadyToRespond gate below is a defensive fast-fail in case sync still lags.
  */
+@Tag("freshstack")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TradeScenarioTest extends DaoTestBase {
 
@@ -139,6 +151,7 @@ public class TradeScenarioTest extends DaoTestBase {
                         .anyMatch(o -> o.getId().equals(offer.getId())),
                 60_000, "bob sees offer " + offer.getId());
 
+        awaitMakerReadyToRespond(alice, offer);
         TradeInfo trade = bob.takeOffer(offer.getId(), bobF2F.getId(), "BTC", BTC_AMOUNT_SATS);
         assertNotNull(trade);
         // Confirm bob's taker-fee tx before the deposit tx, otherwise the deposit tx
@@ -195,6 +208,39 @@ public class TradeScenarioTest extends DaoTestBase {
         }
     }
 
+    /**
+     * Block until the maker is in the synced state its OfferAvailabilityRequest guard
+     * requires, before letting the taker request. {@code OpenOfferManager
+     * .handleOfferAvailabilityRequest} replies with ONLY a NACK AckMessage — and no
+     * {@code OfferAvailabilityResponse} — when the maker's DAO state or BTC wallet chain
+     * height is not yet synced. The taker's protocol only resolves on an
+     * OfferAvailabilityResponse, so a NACK leaves it to time out after 90s with
+     * "timeout reached: peer has not responded" (the flake this guards against).
+     *
+     * <p>{@link DaoTestUtils#generateBlocks(int)} already gates on the BSQ parser's chain
+     * height ({@code getCycleInfo}), but two other signals the guard reads are not covered:
+     * <ul>
+     *   <li>{@code isDaoStateReadyAndInSync()} additionally requires DAO-state-hash
+     *       consensus with the seed node, which races P2P gossip right after new blocks.</li>
+     *   <li>{@code isChainHeightSyncedWithinTolerance()} reads the maker's separate bitcoinj
+     *       wallet height, whose block relay can lag tens of seconds under load (see
+     *       {@link DaoTestUtils#confirmTx}).</li>
+     * </ul>
+     * Gate on both being observably true on the maker before the take.
+     */
+    private void awaitMakerReadyToRespond(GrpcClient maker, OfferInfo offer) {
+        DaoTestUtils.await(maker::getDaoStatus, 60_000, "maker DAO state ready and in sync");
+        // A broadcast maker-fee tx (v1 offers) lets us prove the maker's bitcoinj wallet
+        // reached the block that confirmed it: a non-pending tx ⇒ wallet at that height ⇒
+        // isChainHeightSyncedWithinTolerance holds. BSQ-swap offers have no such tx at
+        // creation, so the DAO-sync gate above is the available signal for them.
+        String makerFeeTxId = offer.getOfferFeePaymentTxId();
+        if (makerFeeTxId != null && !makerFeeTxId.isEmpty()) {
+            DaoTestUtils.await(() -> !maker.getTransaction(makerFeeTxId).getIsPending(),
+                    60_000, "maker BTC wallet confirmed maker-fee tx " + makerFeeTxId);
+        }
+    }
+
     /** Sum of available + reserved + locked BTC — the wallet's full BTC footprint. */
     private static long totalBtc(GrpcClient c) {
         var b = c.getBalances().getBtc();
@@ -217,6 +263,7 @@ public class TradeScenarioTest extends DaoTestBase {
                         .anyMatch(o -> o.getId().equals(offer.getId())),
                 60_000, "bob sees swap offer " + offer.getId());
 
+        awaitMakerReadyToRespond(alice, offer);
         TradeInfo trade = bob.takeBsqSwapOffer(offer.getId(), BTC_AMOUNT_SATS);
         assertNotNull(trade);
         // BSQ swap produces a single atomic tx; wait briefly for tx_id then inject.
