@@ -28,8 +28,11 @@ import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
 
+import org.mockito.MockedStatic;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 class FeeServiceTest {
@@ -55,9 +58,14 @@ class FeeServiceTest {
         assertEquals(FeeService.BTC_MAX_TX_FEE, feeService.getTxFeePerVbyte().getValue());
         assertEquals(FeeService.BTC_MAX_TX_FEE, feeService.getMinFeePerVByte());
         long expected = FeeService.BTC_MAX_TX_FEE * BsqSwapCalculation.ESTIMATED_V_BYTES - 3;
-        long adjustedTxFee = BsqSwapCalculation.getAdjustedTxFee(feeService.getTxFeePerVbyte().getValue(),
-                BsqSwapCalculation.ESTIMATED_V_BYTES,
-                3);
+        long adjustedTxFee;
+        try (MockedStatic<FeeService> mockedFeeService = mockStatic(FeeService.class)) {
+            mockedFeeService.when(() -> FeeService.getMinMakerFee(false)).thenReturn(Coin.valueOf(3));
+            mockedFeeService.when(() -> FeeService.getMinTakerFee(false)).thenReturn(Coin.valueOf(3));
+            adjustedTxFee = BsqSwapCalculation.getAdjustedTxFee(feeService.getTxFeePerVbyte().getValue(),
+                    BsqSwapCalculation.ESTIMATED_V_BYTES,
+                    3);
+        }
         assertEquals(expected, adjustedTxFee);
     }
 
@@ -84,8 +92,6 @@ class FeeServiceTest {
 
         FeeService feeService = new FeeService(daoStateService, periodService);
         feeService.onAllServicesInitialized(filterManager);
-        when(FeeService.getMinMakerFee(false)).thenReturn(Coin.valueOf(3));
-        when(FeeService.getMinTakerFee(false)).thenReturn(Coin.valueOf(3));
         return feeService;
     }
 }
