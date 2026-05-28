@@ -31,7 +31,7 @@ public final class TradeFeeValidation {
     public static final double MAX_MAKER_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
     public static final double MAX_TAKER_FEE_DEVIATION_FACTOR = 1.5; // Max change by factor 1.5 (expected / 1.5 or expected * 1.5)
 
-    // CBSQ trade fee is currently 274.4 BSQ/BTC for taker. With 0.25 BTC limit the fee would be 68.6 BSQ.
+    // BSQ trade fee is currently 274.4 BSQ/BTC for taker. With 0.25 BTC limit the fee would be 68.6 BSQ.
     // If we assume a very high fee of 2000 BSQ/BTC , we would get 500 BSQ as max trade fee.
     // This is only used for setting boundaries.
     public static final int MAX_BSQ_TRADE_FEE = 50000; // 500 BSQ

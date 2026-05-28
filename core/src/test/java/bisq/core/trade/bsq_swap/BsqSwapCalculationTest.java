@@ -17,14 +17,22 @@
 
 package bisq.core.trade.bsq_swap;
 
+import bisq.core.provider.fee.FeeService;
+
+import org.bitcoinj.core.Coin;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 public class BsqSwapCalculationTest {
     @Test
     void monetaryCalculationsReturnExpectedValues() {
+        when(FeeService.getMinMakerFee(false)).thenReturn(Coin.valueOf(3));
+        when(FeeService.getMinTakerFee(false)).thenReturn(Coin.valueOf(3));
+
         assertEquals(5_000_050, BsqSwapCalculation.getBuyersBsqInputValue(5_000_000, 50).value);
         assertEquals(99_998_050, BsqSwapCalculation.getBuyersBtcPayoutValue(100_000_000,
                 10,
@@ -34,7 +42,7 @@ public class BsqSwapCalculationTest {
         assertEquals(4_999_850, BsqSwapCalculation.getSellersBsqPayoutValue(5_000_000, 150).value);
         assertEquals(1_950, BsqSwapCalculation.getAdjustedTxFee(10, 200, 50));
         // 0 trade fee is allowed a seller has no trade fee
-        assertEquals(2_000, BsqSwapCalculation.getAdjustedTxFee(10, 200, 0));
+        assertEquals(1_997, BsqSwapCalculation.getAdjustedTxFee(10, 200, 3));
     }
 
     @Test
