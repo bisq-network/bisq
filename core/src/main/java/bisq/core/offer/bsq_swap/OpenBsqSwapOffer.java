@@ -83,6 +83,8 @@ class OpenBsqSwapOffer {
 
         Offer offer = openOffer.getOffer();
         isBuyOffer = offer.isBuyOffer();
+
+        // tradeFee is 0 for BSQ offers
         tradeFee = offer.getMakerFee().getValue();
 
         txFeePerVbyte = feeService.getTxFeePerVbyte().getValue();
@@ -184,10 +186,16 @@ class OpenBsqSwapOffer {
             hasMissingFunds = walletBalance.isLessThan(requiredBsqInput);
         } else {
             try {
+                // tradeFee is 0 at open BSQ offers. This should have been set at constructor to the min fee, but we
+                // don't want to touch that now, so we only apply a min fix to avoid down stream pollution with unreasonable values.
+                long fee = tradeFee;
+                if (tradeFee <= 0) {
+                    fee = FeeService.getMinMakerFee(false).value;
+                }
                 Coin requiredInput = BsqSwapCalculation.getSellersBtcInputValue(btcWalletService,
                         btcAmount,
                         txFeePerVbyte,
-                        tradeFee);
+                        fee);
                 hasMissingFunds = walletBalance.isLessThan(requiredInput);
             } catch (InsufficientMoneyException e) {
                 hasMissingFunds = true;

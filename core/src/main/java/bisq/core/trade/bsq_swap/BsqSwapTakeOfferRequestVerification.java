@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeFeeValidation.checkBsqTradeFee;
 import static bisq.core.trade.validation.TradeFeeValidation.checkMakerFee;
 import static bisq.core.trade.validation.TradeFeeValidation.checkTakerFee;
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
@@ -80,14 +81,22 @@ public class BsqSwapTakeOfferRequestVerification {
 
             long peersMinerFeeRate = request.getTxFeePerVbyte();
             long expectedMinerFeeRate = feeService.getTxFeePerVbyte().getValue();
+
             long minMinerFeeRate = feeService.getMinFeePerVByte();
             Validator.checkIsPositive(minMinerFeeRate, "minMinerFeeRate");
-            checkArgument(peersMinerFeeRate >= minMinerFeeRate,
+
+            // To not break backward compatibility, we do not apply that strict check but rely on the tolerance only.
+            // Once trade version has enforces > v1.10.0 we can use the strict check again.
+            /* checkArgument(peersMinerFeeRate >= minMinerFeeRate,
                     "Peer miner fee rate is below minimum. peer=%s, min=%s", peersMinerFeeRate, minMinerFeeRate);
+            */
+
             MinerFeeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
 
             checkMakerFee(request.getMakerFee(), false, amountAsCoin);
             checkTakerFee(request.getTakerFee(), false, amountAsCoin);
+            checkBsqTradeFee(request.getMakerFee());
+            checkBsqTradeFee(request.getTakerFee());
         } catch (Exception e) {
             log.error("BsqSwapTakeOfferRequestVerification failed. Request={}, peer={}, error={}", request, peer, e.toString());
             return false;

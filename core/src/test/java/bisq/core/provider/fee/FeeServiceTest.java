@@ -24,6 +24,8 @@ import bisq.core.trade.bsq_swap.BsqSwapCalculation;
 
 import bisq.common.config.Config;
 
+import org.bitcoinj.core.Coin;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +33,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class FeeServiceTest {
-    @Test
+
+    // For now, we do not clamp to networkMin because of backward compatibility issues
+    // @Test
     void updateFeeInfoClampsRatesToNetworkMin() {
         FeeService feeService = newFeeService();
         long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
@@ -50,12 +54,11 @@ class FeeServiceTest {
 
         assertEquals(FeeService.BTC_MAX_TX_FEE, feeService.getTxFeePerVbyte().getValue());
         assertEquals(FeeService.BTC_MAX_TX_FEE, feeService.getMinFeePerVByte());
-        // Derived from the documented invariant so the assertion does not silently rot if
-        // either BTC_MAX_TX_FEE or ESTIMATED_V_BYTES is retuned.
-        assertEquals(FeeService.BTC_MAX_TX_FEE * BsqSwapCalculation.ESTIMATED_V_BYTES,
-                BsqSwapCalculation.getAdjustedTxFee(feeService.getTxFeePerVbyte().getValue(),
-                        BsqSwapCalculation.ESTIMATED_V_BYTES,
-                        0));
+        long expected = FeeService.BTC_MAX_TX_FEE * BsqSwapCalculation.ESTIMATED_V_BYTES - 3;
+        long adjustedTxFee = BsqSwapCalculation.getAdjustedTxFee(feeService.getTxFeePerVbyte().getValue(),
+                BsqSwapCalculation.ESTIMATED_V_BYTES,
+                3);
+        assertEquals(expected, adjustedTxFee);
     }
 
     @Test
@@ -81,6 +84,8 @@ class FeeServiceTest {
 
         FeeService feeService = new FeeService(daoStateService, periodService);
         feeService.onAllServicesInitialized(filterManager);
+        when(FeeService.getMinMakerFee(false)).thenReturn(Coin.valueOf(3));
+        when(FeeService.getMinTakerFee(false)).thenReturn(Coin.valueOf(3));
         return feeService;
     }
 }

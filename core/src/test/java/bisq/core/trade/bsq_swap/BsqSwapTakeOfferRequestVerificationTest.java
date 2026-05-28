@@ -53,7 +53,7 @@ class BsqSwapTakeOfferRequestVerificationTest {
     private static final long MAKER_FEE = 50;
     private static final long TAKER_FEE = 150;
     // Derived from the network default so the assertions remain meaningful if the network
-    // minimum is retuned. FeeService.updateFeeInfo clamps stored rates up to NETWORK_MIN.
+    // minimum is retuned.
     private static final long NETWORK_MIN = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
     // Strictly above 2 * NETWORK_MIN so the tolerance check rejects it.
     private static final long OUTSIDE_TOLERANCE = 2 * NETWORK_MIN + 1;
@@ -70,20 +70,31 @@ class BsqSwapTakeOfferRequestVerificationTest {
     }
 
     @Test
-    void rejectsRequestBelowStoredMinimumFeeRateEvenWhenToleranceWouldAllowIt() {
+    void acceptsRequestBelowStoredMinimumFeeRateWhenToleranceAllowsIt() {
         // Force storedMin >= 2 so belowMin = storedMin - 1 is both strictly below the
-        // stored minimum and still within the 2x tolerance window. This keeps the test
-        // exercising the strict min-rate check (not the tolerance check) regardless of
-        // how the network minimum is tuned.
+        // stored minimum and still within the 2x tolerance window. This documents the
+        // backward-compatible behavior for peers running versions before strict min-rate
+        // enforcement.
         long storedMin = Math.max(2L, NETWORK_MIN);
         long belowMinWithinTolerance = storedMin - 1;
         Fixture fixture = new Fixture(storedMin);
+
+        assertTrue(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newRequest(belowMinWithinTolerance)));
+    }
+
+    @Test
+    void rejectsRequestWithBsqFeeBelowCurrentMinimumEvenWhenFeeToleranceWouldAllowIt() {
+        Fixture fixture = new Fixture(NETWORK_MIN);
 
         assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
                 fixture.feeService,
                 fixture.keyRing,
                 PEER,
-                newRequest(belowMinWithinTolerance)));
+                newRequest(NETWORK_MIN, MAKER_FEE - 1, TAKER_FEE)));
     }
 
     @Test
@@ -98,13 +109,17 @@ class BsqSwapTakeOfferRequestVerificationTest {
     }
 
     private static BsqSwapRequest newRequest(long txFeePerVbyte) {
+        return newRequest(txFeePerVbyte, MAKER_FEE, TAKER_FEE);
+    }
+
+    private static BsqSwapRequest newRequest(long txFeePerVbyte, long makerFee, long takerFee) {
         return new SellersBsqSwapRequest(TRADE_ID,
                 PEER,
                 mock(PubKeyRing.class),
                 TRADE_AMOUNT.value,
                 txFeePerVbyte,
-                MAKER_FEE,
-                TAKER_FEE,
+                makerFee,
+                takerFee,
                 System.currentTimeMillis());
     }
 
