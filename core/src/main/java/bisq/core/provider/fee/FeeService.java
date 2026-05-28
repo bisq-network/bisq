@@ -21,6 +21,7 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
+import bisq.core.util.Validator;
 
 import bisq.common.config.Config;
 
@@ -144,6 +145,8 @@ public class FeeService {
     }
 
     public void updateFeeInfo(long txFeePerVbyte, long minFeePerVByte) {
+        Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
+        Validator.checkIsPositive(minFeePerVByte, "minFeePerVByte");
         // Defense-in-depth: a misbehaving or malicious fee provider could push values outside
         // the realistic range downstream code assumes. Clamp both fields to the network
         // default min and cap them at the documented high-water mark so the invariant
@@ -153,7 +156,12 @@ public class FeeService {
         // when one side's BSQ trade fee exceeds its miner-portion (see BsqSwapCalculation),
         // and avoids multiply overflow in fee estimators if a bad feed returns absurd values.
         long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
-        long clampedMinFee = Math.min(Math.max(minFeePerVByte, networkMin), BTC_MAX_TX_FEE);
+
+        // v1.10.0 does not clamp to networkMin, thus we can receive lower values (usually 10).
+        // To not break backward compatibility, we only clamp to BTC_MAX_TX_FEE.
+        // Once trade version has enforces > v1.10.0 we can use the networkMin as lower bound as well.
+        // long clampedMinFee = Math.min(Math.max(minFeePerVByte, networkMin), BTC_MAX_TX_FEE);
+        long clampedMinFee = Math.min(minFeePerVByte, BTC_MAX_TX_FEE);
         long clampedTxFee = Math.min(Math.max(txFeePerVbyte, clampedMinFee), BTC_MAX_TX_FEE);
         if (clampedTxFee != txFeePerVbyte || clampedMinFee != minFeePerVByte) {
             log.warn("Fee provider returned txFeePerVbyte={}, minFeePerVbyte={}, networkMin={}, maxFeePerVbyte={}; " +
