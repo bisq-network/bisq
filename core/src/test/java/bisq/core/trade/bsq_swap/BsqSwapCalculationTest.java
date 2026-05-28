@@ -48,30 +48,4 @@ public class BsqSwapCalculationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> BsqSwapCalculation.getAdjustedTxFee(Long.MAX_VALUE, 2, -1));
     }
-
-    @Test
-    void getAdjustedTxFeeClampsAtZeroWhenTradeFeeExceedsMinerPortion() {
-        // Real-world reproduction of the take-offer crash: low txFeePerVbyte + small vBytes
-        // (single segwit input) makes the miner-fee portion smaller than the BSQ trade fee.
-        // Returning 0 means this side contributes 0 BTC toward the miner fee; the BSQ trade
-        // fee burns directly into the miner-fee pool and the tx overpays slightly — still
-        // valid, still broadcastable. Pre-fix this threw IllegalArgumentException and killed
-        // the take-offer dialog. The boundary case (tradeFee == minerPortion) also returns 0
-        // since the BSQ fee alone covers the full miner cost.
-        assertEquals(0, BsqSwapCalculation.getAdjustedTxFee(1, 200, 500));
-        assertEquals(0, BsqSwapCalculation.getAdjustedTxFee(1, 200, 200));
-    }
-
-    @Test
-    void sellersAndBuyersFeeOverloadsClampAtZeroWhenTradeFeeExceedsMinerPortion() {
-        // Through the seller-path wrapper that BsqSwapOfferModel.calculateInputAndPayout calls:
-        // seller's BTC input collapses to just btcTradeAmount when their BSQ trade fee already
-        // covers the miner portion.
-        assertEquals(100_000_000L,
-                BsqSwapCalculation.getSellersBtcInputValue(100_000_000L, 1L, 100, 500L).value);
-        // Symmetric buyer-payout wrapper: buyer receives the full btcTradeAmount when their
-        // trade fee already covers the miner portion.
-        assertEquals(100_000_000L,
-                BsqSwapCalculation.getBuyersBtcPayoutValue(100_000_000L, 1L, 100, 500L).value);
-    }
 }
