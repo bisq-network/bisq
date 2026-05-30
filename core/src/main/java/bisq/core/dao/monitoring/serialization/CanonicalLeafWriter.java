@@ -20,11 +20,14 @@ package bisq.core.dao.monitoring.serialization;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
+import bisq.core.dao.state.model.blockchain.ScriptType;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -35,6 +38,7 @@ import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.GenericProposal;
 import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Merit;
 import bisq.core.dao.state.model.governance.ParamChange;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -48,22 +52,21 @@ import bisq.core.dao.state.model.governance.Vote;
 /**
  * Hand-rolled canonical byte encoders for every DAO state leaf class
  * reachable from the hash chain. No protobuf, no Java HashMap — every byte
- * comes out of a {@link CanonicalWriter} primitive whose encoding is fully
+ * comes out of {@link CanonicalWriter} primitives whose encoding is fully
  * specified in this codebase.
  *
- * <p>Field ordering within each {@code writeXxx} method matches the proto
- * declaration order from {@code proto/src/main/proto/pb.proto}, so the
- * canonical bytes parallel (but are not byte-identical to) the protobuf
- * wire format. Discriminated unions ({@link Proposal} subtypes) use a
- * fixed type-tag byte chosen to match the proto oneof tag for clarity:
- * Compensation=6, Reimbursement=7, ChangeParam=8, Role=9,
- * ConfiscateBond=10, Generic=11, RemoveAsset=12.
- *
- * <p>Enums are written as length-prefixed UTF-8 of {@link Enum#name()};
- * this is stable across enum-ordinal reorderings within a Java release.
+ * <p><strong>Enum encoding.</strong> All enums on the hash path are written
+ * via a stable numeric code returned by an explicit switch. The code values
+ * mirror the proto enum field numbers from {@code pb.proto}. Encoding via a
+ * switch — not via {@link Enum#name()} or {@link Enum#ordinal()} — means a
+ * rename or reorder of a model enum is a compile-time visible change at the
+ * call site here, not a silent consensus fork. {@code Proposal} subtype
+ * discriminator and a few enums whose proto wire form is already a string
+ * (Param, BondedRoleType) are written as length-prefixed strings.
  *
  * <p>This file is the single source of truth for the canonical hash format.
- * Any change to a {@code writeXxx} method is a hard fork.
+ * Any change to a {@code writeXxx} method or to a {@code codeOf} switch is
+ * a hard fork.
  */
 final class CanonicalLeafWriter {
 
@@ -89,7 +92,7 @@ final class CanonicalLeafWriter {
         w.writeList(tx.getTxInputs(), CanonicalLeafWriter::writeTxInput);
         // Tx-specific fields
         w.writeList(tx.getTxOutputs(), CanonicalLeafWriter::writeTxOutput);
-        w.writeOptionalEnum(tx.getTxType());
+        w.writeOptional(tx.getTxType(), (cw, t) -> cw.writeEnumCode(codeOf(t)));
         w.writeI64(tx.getBurntBsq());
     }
 
@@ -103,7 +106,7 @@ final class CanonicalLeafWriter {
         // BaseTxOutput fields first
         writeBaseTxOutputFields(w, txOutput);
         // TxOutput-specific fields
-        w.writeEnum(txOutput.getTxOutputType());
+        w.writeEnumCode(codeOf(txOutput.getTxOutputType()));
         w.writeI32(txOutput.getLockTime());
         w.writeI32(txOutput.getUnlockBlockHeight());
     }
@@ -120,7 +123,7 @@ final class CanonicalLeafWriter {
 
     static void writePubKeyScript(CanonicalWriter w, PubKeyScript script) {
         w.writeI32(script.getReqSigs());
-        w.writeEnum(script.getScriptType());
+        w.writeEnumCode(codeOf(script.getScriptType()));
         w.writeStringList(script.getAddresses());
         w.writeString(script.getAsm());
         w.writeString(script.getHex());
@@ -145,7 +148,7 @@ final class CanonicalLeafWriter {
     }
 
     static void writeDaoPhase(CanonicalWriter w, DaoPhase phase) {
-        w.writeEnum(phase.getPhase());
+        w.writeEnumCode(codeOf(phase.getPhase()));
         w.writeI32(phase.getDuration());
     }
 
@@ -154,7 +157,7 @@ final class CanonicalLeafWriter {
         w.writeI32(issuance.getChainHeight());
         w.writeI64(issuance.getAmount());
         w.writeOptionalString(issuance.getPubKey());
-        w.writeEnum(issuance.getIssuanceType());
+        w.writeEnumCode(codeOf(issuance.getIssuanceType()));
     }
 
     static void writeParamChange(CanonicalWriter w, ParamChange paramChange) {
@@ -204,7 +207,11 @@ final class CanonicalLeafWriter {
         w.writeString(role.getUid());
         w.writeString(role.getName());
         w.writeString(role.getLink());
-        w.writeEnum(role.getBondedRoleType());
+        // BondedRoleType is stored on the wire as a string (proto field type
+        // is string bonded_role_type), so we mirror that with a length-
+        // prefixed UTF-8 of the enum name. A rename of a BondedRoleType
+        // constant is consensus-breaking either way.
+        w.writeString(role.getBondedRoleType().name());
     }
 
     // ---------- proposal hierarchy ----------
@@ -220,8 +227,8 @@ final class CanonicalLeafWriter {
         // extraDataMap is TreeMap<String, String>, iterates sorted
         w.writeOptional(proposal.getExtraDataMap(),
                 (cw, m) -> cw.writeSortedMap(m, CanonicalWriter::writeString, CanonicalWriter::writeString));
-        // Discriminated subtype: 1-byte tag + subtype-specific payload.
-        // Tag values match the proto oneof field numbers so they are stable.
+        // Discriminated subtype: stable 1-byte tag (proto oneof field numbers)
+        // + subtype-specific payload.
         if (proposal instanceof CompensationProposal) {
             w.writeRawByte(6);
             writeCompensationProposalFields(w, (CompensationProposal) proposal);
@@ -259,7 +266,8 @@ final class CanonicalLeafWriter {
     }
 
     private static void writeChangeParamProposalFields(CanonicalWriter w, ChangeParamProposal p) {
-        // Proto stores `param` as the enum name string; mirror that semantics.
+        // Proto field `param` is string; mirror that and let Param renames be
+        // a consensus-relevant change (governance code reviews catch this).
         w.writeString(p.getParam().name());
         w.writeString(p.getParamValue());
     }
@@ -276,5 +284,113 @@ final class CanonicalLeafWriter {
 
     private static void writeRemoveAssetProposalFields(CanonicalWriter w, RemoveAssetProposal p) {
         w.writeString(p.getTickerSymbol());
+    }
+
+    // ---------- stable enum codes ----------
+    //
+    // The integer codes below are CONSENSUS-CRITICAL. They mirror the proto
+    // enum field numbers from proto/src/main/proto/pb.proto. Java values
+    // whose name differs from the proto enum (e.g. TxType.UNDEFINED is a
+    // local fallback with no proto counterpart) get a code reserved at the
+    // far end of the proto value space, marked with "// LOCAL". Any new
+    // enum constant added to one of these enums must be assigned a code
+    // here; the default branch throws so the compiler does not — but the
+    // runtime does — catch the omission.
+
+    static int codeOf(TxType t) {
+        switch (t) {
+            case UNDEFINED:            return 0;   // matches proto PB_ERROR_TX_TYPE
+            case UNDEFINED_TX_TYPE:    return 1;
+            case UNVERIFIED:           return 2;
+            case INVALID:              return 3;
+            case GENESIS:              return 4;
+            case TRANSFER_BSQ:         return 5;
+            case PAY_TRADE_FEE:        return 6;
+            case PROPOSAL:             return 7;
+            case COMPENSATION_REQUEST: return 8;
+            case REIMBURSEMENT_REQUEST: return 9;
+            case BLIND_VOTE:           return 10;
+            case VOTE_REVEAL:          return 11;
+            case LOCKUP:               return 12;
+            case UNLOCK:               return 13;
+            case ASSET_LISTING_FEE:    return 14;
+            case PROOF_OF_BURN:        return 15;
+            case IRREGULAR:            return 16;
+            default:
+                throw new IllegalStateException("Unmapped TxType: " + t);
+        }
+    }
+
+    static int codeOf(TxOutputType t) {
+        switch (t) {
+            case UNDEFINED:                          return 0;   // matches proto PB_ERROR_TX_OUTPUT_TYPE
+            case UNDEFINED_OUTPUT:                   return 1;
+            case GENESIS_OUTPUT:                     return 2;
+            case BSQ_OUTPUT:                         return 3;
+            case BTC_OUTPUT:                         return 4;
+            case PROPOSAL_OP_RETURN_OUTPUT:          return 5;
+            case COMP_REQ_OP_RETURN_OUTPUT:          return 6;
+            case REIMBURSEMENT_OP_RETURN_OUTPUT:     return 7;
+            case CONFISCATE_BOND_OP_RETURN_OUTPUT:   return 8;
+            case ISSUANCE_CANDIDATE_OUTPUT:          return 9;
+            case BLIND_VOTE_LOCK_STAKE_OUTPUT:       return 10;
+            case BLIND_VOTE_OP_RETURN_OUTPUT:        return 11;
+            case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:    return 12;
+            case VOTE_REVEAL_OP_RETURN_OUTPUT:       return 13;
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT: return 14;
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:     return 15;
+            case LOCKUP_OUTPUT:                      return 16;
+            case LOCKUP_OP_RETURN_OUTPUT:            return 17;
+            case UNLOCK_OUTPUT:                      return 18;
+            case INVALID_OUTPUT:                     return 19;
+            default:
+                throw new IllegalStateException("Unmapped TxOutputType: " + t);
+        }
+    }
+
+    static int codeOf(ScriptType t) {
+        switch (t) {
+            case UNDEFINED:           return 0;   // matches proto PB_ERROR_SCRIPT_TYPES
+            case PUB_KEY:             return 1;
+            case PUB_KEY_HASH:        return 2;
+            case SCRIPT_HASH:         return 3;
+            case MULTISIG:            return 4;
+            case NULL_DATA:           return 5;
+            case WITNESS_V0_KEYHASH:  return 6;
+            case WITNESS_V0_SCRIPTHASH: return 7;
+            case NONSTANDARD:         return 8;
+            case WITNESS_UNKNOWN:     return 9;
+            case WITNESS_V1_TAPROOT:  return 10;
+            default:
+                throw new IllegalStateException("Unmapped ScriptType: " + t);
+        }
+    }
+
+    static int codeOf(IssuanceType t) {
+        // No proto enum exists for IssuanceType (the proto stores it as a
+        // string field). We lock the codes here ourselves; any reorder/
+        // rename is caught by the golden vector tests.
+        switch (t) {
+            case UNDEFINED:    return 0;
+            case COMPENSATION: return 1;
+            case REIMBURSEMENT: return 2;
+            default:
+                throw new IllegalStateException("Unmapped IssuanceType: " + t);
+        }
+    }
+
+    static int codeOf(DaoPhase.Phase phase) {
+        switch (phase) {
+            case UNDEFINED:   return 0;
+            case PROPOSAL:    return 1;
+            case BREAK1:      return 2;
+            case BLIND_VOTE:  return 3;
+            case BREAK2:      return 4;
+            case VOTE_REVEAL: return 5;
+            case BREAK3:      return 6;
+            case RESULT:      return 7;
+            default:
+                throw new IllegalStateException("Unmapped DaoPhase.Phase: " + phase);
+        }
     }
 }

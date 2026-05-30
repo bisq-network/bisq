@@ -116,8 +116,11 @@ public class CanonicalDaoStateSerializerTest {
         byte[] legacy = new LegacyProtobufDaoStateSerializer().serialize(state);
         assertFalse(java.util.Arrays.equals(canonical, legacy),
                 "Canonical and legacy formats must differ");
-        assertEquals(CanonicalDaoStateSerializer.VERSION_TAG, canonical[0],
-                "Canonical output must start with the version tag");
+        // Domain separator precedes the version tag; the tag lives at the
+        // first byte after the separator.
+        assertEquals(CanonicalDaoStateSerializer.VERSION_TAG,
+                canonical[CanonicalDaoStateSerializer.DOMAIN_SEPARATOR.length],
+                "Canonical output must have the version tag right after the domain separator");
     }
 
     @Test

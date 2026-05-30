@@ -19,6 +19,9 @@ package bisq.core.dao.monitoring.serialization;
 
 import bisq.core.dao.state.model.DaoState;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 /**
  * Canonical (post-activation) byte format for the DAO state hash chain.
  *
@@ -31,33 +34,66 @@ import bisq.core.dao.state.model.DaoState;
  * order and writes each leaf field-by-field via methods declared in this
  * package.
  *
+ * <p><strong>Domain separator.</strong> Every preimage begins with the
+ * fixed ASCII byte sequence {@code "BISQ_HASH_PREIMAGE\0v2\0DAO_STATE_HASH_CHAIN\0"}
+ * followed by the version tag byte. The separator forces any future
+ * canonical preimage in another domain (proposal hash, blindvote hash,
+ * signed messages) to use a distinct prefix, eliminating cross-domain
+ * hash collision concerns.
+ *
  * <p><strong>Wire format.</strong>
  * <pre>
- *   u8   version_tag                   (0x02 for this format)
- *   i32  chain_height                  (big-endian, 4 bytes)
- *   list cycles                        (each leaf written by CanonicalLeafWriter)
- *   map  unspent_tx_output             (TxOutputKey natural order; key + value)
- *   map  spent_info                    (TxOutputKey natural order; key + value)
- *   list confiscated_lockup_tx_list    (length-prefixed UTF-8 strings)
- *   map  issuance                      (txId string sort order; key + Issuance)
- *   list param_change_list
- *   list evaluated_proposal_list
- *   list decrypted_ballots_with_merits_list
- *   block last_block                   (full Block leaf encoding)
+ *   bytes domain_separator             (ASCII: see DOMAIN_SEPARATOR)
+ *   u8    version_tag                  (0x02 for this format)
+ *   i32   chain_height                 (big-endian)
+ *   list  cycles
+ *   map   unspent_tx_output            (TxOutputKey natural order; key + value)
+ *   map   spent_info                   (TxOutputKey natural order; key + value)
+ *   list  confiscated_lockup_tx_list   (length-prefixed UTF-8 strings)
+ *   map   issuance                     (txId sort order; key + Issuance)
+ *   list  param_change_list
+ *   list  evaluated_proposal_list
+ *   list  decrypted_ballots_with_merits_list
+ *   block last_block
  * </pre>
  *
- * <p>Field order is positional. The leading {@code version_tag} byte
- * disambiguates this format from any future canonical variant. Any change
- * to this method, to {@link CanonicalLeafWriter}, or to
- * {@link CanonicalWriter}'s primitives, is a consensus-breaking change.
+ * <p>Field order is positional. Any change to this method, to
+ * {@link CanonicalLeafWriter}, to {@link CanonicalWriter}'s primitives, or
+ * to {@link #DOMAIN_SEPARATOR}, is a consensus-breaking change.
+ *
+ * <p><strong>Streaming.</strong> Use {@link #updateDigest(MessageDigest, DaoState)}
+ * to fold a {@code DaoState} directly into a {@link MessageDigest} without
+ * an intermediate {@code byte[]}. {@link #serialize(DaoState)} retains the
+ * by-array form because {@code stateAsBytes} is folded into the prev-hash
+ * chain in {@code DaoStateMonitoringService} and needs to be a real byte
+ * array.
  */
 public class CanonicalDaoStateSerializer implements DaoStateHashSerializer {
+
+    static final byte[] DOMAIN_SEPARATOR =
+            "BISQ_HASH_PREIMAGE\0v2\0DAO_STATE_HASH_CHAIN\0".getBytes(StandardCharsets.US_ASCII);
 
     static final byte VERSION_TAG = 0x02;
 
     @Override
     public byte[] serialize(DaoState daoState) {
-        CanonicalWriter w = new CanonicalWriter();
+        CanonicalWriter w = CanonicalWriter.intoMemory();
+        writeTo(w, daoState);
+        return w.toByteArray();
+    }
+
+    /**
+     * Stream the canonical preimage for {@code daoState} directly into
+     * {@code digest}. Equivalent to {@code digest.update(serialize(daoState))}
+     * but avoids the intermediate byte array — material for the large maps
+     * inside a full DaoState.
+     */
+    public void updateDigest(MessageDigest digest, DaoState daoState) {
+        writeTo(CanonicalWriter.intoDigest(digest), daoState);
+    }
+
+    private static void writeTo(CanonicalWriter w, DaoState daoState) {
+        w.writeRawBytes(DOMAIN_SEPARATOR);
         w.writeRawByte(VERSION_TAG);
         w.writeI32(daoState.getChainHeight());
 
@@ -81,11 +117,6 @@ public class CanonicalDaoStateSerializer implements DaoStateHashSerializer {
         w.writeList(daoState.getEvaluatedProposalList(), CanonicalLeafWriter::writeEvaluatedProposal);
         w.writeList(daoState.getDecryptedBallotsWithMeritsList(), CanonicalLeafWriter::writeDecryptedBallotsWithMerits);
 
-        // Only the last block participates in the hash chain by design; the
-        // prev-hash chaining done in DaoStateMonitoringService folds in
-        // earlier blocks' state.
         CanonicalLeafWriter.writeBlock(w, daoState.getLastBlock());
-
-        return w.toByteArray();
     }
 }
