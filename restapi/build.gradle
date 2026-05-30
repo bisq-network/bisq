@@ -1,10 +1,15 @@
 plugins {
     id 'bisq.application'
+    id 'bisq.javafx'
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
 application {
     mainClass = 'bisq.restapi.RestApiMain'
+}
+
+javafx {
+    modules = ['javafx.base']
 }
 
 distTar.enabled = false
