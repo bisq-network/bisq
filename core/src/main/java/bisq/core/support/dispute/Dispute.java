@@ -50,7 +50,7 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -147,9 +147,14 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap so the serialized byte order of received-and-then-reserialized disputes matches
+    // the bytes the sender signed: protobuf MapFieldLite is a LinkedHashMap, so wire order is preserved through
+    // the deserialize+reserialize round-trip regardless of the sender's JDK. setExtraData(...) appends in code
+    // order (today only "counterCurrencyTxId" and "counterCurrencyExtraData" from PendingTradesDataModel), which
+    // is also deterministic across nodes.
     @Nullable
     @Setter
-    private Map<String, String> extraDataMap;
+    private LinkedHashMap<String, String> extraDataMap;
 
     // We do not persist uid, it is only used by dispute agents to guarantee an uid.
     @Setter
@@ -287,8 +292,15 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 proto.getIsSupportTicket(),
                 SupportType.fromProto(proto.getSupportType()));
 
-        dispute.setExtraDataMap(CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : ExtraDataMapValidator.getValidatedExtraDataMap(proto.getExtraDataMap()));
+        // Wrap in a LinkedHashMap to preserve the on-the-wire iteration order from MapFieldLite. Re-serialization
+        // (used during signature verification on the receiver side) therefore emits the same bytes the sender
+        // produced — regardless of the sender's JDK HashMap layout.
+        if (CollectionUtils.isEmpty(proto.getExtraDataMap())) {
+            dispute.setExtraDataMap(null);
+        } else {
+            Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(proto.getExtraDataMap());
+            dispute.setExtraDataMap(validated == null ? null : new LinkedHashMap<>(validated));
+        }
 
         dispute.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -400,7 +412,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
             return;
         }
         if (extraDataMap == null) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new LinkedHashMap<>();
         }
         extraDataMap.put(key, value);
     }

@@ -250,14 +250,13 @@ public class DaoState implements PersistablePayload {
         this.chainHeight = chainHeight;
     }
 
-    public byte[] getSerializedStateForHashChain() {
-        // We only add last block as for the hash chain we include the prev. hash in the new hash so the state of the
-        // earlier blocks is included in the hash. The past blocks cannot be changed anyway when a new block arrives.
-        // Reorgs are handled by rebuilding the hash chain from last snapshot.
-        // Using the full blocks list becomes quite heavy. 7000 blocks are
-        // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage()).build().toByteArray();
-    }
+    /**
+     * Hash-chain byte production has moved to
+     * {@code bisq.core.dao.monitoring.serialization.DaoStateHashSerializer} —
+     * see {@code LegacyProtobufDaoStateSerializer} for the byte-equivalent
+     * legacy path and {@code CanonicalDaoStateSerializer} for the canonical
+     * path activated by block height.
+     */
 
     public void addToTxCache(Tx tx) {
         // We shouldn't get duplicate txIds, but use putIfAbsent instead of put for consistency with the map merge

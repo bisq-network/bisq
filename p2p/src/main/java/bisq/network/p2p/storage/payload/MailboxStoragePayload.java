@@ -29,6 +29,7 @@ import com.google.protobuf.ByteString;
 import java.security.PublicKey;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -68,9 +69,11 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
 
-    // We add optional TTL entry in v 1.5.5 so we can support different TTL for trade messages and for AckMessages
+    // We add optional TTL entry in v 1.5.5 so we can support different TTL for trade messages and for AckMessages.
+    // Backed by a LinkedHashMap so the serialized byte order does not depend on java.util.HashMap internals.
+    // Today this map carries at most one entry (EXTRA_MAP_KEY_TTL), so the byte stream is unchanged.
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LinkedHashMap<String, String> extraDataMap;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                  @NotNull PublicKey senderPubKeyForAddOperation,
@@ -85,7 +88,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
         // We do not permit longer TTL as the default one
         if (ttl < TTL) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new LinkedHashMap<>();
             extraDataMap.put(EXTRA_MAP_KEY_TTL, String.valueOf(ttl));
         }
     }
@@ -102,7 +105,8 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validatedExtra = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtra == null ? null : new LinkedHashMap<>(validatedExtra);
 
         senderPubKeyForAddOperation = Sig.getPublicKeyFromBytes(senderPubKeyForAddOperationBytes);
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);

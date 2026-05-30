@@ -32,6 +32,7 @@ import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -66,8 +67,12 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap to preserve wire-order across deserialize-then-reserialize: signature verification
+    // re-serializes this payload, and protobuf MapFieldLite is itself a LinkedHashMap, so wire order survives the
+    // round-trip. Always null at construction today (the public ctor passes null), so on-the-wire bytes are
+    // unchanged.
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final LinkedHashMap<String, String> extraDataMap;
 
     // Used just for caching. Don't persist.
     private final transient PublicKey ownerPubKey;
@@ -86,7 +91,8 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
                                 @Nullable Map<String, String> extraDataMap) {
         this.proposal = proposal;
         this.ownerPubKeyEncoded = ownerPubPubKeyEncoded;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validated == null ? null : new LinkedHashMap<>(validated);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyEncoded);
     }

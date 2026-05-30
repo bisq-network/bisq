@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -95,8 +96,13 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap to preserve wire-order on deserialize-then-reserialize round-trips: signature
+    // verification re-serializes this payload, so the iteration order must match the bytes the sender signed.
+    // LinkedHashMap matches protobuf MapFieldLite's own backing type, so wire order is preserved automatically.
+    // Always null at construction today (only proto-deserialize can populate from a wire payload), so on-the-wire
+    // bytes are unchanged.
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LinkedHashMap<String, String> extraDataMap;
 
     private transient PublicKey ownerPubKey;
 
@@ -374,7 +380,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.btcFeeReceiverAddresses = btcFeeReceiverAddresses;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.creationDate = creationDate;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validatedExtraData = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraData == null ? null : new LinkedHashMap<>(validatedExtraData);
         this.signatureAsBase64 = signatureAsBase64;
         this.signerPubKeyAsHex = signerPubKeyAsHex;
         this.bannedPrivilegedDevPubKeys = bannedPrivilegedDevPubKeys;

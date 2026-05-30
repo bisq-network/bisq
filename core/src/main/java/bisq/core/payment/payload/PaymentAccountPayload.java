@@ -33,6 +33,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import lombok.EqualsAndHashCode;
@@ -68,8 +69,13 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     // Used for new data (e.g. salt introduced in v0.6) which would break backward compatibility as
     // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would
     // fail the contract verification.
+    // Backed by a LinkedHashMap to preserve wire-order across deserialize-then-reserialize. PaymentAccountPayload
+    // is embedded in Contract, which is signed; signature verification re-serializes the contract via
+    // toProtoMessage(). Protobuf MapFieldLite is itself a LinkedHashMap, so populating our field from a wire
+    // payload and re-serializing yields the same bytes the sender signed — regardless of the sender's JDK
+    // HashMap layout. Subclasses still pass `new HashMap<>(...)`; the parent constructor wraps it.
     @JsonExclude
-    protected final Map<String, String> excludeFromJsonDataMap;
+    protected final LinkedHashMap<String, String> excludeFromJsonDataMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +86,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
         this(paymentMethodId,
                 id,
                 -1,
-                new HashMap<>());
+                new LinkedHashMap<>());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +100,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
         this.paymentMethodId = paymentMethodId;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
-        this.excludeFromJsonDataMap = excludeFromJsonDataMapParam;
+        this.excludeFromJsonDataMap = excludeFromJsonDataMapParam instanceof LinkedHashMap
+                ? (LinkedHashMap<String, String>) excludeFromJsonDataMapParam
+                : new LinkedHashMap<>(excludeFromJsonDataMapParam);
 
         // If not set (old versions) we set by default a random 256 bit salt.
         // User can set salt as well by hex string.

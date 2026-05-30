@@ -29,6 +29,7 @@ import com.google.protobuf.ByteString;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +61,12 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     // an unused field.
     private final long date;
 
-    // This hash map allows addition of data in future versions without breaking consensus
-    private final Map<String, String> extraDataMap;
+    // Reserved for future versions without breaking consensus. As of today this map is
+    // always constructed empty by MyBlindVoteListService and never populated elsewhere,
+    // so it serializes to zero proto bytes and contributes nothing to the DAO state
+    // hash. Backed by a TreeMap so any future use will be byte-deterministic without
+    // depending on java.util.HashMap internals.
+    private final TreeMap<String, String> extraDataMap;
 
     public BlindVote(byte[] encryptedVotes,
                      String txId,
@@ -74,7 +79,8 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
         this.stake = stake;
         this.encryptedMeritList = encryptedMeritList;
         this.date = date;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validated == null ? null : new TreeMap<>(validated);
     }
 
 

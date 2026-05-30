@@ -30,6 +30,7 @@ import bisq.common.util.Utilities;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,9 +74,13 @@ public abstract class PaymentAccount implements PersistablePayload {
     protected TradeCurrency selectedTradeCurrency;
 
     // Was added at v1.9.2
+    // Backed by a LinkedHashMap so any code path that re-serializes this account preserves the bytes the original
+    // sender produced. PaymentAccount is local-persistence-only today, but the field is mirrored into
+    // PaymentAccountPayload which is part of the signed Contract — using LinkedHashMap here keeps the iteration
+    // order independent of java.util.HashMap internals across persistence round-trips.
     @Setter
     @Nullable
-    protected Map<String, String> extraData;
+    protected LinkedHashMap<String, String> extraData;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +147,7 @@ public abstract class PaymentAccount implements PersistablePayload {
             if (CollectionUtils.isEmpty(proto.getExtraDataMap())) {
                 account.setExtraData(null);
             } else {
-                account.setExtraData(new HashMap<>(proto.getExtraDataMap()));
+                account.setExtraData(new LinkedHashMap<>(proto.getExtraDataMap()));
             }
             return account;
         } catch (RuntimeException e) {
@@ -290,7 +295,7 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     public Map<String, String> getOrCreateExtraData() {
         if (extraData == null) {
-            extraData = new HashMap<>();
+            extraData = new LinkedHashMap<>();
         }
         return extraData;
     }

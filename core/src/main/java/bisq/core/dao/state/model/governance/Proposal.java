@@ -31,6 +31,7 @@ import bisq.common.util.ExtraDataMapValidator;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -54,9 +55,14 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     @Nullable
     protected final String txId;
 
-    // This hash map allows addition of data in future versions without breaking consensus
+    // This map allows addition of data in future versions without breaking consensus.
+    // Backed by a TreeMap so the serialized byte order (which feeds into the DAO state
+    // hash chain) depends only on the key set, not on java.util.HashMap internals.
+    // Today this map carries at most one entry (BURNING_MAN_RECEIVER_ADDRESS on
+    // CompensationProposal), so switching from HashMap to TreeMap is byte-identical
+    // for all historical proposals and requires no activation height.
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final TreeMap<String, String> extraDataMap;
 
     protected Proposal(String name,
                        String link,
@@ -69,7 +75,8 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
         this.version = version;
         this.creationDate = creationDate;
         this.txId = txId;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validated == null ? null : new TreeMap<>(validated);
     }
 
 

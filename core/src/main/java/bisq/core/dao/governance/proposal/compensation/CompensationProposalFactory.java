@@ -39,9 +39,9 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,7 +81,8 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
     protected CompensationProposal createProposalWithoutTxId() {
         Map<String, String> extraDataMap = null;
         if (burningManReceiverAddress.isPresent()) {
-            extraDataMap = new HashMap<>();
+            // TreeMap so the resulting serialized bytes do not depend on java.util.HashMap internals.
+            extraDataMap = new TreeMap<>();
             extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, burningManReceiverAddress.get());
         }
         return new CompensationProposal(

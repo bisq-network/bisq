@@ -61,6 +61,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -231,10 +232,12 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap to preserve wire-order across deserialize-then-reserialize so any re-serialization
+    // produces the bytes the sender originally emitted, independent of the sender's JDK HashMap layout.
     @Nullable
     @JsonExclude
     @Getter
-    private final Map<String, String> extraDataMap;
+    private final LinkedHashMap<String, String> extraDataMap;
 
     // We cache the date object to avoid reconstructing a new Date at each getDate call.
     @JsonExclude
@@ -311,7 +314,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this.date = date;
         this.mediator = mediator;
         this.refundAgent = refundAgent;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validatedExtra = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtra == null ? null : new LinkedHashMap<>(validatedExtra);
 
         this.hash = hash == null ? createHash() : hash;
 

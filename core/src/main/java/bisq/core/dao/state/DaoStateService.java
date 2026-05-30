@@ -157,8 +157,8 @@ public class DaoStateService implements DaoSetupService {
         return DaoState.getBsqStateCloneExcludingBlocks(daoState);
     }
 
-    public byte[] getSerializedStateForHashChain() {
-        return daoState.getSerializedStateForHashChain();
+    public DaoState getDaoState() {
+        return daoState;
     }
 
 

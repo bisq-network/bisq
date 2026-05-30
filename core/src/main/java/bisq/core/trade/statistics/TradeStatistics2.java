@@ -49,6 +49,7 @@ import com.google.common.base.Charsets;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -135,9 +136,13 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap so any code path that re-serializes this payload preserves the bytes the sender
+    // produced, regardless of the sender's JDK HashMap layout. extraDataMap is excluded from the storage hash
+    // (see createHash) so this switch does not affect the network-storage agreement; it is here for consistency
+    // with the other p2p payloads.
     @Nullable
     @JsonExclude
-    private Map<String, String> extraDataMap;
+    private LinkedHashMap<String, String> extraDataMap;
 
     public TradeStatistics2(OfferPayload offerPayload,
                             Price tradePrice,
@@ -197,7 +202,8 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         this.tradeAmount = tradeAmount;
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validated == null ? null : new LinkedHashMap<>(validated);
 
         this.hash = hash == null ? createHash() : hash;
     }

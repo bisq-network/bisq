@@ -29,6 +29,7 @@ import bisq.common.util.JsonExclude;
 
 import java.security.PublicKey;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -62,8 +63,14 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
     protected final PubKeyRing pubKeyRing;
     // cache
     protected transient byte[] hash;
+    // Backed by a LinkedHashMap to preserve wire-order across deserialize-then-reserialize. OfferPayload is a
+    // ProtectedStoragePayload; its signature is verified by re-serializing the in-memory Java object and hashing
+    // the result. Protobuf MapFieldLite is itself a LinkedHashMap, so populating our field from a wire payload
+    // and then re-serializing yields the same bytes the sender signed — regardless of the sender's JDK
+    // HashMap layout. New offers built locally via OfferUtil insert entries in a fixed code order which the
+    // LinkedHashMap preserves, so signatures verify on any receiver JDK as well.
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final LinkedHashMap<String, String> extraDataMap;
 
     public OfferPayloadBase(String id,
                             long date,
@@ -92,7 +99,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
         this.minAmount = minAmount;
         this.paymentMethodId = paymentMethodId;
         this.makerPaymentAccountId = makerPaymentAccountId;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = extraDataMap == null ? null : new LinkedHashMap<>(extraDataMap);
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
     }

@@ -28,6 +28,7 @@ import bisq.common.util.Utilities;
 
 import java.security.PublicKey;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -58,8 +59,12 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap to preserve wire-order across deserialize-then-reserialize: signature verification
+    // re-serializes this payload, and protobuf MapFieldLite is itself a LinkedHashMap, so wire order survives the
+    // round-trip. Always null at construction today (Mediator/RefundAgent registration sites pass null), so
+    // on-the-wire bytes are unchanged.
     @Nullable
-    protected Map<String, String> extraDataMap;
+    protected LinkedHashMap<String, String> extraDataMap;
 
     public DisputeAgent(NodeAddress nodeAddress,
                         PubKeyRing pubKeyRing,
@@ -78,7 +83,8 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validated == null ? null : new LinkedHashMap<>(validated);
     }
 
 

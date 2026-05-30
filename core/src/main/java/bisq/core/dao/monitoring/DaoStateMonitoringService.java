@@ -26,6 +26,9 @@ import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.monitoring.network.StateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
+import bisq.core.dao.monitoring.serialization.CanonicalDaoStateSerializer;
+import bisq.core.dao.monitoring.serialization.DaoStateHashSerializer;
+import bisq.core.dao.monitoring.serialization.LegacyProtobufDaoStateSerializer;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
@@ -90,6 +93,22 @@ import javax.annotation.Nullable;
 public class DaoStateMonitoringService implements DaoSetupService, DaoStateListener,
         DaoStateNetworkService.Listener<NewDaoStateHashMessage, GetDaoStateHashesRequest, DaoStateHash> {
 
+    // Block height at which the hash-chain switches from the legacy protobuf
+    // serializer (which uses a JDK-pinned HashMap to keep historical bytes
+    // reproducible) to the canonical serializer (no protobuf map fields, no
+    // HashMap anywhere on the hash path). Both serializers feed into the same
+    // SHA-256/RIPEMD-160 + prev-hash chain, so the chain remains continuous
+    // across the switch. Tune these before merge against the actual chain tips.
+    private static final int CANONICAL_HASH_ACTIVATION_HEIGHT_MAINNET = 960000;
+    private static final int CANONICAL_HASH_ACTIVATION_HEIGHT_TESTNET = 2200000;
+    private static final int CANONICAL_HASH_ACTIVATION_HEIGHT_REGTEST = 111;
+
+    private static int canonicalActivationHeight() {
+        return Config.baseCurrencyNetwork().isMainnet() ? CANONICAL_HASH_ACTIVATION_HEIGHT_MAINNET :
+                Config.baseCurrencyNetwork().isTestnet() ? CANONICAL_HASH_ACTIVATION_HEIGHT_TESTNET :
+                        CANONICAL_HASH_ACTIVATION_HEIGHT_REGTEST;
+    }
+
     public interface Listener {
         default void onDaoStateHashesChanged() {
         }
@@ -106,6 +125,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private final DaoStateNetworkService daoStateNetworkService;
     private final GenesisTxInfo genesisTxInfo;
     private final Set<String> seedNodeAddresses;
+    private final DaoStateHashSerializer legacyHashSerializer = new LegacyProtobufDaoStateSerializer();
+    private final DaoStateHashSerializer canonicalHashSerializer = new CanonicalDaoStateSerializer();
 
     @Getter
     private final LinkedList<DaoStateBlock> daoStateBlockChain = new LinkedList<>();
@@ -347,7 +368,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             }
         }
 
-        byte[] stateAsBytes = daoStateService.getSerializedStateForHashChain();
+        DaoStateHashSerializer serializer = height < canonicalActivationHeight()
+                ? legacyHashSerializer
+                : canonicalHashSerializer;
+        byte[] stateAsBytes = serializer.serialize(daoStateService.getDaoState());
         // We include the prev. hash in our new hash so we can be sure that if one hash is matching all the past would
         // match as well.
         byte[] combined = ArrayUtils.addAll(prevHash, stateAsBytes);

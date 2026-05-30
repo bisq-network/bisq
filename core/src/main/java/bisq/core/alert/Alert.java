@@ -32,6 +32,7 @@ import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -67,8 +68,14 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
+    // Backed by a LinkedHashMap so the serialized byte order does not depend on java.util.HashMap internals. We
+    // pick LinkedHashMap over TreeMap because protobuf's MapFieldLite is itself a LinkedHashMap: deserialized
+    // entries land in wire order, and our re-serialization (used for signature verification) emits them back in
+    // that same order. Sig verification therefore stays valid for payloads originally signed by peers running
+    // any JDK or any prior version. Always null at construction today (only proto-deserialize populates), so
+    // current on-the-wire bytes are unchanged.
     @Nullable
-    private Map<String, String> extraDataMap;
+    private LinkedHashMap<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -99,7 +106,8 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         this.version = version;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        Map<String, String> validated = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validated == null ? null : new LinkedHashMap<>(validated);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
