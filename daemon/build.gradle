@@ -1,5 +1,6 @@
 plugins {
     id 'bisq.application'
+    id 'bisq.javafx'
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
@@ -7,6 +8,10 @@ distTar.enabled = true
 
 application {
     mainClass = 'bisq.daemon.app.BisqDaemonMain'
+}
+
+javafx {
+    modules = ['javafx.base']
 }
 
 dependencies {
