@@ -74,7 +74,7 @@ public class BsqFormatter implements CoinFormatter {
         this.monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
         this.immutableCoinFormatter = new ImmutableCoinFormatter(monetaryFormat);
 
-        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> switchLocale(newValue));
+        GlobalSettings.addLocaleListener((oldValue, newValue) -> switchLocale(newValue));
         switchLocale(GlobalSettings.getLocale());
 
         amountFormat.setMinimumFractionDigits(2);

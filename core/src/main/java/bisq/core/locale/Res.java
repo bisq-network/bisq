@@ -59,7 +59,7 @@ public class Res {
     private static ResourceBundle resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", GlobalSettings.getLocale(), new UTF8Control());
 
     static {
-        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> {
+        GlobalSettings.addLocaleListener((oldValue, newValue) -> {
             if ("en".equalsIgnoreCase(newValue.getLanguage()))
                 newValue = Locale.ROOT;
             resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", newValue, new UTF8Control());

@@ -17,19 +17,22 @@
 
 package bisq.core.locale;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GlobalSettings {
+    public interface LocaleListener {
+        void onLocaleChanged(Locale oldLocale, Locale newLocale);
+    }
+
     private static boolean useAnimations = true;
     private static Locale locale;
-    private static final ObjectProperty<Locale> localeProperty = new SimpleObjectProperty<>(locale);
+    private static final List<LocaleListener> localeListeners = new CopyOnWriteArrayList<>();
     private static TradeCurrency defaultTradeCurrency;
     private static String btcDenomination;
 
@@ -43,8 +46,11 @@ public class GlobalSettings {
     }
 
     public static void setLocale(Locale locale) {
+        Locale oldLocale = GlobalSettings.locale;
         GlobalSettings.locale = locale;
-        localeProperty.set(locale);
+        if (!Objects.equals(oldLocale, locale)) {
+            localeListeners.forEach(listener -> listener.onLocaleChanged(oldLocale, locale));
+        }
     }
 
     public static void setUseAnimations(boolean useAnimations) {
@@ -68,8 +74,12 @@ public class GlobalSettings {
         return btcDenomination;
     }
 
-    public static ReadOnlyObjectProperty<Locale> localeProperty() {
-        return localeProperty;
+    public static void addLocaleListener(LocaleListener listener) {
+        localeListeners.add(listener);
+    }
+
+    public static void removeLocaleListener(LocaleListener listener) {
+        localeListeners.remove(listener);
     }
 
     public static boolean getUseAnimations() {
