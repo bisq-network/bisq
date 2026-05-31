@@ -28,6 +28,10 @@ import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.ParamChange;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.core.encoding.canonical.LegacyHashMapOrderMapEntryIterator;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
@@ -61,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
  * TreeMap which is sorted by the key.
  */
 @Slf4j
-public class DaoState implements PersistablePayload {
+public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -256,8 +260,56 @@ public class DaoState implements PersistablePayload {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return LegacyDaoStateHashSerializerV1.serialize(this);
+        return encodeCanonical(CanonicalEncoder.DEFAULT);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<DaoState> SCHEMA = CanonicalSchema.<DaoState>newBuilder("DaoState")
+            .int32(1, "chain_height", DaoState::getChainHeight)
+            .repeatedCompose(2, "blocks", DaoState::getBlocksForHashChain, Block.SCHEMA)
+            .repeatedCompose(3, "cycles", DaoState::getCycles, Cycle.SCHEMA)
+            .mapStringToCompose(4,
+                    "unspent_tx_output_map",
+                    DaoState::getUnspentTxOutputMap,
+                    entry -> entry.getKey().toString(),
+                    Map.Entry::getValue,
+                    TxOutput.SCHEMA,
+                    new LegacyHashMapOrderMapEntryIterator<>())
+            .mapStringToCompose(5,
+                    "issuance_map",
+                    DaoState::getIssuanceMap,
+                    Issuance.SCHEMA,
+                    new LegacyHashMapOrderMapEntryIterator<>())
+            .repeatedString(6, "confiscated_lockup_tx_list", DaoState::getConfiscatedLockupTxList)
+            .mapStringToCompose(7,
+                    "spent_info_map",
+                    DaoState::getSpentInfoMap,
+                    entry -> entry.getKey().toString(),
+                    Map.Entry::getValue,
+                    SpentInfo.SCHEMA,
+                    new LegacyHashMapOrderMapEntryIterator<>())
+            .repeatedCompose(8, "param_change_list", DaoState::getParamChangeList, ParamChange.SCHEMA)
+            .repeatedCompose(9, "evaluated_proposal_list", DaoState::getEvaluatedProposalList,
+                    EvaluatedProposal.SCHEMA)
+            .repeatedCompose(10, "decrypted_ballots_with_merits_list", DaoState::getDecryptedBallotsWithMeritsList,
+                    DecryptedBallotsWithMerits.SCHEMA)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+
+    private List<Block> getBlocksForHashChain() {
+        return Collections.singletonList(getLastBlock());
+    }
+
+
 
     public void addToTxCache(Tx tx) {
         // We shouldn't get duplicate txIds, but use putIfAbsent instead of put for consistency with the map merge

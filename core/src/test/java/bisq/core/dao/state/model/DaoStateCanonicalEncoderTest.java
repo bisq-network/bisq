@@ -11,8 +11,8 @@
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package bisq.core.dao.state.model;
@@ -23,6 +23,8 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.LegacyHashMapOrderMapEntryIterator;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -37,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class LegacyDaoStateHashSerializerV1Test {
+class DaoStateCanonicalEncoderTest {
     private static final int RANDOMIZED_TX_OUTPUT_KEY_COUNT = 50_000;
     private static final String JAVA_11_RANDOMIZED_TX_OUTPUT_KEY_ORDER_DIGEST =
             "33ef83bb099ad2ccbcb7ac588b664c8be6770fa71034ea25cec5ce7aef4fb84f";
@@ -63,7 +65,7 @@ class LegacyDaoStateHashSerializerV1Test {
     @Test
     void returnsJava11HashMapIterationOrder() {
         assertEquals(JAVA_11_HASH_MAP_ORDER,
-                LegacyDaoStateHashSerializerV1.getJava11HashMapIterationOrder(KEYS));
+                LegacyHashMapOrderMapEntryIterator.getJava11HashMapIterationOrder(KEYS));
     }
 
     @Test
@@ -71,7 +73,7 @@ class LegacyDaoStateHashSerializerV1Test {
         List<String> collidingKeys = getSameHashStrings(3);
 
         assertEquals(1, collidingKeys.stream().mapToInt(String::hashCode).distinct().count());
-        assertEquals(collidingKeys, LegacyDaoStateHashSerializerV1.getJava11HashMapIterationOrder(collidingKeys));
+        assertEquals(collidingKeys, LegacyHashMapOrderMapEntryIterator.getJava11HashMapIterationOrder(collidingKeys));
     }
 
     @Test
@@ -80,13 +82,13 @@ class LegacyDaoStateHashSerializerV1Test {
 
         assertEquals(1, collidingKeys.stream().mapToInt(String::hashCode).distinct().count());
         assertEquals(JAVA_11_TREEIFIED_COLLISION_HASH_MAP_ORDER,
-                LegacyDaoStateHashSerializerV1.getJava11HashMapIterationOrder(collidingKeys));
+                LegacyHashMapOrderMapEntryIterator.getJava11HashMapIterationOrder(collidingKeys));
     }
 
     @Test
     void preservesJava11HashMapOrderForMassiveRandomizedTxOutputKeys() throws Exception {
         List<String> keys = getRandomizedTxOutputKeyStrings(RANDOMIZED_TX_OUTPUT_KEY_COUNT);
-        List<String> orderedKeys = LegacyDaoStateHashSerializerV1.getJava11HashMapIterationOrder(keys);
+        List<String> orderedKeys = LegacyHashMapOrderMapEntryIterator.getJava11HashMapIterationOrder(keys);
 
         assertEquals(RANDOMIZED_TX_OUTPUT_KEY_COUNT, orderedKeys.size());
         assertEquals(JAVA_11_RANDOMIZED_TX_OUTPUT_KEY_ORDER_DIGEST, getOrderDigest(orderedKeys));
@@ -96,7 +98,7 @@ class LegacyDaoStateHashSerializerV1Test {
     void serializesDaoStateMapsInJava11HashMapIterationOrder() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 
-        protobuf.DaoState proto = protobuf.DaoState.parseFrom(LegacyDaoStateHashSerializerV1.serialize(daoState));
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain());
 
         assertEquals(JAVA_11_HASH_MAP_ORDER, new ArrayList<>(proto.getIssuanceMapMap().keySet()));
         assertEquals(JAVA_11_TX_OUTPUT_KEY_HASH_MAP_ORDER,
@@ -106,16 +108,21 @@ class LegacyDaoStateHashSerializerV1Test {
     }
 
     @Test
-    void daoStateHashChainSerializationUsesLegacySerializer() {
+    void hashChainSerializationUsesCanonicalEncoderAndOnlyLastBlock() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 
-        assertArrayEquals(LegacyDaoStateHashSerializerV1.serialize(daoState),
-                daoState.getSerializedStateForHashChain());
+        byte[] serializedStateForHashChain = daoState.getSerializedStateForHashChain();
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(serializedStateForHashChain);
+
+        assertArrayEquals(daoState.encodeCanonical(CanonicalEncoder.DEFAULT), serializedStateForHashChain);
+        assertEquals(1, proto.getBlocksCount());
+        assertEquals(100, proto.getBlocks(0).getHeight());
     }
 
     private static DaoState getDaoStateWithMaps() {
         DaoState daoState = new DaoState();
         daoState.setChainHeight(100);
+        daoState.addBlock(new Block(99, 900, "previousBlockHash", "olderBlockHash"));
         daoState.addBlock(new Block(100, 1_000, "blockHash", "previousBlockHash"));
 
         for (int i = 0; i < KEYS.size(); i++) {

@@ -39,9 +39,21 @@ public final class CanonicalWriter {
         }
     }
 
+    public void writeUInt32(int fieldNumber, int value) {
+        if (value != 0) {
+            writeUInt32Value(fieldNumber, value);
+        }
+    }
+
     public void writeInt64(int fieldNumber, long value) {
         if (value != 0) {
             writeInt64Value(fieldNumber, value);
+        }
+    }
+
+    public void writeBool(int fieldNumber, boolean value) {
+        if (value) {
+            writeBoolValue(fieldNumber, value);
         }
     }
 
@@ -94,9 +106,18 @@ public final class CanonicalWriter {
         writeInt32NoTag(value);
     }
 
+    void writeUInt32Value(int fieldNumber, int value) {
+        writeTag(fieldNumber, WIRE_TYPE_VARINT);
+        writeVarint32(value);
+    }
+
     void writeInt64Value(int fieldNumber, long value) {
         writeTag(fieldNumber, WIRE_TYPE_VARINT);
         writeVarint64(value);
+    }
+
+    void writeBoolValue(int fieldNumber, boolean value) {
+        writeInt32Value(fieldNumber, value ? 1 : 0);
     }
 
     void writeEnumValue(int fieldNumber, int value) {

@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.bond.BondedAsset;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.Hash;
@@ -40,7 +43,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public final class Role implements PersistablePayload, NetworkPayload, BondedAsset, ImmutableDaoStateModel {
+public final class Role implements PersistablePayload, NetworkPayload, BondedAsset, ImmutableDaoStateModel, Canonical {
     private final String uid;
     private final String name;
     private final String link;
@@ -96,6 +99,23 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
                 proto.getName(),
                 proto.getLink(),
                 ProtoUtil.enumFromProto(BondedRoleType.class, proto.getBondedRoleType()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Role> SCHEMA = CanonicalSchema.<Role>newBuilder("Role")
+            .string(1, "uid", Role::getUid)
+            .string(2, "name", Role::getName)
+            .string(3, "link", Role::getLink)
+            .string(4, "bonded_role_type", role -> role.bondedRoleType.name())
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

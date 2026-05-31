@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -35,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Value
 @Slf4j
-public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
+public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel, Canonical {
 
     /**
      * Enum for phase of a cycle.
@@ -85,6 +88,21 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
         }
 
         return new DaoPhase(Phase.values()[ordinal], proto.getDuration());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<DaoPhase> SCHEMA = CanonicalSchema.<DaoPhase>newBuilder("DaoPhase")
+            .int32(1, "phase_ordinal", daoPhase -> daoPhase.phase.ordinal())
+            .int32(2, "duration", daoPhase -> daoPhase.duration)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

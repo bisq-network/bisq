@@ -94,48 +94,35 @@ public enum ScriptType implements ImmutableDaoStateModel, CanonicalEnum {
     }
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // CanonicalEnum
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static final int UNDEFINED_CODE = protobuf.ScriptType.PB_ERROR_SCRIPT_TYPES.getNumber();
-    private static final int PUB_KEY_CODE = protobuf.ScriptType.PUB_KEY.getNumber();
-    private static final int PUB_KEY_HASH_CODE = protobuf.ScriptType.PUB_KEY_HASH.getNumber();
-    private static final int SCRIPT_HASH_CODE = protobuf.ScriptType.SCRIPT_HASH.getNumber();
-    private static final int MULTISIG_CODE = protobuf.ScriptType.MULTISIG.getNumber();
-    private static final int NULL_DATA_CODE = protobuf.ScriptType.NULL_DATA.getNumber();
-    private static final int WITNESS_V0_KEYHASH_CODE = protobuf.ScriptType.WITNESS_V0_KEYHASH.getNumber();
-    private static final int WITNESS_V0_SCRIPTHASH_CODE = protobuf.ScriptType.WITNESS_V0_SCRIPTHASH.getNumber();
-    private static final int NONSTANDARD_CODE = protobuf.ScriptType.NONSTANDARD.getNumber();
-    private static final int WITNESS_UNKNOWN_CODE = protobuf.ScriptType.WITNESS_UNKNOWN.getNumber();
-    private static final int WITNESS_V1_TAPROOT_CODE = protobuf.ScriptType.WITNESS_V1_TAPROOT.getNumber();
 
     @Override
     public int getCode() {
         switch (this) {
             case UNDEFINED:
-                return UNDEFINED_CODE;
+                return 0;
             case PUB_KEY:
-                return PUB_KEY_CODE;
+                return 1;
             case PUB_KEY_HASH:
-                return PUB_KEY_HASH_CODE;
+                return 2;
             case SCRIPT_HASH:
-                return SCRIPT_HASH_CODE;
+                return 3;
             case MULTISIG:
-                return MULTISIG_CODE;
+                return 4;
             case NULL_DATA:
-                return NULL_DATA_CODE;
+                return 5;
             case WITNESS_V0_KEYHASH:
-                return WITNESS_V0_KEYHASH_CODE;
+                return 6;
             case WITNESS_V0_SCRIPTHASH:
-                return WITNESS_V0_SCRIPTHASH_CODE;
+                return 7;
             case NONSTANDARD:
-                return NONSTANDARD_CODE;
+                return 8;
             case WITNESS_UNKNOWN:
-                return WITNESS_UNKNOWN_CODE;
+                return 9;
             case WITNESS_V1_TAPROOT:
-                return WITNESS_V1_TAPROOT_CODE;
+                return 10;
             default:
                 throw new IllegalStateException("Unhandled script type " + this);
         }

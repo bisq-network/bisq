@@ -20,6 +20,9 @@ package bisq.core.dao.state.model.governance;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -39,7 +42,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public class DecryptedBallotsWithMerits implements PersistablePayload, ImmutableDaoStateModel {
+public class DecryptedBallotsWithMerits implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final byte[] hashOfBlindVoteList;
     private final String blindVoteTxId;
     private final String voteRevealTxId;
@@ -86,6 +89,26 @@ public class DecryptedBallotsWithMerits implements PersistablePayload, Immutable
                 proto.getStake(),
                 BallotList.fromProto(proto.getBallotList()),
                 MeritList.fromProto(proto.getMeritList()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<DecryptedBallotsWithMerits> SCHEMA =
+            CanonicalSchema.<DecryptedBallotsWithMerits>newBuilder("DecryptedBallotsWithMerits")
+                    .bytes(1, "hash_of_blind_vote_list", DecryptedBallotsWithMerits::getHashOfBlindVoteList)
+                    .string(2, "blind_vote_tx_id", DecryptedBallotsWithMerits::getBlindVoteTxId)
+                    .string(3, "vote_reveal_tx_id", DecryptedBallotsWithMerits::getVoteRevealTxId)
+                    .int64(4, "stake", DecryptedBallotsWithMerits::getStake)
+                    .compose(5, "ballot_list", DecryptedBallotsWithMerits::getBallotList, BallotList.SCHEMA)
+                    .compose(6, "merit_list", DecryptedBallotsWithMerits::getMeritList, MeritList.SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

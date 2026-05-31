@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -31,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Immutable
 @Value
 @Slf4j
-public class ProposalVoteResult implements PersistablePayload, ImmutableDaoStateModel {
+public class ProposalVoteResult implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final Proposal proposal;
     private final long stakeOfAcceptedVotes;
     private final long stakeOfRejectedVotes;
@@ -74,6 +77,27 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
                 proto.getNumRejectedVotes(),
                 proto.getNumIgnoredVotes());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<ProposalVoteResult> SCHEMA =
+            CanonicalSchema.<ProposalVoteResult>newBuilder("ProposalVoteResult")
+                    .compose(1, "proposal", ProposalVoteResult::getProposal, Proposal.SCHEMA)
+                    .int64(2, "stake_of_Accepted_votes", ProposalVoteResult::getStakeOfAcceptedVotes)
+                    .int64(3, "stake_of_Rejected_votes", ProposalVoteResult::getStakeOfRejectedVotes)
+                    .int32(4, "num_accepted_votes", ProposalVoteResult::getNumAcceptedVotes)
+                    .int32(5, "num_rejected_votes", ProposalVoteResult::getNumRejectedVotes)
+                    .int32(6, "num_ignored_votes", ProposalVoteResult::getNumIgnoredVotes)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

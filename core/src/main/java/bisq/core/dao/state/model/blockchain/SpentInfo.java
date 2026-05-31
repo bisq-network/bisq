@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -27,7 +30,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @Value
-public final class SpentInfo implements PersistablePayload, ImmutableDaoStateModel {
+public final class SpentInfo implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final long blockHeight;
     // Spending tx
     private final String txId;
@@ -51,6 +54,23 @@ public final class SpentInfo implements PersistablePayload, ImmutableDaoStateMod
                 .setInputIndex(inputIndex)
                 .build();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<SpentInfo> SCHEMA = CanonicalSchema.<SpentInfo>newBuilder("SpentInfo")
+            .int64(1, "block_height", SpentInfo::getBlockHeight)
+            .string(2, "tx_id", SpentInfo::getTxId)
+            .int32(3, "input_index", SpentInfo::getInputIndex)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     @Override
     public String toString() {

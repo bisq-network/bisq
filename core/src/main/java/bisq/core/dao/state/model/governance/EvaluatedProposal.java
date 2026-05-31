@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -27,7 +30,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @Value
-public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateModel {
+public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final boolean isAccepted;
     private final ProposalVoteResult proposalVoteResult;
 
@@ -52,6 +55,23 @@ public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateM
     public static EvaluatedProposal fromProto(protobuf.EvaluatedProposal proto) {
         return new EvaluatedProposal(proto.getIsAccepted(),
                 ProposalVoteResult.fromProto(proto.getProposalVoteResult()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<EvaluatedProposal> SCHEMA =
+            CanonicalSchema.<EvaluatedProposal>newBuilder("EvaluatedProposal")
+                    .bool(1, "is_accepted", EvaluatedProposal::isAccepted)
+                    .compose(2, "proposal_vote_result", EvaluatedProposal::getProposalVoteResult,
+                            ProposalVoteResult.SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

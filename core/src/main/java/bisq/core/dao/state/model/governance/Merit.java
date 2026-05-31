@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -33,7 +36,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @EqualsAndHashCode
-public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel {
+public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel, Canonical {
     @Getter
     private final Issuance issuance;
     @Getter
@@ -61,6 +64,22 @@ public class Merit implements PersistablePayload, NetworkPayload, ConsensusCriti
         return new Merit(Issuance.fromProto(proto.getIssuance()),
                 proto.getSignature().toByteArray());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Merit> SCHEMA = CanonicalSchema.<Merit>newBuilder("Merit")
+            .compose(1, "issuance", Merit::getIssuance, Issuance.SCHEMA)
+            .bytes(2, "signature", Merit::getSignature)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     public String getIssuanceTxId() {
         return issuance.getTxId();

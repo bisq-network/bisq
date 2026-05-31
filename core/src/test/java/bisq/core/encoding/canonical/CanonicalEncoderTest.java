@@ -46,6 +46,33 @@ public class CanonicalEncoderTest {
             .build();
 
     @Test
+    public void supportsUInt32BoolRepeatedComposeAndMapStringToString() {
+        Map<String, String> tags = new LinkedHashMap<>();
+        tags.put("b", "second");
+        tags.put("a", "first");
+        ComplexContainer container = new ComplexContainer(300, true, List.of(new Value(1), new Value(2)), tags);
+
+        CanonicalSchema<ComplexContainer> schema = CanonicalSchema.<ComplexContainer>newBuilder("ComplexContainer")
+                .uint32(1, "version", ComplexContainer::getVersion)
+                .bool(2, "accepted", ComplexContainer::isAccepted)
+                .repeatedCompose(3, "values", ComplexContainer::getValues, VALUE_SCHEMA)
+                .mapStringToString(4,
+                        "tags",
+                        ComplexContainer::getTags,
+                        TreeMapOrderMapEntryIterator.naturalOrder())
+                .build();
+
+        assertArrayEquals(bytes(
+                        0x08, 0xac, 0x02,
+                        0x10, 0x01,
+                        0x1a, 0x02, 0x08, 0x01,
+                        0x1a, 0x02, 0x08, 0x02,
+                        0x22, 0x0a, 0x0a, 0x01, 0x61, 0x12, 0x05, 0x66, 0x69, 0x72, 0x73, 0x74,
+                        0x22, 0x0b, 0x0a, 0x01, 0x62, 0x12, 0x06, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64),
+                CanonicalEncoder.DEFAULT.encode(container, schema));
+    }
+
+    @Test
     public void mapStringToComposeUsesTreeMapOrder() {
         Map<String, Value> values = new LinkedHashMap<>();
         values.put("b", new Value(2));
@@ -208,6 +235,36 @@ public class CanonicalEncoderTest {
 
         private Map<SourceKey, Value> getValues() {
             return values;
+        }
+    }
+
+    private static final class ComplexContainer {
+        private final int version;
+        private final boolean accepted;
+        private final List<Value> values;
+        private final Map<String, String> tags;
+
+        private ComplexContainer(int version, boolean accepted, List<Value> values, Map<String, String> tags) {
+            this.version = version;
+            this.accepted = accepted;
+            this.values = values;
+            this.tags = tags;
+        }
+
+        private int getVersion() {
+            return version;
+        }
+
+        private boolean isAccepted() {
+            return accepted;
+        }
+
+        private List<Value> getValues() {
+            return values;
+        }
+
+        private Map<String, String> getTags() {
+            return tags;
         }
     }
 

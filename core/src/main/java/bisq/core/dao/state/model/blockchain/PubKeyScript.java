@@ -87,7 +87,6 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel,
     }
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +104,6 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel,
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
-
 
 
     // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!

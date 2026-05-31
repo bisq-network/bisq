@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -44,7 +47,7 @@ import lombok.EqualsAndHashCode;
  *
  */
 @EqualsAndHashCode(callSuper = true)
-public final class Block extends BaseBlock implements PersistablePayload, ImmutableDaoStateModel {
+public final class Block extends BaseBlock implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     // We do not expose txs with a Lombok getter. We cannot make it immutable as we add transactions during parsing.
     private final List<Tx> txs;
 
@@ -103,6 +106,25 @@ public final class Block extends BaseBlock implements PersistablePayload, Immuta
     public List<Tx> getTxs() {
         return Collections.unmodifiableList(txs);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Block> SCHEMA = BaseBlock.<Block>getBaseBlockSchemaBuilder()
+            .extend(6,
+                    "block",
+                    block -> block,
+                    CanonicalSchema.<Block>newBuilder("Block")
+                            .repeatedCompose(1, "txs", Block::getTxs, Tx.SCHEMA))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     @Override
     public String toString() {

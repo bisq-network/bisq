@@ -115,7 +115,6 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload, Immuta
     }
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +133,6 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload, Immuta
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
-
 
 
     @Override

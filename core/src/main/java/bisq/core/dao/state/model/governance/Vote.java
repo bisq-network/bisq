@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -31,7 +34,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @Value
-public class Vote implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel {
+public class Vote implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel, Canonical {
     private boolean accepted;
 
     public Vote(boolean accepted) {
@@ -52,4 +55,20 @@ public class Vote implements PersistablePayload, NetworkPayload, ConsensusCritic
     public static Vote fromProto(protobuf.Vote proto) {
         return new Vote(proto.getAccepted());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Vote> SCHEMA = CanonicalSchema.<Vote>newBuilder("Vote")
+            .bool(1, "accepted", Vote::isAccepted)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+
 }

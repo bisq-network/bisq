@@ -43,8 +43,14 @@ public final class CanonicalEncoder {
             case INT32:
                 writer.writeInt32(field.getNumber(), (int) fieldValue);
                 break;
+            case UINT32:
+                writer.writeUInt32(field.getNumber(), (int) fieldValue);
+                break;
             case INT64:
                 writer.writeInt64(field.getNumber(), (long) fieldValue);
+                break;
+            case BOOL:
+                writer.writeBool(field.getNumber(), (boolean) fieldValue);
                 break;
             case ENUM:
                 writer.writeEnum(field.getNumber(), (CanonicalEnum) fieldValue);
@@ -60,6 +66,9 @@ public final class CanonicalEncoder {
                 break;
             case EXTEND:
                 writeExtend(writer, field, fieldValue);
+                break;
+            case REPEATED_COMPOSE:
+                writeRepeatedCompose(writer, field, fieldValue);
                 break;
             case REPEATED_STRING:
                 writeRepeatedString(writer, field, fieldValue);
@@ -85,6 +94,12 @@ public final class CanonicalEncoder {
     @SuppressWarnings("unchecked")
     private <T> void writeRepeatedString(CanonicalWriter writer, CanonicalSchema.Field<T> field, Object fieldValue) {
         writer.writeRepeatedString(field.getNumber(), (List<String>) fieldValue);
+    }
+
+    private <T> void writeRepeatedCompose(CanonicalWriter writer, CanonicalSchema.Field<T> field, Object fieldValue) {
+        List<?> values = (List<?>) Objects.requireNonNull(fieldValue);
+        CanonicalSchema<?> schema = Objects.requireNonNull(field.getSchema());
+        values.forEach(value -> writer.writeCompose(field.getNumber(), encodeNested(value, schema)));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -118,8 +133,14 @@ public final class CanonicalEncoder {
             case INT32:
                 writer.writeInt32Value(fieldNumber, (int) fieldValue);
                 break;
+            case UINT32:
+                writer.writeUInt32Value(fieldNumber, (int) fieldValue);
+                break;
             case INT64:
                 writer.writeInt64Value(fieldNumber, (long) fieldValue);
+                break;
+            case BOOL:
+                writer.writeBoolValue(fieldNumber, (boolean) fieldValue);
                 break;
             case ENUM:
                 if (fieldValue instanceof CanonicalEnum) {
@@ -140,6 +161,7 @@ public final class CanonicalEncoder {
             case EXTEND:
                 writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
                 break;
+            case REPEATED_COMPOSE:
             case REPEATED_STRING:
             case MAP:
                 throw new IllegalArgumentException("Unsupported canonical map entry type " + type);

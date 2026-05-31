@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.node.parser.TempTx;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -40,7 +43,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Getter
-public final class Tx extends BaseTx implements PersistablePayload, ImmutableDaoStateModel {
+public final class Tx extends BaseTx implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     // Created after parsing of a tx is completed. We store only the immutable tx in the block.
     public static Tx fromTempTx(TempTx tempTx) {
         ImmutableList<TxOutput> txOutputs = ImmutableList.copyOf(tempTx.getTempTxOutputs().stream()
@@ -122,6 +125,26 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
                 outputs,
                 TxType.fromProto(protoTx.getTxType()),
                 protoTx.getBurntBsq());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Tx> SCHEMA = BaseTx.<Tx>getBaseTxSchemaBuilder()
+            .extend(8,
+                    "tx",
+                    tx -> tx,
+                    CanonicalSchema.<Tx>newBuilder("Tx")
+                            .repeatedCompose(1, "tx_outputs", Tx::getTxOutputs, TxOutput.SCHEMA)
+                            .enumField(2, "txType", tx -> tx.txType)
+                            .int64(3, "burnt_bsq", tx -> tx.burntBsq))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

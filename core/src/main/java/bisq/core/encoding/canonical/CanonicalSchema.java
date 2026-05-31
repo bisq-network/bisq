@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 
@@ -62,12 +63,15 @@ public final class CanonicalSchema<T> {
 
     public enum FieldType {
         INT32,
+        UINT32,
         INT64,
+        BOOL,
         ENUM,
         STRING,
         BYTES,
         COMPOSE,
         EXTEND,
+        REPEATED_COMPOSE,
         REPEATED_STRING,
         MAP
     }
@@ -240,9 +244,19 @@ public final class CanonicalSchema<T> {
                     getter::applyAsInt);
         }
 
+        public Builder<T> uint32(int number, String name, ToIntFunction<T> getter) {
+            return add(number, name, FieldType.UINT32, Rule.OMIT_DEFAULT,
+                    getter::applyAsInt);
+        }
+
         public Builder<T> int64(int number, String name, ToLongFunction<T> getter) {
             return add(number, name, FieldType.INT64, Rule.OMIT_DEFAULT,
                     getter::applyAsLong);
+        }
+
+        public Builder<T> bool(int number, String name, Predicate<T> getter) {
+            return add(number, name, FieldType.BOOL, Rule.OMIT_DEFAULT,
+                    getter::test);
         }
 
         public Builder<T> enumField(int number, String name, Function<T, ? extends CanonicalEnum> getter) {
@@ -287,6 +301,53 @@ public final class CanonicalSchema<T> {
                                      Function<T, N> getter,
                                      Builder<N> schemaBuilder) {
             return add(number, name, FieldType.EXTEND, Rule.OMIT_NULL, getter, schemaBuilder);
+        }
+
+        public <N> Builder<T> repeatedCompose(int number,
+                                              String name,
+                                              Function<T, ? extends List<N>> getter,
+                                              CanonicalSchema<N> schema) {
+            return add(number, name, FieldType.REPEATED_COMPOSE, Rule.LIST_ORDER, getter, schema);
+        }
+
+        public <N> Builder<T> repeatedCompose(int number,
+                                              String name,
+                                              Function<T, ? extends List<N>> getter,
+                                              Builder<N> schemaBuilder) {
+            return add(number, name, FieldType.REPEATED_COMPOSE, Rule.LIST_ORDER, getter, schemaBuilder);
+        }
+
+        public Builder<T> mapStringToString(int number,
+                                            String name,
+                                            Function<T, ? extends Map<String, String>> getter,
+                                            CanonicalMapEntryIterator<String, String> entryIterator) {
+            Function<Map.Entry<String, String>, String> keyMapper = Map.Entry::getKey;
+            Function<Map.Entry<String, String>, String> valueMapper = Map.Entry::getValue;
+            return mapStringToString(number,
+                    name,
+                    getter,
+                    keyMapper,
+                    valueMapper,
+                    entryIterator);
+        }
+
+        public <SK, SV> Builder<T> mapStringToString(int number,
+                                                     String name,
+                                                     Function<T, ? extends Map<SK, SV>> getter,
+                                                     Function<Map.Entry<SK, SV>, String> keyMapper,
+                                                     Function<Map.Entry<SK, SV>, String> valueMapper,
+                                                     CanonicalMapEntryIterator<String, String> entryIterator) {
+            return add(number,
+                    name,
+                    FieldType.MAP,
+                    Rule.MAP_ORDER,
+                    getter,
+                    new MapEncoding<>(FieldType.STRING,
+                            FieldType.STRING,
+                            keyMapper,
+                            valueMapper,
+                            null,
+                            entryIterator));
         }
 
         public <V> Builder<T> mapStringToCompose(int number,
@@ -435,19 +496,23 @@ public final class CanonicalSchema<T> {
     }
 
     private static boolean hasNestedSchema(FieldType type) {
-        return type == FieldType.COMPOSE || type == FieldType.EXTEND;
+        return type == FieldType.COMPOSE || type == FieldType.EXTEND || type == FieldType.REPEATED_COMPOSE;
     }
 
     private static boolean isSupportedMapKeyType(FieldType type) {
         return type == FieldType.INT32 ||
+                type == FieldType.UINT32 ||
                 type == FieldType.INT64 ||
+                type == FieldType.BOOL ||
                 type == FieldType.ENUM ||
                 type == FieldType.STRING;
     }
 
     private static boolean isSupportedMapValueType(FieldType type) {
         return type == FieldType.INT32 ||
+                type == FieldType.UINT32 ||
                 type == FieldType.INT64 ||
+                type == FieldType.BOOL ||
                 type == FieldType.ENUM ||
                 type == FieldType.STRING ||
                 type == FieldType.BYTES ||
