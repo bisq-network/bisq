@@ -20,6 +20,7 @@ package bisq.core.dao.node.full;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.encoding.canonical.Canonical;
 import bisq.core.encoding.canonical.CanonicalEncoder;
 import bisq.core.encoding.canonical.CanonicalSchema;
 
@@ -41,7 +42,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
+public final class RawTxOutput extends BaseTxOutput implements NetworkPayload, Canonical {
     public static RawTxOutput fromTxOutput(TxOutput txOutput) {
         return new RawTxOutput(txOutput.getIndex(),
                 txOutput.getValue(),

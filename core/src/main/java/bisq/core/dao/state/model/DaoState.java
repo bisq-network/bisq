@@ -263,6 +263,13 @@ public class DaoState implements PersistablePayload, Canonical {
         return encodeCanonical(CanonicalEncoder.DEFAULT);
     }
 
+    // Only present for verifying that legacy implementation results in same hash as
+    // new canonical version.
+    public byte[] getSerializedStateForHashChainLegacy() {
+        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage())
+                .build().toByteArray();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Canonical
@@ -371,7 +378,7 @@ public class DaoState implements PersistablePayload, Canonical {
     }
 
     public void addBlock(Block block) {
-        // The block added here does not have any tx, 
+        // The block added here does not have any tx,
         // so we do not need to update the txCache or txOutputsByTxOutputType
         blocks.add(block);
         blocksByHeight.put(block.getHeight(), block);

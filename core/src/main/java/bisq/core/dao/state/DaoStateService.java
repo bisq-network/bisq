@@ -39,11 +39,24 @@ import bisq.core.dao.state.model.governance.ParamChange;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
+import bisq.common.config.Config;
+import bisq.common.crypto.Hash;
+import bisq.common.util.Hex;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -70,30 +83,54 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class DaoStateService implements DaoSetupService {
+    private static final String CANONICAL_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME = "_canonical_dao_state_hash_chain.log";
+    private static final String LEGACY_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME = "_legacy_dao_state_hash_chain.log";
+
     private final DaoState daoState;
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
+    private final File appDataDir;
+    private final boolean verifyDaoStateHashChainSerialization;
+    private final boolean dumpDaoStateHashChainSerialization;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
     @Getter
     private boolean parseBlockChainComplete;
     private boolean allowDaoStateChange;
     private final Map<String, Set<String>> cachedTxIdSetByAddress = new HashMap<>();
+    private Path canonicalDaoStateHashChainDumpFilePath;
+    private Path legacyDaoStateHashChainDumpFilePath;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
+    public DaoStateService(DaoState daoState,
+                           GenesisTxInfo genesisTxInfo,
+                           BsqFormatter bsqFormatter,
+                           @Named(Config.APP_DATA_DIR) File appDataDir,
+                           @Named(Config.VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION)
+                           boolean verifyDaoStateHashChainSerialization,
+                           @Named(Config.DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION)
+                           boolean dumpDaoStateHashChainSerialization) {
         this.daoState = daoState;
         this.genesisTxInfo = genesisTxInfo;
         this.bsqFormatter = bsqFormatter;
+        this.appDataDir = appDataDir;
+        this.verifyDaoStateHashChainSerialization = verifyDaoStateHashChainSerialization;
+        this.dumpDaoStateHashChainSerialization = dumpDaoStateHashChainSerialization;
+    }
+
+    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
+        this(daoState, genesisTxInfo, bsqFormatter, null, false, false);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoSetupService
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -110,6 +147,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Snapshot
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot(DaoState snapshot) {
@@ -164,6 +202,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ChainHeight
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getChainHeight() {
@@ -173,6 +212,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Cycle
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public LinkedList<Cycle> getCycles() {
@@ -238,6 +278,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Parser events
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // First we get the blockHeight set
@@ -305,6 +346,64 @@ public class DaoStateService implements DaoSetupService {
 
         if (!block.getTxs().isEmpty()) {
             cachedTxIdSetByAddress.clear();
+        }
+
+        maybeVerifyDaoStatePerBlock(block);
+    }
+
+    private void maybeVerifyDaoStatePerBlock(Block block) {
+        if (!verifyDaoStateHashChainSerialization && !dumpDaoStateHashChainSerialization) {
+            return;
+        }
+
+        Optional<Block> optionalLastBlock = getLastBlock();
+        int height = block.getHeight();
+        if (optionalLastBlock.isEmpty() || optionalLastBlock.get().getHeight() != height) {
+            log.warn("Skip DAO state hash chain serialization verification. blockHeight={}, lastBlockHeight={}",
+                    height, optionalLastBlock.map(Block::getHeight).orElse(null));
+            return;
+        }
+
+        byte[] canonicalDaoStateBytes = daoState.getSerializedStateForHashChain();
+        byte[] legacyDaoStateBytes = daoState.getSerializedStateForHashChainLegacy();
+        if (verifyDaoStateHashChainSerialization &&
+                !Arrays.equals(canonicalDaoStateBytes, legacyDaoStateBytes)) {
+            log.error("DaoStateBytes not matching at height {}. " +
+                            "canonicalDaoStateBytes: {}, legacyDaoStateBytes: {}",
+                    height, Hex.encode(canonicalDaoStateBytes), Hex.encode(legacyDaoStateBytes));
+            throw new IllegalStateException("DaoStateBytes not matching at height " + height);
+        }
+
+        if (dumpDaoStateHashChainSerialization) {
+            if (canonicalDaoStateHashChainDumpFilePath == null) {
+                canonicalDaoStateHashChainDumpFilePath = appDataDir.toPath().resolve(height + CANONICAL_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME);
+            }
+            if (legacyDaoStateHashChainDumpFilePath == null) {
+                legacyDaoStateHashChainDumpFilePath = appDataDir.toPath().resolve(height + LEGACY_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME);
+
+            }
+            dumpDaoStateHashChainSerialization(height,
+                    canonicalDaoStateBytes,
+                    canonicalDaoStateHashChainDumpFilePath);
+            dumpDaoStateHashChainSerialization(height,
+                    legacyDaoStateBytes,
+                    legacyDaoStateHashChainDumpFilePath);
+        }
+    }
+
+    private void dumpDaoStateHashChainSerialization(int height, byte[] stateBytes, Path filePath) {
+        String line = "height=" + height +
+                " bytes=" + stateBytes.length +
+                " stateBytesSha256=" + Hex.encode(Hash.getSha256Hash(stateBytes)) +
+                System.lineSeparator();
+        try {
+            Files.writeString(filePath,
+                    line,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not write DAO state hash chain serialization dump file " + filePath, e);
         }
     }
 
@@ -374,6 +473,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Genesis
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getGenesisTxId() {
@@ -395,6 +495,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tx
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<Tx> getUnorderedTxStream() {
@@ -424,6 +525,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TxType
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<TxType> getOptionalTxType(String txId) {
@@ -433,6 +535,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BurntFee (trade fee and fee burned at proof of burn)
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public long getBurntFee(String txId) {
@@ -464,6 +567,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TxInput
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<TxOutput> getConnectedTxOutput(TxInput txInput) {
@@ -474,6 +578,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TxOutput
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<TxOutput> getUnorderedTxOutputStream() {
@@ -494,6 +599,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UnspentTxOutput
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TreeMap<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
@@ -584,6 +690,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TxOutputType
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Set<TxOutput> getTxOutputsByTxOutputType(TxOutputType txOutputType) {
@@ -626,6 +733,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TxOutputType - Voting
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Set<TxOutput> getUnspentBlindVoteStakeTxOutputs() {
@@ -641,6 +749,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TxOutputType - Issuance
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Set<TxOutput> getIssuanceCandidateTxOutputs() {
@@ -650,6 +759,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Issuance
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addIssuance(Issuance issuance) {
@@ -699,6 +809,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Not accepted issuance candidate outputs of past cycles
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isRejectedIssuanceOutput(TxOutputKey txOutputKey) {
@@ -714,6 +825,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bond
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Terminology
@@ -958,6 +1070,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Param
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setNewParam(int blockHeight, Param param, String paramValue) {
@@ -1026,6 +1139,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // SpentInfo
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setSpentInfo(TxOutputKey txOutputKey, SpentInfo spentInfo) {
@@ -1040,6 +1154,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Addresses
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Map<String, Set<String>> getTxIdSetByAddress() {
@@ -1088,6 +1203,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Vote result data
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public List<EvaluatedProposal> getEvaluatedProposalList() {
@@ -1123,6 +1239,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Asset listing fee
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Set<TxOutput> getAssetListingFeeOpReturnTxOutputs() {
@@ -1131,6 +1248,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Proof of burn
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Set<TxOutput> getProofOfBurnOpReturnTxOutputs() {
@@ -1140,6 +1258,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listeners
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addDaoStateListener(DaoStateListener listener) {
@@ -1153,6 +1272,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String daoStateToString() {
@@ -1162,6 +1282,7 @@ public class DaoStateService implements DaoSetupService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void assertDaoStateChange() {
@@ -1169,4 +1290,3 @@ public class DaoStateService implements DaoSetupService {
             throw new RuntimeException("We got a call which would change the daoState outside of the allowed event phase");
     }
 }
-

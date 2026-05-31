@@ -86,7 +86,7 @@ test {
     systemProperty 'jdk.attach.allowAttachSelf', true
 }
 
-tasks.register('daoHashToolClasspath') {
+tasks.register('hashMapOrderToolClasspath') {
     doLast {
         println sourceSets.test.runtimeClasspath.asPath
     }
