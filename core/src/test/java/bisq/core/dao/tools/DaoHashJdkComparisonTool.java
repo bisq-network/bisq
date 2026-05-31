@@ -139,8 +139,8 @@ public class DaoHashJdkComparisonTool {
     }
 
     private static List<Path> findBucketFiles(Path blocksDir, int fromHeight, int toHeight) throws IOException {
-        int fromBucket = fromHeight / BSQ_BLOCK_BUCKET_SIZE + 1;
-        int toBucket = toHeight / BSQ_BLOCK_BUCKET_SIZE + 1;
+        int fromBucket = fromHeight <= 0 ? 0 : (fromHeight - 1) / BSQ_BLOCK_BUCKET_SIZE + 1;
+        int toBucket = toHeight <= 0 ? 0 : (toHeight - 1) / BSQ_BLOCK_BUCKET_SIZE + 1;
         List<Path> bucketFiles = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(blocksDir)) {
             for (Path path : stream) {
