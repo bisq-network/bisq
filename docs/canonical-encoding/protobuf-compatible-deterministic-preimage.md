@@ -1,16 +1,99 @@
-# Protobuf-Compatible Deterministic Preimage Rules
+# Canonical Encoding and Schema
 
 Date: 2026-05-31
 
+## Purpose
+
+Bisq needs deterministic bytes for data that is hashed, compared, signed, or monitored across
+nodes. The same logical object must produce the same preimage bytes on every participating node
+that uses the same canonical schema version.
+
+The canonical encoder should be generic: it should encode objects by executing an explicit schema,
+not by relying on ad hoc writer code for one object type. The chosen byte format is an implementation
+detail of the schema. In principle the canonical encoder could target any deterministic wire format.
+For Bisq, the target format is a constrained, protobuf-compatible encoding.
+
+## Why Protobuf-Compatible Encoding
+
+Bisq already uses `proto3` messages in persisted, network, and hashed data paths, and pins
+`protobuf-java` and `protoc` in `gradle/libs.versions.toml`. Reusing protobuf wire encoding rules
+keeps the transition cost low:
+
+- existing field numbers and protobuf type choices can be reused;
+- byte-level parity with current Java protobuf output can be tested where required;
+- existing contributors already understand the model shape;
+- activation can be scoped to schema versions instead of replacing the whole serialization stack.
+
+The compatibility format is not "whatever any protobuf parser accepts". Protobuf serialization is
+not canonical by itself: parsers accept multiple byte streams for the same logical message, and
+different implementations can serialize maps, unknown fields, defaults, and duplicates differently.
+Bisq therefore uses a canonical subset of protobuf-compatible output that matches current
+`protobuf-java` emission behavior where that behavior is required for compatibility, and adds
+explicit Bisq rules where protobuf allows multiple equivalent encodings.
+
 ## Scope
 
-Bisq currently uses `proto3` messages in multiple persisted, network, and hashed data paths, and pins `protobuf-java` and `protoc` to version `3.25.8` in `gradle/libs.versions.toml`.
+This design is limited to Bisq's canonical encoding requirements and Bisq's use of protobuf. It is
+not a full protobuf encoder, a decoder, or a general canonical protobuf specification.
+`CanonicalSchema` and `CanonicalWriter` should support only the protobuf features that Bisq needs
+for canonical preimages. Each supported feature needs explicit schema rules and byte-level tests.
+Unsupported protobuf features are rejected or left unimplemented until a Bisq model needs them.
 
-The deterministic preimage format intentionally uses protobuf-compatible wire bytes because that gives low transition cost from existing Bisq serialization paths. The compatibility format is not "whatever any protobuf parser accepts". It is a canonical subset of protobuf-compatible output that matches the current Java protobuf emission behavior where that behavior is clear, and adds explicit Bisq rules where protobuf parsing allows multiple equivalent encodings.
+There is intentionally no decoder in scope. The required operation is object-to-canonical-bytes for
+hashing, monitoring, and signing. Decoding arbitrary protobuf-compatible bytes would introduce a
+separate canonical-validation problem, including duplicate fields, unknown fields, non-minimal
+varints, and merge behavior. That problem should be designed separately only if a concrete Bisq
+requirement appears.
 
-This is not a full protobuf encoder, decoder, or canonical protobuf specification. `CanonicalSchema` and `CanonicalWriter` should support only the protobuf features that Bisq actually needs for canonical preimages, and each supported feature must have explicit schema rules plus byte-level tests. Unsupported protobuf features are rejected or left unimplemented until a Bisq model needs them.
+## Concept
 
-This document is the checklist for schema definitions such as `CanonicalSchema`. It should be kept broader than the initial trigger use case so new canonical preimage schemas do not accidentally introduce malleability.
+The canonical encoder has two parts:
+
+- `CanonicalSchema` describes what is encoded: message name, schema version, fields, protobuf type
+  mapping, accessors, omission rules, nested schemas, and ordering rules.
+- `CanonicalWriter` describes how supported schema elements become bytes: protobuf tags, varints,
+  length-delimited values, nested message bytes, and repeated/map entry emission.
+
+The schema is the source of truth. Serialization should iterate schema fields instead of maintaining
+a parallel manual writer. Human-readable docs can summarize the schema, but they must not become a
+second source of truth.
+
+The encoder is generic because a schema can be written for any supported Bisq model. It is not
+generic in the sense of accepting arbitrary protobuf descriptors or arbitrary parsed protobuf
+messages. Canonical bytes should be produced from Bisq model objects whose semantics are already
+known to the schema.
+
+Schema version is metadata selecting canonical rules. It is not emitted as extra bytes unless a
+schema explicitly defines a version field in the serialized object graph.
+
+## Use Cases
+
+DAO hash chain monitoring is the first consensus-sensitive use case. Nodes can encode the same DAO
+state transition or hash-chain input with a versioned canonical schema and compare the resulting
+hashes. A mismatch then points to a semantic or encoding divergence instead of incidental protobuf
+serialization variation.
+
+Signature preimages are the second use case. The signed bytes should be produced by a deterministic,
+schema-defined encoder so signatures are not affected by unknown fields, duplicate fields, map
+iteration order, or alternate protobuf encodings of the same logical values.
+
+## Map Ordering and Legacy HashMap Compatibility
+
+Protobuf map fields are encoded as repeated entry messages with key field `1` and value field `2`.
+The protobuf wire format does not make map entry order canonical. Java's normal map iteration also
+does not give a portable canonical order, and legacy Bisq paths may depend on `HashMap` iteration
+behavior that should not be treated as a general-purpose rule.
+
+Bisq should address that in two explicit modes:
+
+- `LegacyHashMapOrderMapEntryIterator` reproduces the current Java/protobuf behavior for legacy
+  schemas that must preserve existing preimage bytes. This is a compatibility mode and should be
+  documented per schema.
+- `TreeMapOrderMapEntryIterator` emits entries in sorted key order for schemas that can activate a
+  canonical map order at a known activation block or schema version.
+
+Schemas must choose a map iterator explicitly. The encoder should not rely on protobuf
+deterministic serialization or default `Map` iteration order.
 
 References:
 
@@ -25,10 +108,9 @@ References:
 - Fields are emitted in ascending field-number order unless a schema explicitly defines a repeated or map ordering rule.
 - Unknown fields are never emitted in canonical preimage bytes.
 - A singular field is emitted at most once.
-- Schema version is metadata selecting the canonical rules. It is not emitted as extra bytes unless a schema explicitly defines a version field in the serialized object graph.
 - Every tag, length prefix, and integer value uses the shortest valid varint form for the selected field type, except negative `int32` and `int64` values use protobuf's standard 10-byte two's-complement varint form.
 - Nested messages are emitted as length-delimited canonical bytes produced by their own schema.
-- Map fields must declare an explicit order mode. The only allowed legacy behavior should be named as such, for example `LegacyHashMapOrder`.
+- Map fields must declare an explicit order mode.
 
 ## Malleability Table
 
@@ -74,5 +156,3 @@ Each `CanonicalSchema` should define:
 - nested compose or extend schema, if any;
 - repeated/map ordering rule;
 - oneof selection rule, if any.
-
-The encoder should execute the schema: serialization should iterate schema fields instead of maintaining a parallel manual writer. Human-readable docs can summarize the schema, but they must not become a second source of truth.
