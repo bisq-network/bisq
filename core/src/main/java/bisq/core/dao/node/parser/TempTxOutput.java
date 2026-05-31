@@ -21,6 +21,8 @@ import bisq.core.dao.node.full.RawTxOutput;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import java.util.Objects;
 
@@ -84,6 +86,27 @@ public class TempTxOutput extends BaseTxOutput {
         // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
         return getOpReturnData() != null;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<TempTxOutput> SCHEMA = TempTxOutput.<TempTxOutput>getBaseTxOutputSchemaBuilder()
+            .extend(9,
+                    "tx_output",
+                    tempTxOutput -> tempTxOutput,
+                    CanonicalSchema.<TempTxOutput>newBuilder("TxOutput")
+                            .enumField(1, "tx_output_type", tempTxOutput -> tempTxOutput.txOutputType)
+                            .int32(2, "lock_time", tempTxOutput -> tempTxOutput.lockTime)
+                            .int32(3, "unlock_block_height", tempTxOutput -> tempTxOutput.unlockBlockHeight))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     @Override
     public String toString() {

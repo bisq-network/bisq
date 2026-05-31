@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.node.parser.TempTxOutput;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -37,7 +40,8 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Getter
-public class TxOutput extends BaseTxOutput implements PersistablePayload, ImmutableDaoStateModel {
+public class TxOutput extends BaseTxOutput implements PersistablePayload, ImmutableDaoStateModel, Canonical {
+
     public static TxOutput fromTempOutput(TempTxOutput tempTxOutput) {
         return new TxOutput(tempTxOutput.getIndex(),
                 tempTxOutput.getValue(),
@@ -109,6 +113,28 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload, Immuta
                 protoTxOutput.getLockTime(),
                 protoTxOutput.getUnlockBlockHeight());
     }
+
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<TxOutput> SCHEMA = BaseTxOutput.<TxOutput>getBaseTxOutputSchemaBuilder()
+            .extend(9,
+                    "tx_output",
+                    txOutput -> txOutput,
+                    CanonicalSchema.<TxOutput>newBuilder("TxOutput")
+                            .enumField(1, "tx_output_type", txOutput -> txOutput.txOutputType)
+                            .int32(2, "lock_time", txOutput -> txOutput.lockTime)
+                            .int32(3, "unlock_block_height", txOutput -> txOutput.unlockBlockHeight))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
 
     @Override

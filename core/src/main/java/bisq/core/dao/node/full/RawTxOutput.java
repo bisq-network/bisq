@@ -20,6 +20,8 @@ package bisq.core.dao.node.full;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Utilities;
@@ -84,6 +86,23 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
                 proto.getAddress().isEmpty() ? null : proto.getAddress(),
                 proto.getOpReturnData().isEmpty() ? null : proto.getOpReturnData().toByteArray(),
                 proto.getBlockHeight());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<RawTxOutput> SCHEMA = RawTxOutput.<RawTxOutput>getBaseTxOutputSchemaBuilder()
+            .extend(8,
+                    "raw_tx_output",
+                    rawTxOutput -> rawTxOutput,
+                    CanonicalSchema.<RawTxOutput>newBuilder("RawTxOutput"))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 
