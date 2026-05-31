@@ -18,6 +18,7 @@
 package bisq.core.encoding.canonical;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -63,6 +64,9 @@ public final class CanonicalEncoder {
             case REPEATED_STRING:
                 writeRepeatedString(writer, field, fieldValue);
                 break;
+            case MAP:
+                writeMap(writer, field, fieldValue);
+                break;
         }
     }
 
@@ -81,6 +85,65 @@ public final class CanonicalEncoder {
     @SuppressWarnings("unchecked")
     private <T> void writeRepeatedString(CanonicalWriter writer, CanonicalSchema.Field<T> field, Object fieldValue) {
         writer.writeRepeatedString(field.getNumber(), (List<String>) fieldValue);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private <T> void writeMap(CanonicalWriter writer, CanonicalSchema.Field<T> field, @Nullable Object fieldValue) {
+        Map<?, ?> source = (Map<?, ?>) Objects.requireNonNull(fieldValue);
+        if (source.isEmpty()) {
+            return;
+        }
+
+        CanonicalSchema.MapEncoding mapEncoding = Objects.requireNonNull(field.getMapEncoding());
+        List<Map.Entry<?, ?>> entries = mapEncoding.getEntries((Map) source);
+        mapEncoding.iterate(entries).forEachRemaining(entry ->
+                writer.writeMapEntry(field.getNumber(), encodeMapEntry((Map.Entry<?, ?>) entry, mapEncoding)));
+    }
+
+    private byte[] encodeMapEntry(Map.Entry<?, ?> entry, CanonicalSchema.MapEncoding<?, ?, ?, ?> mapEncoding) {
+        CanonicalWriter writer = new CanonicalWriter();
+        writeMapEntryValue(writer, 1, mapEncoding.getKeyType(), entry.getKey(), null);
+        writeMapEntryValue(writer, 2, mapEncoding.getValueType(), entry.getValue(), mapEncoding.getValueSchema());
+        return writer.toByteArray();
+    }
+
+    private void writeMapEntryValue(CanonicalWriter writer,
+                                    int fieldNumber,
+                                    CanonicalSchema.FieldType type,
+                                    @Nullable Object fieldValue,
+                                    @Nullable CanonicalSchema<?> schema) {
+        Objects.requireNonNull(fieldValue, "Canonical map entry values must not be null");
+
+        switch (type) {
+            case INT32:
+                writer.writeInt32Value(fieldNumber, (int) fieldValue);
+                break;
+            case INT64:
+                writer.writeInt64Value(fieldNumber, (long) fieldValue);
+                break;
+            case ENUM:
+                if (fieldValue instanceof CanonicalEnum) {
+                    writer.writeEnumValue(fieldNumber, ((CanonicalEnum) fieldValue).getCode());
+                } else {
+                    writer.writeEnumValue(fieldNumber, (int) fieldValue);
+                }
+                break;
+            case STRING:
+                writer.writeStringValue(fieldNumber, (String) fieldValue);
+                break;
+            case BYTES:
+                writer.writeLengthDelimitedValue(fieldNumber, (byte[]) fieldValue);
+                break;
+            case COMPOSE:
+                writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
+                break;
+            case EXTEND:
+                writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
+                break;
+            case REPEATED_STRING:
+            case MAP:
+                throw new IllegalArgumentException("Unsupported canonical map entry type " + type);
+        }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

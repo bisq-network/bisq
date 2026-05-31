@@ -35,15 +35,13 @@ public final class CanonicalWriter {
 
     public void writeInt32(int fieldNumber, int value) {
         if (value != 0) {
-            writeTag(fieldNumber, WIRE_TYPE_VARINT);
-            writeInt32NoTag(value);
+            writeInt32Value(fieldNumber, value);
         }
     }
 
     public void writeInt64(int fieldNumber, long value) {
         if (value != 0) {
-            writeTag(fieldNumber, WIRE_TYPE_VARINT);
-            writeVarint64(value);
+            writeInt64Value(fieldNumber, value);
         }
     }
 
@@ -55,8 +53,7 @@ public final class CanonicalWriter {
 
     public void writeEnum(int fieldNumber, int value) {
         if (value != 0) {
-            writeTag(fieldNumber, WIRE_TYPE_VARINT);
-            writeInt32NoTag(value);
+            writeEnumValue(fieldNumber, value);
         }
     }
 
@@ -72,30 +69,48 @@ public final class CanonicalWriter {
 
     public void writeBytes(int fieldNumber, @Nullable byte[] value) {
         if (value != null && value.length > 0) {
-            writeLengthDelimited(fieldNumber, value);
+            writeLengthDelimitedValue(fieldNumber, value);
         }
     }
 
     public void writeCompose(int fieldNumber, @Nullable byte[] value) {
         if (value != null) {
-            writeLengthDelimited(fieldNumber, value);
+            writeLengthDelimitedValue(fieldNumber, value);
         }
     }
 
     public void writeExtend(int fieldNumber, @Nullable byte[] value) {
         if (value != null) {
-            writeLengthDelimited(fieldNumber, value);
+            writeLengthDelimitedValue(fieldNumber, value);
         }
     }
 
-    private void writeLengthDelimited(int fieldNumber, byte[] value) {
+    public void writeMapEntry(int fieldNumber, byte[] value) {
+        writeLengthDelimitedValue(fieldNumber, value);
+    }
+
+    void writeInt32Value(int fieldNumber, int value) {
+        writeTag(fieldNumber, WIRE_TYPE_VARINT);
+        writeInt32NoTag(value);
+    }
+
+    void writeInt64Value(int fieldNumber, long value) {
+        writeTag(fieldNumber, WIRE_TYPE_VARINT);
+        writeVarint64(value);
+    }
+
+    void writeEnumValue(int fieldNumber, int value) {
+        writeInt32Value(fieldNumber, value);
+    }
+
+    void writeStringValue(int fieldNumber, String value) {
+        writeLengthDelimitedValue(fieldNumber, value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    void writeLengthDelimitedValue(int fieldNumber, byte[] value) {
         writeTag(fieldNumber, WIRE_TYPE_LENGTH_DELIMITED);
         writeVarint32(value.length);
         out.write(value, 0, value.length);
-    }
-
-    private void writeStringValue(int fieldNumber, String value) {
-        writeLengthDelimited(fieldNumber, value.getBytes(StandardCharsets.UTF_8));
     }
 
     private void writeTag(int fieldNumber, int wireType) {

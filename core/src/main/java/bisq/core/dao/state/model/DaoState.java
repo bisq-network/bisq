@@ -256,7 +256,7 @@ public class DaoState implements PersistablePayload {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage()).build().toByteArray();
+        return LegacyDaoStateHashSerializerV1.serialize(this);
     }
 
     public void addToTxCache(Tx tx) {

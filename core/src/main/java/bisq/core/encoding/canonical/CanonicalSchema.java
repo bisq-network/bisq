@@ -17,9 +17,12 @@
 
 package bisq.core.encoding.canonical;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
@@ -65,14 +68,16 @@ public final class CanonicalSchema<T> {
         BYTES,
         COMPOSE,
         EXTEND,
-        REPEATED_STRING
+        REPEATED_STRING,
+        MAP
     }
 
     public enum Rule {
         OMIT_DEFAULT,
         OMIT_EMPTY,
         OMIT_NULL,
-        LIST_ORDER
+        LIST_ORDER,
+        MAP_ORDER
     }
 
     public static final class Field<T> {
@@ -88,20 +93,24 @@ public final class CanonicalSchema<T> {
         @Getter
         @Nullable
         private final CanonicalSchema<?> schema;
+        @Getter
+        @Nullable
+        private final MapEncoding<?, ?, ?, ?> mapEncoding;
 
         private Field(int number,
                       String name,
                       FieldType type,
                       Rule rule,
                       Function<T, ?> getter,
-                      @Nullable
-                      CanonicalSchema<?> schema) {
+                      @Nullable CanonicalSchema<?> schema,
+                      @Nullable MapEncoding<?, ?, ?, ?> mapEncoding) {
             this.number = number;
             this.name = name;
             this.type = type;
             this.rule = rule;
             this.getter = getter;
             this.schema = schema;
+            this.mapEncoding = mapEncoding;
         }
 
         @Nullable
@@ -120,6 +129,8 @@ public final class CanonicalSchema<T> {
         private final CanonicalSchema<?> schema;
         @Nullable
         private final Builder<?> schemaBuilder;
+        @Nullable
+        private final MapEncoding<?, ?, ?, ?> mapEncoding;
 
         private FieldDefinition(int number,
                                 String name,
@@ -128,8 +139,8 @@ public final class CanonicalSchema<T> {
                                 Function<T, ?> getter,
                                 @Nullable
                                 CanonicalSchema<?> schema,
-                                @Nullable
-                                Builder<?> schemaBuilder) {
+                                @Nullable Builder<?> schemaBuilder,
+                                @Nullable MapEncoding<?, ?, ?, ?> mapEncoding) {
             this.number = number;
             this.name = name;
             this.type = type;
@@ -137,6 +148,7 @@ public final class CanonicalSchema<T> {
             this.getter = getter;
             this.schema = schema;
             this.schemaBuilder = schemaBuilder;
+            this.mapEncoding = mapEncoding;
         }
 
         private Field<T> build() {
@@ -148,7 +160,60 @@ public final class CanonicalSchema<T> {
                     type,
                     rule,
                     getter,
-                    builtSchema);
+                    builtSchema,
+                    mapEncoding);
+        }
+    }
+
+    public static final class MapEncoding<SK, SV, K, V> {
+        @Getter
+        private final FieldType keyType;
+        @Getter
+        private final FieldType valueType;
+        private final Function<Map.Entry<SK, SV>, K> keyMapper;
+        private final Function<Map.Entry<SK, SV>, V> valueMapper;
+        private final CanonicalMapEntryIterator<K, V> entryIterator;
+        @Getter
+        @Nullable
+        private final CanonicalSchema<?> valueSchema;
+
+        private MapEncoding(FieldType keyType,
+                            FieldType valueType,
+                            Function<Map.Entry<SK, SV>, K> keyMapper,
+                            Function<Map.Entry<SK, SV>, V> valueMapper,
+                            @Nullable CanonicalSchema<?> valueSchema,
+                            CanonicalMapEntryIterator<K, V> entryIterator) {
+            this.keyType = Objects.requireNonNull(keyType);
+            this.valueType = Objects.requireNonNull(valueType);
+            this.keyMapper = Objects.requireNonNull(keyMapper);
+            this.valueMapper = Objects.requireNonNull(valueMapper);
+            this.valueSchema = valueSchema;
+            this.entryIterator = Objects.requireNonNull(entryIterator);
+
+            if (!isSupportedMapKeyType(keyType)) {
+                throw new IllegalArgumentException("Unsupported canonical map key type " + keyType);
+            }
+            if (!isSupportedMapValueType(valueType)) {
+                throw new IllegalArgumentException("Unsupported canonical map value type " + valueType);
+            }
+            if (hasNestedSchema(valueType) && valueSchema == null) {
+                throw new IllegalArgumentException("Canonical map message values must declare a nested schema");
+            }
+            if (!hasNestedSchema(valueType) && valueSchema != null) {
+                throw new IllegalArgumentException("Only canonical map message values can declare a nested schema");
+            }
+        }
+
+        List<Map.Entry<K, V>> getEntries(Map<SK, SV> source) {
+            List<Map.Entry<K, V>> entries = new ArrayList<>(source.size());
+            source.entrySet().forEach(entry -> entries.add(new AbstractMap.SimpleImmutableEntry<>(
+                    keyMapper.apply(entry),
+                    valueMapper.apply(entry))));
+            return entries;
+        }
+
+        Iterator<Map.Entry<K, V>> iterate(List<Map.Entry<K, V>> entries) {
+            return entryIterator.iterate(entries);
         }
     }
 
@@ -224,6 +289,42 @@ public final class CanonicalSchema<T> {
             return add(number, name, FieldType.EXTEND, Rule.OMIT_NULL, getter, schemaBuilder);
         }
 
+        public <V> Builder<T> mapStringToCompose(int number,
+                                                 String name,
+                                                 Function<T, ? extends Map<String, V>> getter,
+                                                 CanonicalSchema<V> valueSchema,
+                                                 CanonicalMapEntryIterator<String, V> entryIterator) {
+            Function<Map.Entry<String, V>, String> keyMapper = Map.Entry::getKey;
+            Function<Map.Entry<String, V>, V> valueMapper = Map.Entry::getValue;
+            return mapStringToCompose(number,
+                    name,
+                    getter,
+                    keyMapper,
+                    valueMapper,
+                    valueSchema,
+                    entryIterator);
+        }
+
+        public <SK, SV, V> Builder<T> mapStringToCompose(int number,
+                                                         String name,
+                                                         Function<T, ? extends Map<SK, SV>> getter,
+                                                         Function<Map.Entry<SK, SV>, String> keyMapper,
+                                                         Function<Map.Entry<SK, SV>, V> valueMapper,
+                                                         CanonicalSchema<V> valueSchema,
+                                                         CanonicalMapEntryIterator<String, V> entryIterator) {
+            return add(number,
+                    name,
+                    FieldType.MAP,
+                    Rule.MAP_ORDER,
+                    getter,
+                    new MapEncoding<>(FieldType.STRING,
+                            FieldType.COMPOSE,
+                            keyMapper,
+                            valueMapper,
+                            valueSchema,
+                            entryIterator));
+        }
+
         public CanonicalSchema<T> build() {
             List<Field<T>> builtFields = new ArrayList<>(fields.size());
             fields.forEach(field -> builtFields.add(field.build()));
@@ -267,11 +368,43 @@ public final class CanonicalSchema<T> {
                                CanonicalSchema<?> schema,
                                @Nullable
                                Builder<?> schemaBuilder) {
+            return add(number, name, type, rule, getter, schema, schemaBuilder, null);
+        }
+
+        private Builder<T> add(int number,
+                               String name,
+                               FieldType type,
+                               Rule rule,
+                               Function<T, ?> getter,
+                               MapEncoding<?, ?, ?, ?> mapEncoding) {
+            return add(number, name, type, rule, getter, null, null, mapEncoding);
+        }
+
+        private Builder<T> add(int number,
+                               String name,
+                               FieldType type,
+                               Rule rule,
+                               Function<T, ?> getter,
+                               @Nullable
+                               CanonicalSchema<?> schema,
+                               @Nullable
+                               Builder<?> schemaBuilder,
+                               @Nullable
+                               MapEncoding<?, ?, ?, ?> mapEncoding) {
             validateFieldNumber(number);
             if (number <= previousFieldNumber) {
                 throw new IllegalArgumentException("Canonical fields must be declared in ascending field-number order");
             }
-            if (hasNestedSchema(type)) {
+            if (type == FieldType.MAP) {
+                if (mapEncoding == null) {
+                    throw new IllegalArgumentException("Map fields must declare a map encoding");
+                }
+                if (schema != null || schemaBuilder != null) {
+                    throw new IllegalArgumentException("Map fields cannot declare a compose or extend nested schema");
+                }
+            } else if (mapEncoding != null) {
+                throw new IllegalArgumentException("Only map fields can declare a map encoding");
+            } else if (hasNestedSchema(type)) {
                 if ((schema == null && schemaBuilder == null) || (schema != null && schemaBuilder != null)) {
                     throw new IllegalArgumentException("Compose and extend fields must declare exactly one nested schema or schema builder");
                 }
@@ -285,7 +418,8 @@ public final class CanonicalSchema<T> {
                     Objects.requireNonNull(rule),
                     Objects.requireNonNull(getter),
                     schema,
-                    schemaBuilder));
+                    schemaBuilder,
+                    mapEncoding));
             previousFieldNumber = number;
             return this;
         }
@@ -302,5 +436,22 @@ public final class CanonicalSchema<T> {
 
     private static boolean hasNestedSchema(FieldType type) {
         return type == FieldType.COMPOSE || type == FieldType.EXTEND;
+    }
+
+    private static boolean isSupportedMapKeyType(FieldType type) {
+        return type == FieldType.INT32 ||
+                type == FieldType.INT64 ||
+                type == FieldType.ENUM ||
+                type == FieldType.STRING;
+    }
+
+    private static boolean isSupportedMapValueType(FieldType type) {
+        return type == FieldType.INT32 ||
+                type == FieldType.INT64 ||
+                type == FieldType.ENUM ||
+                type == FieldType.STRING ||
+                type == FieldType.BYTES ||
+                type == FieldType.COMPOSE ||
+                type == FieldType.EXTEND;
     }
 }

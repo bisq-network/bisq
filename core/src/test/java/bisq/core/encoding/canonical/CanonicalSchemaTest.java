@@ -19,7 +19,11 @@ package bisq.core.encoding.canonical;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CanonicalSchemaTest {
@@ -77,5 +81,35 @@ public class CanonicalSchemaTest {
                 .int32(20000, "after_reserved", ignored -> 1)
                 .int32(536870911, "last", ignored -> 1)
                 .build();
+    }
+
+    @Test
+    public void mapStringToComposeDeclaresMapFieldAndOrderRule() {
+        CanonicalSchema<MapHolder> schema = CanonicalSchema.<MapHolder>newBuilder("MapHolder")
+                .mapStringToCompose(1,
+                        "values",
+                        MapHolder::getValues,
+                        CanonicalSchema.<MapValue>newBuilder("MapValue")
+                                .int32(1, "value", MapValue::getValue)
+                                .build(),
+                        TreeMapOrderMapEntryIterator.naturalOrder())
+                .build();
+
+        CanonicalSchema.Field<MapHolder> field = schema.getFields().get(0);
+        assertEquals(CanonicalSchema.FieldType.MAP, field.getType());
+        assertEquals(CanonicalSchema.Rule.MAP_ORDER, field.getRule());
+        assertNotNull(field.getMapEncoding());
+    }
+
+    private static final class MapHolder {
+        private Map<String, MapValue> getValues() {
+            return Collections.emptyMap();
+        }
+    }
+
+    private static final class MapValue {
+        private int getValue() {
+            return 1;
+        }
     }
 }
