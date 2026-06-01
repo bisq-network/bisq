@@ -51,7 +51,6 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -169,7 +168,7 @@ public class CreateOfferService {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        Map<String, String> extraDataMap = offerUtil.getExtraDataMap(paymentAccount,
+        OfferPayloadExtraDataMap extraDataMap = offerUtil.getOfferPayloadExtraDataMap(paymentAccount,
                 currencyCode,
                 direction);
 

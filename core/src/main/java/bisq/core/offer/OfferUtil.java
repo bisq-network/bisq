@@ -27,6 +27,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
@@ -62,9 +63,7 @@ import org.bitcoinj.utils.Fiat;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -79,7 +78,8 @@ import static bisq.core.btc.wallet.Restrictions.getMaxBuyerSecurityDepositAsPerc
 import static bisq.core.btc.wallet.Restrictions.getMinBuyerSecurityDepositAsPercent;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.btc.wallet.Restrictions.isDust;
-import static bisq.core.offer.bisq_v1.OfferPayload.*;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Values.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -343,39 +343,40 @@ public class OfferUtil {
                 bsqFormatter);
     }
 
-    public Map<String, String> getExtraDataMap(PaymentAccount paymentAccount,
-                                               String currencyCode,
-                                               OfferDirection direction) {
-        Map<String, String> extraDataMap = new HashMap<>();
+    @Nullable
+    public OfferPayloadExtraDataMap getOfferPayloadExtraDataMap(PaymentAccount paymentAccount,
+                                                                String currencyCode,
+                                                                OfferDirection direction) {
+        OfferPayloadExtraDataMap offerPayloadExtraDataMap = new OfferPayloadExtraDataMap();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService
                     .getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
-            extraDataMap.put(ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
+            offerPayloadExtraDataMap.putCanonical(ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
         }
 
         if (referralIdService.getOptionalReferralId().isPresent()) {
-            extraDataMap.put(REFERRAL_ID, referralIdService.getOptionalReferralId().get());
+            offerPayloadExtraDataMap.putCanonical(REFERRAL_ID, referralIdService.getOptionalReferralId().get());
         }
 
         if (paymentAccount instanceof F2FAccount) {
-            extraDataMap.put(F2F_CITY, ((F2FAccount) paymentAccount).getCity());
-            extraDataMap.put(F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
+            offerPayloadExtraDataMap.putCanonical(F2F_CITY, ((F2FAccount) paymentAccount).getCity());
+            offerPayloadExtraDataMap.putCanonical(F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
         }
 
         if (paymentAccount instanceof CashByMailAccount) {
-            extraDataMap.put(CASH_BY_MAIL_EXTRA_INFO, ((CashByMailAccount) paymentAccount).getExtraInfo());
+            offerPayloadExtraDataMap.putCanonical(CASH_BY_MAIL_EXTRA_INFO, ((CashByMailAccount) paymentAccount).getExtraInfo());
         }
 
-        extraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
+        offerPayloadExtraDataMap.putCanonical(CAPABILITIES, Capabilities.app.toStringList());
 
         if (currencyCode.equals("XMR") && direction == OfferDirection.SELL) {
             preferences.getAutoConfirmSettingsList().stream()
                     .filter(e -> e.getCurrencyCode().equals("XMR"))
                     .filter(AutoConfirmSettings::isEnabled)
-                    .forEach(e -> extraDataMap.put(XMR_AUTO_CONF, XMR_AUTO_CONF_ENABLED_VALUE));
+                    .forEach(e -> offerPayloadExtraDataMap.putCanonical(XMR_AUTO_CONF, XMR_AUTO_CONF_ENABLED_VALUE));
         }
 
-        return extraDataMap.isEmpty() ? null : extraDataMap;
+        return offerPayloadExtraDataMap.isEmpty() ? null : offerPayloadExtraDataMap;
     }
 
     public void validateOfferData(double buyerSecurityDeposit,

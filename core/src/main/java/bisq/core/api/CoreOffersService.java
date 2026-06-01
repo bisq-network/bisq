@@ -552,7 +552,7 @@ class CoreOffersService {
                 offer.getAcceptedCountryCodes(),
                 offer.getBankId(),
                 offer.getAcceptedBankIds(),
-                offer.getExtraDataMap());
+                offer.getOfferPayloadExtraDataMap());
         log.info("Merging OfferPayload with {}", mutableOfferPayloadFields);
         return offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
     }

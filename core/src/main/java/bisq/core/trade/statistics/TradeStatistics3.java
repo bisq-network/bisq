@@ -22,7 +22,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.JsonUtil;
@@ -60,7 +60,6 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -73,6 +72,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -96,7 +96,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                                         boolean isTorNetworkNode) {
         TreeMap<String, String> extraDataMap = new TreeMap<>();
         if (referralId != null) {
-            extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
+            extraDataMap.put(REFERRAL_ID, referralId);
         }
 
         NodeAddress mediatorNodeAddress = checkNotNull(trade.getMediatorNodeAddress());

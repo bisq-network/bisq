@@ -37,6 +37,7 @@ import bisq.core.offer.availability.messages.OfferAvailabilityResponse;
 import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferProtocol;
 import bisq.core.provider.mempool.FeeValidationStatus;
@@ -105,6 +106,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkBurningManSelectionHeight;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -1038,21 +1040,21 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                 // - Capabilities changed?
                 // We rewrite our offer with the additional capabilities entry
-                Map<String, String> updatedExtraDataMap = new HashMap<>();
+                OfferPayloadExtraDataMap updatedMap = new OfferPayloadExtraDataMap();
                 if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
                         !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
-                    Map<String, String> originalExtraDataMap = original.getExtraDataMap();
+                    OfferPayloadExtraDataMap originalMap = original.getOfferPayloadExtraDataMap();
 
-                    if (originalExtraDataMap != null) {
-                        updatedExtraDataMap.putAll(originalExtraDataMap);
+                    if (originalMap != null) {
+                        updatedMap.putAll(originalMap.getMap());
                     }
 
                     // We overwrite any entry with our current capabilities
-                    updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+                    updatedMap.putCanonical(CAPABILITIES, Capabilities.app.toStringList());
 
                     log.info("Converted offer to support new Capability.MEDIATION and Capability.REFUND_AGENT capability. id={}", originalOffer.getId());
                 } else {
-                    updatedExtraDataMap = original.getExtraDataMap();
+                    updatedMap = original.getOfferPayloadExtraDataMap();
                 }
 
                 // - Protocol version changed?
@@ -1106,7 +1108,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         original.getUpperClosePrice(),
                         original.isPrivateOffer(),
                         original.getHashOfChallenge(),
-                        updatedExtraDataMap,
+                        updatedMap,
                         protocolVersion);
 
                 // Save states from original data to use for the updated

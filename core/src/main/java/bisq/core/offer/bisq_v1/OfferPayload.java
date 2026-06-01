@@ -33,7 +33,6 @@ import com.google.gson.JsonSerializationContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -55,23 +54,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public final class OfferPayload extends OfferPayloadBase {
-    // Keys for extra map
-    // Only set for fiat offers
-    public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
-    public static final String REFERRAL_ID = "referralId";
-    // Only used in payment method F2F
-    public static final String F2F_CITY = "f2fCity";
-    public static final String F2F_EXTRA_INFO = "f2fExtraInfo";
-    public static final String CASH_BY_MAIL_EXTRA_INFO = "cashByMailExtraInfo";
-
-    // Comma separated list of ordinal of a bisq.common.app.Capability. E.g. ordinal of
-    // Capability.SIGNED_ACCOUNT_AGE_WITNESS is 11 and Capability.MEDIATION is 12 so if we want to signal that maker
-    // of the offer supports both capabilities we add "11, 12" to capabilities.
-    public static final String CAPABILITIES = "capabilities";
-    // If maker is seller and has xmrAutoConf enabled it is set to "1" otherwise it is not set
-    public static final String XMR_AUTO_CONF = "xmrAutoConf";
-    public static final String XMR_AUTO_CONF_ENABLED_VALUE = "1";
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -132,6 +114,7 @@ public final class OfferPayload extends OfferPayloadBase {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public OfferPayload(String id,
@@ -170,7 +153,7 @@ public final class OfferPayload extends OfferPayloadBase {
                         long upperClosePrice,
                         boolean isPrivateOffer,
                         @Nullable String hashOfChallenge,
-                        @Nullable Map<String, String> extraDataMap,
+                        @Nullable OfferPayloadExtraDataMap extraDataMap,
                         int protocolVersion) {
         super(id,
                 date,
@@ -226,6 +209,7 @@ public final class OfferPayload extends OfferPayloadBase {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("deprecation")
@@ -276,7 +260,7 @@ public final class OfferPayload extends OfferPayloadBase {
         Optional.ofNullable(acceptedBankIds).ifPresent(builder::addAllAcceptedBankIds);
         Optional.ofNullable(acceptedCountryCodes).ifPresent(builder::addAllAcceptedCountryCodes);
         Optional.ofNullable(hashOfChallenge).ifPresent(builder::setHashOfChallenge);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(offerPayloadExtraDataMap).map(OfferPayloadExtraDataMap::getMap).ifPresent(builder::putAllExtraData);
 
         return protobuf.StoragePayload.newBuilder().setOfferPayload(builder).build();
     }
@@ -289,8 +273,8 @@ public final class OfferPayload extends OfferPayloadBase {
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
                 null : new ArrayList<>(proto.getAcceptedCountryCodesList());
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : proto.getExtraDataMap();
+        OfferPayloadExtraDataMap extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                null : new OfferPayloadExtraDataMap(proto.getExtraDataMap());
 
         return new OfferPayload(proto.getId(),
                 proto.getDate(),
@@ -402,7 +386,9 @@ public final class OfferPayload extends OfferPayloadBase {
             object.add("lowerClosePrice", context.serialize(offerPayload.getLowerClosePrice()));
             object.add("upperClosePrice", context.serialize(offerPayload.getUpperClosePrice()));
             object.add("isPrivateOffer", context.serialize(offerPayload.isPrivateOffer()));
-            object.add("extraDataMap", context.serialize(offerPayload.getExtraDataMap()));
+            object.add("extraDataMap", context.serialize(offerPayload.getOfferPayloadExtraDataMap() != null
+                    ? offerPayload.getOfferPayloadExtraDataMap().getMap()
+                    : null));
             object.add("protocolVersion", context.serialize(offerPayload.getProtocolVersion()));
             return object;
         }
