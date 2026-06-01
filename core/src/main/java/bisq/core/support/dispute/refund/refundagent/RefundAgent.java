@@ -53,8 +53,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                        byte[] registrationPubKey,
                        String registrationSignature,
                        @Nullable String emailAddress,
-                       @Nullable String info,
-                       @Nullable Map<String, String> extraDataMap) {
+                       @Nullable String info) {
 
         super(nodeAddress,
                 pubKeyRing,
@@ -63,8 +62,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 registrationPubKey,
                 registrationSignature,
                 emailAddress,
-                info,
-                extraDataMap);
+                info);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +80,6 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 .setRegistrationSignature(registrationSignature);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setRefundAgent(builder).build();
     }
 
@@ -94,8 +91,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
-                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()));
     }
 
 

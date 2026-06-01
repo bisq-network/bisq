@@ -59,7 +59,6 @@ public class ArbitratorRegistrationViewModel extends AgentRegistrationViewModel<
                 registrationKey.getPubKey(),
                 registrationSignature,
                 emailAddress,
-                null,
                 null
         );
     }

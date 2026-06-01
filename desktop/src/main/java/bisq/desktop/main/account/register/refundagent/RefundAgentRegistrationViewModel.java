@@ -56,7 +56,6 @@ public class RefundAgentRegistrationViewModel extends AgentRegistrationViewModel
                 registrationKey.getPubKey(),
                 registrationSignature,
                 emailAddress,
-                null,
                 null
         );
     }

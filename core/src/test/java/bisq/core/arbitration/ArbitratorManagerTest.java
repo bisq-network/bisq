@@ -58,11 +58,11 @@ public class ArbitratorManagerTest {
 
         Arbitrator one = new Arbitrator(new NodeAddress("arbitrator:1"), null, null, null,
                 languagesOne, 0L, null, "", null,
-                null, null);
+                null);
 
         Arbitrator two = new Arbitrator(new NodeAddress("arbitrator:2"), null, null, null,
                 languagesTwo, 0L, null, "", null,
-                null, null);
+                null);
 
         manager.addDisputeAgent(one, () -> {
         }, errorMessage -> {
@@ -94,11 +94,11 @@ public class ArbitratorManagerTest {
 
         Arbitrator one = new Arbitrator(new NodeAddress("arbitrator:1"), null, null, null,
                 languagesOne, 0L, null, "", null,
-                null, null);
+                null);
 
         Arbitrator two = new Arbitrator(new NodeAddress("arbitrator:2"), null, null, null,
                 languagesTwo, 0L, null, "", null,
-                null, null);
+                null);
 
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<NodeAddress>() {{
             add(two.getNodeAddress());
