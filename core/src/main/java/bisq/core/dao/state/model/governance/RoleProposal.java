@@ -43,7 +43,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private final long requiredBondUnit;
     private final int unlockTime; // in blocks
 
-    public RoleProposal(Role role, Map<String, String> extraDataMap) {
+    public RoleProposal(Role role) {
         this(role.getName(),
                 role.getLink(),
                 role,
@@ -51,8 +51,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -67,14 +66,13 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                          int unlockTime,
                          byte version,
                          long creationDate,
-                         String txId,
-                         Map<String, String> extraDataMap) {
+                         String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
 
         this.role = role;
         this.requiredBondUnit = requiredBondUnit;
@@ -99,9 +97,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 proposalProto.getUnlockTime(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -138,8 +134,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 unlockTime,
                 version,
                 creationDate,
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

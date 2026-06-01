@@ -43,15 +43,13 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
 
     public ConfiscateBondProposal(String name,
                                   String link,
-                                  String lockupTxId,
-                                  Map<String, String> extraDataMap) {
+                                  String lockupTxId) {
         this(name,
                 link,
                 lockupTxId,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -64,14 +62,13 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                                    String lockupTxId,
                                    byte version,
                                    long creationDate,
-                                   String txId,
-                                   Map<String, String> extraDataMap) {
+                                   String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
         this.lockupTxId = lockupTxId;
     }
 
@@ -89,9 +86,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 proposalProto.getLockupTxId(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -126,8 +121,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 getLockupTxId(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

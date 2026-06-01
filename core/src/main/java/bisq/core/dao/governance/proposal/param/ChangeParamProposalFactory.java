@@ -76,7 +76,6 @@ public class ChangeParamProposalFactory extends BaseProposalFactory<ChangeParamP
                 name,
                 link,
                 param,
-                paramValue,
-                new HashMap<>());
+                paramValue);
     }
 }

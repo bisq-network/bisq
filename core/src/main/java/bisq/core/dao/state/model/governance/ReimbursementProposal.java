@@ -48,16 +48,14 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
     public ReimbursementProposal(String name,
                                  String link,
                                  Coin requestedBsq,
-                                 String bsqAddress,
-                                 Map<String, String> extraDataMap) {
+                                 String bsqAddress) {
         this(name,
                 link,
                 bsqAddress,
                 requestedBsq.value,
                 Version.REIMBURSEMENT_REQUEST,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -71,14 +69,13 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                                   long requestedBsq,
                                   byte version,
                                   long creationDate,
-                                  String txId,
-                                  Map<String, String> extraDataMap) {
+                                  String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
 
         this.requestedBsq = requestedBsq;
         this.bsqAddress = bsqAddress;
@@ -100,9 +97,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 proposalProto.getRequestedBsq(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -143,8 +138,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 getRequestedBsq().value,
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

@@ -41,14 +41,12 @@ import javax.annotation.concurrent.Immutable;
 public final class GenericProposal extends Proposal implements ImmutableDaoStateModel {
 
     public GenericProposal(String name,
-                           String link,
-                           Map<String, String> extraDataMap) {
+                           String link) {
         this(name,
                 link,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -60,14 +58,13 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                             String link,
                             byte version,
                             long creationDate,
-                            String txId,
-                            Map<String, String> extraDataMap) {
+                            String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
     }
 
     @Override
@@ -81,9 +78,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                 proto.getLink(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -117,8 +112,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                 getLink(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

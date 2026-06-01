@@ -71,7 +71,6 @@ public class ConfiscateBondProposalFactory extends BaseProposalFactory<Confiscat
         return new ConfiscateBondProposal(
                 name,
                 link,
-                lockupTxId,
-                new HashMap<>());
+                lockupTxId);
     }
 }

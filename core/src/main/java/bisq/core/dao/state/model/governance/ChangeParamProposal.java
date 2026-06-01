@@ -44,16 +44,14 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
     public ChangeParamProposal(String name,
                                String link,
                                Param param,
-                               String paramValue,
-                               Map<String, String> extraDataMap) {
+                               String paramValue) {
         this(name,
                 link,
                 param,
                 paramValue,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -67,14 +65,12 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                                 String paramValue,
                                 byte version,
                                 long creationDate,
-                                String txId,
-                                Map<String, String> extraDataMap) {
+                                String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId,
-                extraDataMap);
+                txId, null);
 
         this.param = param;
         this.paramValue = paramValue;
@@ -96,9 +92,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 proposalProto.getParamValue(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -134,8 +128,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 getParamValue(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

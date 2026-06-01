@@ -79,8 +79,7 @@ public class ReimbursementProposalFactory extends BaseProposalFactory<Reimbursem
                 name,
                 link,
                 requestedBsq,
-                bsqAddress,
-                new HashMap<>());
+                bsqAddress);
     }
 
     @Override

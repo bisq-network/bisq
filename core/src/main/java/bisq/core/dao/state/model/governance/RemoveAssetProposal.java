@@ -43,15 +43,13 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
 
     public RemoveAssetProposal(String name,
                                String link,
-                               String tickerSymbol,
-                               Map<String, String> extraDataMap) {
+                               String tickerSymbol) {
         this(name,
                 link,
                 tickerSymbol,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -64,14 +62,13 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                                 String tickerSymbol,
                                 byte version,
                                 long creationDate,
-                                String txId,
-                                Map<String, String> extraDataMap) {
+                                String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
 
         this.tickerSymbol = tickerSymbol;
     }
@@ -90,9 +87,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 proposalProto.getTickerSymbol(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -127,8 +122,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 getTickerSymbol(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

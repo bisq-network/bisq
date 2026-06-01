@@ -73,7 +73,6 @@ public class RemoveAssetProposalFactory extends BaseProposalFactory<RemoveAssetP
         return new RemoveAssetProposal(
                 name,
                 link,
-                asset.getTickerSymbol(),
-                new HashMap<>());
+                asset.getTickerSymbol());
     }
 }
