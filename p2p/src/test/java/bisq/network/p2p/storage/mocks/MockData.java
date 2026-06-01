@@ -34,9 +34,6 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     public final PublicKey publicKey;
     public long ttl;
 
-    @Nullable
-    private Map<String, String> extraDataMap;
-
     public MockData(String msg, PublicKey publicKey) {
         this.msg = msg;
         this.publicKey = publicKey;
@@ -63,12 +60,6 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
         return "MockData{" +
                 "msg='" + msg + '\'' +
                 '}';
-    }
-
-    @Nullable
-    @Override
-    public Map<String, String> getExtraDataMap() {
-        return extraDataMap;
     }
 
     @Override
