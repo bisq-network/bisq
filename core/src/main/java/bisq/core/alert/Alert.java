@@ -64,11 +64,6 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     @Nullable
     private PublicKey ownerPubKey;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    private Map<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -91,15 +86,13 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                  boolean isPreReleaseInfo,
                  String version,
                  byte[] ownerPubKeyBytes,
-                 String signatureAsBase64,
-                 Map<String, String> extraDataMap) {
+                 String signatureAsBase64) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.isPreReleaseInfo = isPreReleaseInfo;
         this.version = version;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
@@ -131,9 +124,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getIsPreReleaseInfo(),
                 proto.getVersion(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
-                proto.getSignatureAsBase64(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getSignatureAsBase64());
     }
 
 
@@ -181,5 +172,4 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     public String showAgainKey() {
         return "Update_" + version;
     }
-
 }
