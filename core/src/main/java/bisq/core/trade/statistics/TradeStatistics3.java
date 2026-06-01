@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +94,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
                                         boolean isTorNetworkNode) {
-        Map<String, String> extraDataMap = new HashMap<>();
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
         if (referralId != null) {
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
         }
@@ -255,7 +256,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long date,
                             String mediator,
                             String refundAgent,
-                            @Nullable Map<String, String> extraDataMap) {
+                            @Nullable TreeMap<String, String> extraDataMap) {
         this(currency,
                 price,
                 amount,
@@ -299,7 +300,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long date,
                             @Nullable String mediator,
                             @Nullable String refundAgent,
-                            @Nullable Map<String, String> extraDataMap,
+                            @Nullable TreeMap<String, String> extraDataMap,
                             @Nullable byte[] hash) {
         this.currency = currency;
         this.price = price;
@@ -360,7 +361,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 proto.getDate(),
                 ProtoUtil.stringOrNullFromProto(proto.getMediator()),
                 ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()),
                 proto.getHash().toByteArray());
     }
 
