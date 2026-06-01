@@ -29,8 +29,8 @@ import bisq.common.util.CollectionUtils;
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -54,7 +54,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                 String link,
                                 Coin requestedBsq,
                                 String bsqAddress,
-                                @Nullable Map<String, String> extraDataMap) {
+                                @Nullable TreeMap<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
@@ -68,6 +68,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private CompensationProposal(String name,
@@ -77,7 +78,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                  byte version,
                                  long creationDate,
                                  String txId,
-                                 @Nullable Map<String, String> extraDataMap) {
+                                 @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -107,12 +108,13 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 proto.getCreationDate(),
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -154,7 +156,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 getVersion(),
                 getCreationDate(),
                 txId,
-                extraDataMap);
+                (TreeMap<String, String>) extraDataMap);
     }
 
     @Override
