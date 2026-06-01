@@ -1,0 +1,16 @@
+Font: materialdesignicons-webfont.ttf
+Source: Material Design Icons community project — https://materialdesignicons.com
+Upstream: pictogrammers/MaterialDesign — https://github.com/Templarian/MaterialDesign
+
+Licenses:
+  - Font (TTF / OTF / WOFF): SIL Open Font License 1.1
+    http://scripts.sil.org/OFL
+  - Material Design Icons (community additions): SIL OFL 1.1
+  - Code / icon definitions: Apache License 2.0
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Some icons in this font are derived from Material Design icons by Google
+(Apache License 2.0). All community-contributed icons are released under
+the SIL Open Font License 1.1.
+
+Bundled here under the terms of the SIL OFL 1.1 / Apache 2.0.
