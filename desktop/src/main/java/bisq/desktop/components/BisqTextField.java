@@ -1,10 +1,11 @@
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
+import bisq.desktop.components.controls.skin.BisqTextFieldSkin;
 
 import javafx.scene.control.Skin;
 
-public class BisqTextField extends JFXTextField {
+public class BisqTextField extends BisqJfxTextField {
 
     public BisqTextField(String value) {
         super(value);
@@ -16,6 +17,6 @@ public class BisqTextField extends JFXTextField {
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new JFXTextFieldSkinBisqStyle<>(this, 0);
+        return new BisqTextFieldSkin(this);
     }
 }

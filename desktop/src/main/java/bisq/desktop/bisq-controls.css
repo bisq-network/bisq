@@ -1,0 +1,327 @@
+/*
+ * Pure-JavaFX skin support. Rules here back the Bisq* control replacements (see
+ * bisq.desktop.components.controls). Selectors mirror what jfoenix's internal stylesheets
+ * provided so the visual contract stays identical without depending on jfoenix-only
+ * styleable properties (-jfx-toggle-color, -jfx-size, ...).
+ *
+ * Color tokens (-bs-*) come from theme-{dark,light}.css; rules here only assign tokens
+ * to the new skin substructures (.track, .thumb, .radio, .dot).
+ */
+
+/* ------------------------------ ProgressBar ------------------------- */
+
+/* Skin uses StackPanes — backgrounds + insets/radius/padding work directly. Mirror
+ * jfoenix's jfx-progress-bar.css: no rounding, no insets, small padding inside the bar to
+ * keep the coloured strip from filling 100% of the control's height. The `.secondary-bar`
+ * (used by SeparatedPhaseBars' Proposal phase to mark the GitHub-issue cutoff) colour is
+ * theme-driven — see `.progress-bar > .secondary-bar` in theme-{light,dark}.css. */
+.jfx-progress-bar > .track,
+.jfx-progress-bar > .bar,
+.jfx-progress-bar > .secondary-bar {
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+}
+
+.jfx-progress-bar > .bar {
+    -fx-padding: 1.5;
+}
+
+/* ------------------------------ Spinner ----------------------------- */
+
+.jfx-spinner > .arc {
+    -fx-stroke: -bs-color-primary;
+}
+
+/* ------------------------------ Text inputs ------------------------- */
+
+
+
+/* Hide stock prompt-text when label-float is active — the BisqTextFieldSkin's animated
+ * top-label takes over rendering the prompt. */
+.jfx-text-field:label-float,
+.jfx-password-field:label-float,
+.jfx-text-area:label-float {
+    -fx-prompt-text-fill: transparent;
+}
+
+/* Top label turns active colour only while the control is focused.
+ * Floated-but-unfocused (has-content, blurred) stays prompt colour. */
+.jfx-text-field:focused .jfx-text-field-top-label,
+.jfx-password-field:focused .jfx-text-field-top-label,
+.jfx-text-area:focused .jfx-text-field-top-label,
+.jfx-combo-box:focused .jfx-text-field-top-label {
+    -fx-text-fill: -fx-accent;
+}
+
+
+
+/*
+ * Underline visibility is theme-driven (see theme-light.css / theme-dark.css):
+ *   - dark: transparent (lines hidden — matches production bisq dark look)
+ *   - light: gray (idle) + -fx-accent (focused)
+ * Here we only normalise translate-x so the lines never drift sideways regardless of theme.
+ */
+.jfx-text-field > .input-line,
+.jfx-password-field > .input-line,
+.jfx-text-area  > .input-line,
+.jfx-text-field > .input-focused-line,
+.jfx-password-field > .input-focused-line,
+.jfx-text-area  > .input-focused-line {
+    -fx-translate-x: 0;
+}
+
+/*
+ * TextArea — strip the modena .text-area border (visible as a thin top line) and zero
+ * out the stock ScrollPane / viewport / content paddings + backgrounds so the typed text
+ * sits flush against the .jfx-text-area's own padding, matching jfoenix's rendering.
+ */
+.jfx-text-area {
+    -fx-border-width: 0;
+    -fx-border-color: transparent;
+}
+
+.jfx-text-area > .scroll-pane,
+.jfx-text-area > .scroll-pane > .viewport,
+.jfx-text-area .content {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+/* Override bisq.css's negative-top padding on .error-label (originally tuned to jfoenix's
+ * ValidationPane y-offset). Skin layout in BisqTextFieldSkin / BisqTextAreaSkin already
+ * places the label below the underline with a 4px gap — kill the negative pad so the gap
+ * is actually visible. */
+.jfx-text-field .error-label,
+.jfx-password-field .error-label,
+.jfx-text-area .error-label {
+    -fx-padding: 0;
+}
+
+/* ------------------------------ TabPane (custom skin) -------------- */
+
+/* The skin is BisqTabPaneSkin (built from scratch, not extending TabPaneSkin). It uses a
+ * Label per tab with style class `tab-label`, plus a `tab-selected-line` Region animated
+ * under the active label. */
+/* Token-driven so both light + dark themes get the right header colour. Mirrors
+ * bisq.css's `.jfx-tab-pane .tab-header-background` rule which targeted stock-skin structure. */
+.jfx-tab-pane > .tab-header-area {
+    -fx-background-color: -bs-color-gray-background;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-tab-border;
+    -fx-padding: 0;
+}
+
+.jfx-tab-pane > .tab-content-area {
+    -fx-background-color: transparent;
+}
+
+/* Matches existing rule in bisq.css (`.jfx-tab-pane .headers-region .tab .tab-container .tab-label`)
+ * but targets our skin's structure where the Label is a direct child of the header HBox. */
+.jfx-tab-pane .tab-label {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-padding: 14;
+    -fx-font-size: 0.769em;
+    -fx-font-weight: normal;
+}
+
+.jfx-tab-pane .tab-label.selected {
+    -fx-text-fill: -fx-accent;
+}
+
+.jfx-tab-pane .tab-selected-line {
+    -fx-background-color: -fx-accent;
+    -fx-pref-height: 1;
+}
+
+/* ------------------------------ ComboBox dropdown ------------------- */
+
+/*
+ * Editable ComboBox (AutocompleteComboBox) wraps a stock TextField as its editor. Without an
+ * override the editor paints stock `.text-input` background (a filled rectangle) → the combo
+ * looks "boxed" compared to the non-editable settings combos.  Flatten the editor background
+ * so the combo's own background shows through and visuals match the non-editable case.
+ */
+.jfx-combo-box > .text-input,
+.jfx-combo-box:focused > .text-input,
+.jfx-combo-box > .combo-box-editor {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+/* Stock CSS paints a button-style background on .arrow-button when the combo is editable,
+ * producing a visible rectangle around the chevron. Non-editable combos don't show it. Force
+ * transparent so the chevron sits flat on the combo background in both editable + non. */
+.jfx-combo-box > .arrow-button,
+.jfx-combo-box:focused > .arrow-button,
+.jfx-combo-box:editable > .arrow-button,
+.jfx-combo-box:editable:focused > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+/* Padding for dropdown rows kept at stock — bumping it pushed the app's lists too tall. */
+
+
+/* ------------------------------ Toggle ------------------------------ */
+
+/* Stock ToggleButton paints a button-style border/background. Hide it so only the slider shows. */
+.jfx-toggle-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+.jfx-toggle-button:focused,
+.jfx-toggle-button:armed,
+.jfx-toggle-button:hover,
+.jfx-toggle-button:selected,
+.jfx-toggle-button:focused:selected {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.jfx-toggle-button > .track {
+    -fx-background-color: -bs-color-gray-line;
+    -fx-background-radius: 7;
+}
+
+/* Material toggle on: track is washed-out primary; thumb is solid primary-dark. */
+.jfx-toggle-button:selected > .track {
+    -fx-background-color: derive(-bs-color-primary, 50%);
+    -fx-opacity: 0.55;
+}
+
+.jfx-toggle-button > .thumb {
+    -fx-background-color: white;
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 4, 0, 0, 1);
+}
+
+.jfx-toggle-button:selected > .thumb {
+    -fx-background-color: -bs-color-primary;
+}
+
+/*
+ * Disabled — keep solid fills (not opacity-reduced) so contrast doesn't wash out the way
+ * `-fx-opacity: 0.5` does. Matches jfoenix's disabled rendering: track and thumb stay distinct,
+ * just shifted toward neutral grays.
+ */
+.jfx-toggle-button:disabled > .track {
+    -fx-background-color: derive(-bs-color-gray-bbb, 40%);
+    -fx-opacity: 1;
+}
+
+.jfx-toggle-button:disabled > .thumb,
+.jfx-toggle-button:disabled:selected > .thumb {
+    -fx-background-color: derive(-bs-color-gray-line, 50%);
+    -fx-opacity: 1;
+}
+
+.jfx-toggle-button:disabled:selected > .track {
+    -fx-background-color: derive(-bs-color-gray-bbb, 30%);
+    -fx-opacity: 1;
+}
+
+/* ------------------------------ TextArea / TextField focus -------- */
+
+/*
+ * Stock TextArea/TextField paint a multi-layer focus ring (`-fx-background-color: -fx-focus-color, ...`).
+ * The base rules in bisq.css set a single flat -fx-background-color but only on the unfocused state;
+ * here we force the same flat fill for :focused so the green stock focus ring never bleeds through.
+ */
+/* Higher-specificity selector to outrank stock `.text-area:focused`. */
+.text-area.jfx-text-area,
+.text-area.jfx-text-area:focused {
+    -fx-background-color: -bs-background-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: transparent;
+}
+
+/* ------------------------------ Cursors ----------------------------- */
+
+/* Match jfoenix: clickable controls show pointer cursor. */
+.jfx-check-box,
+.jfx-radio-button,
+.jfx-toggle-button,
+.jfx-combo-box,
+.jfx-combo-box > .arrow-button,
+.jfx-combo-box > .text-input,
+.jfx-combo-box > .combo-box-editor {
+    -fx-cursor: hand;
+}
+
+/* ------------------------------ CheckBox ---------------------------- */
+
+/*
+ * Stock CheckBoxSkin's `.box` paints a multi-layer focus ring with a colored fill. Jfoenix's
+ * internal CSS flattens it. Replicate that flat look here.
+ *
+ * Selected state only changes the border colour here — the green box fill is driven by the
+ * skin's Timeline on real selectedProperty changes (matches jfoenix's JFXFillTransition).
+ * Driving the fill from CSS would make the un-fill happen instantly on pseudo-class change
+ * and there'd be no ease-out on uncheck.
+ */
+.jfx-check-box > .box,
+.jfx-check-box:focused > .box,
+.jfx-check-box:hover > .box {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: -bs-color-gray-bbb;
+}
+
+.jfx-check-box:selected > .box,
+.jfx-check-box:indeterminate > .box {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: #0f9d58;
+}
+
+/*
+ * Mark — exact shape + colour from jfoenix's jfx-check-box.css. White fill+border, 15×12 max,
+ * SVG path renders the checkmark. Colour stays white in every state so the skin's opacity
+ * animation drives visibility (a CSS-driven colour change on :unselected would short-circuit
+ * the ease-out).
+ */
+.jfx-check-box > .box > .mark,
+.jfx-check-box:selected > .box > .mark,
+.jfx-check-box:indeterminate > .box > .mark {
+    -fx-shape: "M384 690l452-452 60 60-512 512-238-238 60-60z";
+    -fx-max-width: 15;
+    -fx-max-height: 12;
+    -fx-background-color: white;
+    -fx-border-color: white;
+    -fx-border-width: 2;
+    -fx-border-radius: 2;
+}
+
+.jfx-check-box > .box > .indeterminate-mark,
+.jfx-check-box:indeterminate > .box > .indeterminate-mark {
+    -fx-background-color: -bs-color-primary;
+    -fx-background-radius: 2;
+    -fx-border-width: 0;
+    -fx-max-width: 10;
+    -fx-max-height: 10;
+}
+
+/* ------------------------------ Radio ------------------------------- */
+
+.jfx-radio-button > .radio-container > .radio {
+    -fx-stroke: -bs-color-gray-bbb;
+    -fx-fill: transparent;
+}
+
+.jfx-radio-button:selected > .radio-container > .radio {
+    -fx-stroke: -bs-color-primary;
+}
+
+.jfx-radio-button > .radio-container > .dot {
+    -fx-fill: -bs-color-primary;
+}

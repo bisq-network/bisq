@@ -26,7 +26,7 @@ import bisq.common.util.Utilities;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -78,7 +78,7 @@ public class ExplorerAddressTextField extends AnchorPane {
         missingAddressWarningIcon.setVisible(false);
         missingAddressWarningIcon.setManaged(false);
 
-        textField = new JFXTextField();
+        textField = new BisqJfxTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.setTooltip(tooltip);

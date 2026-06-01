@@ -14,8 +14,7 @@ import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple3;
 
-import com.jfoenix.controls.JFXBadge;
-import com.jfoenix.controls.JFXSnackbar;
+import bisq.desktop.components.controls.BisqJfxBadge;
 
 import javafx.application.Application;
 
@@ -43,7 +42,6 @@ import static bisq.desktop.util.FormBuilder.addFundsTextfield;
 import static bisq.desktop.util.FormBuilder.addTopLabelInputTextFieldSlideToggleButton;
 
 public class ComponentsDemo extends Application {
-    private JFXSnackbar bar;
 
     public static void main(String[] args) {
         launch(args);
@@ -58,11 +56,6 @@ public class ComponentsDemo extends Application {
         Res.setup();
 
         StackPane stackPane = new StackPane();
-
-        //MainView.rootContainer = stackPane;
-
-        bar = new JFXSnackbar(stackPane);
-        bar.setPrefWidth(450);
 
         GridPane gridPane = new GridPane();
         gridPane.getStyleClass().add("content-pane");
@@ -79,7 +72,7 @@ public class ComponentsDemo extends Application {
         Label label = new Label("PORTFOLIO");
         label.setStyle("-fx-background-color: green");
 
-        final JFXBadge jfxBadge = new JFXBadge(label);
+        final BisqJfxBadge jfxBadge = new BisqJfxBadge(label);
         jfxBadge.setPosition(Pos.TOP_RIGHT);
         jfxBadge.setPrefHeight(100);
         jfxBadge.setMaxWidth(110);

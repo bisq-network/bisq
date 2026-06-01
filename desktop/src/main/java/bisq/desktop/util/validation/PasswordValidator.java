@@ -19,23 +19,23 @@ package bisq.desktop.util.validation;
 
 import bisq.core.locale.Res;
 
-import com.jfoenix.validation.base.ValidatorBase;
+import bisq.desktop.components.controls.validation.Validator;
 
 import javafx.scene.control.TextInputControl;
 
-public final class PasswordValidator extends ValidatorBase {
+public final class PasswordValidator extends Validator {
 
     private boolean passwordsMatch = true;
 
     @Override
     protected void eval() {
-        if (srcControl.get() instanceof TextInputControl) {
+        if (srcControl != null) {
             evalTextInputField();
         }
     }
 
     private void evalTextInputField() {
-        TextInputControl textField = (TextInputControl) srcControl.get();
+        TextInputControl textField = srcControl;
         String text = textField.getText();
         hasErrors.set(false);
 

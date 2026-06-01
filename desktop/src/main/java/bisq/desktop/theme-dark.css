@@ -435,8 +435,36 @@
     -jfx-disable-visual-focus: true;
 }
 
+/*
+ * Dark-mode toggle overrides. Higher-specificity selector (`.toggle-button.jfx-toggle-button`)
+ * so they win over the base rules in bisq-controls.css (which target `.jfx-toggle-button`).
+ */
+.toggle-button.jfx-toggle-button > .track {
+    -fx-background-color: #656565;
+}
+
+.toggle-button.jfx-toggle-button:selected > .track {
+    -fx-background-color: #89d190;
+    -fx-opacity: 1;
+}
+
+.toggle-button.jfx-toggle-button:disabled > .thumb,
+.toggle-button.jfx-toggle-button:disabled:selected > .thumb {
+    -fx-background-color: #b0b0b0;
+}
+
 .jfx-text-area > .input-line {
     -fx-background-color: transparent;
+}
+
+/* Dark-mode text area keeps the focus underline visible (matches jfoenix-era look);
+ * combo/text-field/password underlines are deliberately hidden by the combined rule above. */
+.jfx-text-area > .input-focused-line {
+    -fx-background-color: -fx-accent;
+}
+
+.jfx-text-area:error > .input-focused-line {
+    -fx-background-color: -bs-rd-error-red;
 }
 
 .jfx-date-picker .jfx-text-field > .input-line {

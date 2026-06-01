@@ -55,9 +55,9 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
-import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXTextArea;
-import com.jfoenix.controls.JFXToggleButton;
+import bisq.desktop.components.controls.BisqJfxComboBox;
+import bisq.desktop.components.controls.BisqJfxTextArea;
+import bisq.desktop.components.controls.BisqJfxToggleButton;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -465,7 +465,7 @@ public class FormBuilder {
         label.getStyleClass().add("confirmation-label");
 
         TextArea textArea = addTextArea(gridPane, rowIndex, title2);
-        ((JFXTextArea) textArea).setLabelFloat(false);
+        ((BisqJfxTextArea) textArea).setLabelFloat(false);
 
         GridPane.setColumnIndex(textArea, 1);
         GridPane.setMargin(label, new Insets(top, 0, 0, 0));
@@ -593,7 +593,7 @@ public class FormBuilder {
 
     public static TextArea addTextArea(GridPane gridPane, int rowIndex, String prompt, double top) {
 
-        JFXTextArea textArea = new BisqTextArea();
+        BisqTextArea textArea = new BisqTextArea();
         textArea.setPromptText(prompt);
         textArea.setLabelFloat(true);
         textArea.setWrapText(true);
@@ -842,7 +842,7 @@ public class FormBuilder {
                                                                                                          String toggleButtonTitle) {
 
         InputTextField inputTextField = new InputTextField();
-        ToggleButton toggleButton = new JFXToggleButton();
+        ToggleButton toggleButton = new BisqJfxToggleButton();
         toggleButton.setText(toggleButtonTitle);
         VBox.setMargin(toggleButton, new Insets(4, 0, 0, 0));
 
@@ -861,7 +861,7 @@ public class FormBuilder {
 
         InputTextField inputTextField = new InputTextField();
         Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
-        ToggleButton toggleButton = new JFXToggleButton();
+        ToggleButton toggleButton = new BisqJfxToggleButton();
         toggleButton.setText(toggleButtonTitle);
         HBox hBox = new HBox();
         hBox.getChildren().addAll(topLabelWithVBox.second, toggleButton);
@@ -1169,7 +1169,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex, int top) {
-        final JFXComboBox<T> comboBox = new JFXComboBox<>();
+        final BisqJfxComboBox<T> comboBox = new BisqJfxComboBox<>();
 
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
@@ -1205,7 +1205,7 @@ public class FormBuilder {
         Label label = getTopLabel(title);
         VBox vBox = getTopLabelVBox(top);
 
-        final JFXComboBox<T> comboBox = new JFXComboBox<>();
+        final BisqJfxComboBox<T> comboBox = new BisqJfxComboBox<>();
         comboBox.setPromptText(prompt);
 
         vBox.getChildren().addAll(label, comboBox);
@@ -1316,7 +1316,7 @@ public class FormBuilder {
     }
 
     public static <T> ComboBox<T> addComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-        JFXComboBox<T> comboBox = new JFXComboBox<>();
+        BisqJfxComboBox<T> comboBox = new BisqJfxComboBox<>();
         comboBox.setLabelFloat(true);
         comboBox.setPromptText(title);
         comboBox.setMaxWidth(Double.MAX_VALUE);
@@ -1407,8 +1407,8 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox<T> comboBox1 = new JFXComboBox<>();
-        ComboBox<R> comboBox2 = new JFXComboBox<>();
+        ComboBox<T> comboBox1 = new BisqJfxComboBox<>();
+        ComboBox<R> comboBox2 = new BisqJfxComboBox<>();
         hBox.getChildren().addAll(comboBox1, comboBox2);
 
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, hBox, top);
@@ -1435,7 +1435,7 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        JFXComboBox<T> comboBox = new JFXComboBox<>();
+        BisqJfxComboBox<T> comboBox = new BisqJfxComboBox<>();
         comboBox.setPromptText(titleCombobox);
         comboBox.setLabelFloat(true);
 
@@ -1479,7 +1479,7 @@ public class FormBuilder {
         Button button = new AutoTooltipButton(buttonTitle);
         button.setDefaultButton(true);
 
-        ComboBox<T> comboBox = new JFXComboBox<>();
+        ComboBox<T> comboBox = new BisqJfxComboBox<>();
 
         hBox.getChildren().addAll(comboBox, button);
 
@@ -1513,7 +1513,7 @@ public class FormBuilder {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        ComboBox<T> comboBox = new JFXComboBox<>();
+        ComboBox<T> comboBox = new BisqJfxComboBox<>();
         TextField textField = new TextField(textFieldText);
         textField.setEditable(false);
         textField.setMouseTransparent(true);

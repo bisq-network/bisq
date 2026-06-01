@@ -17,12 +17,12 @@
 
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXSpinner;
+import bisq.desktop.components.controls.BisqJfxSpinner;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
-public class BusyAnimation extends JFXSpinner {
+public class BusyAnimation extends BisqJfxSpinner {
 
     private final BooleanProperty isRunningProperty = new SimpleBooleanProperty();
 

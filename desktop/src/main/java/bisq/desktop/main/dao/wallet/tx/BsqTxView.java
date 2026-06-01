@@ -57,7 +57,7 @@ import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXProgressBar;
+import bisq.desktop.components.controls.BisqJfxProgressBar;
 
 import javafx.stage.Stage;
 
@@ -157,7 +157,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         addConfidenceColumn();
         addTxTypeColumn();
 
-        chainSyncIndicator = new JFXProgressBar();
+        chainSyncIndicator = new BisqJfxProgressBar();
         chainSyncIndicator.setPrefWidth(120);
         chainSyncIndicator.setProgress(-1);
         chainSyncIndicator.setPadding(new Insets(-6, 0, -10, 5));

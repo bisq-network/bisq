@@ -22,8 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
-import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxComboBox;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -141,8 +141,8 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
         HBox hBox = new HBox();
 
         hBox.setSpacing(10);
-        ComboBox<Country> countryComboBox = new JFXComboBox<>();
-        TextField currencyTextField = new JFXTextField("");
+        ComboBox<Country> countryComboBox = new BisqJfxComboBox<>();
+        TextField currencyTextField = new BisqJfxTextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);
         currencyTextField.setFocusTraversable(false);

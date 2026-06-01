@@ -57,7 +57,7 @@ import javax.inject.Named;
 
 import com.google.common.collect.Lists;
 
-import com.jfoenix.controls.JFXTabPane;
+import bisq.desktop.components.controls.BisqJfxTabPane;
 
 import javafx.stage.Stage;
 
@@ -289,7 +289,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void activate() {
-        tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
+        tabPaneSelectionModel = GUIUtil.getParentOfType(root, BisqJfxTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);

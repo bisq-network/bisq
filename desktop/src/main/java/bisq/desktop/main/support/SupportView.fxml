@@ -17,10 +17,10 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import com.jfoenix.controls.JFXTabPane?>
+<?import bisq.desktop.components.controls.BisqJfxTabPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.support.SupportView"
+<BisqJfxTabPane fx:id="root" fx:controller="bisq.desktop.main.support.SupportView"
             AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
             AnchorPane.topAnchor="0.0"
             xmlns:fx="http://javafx.com/fxml">
-</JFXTabPane>
+</BisqJfxTabPane>

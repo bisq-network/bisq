@@ -1,12 +1,13 @@
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXTextArea;
+import bisq.desktop.components.controls.BisqJfxTextArea;
+import bisq.desktop.components.controls.skin.BisqTextAreaSkin;
 
 import javafx.scene.control.Skin;
 
-public class BisqTextArea extends JFXTextArea {
+public class BisqTextArea extends BisqJfxTextArea {
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new JFXTextAreaSkinBisqStyle(this);
+        return new BisqTextAreaSkin(this);
     }
 }

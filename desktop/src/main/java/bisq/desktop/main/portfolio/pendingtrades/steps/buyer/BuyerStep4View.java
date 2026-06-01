@@ -37,7 +37,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 
-import com.jfoenix.controls.JFXBadge;
+import bisq.desktop.components.controls.BisqJfxBadge;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -93,7 +93,7 @@ public class BuyerStep4View extends TradeStepView {
         } else {
             completedTradeLabel.setText(Res.get("portfolio.pending.step5_buyer.groupTitle"));
         }
-        JFXBadge autoConfBadge = new JFXBadge(new Label(""), Pos.BASELINE_RIGHT);
+        BisqJfxBadge autoConfBadge = new BisqJfxBadge(new Label(""), Pos.BASELINE_RIGHT);
         autoConfBadge.setText(Res.get("portfolio.pending.autoConf"));
         autoConfBadge.getStyleClass().add("auto-conf");
 

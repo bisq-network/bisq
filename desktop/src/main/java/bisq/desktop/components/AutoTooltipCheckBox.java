@@ -17,14 +17,14 @@
 
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXCheckBox;
-import com.jfoenix.skins.JFXCheckBoxSkin;
+import bisq.desktop.components.controls.BisqJfxCheckBox;
+import bisq.desktop.components.controls.skin.BisqCheckBoxSkin;
 
 import javafx.scene.control.Skin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipCheckBox extends JFXCheckBox {
+public class AutoTooltipCheckBox extends BisqJfxCheckBox {
 
     public AutoTooltipCheckBox() {
         super();
@@ -39,8 +39,8 @@ public class AutoTooltipCheckBox extends JFXCheckBox {
         return new AutoTooltipCheckBoxSkin(this);
     }
 
-    private class AutoTooltipCheckBoxSkin extends JFXCheckBoxSkin {
-        public AutoTooltipCheckBoxSkin(JFXCheckBox checkBox) {
+    private class AutoTooltipCheckBoxSkin extends BisqCheckBoxSkin {
+        public AutoTooltipCheckBoxSkin(BisqJfxCheckBox checkBox) {
             super(checkBox);
         }
 

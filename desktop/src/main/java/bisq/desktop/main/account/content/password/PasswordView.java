@@ -41,7 +41,7 @@ import org.bitcoinj.crypto.KeyCrypterScrypt;
 
 import javax.inject.Inject;
 
-import com.jfoenix.validation.RequiredFieldValidator;
+import bisq.desktop.components.controls.validation.RequiredFieldValidator;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

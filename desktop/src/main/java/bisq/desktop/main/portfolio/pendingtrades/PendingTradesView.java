@@ -60,8 +60,8 @@ import javax.inject.Named;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import com.jfoenix.controls.JFXBadge;
-import com.jfoenix.controls.JFXButton;
+import bisq.desktop.components.controls.BisqJfxBadge;
+import bisq.desktop.components.controls.BisqJfxButton;
 
 import javafx.fxml.FXML;
 
@@ -151,7 +151,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Number> yPositionListener;
 
     private final Map<String, Button> buttonByTrade = new HashMap<>();
-    private final Map<String, JFXBadge> badgeByTrade = new HashMap<>();
+    private final Map<String, BisqJfxBadge> badgeByTrade = new HashMap<>();
     private final Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
@@ -555,7 +555,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         updateChatMessageCount(trade, badgeByTrade.get(trade.getId()));
     }
 
-    private void updateChatMessageCount(Trade trade, JFXBadge badge) {
+    private void updateChatMessageCount(Trade trade, BisqJfxBadge badge) {
         if (!trade.getId().equals(tradeIdOfOpenChat)) {
             updateNewChatMessagesByTradeMap();
             long num = newChatMessagesByTradeMap.get(trade.getId());
@@ -885,9 +885,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                         button = buttonByTrade.get(id);
                                     }
 
-                                    JFXBadge badge;
+                                    BisqJfxBadge badge;
                                     if (!badgeByTrade.containsKey(id)) {
-                                        badge = new JFXBadge(button);
+                                        badge = new BisqJfxBadge(button);
                                         badgeByTrade.put(id, badge);
                                         badge.setPosition(Pos.TOP_RIGHT);
                                     } else {
@@ -928,7 +928,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             PendingTradesListItem> column) {
                         return new TableCell<>() {
                             private Trade trade;
-                            private JFXButton warnIconButton, trashIconButton;
+                            private BisqJfxButton warnIconButton, trashIconButton;
                             private ChangeListener<Trade.State> listener;
 
                             @Override
@@ -956,12 +956,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                         warnIcon.getStyleClass().addAll("icon", "warn-icon");
                                     }
 
-                                    warnIconButton = new JFXButton("", warnIcon);
+                                    warnIconButton = new BisqJfxButton("", warnIcon);
                                     warnIconButton.getStyleClass().add("hidden-icon-button");
                                     warnIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.warningIcon.tooltip")));
                                     warnIconButton.setOnAction(e -> onShowInfoForInvalidTrade(trade));
 
-                                    trashIconButton = new JFXButton("", trashIcon);
+                                    trashIconButton = new BisqJfxButton("", trashIcon);
                                     trashIconButton.getStyleClass().add("hidden-icon-button");
                                     trashIconButton.setTooltip(new Tooltip(Res.get("portfolio.pending.failedTrade.moveTradeToFailedIcon.tooltip")));
                                     trashIconButton.setOnAction(e -> onMoveInvalidTradeToFailedTrades(trade));

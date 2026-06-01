@@ -71,7 +71,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.jfoenix.controls.JFXButton;
+import bisq.desktop.components.controls.BisqJfxButton;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -847,7 +847,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             item.onPhaseChanged(currentPhase);
-                            JFXButton iconButton = item.getIconButton();
+                            BisqJfxButton iconButton = item.getIconButton();
                             if (iconButton != null) {
                                 ProposalsListItem.IconButtonType iconButtonType = (ProposalsListItem.IconButtonType) iconButton.getUserData();
                                 iconButton.setOnAction(e -> {

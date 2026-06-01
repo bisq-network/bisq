@@ -36,7 +36,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import com.jfoenix.controls.JFXTextArea;
+import bisq.desktop.components.controls.BisqJfxTextArea;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -281,7 +281,7 @@ public class SwiftForm extends PaymentMethodForm {
         label = Res.get("payment.shared.optionalExtra");
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow, label, label).second;
         extraTextArea.setMinHeight(70);
-        ((JFXTextArea) extraTextArea).setLabelFloat(false);
+        ((BisqJfxTextArea) extraTextArea).setLabelFloat(false);
         extraTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             formData.setSpecialInstructions(newValue.trim());
             updateFromInputs();

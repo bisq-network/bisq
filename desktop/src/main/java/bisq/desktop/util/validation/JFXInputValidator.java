@@ -2,9 +2,9 @@ package bisq.desktop.util.validation;
 
 import bisq.core.util.validation.InputValidator;
 
-import com.jfoenix.validation.base.ValidatorBase;
+import bisq.desktop.components.controls.validation.Validator;
 
-public class JFXInputValidator extends ValidatorBase {
+public class JFXInputValidator extends Validator {
 
     public JFXInputValidator() {
         super();

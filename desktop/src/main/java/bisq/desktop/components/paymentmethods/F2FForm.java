@@ -39,7 +39,7 @@ import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
 
-import com.jfoenix.controls.JFXTextArea;
+import bisq.desktop.components.controls.BisqJfxTextArea;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
@@ -109,7 +109,7 @@ public class F2FForm extends PaymentMethodForm {
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow,
                 Res.get("payment.shared.optionalExtra"), Res.get("payment.shared.extraInfo.prompt")).second;
         extraTextArea.setMinHeight(70);
-        ((JFXTextArea) extraTextArea).setLabelFloat(false);
+        ((BisqJfxTextArea) extraTextArea).setLabelFloat(false);
         //extraTextArea.setValidator(f2fValidator);
         extraTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             f2fAccount.setExtraInfo(newValue);

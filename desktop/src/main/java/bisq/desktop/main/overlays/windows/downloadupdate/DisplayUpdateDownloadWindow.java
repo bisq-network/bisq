@@ -34,7 +34,7 @@ import bisq.common.util.Utilities;
 
 import com.google.common.base.Joiner;
 
-import com.jfoenix.controls.JFXProgressBar;
+import bisq.desktop.components.controls.BisqJfxProgressBar;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -157,7 +157,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         downloadingFileLabel.setOpacity(0.2);
         GridPane.setHalignment(downloadingFileLabel, HPos.LEFT);
 
-        progressBar = new JFXProgressBar(0L);
+        progressBar = new BisqJfxProgressBar(0L);
         progressBar.setMaxHeight(4);
         progressBar.managedProperty().bind(progressBar.visibleProperty());
 
