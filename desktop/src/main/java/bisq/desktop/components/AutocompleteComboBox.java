@@ -21,8 +21,9 @@ import bisq.common.UserThread;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.skins.JFXComboBoxListViewSkin;
+import bisq.desktop.components.controls.BisqJfxComboBox;
+import bisq.desktop.components.controls.skin.BisqComboBoxSkin;
+import javafx.scene.control.skin.ComboBoxListViewSkin;
 
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -44,19 +45,34 @@ import java.util.stream.Collectors;
  *
  * @param <T>  type of the ComboBox item; in the simplest case this can be a String
  */
-public class AutocompleteComboBox<T> extends JFXComboBox<T> {
+public class AutocompleteComboBox<T> extends BisqJfxComboBox<T> {
     private List<? extends T> list;
     private List<? extends T> extendedList;
     private List<T> matchingList;
-    private JFXComboBoxListViewSkin<T> comboBoxListViewSkin;
+    private ComboBoxListViewSkin<T> comboBoxListViewSkin;
 
     public AutocompleteComboBox() {
         this(FXCollections.observableArrayList());
     }
 
+    /**
+     * Cap visible rows so the popup stays short enough that {@code PopupControl.autoFix}
+     * doesn't flip it above the combo. {@code setVisibleRowCount} is {@code final} on
+     * {@code ComboBox} so the cap is enforced via a property listener that clamps any
+     * external write — covers OfferBookView and the internal {@code adjustVisibleRowCount}
+     * which both push the count back up to 10.
+     */
+    private static final int MAX_VISIBLE_ROWS = 6;
+
     private AutocompleteComboBox(ObservableList<T> items) {
         super(items);
         setEditable(true);
+        visibleRowCountProperty().addListener((o, ov, nv) -> {
+            if (nv != null && nv.intValue() > MAX_VISIBLE_ROWS) {
+                setVisibleRowCount(MAX_VISIBLE_ROWS);
+            }
+        });
+        setVisibleRowCount(MAX_VISIBLE_ROWS);
         clearOnFocus();
         setEmptySkinToGetMoreControlOverListView();
         fixSpaceKey();
@@ -128,7 +144,11 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     // ListView that is used as a dropdown. The only way to get this control
     // is to set custom ListViewSkin. The default skin is null and so useless.
     private void setEmptySkinToGetMoreControlOverListView() {
-        comboBoxListViewSkin = new JFXComboBoxListViewSkin<>(this);
+        // Use BisqComboBoxSkin (extends ComboBoxListViewSkin) so AutocompleteComboBox keeps the
+        // input-line / input-focused-line jfoenix-style underline that BisqJfxComboBox provides
+        // out of the box. Without this, calling setSkin here erases the BisqJfxComboBox skin and
+        // the underline disappears in any view that uses AutocompleteComboBox (Buy/Sell, ...).
+        comboBoxListViewSkin = new BisqComboBoxSkin<>(this);
         setSkin(comboBoxListViewSkin);
     }
 
@@ -191,7 +211,7 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     }
 
     private void adjustVisibleRowCount() {
-        setVisibleRowCount(Math.min(10, matchingListSize()));
+        setVisibleRowCount(Math.min(MAX_VISIBLE_ROWS, matchingListSize()));
     }
 
     private String asString(T item) {

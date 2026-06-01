@@ -57,9 +57,9 @@ import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
-import com.jfoenix.controls.JFXBadge;
-import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXProgressBar;
+import bisq.desktop.components.controls.BisqJfxBadge;
+import bisq.desktop.components.controls.BisqJfxComboBox;
+import bisq.desktop.components.controls.BisqJfxProgressBar;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -197,11 +197,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
 
-        JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
-        JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
-        JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
-        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
-        JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
+        BisqJfxBadge portfolioButtonWithBadge = new BisqJfxBadge(portfolioButton);
+        BisqJfxBadge supportButtonWithBadge = new BisqJfxBadge(supportButton);
+        BisqJfxBadge settingsButtonWithBadge = new BisqJfxBadge(settingsButton);
+        BisqJfxBadge accountButtonWithBadge = new BisqJfxBadge(accountButton);
+        BisqJfxBadge daoButtonWithBadge = new BisqJfxBadge(daoButton);
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -492,7 +492,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         VBox marketPriceBox = new VBox();
         marketPriceBox.setAlignment(Pos.CENTER_LEFT);
 
-        ComboBox<PriceFeedComboBoxItem> priceComboBox = new JFXComboBox<>();
+        ComboBox<PriceFeedComboBoxItem> priceComboBox = new BisqJfxComboBox<>();
         priceComboBox.setVisibleRowCount(12);
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
@@ -570,7 +570,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         };
         model.getWalletServiceErrorMsg().addListener(walletServiceErrorMsgListener);
 
-        btcSyncIndicator = new JFXProgressBar();
+        btcSyncIndicator = new BisqJfxProgressBar();
         btcSyncIndicator.setPrefWidth(305);
         btcSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
 
@@ -708,7 +708,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setBottomAnchor(btcInfoLabel, 7d);
 
         // temporarily disabled due to high CPU usage (per issue #4649)
-        //ProgressBar blockchainSyncIndicator = new JFXProgressBar(-1);
+        //ProgressBar blockchainSyncIndicator = new BisqJfxProgressBar(-1);
         //blockchainSyncIndicator.setPrefWidth(80);
         //blockchainSyncIndicator.setMaxHeight(10);
         //blockchainSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
@@ -822,7 +822,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             p2pNetworkProgressBar.setProgress(0);
         });
 
-        p2pNetworkProgressBar = new JFXProgressBar(-1);
+        p2pNetworkProgressBar = new BisqJfxProgressBar(-1);
         p2pNetworkProgressBar.setMaxHeight(2);
         p2pNetworkProgressBar.prefWidthProperty().bind(p2PNetworkLabel.widthProperty());
 
@@ -839,7 +839,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         }};
     }
 
-    private void setupBadge(JFXBadge buttonWithBadge, StringProperty badgeNumber, BooleanProperty badgeEnabled) {
+    private void setupBadge(BisqJfxBadge buttonWithBadge, StringProperty badgeNumber, BooleanProperty badgeEnabled) {
         buttonWithBadge.textProperty().bind(badgeNumber);
         buttonWithBadge.setEnabled(badgeEnabled.get());
         badgeEnabled.addListener((observable, oldValue, newValue) -> {

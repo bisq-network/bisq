@@ -31,7 +31,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -101,7 +101,7 @@ public class TxIdTextField extends AnchorPane {
         missingTxWarningIcon.setVisible(false);
         missingTxWarningIcon.setManaged(false);
 
-        textField = new JFXTextField();
+        textField = new BisqJfxTextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.setTooltip(tooltip);

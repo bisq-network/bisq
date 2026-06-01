@@ -20,7 +20,7 @@ package bisq.desktop.components;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.View;
 
-import com.jfoenix.controls.JFXButton;
+import bisq.desktop.components.controls.BisqJfxButton;
 
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
-public class MenuItem extends JFXButton implements Toggle {
+public class MenuItem extends BisqJfxButton implements Toggle {
     private final Navigation navigation;
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final Class<? extends View> viewClass;

@@ -52,7 +52,11 @@ public class CssTheme {
                 cssThemeFolder + "CandleStickChart.css",
 
                 // load theme last to allow override
-                cssThemeFolder + cssThemeFile
+                cssThemeFolder + cssThemeFile,
+
+                // overrides + tokens for the pure-JavaFX Bisq* controls. Must come after the
+                // theme so its rules win on rule-ordering ties.
+                cssThemeFolder + "bisq-controls.css"
         );
         if (useDevHeader)
             scene.getStylesheets().add(cssThemeFolder + "theme-dev.css");

@@ -20,7 +20,7 @@ package bisq.desktop.components;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -39,7 +39,7 @@ public class TextFieldWithIcon extends AnchorPane {
     private final Label dummyTextField;
 
     public TextFieldWithIcon() {
-        textField = new JFXTextField();
+        textField = new BisqJfxTextField();
         textField.setEditable(false);
         textField.setFocusTraversable(false);
         setLeftAnchor(textField, 0d);

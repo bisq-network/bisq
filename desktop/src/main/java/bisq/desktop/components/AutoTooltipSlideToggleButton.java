@@ -1,13 +1,13 @@
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXToggleButton;
-import com.jfoenix.skins.JFXToggleButtonSkin;
+import bisq.desktop.components.controls.BisqJfxToggleButton;
+import bisq.desktop.components.controls.skin.BisqToggleButtonSkin;
 
 import javafx.scene.control.Skin;
 
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipSlideToggleButton extends JFXToggleButton {
+public class AutoTooltipSlideToggleButton extends BisqJfxToggleButton {
     public AutoTooltipSlideToggleButton() {
         super();
     }
@@ -17,8 +17,8 @@ public class AutoTooltipSlideToggleButton extends JFXToggleButton {
         return new AutoTooltipSlideToggleButton.AutoTooltipSlideToggleButtonSkin(this);
     }
 
-    private class AutoTooltipSlideToggleButtonSkin extends JFXToggleButtonSkin {
-        public AutoTooltipSlideToggleButtonSkin(JFXToggleButton toggleButton) {
+    private class AutoTooltipSlideToggleButtonSkin extends BisqToggleButtonSkin {
+        public AutoTooltipSlideToggleButtonSkin(BisqJfxToggleButton toggleButton) {
             super(toggleButton);
         }
 

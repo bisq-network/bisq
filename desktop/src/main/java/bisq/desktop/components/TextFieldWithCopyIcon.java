@@ -24,7 +24,7 @@ import bisq.common.util.Utilities;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -73,7 +73,7 @@ public class TextFieldWithCopyIcon extends AnchorPane {
                 Utilities.copyToClipboard(copyText);
             }
         });
-        textField = new JFXTextField();
+        textField = new BisqJfxTextField();
         textField.setEditable(false);
         if (customStyleClass != null) textField.getStyleClass().add(customStyleClass);
         textField.textProperty().bindBidirectional(text);

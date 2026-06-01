@@ -17,11 +17,11 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import com.jfoenix.controls.JFXTabPane?>
+<?import bisq.desktop.components.controls.BisqJfxTabPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import bisq.desktop.components.BisqScrollPane?>
-<JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.account.AccountView"
+<BisqJfxTabPane fx:id="root" fx:controller="bisq.desktop.main.account.AccountView"
             prefHeight="630.0" prefWidth="1000.0"
             AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
             AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
@@ -56,4 +56,4 @@
     </Tab>
     <Tab fx:id="backupTab" closable="false"/>
 
-</JFXTabPane>
+</BisqJfxTabPane>

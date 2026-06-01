@@ -82,7 +82,7 @@ import javax.inject.Named;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -844,7 +844,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodTextField.setMouseTransparent(true);
         paymentMethodTextField.setFocusTraversable(false);
 
-        currencyTextField = new JFXTextField();
+        currencyTextField = new BisqJfxTextField();
         currencyTextField.setMinWidth(250);
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);

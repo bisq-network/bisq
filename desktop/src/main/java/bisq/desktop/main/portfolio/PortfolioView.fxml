@@ -17,10 +17,10 @@
   ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<?import com.jfoenix.controls.JFXTabPane?>
+<?import bisq.desktop.components.controls.BisqJfxTabPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.AnchorPane?>
-<JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.portfolio.PortfolioView"
+<BisqJfxTabPane fx:id="root" fx:controller="bisq.desktop.main.portfolio.PortfolioView"
             AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
             AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
             xmlns:fx="http://javafx.com/fxml">
@@ -30,4 +30,4 @@
     <Tab fx:id="bsqSwapTradesTab" closable="false"/>
     <Tab fx:id="closedTradesTab" closable="false"/>
 
-</JFXTabPane>
+</BisqJfxTabPane>

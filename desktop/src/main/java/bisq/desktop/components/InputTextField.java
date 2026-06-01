@@ -23,7 +23,8 @@ import bisq.desktop.util.validation.JFXInputValidator;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
+import bisq.desktop.components.controls.skin.BisqTextFieldSkin;
 
 import javafx.scene.control.Skin;
 
@@ -42,7 +43,7 @@ import javafx.beans.property.SimpleObjectProperty;
  * The position is derived from the position of the textField itself or if set from the layoutReference node.
  */
 //TODO There are some rare situation where it behaves buggy. Needs further investigation and improvements.
-public class InputTextField extends JFXTextField {
+public class InputTextField extends BisqJfxTextField {
 
     private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>
             (new InputValidator.ValidationResult(true));
@@ -147,6 +148,6 @@ public class InputTextField extends JFXTextField {
     }
 
     protected Skin<?> createDefaultSkin() {
-        return new JFXTextFieldSkinBisqStyle<>(this, inputLineExtension);
+        return new BisqTextFieldSkin(this, inputLineExtension);
     }
 }

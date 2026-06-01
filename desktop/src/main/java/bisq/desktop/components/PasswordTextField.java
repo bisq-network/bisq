@@ -17,11 +17,12 @@
 
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXPasswordField;
+import bisq.desktop.components.controls.BisqJfxPasswordField;
+import bisq.desktop.components.controls.skin.BisqTextFieldSkin;
 
 import javafx.scene.control.Skin;
 
-public class PasswordTextField extends JFXPasswordField {
+public class PasswordTextField extends BisqJfxPasswordField {
     public PasswordTextField() {
         super();
         setLabelFloat(true);
@@ -30,6 +31,6 @@ public class PasswordTextField extends JFXPasswordField {
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new JFXTextFieldSkinBisqStyle<>(this, 0);
+        return new BisqTextFieldSkin(this);
     }
 }

@@ -54,7 +54,7 @@ import javax.inject.Inject;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import com.jfoenix.controls.JFXTextField;
+import bisq.desktop.components.controls.BisqJfxTextField;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -273,7 +273,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                         log.error(errorMessage);
                         new Popup().warning(errorMessage).show();
                     });
-            // JFXComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
+            // BisqJfxComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
             // on our view here avoids that the currency List overlay gets displayed.
             requestFocus();
             return;
@@ -464,7 +464,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
         paymentMethodTextField.setMouseTransparent(true);
         paymentMethodTextField.setFocusTraversable(false);
 
-        currencyTextField = new JFXTextField();
+        currencyTextField = new BisqJfxTextField();
         currencyTextField.setMinWidth(250);
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);

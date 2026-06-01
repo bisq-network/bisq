@@ -17,30 +17,32 @@
 
 package bisq.desktop.components;
 
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.skins.JFXButtonSkin;
+import bisq.desktop.components.controls.BisqJfxButton;
+import bisq.desktop.components.controls.skin.BisqButtonSkin;
 
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 
+import java.util.Locale;
+
 import static bisq.desktop.components.TooltipUtil.showTooltipIfTruncated;
 
-public class AutoTooltipButton extends JFXButton {
+public class AutoTooltipButton extends BisqJfxButton {
 
     public AutoTooltipButton() {
         super();
     }
 
     public AutoTooltipButton(String text) {
-        super(text.toUpperCase());
+        super(text.toUpperCase(Locale.ROOT));
     }
 
     public AutoTooltipButton(String text, Node graphic) {
-        super(text.toUpperCase(), graphic);
+        super(text.toUpperCase(Locale.ROOT), graphic);
     }
 
     public void updateText(String text) {
-        setText(text.toUpperCase());
+        setText(text.toUpperCase(Locale.ROOT));
     }
 
     @Override
@@ -48,8 +50,8 @@ public class AutoTooltipButton extends JFXButton {
         return new AutoTooltipButtonSkin(this);
     }
 
-    private class AutoTooltipButtonSkin extends JFXButtonSkin {
-        public AutoTooltipButtonSkin(JFXButton button) {
+    private class AutoTooltipButtonSkin extends BisqButtonSkin {
+        public AutoTooltipButtonSkin(BisqJfxButton button) {
             super(button);
         }
 

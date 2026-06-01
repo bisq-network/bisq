@@ -72,7 +72,7 @@ import org.bitcoinj.core.Coin;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
-import com.jfoenix.controls.JFXBadge;
+import bisq.desktop.components.controls.BisqJfxBadge;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -188,8 +188,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     protected TableColumn<Dispute, Dispute> stateColumn;
     private Map<String, ListChangeListener<ChatMessage>> listenerByDispute = new HashMap<>();
     private Map<String, Button> chatButtonByDispute = new HashMap<>();
-    private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
-    private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
+    private Map<String, BisqJfxBadge> chatBadgeByDispute = new HashMap<>();
+    private Map<String, BisqJfxBadge> newBadgeByDispute = new HashMap<>();
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
     protected DisputeChatPopup chatPopup;
@@ -1021,7 +1021,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     Button button = getRegularIconButton(MaterialDesignIcon.INFORMATION_OUTLINE);
-                                    JFXBadge badge = new JFXBadge(new Label(""), Pos.BASELINE_RIGHT);
+                                    BisqJfxBadge badge = new BisqJfxBadge(new Label(""), Pos.BASELINE_RIGHT);
                                     badge.setPosition(Pos.TOP_RIGHT);
                                     badge.setVisible(item.isNew());
                                     badge.setText("New");
@@ -1112,9 +1112,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                     } else {
                                         button = chatButtonByDispute.get(id);
                                     }
-                                    JFXBadge chatBadge;
+                                    BisqJfxBadge chatBadge;
                                     if (!chatBadgeByDispute.containsKey(id)) {
-                                        chatBadge = new JFXBadge(button);
+                                        chatBadge = new BisqJfxBadge(button);
                                         chatBadgeByDispute.put(id, chatBadge);
                                         chatBadge.setPosition(Pos.TOP_RIGHT);
                                     } else {
@@ -1454,7 +1454,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         updateChatMessageCount(dispute, chatBadgeByDispute.get(dispute.getId()));
     }
 
-    private void updateChatMessageCount(Dispute dispute, JFXBadge chatBadge) {
+    private void updateChatMessageCount(Dispute dispute, BisqJfxBadge chatBadge) {
         if (chatBadge == null)
             return;
         // when the chat popup is active, we do not display new message count indicator for that item

@@ -10,9 +10,6 @@ application {
     applicationDefaultJvmArgs = ['-XX:MaxRAM=8g', '-Xss1280k', '-XX:+UseG1GC', '-XX:MaxHeapFreeRatio=10',
                                  '-XX:MinHeapFreeRatio=5', '-XX:+UseStringDeduplication',
                                  '-Djava.net.preferIPv4Stack=true',
-                                 '--add-exports=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED',
-                                 '--add-exports=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
-                                 '--add-exports=javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED',
                                  '--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED']
 }
 
@@ -36,7 +33,6 @@ dependencies {
     implementation libs.google.gson
     implementation libs.google.guava
     implementation libs.jcsv
-    implementation libs.jfoenix
     implementation libs.commons.io
     implementation libs.fontawesomefx
     implementation libs.fontawesomefx.commons

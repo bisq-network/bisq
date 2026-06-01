@@ -30,7 +30,7 @@ import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import com.jfoenix.controls.JFXTextArea;
+import bisq.desktop.components.controls.BisqJfxTextArea;
 
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
@@ -99,7 +99,7 @@ public class CashByMailForm extends PaymentMethodForm {
         TextArea extraTextArea = addTopLabelTextArea(gridPane, ++gridRow,
                 Res.get("payment.shared.optionalExtra"), Res.get("payment.cashByMail.extraInfo.prompt")).second;
         extraTextArea.setMinHeight(70);
-        ((JFXTextArea) extraTextArea).setLabelFloat(false);
+        ((BisqJfxTextArea) extraTextArea).setLabelFloat(false);
         extraTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             cashByMailAccount.setExtraInfo(newValue);
             updateFromInputs();

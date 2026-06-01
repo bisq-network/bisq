@@ -3,13 +3,13 @@ package bisq.desktop.components;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import com.jfoenix.controls.JFXBadge;
+import bisq.desktop.components.controls.BisqJfxBadge;
 
 import javafx.scene.Node;
 
 import javafx.collections.MapChangeListener;
 
-public class NewBadge extends JFXBadge {
+public class NewBadge extends BisqJfxBadge {
 
     private final String key;
 

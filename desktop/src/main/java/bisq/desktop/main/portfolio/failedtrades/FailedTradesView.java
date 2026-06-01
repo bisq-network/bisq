@@ -41,7 +41,7 @@ import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXButton;
+import bisq.desktop.components.controls.BisqJfxButton;
 
 import javafx.fxml.FXML;
 
@@ -468,7 +468,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                                 if (!empty && newItem != null) {
                                     Label icon = FormBuilder.getIcon(AwesomeIcon.UNDO);
                                     icon.getStyleClass().addAll("icon", "dao-remove-proposal-icon");
-                                    JFXButton iconButton = new JFXButton("", icon);
+                                    BisqJfxButton iconButton = new BisqJfxButton("", icon);
                                     iconButton.setStyle("-fx-cursor: hand;");
                                     iconButton.getStyleClass().add("hidden-icon-button");
                                     iconButton.setTooltip(new Tooltip(Res.get("portfolio.failed.revertToPending")));

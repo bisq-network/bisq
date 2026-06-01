@@ -29,7 +29,7 @@ import bisq.core.util.coin.BsqFormatter;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXButton;
+import bisq.desktop.components.controls.BisqJfxButton;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -72,7 +72,7 @@ public class ProposalsListItem {
     private Ballot ballot;
 
     @Getter
-    private JFXButton iconButton;
+    private BisqJfxButton iconButton;
 
     private ChangeListener<DaoPhase.Phase> phaseChangeListener;
 
@@ -125,7 +125,7 @@ public class ProposalsListItem {
             icon = FormBuilder.getIcon(AwesomeIcon.TRASH);
 
             icon.getStyleClass().addAll("icon", "dao-remove-proposal-icon");
-            iconButton = new JFXButton("", icon);
+            iconButton = new BisqJfxButton("", icon);
             boolean isMyProposal = daoFacade.isMyProposal(proposal);
             if (isMyProposal) {
                 iconButton.setUserData(IconButtonType.REMOVE_PROPOSAL);
@@ -147,18 +147,18 @@ public class ProposalsListItem {
                 if ((vote).isAccepted()) {
                     icon = FormBuilder.getIcon(AwesomeIcon.THUMBS_UP);
                     icon.getStyleClass().addAll("icon", "dao-accepted-icon");
-                    iconButton = new JFXButton("", icon);
+                    iconButton = new BisqJfxButton("", icon);
                     iconButton.setUserData(IconButtonType.ACCEPT);
                 } else {
                     icon = FormBuilder.getIcon(AwesomeIcon.THUMBS_DOWN);
                     icon.getStyleClass().addAll("icon", "dao-rejected-icon");
-                    iconButton = new JFXButton("", icon);
+                    iconButton = new BisqJfxButton("", icon);
                     iconButton.setUserData(IconButtonType.REJECT);
                 }
             } else {
                 icon = FormBuilder.getIcon(AwesomeIcon.MINUS);
                 icon.getStyleClass().addAll("icon", "dao-ignored-icon");
-                iconButton = new JFXButton("", icon);
+                iconButton = new BisqJfxButton("", icon);
                 iconButton.setUserData(IconButtonType.IGNORE);
             }
             iconButton.setTooltip(new Tooltip(Res.get("dao.proposal.table.icon.tooltip.changeVote",

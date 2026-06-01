@@ -20,7 +20,7 @@ package bisq.desktop.components;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
-import com.jfoenix.controls.JFXProgressBar;
+import bisq.desktop.components.controls.BisqJfxProgressBar;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -70,7 +70,7 @@ public class SeparatedPhaseBars extends VBox {
             item.setTitleLabel(titleLabel);
             titlesBars.getChildren().addAll(titleLabel);
 
-            JFXProgressBar progressBar = new JFXProgressBar();
+            BisqJfxProgressBar progressBar = new BisqJfxProgressBar();
             progressBar.setMinHeight(9);
             progressBar.setMaxHeight(9);
             progressBar.progressProperty().bind(item.progressProperty);
