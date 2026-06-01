@@ -60,21 +60,16 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     // an unused field.
     private final long date;
 
-    // This hash map allows addition of data in future versions without breaking consensus
-    private final Map<String, String> extraDataMap;
-
     public BlindVote(byte[] encryptedVotes,
                      String txId,
                      long stake,
                      byte[] encryptedMeritList,
-                     long date,
-                     Map<String, String> extraDataMap) {
+                     long date) {
         this.encryptedVotes = encryptedVotes;
         this.txId = txId;
         this.stake = stake;
         this.encryptedMeritList = encryptedMeritList;
         this.date = date;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
     }
 
 
@@ -96,7 +91,6 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 .setStake(stake)
                 .setEncryptedMeritList(ByteString.copyFrom(encryptedMeritList))
                 .setDate(date);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return builder;
     }
 
@@ -105,9 +99,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 proto.getTxId(),
                 proto.getStake(),
                 proto.getEncryptedMeritList().toByteArray(),
-                proto.getDate(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getDate());
     }
 
 
@@ -122,7 +114,6 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 ",\n     stake=" + stake +
                 ",\n     encryptedMeritList=" + Utilities.bytesAsHexString(encryptedMeritList) +
                 ",\n     date=" + date +
-                ",\n     extraDataMap=" + extraDataMap +
                 "\n}";
     }
 }
