@@ -28,9 +28,9 @@ import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
@@ -85,7 +85,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
         // We do not permit longer TTL as the default one
         if (ttl < TTL) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new TreeMap<>();
             extraDataMap.put(EXTRA_MAP_KEY_TTL, String.valueOf(ttl));
         }
     }
@@ -93,6 +93,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
@@ -123,12 +124,13 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
                 PrefixedSealedAndSignedMessage.fromPayloadProto(proto.getPrefixedSealedAndSignedMessage()),
                 proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
