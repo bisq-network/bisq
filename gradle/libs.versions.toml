@@ -12,10 +12,6 @@ commons-io = { strictly = '2.22.0' }
 
 cowwoc-diff-match-patch = { strictly = '1.2' }
 
-fontawesomefx = { strictly = '8.0.0' }
-fontawesomefx-commons = { strictly = '9.1.2' }
-fontawesomefx-materialdesign-font = { strictly = '2.0.26-9.1.2' }
-
 fxmisc-easybind = { strictly = '1.0.3' }
 
 glassfish-jaxb-lib = { strictly = '4.0.8' }
@@ -67,10 +63,6 @@ commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 
 cowwoc-diff-match-patch = { module = "org.bitbucket.cowwoc:diff-match-patch", version.ref = "cowwoc-diff-match-patch" }
-
-fontawesomefx = { module = "de.jensd:fontawesomefx", version.ref = "fontawesomefx" }
-fontawesomefx-commons = { module = "de.jensd:fontawesomefx-commons", version.ref = "fontawesomefx-commons" }
-fontawesomefx-materialdesign-font = { module = "de.jensd:fontawesomefx-materialdesignfont", version.ref = "fontawesomefx-materialdesign-font" }
 
 fxmisc-easybind = { module = "org.fxmisc.easybind:easybind", version.ref = "fxmisc-easybind" }
 
