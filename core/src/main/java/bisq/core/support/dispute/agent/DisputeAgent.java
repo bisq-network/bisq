@@ -93,12 +93,6 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         return pubKeyRing.getSignaturePubKey();
     }
 
-    @Nullable
-    @Override
-    public Map<String, String> getExtraDataMap() {
-        return null;
-    }
-
     @Override
     public String toString() {
         return "DisputeAgent{" +

@@ -110,12 +110,6 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
         return ownerPubKey;
     }
 
-    @Nullable
-    @Override
-    public Map<String, String> getExtraDataMap() {
-        return null;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ExpirablePayload
