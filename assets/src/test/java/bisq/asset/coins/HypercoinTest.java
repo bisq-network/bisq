@@ -36,8 +36,8 @@ public class HypercoinTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertValidAddress("193rdaPZVXyxJtQ2yCP2nZX5BA13ixx7Yt");
-        assertValidAddress("hc1qre8fp627d2evr2jsrzd3nf8k55zm6535ucgekl");
-        assertValidAddress("3PB4Zrd7BqYFFCmaWFFg5A8VDsHwRcPD5#");
+        assertInvalidAddress("193rdaPZVXyxJtQ2yCP2nZX5BA13ixx7Yt");
+        assertInvalidAddress("hc1qre8fp627d2evr2jsrzd3nf8k55zm6535ucgekl");
+        assertInvalidAddress("3PB4Zrd7BqYFFCmaWFFg5A8VDsHwRcPD5#");
     }
 }
