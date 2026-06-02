@@ -24,7 +24,7 @@ import bisq.asset.NetworkParametersAdapter;
 public class Mydogecoin extends Coin {
 
     public Mydogecoin() {
-        super("MYdogecoin", "MYDOGE", new Base58AddressValidator(new MydogecoinMainNetParams()), Network.MAINNET);
+        super("Mydogecoin", "MYDOGE", new Base58AddressValidator(new MydogecoinMainNetParams()), Network.MAINNET);
     }
 
     public static class MydogecoinMainNetParams extends NetworkParametersAdapter {
