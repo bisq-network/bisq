@@ -16,6 +16,7 @@ import org.gradle.kotlin.dsl.register
 import java.io.File
 import javax.inject.Inject
 
+@Suppress("unused")
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
