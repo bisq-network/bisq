@@ -4,11 +4,14 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.jvm.toolchain.JvmImplementation
 import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.register
+import java.io.File
 import javax.inject.Inject
 
 class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
@@ -32,12 +35,19 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             pidFile.set(startBitcoindTask.flatMap { it.pidFile })
         }
 
+        val seedNodeLibsDir: Provider<File> = project.provider {
+            val seedNodeProject: Project = project.project("seednode")
+            val installDistTask: TaskProvider<Sync> = seedNodeProject.tasks.named("installDist", Sync::class.java)
+            val libsDir = File(installDistTask.get().destinationDir, "lib")
+            libsDir
+        }
+
         val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
             dependsOn(startBitcoindTask)
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(project.layout.projectDirectory.dir("seednode/build/app/lib"))
+            libsDir.set(seedNodeLibsDir.get())
 
             mainClass.set("bisq.seednode.SeedNodeMain")
             arguments.set(
@@ -58,7 +68,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(project.layout.projectDirectory.dir("seednode/build/app/lib"))
+            libsDir.set(seedNodeLibsDir.get())
 
             mainClass.set("bisq.seednode.SeedNodeMain")
             arguments.set(
