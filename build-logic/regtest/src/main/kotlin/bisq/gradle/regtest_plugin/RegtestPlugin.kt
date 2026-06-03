@@ -83,13 +83,20 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             pidFile.set(startSecondSeedNodeTask.flatMap { it.pidFile })
         }
 
+        val desktopAppLibsDir: Provider<File> = project.provider {
+            val desktopProject: Project = project.project("desktop")
+            val installDistTask: TaskProvider<Sync> = desktopProject.tasks.named("installDist", Sync::class.java)
+            val libsDir = File(installDistTask.get().destinationDir, "lib")
+            libsDir
+        }
+
         val startMediatorTask = project.tasks.register<StartBisqTask>("startRegtestMediator") {
             dependsOn(startFirstSeedNodeTask)
             dependsOn(startSecondSeedNodeTask)
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(project.layout.projectDirectory.dir("desktop/build/app/lib"))
+            libsDir.set(desktopAppLibsDir.get())
 
             mainClass.set("bisq.desktop.app.BisqAppMain")
             arguments.set(
@@ -110,7 +117,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(project.layout.projectDirectory.dir("desktop/build/app/lib"))
+            libsDir.set(desktopAppLibsDir.get())
 
             mainClass.set("bisq.desktop.app.BisqAppMain")
 
@@ -141,7 +148,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(project.layout.projectDirectory.dir("desktop/build/app/lib"))
+            libsDir.set(desktopAppLibsDir.get())
 
             mainClass.set("bisq.desktop.app.BisqAppMain")
             arguments.set(
