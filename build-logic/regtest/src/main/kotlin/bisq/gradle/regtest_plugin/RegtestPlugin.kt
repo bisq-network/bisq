@@ -47,10 +47,16 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
                     .file("blocknotify")
                     .asFile
                 blockNotifyFile.appendText("echo exit 0")
+
+                project.layout.projectDirectory
+                    .dir(".localnet")
+                    .dir("bitcoind2")
+                    .asFile
+                    .mkdirs()
             }
         }
 
-        val startBitcoindTask = project.tasks.register<StartBitcoindTask>("startRegtestBitcoind") {
+        val startFirstBitcoindTask = project.tasks.register<StartBitcoindTask>("startFirstRegtestBitcoind") {
             dependsOn(initialDaoSetupTask)
             pidFile.set(project.layout.projectDirectory.file(".localnet/bitcoind.pid"))
 
@@ -60,14 +66,35 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             blockNotifyArg.set(".localnet/bitcoind/blocknotify %s")
         }
 
-        val stopBitcoindTask = project.tasks.register<KillTask>("stopRegtestBitcoind") {
-            pidFile.set(startBitcoindTask.flatMap { it.pidFile })
+        val stopFirstBitcoindTask = project.tasks.register<KillTask>("stopFirstRegtestBitcoind") {
+            pidFile.set(startFirstBitcoindTask.flatMap { it.pidFile })
+        }
+
+        val startSecondBitcoindTask = project.tasks.register<StartBitcoindTask>("startSecondRegtestBitcoind") {
+            dependsOn(initialDaoSetupTask)
+            pidFile.set(project.layout.projectDirectory.file(".localnet/bitcoind_2.pid"))
+
+            dataDirectory.set(project.layout.projectDirectory.dir(".localnet/bitcoind2"))
+            port.set(19444)
+            onionPort.set(19445)
+            otherNodes.add("127.0.0.1:18444")
+
+            rpcAllowIp.set("127.0.0.1")
+            rpcBindPort.set(19443)
+            rpcUser.set(RPC_USER)
+            rpcPassword.set(RPC_PASSWORD)
+
+            blockNotifyArg.set(".localnet/bitcoind/blocknotify %s")
+        }
+
+        val stopSecondBitcoindTask = project.tasks.register<KillTask>("stopSecondRegtestBitcoind") {
+            pidFile.set(startSecondBitcoindTask.flatMap { it.pidFile })
         }
 
         val seedNodeLibsDirProvider: Provider<Directory> = getBisqAppLibsDirProvider(project, "seednode")
 
         val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
-            dependsOn(startBitcoindTask)
+            dependsOn(startFirstBitcoindTask)
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
@@ -87,7 +114,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         }
 
         val startSecondSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestSecondSeednode") {
-            dependsOn(startBitcoindTask)
+            dependsOn(startFirstBitcoindTask)
             dependsOn(startFirstSeedNodeTask)
 
             workingDirectory.set(project.layout.projectDirectory)
@@ -179,7 +206,8 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         }
 
         project.tasks.register<KillTask>("stopRegtest") {
-            dependsOn(stopBitcoindTask)
+            dependsOn(stopFirstBitcoindTask)
+            dependsOn(stopSecondBitcoindTask)
 
             dependsOn(stopFirstSeedNodeTask)
             dependsOn(stopSeedNodeTask)
