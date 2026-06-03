@@ -10,10 +10,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
-import org.gradle.jvm.toolchain.JvmImplementation
-import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import java.io.File
@@ -42,7 +39,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         project.tasks.register<JPackageTask>("generateInstallers") {
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJPackageJdkDirectory())
+            jdkDirectory.set(getProjectJdkDirectory(project))
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -54,11 +51,6 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
-
-            runtimeImageDirectory.set(
-                if (getOS() == OS.MAC_OS) getJPackageJdkDirectory()
-                else getProjectJdkDirectory(project)
-            )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
         }
@@ -81,14 +73,5 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val toolchain = javaExtension.toolchain
         val projectLauncherProvider = javaToolchainService.launcherFor(toolchain)
         return projectLauncherProvider.map { it.metadata.installationPath }
-    }
-
-    private fun getJPackageJdkDirectory(): Provider<Directory> {
-        val launcherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(21))
-            vendor.set(JvmVendorSpec.AZUL)
-            implementation.set(JvmImplementation.VENDOR_SPECIFIC)
-        }
-        return launcherProvider.map { it.metadata.installationPath }
     }
 }

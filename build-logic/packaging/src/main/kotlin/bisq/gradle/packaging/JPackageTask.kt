@@ -40,9 +40,6 @@ abstract class JPackageTask : DefaultTask() {
     @get:InputDirectory
     abstract val packageResourcesDir: DirectoryProperty
 
-    @get:InputDirectory
-    abstract val runtimeImageDirectory: DirectoryProperty
-
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
@@ -55,7 +52,6 @@ abstract class JPackageTask : DefaultTask() {
         val jPackageConfig = JPackageConfig(
                 inputDirPath = distDirFile.get().toPath().resolve("lib"),
                 outputDirPath = outputDirectoryFile.toPath(),
-                runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
                 temporaryDirPath = temporaryDir.toPath(),
 
                 appConfig = JPackageAppConfig(

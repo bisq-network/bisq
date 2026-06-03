@@ -80,8 +80,6 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
                     "--main-class", appConfig.mainClassName,
                     "--java-options", appConfig.jvmArgs.joinToString(separator = " "),
-
-                    "--runtime-image", jPackageConfig.runtimeImageDirPath.toAbsolutePath().toString()
             )
 
     private fun configureReproducibleRpmEnvironment(processBuilder: ProcessBuilder, packageFormat: PackageFormat) {
