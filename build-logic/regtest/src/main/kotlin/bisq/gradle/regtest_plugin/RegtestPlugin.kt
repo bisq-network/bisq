@@ -2,10 +2,12 @@ package bisq.gradle.regtest_plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.jvm.toolchain.JvmImplementation
@@ -14,6 +16,7 @@ import org.gradle.kotlin.dsl.register
 import java.io.File
 import javax.inject.Inject
 
+@Suppress("unused")
 class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
@@ -22,7 +25,33 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
     }
 
     override fun apply(project: Project) {
+        val initialDaoSetupTask = project.tasks.register<Copy>("initialDaoSetup") {
+            from(project.zipTree("docs/dao-setup.zip"))
+            into(project.layout.projectDirectory.dir(".localnet"))
+
+            exclude("dao-setup/Bitcoin-regtest/bitcoin.conf")
+
+            eachFile {
+                path = sourcePath.replace("dao-setup/Bitcoin-regtest", "bitcoind")
+                    .replace("dao-setup/bisq-BTC_REGTEST_Alice_dao", "alice")
+                    .replace("dao-setup/bisq-BTC_REGTEST_Bob_dao", "bob")
+            }
+
+            includeEmptyDirs = false
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+            doLast {
+                val blockNotifyFile = project.layout.projectDirectory
+                    .dir(".localnet")
+                    .dir("bitcoind")
+                    .file("blocknotify")
+                    .asFile
+                blockNotifyFile.appendText("echo exit 0")
+            }
+        }
+
         val startBitcoindTask = project.tasks.register<StartBitcoindTask>("startRegtestBitcoind") {
+            dependsOn(initialDaoSetupTask)
             pidFile.set(project.layout.projectDirectory.file(".localnet/bitcoind.pid"))
 
             dataDirectory.set(project.layout.projectDirectory.dir(".localnet/bitcoind"))
@@ -35,19 +64,14 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             pidFile.set(startBitcoindTask.flatMap { it.pidFile })
         }
 
-        val seedNodeLibsDir: Provider<File> = project.provider {
-            val seedNodeProject: Project = project.project("seednode")
-            val installDistTask: TaskProvider<Sync> = seedNodeProject.tasks.named("installDist", Sync::class.java)
-            val libsDir = File(installDistTask.get().destinationDir, "lib")
-            libsDir
-        }
+        val seedNodeLibsDirProvider: Provider<Directory> = getBisqAppLibsDirProvider(project, "seednode")
 
         val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
             dependsOn(startBitcoindTask)
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(seedNodeLibsDir.get())
+            libsDir.set(seedNodeLibsDirProvider)
 
             mainClass.set("bisq.seednode.SeedNodeMain")
             arguments.set(
@@ -68,7 +92,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(seedNodeLibsDir.get())
+            libsDir.set(seedNodeLibsDirProvider)
 
             mainClass.set("bisq.seednode.SeedNodeMain")
             arguments.set(
@@ -83,12 +107,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             pidFile.set(startSecondSeedNodeTask.flatMap { it.pidFile })
         }
 
-        val desktopAppLibsDir: Provider<File> = project.provider {
-            val desktopProject: Project = project.project("desktop")
-            val installDistTask: TaskProvider<Sync> = desktopProject.tasks.named("installDist", Sync::class.java)
-            val libsDir = File(installDistTask.get().destinationDir, "lib")
-            libsDir
-        }
+        val desktopAppLibsDirProvider: Provider<Directory> = getBisqAppLibsDirProvider(project, "desktop")
 
         val startMediatorTask = project.tasks.register<StartBisqTask>("startRegtestMediator") {
             dependsOn(startFirstSeedNodeTask)
@@ -96,7 +115,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(desktopAppLibsDir.get())
+            libsDir.set(desktopAppLibsDirProvider)
 
             mainClass.set("bisq.desktop.app.BisqAppMain")
             arguments.set(
@@ -117,7 +136,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(desktopAppLibsDir.get())
+            libsDir.set(desktopAppLibsDirProvider)
 
             mainClass.set("bisq.desktop.app.BisqAppMain")
 
@@ -148,7 +167,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
-            libsDir.set(desktopAppLibsDir.get())
+            libsDir.set(desktopAppLibsDirProvider)
 
             mainClass.set("bisq.desktop.app.BisqAppMain")
             arguments.set(
@@ -171,6 +190,17 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             pidFile.set(startBobTask.flatMap { it.pidFile })
         }
     }
+
+    private fun getBisqAppLibsDirProvider(project: Project, moduleName: String): Provider<Directory> =
+        project.provider {
+            project.project(moduleName)
+        }.flatMap { seedNodeProject ->
+            seedNodeProject.tasks.named("installDist", Sync::class.java)
+        }.flatMap { installDistTask ->
+            project.layout.dir(project.provider {
+                File(installDistTask.destinationDir, "lib")
+            })
+        }
 
     private fun getJavaExecutable(): Provider<RegularFile> =
         javaToolchainService.launcherFor {
