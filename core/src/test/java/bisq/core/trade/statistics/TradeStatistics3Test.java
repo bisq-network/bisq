@@ -26,6 +26,7 @@ import org.bitcoinj.core.Coin;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Disabled;
@@ -45,7 +46,7 @@ public class TradeStatistics3Test {
                 System.currentTimeMillis(),
                 null,
                 null,
-                (Map<String, String>) null);
+                (TreeMap<String, String>) null);
 
         assertTrue(tradeStatistics.isValid());
     }
@@ -59,7 +60,7 @@ public class TradeStatistics3Test {
                 System.currentTimeMillis(),
                 null,
                 null,
-                (Map<String, String>) null);
+                (TreeMap<String, String>) null);
 
         assertFalse(tradeStatistics.isValid());
     }
