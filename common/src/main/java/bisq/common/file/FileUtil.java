@@ -21,7 +21,6 @@ import bisq.common.util.Utilities;
 
 import com.google.common.io.Files;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.net.URI;
@@ -237,8 +236,69 @@ public class FileUtil {
 
     }
 
+    /**
+     * Recursively copies {@code source} into {@code destination} using stream based file
+     * copying (via {@link Files#copy}, backed by a {@link java.io.FileInputStream}).
+     * <p>
+     * This intentionally does not use {@code org.apache.commons.io.FileUtils.copyDirectory}.
+     * Since commons-io 2.7 that delegates to NIO {@code java.nio.file.Files.copy}, which on
+     * Windows uses the Win32 {@code CopyFileEx} API. {@code CopyFileEx} respects byte-range
+     * locks, so copying a file that another process has locked a region of fails with
+     * "The process cannot access the file because another process has locked a portion of
+     * the file" and aborts the whole backup. bitcoinj holds such a lock on
+     * {@code bisq.spvchain} while running. A plain {@code FileInputStream} read tolerates the
+     * lock, restoring the behaviour Bisq relied on before the commons-io upgrade.
+     */
     public static void copyDirectory(File source, File destination) throws IOException {
-        FileUtils.copyDirectory(source, destination);
+        // Match commons-io's copyDirectory input validation.
+        if (!source.exists()) {
+            throw new FileNotFoundException("Source '" + source.getAbsolutePath() + "' does not exist");
+        }
+        if (!source.isDirectory()) {
+            throw new IllegalArgumentException("Source '" + source.getAbsolutePath() + "' exists but is not a directory");
+        }
+        // When the destination lies inside the source, exclude it from the walk so we don't
+        // endlessly copy the destination into itself. Mirrors commons-io's copyDirectory,
+        // which builds the same exclusion rather than rejecting such destinations.
+        String excludedPath = null;
+        String sourcePath = source.getCanonicalPath() + File.separator;
+        String destinationPath = destination.getCanonicalPath() + File.separator;
+        if (destinationPath.startsWith(sourcePath)) {
+            excludedPath = destination.getCanonicalPath();
+        }
+        doCopyDirectory(source, destination, excludedPath);
+    }
+
+    private static void doCopyDirectory(File source, File destination, @Nullable String excludedPath) throws IOException {
+        if (source.isDirectory()) {
+            if (!destination.exists() && !destination.mkdirs()) {
+                throw new IOException("Failed to create directory: " + destination.getAbsolutePath());
+            }
+            File[] files = source.listFiles();
+            if (files == null) {
+                // listFiles() returns null on an I/O error; treat it as a hard failure rather
+                // than a silently empty directory, matching commons-io.
+                throw new IOException("Failed to list contents of directory: " + source.getAbsolutePath());
+            }
+            for (File file : files) {
+                if (excludedPath != null && file.getCanonicalPath().equals(excludedPath)) {
+                    continue;
+                }
+                doCopyDirectory(file, new File(destination, file.getName()), excludedPath);
+            }
+            preserveLastModified(source, destination);
+        } else {
+            Files.copy(source, destination);
+            preserveLastModified(source, destination);
+        }
+    }
+
+    // Guava's Files.copy copies bytes only; restore the last-modified time (for both files and
+    // directories) so the backup matches commons-io's preserveFileDate behaviour.
+    private static void preserveLastModified(File source, File destination) {
+        if (!destination.setLastModified(source.lastModified())) {
+            log.warn("Could not preserve last-modified time of {}", destination.getAbsolutePath());
+        }
     }
 
     public static File createNewFile(Path path) throws IOException {
