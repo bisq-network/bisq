@@ -154,6 +154,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     }
 
     @Nullable
+    @Override
     public Map<String, String> getExtraDataMap() {
         return extraDataMap;
     }
