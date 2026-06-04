@@ -23,13 +23,11 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.GetDataResponsePriority;
-import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import java.security.PublicKey;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;

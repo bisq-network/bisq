@@ -25,15 +25,11 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
-import bisq.common.util.CollectionUtils;
-import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
@@ -42,7 +38,6 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import static com.google.common.base.Preconditions.checkArgument;
