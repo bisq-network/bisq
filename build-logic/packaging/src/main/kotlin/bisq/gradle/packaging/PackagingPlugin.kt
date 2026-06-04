@@ -41,7 +41,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
 
-            outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
+            outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
         }
     }
 
