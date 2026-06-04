@@ -268,26 +268,6 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 null);
     }
 
-    // Used from conversion method where we use the hash of the TradeStatistics2 objects to avoid duplicate entries
-    public TradeStatistics3(String currency,
-                            long price,
-                            long amount,
-                            String paymentMethod,
-                            long date,
-                            String mediator,
-                            String refundAgent,
-                            @Nullable byte[] hash) {
-        this(currency,
-                price,
-                amount,
-                paymentMethod,
-                date,
-                mediator,
-                refundAgent,
-                null,
-                hash);
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////

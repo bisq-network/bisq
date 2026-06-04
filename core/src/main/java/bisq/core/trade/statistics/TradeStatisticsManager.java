@@ -70,7 +70,6 @@ public class TradeStatisticsManager {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final TradeStatistics3StorageService tradeStatistics3StorageService;
-    private final TradeStatisticsConverter tradeStatisticsConverter;
     private final File storageDir;
     private final boolean dumpStatistics;
     private final NavigableSet<TradeStatistics3> navigableTradeStatisticsSet = new TreeSet<>();
@@ -82,13 +81,11 @@ public class TradeStatisticsManager {
                                   PriceFeedService priceFeedService,
                                   TradeStatistics3StorageService tradeStatistics3StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                  TradeStatisticsConverter tradeStatisticsConverter,
                                   @Named(Config.STORAGE_DIR) File storageDir,
                                   @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatistics3StorageService = tradeStatistics3StorageService;
-        this.tradeStatisticsConverter = tradeStatisticsConverter;
         this.storageDir = storageDir;
         this.dumpStatistics = dumpStatistics;
 
@@ -96,7 +93,6 @@ public class TradeStatisticsManager {
     }
 
     public void shutDown() {
-        tradeStatisticsConverter.shutDown();
         if (jsonFileManager != null) {
             jsonFileManager.shutDown();
         }
@@ -193,7 +189,6 @@ public class TradeStatisticsManager {
         jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(array), "trade_statistics");
     }
 
-    @SuppressWarnings("deprecation")
     public void maybeRepublishTradeStatistics(Set<TradeModel> trades,
                                               @Nullable String referralId,
                                               boolean isTorNetworkNode) {
@@ -215,19 +210,6 @@ public class TradeStatisticsManager {
                         log.debug("Trade: {}. We have already a tradeStatistics matching the hash of tradeStatistics3.",
                                 trade.getShortId());
                         return;
-                    }
-
-                    // If we did not find a TradeStatistics3 we look up if we find a TradeStatistics3 converted from
-                    // TradeStatistics2 where we used the original hash, which is not the native hash of the
-                    // TradeStatistics3 but of TradeStatistics2.
-                    if (!trade.isBsqSwap()) {
-                        TradeStatistics2 tradeStatistics2 = TradeStatistics2.from(trade, referralId, isTorNetworkNode);
-                        boolean hasTradeStatistics2 = hashes.contains(new P2PDataStorage.ByteArray(tradeStatistics2.getHash()));
-                        if (hasTradeStatistics2) {
-                            log.debug("Trade: {}. We have already a tradeStatistics matching the hash of tradeStatistics2. ",
-                                    trade.getShortId());
-                            return;
-                        }
                     }
 
                     if (!tradeStatistics3.isValid()) {

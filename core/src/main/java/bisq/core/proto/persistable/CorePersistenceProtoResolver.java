@@ -40,7 +40,6 @@ import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
 import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.support.dispute.refund.RefundDisputeList;
 import bisq.core.trade.model.TradableList;
-import bisq.core.trade.statistics.TradeStatistics2Store;
 import bisq.core.trade.statistics.TradeStatistics3Store;
 import bisq.core.user.PreferencesPayload;
 import bisq.core.user.UserPayload;
@@ -78,7 +77,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
         this.networkProtoResolver = networkProtoResolver;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public PersistableEnvelope fromProto(protobuf.PersistableEnvelope proto) {
         if (proto != null) {
@@ -107,8 +105,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return PaymentAccountList.fromProto(proto.getPaymentAccountList(), this);
                 case ACCOUNT_AGE_WITNESS_STORE:
                     return AccountAgeWitnessStore.fromProto(proto.getAccountAgeWitnessStore());
-                case TRADE_STATISTICS2_STORE:
-                    return TradeStatistics2Store.fromProto(proto.getTradeStatistics2Store());
                 case BLIND_VOTE_STORE:
                     return BlindVoteStore.fromProto(proto.getBlindVoteStore());
                 case PROPOSAL_STORE:
