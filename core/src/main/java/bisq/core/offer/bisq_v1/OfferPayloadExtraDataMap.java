@@ -19,17 +19,16 @@ package bisq.core.offer.bisq_v1;
 
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-
-import lombok.Getter;
+import java.util.Objects;
+import java.util.Set;
 
 public class OfferPayloadExtraDataMap {
-    // This replicates the order of the Java HashMap for the given keys to support backward compatibility.
-    private static final List<String> LEGACY_HASHMAP_ORDER = List.of(
+    // This replicates the order of the Java HashMap for the given keys, inserted by current offer producers,
+    // to support backward compatibility.
+    static final List<String> LEGACY_HASHMAP_ORDER = List.of(
             Keys.CAPABILITIES,
             Keys.REFERRAL_ID,
             Keys.XMR_AUTO_CONF,
@@ -38,33 +37,37 @@ public class OfferPayloadExtraDataMap {
             Keys.F2F_EXTRA_INFO,
             Keys.F2F_CITY
     );
+    private static final Set<String> SUPPORTED_KEYS = Set.copyOf(LEGACY_HASHMAP_ORDER);
 
-    public ImmutableMap<String, String> getMap() {
-        // ImmutableMap.copyOf preserves the order.
-        // From the ImmutableMap.copyOf Java doc: The returned map iterates over entries in the same order
-        // as the entrySet of the original map.
-        return ImmutableMap.copyOf(map);
-    }
+    private final LinkedHashMap<String, String> map;
+    private final boolean preserveInsertionOrder;
 
-    private final Map<String, String> map;
-
-    // We use the LEGACY_HASHMAP_ORDER as comparator for the TreeMap
+    // Locally created maps are always serialized in the legacy Java HashMap order.
     public OfferPayloadExtraDataMap() {
-        map = new TreeMap<>(Comparator.comparingInt(LEGACY_HASHMAP_ORDER::indexOf));
+        preserveInsertionOrder = false;
+        map = new LinkedHashMap<>();
     }
 
     // If we get constructed from protobuf data we keep the order of the protobuf
     // LinkedHashMap
     public OfferPayloadExtraDataMap(Map<String, String> map) {
-        this.map = new LinkedHashMap<>(map);
+        preserveInsertionOrder = true;
+        this.map = new LinkedHashMap<>();
+        putAll(map);
     }
 
     public String put(String key, String value) {
-        return map.put(key, value);
+        validateEntry(key, value);
+        String previousValue = map.put(key, value);
+        maybeApplyLegacyHashMapOrder();
+        return previousValue;
     }
 
     public void putAll(Map<String, String> map) {
+        Objects.requireNonNull(map, "map must not be null");
+        map.forEach(OfferPayloadExtraDataMap::validateEntry);
         this.map.putAll(map);
+        maybeApplyLegacyHashMapOrder();
     }
 
     public boolean containsKey(String key) {
@@ -77,6 +80,53 @@ public class OfferPayloadExtraDataMap {
 
     public boolean isEmpty() {
         return map.isEmpty();
+    }
+
+    public ImmutableMap<String, String> getMap() {
+        // ImmutableMap.copyOf preserves the order.
+        // From the ImmutableMap.copyOf Java doc: The returned map iterates over entries in the same order
+        // as the entrySet of the original map.
+        return ImmutableMap.copyOf(map);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (!(o instanceof OfferPayloadExtraDataMap that)) return false;
+
+        return map.equals(that.map);
+    }
+
+    @Override
+    public int hashCode() {
+        return map.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "OfferPayloadExtraDataMap{" +
+                "map=" + map +
+                '}';
+    }
+
+    private void maybeApplyLegacyHashMapOrder() {
+        if (preserveInsertionOrder) {
+            return;
+        }
+
+        LinkedHashMap<String, String> orderedMap = new LinkedHashMap<>();
+        LEGACY_HASHMAP_ORDER.stream()
+                .filter(map::containsKey)
+                .forEach(key -> orderedMap.put(key, map.get(key)));
+        map.clear();
+        map.putAll(orderedMap);
+    }
+
+    private static void validateEntry(String key, String value) {
+        Objects.requireNonNull(key, "key must not be null");
+        Objects.requireNonNull(value, "value must not be null");
+        if (!SUPPORTED_KEYS.contains(key)) {
+            throw new IllegalArgumentException("Unsupported OfferPayload extraDataMap key: " + key);
+        }
     }
 
     public static class Keys {
