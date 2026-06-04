@@ -94,7 +94,7 @@ public class TestFilter {
                 bannedDevKeys,
                 false,
                 Collections.emptyList(),
-                Collections.emptySet(),
+                Collections.emptyList(),
                 false,
                 false,
                 false,

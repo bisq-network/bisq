@@ -91,13 +91,13 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
 
     private final List<String> bannedPrivilegedDevPubKeys;
 
-    private transient PublicKey ownerPubKey;
+    private transient final PublicKey ownerPubKey;
 
     // added at v1.3.8
     private final boolean disableAutoConf;
 
     // added at v1.5.5
-    private final Set<String> nodeAddressesBannedFromNetwork;
+    private final List<String> nodeAddressesBannedFromNetwork;
     private final boolean disableApi;
 
     // added at v1.6.0
@@ -238,7 +238,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> bannedPrivilegedDevPubKeys,
                   boolean disableAutoConf,
                   List<String> bannedAutoConfExplorers,
-                  Set<String> nodeAddressesBannedFromNetwork,
+                  List<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
@@ -324,7 +324,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> bannedPrivilegedDevPubKeys,
                   boolean disableAutoConf,
                   List<String> bannedAutoConfExplorers,
-                  Set<String> nodeAddressesBannedFromNetwork,
+                  List<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
@@ -495,7 +495,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),
                 proto.getDisableAutoConf(),
                 ProtoUtil.protocolStringListToList(proto.getBannedAutoConfExplorersList()),
-                ProtoUtil.protocolStringListToSet(proto.getNodeAddressesBannedFromNetworkList()),
+                ProtoUtil.protocolStringListToList(proto.getNodeAddressesBannedFromNetworkList()),
                 proto.getDisableMempoolValidation(),
                 proto.getDisableApi(),
                 proto.getDisablePowMessage(),

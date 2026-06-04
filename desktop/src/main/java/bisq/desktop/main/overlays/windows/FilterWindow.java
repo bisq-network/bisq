@@ -289,7 +289,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         readAsList(bannedPrivilegedDevPubKeysTF),
                         disableAutoConfCheckBox.isSelected(),
                         readAsList(autoConfExplorersTF),
-                        new HashSet<>(readAsList(bannedFromNetworkTF)),
+                        readAsList(bannedFromNetworkTF),
                         disableMempoolValidationCheckBox.isSelected(),
                         disableApiCheckBox.isSelected(),
                         disablePowMessage.isSelected(),
