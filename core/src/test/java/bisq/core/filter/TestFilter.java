@@ -90,7 +90,6 @@ public class TestFilter {
                 ownerPublicKey.getEncoded(),
                 creationDate,
                 null,
-                null,
                 signerPubKeyAsHex,
                 bannedDevKeys,
                 false,

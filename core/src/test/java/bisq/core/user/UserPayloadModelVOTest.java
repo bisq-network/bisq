@@ -65,7 +65,6 @@ public class UserPayloadModelVOTest {
                 null,
                 null,
                 null,
-                null,
                 false,
                 Lists.newArrayList(),
                 new HashSet<>(),
