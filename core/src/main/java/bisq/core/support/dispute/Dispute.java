@@ -50,7 +50,6 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -143,13 +142,11 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Setter
     private long tradeTxFee;
 
-
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    @Setter
-    private Map<String, String> extraDataMap;
+    private DisputeExtraDataMap extraDataMap;
 
     // We do not persist uid, it is only used by dispute agents to guarantee an uid.
     @Setter
@@ -168,6 +165,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Dispute(long openingDate,
@@ -220,6 +218,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -261,7 +260,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
-        Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(getExtraDataMap()).map(DisputeExtraDataMap::getMap).ifPresent(builder::putAllExtraData);
         return builder.build();
     }
 
@@ -287,9 +286,10 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 proto.getIsSupportTicket(),
                 SupportType.fromProto(proto.getSupportType()));
 
-        dispute.setExtraDataMap(CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : ExtraDataMapValidator.getValidatedExtraDataMap(proto.getExtraDataMap()));
-
+        if (!CollectionUtils.isEmpty(proto.getExtraDataMap())) {
+            Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(proto.getExtraDataMap());
+            dispute.setExtraDataMap(new DisputeExtraDataMap(validatedExtraDataMap));
+        }
         dispute.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
@@ -336,6 +336,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
@@ -376,7 +377,13 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
+
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setExtraDataMap(@Nullable DisputeExtraDataMap extraDataMap) {
+        this.extraDataMap = extraDataMap;
+    }
+
 
     public void setIsClosed() {
         setState(State.CLOSED);
@@ -400,13 +407,14 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
             return;
         }
         if (extraDataMap == null) {
-            extraDataMap = new HashMap<>();
+            extraDataMap = new DisputeExtraDataMap();
         }
         extraDataMap.put(key, value);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getShortTradeId() {
