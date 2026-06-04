@@ -214,8 +214,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                     blindVoteTxId,
                     stake.value,
                     encryptedMeritList,
-                    new Date().getTime(),
-                    new HashMap<>());
+                    new Date().getTime());
             addBlindVoteToList(blindVote);
 
             addToP2PNetwork(blindVote, errorMessage -> {

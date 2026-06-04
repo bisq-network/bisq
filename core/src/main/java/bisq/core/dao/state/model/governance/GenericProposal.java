@@ -23,10 +23,8 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -34,21 +32,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Immutable
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class GenericProposal extends Proposal implements ImmutableDaoStateModel {
 
-    public GenericProposal(String name,
-                           String link,
-                           Map<String, String> extraDataMap) {
+    public GenericProposal(String name, String link) {
         this(name,
                 link,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -60,14 +57,13 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                             String link,
                             byte version,
                             long creationDate,
-                            String txId,
-                            Map<String, String> extraDataMap) {
+                            String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
     }
 
     @Override
@@ -77,13 +73,16 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
     }
 
     public static GenericProposal fromProto(protobuf.Proposal proto) {
+        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in GenericProposal");
+
         return new GenericProposal(proto.getName(),
                 proto.getLink(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -117,8 +116,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                 getLink(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

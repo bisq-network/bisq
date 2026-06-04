@@ -23,16 +23,16 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -43,15 +43,13 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
 
     public RemoveAssetProposal(String name,
                                String link,
-                               String tickerSymbol,
-                               Map<String, String> extraDataMap) {
+                               String tickerSymbol) {
         this(name,
                 link,
                 tickerSymbol,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -64,14 +62,13 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                                 String tickerSymbol,
                                 byte version,
                                 long creationDate,
-                                String txId,
-                                Map<String, String> extraDataMap) {
+                                String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
 
         this.tickerSymbol = tickerSymbol;
     }
@@ -84,15 +81,18 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
     }
 
     public static RemoveAssetProposal fromProto(protobuf.Proposal proto) {
-        final protobuf.RemoveAssetProposal proposalProto = proto.getRemoveAssetProposal();
+        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in getRemoveAssetProposal");
+
+        protobuf.RemoveAssetProposal proposalProto = proto.getRemoveAssetProposal();
         return new RemoveAssetProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getTickerSymbol(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -127,8 +127,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 getTickerSymbol(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override
