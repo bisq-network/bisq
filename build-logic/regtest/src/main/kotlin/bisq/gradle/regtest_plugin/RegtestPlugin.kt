@@ -160,6 +160,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         val startAliceTask = project.tasks.register<StartBisqTask>("startRegtestAlice") {
             dependsOn(startFirstSeedNodeTask)
             dependsOn(startSecondSeedNodeTask)
+            dependsOn(startMediatorTask)
 
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
