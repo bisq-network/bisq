@@ -70,7 +70,9 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
         this.version = version;
         this.creationDate = creationDate;
         this.txId = txId;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
     }
 
 
