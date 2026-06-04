@@ -26,6 +26,7 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
@@ -57,7 +58,6 @@ import java.security.PublicKey;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.Getter;
@@ -66,6 +66,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Values.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -382,25 +384,25 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public Optional<String> getAccountAgeWitnessHashAsHex() {
-        Map<String, String> extraDataMap = getExtraDataMap();
-        if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
-            return Optional.of(extraDataMap.get(OfferPayload.ACCOUNT_AGE_WITNESS_HASH));
+        OfferPayloadExtraDataMap extraDataMap = getOfferPayloadExtraDataMap();
+        if (extraDataMap != null && extraDataMap.containsKey(ACCOUNT_AGE_WITNESS_HASH))
+            return Optional.of(extraDataMap.get(ACCOUNT_AGE_WITNESS_HASH));
         else
             return Optional.empty();
     }
 
     public String getF2FCity() {
-        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.F2F_CITY))
-            return getExtraDataMap().get(OfferPayload.F2F_CITY);
+        if (getOfferPayloadExtraDataMap() != null && getOfferPayloadExtraDataMap().containsKey(F2F_CITY))
+            return getOfferPayloadExtraDataMap().get(F2F_CITY);
         else
             return "";
     }
 
     public String getExtraInfo() {
-        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.F2F_EXTRA_INFO))
-            return getExtraDataMap().get(OfferPayload.F2F_EXTRA_INFO);
-        else if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.CASH_BY_MAIL_EXTRA_INFO))
-            return getExtraDataMap().get(OfferPayload.CASH_BY_MAIL_EXTRA_INFO);
+        if (getOfferPayloadExtraDataMap() != null && getOfferPayloadExtraDataMap().containsKey(F2F_EXTRA_INFO))
+            return getOfferPayloadExtraDataMap().get(F2F_EXTRA_INFO);
+        else if (getOfferPayloadExtraDataMap() != null && getOfferPayloadExtraDataMap().containsKey(CASH_BY_MAIL_EXTRA_INFO))
+            return getOfferPayloadExtraDataMap().get(CASH_BY_MAIL_EXTRA_INFO);
         else
             return "";
     }
@@ -529,8 +531,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     @Nullable
-    public Map<String, String> getExtraDataMap() {
-        return offerPayloadBase.getExtraDataMap();
+    public OfferPayloadExtraDataMap getOfferPayloadExtraDataMap() {
+        return offerPayloadBase.getOfferPayloadExtraDataMap();
     }
 
     public boolean isUseAutoClose() {
@@ -549,11 +551,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
         if (!isXmr()) {
             return false;
         }
-        if (getExtraDataMap() == null || !getExtraDataMap().containsKey(OfferPayload.XMR_AUTO_CONF)) {
+        if (getOfferPayloadExtraDataMap() == null || !getOfferPayloadExtraDataMap().containsKey(XMR_AUTO_CONF)) {
             return false;
         }
 
-        return getExtraDataMap().get(OfferPayload.XMR_AUTO_CONF).equals(OfferPayload.XMR_AUTO_CONF_ENABLED_VALUE);
+        return getOfferPayloadExtraDataMap().get(XMR_AUTO_CONF).equals(XMR_AUTO_CONF_ENABLED_VALUE);
     }
 
     public boolean isXmr() {

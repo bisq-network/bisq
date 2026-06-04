@@ -35,7 +35,6 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatistics3StorageService;
 import bisq.core.util.FormattingUtils;
@@ -66,6 +65,8 @@ import javafx.event.EventHandler;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 
 @FxmlView
 public class MarketView extends ActivatableView<TabPane, Void> {
@@ -192,7 +193,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                 .filter(e -> e instanceof TradeStatistics3)
                 .map(e -> (TradeStatistics3) e)
                 .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap() != null)
-                .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
+                .filter(tradeStatistics3 -> tradeStatistics3.getExtraDataMap().get(REFERRAL_ID) != null)
                 .map(tradeStatistics3 -> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Date: ").append(DisplayUtils.formatDateTime(tradeStatistics3.getDate())).append("\n")
@@ -201,7 +202,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                             .append("Amount: ").append(formatter.formatCoin(tradeStatistics3.getTradeAmount())).append("\n")
                             .append("Volume: ").append(VolumeUtil.formatVolume(tradeStatistics3.getTradeVolume())).append("\n")
                             .append("Payment method: ").append(Res.get(tradeStatistics3.getPaymentMethodId())).append("\n")
-                            .append("ReferralID: ").append(tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
+                            .append("ReferralID: ").append(tradeStatistics3.getExtraDataMap().get(REFERRAL_ID));
                     return sb.toString();
                 })
                 .collect(Collectors.toList());
@@ -211,8 +212,8 @@ public class MarketView extends ActivatableView<TabPane, Void> {
     private String getAllOffersWithReferralId() {
         List<String> list = offerBook.getOfferBookListItems().stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(offer -> offer.getExtraDataMap() != null)
-                .filter(offer -> offer.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
+                .filter(offer -> offer.getOfferPayloadExtraDataMap() != null)
+                .filter(offer -> offer.getOfferPayloadExtraDataMap().get(REFERRAL_ID) != null)
                 .map(offer -> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Offer ID: ").append(offer.getId()).append("\n")
@@ -221,7 +222,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                             .append("Price: ").append(FormattingUtils.formatPrice(offer.getPrice())).append("\n")
                             .append("Amount: ").append(DisplayUtils.formatAmount(offer, formatter)).append(" BTC\n")
                             .append("Payment method: ").append(Res.get(offer.getPaymentMethod().getId())).append("\n")
-                            .append("ReferralID: ").append(offer.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
+                            .append("ReferralID: ").append(offer.getOfferPayloadExtraDataMap().get(REFERRAL_ID));
                     return sb.toString();
                 })
                 .collect(Collectors.toList());

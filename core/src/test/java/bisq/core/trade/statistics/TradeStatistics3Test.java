@@ -17,7 +17,6 @@
 
 package bisq.core.trade.statistics;
 
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.common.util.ExtraDataMapValidator;
@@ -37,6 +36,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -76,7 +76,7 @@ public class TradeStatistics3Test {
     @Test
     public void singleEntryExtraDataMapSerializesLikeHashMap() {
         TreeMap<String, String> extraDataMap = new TreeMap<>();
-        extraDataMap.put(OfferPayload.REFERRAL_ID, "referralId");
+        extraDataMap.put(REFERRAL_ID, "referralId");
         TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
                 50_000_000,
                 Coin.parseCoin("0.25").value,
@@ -89,7 +89,7 @@ public class TradeStatistics3Test {
 
         protobuf.TradeStatistics3 treeMapProto = tradeStatistics.toProtoTradeStatistics3();
         Map<String, String> hashMap = new HashMap<>();
-        hashMap.put(OfferPayload.REFERRAL_ID, "referralId");
+        hashMap.put(REFERRAL_ID, "referralId");
         protobuf.TradeStatistics3 hashMapProto = treeMapProto.toBuilder()
                 .clearExtraData()
                 .putAllExtraData(hashMap)
@@ -101,7 +101,7 @@ public class TradeStatistics3Test {
     @Test
     public void fromProtoConvertsExtraDataMapToTreeMapWithoutChangingSingleEntryBytes() {
         Map<String, String> hashMap = new HashMap<>();
-        hashMap.put(OfferPayload.REFERRAL_ID, "referralId");
+        hashMap.put(REFERRAL_ID, "referralId");
         protobuf.TradeStatistics3 hashMapProto = protobuf.TradeStatistics3.newBuilder()
                 .setCurrency("USD")
                 .setPrice(50_000_000)
