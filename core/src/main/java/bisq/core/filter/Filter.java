@@ -123,13 +123,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<PaymentAccountFilter> delayedPayoutPaymentAccounts;
 
     // Added at v 1.9.16
-    @ExcludeForHash
     private final List<String> addedBtcNodes;
-    @ExcludeForHash
     private final List<String> addedSeedNodes;
-    // As we might add more ExcludeForHash we want to ensure to have a unique identifier.
-    // The hash of the data is not unique anymore if the only change have been at
-    // the ExcludeForHash annotated fields.
     private final String uid;
 
     // Added at v1.9.24
