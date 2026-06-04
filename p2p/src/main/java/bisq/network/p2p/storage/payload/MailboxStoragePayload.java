@@ -102,8 +102,8 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
-        this.extraDataMap = extraDataMap;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
         senderPubKeyForAddOperation = Sig.getPublicKeyFromBytes(senderPubKeyForAddOperationBytes);
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }

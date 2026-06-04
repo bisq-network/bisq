@@ -22,6 +22,7 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.TestUtils;
 
 import bisq.common.crypto.SealedAndSigned;
+import bisq.common.util.ExtraDataMapValidator;
 
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +35,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MailboxStoragePayloadTest {
@@ -66,6 +69,42 @@ public class MailboxStoragePayloadTest {
         assertTrue(payload.getExtraDataMap() instanceof TreeMap);
         assertEquals(CUSTOM_TTL, payload.getTTL());
         assertArrayEquals(hashMapProto.toByteArray(), payload.toProtoMessage().toByteArray());
+    }
+
+    @Test
+    public void fromProtoPreservesNullExtraDataMap() throws NoSuchAlgorithmException {
+        protobuf.MailboxStoragePayload proto = newMailboxStoragePayload(MailboxStoragePayload.TTL)
+                .toProtoMessage()
+                .getMailboxStoragePayload();
+
+        MailboxStoragePayload payload = MailboxStoragePayload.fromProto(proto);
+
+        assertNull(payload.getExtraDataMap());
+        assertEquals(MailboxStoragePayload.TTL, payload.getTTL());
+        assertTrue(payload.toProtoMessage().getMailboxStoragePayload().getExtraDataMap().isEmpty());
+    }
+
+    @Test
+    public void fromProtoSanitizesInvalidExtraDataMap() throws NoSuchAlgorithmException {
+        Map<String, String> oversizedMap = new HashMap<>();
+        for (int i = 0; i <= ExtraDataMapValidator.MAX_SIZE; i++) {
+            oversizedMap.put("key" + i, "value");
+        }
+        protobuf.MailboxStoragePayload proto = newMailboxStoragePayload(CUSTOM_TTL)
+                .toProtoMessage()
+                .getMailboxStoragePayload()
+                .toBuilder()
+                .clearExtraData()
+                .putAllExtraData(oversizedMap)
+                .build();
+
+        MailboxStoragePayload payload = MailboxStoragePayload.fromProto(proto);
+
+        Map<String, String> extraDataMap = payload.getExtraDataMap();
+        assertNotNull(extraDataMap);
+        assertTrue(extraDataMap instanceof TreeMap);
+        assertTrue(extraDataMap.isEmpty());
+        assertTrue(payload.toProtoMessage().getMailboxStoragePayload().getExtraDataMap().isEmpty());
     }
 
     private static protobuf.StoragePayload buildStoragePayloadWithHashMapExtraData() throws NoSuchAlgorithmException {

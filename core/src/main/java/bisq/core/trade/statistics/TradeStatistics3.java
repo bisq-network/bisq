@@ -315,8 +315,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this.date = date;
         this.mediator = mediator;
         this.refundAgent = refundAgent;
-        ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
-        this.extraDataMap = extraDataMap;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
         this.hash = hash == null ? createHash() : hash;
 
         dateObj = new Date(date);

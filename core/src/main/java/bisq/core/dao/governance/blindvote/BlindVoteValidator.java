@@ -24,8 +24,6 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
-import bisq.common.util.ExtraDataMapValidator;
-
 import javax.inject.Inject;
 
 import java.util.Optional;
