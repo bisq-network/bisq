@@ -59,10 +59,10 @@ public class PreferencesViewModelTest {
         }};
 
         RefundAgent one = new RefundAgent(new NodeAddress("refundAgent:1"), null, languagesOne, 0L,
-                null, null, null, null, null);
+                null, null, null, null);
 
         RefundAgent two = new RefundAgent(new NodeAddress("refundAgent:2"), null, languagesTwo, 0L,
-                null, null, null, null, null);
+                null, null, null, null);
 
         refundAgents.put(one.getNodeAddress(), one);
         refundAgents.put(two.getNodeAddress(), two);
@@ -94,10 +94,10 @@ public class PreferencesViewModelTest {
         }};
 
         Mediator one = new Mediator(new NodeAddress("refundAgent:1"), null, languagesOne, 0L,
-                null, null, null, null, null);
+                null, null, null, null);
 
         Mediator two = new Mediator(new NodeAddress("refundAgent:2"), null, languagesTwo, 0L,
-                null, null, null, null, null);
+                null, null, null, null);
 
         mnediators.put(one.getNodeAddress(), one);
         mnediators.put(two.getNodeAddress(), two);

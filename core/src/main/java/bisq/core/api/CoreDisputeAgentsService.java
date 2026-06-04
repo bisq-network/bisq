@@ -126,7 +126,6 @@ class CoreDisputeAgentsService {
                 ecKey.getPubKey(),
                 signature,
                 null,
-                null,
                 null
         );
         mediatorManager.addDisputeAgent(mediator, () -> {
@@ -146,7 +145,6 @@ class CoreDisputeAgentsService {
                 new Date().getTime(),
                 ecKey.getPubKey(),
                 signature,
-                null,
                 null,
                 null
         );

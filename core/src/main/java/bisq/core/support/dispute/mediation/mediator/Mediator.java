@@ -47,8 +47,7 @@ public final class Mediator extends DisputeAgent {
                     byte[] registrationPubKey,
                     String registrationSignature,
                     @Nullable String emailAddress,
-                    @Nullable String info,
-                    @Nullable Map<String, String> extraDataMap) {
+                    @Nullable String info) {
 
         super(nodeAddress,
                 pubKeyRing,
@@ -57,8 +56,7 @@ public final class Mediator extends DisputeAgent {
                 registrationPubKey,
                 registrationSignature,
                 emailAddress,
-                info,
-                extraDataMap);
+                info);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +74,6 @@ public final class Mediator extends DisputeAgent {
                 .setRegistrationSignature(registrationSignature);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setMediator(builder).build();
     }
 
@@ -88,8 +85,7 @@ public final class Mediator extends DisputeAgent {
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
-                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()));
     }
 
 

@@ -51,7 +51,7 @@ public class ArbitratorTest {
                 new Date().getTime(),
                 getBytes(100),
                 "registrationSignature",
-                null, null, null);
+                null, null);
     }
 
     @SuppressWarnings("deprecation")
