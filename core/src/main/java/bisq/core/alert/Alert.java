@@ -25,21 +25,19 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.network.GetDataResponsePriority;
-import bisq.common.util.CollectionUtils;
-import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 
@@ -64,11 +62,6 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     @Nullable
     private PublicKey ownerPubKey;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    private Map<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -83,23 +76,23 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("NullableProblems")
+    @VisibleForTesting
     public Alert(String message,
                  boolean isUpdateInfo,
                  boolean isPreReleaseInfo,
                  String version,
                  byte[] ownerPubKeyBytes,
-                 String signatureAsBase64,
-                 Map<String, String> extraDataMap) {
+                 String signatureAsBase64) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.isPreReleaseInfo = isPreReleaseInfo;
         this.version = version;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
@@ -115,7 +108,6 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignatureAsBase64(signatureAsBase64);
-        Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
@@ -131,14 +123,13 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getIsPreReleaseInfo(),
                 proto.getVersion(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
-                proto.getSignatureAsBase64(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getSignatureAsBase64());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -181,5 +172,4 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     public String showAgainKey() {
         return "Update_" + version;
     }
-
 }
