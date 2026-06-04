@@ -31,6 +31,7 @@ import org.bitcoinj.core.Coin;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -54,7 +55,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                 String link,
                                 Coin requestedBsq,
                                 String bsqAddress,
-                                @Nullable Map<String, String> extraDataMap) {
+                                @Nullable TreeMap<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
@@ -77,7 +78,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                  byte version,
                                  long creationDate,
                                  String txId,
-                                 @Nullable Map<String, String> extraDataMap) {
+                                 @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -98,7 +99,14 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     }
 
     public static CompensationProposal fromProto(protobuf.Proposal proto) {
-        final protobuf.CompensationProposal proposalProto = proto.getCompensationProposal();
+        if (proto.getExtraDataMap().size() > 1) {
+            // We do not throw an exception as we might add more entries in the future.
+            // In that case, the size check can be removed, but we need to ensure that all users have updated
+            // to v1.10.2 or higher.
+            log.warn("ExtraDataMap in CompensationProposal had more then 1 map entries. " +
+                    "This is not expected.");
+        }
+        protobuf.CompensationProposal proposalProto = proto.getCompensationProposal();
         return new CompensationProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getBsqAddress(),
@@ -107,7 +115,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 proto.getCreationDate(),
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
@@ -154,7 +162,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 getVersion(),
                 getCreationDate(),
                 txId,
-                extraDataMap);
+                (TreeMap<String, String>) extraDataMap);
     }
 
     @Override
