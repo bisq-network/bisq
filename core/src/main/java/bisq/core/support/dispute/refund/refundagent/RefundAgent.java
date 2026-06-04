@@ -26,13 +26,11 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.ByteString;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
