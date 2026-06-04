@@ -39,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
@@ -91,6 +93,11 @@ public final class Arbitrator extends DisputeAgent {
     }
 
     public static Arbitrator fromProto(protobuf.Arbitrator proto) {
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in Arbitrator");
+
         return new Arbitrator(NodeAddress.fromProto(proto.getNodeAddress()),
                 proto.getBtcPubKey().toByteArray(),
                 proto.getBtcAddress(),

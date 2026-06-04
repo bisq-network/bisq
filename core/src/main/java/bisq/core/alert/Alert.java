@@ -41,6 +41,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
@@ -113,6 +114,11 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     @Nullable
     public static Alert fromProto(protobuf.Alert proto) {
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in Alert");
+
         // We got in dev testing sometimes an empty protobuf Alert. Not clear why that happened but as it causes an
         // exception and corrupted user db file we prefer to set it to null.
         if (proto.getSignatureAsBase64().isEmpty())
