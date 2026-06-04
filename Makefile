@@ -14,8 +14,7 @@
 #
 #  - Linux, macOS or similar *nix with standard tools like `make`
 #  - bitcoind and bitcoin-cli (`brew install bitcoin` on macOS)
-#  - JDK 21 to build and run Bisq binaries; see
-#    https://jdk.java.net/archive/
+#  - JDK 21 to build and run Bisq binaries
 #
 #
 # USAGE
@@ -31,7 +30,7 @@
 # Notes:
 #
 #  - When complete, you'll have a number of scripts available in the
-#  root directory. They will be used in the make targets below to start
+#  scripts directory. They will be used in the make targets below to start
 #  the various Bisq seed and desktop nodes that will make up your
 #  localnet:
 #
@@ -57,29 +56,13 @@
 # Run each of the following in a SEPARATE TERMINAL WINDOW, as they are
 # long-running processes.
 #
-#     $ make bitcoind
-#     $ make seednode
-#     $ make seednode2
-#     $ make mediator
-#     $ make alice
-#     $ make bob
-#
-#  Tip: Those familiar with the `screen` terminal multiplexer can
-#  automate the above by running the `deploy` target found below.
-#
-#  Notes:
-#
-#    - The 'seednode' targets launch headless Bisq nodes that help
-#    desktop nodes discover other peers, as well as storing and
-#    forwarding p2p network messages for nodes as they go on and
-#    offline.
-#
-#    - As you run the 'mediator', 'alice' and 'bob' targets above,
-#    you'll see a Bisq desktop node window appear for each. The Alice
-#    and Bob instances represent two traders who can make and take
-#    offers with one another. The Mediator instance represents a Bisq
-#    contributor who can help resolve any technical problems or disputes
-#    that come up between the two traders.
+#     $ ./gradlew :startFirstRegtestBitcoind
+#     $ ./gradlew :startSecondRegtestBitcoind
+#     $ ./gradlew :startRegtestFirstSeednode
+#     $ ./gradlew :startRegtestSecondSeednode
+#     $ ./gradlew :startRegtestMediator
+#     $ ./gradlew :startRegtestAlice
+#     $ ./gradlew :startRegtest
 #
 # STEP 3: Configure the mediator Bisq node. In order to make and take
 # offers, Alice and Bob will need to have a mediator and a refund agent
@@ -97,11 +80,8 @@
 # ready to use. You can now test in isolation all Bisq features and use
 # cases.
 #
-
-# Set up everything necessary for deploying your localnet. This is the
-# default target.
-.PHONY: build bitcoind seednode seednode2 mediator alice bob block blocks
-setup: build .localnet
+setup:
+	./gradlew :seednode:build :desktop:build
 
 clean: clean-build clean-localnet
 
@@ -111,60 +91,12 @@ clean-build:
 clean-localnet:
 	rm -rf .localnet ./dao-setup
 
-# Build Bisq binaries and shell scripts used in the targets below
-build: seednode/build desktop/build
-
-seednode/build:
-	./gradlew :seednode:build
-
-desktop/build:
-	./gradlew :desktop:build
-
-# Unpack and customize a Bitcoin regtest node and Alice and Bob Bisq
-# nodes that have been preconfigured with a blockchain containing the
-# BSQ genesis transaction
-.localnet:
-	# Unpack the old dao-setup.zip and move things around for more
-	# concise and intuitive naming. This is a temporary measure until we
-	# clean these resources up more thoroughly.
-	unzip docs/dao-setup.zip
-	mv dao-setup .localnet
-	mv .localnet/Bitcoin-regtest .localnet/bitcoind
-	mv .localnet/bisq-BTC_REGTEST_Alice_dao .localnet/alice
-	mv .localnet/bisq-BTC_REGTEST_Bob_dao .localnet/bob
-	mkdir .localnet/bitcoind2
-	# Remove the preconfigured bitcoin.conf in favor of explicitly
-	# parameterizing the invocation of bitcoind in the target below
-	rm -v .localnet/bitcoind/bitcoin.conf
-	# Avoid spurious 'runCommand' errors in the bitcoind log when nc
-	# fails to bind to one of the listed block notification ports
-	echo exit 0 >> .localnet/bitcoind/blocknotify
-
-# Alias '.localnet' to 'localnet' so the target is discoverable in tab
-# completion
-localnet: .localnet
-
 # Deploy a complete localnet by running all required Bitcoin and Bisq
 # nodes, each in their own named screen window. If you are not a screen
 # user, you'll need to manually run each of the targets listed below
 # commands manually in a separate terminal or as background jobs.
-deploy: setup
-	# ensure localnet is not already deployed
-	if screen -ls localnet | grep Detached; then false; fi
-	# create a new screen session named 'localnet'
-	screen -dmS localnet
-	# deploy each node in its own named screen window
-	for target in \
-			bitcoind \
-			bitcoind2 \
-			seednode \
-			seednode2 \
-			alice \
-			bob \
-			mediator; do \
-		screen -S localnet -X screen -t $$target; \
-		screen -S localnet -p $$target -X stuff "make $$target\n"; \
-	done;
+deploy:
+	./gradlew :startRegtest
 	# give bitcoind rpc server time to start
 	sleep 5
 	# generate a block to ensure Bisq nodes get dao-synced
@@ -173,102 +105,7 @@ deploy: setup
 # Undeploy a running localnet by killing all Bitcoin and Bisq
 # node processes, then killing the localnet screen session altogether
 undeploy:
-	# kill all Bitcoind and Bisq nodes running in screen windows
-	screen -S localnet -X at "#" stuff "^C"
-	# quit all screen windows which results in killing the session
-	screen -S localnet -X at "#" kill
-	# remove dead screens
-	screen -wipe || true
-
-bitcoind: .localnet
-	bitcoind \
-		-regtest \
-		-prune=0 \
-		-txindex=1 \
-		-peerbloomfilters=1 \
-		-server \
-		-rpcuser=bisqdao \
-		-rpcpassword=bsq \
-		-datadir=.localnet/bitcoind \
-		-blocknotify='.localnet/bitcoind/blocknotify %s'
-
-bitcoind2: .localnet
-	bitcoind \
-		-regtest \
-		-port=19444 \
-		-bind=127.0.0.1:19445=onion \
-		-addnode=127.0.0.1:18444 \
-		-prune=0 \
-		-txindex=1 \
-		-peerbloomfilters=1 \
-		-server \
-		-rpcallowip=127.0.0.1 \
-		-rpcbind=127.0.0.1:19443 \
-		-rpcuser=bisqdao \
-		-rpcpassword=bsq \
-		-datadir=.localnet/bitcoind2 \
-
-seednode: seednode/build
-	scripts/seednode \
-		--baseCurrencyNetwork=BTC_REGTEST \
-		--useLocalhostForP2P=true \
-		--useDevPrivilegeKeys=true \
-		--fullDaoNode=true \
-		--isBmFullNode=true \
-		--rpcUser=bisqdao \
-		--rpcPassword=bsq \
-		--rpcBlockNotificationPort=5120 \
-		--nodePort=2002 \
-		--userDataDir=.localnet \
-		--appName=seednode
-
-seednode2: seednode/build
-	scripts/seednode \
-		--baseCurrencyNetwork=BTC_REGTEST \
-		--useLocalhostForP2P=true \
-		--useDevPrivilegeKeys=true \
-		--fullDaoNode=true \
-		--isBmFullNode=true \
-		--rpcUser=bisqdao \
-		--rpcPassword=bsq \
-		--rpcBlockNotificationPort=5121 \
-		--nodePort=3002 \
-		--userDataDir=.localnet \
-		--appName=seednode2
-
-mediator: desktop/build
-	scripts/desktop \
-		--baseCurrencyNetwork=BTC_REGTEST \
-		--useLocalhostForP2P=true \
-		--useDevPrivilegeKeys=true \
-		--nodePort=4444 \
-		--appDataDir=.localnet/mediator \
-		--appName=Mediator
-
-alice: setup
-	scripts/desktop \
-		--baseCurrencyNetwork=BTC_REGTEST \
-		--useLocalhostForP2P=true \
-		--useDevPrivilegeKeys=true \
-		--nodePort=5555 \
-		--fullDaoNode=true \
-		--isBmFullNode=true \
-		--rpcUser=bisqdao \
-		--rpcPassword=bsq \
-		--rpcBlockNotificationPort=5122 \
-		--genesisBlockHeight=111 \
-		--genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf \
-		--appDataDir=.localnet/alice \
-		--appName=Alice
-
-bob: setup
-	scripts/desktop \
-		--baseCurrencyNetwork=BTC_REGTEST \
-		--useLocalhostForP2P=true \
-		--useDevPrivilegeKeys=true \
-		--nodePort=6666 \
-		--appDataDir=.localnet/bob \
-		--appName=Bob
+	./gradlew :stopRegtest
 
 # Generate a new block on your Bitcoin regtest network. Requires that
 # bitcoind is already running. See the `bitcoind` target above.
