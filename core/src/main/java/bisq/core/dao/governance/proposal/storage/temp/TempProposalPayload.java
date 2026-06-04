@@ -45,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * TempProposalPayload is wrapper for proposal sent over wire as well as it gets persisted.
  * Data size: about 1.245 bytes (pubKey makes it big)
@@ -63,18 +65,12 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     protected final Proposal proposal;
     protected final byte[] ownerPubKeyEncoded;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    protected final Map<String, String> extraDataMap;
-
     // Used just for caching. Don't persist.
     private final transient PublicKey ownerPubKey;
 
     public TempProposalPayload(Proposal proposal,
                                PublicKey ownerPublicKey) {
-        this(proposal, Sig.getPublicKeyBytes(ownerPublicKey), null);
+        this(proposal, Sig.getPublicKeyBytes(ownerPublicKey));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,11 +78,9 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TempProposalPayload(Proposal proposal,
-                                byte[] ownerPubPubKeyEncoded,
-                                @Nullable Map<String, String> extraDataMap) {
+                                byte[] ownerPubPubKeyEncoded) {
         this.proposal = proposal;
         this.ownerPubKeyEncoded = ownerPubPubKeyEncoded;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyEncoded);
     }
@@ -95,7 +89,6 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
         final protobuf.TempProposalPayload.Builder builder = protobuf.TempProposalPayload.newBuilder()
                 .setProposal(proposal.getProposalBuilder())
                 .setOwnerPubKeyEncoded(ByteString.copyFrom(ownerPubKeyEncoded));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return builder;
     }
 
@@ -105,9 +98,13 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     }
 
     public static TempProposalPayload fromProto(protobuf.TempProposalPayload proto) {
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in TempProposalPayload");
+
         return new TempProposalPayload(Proposal.fromProto(proto.getProposal()),
-                proto.getOwnerPubKeyEncoded().toByteArray(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                proto.getOwnerPubKeyEncoded().toByteArray());
     }
 
 
