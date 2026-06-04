@@ -871,7 +871,7 @@ message BsqSwapOfferPayload {
     int64 amount = 7;
     int64 min_amount = 8;
     ProofOfWork proof_of_work = 9;
-    map<string, string> extra_data = 10;
+    map<string, string> extra_data = 10 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;;
     string version_nr = 11;
     int32 protocol_version = 12;
 }
