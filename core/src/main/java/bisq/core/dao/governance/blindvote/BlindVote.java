@@ -32,6 +32,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.concurrent.Immutable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Holds encryptedVotes, encryptedMeritList, txId of blindVote tx and stake.
  * A encryptedVotes for 1 proposal is 304 bytes
@@ -90,6 +92,11 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     }
 
     public static BlindVote fromProto(protobuf.BlindVote proto) {
+        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in BlindVote");
+
         return new BlindVote(proto.getEncryptedVotes().toByteArray(),
                 proto.getTxId(),
                 proto.getStake(),

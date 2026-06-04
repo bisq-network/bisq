@@ -18,8 +18,18 @@
 package bisq.core.proto;
 
 import bisq.core.alert.Alert;
+import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
+import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
 import bisq.core.dao.state.model.governance.GenericProposal;
+import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.filter.Filter;
 import bisq.core.filter.TestFilter;
 import bisq.core.offer.OfferDirection;
@@ -37,6 +47,7 @@ import bisq.common.crypto.Sig;
 
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 
 import java.security.PublicKey;
@@ -132,6 +143,57 @@ public class DeprecatedExtraDataMapTest {
                 protobuf.BsqSwapOfferPayload::getExtraDataMap);
     }
 
+    @Test
+    public void blindVoteRejectsNonEmptyExtraDataMap() {
+        protobuf.BlindVote proto = blindVote().toProtoMessage();
+
+        assertDeprecatedExtraDataMap(proto,
+                p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
+                p -> p.toBuilder().putExtraData("key", "value").build(),
+                BlindVote::fromProto,
+                protobuf.BlindVote::getExtraDataMap);
+    }
+
+    @Test
+    public void reimbursementProposalRejectsNonEmptyExtraDataMap() {
+        assertProposalDeprecatedExtraDataMap(reimbursementProposal());
+    }
+
+    @Test
+    public void changeParamProposalRejectsNonEmptyExtraDataMap() {
+        assertProposalDeprecatedExtraDataMap(changeParamProposal());
+    }
+
+    @Test
+    public void roleProposalRejectsNonEmptyExtraDataMap() {
+        assertProposalDeprecatedExtraDataMap(roleProposal());
+    }
+
+    @Test
+    public void confiscateBondProposalRejectsNonEmptyExtraDataMap() {
+        assertProposalDeprecatedExtraDataMap(confiscateBondProposal());
+    }
+
+    @Test
+    public void genericProposalRejectsNonEmptyExtraDataMap() {
+        assertProposalDeprecatedExtraDataMap(genericProposal());
+    }
+
+    @Test
+    public void removeAssetProposalRejectsNonEmptyExtraDataMap() {
+        assertProposalDeprecatedExtraDataMap(removeAssetProposal());
+    }
+
+    private static void assertProposalDeprecatedExtraDataMap(Proposal proposal) {
+        protobuf.Proposal proto = proposal.toProtoMessage();
+
+        assertDeprecatedExtraDataMap(proto,
+                p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
+                p -> p.toBuilder().putExtraData("key", "value").build(),
+                Proposal::fromProto,
+                protobuf.Proposal::getExtraDataMap);
+    }
+
     private static <T extends Message> void assertDeprecatedExtraDataMap(
             T proto,
             Function<T, T> addEmptyExtraDataMap,
@@ -199,7 +261,7 @@ public class DeprecatedExtraDataMapTest {
     }
 
     private static TempProposalPayload tempProposalPayload() {
-        return new TempProposalPayload(new GenericProposal("name", "link"), signaturePublicKey());
+        return new TempProposalPayload(genericProposal(), signaturePublicKey());
     }
 
     private static BsqSwapOfferPayload bsqSwapOfferPayload() {
@@ -214,6 +276,38 @@ public class DeprecatedExtraDataMapTest {
                 proofOfWork(),
                 "version",
                 1);
+    }
+
+    private static BlindVote blindVote() {
+        return new BlindVote(new byte[]{1},
+                "txId",
+                1L,
+                new byte[]{2},
+                3L);
+    }
+
+    private static ReimbursementProposal reimbursementProposal() {
+        return new ReimbursementProposal("name", "link", Coin.valueOf(1), "bsqAddress");
+    }
+
+    private static ChangeParamProposal changeParamProposal() {
+        return new ChangeParamProposal("name", "link", Param.PROPOSAL_FEE, "3");
+    }
+
+    private static RoleProposal roleProposal() {
+        return new RoleProposal(new Role("name", "link", BondedRoleType.BTC_NODE_OPERATOR));
+    }
+
+    private static ConfiscateBondProposal confiscateBondProposal() {
+        return new ConfiscateBondProposal("name", "link", "lockupTxId");
+    }
+
+    private static GenericProposal genericProposal() {
+        return new GenericProposal("name", "link");
+    }
+
+    private static RemoveAssetProposal removeAssetProposal() {
+        return new RemoveAssetProposal("name", "link", "BSQ");
     }
 
     private static ProofOfWork proofOfWork() {
