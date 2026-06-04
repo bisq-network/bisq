@@ -25,8 +25,6 @@ import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,7 +60,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                                        String state,
                                        String email,
                                        long maxTradePeriod,
-                                       Map<String, String> excludeFromJsonDataMap) {
+                                       PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -103,7 +101,7 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
                 westernUnionAccountPayload.getState(),
                 westernUnionAccountPayload.getEmail(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

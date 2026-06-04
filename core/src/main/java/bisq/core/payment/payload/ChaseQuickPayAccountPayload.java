@@ -23,8 +23,6 @@ import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -58,7 +56,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload imp
                                         String email,
                                         String holderName,
                                         long maxTradePeriod,
-                                        Map<String, String> excludeFromJsonDataMap) {
+                                        PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -83,7 +81,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload imp
                 proto.getChaseQuickPayAccountPayload().getEmail(),
                 proto.getChaseQuickPayAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

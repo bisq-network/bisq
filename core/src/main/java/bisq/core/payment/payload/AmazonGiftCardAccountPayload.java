@@ -24,8 +24,6 @@ import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -59,7 +57,7 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
                                          String emailOrMobileNr,
                                          String countryCode,
                                          long maxTradePeriod,
-                                         Map<String, String> excludeFromJsonDataMap) {
+                                         PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,
@@ -87,7 +85,7 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
                 amazonGiftCardAccountPayload.getEmailOrMobileNr(),
                 amazonGiftCardAccountPayload.getCountryCode(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

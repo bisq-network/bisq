@@ -23,8 +23,6 @@ import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -69,7 +67,7 @@ public class CashDepositAccountPayload extends BankAccountPayload {
                                       @Nullable String bankId,
                                       @Nullable String nationalAccountId,
                                       long maxTradePeriod,
-                                      Map<String, String> excludeFromJsonDataMap) {
+                                      PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -129,7 +127,7 @@ public class CashDepositAccountPayload extends BankAccountPayload {
                 cashDepositAccountPayload.getBankId().isEmpty() ? null : cashDepositAccountPayload.getBankId(),
                 cashDepositAccountPayload.getNationalAccountId().isEmpty() ? null : cashDepositAccountPayload.getNationalAccountId(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

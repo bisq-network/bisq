@@ -25,8 +25,6 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,7 +53,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
                                        String id,
                                        String email,
                                        long maxTradePeriod,
-                                       Map<String, String> excludeFromJsonDataMap) {
+                                       PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -77,7 +75,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getTransferwiseAccountPayload().getEmail(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

@@ -25,8 +25,6 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -51,7 +49,7 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
                                 String countryCode,
                                 String pixKey,
                                 long maxTradePeriod,
-                                Map<String, String> excludeFromJsonDataMap) {
+                                PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 countryCode,
@@ -82,7 +80,7 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 paytmAccountPayloadPB.getPixKey(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
     @Override

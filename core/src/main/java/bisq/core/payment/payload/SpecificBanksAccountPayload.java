@@ -24,8 +24,6 @@ import com.google.protobuf.Message;
 import com.google.common.base.Joiner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,7 +60,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                                         String nationalAccountId,
                                         ArrayList<String> acceptedBanks,
                                         long maxTradePeriod,
-                                        Map<String, String> excludeFromJsonDataMap) {
+                                        PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -117,7 +115,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getNationalAccountId().isEmpty() ? null : bankAccountPayload.getNationalAccountId(),
                 new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList()),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

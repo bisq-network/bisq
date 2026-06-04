@@ -32,14 +32,13 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.payment.payload.PaymentAccountPayloadExcludeFromJsonMap.Keys.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
@@ -51,11 +50,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @Slf4j
 public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTradeContractJson {
-
-    // Keys for excludeFromJsonDataMap
-    public static final String SALT = "salt";
-    public static final String HOLDER_NAME = "holderName";
-
     protected final String paymentMethodId;
     protected final String id;
 
@@ -69,7 +63,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     // PaymentAccountPayload is used for the json contract and a trade with a user who has an older version would
     // fail the contract verification.
     @JsonExclude
-    protected final Map<String, String> excludeFromJsonDataMap;
+    protected final PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +74,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
         this(paymentMethodId,
                 id,
                 -1,
-                new HashMap<>());
+                new PaymentAccountPayloadExcludeFromJsonMap());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +84,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     protected PaymentAccountPayload(String paymentMethodId,
                                     String id,
                                     long maxTradePeriod,
-                                    Map<String, String> excludeFromJsonDataMapParam) {
+                                    PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMapParam) {
         this.paymentMethodId = paymentMethodId;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
@@ -110,7 +104,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
                 .setMaxTradePeriod(maxTradePeriod)
                 .setId(id);
 
-        builder.putAllExcludeFromJsonData(excludeFromJsonDataMap);
+        builder.putAllExcludeFromJsonData(excludeFromJsonDataMap.getMap());
 
         return builder;
     }
@@ -147,7 +141,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     public void setHolderName(String holderName) {
         // an empty string must result in the mapping removing the entry.
-        excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
+        excludeFromJsonDataMap.compute(HOLDER_NAME,
+                (k, v) -> Strings.emptyToNull(holderName));
     }
 
     // Identifying data of payment account (e.g. IBAN).

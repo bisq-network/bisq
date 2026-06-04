@@ -21,7 +21,6 @@ import bisq.core.locale.Res;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,7 +49,7 @@ public abstract class AssetsAccountPayload extends PaymentAccountPayload {
                                    String id,
                                    String address,
                                    long maxTradePeriod,
-                                   Map<String, String> excludeFromJsonDataMap) {
+                                   PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
