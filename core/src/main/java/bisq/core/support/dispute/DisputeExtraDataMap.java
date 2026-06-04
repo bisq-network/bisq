@@ -17,6 +17,8 @@
 
 package bisq.core.support.dispute;
 
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -31,7 +33,11 @@ public class DisputeExtraDataMap {
     // to support backward compatibility.
     static final List<String> LEGACY_HASHMAP_ORDER = List.of(
             Keys.COUNTER_CURRENCY_TX_ID,
-            Keys.COUNTER_CURRENCY_EXTRA_DATA
+            Keys.COUNTER_CURRENCY_EXTRA_DATA,
+            Keys.RESERVED_0,
+            Keys.RESERVED_1,
+            Keys.RESERVED_2,
+            Keys.RESERVED_3
     );
     private static final Set<String> SUPPORTED_KEYS = Set.copyOf(LEGACY_HASHMAP_ORDER);
 
@@ -136,5 +142,11 @@ public class DisputeExtraDataMap {
     public static class Keys {
         public static final String COUNTER_CURRENCY_TX_ID = "counterCurrencyTxId";
         public static final String COUNTER_CURRENCY_EXTRA_DATA = "counterCurrencyExtraData";
+
+        // Reserved for future use.
+        public static final String RESERVED_0 = "reserved0";
+        public static final String RESERVED_1 = "reserved1";
+        public static final String RESERVED_2 = "reserved2";
+        public static final String RESERVED_3 = "reserved3";
     }
 }

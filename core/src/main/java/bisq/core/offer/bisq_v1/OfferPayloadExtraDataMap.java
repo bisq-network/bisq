@@ -35,7 +35,11 @@ public class OfferPayloadExtraDataMap {
             Keys.ACCOUNT_AGE_WITNESS_HASH,
             Keys.CASH_BY_MAIL_EXTRA_INFO,
             Keys.F2F_EXTRA_INFO,
-            Keys.F2F_CITY
+            Keys.F2F_CITY,
+            Keys.RESERVED_0,
+            Keys.RESERVED_1,
+            Keys.RESERVED_2,
+            Keys.RESERVED_3
     );
     private static final Set<String> SUPPORTED_KEYS = Set.copyOf(LEGACY_HASHMAP_ORDER);
 
@@ -144,6 +148,12 @@ public class OfferPayloadExtraDataMap {
         public static final String CAPABILITIES = "capabilities";
         // If maker is seller and has xmrAutoConf enabled it is set to "1" otherwise it is not set
         public static final String XMR_AUTO_CONF = "xmrAutoConf";
+
+        // Reserved for future use.
+        public static final String RESERVED_0 = "reserved0";
+        public static final String RESERVED_1 = "reserved1";
+        public static final String RESERVED_2 = "reserved2";
+        public static final String RESERVED_3 = "reserved3";
     }
 
     public static class Values {
