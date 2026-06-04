@@ -21,7 +21,6 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,7 +44,7 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
                                                 String id,
                                                 String countryCode,
                                                 long maxTradePeriod,
-                                                Map<String, String> excludeFromJsonDataMap) {
+                                                PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 maxTradePeriod,

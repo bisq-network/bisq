@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import com.google.protobuf.Message;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,7 +46,7 @@ public final class InstantCryptoCurrencyPayload extends AssetsAccountPayload {
                                          String id,
                                          String address,
                                          long maxTradePeriod,
-                                         Map<String, String> excludeFromJsonDataMap) {
+                                         PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 address,
@@ -70,6 +68,6 @@ public final class InstantCryptoCurrencyPayload extends AssetsAccountPayload {
                 proto.getId(),
                 proto.getInstantCryptoCurrencyAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 }

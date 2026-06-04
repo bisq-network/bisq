@@ -25,8 +25,6 @@ import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -60,7 +58,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
                                  String accountId,
                                  String accountOwner,
                                  long maxTradePeriod,
-                                 Map<String, String> excludeFromJsonDataMap) {
+                                 PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -86,7 +84,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
                 proto.getUpholdAccountPayload().getAccountId(),
                 proto.getUpholdAccountPayload().getAccountOwner(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

@@ -23,8 +23,6 @@ import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,7 +50,7 @@ public final class HalCashAccountPayload extends PaymentAccountPayload {
     private HalCashAccountPayload(String paymentMethod, String id,
                                   String mobileNr,
                                   long maxTradePeriod,
-                                  Map<String, String> excludeFromJsonDataMap) {
+                                  PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -74,7 +72,7 @@ public final class HalCashAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getHalCashAccountPayload().getMobileNr(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

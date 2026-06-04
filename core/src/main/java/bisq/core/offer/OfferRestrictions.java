@@ -17,7 +17,7 @@
 
 package bisq.core.offer;
 
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -28,7 +28,8 @@ import org.bitcoinj.core.Coin;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Map;
+
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 
 public class OfferRestrictions {
     public static final Date TOLERATED_SMALL_TRADE_AMOUNT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.FEBRUARY, 17);
@@ -46,9 +47,9 @@ public class OfferRestrictions {
             : Coin.parseCoin("0.01");
 
     static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
-        Map<String, String> extraDataMap = offer.getExtraDataMap();
-        if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.CAPABILITIES)) {
-            String commaSeparatedOrdinals = extraDataMap.get(OfferPayload.CAPABILITIES);
+        OfferPayloadExtraDataMap extraDataMap = offer.getOfferPayloadExtraDataMap();
+        if (extraDataMap != null && extraDataMap.containsKey(CAPABILITIES)) {
+            String commaSeparatedOrdinals = extraDataMap.get(CAPABILITIES);
             Capabilities capabilities = Capabilities.fromStringList(commaSeparatedOrdinals);
             return Capabilities.hasMandatoryCapability(capabilities, mandatoryCapability);
         }

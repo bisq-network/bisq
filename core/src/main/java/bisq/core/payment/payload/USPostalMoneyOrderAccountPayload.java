@@ -25,8 +25,6 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,7 +54,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                                              String postalAddress,
                                              String holderName,
                                              long maxTradePeriod,
-                                             Map<String, String> excludeFromJsonDataMap) {
+                                             PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -81,7 +79,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                 proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
                 proto.getUSPostalMoneyOrderAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

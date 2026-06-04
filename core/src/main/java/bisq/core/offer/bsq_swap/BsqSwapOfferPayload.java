@@ -122,8 +122,6 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 .setVersionNr(versionNr)
                 .setProtocolVersion(protocolVersion);
 
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-
         return protobuf.StoragePayload.newBuilder().setBsqSwapOfferPayload(builder).build();
     }
 

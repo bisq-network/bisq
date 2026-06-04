@@ -17,6 +17,8 @@
 
 package bisq.core.offer;
 
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -63,7 +65,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
     // cache
     protected transient byte[] hash;
     @Nullable
-    protected final Map<String, String> extraDataMap;
+    protected final OfferPayloadExtraDataMap offerPayloadExtraDataMap;
 
     public OfferPayloadBase(String id,
                             long date,
@@ -77,7 +79,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
                             long minAmount,
                             String paymentMethodId,
                             String makerPaymentAccountId,
-                            @Nullable Map<String, String> extraDataMap,
+                            @Nullable OfferPayloadExtraDataMap offerPayloadExtraDataMap,
                             String versionNr,
                             int protocolVersion) {
         this.id = id;
@@ -92,7 +94,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
         this.minAmount = minAmount;
         this.paymentMethodId = paymentMethodId;
         this.makerPaymentAccountId = makerPaymentAccountId;
-        this.extraDataMap = extraDataMap;
+        this.offerPayloadExtraDataMap = offerPayloadExtraDataMap;
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
     }
@@ -123,6 +125,11 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
         return TTL;
     }
 
+    @Nullable
+    public Map<String, String> getExtraDataMap() {
+        return offerPayloadExtraDataMap != null ? offerPayloadExtraDataMap.getMap() : null;
+    }
+
     @Override
     public String toString() {
         return "OfferPayloadBase{" +
@@ -141,7 +148,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
                 ",\r\n     protocolVersion=" + protocolVersion +
                 ",\r\n     pubKeyRing=" + pubKeyRing +
                 ",\r\n     hash=" + (hash != null ? Hex.encode(hash) : "null") +
-                ",\r\n     extraDataMap=" + extraDataMap +
+                ",\r\n     offerPayloadExtraDataMap=" + offerPayloadExtraDataMap +
                 "\r\n}";
     }
 }

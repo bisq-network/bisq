@@ -25,8 +25,6 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -60,7 +58,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                               String city,
                               String extraInfo,
                               long maxTradePeriod,
-                              Map<String, String> excludeFromJsonDataMap) {
+                              PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -96,7 +94,7 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                 f2fAccountPayloadPB.getCity(),
                 f2fAccountPayloadPB.getExtraInfo(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

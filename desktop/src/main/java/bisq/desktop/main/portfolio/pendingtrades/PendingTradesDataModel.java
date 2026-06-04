@@ -41,6 +41,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeAlreadyOpenException;
+import bisq.core.support.dispute.DisputeExtraDataMap;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
@@ -566,8 +567,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     mediatorPubKeyRing,
                     isSupportTicket,
                     SupportType.MEDIATION);
-            dispute.setExtraData("counterCurrencyTxId", trade.getCounterCurrencyTxId());
-            dispute.setExtraData("counterCurrencyExtraData", trade.getCounterCurrencyExtraData());
+
+            dispute.setExtraData(DisputeExtraDataMap.Keys.COUNTER_CURRENCY_TX_ID, trade.getCounterCurrencyTxId());
+            dispute.setExtraData(DisputeExtraDataMap.Keys.COUNTER_CURRENCY_EXTRA_DATA, trade.getCounterCurrencyExtraData());
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             if (delayedPayoutTx != null) {
@@ -630,8 +632,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     refundAgentPubKeyRing,
                     isSupportTicket,
                     SupportType.REFUND);
-            dispute.setExtraData("counterCurrencyTxId", trade.getCounterCurrencyTxId());
-            dispute.setExtraData("counterCurrencyExtraData", trade.getCounterCurrencyExtraData());
+
+            dispute.setExtraData(DisputeExtraDataMap.Keys.COUNTER_CURRENCY_TX_ID, trade.getCounterCurrencyTxId());
+            dispute.setExtraData(DisputeExtraDataMap.Keys.COUNTER_CURRENCY_EXTRA_DATA, trade.getCounterCurrencyExtraData());
 
             String tradeId = dispute.getTradeId();
             mediationManager.findDispute(tradeId)

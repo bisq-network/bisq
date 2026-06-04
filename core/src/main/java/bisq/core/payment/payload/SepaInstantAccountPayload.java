@@ -28,9 +28,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -77,7 +75,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
                                       String bic,
                                       List<String> acceptedCountryCodes,
                                       long maxTradePeriod,
-                                      Map<String, String> excludeFromJsonDataMap) {
+                                      PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,
@@ -119,7 +117,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
                 sepaInstantAccountPayloadPB.getBic(),
                 new ArrayList<>(sepaInstantAccountPayloadPB.getAcceptedCountryCodesList()),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 

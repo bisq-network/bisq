@@ -323,7 +323,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     tradePeriodEnd.getStyleClass().add("alert"); // highlight field when the trade period is still active
                 }
             }
-            if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {
+            if (dispute.getExtraDataMap() != null && !dispute.getExtraDataMap().isEmpty()) {
                 String extraDataSummary = "";
                 for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
                     extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";

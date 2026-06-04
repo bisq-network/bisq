@@ -23,8 +23,6 @@ import com.google.protobuf.Message;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -91,7 +89,7 @@ public final class SwiftAccountPayload extends PaymentAccountPayload {
                                 String intermediaryBranch,
                                 String intermediaryAddress,
                                 long maxTradePeriod,
-                                Map<String, String> excludeFromJsonDataMap) {
+                                PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -161,7 +159,7 @@ public final class SwiftAccountPayload extends PaymentAccountPayload {
                 x.getIntermediaryBranch(),
                 x.getIntermediaryAddress(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
     @Override

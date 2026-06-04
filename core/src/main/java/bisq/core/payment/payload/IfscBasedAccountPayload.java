@@ -7,7 +7,6 @@ import bisq.core.locale.Res;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -41,7 +40,7 @@ public abstract class IfscBasedAccountPayload extends CountryBasedPaymentAccount
                                  String accountNr,
                                  String ifsc,
                                  long maxTradePeriod,
-                                 Map<String, String> excludeFromJsonDataMap) {
+                                 PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethodName,
                 id,
                 countryCode,

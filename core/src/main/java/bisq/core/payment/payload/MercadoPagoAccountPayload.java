@@ -20,8 +20,6 @@ package bisq.core.payment.payload;
 import bisq.core.locale.Res;
 import com.google.protobuf.Message;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,7 +46,7 @@ public final class MercadoPagoAccountPayload extends CountryBasedPaymentAccountP
                                          String accountHolderName,
                                          String accountHolderId,
                                          long maxTradePeriod,
-                                         Map<String, String> excludeFromJsonDataMap) {
+                                         PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 countryCode,
@@ -82,7 +80,7 @@ public final class MercadoPagoAccountPayload extends CountryBasedPaymentAccountP
                 mercadoPagoAccountPayloadPB.getHolderName(),
                 mercadoPagoAccountPayloadPB.getHolderId(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
     @Override

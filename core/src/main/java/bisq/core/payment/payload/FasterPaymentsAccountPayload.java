@@ -27,14 +27,14 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.payment.payload.PaymentAccountPayloadExcludeFromJsonMap.Keys.*;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -62,7 +62,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                                          String accountNr,
                                          String email,
                                          long maxTradePeriod,
-                                         Map<String, String> excludeFromJsonDataMap) {
+                                         PaymentAccountPayloadExcludeFromJsonMap excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -91,21 +91,13 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                 proto.getFasterPaymentsAccountPayload().getAccountNr(),
                 proto.getFasterPaymentsAccountPayload().getEmail(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new PaymentAccountPayloadExcludeFromJsonMap(proto.getExcludeFromJsonDataMap()));
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getHolderName() {
-        return excludeFromJsonDataMap.getOrDefault(HOLDER_NAME, "");
-    }
-
-    public void setHolderName(String holderName) {
-        excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
-    }
 
     @Override
     public String getPaymentDetails() {
