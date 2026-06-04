@@ -25,7 +25,6 @@ import bisq.core.proto.CoreProtoResolver;
 
 import com.google.common.collect.Lists;
 
-import java.util.HashSet;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Disabled;

@@ -50,7 +50,9 @@ import java.io.File;
 import java.math.BigInteger;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -166,6 +168,69 @@ public class FilterManagerAddFilterToNetworkTests {
         Filter currentFilter = filterManager.getFilter();
         assertNotNull(currentFilter);
         assertEquals(filterWithSig, currentFilter);
+    }
+
+    @Test
+    void publishValidFilterOlderThanDateDrift() {
+        // No filter before adding our filter
+        assertNull(filterManager.getFilter());
+
+        long creationTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
+        Filter filterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
+        p2pStorageMap.put(
+                new P2PDataStorage.ByteArray(new byte[100]),
+                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+        );
+
+        filterManager.onAllServicesInitialized();
+
+        // Our filter got set
+        Filter currentFilter = filterManager.getFilter();
+        assertNotNull(currentFilter);
+        assertEquals(filterWithSig, currentFilter);
+    }
+
+    @Test
+    void rejectFilterTooFarInFuture() {
+        // No filter before adding our filter
+        assertNull(filterManager.getFilter());
+
+        long creationTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(3);
+        Filter filterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
+        p2pStorageMap.put(
+                new P2PDataStorage.ByteArray(new byte[100]),
+                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+        );
+
+        filterManager.onAllServicesInitialized();
+
+        // FilterManager didn't add our filter
+        assertNull(filterManager.getFilter());
+    }
+
+    @Test
+    void rejectFilterWithUnsafePersistedNodeListValue() {
+        // No filter before adding our filter
+        assertNull(filterManager.getFilter());
+
+        Filter filterWithSig = TestFilter.createSignedFilterWithNodeLists(ownerPublicKey,
+                privilegedDevEcKey,
+                System.currentTimeMillis(),
+                List.of("seed1.onion:8001\napiPassword=secret"),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of("btc1.onion:8333"),
+                List.of("seed2.onion:8002"));
+        p2pStorageMap.put(
+                new P2PDataStorage.ByteArray(new byte[100]),
+                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+        );
+
+        filterManager.onAllServicesInitialized();
+
+        // FilterManager didn't add our filter
+        assertNull(filterManager.getFilter());
     }
 
     @Test
