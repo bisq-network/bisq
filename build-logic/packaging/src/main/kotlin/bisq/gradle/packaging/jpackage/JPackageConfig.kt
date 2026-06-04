@@ -6,6 +6,7 @@ import java.nio.file.Path
 data class JPackageConfig(
         val inputDirPath: Path,
         val outputDirPath: Path,
+        val jPackageTempDirPath: Path,
         val temporaryDirPath: Path,
         val appConfig: JPackageAppConfig,
         val packageFormatConfigs: JPackagePackageFormatConfigs
