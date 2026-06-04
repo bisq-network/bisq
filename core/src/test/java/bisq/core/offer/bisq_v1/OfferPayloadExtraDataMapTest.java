@@ -32,6 +32,10 @@ import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.CASH_BY_MAIL
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.F2F_CITY;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.F2F_EXTRA_INFO;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.REFERRAL_ID;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.RESERVED_0;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.RESERVED_1;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.RESERVED_2;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.RESERVED_3;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.XMR_AUTO_CONF;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,6 +51,19 @@ public class OfferPayloadExtraDataMapTest {
             CASH_BY_MAIL_EXTRA_INFO,
             CAPABILITIES,
             XMR_AUTO_CONF
+    );
+    private static final List<String> CANONICAL_ORDER = List.of(
+            CAPABILITIES,
+            REFERRAL_ID,
+            XMR_AUTO_CONF,
+            ACCOUNT_AGE_WITNESS_HASH,
+            CASH_BY_MAIL_EXTRA_INFO,
+            F2F_EXTRA_INFO,
+            F2F_CITY,
+            RESERVED_0,
+            RESERVED_1,
+            RESERVED_2,
+            RESERVED_3
     );
     private static final String UNKNOWN_KEY = "unknownOfferPayloadExtraDataKey";
 
@@ -106,6 +123,21 @@ public class OfferPayloadExtraDataMapTest {
 
         assertEquals(List.of(REFERRAL_ID, XMR_AUTO_CONF, ACCOUNT_AGE_WITNESS_HASH, CASH_BY_MAIL_EXTRA_INFO),
                 keys(extraDataMap.getMap()));
+    }
+
+    @Test
+    public void reservedKeysUseFutureCanonicalOrderAfterLegacyKeys() {
+        assertEquals(CANONICAL_ORDER, OfferPayloadExtraDataMap.LEGACY_HASHMAP_ORDER);
+
+        Map<String, String> reverseCanonicalInput = new LinkedHashMap<>();
+        List<String> reverseCanonicalOrder = new ArrayList<>(CANONICAL_ORDER);
+        Collections.reverse(reverseCanonicalOrder);
+        reverseCanonicalOrder.forEach(key -> reverseCanonicalInput.put(key, valueFor(key)));
+
+        OfferPayloadExtraDataMap extraDataMap = new OfferPayloadExtraDataMap();
+        extraDataMap.putAll(reverseCanonicalInput);
+
+        assertEquals(CANONICAL_ORDER, keys(extraDataMap.getMap()));
     }
 
     @Test

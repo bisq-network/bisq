@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class OfferPayloadExtraDataMap {
-    // This replicates the order of the Java HashMap for the given keys, inserted by current offer producers,
+    // This replicates the order of the Java HashMap for the given keys, inserted by current producers,
     // to support backward compatibility.
     static final List<String> LEGACY_HASHMAP_ORDER = List.of(
             Keys.CAPABILITIES,

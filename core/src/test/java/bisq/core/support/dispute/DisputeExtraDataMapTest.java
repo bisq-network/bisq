@@ -28,6 +28,10 @@ import org.junit.jupiter.api.Test;
 
 import static bisq.core.support.dispute.DisputeExtraDataMap.Keys.COUNTER_CURRENCY_EXTRA_DATA;
 import static bisq.core.support.dispute.DisputeExtraDataMap.Keys.COUNTER_CURRENCY_TX_ID;
+import static bisq.core.support.dispute.DisputeExtraDataMap.Keys.RESERVED_0;
+import static bisq.core.support.dispute.DisputeExtraDataMap.Keys.RESERVED_1;
+import static bisq.core.support.dispute.DisputeExtraDataMap.Keys.RESERVED_2;
+import static bisq.core.support.dispute.DisputeExtraDataMap.Keys.RESERVED_3;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,6 +41,14 @@ public class DisputeExtraDataMapTest {
     private static final List<String> PENDING_TRADES_INSERTION_ORDER = List.of(
             COUNTER_CURRENCY_TX_ID,
             COUNTER_CURRENCY_EXTRA_DATA
+    );
+    private static final List<String> CANONICAL_ORDER = List.of(
+            COUNTER_CURRENCY_TX_ID,
+            COUNTER_CURRENCY_EXTRA_DATA,
+            RESERVED_0,
+            RESERVED_1,
+            RESERVED_2,
+            RESERVED_3
     );
     private static final String UNKNOWN_KEY = "unknownDisputeExtraDataKey";
 
@@ -97,6 +109,21 @@ public class DisputeExtraDataMapTest {
     }
 
     @Test
+    public void reservedKeysUseFutureCanonicalOrderAfterLegacyKeys() {
+        assertEquals(CANONICAL_ORDER, DisputeExtraDataMap.LEGACY_HASHMAP_ORDER);
+
+        Map<String, String> reverseCanonicalInput = new LinkedHashMap<>();
+        List<String> reverseCanonicalOrder = new ArrayList<>(CANONICAL_ORDER);
+        Collections.reverse(reverseCanonicalOrder);
+        reverseCanonicalOrder.forEach(key -> reverseCanonicalInput.put(key, valueFor(key)));
+
+        DisputeExtraDataMap extraDataMap = new DisputeExtraDataMap();
+        extraDataMap.putAll(reverseCanonicalInput);
+
+        assertEquals(CANONICAL_ORDER, keys(extraDataMap.getMap()));
+    }
+
+    @Test
     public void protobufConstructedMapPreservesInsertionOrder() {
         Map<String, String> protobufOrder = new LinkedHashMap<>();
         protobufOrder.put(COUNTER_CURRENCY_EXTRA_DATA, valueFor(COUNTER_CURRENCY_EXTRA_DATA));
@@ -109,15 +136,13 @@ public class DisputeExtraDataMapTest {
     }
 
     @Test
-    public void entrySetUsesCanonicalOrder() {
+    public void getMapUsesCanonicalOrder() {
         DisputeExtraDataMap extraDataMap = new DisputeExtraDataMap();
         extraDataMap.put(COUNTER_CURRENCY_EXTRA_DATA, valueFor(COUNTER_CURRENCY_EXTRA_DATA));
         extraDataMap.put(COUNTER_CURRENCY_TX_ID, valueFor(COUNTER_CURRENCY_TX_ID));
 
         assertEquals(List.of(COUNTER_CURRENCY_TX_ID, COUNTER_CURRENCY_EXTRA_DATA),
-                extraDataMap.entrySet().stream()
-                        .map(Map.Entry::getKey)
-                        .toList());
+                keys(extraDataMap.getMap()));
     }
 
     @Test

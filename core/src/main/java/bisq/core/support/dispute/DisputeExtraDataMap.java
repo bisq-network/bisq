@@ -17,8 +17,6 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -29,7 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class DisputeExtraDataMap {
-    // This replicates the order of the Java HashMap for the given keys, inserted by current offer producers,
+    // This replicates the order of the Java HashMap for the given keys, inserted by current producers,
     // to support backward compatibility.
     static final List<String> LEGACY_HASHMAP_ORDER = List.of(
             Keys.COUNTER_CURRENCY_TX_ID,

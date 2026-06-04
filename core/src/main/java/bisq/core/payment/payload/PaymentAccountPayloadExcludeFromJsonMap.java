@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 public class PaymentAccountPayloadExcludeFromJsonMap {
-    // This replicates the order of the Java HashMap for the given keys, inserted by current offer producers,
+    // This replicates the order of the Java HashMap for the given keys, inserted by current producers,
     // to support backward compatibility.
     static final List<String> LEGACY_HASHMAP_ORDER = List.of(
             Keys.HOLDER_NAME,
@@ -161,10 +161,5 @@ public class PaymentAccountPayloadExcludeFromJsonMap {
         public static final String RESERVED_1 = "reserved1";
         public static final String RESERVED_2 = "reserved2";
         public static final String RESERVED_3 = "reserved3";
-    }
-
-    public static class Values {
-        // If maker is seller and has xmrAutoConf enabled it is set to "1" otherwise it is not set
-        public static final String XMR_AUTO_CONF_ENABLED_VALUE = "1";
     }
 }
