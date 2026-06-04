@@ -73,8 +73,6 @@ public class BlindVoteValidator {
                     "getEncryptedMeritList must not be empty");
             checkArgument(blindVote.getEncryptedMeritList().length <= 100000,
                     "getEncryptedMeritList must not exceed 100kb");
-
-            ExtraDataMapValidator.validate(blindVote.getExtraDataMap());
         } catch (Throwable e) {
             log.warn(e.toString());
             throw new ProposalValidationException(e);

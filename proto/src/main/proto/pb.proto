@@ -2417,7 +2417,7 @@ message BlindVote {
     int64 stake = 3;
     bytes encrypted_merit_list = 4;
     int64 date = 5;
-    map<string, string> extra_data = 6;
+    map<string, string> extra_data = 6 [deprecated = true]; // Was always empty map and is not supported anymore since v1.10.2
 }
 
 message MyBlindVoteList {
