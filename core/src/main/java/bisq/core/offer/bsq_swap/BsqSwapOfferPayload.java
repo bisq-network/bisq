@@ -31,16 +31,13 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.ProofOfWork;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.util.CollectionUtils;
-
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.Nullable;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -60,7 +57,6 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 original.getAmount(),
                 original.getMinAmount(),
                 proofOfWork,
-                original.getExtraDataMap(),
                 original.getVersionNr(),
                 original.getProtocolVersion()
         );
@@ -77,7 +73,6 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                                long amount,
                                long minAmount,
                                ProofOfWork proofOfWork,
-                               @Nullable Map<String, String> extraDataMap,
                                String versionNr,
                                int protocolVersion) {
         super(id,
@@ -92,7 +87,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 minAmount,
                 PaymentMethod.BSQ_SWAP_ID,
                 BsqSwapAccount.ID,
-                extraDataMap,
+                null,
                 versionNr,
                 protocolVersion);
 
@@ -133,8 +128,11 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     }
 
     public static BsqSwapOfferPayload fromProto(protobuf.BsqSwapOfferPayload proto) {
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : proto.getExtraDataMap();
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in BsqSwapOfferPayload");
+
         return new BsqSwapOfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
@@ -144,7 +142,6 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 proto.getAmount(),
                 proto.getMinAmount(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
-                extraDataMapMap,
                 proto.getVersionNr(),
                 proto.getProtocolVersion()
         );

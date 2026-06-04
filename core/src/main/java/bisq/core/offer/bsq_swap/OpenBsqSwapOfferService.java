@@ -223,7 +223,6 @@ public class OpenBsqSwapOfferService {
                                 amount.getValue(),
                                 minAmount.getValue(),
                                 proofOfWork,
-                                null,
                                 Version.VERSION,
                                 Version.TRADE_PROTOCOL_VERSION);
                         resultHandler.accept(new Offer(bsqSwapOfferPayload));

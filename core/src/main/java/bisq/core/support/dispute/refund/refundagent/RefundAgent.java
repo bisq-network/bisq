@@ -41,6 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
@@ -53,8 +55,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                        byte[] registrationPubKey,
                        String registrationSignature,
                        @Nullable String emailAddress,
-                       @Nullable String info,
-                       @Nullable Map<String, String> extraDataMap) {
+                       @Nullable String info) {
 
         super(nodeAddress,
                 pubKeyRing,
@@ -63,8 +64,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 registrationPubKey,
                 registrationSignature,
                 emailAddress,
-                info,
-                extraDataMap);
+                info);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -82,11 +82,15 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 .setRegistrationSignature(registrationSignature);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setRefundAgent(builder).build();
     }
 
     public static RefundAgent fromProto(protobuf.RefundAgent proto) {
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in RefundAgent");
+
         return new RefundAgent(NodeAddress.fromProto(proto.getNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 new ArrayList<>(proto.getLanguageCodesList()),
@@ -94,8 +98,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
-                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()));
     }
 
 

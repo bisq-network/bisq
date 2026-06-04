@@ -238,7 +238,6 @@ class ValidationTestUtils {
                 new byte[]{1},
                 "registrationSignature",
                 null,
-                null,
                 null);
     }
 

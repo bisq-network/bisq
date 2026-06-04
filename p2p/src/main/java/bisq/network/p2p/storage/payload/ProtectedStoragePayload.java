@@ -48,7 +48,9 @@ public interface ProtectedStoragePayload extends NetworkPayload {
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    Map<String, String> getExtraDataMap();
+    default Map<String, String> getExtraDataMap() {
+        return null;
+    }
 
     static ProtectedStoragePayload fromProto(protobuf.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
         return (ProtectedStoragePayload) networkProtoResolver.fromProto(storagePayload);

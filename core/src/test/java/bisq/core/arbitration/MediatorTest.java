@@ -50,7 +50,6 @@ public class MediatorTest {
                 getBytes(100),
                 "registrationSignature",
                 "email",
-                "info",
-                null);
+                "info");
     }
 }

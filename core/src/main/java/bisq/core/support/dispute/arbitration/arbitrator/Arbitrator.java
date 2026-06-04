@@ -23,14 +23,12 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.util.CollectionUtils;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -38,6 +36,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
@@ -55,8 +55,7 @@ public final class Arbitrator extends DisputeAgent {
                       byte[] registrationPubKey,
                       String registrationSignature,
                       @Nullable String emailAddress,
-                      @Nullable String info,
-                      @Nullable Map<String, String> extraDataMap) {
+                      @Nullable String info) {
 
         super(nodeAddress,
                 pubKeyRing,
@@ -65,8 +64,7 @@ public final class Arbitrator extends DisputeAgent {
                 registrationPubKey,
                 registrationSignature,
                 emailAddress,
-                info,
-                extraDataMap);
+                info);
 
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
@@ -89,11 +87,15 @@ public final class Arbitrator extends DisputeAgent {
                 .setRegistrationSignature(registrationSignature);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
     public static Arbitrator fromProto(protobuf.Arbitrator proto) {
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in Arbitrator");
+
         return new Arbitrator(NodeAddress.fromProto(proto.getNodeAddress()),
                 proto.getBtcPubKey().toByteArray(),
                 proto.getBtcAddress(),
@@ -103,8 +105,7 @@ public final class Arbitrator extends DisputeAgent {
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
-                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()));
     }
 
 

@@ -42,7 +42,7 @@ public class UserPayloadModelVOTest {
     public void testRoundtripFull() {
         UserPayload vo = new UserPayload();
         vo.setAccountId("accountId");
-        vo.setDisplayedAlert(new Alert("message", true, false, "version", new byte[]{12, -64, 12}, "string", null));
+        vo.setDisplayedAlert(new Alert("message", true, false, "version", new byte[]{12, -64, 12}, "string"));
         vo.setDevelopersFilter(new Filter(Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
@@ -62,7 +62,6 @@ public class UserPayloadModelVOTest {
                 Lists.newArrayList(),
                 null,
                 0,
-                null,
                 null,
                 null,
                 null,

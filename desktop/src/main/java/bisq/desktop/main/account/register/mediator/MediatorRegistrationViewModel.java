@@ -55,7 +55,6 @@ class MediatorRegistrationViewModel extends AgentRegistrationViewModel<Mediator,
                 registrationKey.getPubKey(),
                 registrationSignature,
                 emailAddress,
-                null,
                 null
         );
     }

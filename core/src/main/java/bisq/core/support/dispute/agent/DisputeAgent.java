@@ -23,13 +23,11 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.GetDataResponsePriority;
-import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import java.security.PublicKey;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
@@ -55,12 +53,6 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
     @Nullable
     protected final String info;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    protected Map<String, String> extraDataMap;
-
     public DisputeAgent(NodeAddress nodeAddress,
                         PubKeyRing pubKeyRing,
                         List<String> languageCodes,
@@ -68,8 +60,7 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
                         byte[] registrationPubKey,
                         String registrationSignature,
                         @Nullable String emailAddress,
-                        @Nullable String info,
-                        @Nullable Map<String, String> extraDataMap) {
+                        @Nullable String info) {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
@@ -78,7 +69,6 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
     }
 
 
@@ -101,7 +91,6 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         return pubKeyRing.getSignaturePubKey();
     }
 
-
     @Override
     public String toString() {
         return "DisputeAgent{" +
@@ -113,7 +102,6 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
                 ",\n     registrationSignature='" + registrationSignature + '\'' +
                 ",\n     emailAddress='" + emailAddress + '\'' +
                 ",\n     info='" + info + '\'' +
-                ",\n     extraDataMap=" + extraDataMap +
                 "\n}";
     }
 }

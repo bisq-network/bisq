@@ -24,18 +24,11 @@ import org.apache.commons.lang3.NotImplementedException;
 
 import java.security.PublicKey;
 
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 @SuppressWarnings("ALL")
 public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     public final String msg;
     public final PublicKey publicKey;
     public long ttl;
-
-    @Nullable
-    private Map<String, String> extraDataMap;
 
     public MockData(String msg, PublicKey publicKey) {
         this.msg = msg;
@@ -63,12 +56,6 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
         return "MockData{" +
                 "msg='" + msg + '\'' +
                 '}';
-    }
-
-    @Nullable
-    @Override
-    public Map<String, String> getExtraDataMap() {
-        return extraDataMap;
     }
 
     @Override

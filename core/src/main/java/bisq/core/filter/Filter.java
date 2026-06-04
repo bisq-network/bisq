@@ -25,8 +25,6 @@ import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
-import bisq.common.util.CollectionUtils;
-import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
@@ -51,6 +49,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -91,12 +91,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final long creationDate;
 
     private final List<String> bannedPrivilegedDevPubKeys;
-
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    private Map<String, String> extraDataMap;
 
     private transient PublicKey ownerPubKey;
 
@@ -163,7 +157,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
-                filter.getExtraDataMap(),
                 signatureAsBase64,
                 filter.getSignerPubKeyAsHex(),
                 filter.getBannedPrivilegedDevPubKeys(),
@@ -207,7 +200,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
-                filter.getExtraDataMap(),
                 null,
                 filter.getSignerPubKeyAsHex(),
                 filter.getBannedPrivilegedDevPubKeys(),
@@ -287,7 +279,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 Sig.getPublicKeyBytes(ownerPubKey),
                 System.currentTimeMillis(),
                 null,
-                null,
                 signerPubKeyAsHex,
                 bannedPrivilegedDevPubKeys,
                 disableAutoConf,
@@ -334,7 +325,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
-                  @Nullable Map<String, String> extraDataMap,
                   @Nullable String signatureAsBase64,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
@@ -374,7 +364,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.btcFeeReceiverAddresses = btcFeeReceiverAddresses;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.creationDate = creationDate;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.signatureAsBase64 = signatureAsBase64;
         this.signerPubKeyAsHex = signerPubKeyAsHex;
         this.bannedPrivilegedDevPubKeys = bannedPrivilegedDevPubKeys;
@@ -471,12 +460,16 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .setDisableBsqSwap(disableBsqSwap);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
         return builder;
     }
 
     public static Filter fromProto(protobuf.Filter proto) {
+        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in Filter");
+
         List<PaymentAccountFilter> bannedPaymentAccountsList = proto.getBannedPaymentAccountsList().stream()
                 .map(PaymentAccountFilter::fromProto)
                 .collect(Collectors.toList());
@@ -503,7 +496,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getCreationDate(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),
@@ -569,7 +561,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
-                ",\n     extraDataMap=" + extraDataMap +
                 ",\n     ownerPubKey=" + Hex.encode(ownerPubKeyBytes) +
                 ",\n     disableAutoConf=" + disableAutoConf +
                 ",\n     nodeAddressesBannedFromNetwork=" + nodeAddressesBannedFromNetwork +
