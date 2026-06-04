@@ -17,22 +17,31 @@
 
 package bisq.core.trade.statistics;
 
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import bisq.common.util.ExtraDataMapValidator;
+
 import com.google.common.collect.Sets;
+import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TradeStatistics3Test {
@@ -45,7 +54,7 @@ public class TradeStatistics3Test {
                 System.currentTimeMillis(),
                 null,
                 null,
-                (Map<String, String>) null);
+                (TreeMap<String, String>) null);
 
         assertTrue(tradeStatistics.isValid());
     }
@@ -59,9 +68,98 @@ public class TradeStatistics3Test {
                 System.currentTimeMillis(),
                 null,
                 null,
-                (Map<String, String>) null);
+                (TreeMap<String, String>) null);
 
         assertFalse(tradeStatistics.isValid());
+    }
+
+    @Test
+    public void singleEntryExtraDataMapSerializesLikeHashMap() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put(OfferPayload.REFERRAL_ID, "referralId");
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
+                50_000_000,
+                Coin.parseCoin("0.25").value,
+                "SEPA",
+                1,
+                "mediator",
+                "refundAgent",
+                extraDataMap,
+                new byte[20]);
+
+        protobuf.TradeStatistics3 treeMapProto = tradeStatistics.toProtoTradeStatistics3();
+        Map<String, String> hashMap = new HashMap<>();
+        hashMap.put(OfferPayload.REFERRAL_ID, "referralId");
+        protobuf.TradeStatistics3 hashMapProto = treeMapProto.toBuilder()
+                .clearExtraData()
+                .putAllExtraData(hashMap)
+                .build();
+
+        assertArrayEquals(hashMapProto.toByteArray(), treeMapProto.toByteArray());
+    }
+
+    @Test
+    public void fromProtoConvertsExtraDataMapToTreeMapWithoutChangingSingleEntryBytes() {
+        Map<String, String> hashMap = new HashMap<>();
+        hashMap.put(OfferPayload.REFERRAL_ID, "referralId");
+        protobuf.TradeStatistics3 hashMapProto = protobuf.TradeStatistics3.newBuilder()
+                .setCurrency("USD")
+                .setPrice(50_000_000)
+                .setAmount(Coin.parseCoin("0.25").value)
+                .setPaymentMethod(String.valueOf(TradeStatistics3.PaymentMethodMapper.SEPA.ordinal()))
+                .setDate(1)
+                .setMediator("mediator")
+                .setRefundAgent("refundAgent")
+                .setHash(ByteString.copyFrom(new byte[20]))
+                .putAllExtraData(hashMap)
+                .build();
+
+        TradeStatistics3 tradeStatistics = TradeStatistics3.fromProto(hashMapProto);
+
+        assertTrue(tradeStatistics.getExtraDataMap() instanceof TreeMap);
+        assertArrayEquals(hashMapProto.toByteArray(), tradeStatistics.toProtoTradeStatistics3().toByteArray());
+    }
+
+    @Test
+    public void fromProtoPreservesNullExtraDataMap() {
+        protobuf.TradeStatistics3 proto = protobuf.TradeStatistics3.newBuilder()
+                .setCurrency("USD")
+                .setPrice(50_000_000)
+                .setAmount(Coin.parseCoin("0.25").value)
+                .setPaymentMethod(String.valueOf(TradeStatistics3.PaymentMethodMapper.SEPA.ordinal()))
+                .setDate(1)
+                .setHash(ByteString.copyFrom(new byte[20]))
+                .build();
+
+        TradeStatistics3 tradeStatistics = TradeStatistics3.fromProto(proto);
+
+        assertNull(tradeStatistics.getExtraDataMap());
+        assertTrue(tradeStatistics.toProtoTradeStatistics3().getExtraDataMap().isEmpty());
+    }
+
+    @Test
+    public void fromProtoSanitizesInvalidExtraDataMap() {
+        Map<String, String> oversizedMap = new HashMap<>();
+        for (int i = 0; i <= ExtraDataMapValidator.MAX_SIZE; i++) {
+            oversizedMap.put("key" + i, "value");
+        }
+        protobuf.TradeStatistics3 proto = protobuf.TradeStatistics3.newBuilder()
+                .setCurrency("USD")
+                .setPrice(50_000_000)
+                .setAmount(Coin.parseCoin("0.25").value)
+                .setPaymentMethod(String.valueOf(TradeStatistics3.PaymentMethodMapper.SEPA.ordinal()))
+                .setDate(1)
+                .setHash(ByteString.copyFrom(new byte[20]))
+                .putAllExtraData(oversizedMap)
+                .build();
+
+        TradeStatistics3 tradeStatistics = TradeStatistics3.fromProto(proto);
+
+        Map<String, String> extraDataMap = tradeStatistics.getExtraDataMap();
+        assertNotNull(extraDataMap);
+        assertTrue(extraDataMap instanceof TreeMap);
+        assertTrue(extraDataMap.isEmpty());
+        assertTrue(tradeStatistics.toProtoTradeStatistics3().getExtraDataMap().isEmpty());
     }
 
     @Disabled("Not fixed yet")

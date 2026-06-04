@@ -45,8 +45,8 @@ import javafx.collections.FXCollections;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -362,7 +362,8 @@ public class BurningManServiceTest {
                                                                                     long amount,
                                                                                     String receiverAddress) {
         var issuance = new Issuance(txId, chainHeight, amount, null, IssuanceType.COMPENSATION);
-        var extraDataMap = Map.of(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, receiverAddress);
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, receiverAddress);
         var proposal = new CompensationProposal(name, "link", Coin.valueOf(amount), "bsqAddress", extraDataMap);
         return new Tuple2<>(issuance, new ProposalPayload(proposal.cloneProposalAndAddTxId(txId)));
     }

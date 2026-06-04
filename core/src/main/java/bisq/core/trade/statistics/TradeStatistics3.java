@@ -60,10 +60,10 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +93,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
                                         boolean isTorNetworkNode) {
-        Map<String, String> extraDataMap = new HashMap<>();
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
         if (referralId != null) {
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralId);
         }
@@ -231,13 +231,14 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // Hash get set in constructor from json of all the other data fields (with hash = null).
     @JsonExclude
     private final byte[] hash;
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     @JsonExclude
     @Getter
-    private final Map<String, String> extraDataMap;
+    private final TreeMap<String, String> extraDataMap;
 
     // We cache the date object to avoid reconstructing a new Date at each getDate call.
     @JsonExclude
@@ -255,7 +256,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long date,
                             String mediator,
                             String refundAgent,
-                            @Nullable Map<String, String> extraDataMap) {
+                            @Nullable TreeMap<String, String> extraDataMap) {
         this(currency,
                 price,
                 amount,
@@ -299,7 +300,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                             long date,
                             @Nullable String mediator,
                             @Nullable String refundAgent,
-                            @Nullable Map<String, String> extraDataMap,
+                            @Nullable TreeMap<String, String> extraDataMap,
                             @Nullable byte[] hash) {
         this.currency = currency;
         this.price = price;
@@ -314,8 +315,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         this.date = date;
         this.mediator = mediator;
         this.refundAgent = refundAgent;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
-
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
         this.hash = hash == null ? createHash() : hash;
 
         dateObj = new Date(date);
@@ -360,7 +361,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 proto.getDate(),
                 ProtoUtil.stringOrNullFromProto(proto.getMediator()),
                 ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()),
                 proto.getHash().toByteArray());
     }
 

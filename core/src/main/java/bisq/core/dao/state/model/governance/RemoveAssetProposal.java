@@ -84,7 +84,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
         // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
         // It is not expected that any historical data exist with a non-empty ExtraDataMap.
         checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in getRemoveAssetProposal");
+                "ExtraDataMap is expected to be not set in RemoveAssetProposal");
 
         protobuf.RemoveAssetProposal proposalProto = proto.getRemoveAssetProposal();
         return new RemoveAssetProposal(proto.getName(),

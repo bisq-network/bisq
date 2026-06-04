@@ -31,6 +31,7 @@ import bisq.common.util.ExtraDataMapValidator;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,13 +64,15 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
                        byte version,
                        long creationDate,
                        @Nullable String txId,
-                       @Nullable Map<String, String> extraDataMap) {
+                       @Nullable TreeMap<String, String> extraDataMap) {
         this.name = name;
         this.link = link;
         this.version = version;
         this.creationDate = creationDate;
         this.txId = txId;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
     }
 
 

@@ -93,7 +93,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
         // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
         // It is not expected that any historical data exist with a non-empty ExtraDataMap.
         checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in getReimbursementProposal");
+                "ExtraDataMap is expected to be not set in ReimbursementProposal");
 
         final protobuf.ReimbursementProposal proposalProto = proto.getReimbursementProposal();
         return new ReimbursementProposal(proto.getName(),
