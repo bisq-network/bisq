@@ -81,7 +81,6 @@ import bisq.core.payment.payload.VenmoAccountPayload;
 import bisq.core.payment.payload.VerseAccountPayload;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
-import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatistics3;
 
 import bisq.common.proto.ProtoResolver;
@@ -258,15 +257,12 @@ public class CoreProtoResolver implements ProtoResolver {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public PersistablePayload fromProto(protobuf.PersistableNetworkPayload proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case ACCOUNT_AGE_WITNESS:
                     return AccountAgeWitness.fromProto(proto.getAccountAgeWitness());
-                case TRADE_STATISTICS2:
-                    return TradeStatistics2.fromProto(proto.getTradeStatistics2());
                 case PROPOSAL_PAYLOAD:
                     return ProposalPayload.fromProto(proto.getProposalPayload());
                 case BLIND_VOTE_PAYLOAD:

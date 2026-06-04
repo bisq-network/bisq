@@ -615,7 +615,7 @@ message StoragePayload {
 message PersistableNetworkPayload {
     oneof message {
         AccountAgeWitness account_age_witness = 1;
-        TradeStatistics2 trade_statistics2 = 2 [deprecated = true];
+        TradeStatistics2 trade_statistics2 = 2 [deprecated = true]; // Java class removed in 1.10.2
         ProposalPayload proposal_payload = 3;
         BlindVotePayload blind_vote_payload = 4;
         SignedWitness signed_witness = 5;
@@ -773,7 +773,7 @@ message Filter {
     bool disable_bsq_swap = 40;
 }
 
-/* Deprecated */
+/* Deprecated. Java class removed in 1.10.2; kept to reserve the old wire format. */
 message TradeStatistics2 {
     string base_currency = 1 [deprecated = true];
     string counter_currency = 2 [deprecated = true];
@@ -1491,7 +1491,7 @@ message PersistableEnvelope {
         // BsqState bsq_state = 12;
 
         AccountAgeWitnessStore account_age_witness_store = 13;
-        TradeStatistics2Store trade_statistics2_store = 14 [deprecated = true];
+        TradeStatistics2Store trade_statistics2_store = 14 [deprecated = true]; // Java class removed in 1.10.2
 
         // PersistableNetworkPayloadList persistable_network_payload_list = 15; // long deprecated & migration away from it is already done.
 
@@ -1553,7 +1553,7 @@ message SignedWitnessStore {
     repeated SignedWitness items = 1;
 }
 
-/* Deprecated. Not used anymore.
+/* Deprecated. Java class removed in 1.10.2; kept to reserve the old local storage format.
 * We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway.
 */
 message TradeStatistics2Store {
