@@ -467,7 +467,10 @@ tree-table-view:focused {
 .jfx-badge .badge-pane .label {
     -fx-font-weight: bold;
     -fx-font-size: 0.692em;
-    -fx-text-fill: -bs-background-color;
+    /* Badge background is always red/orange in both themes, so keep the text
+       white for contrast. -bs-background-color is dark in the dark theme and
+       would make the count unreadable. */
+    -fx-text-fill: -bs-white;
 }
 
 .jfx-badge {
