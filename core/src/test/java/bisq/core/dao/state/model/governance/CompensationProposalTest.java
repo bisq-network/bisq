@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.model.governance;
 
+import bisq.common.util.ExtraDataMapValidator;
+
 import org.bitcoinj.core.Coin;
 
 import java.util.HashMap;
@@ -26,6 +28,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CompensationProposalTest {
@@ -72,5 +75,32 @@ public class CompensationProposalTest {
 
         assertTrue(proposal.getExtraDataMap() instanceof TreeMap);
         assertArrayEquals(hashMapProto.toByteArray(), proposal.toProtoMessage().toByteArray());
+    }
+
+    @Test
+    public void fromProtoSanitizesInvalidExtraDataMap() {
+        Map<String, String> oversizedMap = new HashMap<>();
+        for (int i = 0; i <= ExtraDataMapValidator.MAX_SIZE; i++) {
+            oversizedMap.put("key" + i, "value");
+        }
+        protobuf.Proposal proto = protobuf.Proposal.newBuilder()
+                .setName("name")
+                .setLink("link")
+                .setVersion(1)
+                .setCreationDate(1)
+                .setTxId("txId")
+                .setCompensationProposal(protobuf.CompensationProposal.newBuilder()
+                        .setRequestedBsq(10_000)
+                        .setBsqAddress("bsqAddress"))
+                .putAllExtraData(oversizedMap)
+                .build();
+
+        CompensationProposal proposal = CompensationProposal.fromProto(proto);
+
+        Map<String, String> extraDataMap = proposal.getExtraDataMap();
+        assertNotNull(extraDataMap);
+        assertTrue(extraDataMap instanceof TreeMap);
+        assertTrue(extraDataMap.isEmpty());
+        assertTrue(proposal.toProtoMessage().getExtraDataMap().isEmpty());
     }
 }
