@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
@@ -22,6 +23,8 @@ import javafx.scene.layout.StackPane;
  */
 public class BisqJfxBadge extends StackPane {
 
+    private final Group badge = new Group();
+    private final StackPane badgePane = new StackPane();
     private final Label badgeLabel = new Label();
     private final StringProperty text = new SimpleStringProperty("");
     private final BooleanProperty enabled = new SimpleBooleanProperty(true);
@@ -37,8 +40,16 @@ public class BisqJfxBadge extends StackPane {
         this.control = control;
         this.position = position;
         getStyleClass().add("jfx-badge");
-        badgeLabel.getStyleClass().add("jfx-badge-pane");
+        // Mirror the jfoenix JFXBadge node structure exactly:
+        //   jfx-badge (StackPane) > Group > badge-pane (StackPane) > Label
+        // The Group is essential: it is non-resizable, so the outer StackPane leaves
+        // the badge-pane at its content size and floats it at the corner. Without it
+        // the badge-pane is stretched to fill the cell (giant pill instead of a dot)
+        // and the ".jfx-badge .badge-pane" CSS no longer reads as intended.
+        badgePane.getStyleClass().add("badge-pane");
         badgeLabel.textProperty().bind(text);
+        badgePane.getChildren().add(badgeLabel);
+        badge.getChildren().add(badgePane);
         getChildren().addAll(control);
 
         text.addListener((o, oldV, newV) -> refreshBadge());
@@ -47,11 +58,11 @@ public class BisqJfxBadge extends StackPane {
     }
 
     public void refreshBadge() {
-        getChildren().remove(badgeLabel);
+        getChildren().remove(badge);
         String t = text.get();
         if (enabled.get() && t != null && !t.isEmpty()) {
-            StackPane.setAlignment(badgeLabel, position);
-            getChildren().add(badgeLabel);
+            StackPane.setAlignment(badge, position);
+            getChildren().add(badge);
         }
     }
 
