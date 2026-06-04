@@ -23,16 +23,16 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.Objects;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -44,16 +44,14 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
     public ChangeParamProposal(String name,
                                String link,
                                Param param,
-                               String paramValue,
-                               Map<String, String> extraDataMap) {
+                               String paramValue) {
         this(name,
                 link,
                 param,
                 paramValue,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -67,14 +65,13 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                                 String paramValue,
                                 byte version,
                                 long creationDate,
-                                String txId,
-                                Map<String, String> extraDataMap) {
+                                String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
 
         this.param = param;
         this.paramValue = paramValue;
@@ -89,6 +86,10 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
     }
 
     public static ChangeParamProposal fromProto(protobuf.Proposal proto) {
+        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in ChangeParamProposal");
         final protobuf.ChangeParamProposal proposalProto = proto.getChangeParamProposal();
         return new ChangeParamProposal(proto.getName(),
                 proto.getLink(),
@@ -96,9 +97,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 proposalProto.getParamValue(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -134,8 +133,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 getParamValue(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

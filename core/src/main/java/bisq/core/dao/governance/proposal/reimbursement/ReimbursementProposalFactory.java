@@ -39,8 +39,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -79,8 +77,7 @@ public class ReimbursementProposalFactory extends BaseProposalFactory<Reimbursem
                 name,
                 link,
                 requestedBsq,
-                bsqAddress,
-                new HashMap<>());
+                bsqAddress);
     }
 
     @Override

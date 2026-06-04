@@ -2283,6 +2283,7 @@ message Proposal {
         RemoveAssetProposal remove_asset_proposal = 12;
     }
     // We leave some index space here in case we add more subclasses.
+    // extra_data is only used in CompensationProposal, the other subclasses have set it to null
     map<string, string> extra_data = 20;
 }
 

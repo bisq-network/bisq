@@ -199,7 +199,7 @@ public class DeprecatedExtraDataMapTest {
     }
 
     private static TempProposalPayload tempProposalPayload() {
-        return new TempProposalPayload(new GenericProposal("name", "link", null), signaturePublicKey());
+        return new TempProposalPayload(new GenericProposal("name", "link"), signaturePublicKey());
     }
 
     private static BsqSwapOfferPayload bsqSwapOfferPayload() {

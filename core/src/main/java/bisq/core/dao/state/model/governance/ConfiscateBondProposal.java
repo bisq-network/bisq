@@ -23,16 +23,16 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -43,15 +43,13 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
 
     public ConfiscateBondProposal(String name,
                                   String link,
-                                  String lockupTxId,
-                                  Map<String, String> extraDataMap) {
+                                  String lockupTxId) {
         this(name,
                 link,
                 lockupTxId,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -64,14 +62,13 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                                    String lockupTxId,
                                    byte version,
                                    long creationDate,
-                                   String txId,
-                                   Map<String, String> extraDataMap) {
+                                   String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
         this.lockupTxId = lockupTxId;
     }
 
@@ -83,15 +80,18 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     }
 
     public static ConfiscateBondProposal fromProto(protobuf.Proposal proto) {
+        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in ConfiscateBondProposal");
+
         final protobuf.ConfiscateBondProposal proposalProto = proto.getConfiscateBondProposal();
         return new ConfiscateBondProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getLockupTxId(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -126,8 +126,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 getLockupTxId(),
                 getVersion(),
                 getCreationDate(),
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override

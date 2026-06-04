@@ -31,8 +31,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -76,7 +74,6 @@ public class ChangeParamProposalFactory extends BaseProposalFactory<ChangeParamP
                 name,
                 link,
                 param,
-                paramValue,
-                new HashMap<>());
+                paramValue);
     }
 }

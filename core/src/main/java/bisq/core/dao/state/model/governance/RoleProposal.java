@@ -23,16 +23,16 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
-import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
-import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -43,7 +43,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private final long requiredBondUnit;
     private final int unlockTime; // in blocks
 
-    public RoleProposal(Role role, Map<String, String> extraDataMap) {
+    public RoleProposal(Role role) {
         this(role.getName(),
                 role.getLink(),
                 role,
@@ -51,8 +51,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null,
-                extraDataMap);
+                null);
     }
 
 
@@ -67,14 +66,13 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                          int unlockTime,
                          byte version,
                          long creationDate,
-                         String txId,
-                         Map<String, String> extraDataMap) {
+                         String txId) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                extraDataMap);
+                null);
 
         this.role = role;
         this.requiredBondUnit = requiredBondUnit;
@@ -91,7 +89,12 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     }
 
     public static RoleProposal fromProto(protobuf.Proposal proto) {
-        final protobuf.RoleProposal proposalProto = proto.getRoleProposal();
+        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
+        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
+        checkArgument(proto.getExtraDataMap().isEmpty(),
+                "ExtraDataMap is expected to be not set in RoleProposal");
+
+        protobuf.RoleProposal proposalProto = proto.getRoleProposal();
         return new RoleProposal(proto.getName(),
                 proto.getLink(),
                 Role.fromProto(proposalProto.getRole()),
@@ -99,9 +102,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 proposalProto.getUnlockTime(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                proto.getTxId());
     }
 
 
@@ -138,8 +139,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 unlockTime,
                 version,
                 creationDate,
-                txId,
-                extraDataMap);
+                txId);
     }
 
     @Override
