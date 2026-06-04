@@ -40,6 +40,15 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
             allCommands.addAll(jPackageCommonArgs)
             allCommands.addAll(customCommands)
 
+            // jpackage fails if temp directory is not empty
+            val jPackageTempDir = jPackageConfig.jPackageTempDirPath.toFile()
+            if (jPackageTempDir.exists()) {
+                val isSuccess = jPackageTempDir.deleteRecursively()
+                if (!isSuccess) {
+                    throw GradleException("Couldn't delete jpackage temp directory: ${jPackageTempDir.absolutePath}")
+                }
+            }
+
             val process: Process = processBuilder.start()
             val finished = process.waitFor(15, TimeUnit.MINUTES)
             if (!finished) {
@@ -65,22 +74,23 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
     }
 
     private fun createCommonArguments(appConfig: JPackageAppConfig): List<String> =
-            mutableListOf(
-                    "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
+        mutableListOf(
+            "--temp", jPackageConfig.jPackageTempDirPath.toAbsolutePath().toString(),
+            "--dest", jPackageConfig.outputDirPath.toAbsolutePath().toString(),
 
-                    "--name", "Bisq",
-                    "--description", "A decentralized bitcoin exchange network.",
-                    "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
-                    "--vendor", "Bisq",
+            "--name", "Bisq",
+            "--description", "A decentralized bitcoin exchange network.",
+            "--copyright", "Copyright © 2013-${Year.now()} - The Bisq developers",
+            "--vendor", "Bisq",
 
-                    "--app-version", appConfig.appVersion,
+            "--app-version", appConfig.appVersion,
 
-                    "--input", jPackageConfig.inputDirPath.toAbsolutePath().toString(),
-                    "--main-jar", appConfig.mainJarFileName,
+            "--input", jPackageConfig.inputDirPath.toAbsolutePath().toString(),
+            "--main-jar", appConfig.mainJarFileName,
 
-                    "--main-class", appConfig.mainClassName,
-                    "--java-options", appConfig.jvmArgs.joinToString(separator = " "),
-            )
+            "--main-class", appConfig.mainClassName,
+            "--java-options", appConfig.jvmArgs.joinToString(separator = " "),
+        )
 
     private fun configureReproducibleRpmEnvironment(processBuilder: ProcessBuilder, packageFormat: PackageFormat) {
         if (packageFormat != PackageFormat.RPM) {

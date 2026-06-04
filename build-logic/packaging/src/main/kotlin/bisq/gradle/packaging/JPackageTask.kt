@@ -50,18 +50,19 @@ abstract class JPackageTask : DefaultTask() {
         deleteExistingInstallerArtifacts(outputDirectoryFile)
 
         val jPackageConfig = JPackageConfig(
-                inputDirPath = distDirFile.get().toPath().resolve("lib"),
-                outputDirPath = outputDirectoryFile.toPath(),
-                temporaryDirPath = temporaryDir.toPath(),
+            inputDirPath = distDirFile.get().toPath().resolve("lib"),
+            outputDirPath = outputDirectoryFile.toPath(),
+            jPackageTempDirPath = outputDirectoryFile.toPath().resolve("jpackage_temp"),
+            temporaryDirPath = temporaryDir.toPath(),
 
-                appConfig = JPackageAppConfig(
-                        appVersion = appVersion.get(),
-                        mainJarFileName = mainJarFile.asFile.get().name,
-                        mainClassName = mainClassName.get(),
-                        jvmArgs = jvmArgs.get()
-                ),
+            appConfig = JPackageAppConfig(
+                appVersion = appVersion.get(),
+                mainJarFileName = mainJarFile.asFile.get().name,
+                mainClassName = mainClassName.get(),
+                jvmArgs = jvmArgs.get()
+            ),
 
-                packageFormatConfigs = getPackageFormatConfigs()
+            packageFormatConfigs = getPackageFormatConfigs()
         )
 
         val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
