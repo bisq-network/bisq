@@ -124,8 +124,8 @@ public class FilterPolicyService {
     }
 
     public boolean requireUpdateToNewVersionForTrading() {
-        return denyList.hasRequiredVersionForTrading() &&
-                Version.isNewVersion(denyList.getRequiredVersionForTrading()) ||
+        return (denyList.hasRequiredVersionForTrading() &&
+                Version.isNewVersion(denyList.getRequiredVersionForTrading())) ||
                 filterManager.requireUpdateToNewVersionForTrading();
     }
 
