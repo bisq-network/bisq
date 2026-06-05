@@ -27,6 +27,7 @@ import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
 import bisq.core.notifications.alerts.MyOfferTakenEvents;
@@ -104,6 +105,7 @@ public class DomainInitialisation {
     private final SignedWitnessService signedWitnessService;
     private final PriceFeedService priceFeedService;
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final VoteResultService voteResultService;
     private final MobileNotificationService mobileNotificationService;
     private final MyOfferTakenEvents myOfferTakenEvents;
@@ -145,6 +147,7 @@ public class DomainInitialisation {
                                 SignedWitnessService signedWitnessService,
                                 PriceFeedService priceFeedService,
                                 FilterManager filterManager,
+                                FilterPolicyService filterPolicyService,
                                 VoteResultService voteResultService,
                                 MobileNotificationService mobileNotificationService,
                                 MyOfferTakenEvents myOfferTakenEvents,
@@ -184,6 +187,7 @@ public class DomainInitialisation {
         this.signedWitnessService = signedWitnessService;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.voteResultService = voteResultService;
         this.mobileNotificationService = mobileNotificationService;
         this.myOfferTakenEvents = myOfferTakenEvents;
@@ -246,7 +250,7 @@ public class DomainInitialisation {
 
         p2PService.onAllServicesInitialized();
 
-        feeService.onAllServicesInitialized();
+        feeService.onAllServicesInitialized(filterPolicyService);
 
         daoSetup.onAllServicesInitialized(errorMessage -> {
             if (daoErrorMessageHandler != null)

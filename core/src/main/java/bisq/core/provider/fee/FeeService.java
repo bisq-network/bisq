@@ -114,16 +114,9 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(DaoStateService daoStateService,
-                      PeriodService periodService,
-                      FilterPolicyService filterPolicyService) {
+    public FeeService(DaoStateService daoStateService, PeriodService periodService) {
         FeeService.daoStateService = daoStateService;
         FeeService.periodService = periodService;
-        FeeService.filterPolicyService = filterPolicyService;
-    }
-
-    public FeeService(DaoStateService daoStateService, PeriodService periodService) {
-        this(daoStateService, periodService, null);
     }
 
 
@@ -133,6 +126,11 @@ public class FeeService {
 
     public void onAllServicesInitialized() {
         minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+    }
+
+    public void onAllServicesInitialized(FilterPolicyService providedFilterPolicyService) {
+        filterPolicyService = providedFilterPolicyService;
+        onAllServicesInitialized();
     }
 
     public void onAllServicesInitialized(FilterManager providedFilterManager) {
