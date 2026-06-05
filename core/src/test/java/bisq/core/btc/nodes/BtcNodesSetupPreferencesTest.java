@@ -82,4 +82,30 @@ public class BtcNodesSetupPreferencesTest {
 
         assertEquals(List.of(alice), nodes);
     }
+
+    @Test
+    public void testSelectPreferredNodesIgnoresPersistedNetworkFilterNodesWhenConfigured() {
+        Preferences delegate = mock(Preferences.class);
+        when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PROVIDED.ordinal());
+
+        BtcNode alice = new BtcNode(null, "alice.onion", null, BtcNode.DEFAULT_PORT, "@alice");
+        BtcNode bob = new BtcNode(null, "bob.onion", null, BtcNode.DEFAULT_PORT, "@bob");
+        BtcNodes btcNodes = mock(BtcNodes.class);
+        when(btcNodes.getProvidedBtcNodes()).thenReturn(List.of(alice, bob));
+
+        Config config = new Config("--ignoreNetworkFilter=true",
+                "--bannedBtcNodes=bob.onion:" + BtcNode.DEFAULT_PORT,
+                "--filterProvidedBtcNodes=carol.onion:" + BtcNode.DEFAULT_PORT);
+        Properties properties = new Properties();
+        properties.setProperty("bannedBtcNodes", "alice.onion:" + BtcNode.DEFAULT_PORT);
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate,
+                Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC,
+                config,
+                denyList);
+        List<BtcNode> nodes = preferences.selectPreferredNodes(btcNodes);
+
+        assertEquals(List.of(bob), nodes);
+    }
 }

@@ -48,4 +48,20 @@ public class PriceFeedNodeAddressProviderTest {
         assertEquals("http://bar.onion/", provider.getBaseUrl());
         assertEquals(List.of("foo"), provider.getBannedNodes());
     }
+
+    @Test
+    void ignoresPersistedNetworkFilterPriceRelayNodesWhenConfigured() {
+        Properties properties = new Properties();
+        properties.setProperty("bannedPriceRelayNodes", "bar");
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        PriceFeedNodeAddressProvider provider = new PriceFeedNodeAddressProvider(
+                new Config("--ignoreNetworkFilter=true", "--bannedPriceRelayNodes=foo"),
+                List.of("foo.onion", "bar.onion", "baz.onion"),
+                false,
+                denyList);
+
+        assertEquals("http://foo.onion/", provider.getBaseUrl());
+        assertEquals(List.of("bar"), provider.getBannedNodes());
+    }
 }

@@ -75,7 +75,7 @@ public class PriceFeedNodeAddressProvider {
 
         Collections.shuffle(DEFAULT_NODES);
 
-        applyBannedNodes(config.bannedPriceRelayNodes);
+        applyBannedNodes(config.ignoreNetworkFilter ? null : config.bannedPriceRelayNodes);
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {

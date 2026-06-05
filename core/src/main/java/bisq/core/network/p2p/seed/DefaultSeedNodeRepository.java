@@ -83,14 +83,19 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH));
             cache.addAll(result);
 
-            Set<NodeAddress> filterProvidedSeedNodes = config.filterProvidedSeedNodes.stream()
+            Set<NodeAddress> filterProvidedSeedNodes = (config.ignoreNetworkFilter ?
+                    List.<String>of() :
+                    config.filterProvidedSeedNodes).stream()
                     .filter(n -> !n.isEmpty())
                     .map(this::getNodeAddress)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             cache.addAll(filterProvidedSeedNodes);
 
-            Set<NodeAddress> bannedSeedNodes = merge(config.bannedSeedNodes, denyList.getBannedSeedNodes()).stream()
+            List<String> persistedBannedSeedNodes = config.ignoreNetworkFilter ?
+                    List.of() :
+                    config.bannedSeedNodes;
+            Set<NodeAddress> bannedSeedNodes = merge(persistedBannedSeedNodes, denyList.getBannedSeedNodes()).stream()
                     .filter(n -> !n.isEmpty())
                     .map(this::getNodeAddress)
                     .filter(Objects::nonNull)

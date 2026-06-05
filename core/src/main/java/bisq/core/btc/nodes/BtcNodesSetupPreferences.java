@@ -78,8 +78,13 @@ public class BtcNodesSetupPreferences {
             case PROVIDED:
             default:
                 Stream<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes().stream();
-                Stream<String> filterProvidedBtcNodes = config.filterProvidedBtcNodes.stream();
-                Stream<String> bannedBtcNodes = Stream.concat(config.bannedBtcNodes.stream(),
+                Stream<String> filterProvidedBtcNodes = config.ignoreNetworkFilter ?
+                        Stream.empty() :
+                        config.filterProvidedBtcNodes.stream();
+                Stream<String> persistedBannedBtcNodes = config.ignoreNetworkFilter ?
+                        Stream.empty() :
+                        config.bannedBtcNodes.stream();
+                Stream<String> bannedBtcNodes = Stream.concat(persistedBannedBtcNodes,
                         denyList.getBannedBtcNodes().stream());
                 result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, filterProvidedBtcNodes, bannedBtcNodes);
                 break;

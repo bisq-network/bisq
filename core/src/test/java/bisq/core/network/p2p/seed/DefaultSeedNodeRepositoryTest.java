@@ -78,6 +78,24 @@ public class DefaultSeedNodeRepositoryTest {
         assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed)));
     }
 
+    @Test
+    public void ignoresPersistedNetworkFilterSeedNodesWhenConfigured() {
+        String baseCurrencyNetwork = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
+        Config config = new Config(baseCurrencyNetwork,
+                "--ignoreNetworkFilter=true",
+                "--bannedSeedNodes=localhost:2002",
+                "--filterProvidedSeedNodes=localhost:4002");
+        Properties properties = new Properties();
+        properties.setProperty("bannedSeedNodes", "localhost:3002");
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config, denyList);
+
+        assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:2002")));
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:3002")));
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:4002")));
+    }
+
     @AfterEach
     public void tearDown() {
         //restore default Config
