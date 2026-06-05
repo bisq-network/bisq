@@ -50,14 +50,12 @@ public class DenyList {
     private static final String RESOURCE_EXTENSION = ".denylist";
     private static final Splitter COMMA_SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-    private final List<String> bannedOfferIds;
     private final List<String> nodeAddressesBannedFromTrading;
     private final List<String> nodeAddressesBannedFromNetwork;
     private final List<String> bannedCurrencies;
     private final List<String> bannedPaymentMethods;
     private final List<String> bannedAccountWitnessSignerPubKeys;
     private final List<String> bannedPaymentAccountDataHashes;
-    private final List<String> bannedArbitrators;
     private final List<String> bannedMediators;
     private final List<String> bannedRefundAgents;
     private final List<String> bannedSeedNodes;
@@ -76,14 +74,12 @@ public class DenyList {
 
     @VisibleForTesting
     DenyList(Properties properties) {
-        bannedOfferIds = readList(properties, "bannedOfferIds");
         nodeAddressesBannedFromTrading = readNodeAddressList(properties, "nodeAddressesBannedFromTrading");
         nodeAddressesBannedFromNetwork = readNodeAddressList(properties, "nodeAddressesBannedFromNetwork");
         bannedCurrencies = readList(properties, "bannedCurrencies");
         bannedPaymentMethods = readList(properties, "bannedPaymentMethods");
         bannedAccountWitnessSignerPubKeys = readList(properties, "bannedAccountWitnessSignerPubKeys");
         bannedPaymentAccountDataHashes = readList(properties, "bannedPaymentAccountDataHashes");
-        bannedArbitrators = readNodeAddressList(properties, "bannedArbitrators");
         bannedMediators = readNodeAddressList(properties, "bannedMediators");
         bannedRefundAgents = readNodeAddressList(properties, "bannedRefundAgents");
         bannedSeedNodes = readNodeAddressList(properties, "bannedSeedNodes");

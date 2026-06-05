@@ -49,8 +49,7 @@ public class FilterPolicyService {
     }
 
     public boolean isOfferIdBanned(String offerId) {
-        return denyList.getBannedOfferIds().contains(offerId) ||
-                filterManager.isOfferIdBanned(offerId);
+        return filterManager.isOfferIdBanned(offerId);
     }
 
     public boolean isCurrencyBanned(String currencyCode) {
@@ -138,7 +137,7 @@ public class FilterPolicyService {
 
     public List<String> getBannedArbitrators() {
         Filter filter = filterManager.getFilter();
-        return merge(denyList.getBannedArbitrators(), filter != null ? filter.getArbitrators() : List.of());
+        return filter != null ? filter.getArbitrators() : List.of();
     }
 
     public List<String> getBannedMediators() {
