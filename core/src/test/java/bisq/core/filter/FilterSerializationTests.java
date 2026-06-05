@@ -45,6 +45,7 @@ import static org.bitcoinj.core.Utils.HEX;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 public class FilterSerializationTests {
@@ -67,6 +68,23 @@ public class FilterSerializationTests {
         Filter filterWithoutSig = TestFilter.createFilter(ownerPublicKey, signerPubKeyAsHex);
 
         assertArrayEquals(filterWithoutSig.serialize(), filterWithoutSig.serializeForHash());
+    }
+
+    @Test
+    void serializeHandlesNullOwnerPubKeyBytes() {
+        Filter filter = TestFilter.createFilter(null,
+                signerPubKeyAsHex,
+                1_700_000_000_000L,
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of("btc1.onion:8333"),
+                List.of("seed1.onion:8001"));
+
+        assertTrue(filter.toProtoMessage().getFilter().getOwnerPubKeyBytes().isEmpty());
+        assertArrayEquals(filter.serialize(), filter.serializeForHash());
     }
 
     @Test

@@ -435,7 +435,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllRefundAgents(refundAgents)
                 .addAllBannedSignerPubKeys(bannedAccountWitnessSignerPubKeys)
                 .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
-                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
                 .setCreationDate(creationDate)
                 .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys)
@@ -457,6 +456,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .setUid(uid)
                 .setDisableBsqSwap(disableBsqSwap);
 
+        Optional.ofNullable(ownerPubKeyBytes)
+                .map(ByteString::copyFrom)
+                .ifPresent(builder::setOwnerPubKeyBytes);
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
 
         return builder;
