@@ -43,7 +43,6 @@ import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferProtocol;
 import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.ClosedTradableManager;
@@ -132,7 +131,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
@@ -174,7 +172,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PriceFeedService priceFeedService,
                             Preferences preferences,
                             TradeStatisticsManager tradeStatisticsManager,
-                            ArbitratorManager arbitratorManager,
                             MediatorManager mediatorManager,
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
@@ -197,7 +194,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
@@ -492,7 +488,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
-                arbitratorManager,
                 mediatorManager,
                 refundAgentManager,
                 tradeStatisticsManager,

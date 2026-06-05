@@ -62,7 +62,6 @@ import javafx.scene.layout.Region;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -330,7 +329,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             readAsHashedPaymentAccountFiltersList(paymentAccountFilterTF),
                             readAsList(bannedCurrenciesTF),
                             readAsList(bannedPaymentMethodsTF),
-                            new ArrayList<>(),
                             readAsList(seedNodesTF),
                             readAsList(priceRelayNodesTF),
                             preventPublicBtcNetworkCheckBox.isSelected(),

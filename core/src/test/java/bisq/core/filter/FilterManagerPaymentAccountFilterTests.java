@@ -120,7 +120,6 @@ public class FilterManagerPaymentAccountFilterTests {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList(),
                 false,
                 Collections.emptyList(),
                 false,

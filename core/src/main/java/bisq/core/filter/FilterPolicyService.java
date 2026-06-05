@@ -170,11 +170,6 @@ public class FilterPolicyService {
         return filter != null ? filter.getBtcFeeReceiverAddresses() : List.of();
     }
 
-    public List<String> getBannedArbitrators() {
-        Filter filter = filterManager.getFilter();
-        return filter != null ? filter.getArbitrators() : List.of();
-    }
-
     public List<String> getBannedMediators() {
         Filter filter = filterManager.getFilter();
         return merge(denyList.getBannedMediators(), filter != null ? filter.getMediators() : List.of());

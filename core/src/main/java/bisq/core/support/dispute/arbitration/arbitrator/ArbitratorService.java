@@ -17,7 +17,6 @@
 
 package bisq.core.support.dispute.arbitration.arbitrator;
 
-import bisq.core.filter.FilterPolicyService;
 import bisq.core.support.dispute.agent.DisputeAgentService;
 
 import bisq.network.p2p.NodeAddress;
@@ -32,15 +31,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Deprecated
 @Singleton
 public class ArbitratorService extends DisputeAgentService<Arbitrator> {
-    private final FilterPolicyService filterPolicyService;
-
     @Inject
-    public ArbitratorService(P2PService p2PService,
-                             FilterPolicyService filterPolicyService) {
+    public ArbitratorService(P2PService p2PService) {
         super(p2PService);
-        this.filterPolicyService = filterPolicyService;
     }
 
     @Override
@@ -55,7 +51,7 @@ public class ArbitratorService extends DisputeAgentService<Arbitrator> {
 
     @Override
     protected List<String> getDisputeAgentsFromFilter() {
-        return filterPolicyService.getBannedArbitrators();
+        return List.of();
     }
 
     public Map<NodeAddress, Arbitrator> getArbitrators() {

@@ -70,6 +70,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Deprecated
 @Slf4j
 @Singleton
 public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {

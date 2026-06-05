@@ -112,8 +112,6 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
 
     static void checkDisputeAgentAvailability(Offer offer, PlaceOfferModel model) {
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
-        checkArgument(hasAvailableAcceptedDisputeAgent(offerPayload.getArbitratorNodeAddresses(), model.getArbitratorManager()),
-                "Cannot create offer because no accepted arbitrator is available.");
         checkArgument(hasAvailableAcceptedDisputeAgent(offerPayload.getMediatorNodeAddresses(), model.getMediatorManager()),
                 "Cannot create offer because no accepted mediator is available.");
         checkArgument(DisputeAgentSelection.hasAvailableDisputeAgent(model.getRefundAgentManager()),

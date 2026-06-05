@@ -61,7 +61,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
     private final List<String> bannedCurrencies;
     private final List<String> bannedPaymentMethods;
-    private final List<String> arbitrators;
     private final List<String> seedNodes;
     private final List<String> priceRelayNodes;
     private final boolean preventPublicBtcNetwork;
@@ -137,7 +136,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getBannedPaymentAccounts(),
                 filter.getBannedCurrencies(),
                 filter.getBannedPaymentMethods(),
-                filter.getArbitrators(),
                 filter.getSeedNodes(),
                 filter.getPriceRelayNodes(),
                 filter.isPreventPublicBtcNetwork(),
@@ -180,7 +178,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getBannedPaymentAccounts(),
                 filter.getBannedCurrencies(),
                 filter.getBannedPaymentMethods(),
-                filter.getArbitrators(),
                 filter.getSeedNodes(),
                 filter.getPriceRelayNodes(),
                 filter.isPreventPublicBtcNetwork(),
@@ -221,7 +218,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<PaymentAccountFilter> bannedPaymentAccounts,
                   List<String> bannedCurrencies,
                   List<String> bannedPaymentMethods,
-                  List<String> arbitrators,
                   List<String> seedNodes,
                   List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
@@ -258,7 +254,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 bannedPaymentAccounts,
                 bannedCurrencies,
                 bannedPaymentMethods,
-                arbitrators,
                 seedNodes,
                 priceRelayNodes,
                 preventPublicBtcNetwork,
@@ -305,7 +300,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<PaymentAccountFilter> bannedPaymentAccounts,
                   List<String> bannedCurrencies,
                   List<String> bannedPaymentMethods,
-                  List<String> arbitrators,
                   List<String> seedNodes,
                   List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
@@ -344,7 +338,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.bannedPaymentAccounts = copyList(bannedPaymentAccounts);
         this.bannedCurrencies = copyList(bannedCurrencies);
         this.bannedPaymentMethods = copyList(bannedPaymentMethods);
-        this.arbitrators = copyList(arbitrators);
         this.seedNodes = copyList(seedNodes);
         this.priceRelayNodes = copyList(priceRelayNodes);
         this.preventPublicBtcNetwork = preventPublicBtcNetwork;
@@ -423,7 +416,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .addAllBannedCurrencies(bannedCurrencies)
                 .addAllBannedPaymentMethods(bannedPaymentMethods)
-                .addAllArbitrators(arbitrators)
                 .addAllSeedNodes(seedNodes)
                 .addAllPriceRelayNodes(priceRelayNodes)
                 .setPreventPublicBtcNetwork(preventPublicBtcNetwork)
@@ -485,7 +477,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 bannedPaymentAccountsList,
                 ProtoUtil.protocolStringListToList(proto.getBannedCurrenciesList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedPaymentMethodsList()),
-                ProtoUtil.protocolStringListToList(proto.getArbitratorsList()),
                 ProtoUtil.protocolStringListToList(proto.getSeedNodesList()),
                 ProtoUtil.protocolStringListToList(proto.getPriceRelayNodesList()),
                 proto.getPreventPublicBtcNetwork(),
@@ -553,7 +544,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     bannedPaymentAccounts=" + bannedPaymentAccounts +
                 ",\n     bannedCurrencies=" + bannedCurrencies +
                 ",\n     bannedPaymentMethods=" + bannedPaymentMethods +
-                ",\n     arbitrators=" + arbitrators +
                 ",\n     seedNodes=" + seedNodes +
                 ",\n     priceRelayNodes=" + priceRelayNodes +
                 ",\n     preventPublicBtcNetwork=" + preventPublicBtcNetwork +

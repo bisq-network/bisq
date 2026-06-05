@@ -139,7 +139,6 @@ public class TestFilter {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList(),
                 seedNodes,
                 priceRelayNodes,
                 false,

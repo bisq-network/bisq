@@ -111,6 +111,18 @@ public class FilterSerializationTests {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
+    void fromProtoDropsDeprecatedArbitrators() {
+        protobuf.Filter proto = protobuf.Filter.newBuilder()
+                .addArbitrators("legacy-arbitrator.onion:9999")
+                .build();
+
+        Filter roundTrippedFilter = Filter.fromProto(proto);
+
+        assertTrue(roundTrippedFilter.toProtoMessage().getFilter().getArbitratorsList().isEmpty());
+    }
+
+    @Test
     void constructorDefensivelyCopiesSignedState() {
         byte[] ownerPubKeyBytes = ownerPublicKey.getEncoded();
         byte[] originalOwnerPubKeyBytes = ownerPubKeyBytes.clone();

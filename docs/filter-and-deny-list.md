@@ -9,7 +9,7 @@ Use `FilterPolicyService` for policy decisions in application code. It merges th
 
 ## Signed network filter
 
-The signed network filter is mutable operational policy. Privileged developers publish it through the filter window. It can ban offers, trading peers, network peers, currencies, payment methods, payment account data, witness signer keys, dispute agents, infrastructure nodes, fee receiver addresses, minimum fees, PoW settings, API or mempool validation, BSQ swaps, auto-confirm, and DAO/trading versions.
+The signed network filter is mutable operational policy. Privileged developers publish it through the filter window. It can ban offers, trading peers, network peers, currencies, payment methods, payment account data, witness signer keys, mediators, refund agents, infrastructure nodes, fee receiver addresses, minimum fees, PoW settings, API or mempool validation, BSQ swaps, auto-confirm, and DAO/trading versions.
 
 Only one active network filter is used. `FilterManager` accepts signed filters from trusted developer keys, rejects signatures that do not verify, rejects filters too far in the future, and prefers the newest valid filter by creation date.
 
@@ -83,11 +83,12 @@ The filter window stores plaintext preimages only in local `UserPayload` fields 
 
 ## Dispute agent filters
 
-Arbitrator, mediator, and refund-agent filters are applied by their dispute-agent services before managers refresh their observable maps. On each refresh, managers rebuild the user's accepted dispute-agent lists from the filtered maps. This keeps offer payload creation and later trade validation from using agents that were removed only by policy and not by P2P storage removal.
+Mediator and refund-agent filters are applied by their dispute-agent services before managers refresh their observable maps. On each refresh, managers rebuild the user's accepted dispute-agent lists from the filtered maps. This keeps offer payload creation and later trade validation from using agents that were removed only by policy and not by P2P storage removal.
+
+Arbitrator filters are legacy. The `Filter.arbitrators` protobuf field is deprecated so old protobuf payloads can still be deserialized, but runtime policy ignores those values and new `Filter` serialization does not emit them.
 
 Bisq v1 offer placement validates dispute-agent availability before funding or publishing the offer:
 
-* the offer's accepted arbitrator list must include at least one currently allowed arbitrator;
 * the offer's accepted mediator list must include at least one currently allowed mediator;
 * the local refund-agent manager must have at least one currently allowed refund agent, because refund agents are selected when the maker answers an offer availability request.
 

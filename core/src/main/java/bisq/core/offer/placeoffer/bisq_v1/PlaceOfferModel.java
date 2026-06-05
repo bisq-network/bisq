@@ -25,7 +25,6 @@ import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -52,7 +51,6 @@ public class PlaceOfferModel implements Model {
     private final TradeWalletService tradeWalletService;
     private final BsqWalletService bsqWalletService;
     private final OfferBookService offerBookService;
-    private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -76,7 +74,6 @@ public class PlaceOfferModel implements Model {
                            TradeWalletService tradeWalletService,
                            BsqWalletService bsqWalletService,
                            OfferBookService offerBookService,
-                           ArbitratorManager arbitratorManager,
                            MediatorManager mediatorManager,
                            RefundAgentManager refundAgentManager,
                            TradeStatisticsManager tradeStatisticsManager,
@@ -92,7 +89,6 @@ public class PlaceOfferModel implements Model {
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
-        this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.tradeStatisticsManager = tradeStatisticsManager;

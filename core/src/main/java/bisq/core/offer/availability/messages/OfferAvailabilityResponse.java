@@ -44,6 +44,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     @Nullable
     private final Capabilities supportedCapabilities;
 
+    @Deprecated
     private final NodeAddress arbitrator;
     // Was introduced in v 1.1.6. Might be null if msg received from node with old version
     @Nullable
