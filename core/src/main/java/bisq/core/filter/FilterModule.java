@@ -22,7 +22,6 @@ import bisq.common.config.Config;
 
 import com.google.inject.Singleton;
 
-import static bisq.common.config.Config.IGNORE_DEV_MSG;
 import static bisq.common.config.Config.IGNORE_NETWORK_FILTER;
 import static com.google.inject.name.Names.named;
 
@@ -35,7 +34,6 @@ public class FilterModule extends AppModule {
     @Override
     protected final void configure() {
         bind(FilterManager.class).in(Singleton.class);
-        bindConstant().annotatedWith(named(IGNORE_DEV_MSG)).to(config.ignoreDevMsg);
         bindConstant().annotatedWith(named(IGNORE_NETWORK_FILTER)).to(config.ignoreNetworkFilter);
     }
 }

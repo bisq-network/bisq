@@ -70,7 +70,6 @@ public class FilterManagerPaymentAccountFilterTests {
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
                 false,
-                false,
                 true
         );
     }

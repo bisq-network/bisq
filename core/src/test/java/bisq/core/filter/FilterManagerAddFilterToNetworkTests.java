@@ -124,7 +124,6 @@ public class FilterManagerAddFilterToNetworkTests {
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
                 false,
-                false,
                 true
         );
     }

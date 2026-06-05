@@ -70,7 +70,6 @@ public class FilterManagerInitializationTests {
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
                 false,
-                false,
                 true
         );
 
@@ -91,7 +90,6 @@ public class FilterManagerInitializationTests {
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
-                false,
                 false,
                 true
         );
@@ -120,47 +118,6 @@ public class FilterManagerInitializationTests {
     }
 
     @Test
-    void onAllServicesInitializedNoFilterMainnetIgnoreDevMsg() {
-        P2PService p2PService = mock(P2PService.class);
-        var filterManager = new FilterManager(
-                p2PService,
-                mock(KeyRing.class),
-                mock(User.class),
-                mock(Preferences.class),
-                DenyList.empty(),
-                mock(Config.class),
-                mock(PriceFeedNodeAddressProvider.class),
-                mock(BanFilter.class),
-                mock(PriceFeedService.class),
-                true,
-                false,
-                true
-        );
-
-        var p2pStorageMap = new HashMap<>();
-        P2PDataStorage p2pDataStorage = mock(P2PDataStorage.class);
-
-        doReturn(p2pStorageMap).when(p2pDataStorage).getMap();
-        doReturn(p2pDataStorage).when(p2PService).getP2PDataStorage();
-
-        final var warningHandlerTriggered = new AtomicBoolean();
-        try (MockedStatic<Res> mocked = mockStatic(Res.class)) {
-            mocked.when(() -> Res.get("popup.warning.noFilter"))
-                    .thenReturn("No filter.");
-
-            filterManager.setFilterWarningHandler(errorMessage -> {
-                if (errorMessage.equals(Res.get("popup.warning.noFilter"))) {
-                    warningHandlerTriggered.set(true);
-                }
-            });
-
-            filterManager.onAllServicesInitialized();
-        }
-
-        assertFalse(warningHandlerTriggered.get());
-    }
-
-    @Test
     void onAllServicesInitializedNoFilterMainnetIgnoreNetworkFilter() {
         P2PService p2PService = mock(P2PService.class);
         var filterManager = new FilterManager(
@@ -173,7 +130,6 @@ public class FilterManagerInitializationTests {
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
-                false,
                 true,
                 true
         );
