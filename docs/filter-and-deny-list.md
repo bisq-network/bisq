@@ -81,6 +81,18 @@ Only the account value is canonicalized by trimming and lowercasing. The payment
 
 The filter window stores plaintext preimages only in local `UserPayload` fields so developers can edit filters later. Those preimages are not included in the signed network `Filter`; the network filter receives only hash values. Plaintext filter values remain supported by the matcher only as transitional compatibility for already-published filters.
 
+## Dispute agent filters
+
+Arbitrator, mediator, and refund-agent filters are applied by their dispute-agent services before managers refresh their observable maps. On each refresh, managers rebuild the user's accepted dispute-agent lists from the filtered maps. This keeps offer payload creation and later trade validation from using agents that were removed only by policy and not by P2P storage removal.
+
+Bisq v1 offer placement validates dispute-agent availability before funding or publishing the offer:
+
+* the offer's accepted arbitrator list must include at least one currently allowed arbitrator;
+* the offer's accepted mediator list must include at least one currently allowed mediator;
+* the local refund-agent manager must have at least one currently allowed refund agent, because refund agents are selected when the maker answers an offer availability request.
+
+If filters remove all mediators or refund agents after an offer has already been published, the maker answers later availability requests with `NO_MEDIATORS` or `NO_REFUND_AGENTS` instead of selecting a banned agent.
+
 ## Adding or changing policy
 
 When adding a policy category, prefer this order:

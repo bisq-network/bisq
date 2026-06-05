@@ -493,6 +493,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 bsqWalletService,
                 offerBookService,
                 arbitratorManager,
+                mediatorManager,
+                refundAgentManager,
                 tradeStatisticsManager,
                 daoFacade,
                 btcFeeReceiverService,
@@ -874,34 +876,40 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
                         Offer offer = openOffer.getOffer();
                         if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
-                            mediatorNodeAddress = DisputeAgentSelection.getRandomMediator(mediatorManager).getNodeAddress();
-                            openOffer.setMediatorNodeAddress(mediatorNodeAddress);
+                            if (!DisputeAgentSelection.hasAvailableDisputeAgent(mediatorManager)) {
+                                availabilityResult = AvailabilityResult.NO_MEDIATORS;
+                            } else if (!DisputeAgentSelection.hasAvailableDisputeAgent(refundAgentManager)) {
+                                availabilityResult = AvailabilityResult.NO_REFUND_AGENTS;
+                            } else {
+                                mediatorNodeAddress = DisputeAgentSelection.getRandomMediator(mediatorManager).getNodeAddress();
+                                openOffer.setMediatorNodeAddress(mediatorNodeAddress);
 
-                            refundAgentNodeAddress = DisputeAgentSelection.getRandomRefundAgent(refundAgentManager).getNodeAddress();
-                            openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
+                                refundAgentNodeAddress = DisputeAgentSelection.getRandomRefundAgent(refundAgentManager).getNodeAddress();
+                                openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
 
-                            try {
-                                // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                                // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                                // losses and therefore an outdated market price.
-                                offer.verifyTakersTradePrice(request.getTakersTradePrice());
+                                try {
+                                    // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                                    // in trade price between the peers. Also here poor connectivity might cause market price API connection
+                                    // losses and therefore an outdated market price.
+                                    offer.verifyTakersTradePrice(request.getTakersTradePrice());
 
-                                // We allow 10% tolerance to the max allowed price percentage to avoid failing requests in
-                                // high volatility environments
-                                OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.1);
+                                    // We allow 10% tolerance to the max allowed price percentage to avoid failing requests in
+                                    // high volatility environments
+                                    OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.1);
 
-                                availabilityResult = AvailabilityResult.AVAILABLE;
-                            } catch (TradePriceOutOfToleranceException e) {
-                                log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                            } catch (MarketPriceNotAvailableException e) {
-                                log.warn(e.getMessage());
-                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                            } catch (Exception e) {
-                                // Intentionally narrower than Throwable: JVM Errors (OOM, StackOverflow, ...)
-                                // must propagate instead of being downgraded to a price-check failure.
-                                log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.PRICE_CHECK_FAILED;
+                                    availabilityResult = AvailabilityResult.AVAILABLE;
+                                } catch (TradePriceOutOfToleranceException e) {
+                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                                } catch (MarketPriceNotAvailableException e) {
+                                    log.warn(e.getMessage());
+                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                                } catch (Exception e) {
+                                    // Intentionally narrower than Throwable: JVM Errors (OOM, StackOverflow, ...)
+                                    // must propagate instead of being downgraded to a price-check failure.
+                                    log.warn("Trade price check failed. " + e.getMessage());
+                                    availabilityResult = AvailabilityResult.PRICE_CHECK_FAILED;
+                                }
                             }
                         } else {
                             availabilityResult = AvailabilityResult.USER_IGNORED;

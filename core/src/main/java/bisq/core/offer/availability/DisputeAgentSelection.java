@@ -41,6 +41,10 @@ public class DisputeAgentSelection {
         return getRandomDisputeAgent(disputeAgentManager);
     }
 
+    public static boolean hasAvailableDisputeAgent(DisputeAgentManager<? extends DisputeAgent> disputeAgentManager) {
+        return !disputeAgentManager.getObservableMap().isEmpty();
+    }
+
     private static <T extends DisputeAgent> T getRandomDisputeAgent(DisputeAgentManager<T> disputeAgentManager) {
         List<T> disputeAgents = new ArrayList<>(disputeAgentManager.getObservableMap().values());
         Collections.shuffle(disputeAgents);

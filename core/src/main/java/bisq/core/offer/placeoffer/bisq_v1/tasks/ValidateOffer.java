@@ -18,12 +18,20 @@
 package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.DisputeAgentSelection;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
+import bisq.core.support.dispute.agent.DisputeAgent;
+import bisq.core.support.dispute.agent.DisputeAgentManager;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
+
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,6 +96,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkNotNull(offer.getVersionNr(), "VersionNr is null");
             checkArgument(offer.getMaxTradePeriod() > 0,
                     "maxTradePeriod must be positive. maxTradePeriod=" + offer.getMaxTradePeriod());
+            checkDisputeAgentAvailability(offer, model);
             // TODO check upper and lower bounds for fiat
             // TODO check rest of new parameters
             // TODO check for account age witness base tradeLimit is missing
@@ -99,6 +108,22 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
                     + e.getMessage());
             failed(e);
         }
+    }
+
+    static void checkDisputeAgentAvailability(Offer offer, PlaceOfferModel model) {
+        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
+        checkArgument(hasAvailableAcceptedDisputeAgent(offerPayload.getArbitratorNodeAddresses(), model.getArbitratorManager()),
+                "Cannot create offer because no accepted arbitrator is available.");
+        checkArgument(hasAvailableAcceptedDisputeAgent(offerPayload.getMediatorNodeAddresses(), model.getMediatorManager()),
+                "Cannot create offer because no accepted mediator is available.");
+        checkArgument(DisputeAgentSelection.hasAvailableDisputeAgent(model.getRefundAgentManager()),
+                "Cannot create offer because no refund agent is available.");
+    }
+
+    static boolean hasAvailableAcceptedDisputeAgent(List<NodeAddress> acceptedNodeAddresses,
+                                                    DisputeAgentManager<? extends DisputeAgent> disputeAgentManager) {
+        return acceptedNodeAddresses != null &&
+                acceptedNodeAddresses.stream().anyMatch(nodeAddress -> disputeAgentManager.getObservableMap().containsKey(nodeAddress));
     }
 
     public static void checkCoinNotNullOrZero(Coin value, String name) {
