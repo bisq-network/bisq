@@ -476,10 +476,14 @@ public class FilterManager {
     }
 
     public boolean isNodeAddressBannedFromNetwork(NodeAddress nodeAddress) {
-        return denyList.getNodeAddressesBannedFromNetwork().contains(nodeAddress.getFullAddress()) ||
-                getFilter() != null &&
-                getFilter().getNodeAddressesBannedFromNetwork().stream()
-                        .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
+        if (nodeAddress == null) {
+            return false;
+        }
+        String fullAddress = nodeAddress.getFullAddress();
+        return denyList.getNodeAddressesBannedFromNetwork().contains(fullAddress) ||
+                (getFilter() != null &&
+                        getFilter().getNodeAddressesBannedFromNetwork().stream()
+                                .anyMatch(e -> e.equals(fullAddress)));
     }
 
     public boolean isAutoConfExplorerBanned(String address) {
