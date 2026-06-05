@@ -44,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.bitcoinj.core.Utils.HEX;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -84,6 +85,7 @@ public class FilterSerializationTests {
                 List.of("seed1.onion:8001"));
 
         assertTrue(filter.toProtoMessage().getFilter().getOwnerPubKeyBytes().isEmpty());
+        assertNull(Filter.fromProto(filter.toProtoMessage().getFilter()).getOwnerPubKeyBytes());
         assertArrayEquals(filter.serialize(), filter.serializeForHash());
     }
 

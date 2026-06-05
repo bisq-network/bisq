@@ -476,6 +476,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         List<PaymentAccountFilter> delayedPayoutPaymentAccounts = proto.getDelayedPayoutPaymentAccountsList().stream()
                 .map(PaymentAccountFilter::fromProto)
                 .collect(Collectors.toList());
+        byte[] ownerPubKeyBytes = proto.getOwnerPubKeyBytes().isEmpty() ?
+                null :
+                proto.getOwnerPubKeyBytes().toByteArray();
 
         return new Filter(ProtoUtil.protocolStringListToList(proto.getBannedOfferIdsList()),
                 ProtoUtil.protocolStringListToList(proto.getNodeAddressesBannedFromTradingList()),
@@ -494,7 +497,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getRefundAgentsList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedSignerPubKeysList()),
                 ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
-                proto.getOwnerPubKeyBytes().toByteArray(),
+                ownerPubKeyBytes,
                 proto.getCreationDate(),
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),

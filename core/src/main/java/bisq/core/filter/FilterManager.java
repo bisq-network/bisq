@@ -299,8 +299,7 @@ public class FilterManager {
     }
 
     public boolean addDevFilter(Filter filterWithoutSig, String privKeyString) {
-        if (!arePersistedNodeListsValid(filterWithoutSig)) {
-            log.warn("Developer filter contains invalid persisted node list values. filter={}", filterWithoutSig);
+        if (!isFilterValidForAdd(filterWithoutSig)) {
             return false;
         }
 
@@ -315,6 +314,15 @@ public class FilterManager {
         invalidFilters.forEach(filter -> {
             removeInvalidFilters(filter, privKeyString);
         });
+        return true;
+    }
+
+    public boolean isFilterValidForAdd(Filter filterWithoutSig) {
+        if (!arePersistedNodeListsValid(filterWithoutSig)) {
+            log.warn("Developer filter contains invalid persisted node list values. {}",
+                    getSafeFilterMetadata(filterWithoutSig));
+            return false;
+        }
         return true;
     }
 
@@ -574,8 +582,8 @@ public class FilterManager {
             return;
         }
         if (!arePersistedNodeListsValid(filterFromNetwork)) {
-            log.warn("Filter from network contains invalid persisted node list values. filterFromNetwork={}",
-                    filterFromNetwork);
+            log.warn("Filter from network contains invalid persisted node list values. {}",
+                    getSafeFilterMetadata(filterFromNetwork));
             return;
         }
 
@@ -722,6 +730,28 @@ public class FilterManager {
             }
         }
         return true;
+    }
+
+    private String getSafeFilterMetadata(Filter filter) {
+        return "signerPubKeyAsHex=" + sanitizeLogValue(filter.getSignerPubKeyAsHex()) +
+                ", creationDate=" + filter.getCreationDate() + " (" + new Date(filter.getCreationDate()) + ")";
+    }
+
+    private String sanitizeLogValue(@Nullable String value) {
+        if (value == null) {
+            return "null";
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        int maxLength = 80;
+        for (int i = 0; i < value.length() && i < maxLength; i++) {
+            char c = value.charAt(i);
+            stringBuilder.append(Character.isISOControl(c) ? '?' : c);
+        }
+        if (value.length() > maxLength) {
+            stringBuilder.append("...");
+        }
+        return stringBuilder.toString();
     }
 
     private boolean isValidDevPrivilegeKey(String privKeyString) {

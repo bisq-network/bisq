@@ -304,6 +304,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         uidTF.getText(),
                         disableBsqSwapCheckBox.isSelected()
                 );
+                if (!filterManager.isFilterValidForAdd(newFilter)) {
+                    new Popup().warning(Res.get("validation.invalidAddressList")).onClose(this::blurAgain).show();
+                    return;
+                }
 
                 // We remove first the old filter
                 // We delay a bit with adding as it seems that the instant add/remove calls lead to issues that the
