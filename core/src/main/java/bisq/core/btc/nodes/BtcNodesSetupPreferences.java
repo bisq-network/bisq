@@ -18,6 +18,7 @@
 package bisq.core.btc.nodes;
 
 import bisq.core.btc.nodes.BtcNodes.BtcNode;
+import bisq.core.filter.DenyList;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
@@ -37,13 +38,22 @@ public class BtcNodesSetupPreferences {
     private final Preferences preferences;
     private final int numConnectionsForBtc;
     private final Config config;
+    private final DenyList denyList;
 
     public BtcNodesSetupPreferences(Preferences preferences,
                                     int numConnectionsForBtc,
                                     Config config) {
+        this(preferences, numConnectionsForBtc, config, DenyList.empty());
+    }
+
+    public BtcNodesSetupPreferences(Preferences preferences,
+                                    int numConnectionsForBtc,
+                                    Config config,
+                                    DenyList denyList) {
         this.preferences = preferences;
         this.numConnectionsForBtc = numConnectionsForBtc;
         this.config = config;
+        this.denyList = denyList;
     }
 
     public List<BtcNode> selectPreferredNodes(BtcNodes btcNodes) {
@@ -69,7 +79,8 @@ public class BtcNodesSetupPreferences {
             default:
                 Stream<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes().stream();
                 Stream<String> filterProvidedBtcNodes = config.filterProvidedBtcNodes.stream();
-                Stream<String> bannedBtcNodes = config.bannedBtcNodes.stream();
+                Stream<String> bannedBtcNodes = Stream.concat(config.bannedBtcNodes.stream(),
+                        denyList.getBannedBtcNodes().stream());
                 result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, filterProvidedBtcNodes, bannedBtcNodes);
                 break;
         }

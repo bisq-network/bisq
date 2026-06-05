@@ -17,9 +17,13 @@
 
 package bisq.core.network.p2p.seed;
 
+import bisq.core.filter.DenyList;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
+
+import java.util.Properties;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +62,20 @@ public class DefaultSeedNodeRepositoryTest {
         Config config = new Config(baseCurrencyNetwork, bannedSeedNodesOption);
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config);
         assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
+    }
+
+    @Test
+    public void appliesDenyListSeedNodes() {
+        String seed = "localhost:2002";
+        String baseCurrencyNetwork = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
+        Config config = new Config(baseCurrencyNetwork);
+        Properties properties = new Properties();
+        properties.setProperty("bannedSeedNodes", seed);
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config, denyList);
+
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed)));
     }
 
     @AfterEach

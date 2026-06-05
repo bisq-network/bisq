@@ -86,8 +86,12 @@ public class DenyList {
         requiredVersionForTrading = properties.getProperty("requiredVersionForTrading", "").trim();
     }
 
+    public static DenyList empty() {
+        return new DenyList(new Properties());
+    }
+
     @VisibleForTesting
-    static DenyList fromProperties(Properties properties) {
+    public static DenyList fromProperties(Properties properties) {
         return new DenyList(properties);
     }
 

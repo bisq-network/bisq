@@ -27,6 +27,7 @@ import bisq.core.btc.nodes.BtcNodes.BtcNode;
 import bisq.core.btc.nodes.BtcNodesRepository;
 import bisq.core.btc.nodes.BtcNodesSetupPreferences;
 import bisq.core.btc.nodes.LocalBitcoinNode;
+import bisq.core.filter.DenyList;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5MultiDiscovery;
@@ -124,6 +125,7 @@ public class WalletsSetup {
     private final Preferences preferences;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Config config;
+    private final DenyList denyList;
     private final LocalBitcoinNode localBitcoinNode;
     private final BtcNodes btcNodes;
     private final String btcWalletFileName;
@@ -152,6 +154,7 @@ public class WalletsSetup {
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
                         Config config,
+                        DenyList denyList,
                         LocalBitcoinNode localBitcoinNode,
                         BtcNodes btcNodes,
                         @Named(Config.USER_AGENT) String userAgent,
@@ -164,6 +167,7 @@ public class WalletsSetup {
         this.preferences = preferences;
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.config = config;
+        this.denyList = denyList;
         this.localBitcoinNode = localBitcoinNode;
         this.btcNodes = btcNodes;
         this.numConnectionsForBtc = numConnectionsForBtc;
@@ -396,7 +400,10 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
-        BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences, numConnectionsForBtc, config);
+        BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences,
+                numConnectionsForBtc,
+                config,
+                denyList);
 
         List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(btcNodes);
         int minBroadcastConnections = btcNodesSetupPreferences.calculateMinBroadcastConnections(nodes);

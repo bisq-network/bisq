@@ -17,6 +17,8 @@
 
 package bisq.core.provider;
 
+import bisq.core.filter.DenyList;
+
 import bisq.common.config.Config;
 
 import com.google.inject.Inject;
@@ -25,7 +27,9 @@ import javax.inject.Named;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -43,6 +47,7 @@ public class PriceFeedNodeAddressProvider {
     private final Config config;
     private final List<String> providersFromProgramArgs;
     private final boolean useLocalhostForP2P;
+    private final DenyList denyList;
 
     private List<String> providerList;
     @Getter
@@ -60,11 +65,13 @@ public class PriceFeedNodeAddressProvider {
     @Inject
     public PriceFeedNodeAddressProvider(Config config,
                                         @Named(Config.PROVIDERS) List<String> providers,
-                                        @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
+                                        @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
+                                        DenyList denyList) {
 
         this.config = config;
         this.providersFromProgramArgs = providers;
         this.useLocalhostForP2P = useLocalhostForP2P;
+        this.denyList = denyList;
 
         Collections.shuffle(DEFAULT_NODES);
 
@@ -72,14 +79,22 @@ public class PriceFeedNodeAddressProvider {
     }
 
     public void applyBannedNodes(@Nullable List<String> bannedNodes) {
-        this.bannedNodes = bannedNodes;
+        this.bannedNodes = mergeWithDenyList(bannedNodes);
         fillProviderList();
         selectNextProviderBaseUrl();
 
-        if (bannedNodes != null && !bannedNodes.isEmpty()) {
+        if (!this.bannedNodes.isEmpty()) {
             log.info("Excluded provider nodes from filter: nodes={}, selected provider baseUrl={}, providerList={}",
-                    bannedNodes, baseUrl, providerList);
+                    this.bannedNodes, baseUrl, providerList);
         }
+    }
+
+    private List<String> mergeWithDenyList(@Nullable List<String> bannedNodes) {
+        Set<String> merged = new LinkedHashSet<>(denyList.getBannedPriceRelayNodes());
+        if (bannedNodes != null) {
+            merged.addAll(bannedNodes);
+        }
+        return List.copyOf(merged);
     }
 
     public void selectNextProviderBaseUrl() {

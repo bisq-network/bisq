@@ -18,15 +18,18 @@
 package bisq.core.btc.nodes;
 
 import bisq.core.btc.nodes.BtcNodes.BtcNode;
+import bisq.core.filter.DenyList;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.CUSTOM;
+import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.PROVIDED;
 import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.PUBLIC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,5 +58,28 @@ public class BtcNodesSetupPreferencesTest {
         List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BtcNodes.class));
 
         assertEquals(2, nodes.size());
+    }
+
+    @Test
+    public void testSelectPreferredNodesAppliesDenyList() {
+        Preferences delegate = mock(Preferences.class);
+        when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PROVIDED.ordinal());
+
+        BtcNode alice = new BtcNode(null, "alice.onion", null, BtcNode.DEFAULT_PORT, "@alice");
+        BtcNode bob = new BtcNode(null, "bob.onion", null, BtcNode.DEFAULT_PORT, "@bob");
+        BtcNodes btcNodes = mock(BtcNodes.class);
+        when(btcNodes.getProvidedBtcNodes()).thenReturn(List.of(alice, bob));
+
+        Properties properties = new Properties();
+        properties.setProperty("bannedBtcNodes", "bob.onion:" + BtcNode.DEFAULT_PORT);
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate,
+                Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC,
+                new Config(),
+                denyList);
+        List<BtcNode> nodes = preferences.selectPreferredNodes(btcNodes);
+
+        assertEquals(List.of(alice), nodes);
     }
 }
