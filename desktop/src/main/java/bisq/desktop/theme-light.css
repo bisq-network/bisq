@@ -189,9 +189,11 @@
 .jfx-text-field:error > .input-line,
 .jfx-password-field:error > .input-line,
 .jfx-text-area:error > .input-line,
+.jfx-combo-box:error > .input-line,
 .jfx-text-field:error > .input-focused-line,
 .jfx-password-field:error > .input-focused-line,
-.jfx-text-area:error > .input-focused-line {
+.jfx-text-area:error > .input-focused-line,
+.jfx-combo-box:error > .input-focused-line {
     -fx-background-color: -bs-rd-error-red;
 }
 

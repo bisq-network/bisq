@@ -190,12 +190,16 @@ public class BisqTextFieldSkin extends TextFieldSkin {
         super.layoutChildren(x, y, w, h);
         double cw = getSkinnable().getWidth();
         double ch = getSkinnable().getHeight();
-        double lineY = ch - LINE_HEIGHT;
-        line.resizeRelocate(-inputLineExtension, lineY,
-                cw + inputLineExtension * 2, LINE_HEIGHT);
-        double focusedY = ch - FOCUSED_LINE_HEIGHT;
-        focusedLine.resizeRelocate(-inputLineExtension, focusedY,
-                cw + inputLineExtension * 2, FOCUSED_LINE_HEIGHT);
+        // Underline spans the field plus inputLineExtension to the RIGHT only (to reach under an
+        // adjacent currency-code label sitting outside the field, e.g. offer amount/price rows).
+        // Matches the original JFXTextFieldSkinBisqStyle geometry (width = fieldWidth + extension,
+        // origin 0). The earlier "-extension .. cw + 2*extension" overhung both sides.
+        // Lines sit at the field's bottom edge (y = ch) extending downward, matching jfoenix's
+        // PromptLinesWrapper (line.resizeRelocate(x, controlHeight, ...)). Drawing them at
+        // ch - height instead floats them inside the field, above the box's bottom border.
+        double lineWidth = cw + inputLineExtension;
+        line.resizeRelocate(0, ch, lineWidth, LINE_HEIGHT);
+        focusedLine.resizeRelocate(0, ch, lineWidth, FOCUSED_LINE_HEIGHT);
         // Floating label baseline INSIDE the field. translateY (driven by promptOffsetY) lifts
         // it above when focused/filled.
         if (topLabel.isVisible()) {
