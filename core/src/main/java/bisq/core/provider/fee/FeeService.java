@@ -29,6 +29,7 @@ import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import javafx.beans.property.IntegerProperty;
@@ -133,6 +134,10 @@ public class FeeService {
         onAllServicesInitialized();
     }
 
+    // Test-only: wraps a FilterManager in a FilterPolicyService backed by an empty DenyList so existing
+    // tests can pass a mock without constructing the full policy graph. Production code uses the
+    // FilterPolicyService overload above.
+    @VisibleForTesting
     public void onAllServicesInitialized(FilterManager providedFilterManager) {
         filterPolicyService = new FilterPolicyService(DenyList.empty(), providedFilterManager);
         onAllServicesInitialized();

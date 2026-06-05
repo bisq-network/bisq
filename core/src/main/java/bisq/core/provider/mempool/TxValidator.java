@@ -28,6 +28,7 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -63,6 +64,8 @@ public class TxValidator {
     @Setter
     private String jsonTxt;
 
+    // Test-only constructor. Production code should pass FilterPolicyService directly so deny-list policy applies.
+    @VisibleForTesting
     public TxValidator(DaoStateService daoStateService,
                        String txId,
                        Coin amount,
@@ -90,6 +93,8 @@ public class TxValidator {
         this.status = FeeValidationStatus.NOT_CHECKED_YET;
     }
 
+    // Test-only constructor. Production code should pass FilterPolicyService directly so deny-list policy applies.
+    @VisibleForTesting
     public TxValidator(DaoStateService daoStateService, String txId, FilterManager filterManager) {
         this(daoStateService, txId, new FilterPolicyService(DenyList.empty(), filterManager));
     }
