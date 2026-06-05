@@ -22,6 +22,8 @@ import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
@@ -36,6 +38,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
@@ -49,6 +52,7 @@ import com.google.common.base.Splitter;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
@@ -58,15 +62,15 @@ import javafx.scene.layout.Region;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class FilterWindow extends Overlay<FilterWindow> {
     private final FilterManager filterManager;
@@ -129,104 +133,134 @@ public class FilterWindow extends Overlay<FilterWindow> {
         gridPane.getColumnConstraints().remove(1);
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
 
-        InputTextField keyTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10);
-        InputTextField uidTF = addInputTextField(gridPane, ++rowIndex,
-                "UID", 10);
-        if (useDevPrivilegeKeys) {
-            keyTF.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
-        }
-
-        InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.offers"));
-        InputTextField bannedFromTradingTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.onions")).second;
-        InputTextField bannedFromNetworkTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        // User scope
+        // Nodes
+        addFilterWindowGroup(2, Res.get("filterWindow.group.bannedNodes"));
+        InputTextField bannedFromTradingTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.onions"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        bannedFromTradingTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999");
+        InputTextField bannedFromNetworkTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedFromNetwork")).second;
-        bannedFromTradingTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
-        InputTextField paymentAccountFilterPlainTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.accountsPlain")).second;
+        bannedFromNetworkTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999");
+
+
+        // Accounts
+        addFilterWindowGroup(6, Res.get("filterWindow.group.bannedUserAccounts"));
+        InputTextField paymentAccountFilterPlainTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.accountsPlain"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         GridPane.setHalignment(paymentAccountFilterPlainTF, HPos.RIGHT);
-        paymentAccountFilterPlainTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
-        InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        paymentAccountFilterPlainTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345");
+        InputTextField paymentAccountFilterTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
         paymentAccountFilterTF.setEditable(false);
-        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|sha256-v1:<64 hex chars>"); // Do not translate
+        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|sha256-v1:<64 hex chars>");
 
-        InputTextField delayedPayoutPlainTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        InputTextField delayedPayoutPlainTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.delayedPayoutPlain")).second;
         GridPane.setHalignment(delayedPayoutPlainTF, HPos.RIGHT);
-        delayedPayoutPlainTF.setPromptText("E.g. SEPA|getBic|COBADEH077X"); // Do not translate
-        InputTextField delayedPayoutTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        delayedPayoutPlainTF.setPromptText("E.g. SEPA|getBic|COBADEH077X");
+        InputTextField delayedPayoutTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.delayedPayout")).second;
         GridPane.setHalignment(delayedPayoutTF, HPos.RIGHT);
         delayedPayoutTF.setEditable(false);
-        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|sha256-v1:<64 hex chars>"); // Do not translate
+        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|sha256-v1:<64 hex chars>");
         bindPaymentAccountFilterHashField(paymentAccountFilterPlainTF, paymentAccountFilterTF);
         bindPaymentAccountFilterHashField(delayedPayoutPlainTF, delayedPayoutTF);
 
-        InputTextField bannedCurrenciesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.bannedCurrencies"));
-        InputTextField bannedPaymentMethodsTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.bannedPaymentMethods")).second;
-        bannedPaymentMethodsTF.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
-        InputTextField bannedAccountWitnessSignerPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        InputTextField bannedAccountWitnessSignerPubKeysTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedAccountWitnessSignerPubKeys")).second;
-        bannedAccountWitnessSignerPubKeysTF.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
-        InputTextField arbitratorsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.arbitrators"));
-        InputTextField mediatorsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.mediators"));
+        bannedAccountWitnessSignerPubKeysTF.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257");
+
+        InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.offers")).second;
+
+
+        // Bisq scope
+        addFilterWindowGroup(2, Res.get("filterWindow.group.payment"));
+        InputTextField bannedCurrenciesTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.bannedCurrencies"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField bannedPaymentMethodsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedPaymentMethods")).second;
+        bannedPaymentMethodsTF.setPromptText("E.g. PERFECT_MONEY");
+
+
+        addFilterWindowGroup(7, Res.get("filterWindow.group.infrastructure"));
+        InputTextField mediatorsTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.mediators"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         InputTextField refundAgentsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.refundAgents"));
-        InputTextField btcFeeReceiverAddressesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.btcFeeReceiverAddresses"));
-        InputTextField seedNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.seedNode"));
-        InputTextField addedSeedNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.addedSeedNodes"));
-        InputTextField priceRelayNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.priceRelayNode"));
+                Res.get("filterWindow.refundAgents")).second;
+        InputTextField bannedPrivilegedDevPubKeysTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
+
         InputTextField btcNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.btcNode"));
+                Res.get("filterWindow.btcNode")).second;
+
+        InputTextField seedNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.seedNode")).second;
+        InputTextField priceRelayNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.priceRelayNode")).second;
+        InputTextField autoConfExplorersTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.autoConfExplorers")).second;
+
+        addFilterWindowGroup(2, Res.get("filterWindow.group.addedNodes"));
+        InputTextField addedSeedNodesTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.addedSeedNodes"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         InputTextField addedBtcNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.addedBtcNodes"));
-        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.preventPublicBtcNetwork"), 15);
+                Res.get("filterWindow.addedBtcNodes")).second;
+
+        // Features
+        addFilterWindowGroup(11, Res.get("filterWindow.group.features"));
+        InputTextField disableTradeBelowVersionTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.disableTradeBelowVersion"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField disableDaoBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableDaoBelowVersion")).second;
+
+        InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.powDifficulty")).second;
+        powDifficultyTF.setText("0.0");
+        InputTextField enabledPowVersionsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.enabledPowVersions")).second;
+
         CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableDao"));
+                Res.get("filterWindow.disableDao"), 15);
+        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.preventPublicBtcNetwork"));
         CheckBox disableAutoConfCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableAutoConf"));
-        InputTextField disableDaoBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableDaoBelowVersion"));
-        InputTextField disableTradeBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableTradeBelowVersion"));
-        InputTextField bannedPrivilegedDevPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
-        InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.autoConfExplorers")).second;
         CheckBox disableMempoolValidationCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableMempoolValidation"), 15);
+                Res.get("filterWindow.disableMempoolValidation"));
         CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableApi"));
         CheckBox disableBsqSwapCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableBsqSwap"));
         CheckBox disablePowMessage = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disablePowMessage"));
-        InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.powDifficulty"));
-        powDifficultyTF.setText("0.0");
-        InputTextField enabledPowVersionsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.enabledPowVersions"));
+
+        // Fees
+        addFilterWindowGroup(5, Res.get("filterWindow.group.fees"));
+        InputTextField btcFeeReceiverAddressesTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.btcFeeReceiverAddresses"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         InputTextField makerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.makerFeeBtc"));
+                Res.get("filterWindow.makerFeeBtc")).second;
         InputTextField takerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.takerFeeBtc"));
+                Res.get("filterWindow.takerFeeBtc")).second;
         InputTextField makerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.makerFeeBsq"));
+                Res.get("filterWindow.makerFeeBsq")).second;
         InputTextField takerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.takerFeeBsq"));
+                Res.get("filterWindow.takerFeeBsq")).second;
+
+
+        addFilterWindowGroup(2, Res.get("filterWindow.group.metadata"));
+        InputTextField keyTF = addInputTextField(gridPane, rowIndex,
+                Res.get("shared.unlock"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField uidTF = addInputTextField(gridPane, ++rowIndex,
+                "UID").second;
+        uidTF.setEditable(false);
+        if (useDevPrivilegeKeys) {
+            keyTF.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
+        }
+
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -241,7 +275,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(bannedCurrenciesTF, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsTF, filter.getBannedPaymentMethods());
             setupFieldFromList(bannedAccountWitnessSignerPubKeysTF, filter.getBannedAccountWitnessSignerPubKeys());
-            setupFieldFromList(arbitratorsTF, filter.getArbitrators());
             setupFieldFromList(mediatorsTF, filter.getMediators());
             setupFieldFromList(refundAgentsTF, filter.getRefundAgents());
             setupFieldFromList(btcFeeReceiverAddressesTF, filter.getBtcFeeReceiverAddresses());
@@ -297,7 +330,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             readAsHashedPaymentAccountFiltersList(paymentAccountFilterTF),
                             readAsList(bannedCurrenciesTF),
                             readAsList(bannedPaymentMethodsTF),
-                            readAsList(arbitratorsTF),
+                            new ArrayList<>(),
                             readAsList(seedNodesTF),
                             readAsList(priceRelayNodesTF),
                             preventPublicBtcNetworkCheckBox.isSelected(),
@@ -387,7 +420,15 @@ public class FilterWindow extends Overlay<FilterWindow> {
         GridPane.setRowIndex(hBox, ++rowIndex);
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(35, 0, 0, 0));
+    }
+
+    private void addFilterWindowGroup(int rows, String title) {
+        addFilterWindowGroup(rows, title, Layout.COMPACT_GROUP_DISTANCE);
+    }
+
+    private void addFilterWindowGroup(int rows, String title, double top) {
+        addTitledGroupBg(gridPane, ++rowIndex, rows, title, top);
     }
 
     private void addDevFilter(Button removeFilterMessageButton,
@@ -511,5 +552,18 @@ public class FilterWindow extends Overlay<FilterWindow> {
                                 paymentAccountFilter.getGetMethodName(),
                                 paymentAccountFilter.getValue())))
                 .collect(Collectors.toList());
+    }
+
+    private static Tuple2<Label, InputTextField> addInputTextField(GridPane gridPane,
+                                                                   int rowIndex,
+                                                                   String title) {
+        return FormBuilder.addTopLabelInputTextField(gridPane, rowIndex, title, -13);
+    }
+
+    private static Tuple2<Label, InputTextField> addInputTextField(GridPane gridPane,
+                                                                   int rowIndex,
+                                                                   String title,
+                                                                   double top) {
+        return FormBuilder.addTopLabelInputTextField(gridPane, rowIndex, title, top);
     }
 }
