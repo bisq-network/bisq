@@ -17,6 +17,8 @@
 
 package bisq.core.network.p2p.seed;
 
+import bisq.core.filter.DenyList;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
@@ -32,6 +34,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -54,10 +57,16 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     private static final String ENDING = ".seednodes";
     private final Set<NodeAddress> cache = new HashSet<>();
     private final Config config;
+    private final DenyList denyList;
 
     @Inject
-    public DefaultSeedNodeRepository(Config config) {
+    public DefaultSeedNodeRepository(Config config, DenyList denyList) {
         this.config = config;
+        this.denyList = denyList;
+    }
+
+    public DefaultSeedNodeRepository(Config config) {
+        this(config, DenyList.empty());
     }
 
     private void reload() {
@@ -74,14 +83,20 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH));
             cache.addAll(result);
 
-            Set<NodeAddress> filterProvidedSeedNodes = config.filterProvidedSeedNodes.stream()
+            // --ignoreNetworkFilter only skips signed-filter sources; --ignoreDenyList controls the static
+            // deny-list and is honored by DenyList itself, which returns an empty list when set.
+            Set<NodeAddress> filterProvidedSeedNodes = (config.ignoreNetworkFilter ?
+                    List.<String>of() :
+                    config.filterProvidedSeedNodes).stream()
                     .filter(n -> !n.isEmpty())
                     .map(this::getNodeAddress)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             cache.addAll(filterProvidedSeedNodes);
 
-            Set<NodeAddress> bannedSeedNodes = config.bannedSeedNodes.stream()
+            List<String> persistedBannedSeedNodes = config.bannedSeedNodes;
+            List<String> deniedSeedNodes = denyList.getBannedSeedNodes();
+            Set<NodeAddress> bannedSeedNodes = merge(persistedBannedSeedNodes, deniedSeedNodes).stream()
                     .filter(n -> !n.isEmpty())
                     .map(this::getNodeAddress)
                     .filter(Objects::nonNull)
@@ -135,6 +150,12 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         if (cache.isEmpty())
             reload();
         return cache.contains(nodeAddress);
+    }
+
+    private List<String> merge(List<String> first, List<String> second) {
+        Set<String> result = new LinkedHashSet<>(first);
+        result.addAll(second);
+        return new ArrayList<>(result);
     }
 
     @Nullable

@@ -17,9 +17,13 @@
 
 package bisq.core.network.p2p.seed;
 
+import bisq.core.filter.DenyList;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
+
+import java.util.Properties;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +62,52 @@ public class DefaultSeedNodeRepositoryTest {
         Config config = new Config(baseCurrencyNetwork, bannedSeedNodesOption);
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config);
         assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
+    }
+
+    @Test
+    public void appliesDenyListSeedNodes() {
+        String seed = "localhost:2002";
+        String baseCurrencyNetwork = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
+        String providedSeedNodes = "--filterProvidedSeedNodes=" + seed;
+        Config config = new Config(baseCurrencyNetwork, providedSeedNodes);
+        Properties properties = new Properties();
+        properties.setProperty("bannedSeedNodes", seed);
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        DefaultSeedNodeRepository repositoryWithoutDenyList =
+                new DefaultSeedNodeRepository(config, DenyList.empty());
+        assertTrue(repositoryWithoutDenyList.getSeedNodeAddresses().contains(new NodeAddress(seed)));
+
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config, denyList);
+
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed)));
+    }
+
+    @Test
+    public void keepsLocalAndDenyListBansAndIgnoresFilterProvidedSeedNodesWhenConfigured() {
+        String baseCurrencyNetwork = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
+        String providedSeedNodes = "--filterProvidedSeedNodes=localhost:2002,localhost:3002,localhost:4002";
+        Config configWithoutBans = new Config(baseCurrencyNetwork, providedSeedNodes);
+        DefaultSeedNodeRepository repositoryWithoutBans =
+                new DefaultSeedNodeRepository(configWithoutBans, DenyList.empty());
+        assertTrue(repositoryWithoutBans.getSeedNodeAddresses().contains(new NodeAddress("localhost:2002")));
+        assertTrue(repositoryWithoutBans.getSeedNodeAddresses().contains(new NodeAddress("localhost:3002")));
+        assertTrue(repositoryWithoutBans.getSeedNodeAddresses().contains(new NodeAddress("localhost:4002")));
+
+        Config config = new Config(baseCurrencyNetwork,
+                "--ignoreNetworkFilter=true",
+                "--bannedSeedNodes=localhost:2002",
+                providedSeedNodes);
+        Properties properties = new Properties();
+        properties.setProperty("bannedSeedNodes", "localhost:3002");
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config, denyList);
+
+        // --ignoreNetworkFilter skips the filter-provided seed but does NOT skip deny-list bans.
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:2002")));
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:3002")));
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:4002")));
     }
 
     @AfterEach

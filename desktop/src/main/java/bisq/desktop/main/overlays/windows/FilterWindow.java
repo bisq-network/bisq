@@ -22,10 +22,13 @@ import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
+import bisq.core.filter.PaymentAccountFilterMatcher;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -35,6 +38,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
@@ -48,6 +52,7 @@ import com.google.common.base.Splitter;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
@@ -59,12 +64,12 @@ import javafx.geometry.Insets;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 public class FilterWindow extends Overlay<FilterWindow> {
     private final FilterManager filterManager;
@@ -127,107 +132,145 @@ public class FilterWindow extends Overlay<FilterWindow> {
         gridPane.getColumnConstraints().remove(1);
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
 
-        InputTextField keyTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("shared.unlock"), 10);
-        InputTextField uidTF = addInputTextField(gridPane, ++rowIndex,
-                "UID", 10);
-        if (useDevPrivilegeKeys) {
-            keyTF.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
-        }
-
-        InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.offers"));
-        InputTextField bannedFromTradingTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.onions")).second;
-        InputTextField bannedFromNetworkTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        // User scope
+        // Nodes
+        addFilterWindowGroup(2, Res.get("filterWindow.group.bannedNodes"));
+        InputTextField bannedFromTradingTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.onions"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        bannedFromTradingTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999");
+        InputTextField bannedFromNetworkTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedFromNetwork")).second;
-        bannedFromTradingTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
-        InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        bannedFromNetworkTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999");
+
+
+        // Accounts
+        addFilterWindowGroup(6, Res.get("filterWindow.group.bannedUserAccounts"));
+        InputTextField paymentAccountFilterPlainTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.accountsPlain"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        GridPane.setHalignment(paymentAccountFilterPlainTF, HPos.RIGHT);
+        paymentAccountFilterPlainTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345");
+        InputTextField paymentAccountFilterTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
-        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
+        paymentAccountFilterTF.setEditable(false);
+        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|sha256-v1:<64 hex chars>");
 
-        InputTextField delayedPayoutTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        InputTextField delayedPayoutPlainTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.delayedPayoutPlain")).second;
+        GridPane.setHalignment(delayedPayoutPlainTF, HPos.RIGHT);
+        delayedPayoutPlainTF.setPromptText("E.g. SEPA|getBic|COBADEH077X");
+        InputTextField delayedPayoutTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.delayedPayout")).second;
         GridPane.setHalignment(delayedPayoutTF, HPos.RIGHT);
-        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|COBADEH077X"); // Do not translate
+        delayedPayoutTF.setEditable(false);
+        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|sha256-v1:<64 hex chars>");
+        bindPaymentAccountFilterHashField(paymentAccountFilterPlainTF, paymentAccountFilterTF);
+        bindPaymentAccountFilterHashField(delayedPayoutPlainTF, delayedPayoutTF);
 
-        InputTextField bannedCurrenciesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.bannedCurrencies"));
-        InputTextField bannedPaymentMethodsTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.bannedPaymentMethods")).second;
-        bannedPaymentMethodsTF.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
-        InputTextField bannedAccountWitnessSignerPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+        InputTextField bannedAccountWitnessSignerPubKeysTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedAccountWitnessSignerPubKeys")).second;
-        bannedAccountWitnessSignerPubKeysTF.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257"); // Do not translate
-        InputTextField arbitratorsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.arbitrators"));
-        InputTextField mediatorsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.mediators"));
+        bannedAccountWitnessSignerPubKeysTF.setPromptText("E.g. 7f66117aa084e5a2c54fe17d29dd1fee2b241257");
+
+        InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.offers")).second;
+
+
+        // Bisq scope
+        addFilterWindowGroup(2, Res.get("filterWindow.group.payment"));
+        InputTextField bannedCurrenciesTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.bannedCurrencies"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField bannedPaymentMethodsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedPaymentMethods")).second;
+        bannedPaymentMethodsTF.setPromptText("E.g. PERFECT_MONEY");
+
+
+        addFilterWindowGroup(7, Res.get("filterWindow.group.infrastructure"));
+        InputTextField mediatorsTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.mediators"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         InputTextField refundAgentsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.refundAgents"));
-        InputTextField btcFeeReceiverAddressesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.btcFeeReceiverAddresses"));
-        InputTextField seedNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.seedNode"));
-        InputTextField addedSeedNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.addedSeedNodes"));
-        InputTextField priceRelayNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.priceRelayNode"));
+                Res.get("filterWindow.refundAgents")).second;
+        InputTextField bannedPrivilegedDevPubKeysTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
+
         InputTextField btcNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.btcNode"));
+                Res.get("filterWindow.btcNode")).second;
+
+        InputTextField seedNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.seedNode")).second;
+        InputTextField priceRelayNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.priceRelayNode")).second;
+        InputTextField autoConfExplorersTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.autoConfExplorers")).second;
+
+        addFilterWindowGroup(2, Res.get("filterWindow.group.addedNodes"));
+        InputTextField addedSeedNodesTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.addedSeedNodes"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         InputTextField addedBtcNodesTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.addedBtcNodes"));
-        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.preventPublicBtcNetwork"), 15);
+                Res.get("filterWindow.addedBtcNodes")).second;
+
+        // Features
+        addFilterWindowGroup(11, Res.get("filterWindow.group.features"));
+        InputTextField disableTradeBelowVersionTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.disableTradeBelowVersion"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField disableDaoBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.disableDaoBelowVersion")).second;
+
+        InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.powDifficulty")).second;
+        powDifficultyTF.setText("0.0");
+        InputTextField enabledPowVersionsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.enabledPowVersions")).second;
+
         CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableDao"));
+                Res.get("filterWindow.disableDao"), 15);
+        CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.preventPublicBtcNetwork"));
         CheckBox disableAutoConfCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableAutoConf"));
-        InputTextField disableDaoBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableDaoBelowVersion"));
-        InputTextField disableTradeBelowVersionTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableTradeBelowVersion"));
-        InputTextField bannedPrivilegedDevPubKeysTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.bannedPrivilegedDevPubKeys")).second;
-        InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.autoConfExplorers")).second;
         CheckBox disableMempoolValidationCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableMempoolValidation"), 15);
+                Res.get("filterWindow.disableMempoolValidation"));
         CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableApi"));
         CheckBox disableBsqSwapCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableBsqSwap"));
         CheckBox disablePowMessage = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disablePowMessage"));
-        InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.powDifficulty"));
-        powDifficultyTF.setText("0.0");
-        InputTextField enabledPowVersionsTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.enabledPowVersions"));
-        InputTextField makerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.makerFeeBtc"));
-        InputTextField takerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.takerFeeBtc"));
-        InputTextField makerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.makerFeeBsq"));
-        InputTextField takerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
-                Res.get("filterWindow.takerFeeBsq"));
 
+        // Fees
+        addFilterWindowGroup(4, Res.get("filterWindow.group.fees"));
+        InputTextField makerFeeBtcTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.makerFeeBtc"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField takerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.takerFeeBtc")).second;
+        InputTextField makerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.makerFeeBsq")).second;
+        InputTextField takerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.takerFeeBsq")).second;
+
+
+        addFilterWindowGroup(1, Res.get("filterWindow.group.auth"));
+        InputTextField keyTF = addInputTextField(gridPane, rowIndex,
+                Res.get("shared.unlock"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        if (useDevPrivilegeKeys) {
+            keyTF.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
+        }
+
+        String uid;
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
-            uidTF.setText(filter.getUid());
+            uid = filter.getUid();
             setupFieldFromList(offerIdsTF, filter.getBannedOfferIds());
             setupFieldFromList(bannedFromTradingTF, filter.getNodeAddressesBannedFromTrading());
             setupFieldFromList(bannedFromNetworkTF, filter.getNodeAddressesBannedFromNetwork());
-            setupFieldFromPaymentAccountFiltersList(paymentAccountFilterTF, filter.getBannedPaymentAccounts());
+            setupPaymentAccountFilterFields(paymentAccountFilterPlainTF,
+                    paymentAccountFilterTF,
+                    filterManager.getDevFilterBannedPaymentAccountPreimages(),
+                    filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesTF, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsTF, filter.getBannedPaymentMethods());
             setupFieldFromList(bannedAccountWitnessSignerPubKeysTF, filter.getBannedAccountWitnessSignerPubKeys());
-            setupFieldFromList(arbitratorsTF, filter.getArbitrators());
             setupFieldFromList(mediatorsTF, filter.getMediators());
             setupFieldFromList(refundAgentsTF, filter.getRefundAgents());
-            setupFieldFromList(btcFeeReceiverAddressesTF, filter.getBtcFeeReceiverAddresses());
             setupFieldFromList(seedNodesTF, filter.getSeedNodes());
             setupFieldFromList(addedSeedNodesTF, filter.getAddedSeedNodes());
             setupFieldFromList(priceRelayNodesTF, filter.getPriceRelayNodes());
@@ -252,9 +295,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
             takerFeeBtcTF.setText(btcFormatter.formatCoin(Coin.valueOf(filter.getTakerFeeBtc())));
             makerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getMakerFeeBsq()));
             takerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getTakerFeeBsq()));
-            setupFieldFromPaymentAccountFiltersList(delayedPayoutTF, filter.getDelayedPayoutPaymentAccounts());
+            setupPaymentAccountFilterFields(delayedPayoutPlainTF,
+                    delayedPayoutTF,
+                    filterManager.getDevFilterDelayedPayoutPaymentAccountPreimages(),
+                    filter.getDelayedPayoutPaymentAccounts());
         } else {
-            uidTF.setText(UUID.randomUUID().toString());
+            uid = UUID.randomUUID().toString();
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
@@ -265,47 +311,51 @@ public class FilterWindow extends Overlay<FilterWindow> {
             String privKeyString = keyTF.getText();
             if (filterManager.canAddDevFilter(privKeyString)) {
                 String signerPubKeyAsHex = filterManager.getSignerPubKeyAsHex(privKeyString);
-                Filter newFilter = new Filter(
-                        readAsList(offerIdsTF),
-                        readAsList(bannedFromTradingTF),
-                        readAsPaymentAccountFiltersList(paymentAccountFilterTF),
-                        readAsList(bannedCurrenciesTF),
-                        readAsList(bannedPaymentMethodsTF),
-                        readAsList(arbitratorsTF),
-                        readAsList(seedNodesTF),
-                        readAsList(priceRelayNodesTF),
-                        preventPublicBtcNetworkCheckBox.isSelected(),
-                        readAsList(btcNodesTF),
-                        disableDaoCheckBox.isSelected(),
-                        disableDaoBelowVersionTF.getText(),
-                        disableTradeBelowVersionTF.getText(),
-                        readAsList(mediatorsTF),
-                        readAsList(refundAgentsTF),
-                        readAsList(bannedAccountWitnessSignerPubKeysTF),
-                        readAsList(btcFeeReceiverAddressesTF),
-                        filterManager.getOwnerPubKey(),
-                        signerPubKeyAsHex,
-                        readAsList(bannedPrivilegedDevPubKeysTF),
-                        disableAutoConfCheckBox.isSelected(),
-                        readAsList(autoConfExplorersTF),
-                        readAsList(bannedFromNetworkTF),
-                        disableMempoolValidationCheckBox.isSelected(),
-                        disableApiCheckBox.isSelected(),
-                        disablePowMessage.isSelected(),
-                        Double.parseDouble(powDifficultyTF.getText()),
-                        readAsList(enabledPowVersionsTF).stream().map(Integer::parseInt).collect(Collectors.toList()),
-                        ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
-                        ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
-                        ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
-                        ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
-                        readAsPaymentAccountFiltersList(delayedPayoutTF),
-                        readAsList(addedBtcNodesTF),
-                        readAsList(addedSeedNodesTF),
-                        uidTF.getText(),
-                        disableBsqSwapCheckBox.isSelected()
-                );
-                if (!filterManager.isFilterValidForAdd(newFilter)) {
-                    new Popup().warning(Res.get("validation.invalidAddressList")).onClose(this::blurAgain).show();
+                Filter newFilter;
+                List<PaymentAccountFilter> bannedPaymentAccountPreimages;
+                List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages;
+                try {
+                    bannedPaymentAccountPreimages = readAsPlainPaymentAccountFiltersList(paymentAccountFilterPlainTF);
+                    delayedPayoutPaymentAccountPreimages = readAsPlainPaymentAccountFiltersList(delayedPayoutPlainTF);
+                    newFilter = new Filter(
+                            readAsList(offerIdsTF),
+                            readAsList(bannedFromTradingTF),
+                            readAsHashedPaymentAccountFiltersList(paymentAccountFilterTF),
+                            readAsList(bannedCurrenciesTF),
+                            readAsList(bannedPaymentMethodsTF),
+                            readAsList(seedNodesTF),
+                            readAsList(priceRelayNodesTF),
+                            preventPublicBtcNetworkCheckBox.isSelected(),
+                            readAsList(btcNodesTF),
+                            disableDaoCheckBox.isSelected(),
+                            disableDaoBelowVersionTF.getText(),
+                            disableTradeBelowVersionTF.getText(),
+                            readAsList(mediatorsTF),
+                            readAsList(refundAgentsTF),
+                            readAsList(bannedAccountWitnessSignerPubKeysTF),
+                            filterManager.getOwnerPubKey(),
+                            signerPubKeyAsHex,
+                            readAsList(bannedPrivilegedDevPubKeysTF),
+                            disableAutoConfCheckBox.isSelected(),
+                            readAsList(autoConfExplorersTF),
+                            readAsList(bannedFromNetworkTF),
+                            disableMempoolValidationCheckBox.isSelected(),
+                            disableApiCheckBox.isSelected(),
+                            disablePowMessage.isSelected(),
+                            Double.parseDouble(powDifficultyTF.getText()),
+                            readAsList(enabledPowVersionsTF).stream().map(Integer::parseInt).collect(Collectors.toList()),
+                            ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
+                            ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
+                            ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
+                            ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
+                            readAsHashedPaymentAccountFiltersList(delayedPayoutTF),
+                            readAsList(addedBtcNodesTF),
+                            readAsList(addedSeedNodesTF),
+                            uid,
+                            disableBsqSwapCheckBox.isSelected()
+                    );
+                } catch (IllegalArgumentException exception) {
+                    new Popup().warning(exception.getMessage()).onClose(this::blurAgain).show();
                     return;
                 }
 
@@ -316,12 +366,24 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 if (filterManager.canRemoveDevFilter(privKeyString)) {
                     filterManager.removeDevFilter(privKeyString);
                     if (DevEnv.isDevMode()) {
-                        addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
+                        addDevFilter(removeFilterMessageButton,
+                                privKeyString,
+                                newFilter,
+                                bannedPaymentAccountPreimages,
+                                delayedPayoutPaymentAccountPreimages);
                     } else {
-                        UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter), 5);
+                        UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton,
+                                privKeyString,
+                                newFilter,
+                                bannedPaymentAccountPreimages,
+                                delayedPayoutPaymentAccountPreimages), 5);
                     }
                 } else {
-                    addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
+                    addDevFilter(removeFilterMessageButton,
+                            privKeyString,
+                            newFilter,
+                            bannedPaymentAccountPreimages,
+                            delayedPayoutPaymentAccountPreimages);
                 }
             } else {
                 new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
@@ -349,11 +411,26 @@ public class FilterWindow extends Overlay<FilterWindow> {
         GridPane.setRowIndex(hBox, ++rowIndex);
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(35, 0, 0, 0));
     }
 
-    private void addDevFilter(Button removeFilterMessageButton, String privKeyString, Filter newFilter) {
-        if (filterManager.addDevFilter(newFilter, privKeyString)) {
+    private void addFilterWindowGroup(int rows, String title) {
+        addFilterWindowGroup(rows, title, Layout.COMPACT_GROUP_DISTANCE);
+    }
+
+    private void addFilterWindowGroup(int rows, String title, double top) {
+        addTitledGroupBg(gridPane, ++rowIndex, rows, title, top);
+    }
+
+    private void addDevFilter(Button removeFilterMessageButton,
+                              String privKeyString,
+                              Filter newFilter,
+                              List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                              List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
+        if (filterManager.addDevFilter(newFilter,
+                privKeyString,
+                bannedPaymentAccountPreimages,
+                delayedPayoutPaymentAccountPreimages)) {
             removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
             hide();
         } else {
@@ -385,19 +462,99 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
     }
 
+    private void setupPaymentAccountFilterFields(InputTextField plainField,
+                                                 InputTextField hashField,
+                                                 List<PaymentAccountFilter> plainValues,
+                                                 List<PaymentAccountFilter> hashValues) {
+        setupFieldFromPaymentAccountFiltersList(plainField, plainValues);
+        if (plainValues == null || plainValues.isEmpty()) {
+            setupFieldFromPaymentAccountFiltersList(hashField, hashValues);
+        } else {
+            setupFieldFromPaymentAccountFiltersList(hashField, hashPaymentAccountFilters(plainValues));
+        }
+    }
+
+    private void bindPaymentAccountFilterHashField(InputTextField plainField, InputTextField hashField) {
+        plainField.textProperty().addListener((observable, oldValue, newValue) ->
+                updatePaymentAccountFilterHashField(plainField, hashField));
+    }
+
+    private void updatePaymentAccountFilterHashField(InputTextField plainField, InputTextField hashField) {
+        if (plainField.getText() == null || plainField.getText().trim().isEmpty()) {
+            hashField.setText("");
+            return;
+        }
+
+        try {
+            setupFieldFromPaymentAccountFiltersList(hashField,
+                    hashPaymentAccountFilters(readAsPlainPaymentAccountFiltersList(plainField)));
+        } catch (IllegalArgumentException exception) {
+            hashField.setText(exception.getMessage());
+        }
+    }
+
     private List<String> readAsList(InputTextField field) {
         return Splitter.on(',').trimResults().omitEmptyStrings().splitToList(field.getText());
     }
 
-    private List<PaymentAccountFilter> readAsPaymentAccountFiltersList(InputTextField field) {
+    private List<PaymentAccountFilter> readAsPlainPaymentAccountFiltersList(InputTextField field) {
         return readAsList(field)
                 .stream().map(item -> {
-                    String[] list = item.split("\\|");
-                    if (list.length == 3)
-                        return new PaymentAccountFilter(list[0], list[1], list[2]);
-                    else
-                        return new PaymentAccountFilter("", "", "");
+                    String[] list = item.split("\\|", 3);
+                    if (list.length != 3 ||
+                            list[0].trim().isEmpty() ||
+                            list[1].trim().isEmpty() ||
+                            list[2].trim().isEmpty()) {
+                        throw new IllegalArgumentException("Invalid payment account filter. Expected PAYMENT_METHOD|getMethod|plain text value.");
+                    }
+
+                    return new PaymentAccountFilter(list[0].trim(),
+                            list[1].trim(),
+                            list[2].trim());
                 })
                 .collect(Collectors.toList());
+    }
+
+    private List<PaymentAccountFilter> readAsHashedPaymentAccountFiltersList(InputTextField field) {
+        return readAsList(field)
+                .stream().map(item -> {
+                    String[] list = item.split("\\|", 3);
+                    if (list.length != 3 || list[0].trim().isEmpty() || list[1].trim().isEmpty()) {
+                        throw new IllegalArgumentException("Invalid payment account filter. Expected PAYMENT_METHOD|getMethod|sha256-v1:<64 hex chars>.");
+                    }
+
+                    String value = list[2].trim();
+                    if (!PaymentAccountFilterMatcher.isValidHashValue(value)) {
+                        throw new IllegalArgumentException("Invalid payment account filter hash. Expected sha256-v1:<64 hex chars>.");
+                    }
+
+                    return new PaymentAccountFilter(list[0].trim(),
+                            list[1].trim(),
+                            value.toLowerCase(Locale.ROOT));
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<PaymentAccountFilter> hashPaymentAccountFilters(List<PaymentAccountFilter> paymentAccountFilters) {
+        return paymentAccountFilters.stream()
+                .map(paymentAccountFilter -> new PaymentAccountFilter(paymentAccountFilter.getPaymentMethodId(),
+                        paymentAccountFilter.getGetMethodName(),
+                        PaymentAccountFilterMatcher.hashValue(paymentAccountFilter.getPaymentMethodId(),
+                                paymentAccountFilter.getGetMethodName(),
+                                paymentAccountFilter.getValue())))
+                .collect(Collectors.toList());
+    }
+
+    private static Tuple2<Label, InputTextField> addInputTextField(GridPane gridPane,
+                                                                   int rowIndex,
+                                                                   String title) {
+        return FormBuilder.addTopLabelInputTextField(gridPane, rowIndex, title, -13);
+    }
+
+    private static Tuple2<Label, InputTextField> addInputTextField(GridPane gridPane,
+                                                                   int rowIndex,
+                                                                   String title,
+                                                                   double top) {
+        return FormBuilder.addTopLabelInputTextField(gridPane, rowIndex, title, top);
     }
 }

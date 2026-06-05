@@ -26,6 +26,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -56,6 +57,7 @@ public class Provider {
     private final ReferralIdService referralIdService;
     private final User user;
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ArbitratorManager arbitratorManager;
@@ -78,6 +80,7 @@ public class Provider {
                     ReferralIdService referralIdService,
                     User user,
                     FilterManager filterManager,
+                    FilterPolicyService filterPolicyService,
                     AccountAgeWitnessService accountAgeWitnessService,
                     TradeStatisticsManager tradeStatisticsManager,
                     ArbitratorManager arbitratorManager,
@@ -99,6 +102,7 @@ public class Provider {
         this.referralIdService = referralIdService;
         this.user = user;
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;

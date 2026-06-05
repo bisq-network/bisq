@@ -19,7 +19,7 @@ package bisq.core.account.witness;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -145,7 +145,7 @@ public class AccountAgeWitnessService {
     private final AccountAgeWitnessStorageService accountAgeWitnessStorageService;
     private final Clock clock;
     private final Preferences preferences;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
 
@@ -172,7 +172,7 @@ public class AccountAgeWitnessService {
                                     AppendOnlyDataStoreService appendOnlyDataStoreService,
                                     Clock clock,
                                     Preferences preferences,
-                                    FilterManager filterManager) {
+                                    FilterPolicyService filterPolicyService) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.user = user;
@@ -181,7 +181,7 @@ public class AccountAgeWitnessService {
         this.accountAgeWitnessStorageService = accountAgeWitnessStorageService;
         this.clock = clock;
         this.preferences = preferences;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
 
         accountAgeWitnessUtils = new AccountAgeWitnessUtils(
                 this,
@@ -784,17 +784,17 @@ public class AccountAgeWitnessService {
     }
 
     private boolean isNotFiltered(Dispute dispute) {
-        boolean isFiltered = filterManager.isNodeAddressBanned(dispute.getContract().getBuyerNodeAddress()) ||
-                filterManager.isNodeAddressBanned(dispute.getContract().getSellerNodeAddress()) ||
-                filterManager.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
-                filterManager.isPaymentMethodBanned(
+        boolean isFiltered = filterPolicyService.isNodeAddressBanned(dispute.getContract().getBuyerNodeAddress()) ||
+                filterPolicyService.isNodeAddressBanned(dispute.getContract().getSellerNodeAddress()) ||
+                filterPolicyService.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
+                filterPolicyService.isPaymentMethodBanned(
                         PaymentMethod.getPaymentMethod(dispute.getContract().getPaymentMethodId())) ||
-                filterManager.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload()) ||
-                filterManager.arePeersPaymentAccountDataBanned(
+                filterPolicyService.arePeersPaymentAccountDataBanned(dispute.getContract().getBuyerPaymentAccountPayload()) ||
+                filterPolicyService.arePeersPaymentAccountDataBanned(
                         dispute.getContract().getSellerPaymentAccountPayload()) ||
-                filterManager.isWitnessSignerPubKeyBanned(
+                filterPolicyService.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getBuyerPubKeyRing().getSignaturePubKeyBytes())) ||
-                filterManager.isWitnessSignerPubKeyBanned(
+                filterPolicyService.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(dispute.getContract().getSellerPubKeyRing().getSignaturePubKeyBytes()));
         return !isFiltered;
     }

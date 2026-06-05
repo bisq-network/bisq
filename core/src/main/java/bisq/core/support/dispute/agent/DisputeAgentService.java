@@ -17,8 +17,6 @@
 
 package bisq.core.support.dispute.agent;
 
-import bisq.core.filter.FilterManager;
-
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.HashMapChangedListener;
@@ -42,16 +40,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class DisputeAgentService<T extends DisputeAgent> {
     protected final P2PService p2PService;
-    protected final FilterManager filterManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeAgentService(P2PService p2PService, FilterManager filterManager) {
+    public DisputeAgentService(P2PService p2PService) {
         this.p2PService = p2PService;
-        this.filterManager = filterManager;
     }
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {
@@ -94,12 +90,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
     }
 
     public Map<NodeAddress, T> getDisputeAgents() {
-        final List<String> bannedDisputeAgents;
-        if (filterManager.getFilter() != null) {
-            bannedDisputeAgents = getDisputeAgentsFromFilter();
-        } else {
-            bannedDisputeAgents = null;
-        }
+        final List<String> bannedDisputeAgents = getDisputeAgentsFromFilter();
 
         if (bannedDisputeAgents != null && !bannedDisputeAgents.isEmpty()) {
             log.warn("bannedDisputeAgents=" + bannedDisputeAgents);

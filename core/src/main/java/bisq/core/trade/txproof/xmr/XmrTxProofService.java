@@ -19,6 +19,7 @@ package bisq.core.trade.txproof.xmr;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
@@ -74,6 +75,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class XmrTxProofService implements AssetTxProofService {
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final Preferences preferences;
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
@@ -101,6 +103,7 @@ public class XmrTxProofService implements AssetTxProofService {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public XmrTxProofService(FilterManager filterManager,
+                             FilterPolicyService filterPolicyService,
                              Preferences preferences,
                              TradeManager tradeManager,
                              ClosedTradableManager closedTradableManager,
@@ -113,6 +116,7 @@ public class XmrTxProofService implements AssetTxProofService {
                              @Named(Config.ALLOW_LAN_FOR_HTTP_REQUESTS) boolean allowLanForHttpRequests,
                              @Named(Config.ALLOW_CLEARNET_HTTP_REQUESTS) boolean allowClearnetHttpRequests) {
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.preferences = preferences;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
@@ -274,7 +278,7 @@ public class XmrTxProofService implements AssetTxProofService {
                 trade,
                 autoConfirmSettings,
                 mediationManager,
-                filterManager,
+                filterPolicyService,
                 refundManager,
                 allowLanForHttpRequests,
                 allowClearnetHttpRequests);
@@ -381,8 +385,7 @@ public class XmrTxProofService implements AssetTxProofService {
     }
 
     private boolean isAutoConfDisabledByFilter() {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().isDisableAutoConf();
+        return filterPolicyService.isAutoConfDisabled();
     }
 
     private boolean wasTxKeyReUsed(Trade trade, List<Trade> activeTrades) {

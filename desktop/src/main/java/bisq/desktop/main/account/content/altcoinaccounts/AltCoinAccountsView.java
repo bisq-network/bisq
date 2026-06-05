@@ -30,7 +30,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -81,7 +81,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AssetService assetService;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final CoinFormatter formatter;
     private final User user;
     private final Preferences preferences;
@@ -98,7 +98,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                AltCoinAddressValidator altCoinAddressValidator,
                                AccountAgeWitnessService accountAgeWitnessService,
                                AssetService assetService,
-                               FilterManager filterManager,
+                               FilterPolicyService filterPolicyService,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                User user,
                                Preferences preferences) {
@@ -107,7 +107,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.formatter = formatter;
         this.user = user;
         this.preferences = preferences;
@@ -331,7 +331,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                 currencyComboBox.setPromptText(""));
 
         ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
-                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
+                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterPolicyService));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
 
         currencyComboBox.setConverter(new StringConverter<>() {

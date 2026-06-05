@@ -20,7 +20,7 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.crypto.LowRSigningKey;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.CountryUtil;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.ChargeBackRisk;
@@ -85,7 +85,7 @@ public class AccountAgeWitnessServiceTest {
     private SignedWitnessService signedWitnessService;
     private AccountAgeWitnessService service;
     private ChargeBackRisk chargeBackRisk;
-    private FilterManager filterManager;
+    private FilterPolicyService filterPolicyService;
     private File dir1;
     private File dir2;
     private File dir3;
@@ -109,9 +109,9 @@ public class AccountAgeWitnessServiceTest {
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
-        filterManager = mock(FilterManager.class);
-        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterManager);
-        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, null, null, filterManager);
+        filterPolicyService = mock(FilterPolicyService.class);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterPolicyService);
+        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, null, null, filterPolicyService);
     }
 
     private File makeDir(String name) throws IOException {
@@ -218,11 +218,11 @@ public class AccountAgeWitnessServiceTest {
                 false, "", UNKNOWN));
 
         // Filtermanager says nothing is filtered
-        when(filterManager.isNodeAddressBanned(any())).thenReturn(false);
-        when(filterManager.isCurrencyBanned(any())).thenReturn(false);
-        when(filterManager.isPaymentMethodBanned(any())).thenReturn(false);
-        when(filterManager.arePeersPaymentAccountDataBanned(any())).thenReturn(false);
-        when(filterManager.isWitnessSignerPubKeyBanned(any())).thenReturn(false);
+        when(filterPolicyService.isNodeAddressBanned(any())).thenReturn(false);
+        when(filterPolicyService.isCurrencyBanned(any())).thenReturn(false);
+        when(filterPolicyService.isPaymentMethodBanned(any())).thenReturn(false);
+        when(filterPolicyService.arePeersPaymentAccountDataBanned(any())).thenReturn(false);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(any())).thenReturn(false);
 
         when(chargeBackRisk.hasChargebackRisk(any(), any())).thenReturn(true);
 

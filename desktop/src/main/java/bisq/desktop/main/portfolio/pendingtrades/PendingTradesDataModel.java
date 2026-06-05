@@ -32,7 +32,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -117,7 +117,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final OfferUtil offerUtil;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final CoinFormatter btcFormatter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
@@ -156,7 +156,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter,
                                   OfferUtil offerUtil,
-                                  FilterManager filterManager,
+                                  FilterPolicyService filterPolicyService,
                                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
@@ -173,7 +173,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.offerUtil = offerUtil;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.btcFormatter = formatter;
 
         tradesListChangeListener = change -> onListChanged();
@@ -706,7 +706,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public boolean requiresPayoutDelay() {
-        return filterManager.isDelayedPayoutPaymentAccount(Objects.requireNonNull(getTrade()).getProcessModel().getTradePeer().getPaymentAccountPayload());
+        return filterPolicyService.isDelayedPayoutPaymentAccount(Objects.requireNonNull(getTrade()).getProcessModel().getTradePeer().getPaymentAccountPayload());
     }
 
     public boolean requiredPayoutDelayHasPassed() {
@@ -733,4 +733,3 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 TimeUnit.DAYS.toMillis(14);
     }
 }
-

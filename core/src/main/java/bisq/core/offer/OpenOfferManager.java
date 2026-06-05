@@ -43,7 +43,6 @@ import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferProtocol;
 import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.ClosedTradableManager;
@@ -132,7 +131,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
@@ -174,7 +172,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PriceFeedService priceFeedService,
                             Preferences preferences,
                             TradeStatisticsManager tradeStatisticsManager,
-                            ArbitratorManager arbitratorManager,
                             MediatorManager mediatorManager,
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
@@ -197,7 +194,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
@@ -492,7 +488,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
-                arbitratorManager,
+                mediatorManager,
+                refundAgentManager,
                 tradeStatisticsManager,
                 daoFacade,
                 btcFeeReceiverService,
@@ -872,40 +869,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 OpenOffer openOffer = openOfferOptional.get();
                 if (!apiUserDeniedByOffer(request)) {
                     if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
-                        Offer offer = openOffer.getOffer();
-                        if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
-                            mediatorNodeAddress = DisputeAgentSelection.getRandomMediator(mediatorManager).getNodeAddress();
-                            openOffer.setMediatorNodeAddress(mediatorNodeAddress);
-
-                            refundAgentNodeAddress = DisputeAgentSelection.getRandomRefundAgent(refundAgentManager).getNodeAddress();
-                            openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
-
-                            try {
-                                // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                                // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                                // losses and therefore an outdated market price.
-                                offer.verifyTakersTradePrice(request.getTakersTradePrice());
-
-                                // We allow 10% tolerance to the max allowed price percentage to avoid failing requests in
-                                // high volatility environments
-                                OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.1);
-
-                                availabilityResult = AvailabilityResult.AVAILABLE;
-                            } catch (TradePriceOutOfToleranceException e) {
-                                log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                            } catch (MarketPriceNotAvailableException e) {
-                                log.warn(e.getMessage());
-                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                            } catch (Exception e) {
-                                // Intentionally narrower than Throwable: JVM Errors (OOM, StackOverflow, ...)
-                                // must propagate instead of being downgraded to a price-check failure.
-                                log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.PRICE_CHECK_FAILED;
-                            }
-                        } else {
-                            availabilityResult = AvailabilityResult.USER_IGNORED;
-                        }
+                        AvailabilityCheckResult availabilityCheckResult = checkAvailabilityForAvailableOpenOffer(openOffer,
+                                request,
+                                peer);
+                        availabilityResult = availabilityCheckResult.availabilityResult;
+                        mediatorNodeAddress = availabilityCheckResult.mediatorNodeAddress;
+                        refundAgentNodeAddress = availabilityCheckResult.refundAgentNodeAddress;
                     } else {
                         availabilityResult = AvailabilityResult.OFFER_TAKEN;
                     }
@@ -967,6 +936,78 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             t.printStackTrace();
         } finally {
             sendAckMessage(request, peer, result, errorMessage);
+        }
+    }
+
+    AvailabilityCheckResult checkAvailabilityForAvailableOpenOffer(OpenOffer openOffer,
+                                                                   OfferAvailabilityRequest request,
+                                                                   NodeAddress peer) {
+        Offer offer = openOffer.getOffer();
+        if (preferences.getIgnoreTradersList().stream().anyMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
+            return new AvailabilityCheckResult(AvailabilityResult.USER_IGNORED, null, null);
+        }
+
+        if (offer.isBsqSwapOffer()) {
+            return new AvailabilityCheckResult(verifyTradePrice(offer, request), null, null);
+        }
+
+        List<NodeAddress> acceptedMediators = offer.getOfferPayload().orElseThrow().getMediatorNodeAddresses();
+        if (!DisputeAgentSelection.hasAvailableAcceptedDisputeAgent(acceptedMediators, mediatorManager)) {
+            return new AvailabilityCheckResult(AvailabilityResult.NO_MEDIATORS, null, null);
+        } else if (!DisputeAgentSelection.hasAvailableDisputeAgent(refundAgentManager)) {
+            return new AvailabilityCheckResult(AvailabilityResult.NO_REFUND_AGENTS, null, null);
+        } else {
+            NodeAddress mediatorNodeAddress = DisputeAgentSelection.getRandomAcceptedMediator(acceptedMediators, mediatorManager).getNodeAddress();
+            openOffer.setMediatorNodeAddress(mediatorNodeAddress);
+
+            NodeAddress refundAgentNodeAddress = DisputeAgentSelection.getRandomRefundAgent(refundAgentManager).getNodeAddress();
+            openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
+
+            return new AvailabilityCheckResult(verifyTradePrice(offer, request),
+                    mediatorNodeAddress,
+                    refundAgentNodeAddress);
+        }
+    }
+
+    private AvailabilityResult verifyTradePrice(Offer offer, OfferAvailabilityRequest request) {
+        try {
+            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+            // in trade price between the peers. Also here poor connectivity might cause market price API connection
+            // losses and therefore an outdated market price.
+            offer.verifyTakersTradePrice(request.getTakersTradePrice());
+
+            // We allow 10% tolerance to the max allowed price percentage to avoid failing requests in
+            // high volatility environments
+            OfferValidation.verifyPriceInBounds(priceFeedService, offer, 1.1);
+
+            return AvailabilityResult.AVAILABLE;
+        } catch (TradePriceOutOfToleranceException e) {
+            log.warn("Trade price check failed because takers price is outside out tolerance.");
+            return AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+        } catch (MarketPriceNotAvailableException e) {
+            log.warn(e.getMessage());
+            return AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+        } catch (Exception e) {
+            // Intentionally narrower than Throwable: JVM Errors (OOM, StackOverflow, ...)
+            // must propagate instead of being downgraded to a price-check failure.
+            log.warn("Trade price check failed. " + e.getMessage());
+            return AvailabilityResult.PRICE_CHECK_FAILED;
+        }
+    }
+
+    static class AvailabilityCheckResult {
+        final AvailabilityResult availabilityResult;
+        @Nullable
+        final NodeAddress mediatorNodeAddress;
+        @Nullable
+        final NodeAddress refundAgentNodeAddress;
+
+        private AvailabilityCheckResult(AvailabilityResult availabilityResult,
+                                        @Nullable NodeAddress mediatorNodeAddress,
+                                        @Nullable NodeAddress refundAgentNodeAddress) {
+            this.availabilityResult = availabilityResult;
+            this.mediatorNodeAddress = mediatorNodeAddress;
+            this.refundAgentNodeAddress = refundAgentNodeAddress;
         }
     }
 

@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks;
 
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -47,10 +47,10 @@ public class ApplyFilter extends TradeTask {
             @Nullable
             PaymentAccountPayload paymentAccountPayload = processModel.getTradePeer().getPaymentAccountPayload();
 
-            FilterManager filterManager = processModel.getFilterManager();
+            FilterPolicyService filterPolicyService = processModel.getFilterPolicyService();
 
             TradeUtil.applyFilter(trade,
-                    filterManager,
+                    filterPolicyService,
                     nodeAddress,
                     paymentAccountPayload,
                     this::complete,
@@ -60,4 +60,3 @@ public class ApplyFilter extends TradeTask {
         }
     }
 }
-

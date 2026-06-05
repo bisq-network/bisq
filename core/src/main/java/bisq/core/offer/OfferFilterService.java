@@ -18,7 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.user.Preferences;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferFilterService {
     private final User user;
     private final Preferences preferences;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
     private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
@@ -53,11 +53,11 @@ public class OfferFilterService {
     @Inject
     public OfferFilterService(User user,
                               Preferences preferences,
-                              FilterManager filterManager,
+                              FilterPolicyService filterPolicyService,
                               AccountAgeWitnessService accountAgeWitnessService) {
         this.user = user;
         this.preferences = preferences;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.accountAgeWitnessService = accountAgeWitnessService;
 
         if (user != null) {
@@ -96,7 +96,7 @@ public class OfferFilterService {
     }
 
     public Result canTakeOffer(Offer offer, boolean isTakerApiUser) {
-        if (isTakerApiUser && filterManager.getFilter() != null && filterManager.getFilter().isDisableApi()) {
+        if (isTakerApiUser && filterPolicyService.isApiDisabled()) {
             return Result.API_DISABLED;
         }
         if (isBsqSwapDisabled(offer)) {
@@ -151,27 +151,27 @@ public class OfferFilterService {
     }
 
     public boolean isOfferBanned(Offer offer) {
-        return filterManager.isOfferIdBanned(offer.getId());
+        return filterPolicyService.isOfferIdBanned(offer.getId());
     }
 
     public boolean isCurrencyBanned(Offer offer) {
-        return filterManager.isCurrencyBanned(offer.getCurrencyCode());
+        return filterPolicyService.isCurrencyBanned(offer.getCurrencyCode());
     }
 
     public boolean isPaymentMethodBanned(Offer offer) {
-        return filterManager.isPaymentMethodBanned(offer.getPaymentMethod());
+        return filterPolicyService.isPaymentMethodBanned(offer.getPaymentMethod());
     }
 
     public boolean isNodeAddressBanned(Offer offer) {
-        return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
+        return filterPolicyService.isNodeAddressBanned(offer.getMakerNodeAddress());
     }
 
     public boolean isBsqSwapDisabled(Offer offer) {
-        return offer.isBsqSwapOffer() && filterManager.isBsqSwapDisabled();
+        return offer.isBsqSwapOffer() && filterPolicyService.isBsqSwapDisabled();
     }
 
     public boolean requireUpdateToNewVersion() {
-        return filterManager.requireUpdateToNewVersionForTrading();
+        return filterPolicyService.requireUpdateToNewVersionForTrading();
     }
 
     // This call is a bit expensive so we cache results

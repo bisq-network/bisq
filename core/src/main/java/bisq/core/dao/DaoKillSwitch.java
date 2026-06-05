@@ -18,53 +18,41 @@
 package bisq.core.dao;
 
 import bisq.core.dao.exceptions.DaoDisabledException;
-import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
-
-import bisq.common.app.Version;
+import bisq.core.filter.FilterPolicyService;
 
 import javax.inject.Inject;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 public class DaoKillSwitch implements DaoSetupService {
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
 
     @Getter
     private boolean daoDisabled;
 
     @Inject
-    public DaoKillSwitch(FilterManager filterManager) {
+    public DaoKillSwitch(FilterManager filterManager,
+                         FilterPolicyService filterPolicyService) {
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
     }
 
     @Override
     public void addListeners() {
-        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> applyFilter(newValue));
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> applyFilter());
     }
 
     @Override
     public void start() {
-        applyFilter(filterManager.getFilter());
+        applyFilter();
     }
 
-    private void applyFilter(@Nullable Filter filter) {
-        if (filter == null) {
-            daoDisabled = false;
-            return;
-        }
-
-        boolean requireUpdateToNewVersion = false;
-        String disableDaoBelowVersion = filter.getDisableDaoBelowVersion();
-        if (disableDaoBelowVersion != null && !disableDaoBelowVersion.isEmpty()) {
-            requireUpdateToNewVersion = Version.isNewVersion(disableDaoBelowVersion);
-        }
-
-        daoDisabled = requireUpdateToNewVersion || filter.isDisableDao();
+    private void applyFilter() {
+        daoDisabled = filterPolicyService.isDaoDisabled();
     }
 
     public void assertDaoIsNotDisabled() {

@@ -14,8 +14,8 @@ services:
     volumes:
       - bitcoind-data:/data/.bitcoin
     ports:
-      - "18443:18443"   # RPC
-      - "18444:18444"   # bitcoinj P2P (intra-bridge works without publish, but
+      - "${BITCOIND_RPC_HOST_PORT:-18443}:18443"   # RPC
+      - "${BITCOIND_P2P_HOST_PORT:-18444}:18444"   # bitcoinj P2P (intra-bridge works without publish, but
                         # exposing matches the user's reference setup)
     healthcheck:
       test: ["CMD-SHELL", "bitcoin-cli -regtest -rpcuser=bisqdao -rpcpassword=bsq getrawtransaction 30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf >/dev/null 2>&1 || exit 1"]
@@ -41,6 +41,8 @@ services:
       NODE_PORT: "2002"
       RPC_BLOCK_NOTIFICATION_PORT: "5120"
       BISQ_P2P_LOCALHOST_NAME: "seednode"
+      BISQ_EXTRA_ARGS: "${BISQ_EXTRA_ARGS:-}"
+      SEEDNODE_OPTS: "${SEEDNODE_OPTS:--Xms256M -Xmx1024M}"
     volumes:
       - seednode-data:/bisq/data
 
@@ -63,6 +65,7 @@ services:
       RPC_BLOCK_NOTIFICATION_PORT: "5121"
       REGISTER_DISPUTE_AGENT: "true"
       BISQ_P2P_LOCALHOST_NAME: "arb"
+      BISQ_EXTRA_ARGS: "${BISQ_EXTRA_ARGS:-}"
     ports:
       - "9997:9997"
     volumes:
@@ -86,6 +89,7 @@ services:
       API_PASSWORD: "xyz"
       RPC_BLOCK_NOTIFICATION_PORT: "5122"
       BISQ_P2P_LOCALHOST_NAME: "alice"
+      BISQ_EXTRA_ARGS: "${BISQ_EXTRA_ARGS:-}"
     ports:
       - "9998:9998"
     volumes:
@@ -109,6 +113,7 @@ services:
       API_PASSWORD: "xyz"
       RPC_BLOCK_NOTIFICATION_PORT: "5123"
       BISQ_P2P_LOCALHOST_NAME: "bob"
+      BISQ_EXTRA_ARGS: "${BISQ_EXTRA_ARGS:-}"
     ports:
       - "9999:9999"
     volumes:

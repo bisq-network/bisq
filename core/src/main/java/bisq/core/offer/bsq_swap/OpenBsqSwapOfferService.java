@@ -24,6 +24,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
@@ -82,6 +83,7 @@ public class OpenBsqSwapOfferService {
     private final OfferBookService offerBookService;
     private final OfferUtil offerUtil;
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final PubKeyRing pubKeyRing;
 
     private final Map<String, OpenBsqSwapOffer> openBsqSwapOffersById = new HashMap<>();
@@ -100,6 +102,7 @@ public class OpenBsqSwapOfferService {
                                    OfferBookService offerBookService,
                                    OfferUtil offerUtil,
                                    FilterManager filterManager,
+                                   FilterPolicyService filterPolicyService,
                                    PubKeyRing pubKeyRing) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
@@ -110,6 +113,7 @@ public class OpenBsqSwapOfferService {
         this.offerBookService = offerBookService;
         this.offerUtil = offerUtil;
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.pubKeyRing = pubKeyRing;
 
         offerListChangeListener = c -> {
@@ -437,16 +441,16 @@ public class OpenBsqSwapOfferService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isProofOfWorkInvalid(Offer offer) {
-        return !filterManager.isProofOfWorkValid(offer);
+        return !filterPolicyService.isProofOfWorkValid(offer);
     }
 
 
     private double getPowDifficulty() {
-        return filterManager.getFilter() != null ? filterManager.getFilter().getPowDifficulty() : 0.0;
+        return filterPolicyService.getPowDifficulty();
     }
 
     private ProofOfWorkService getPowService() {
-        var service = filterManager.getEnabledPowVersions().stream()
+        var service = filterPolicyService.getEnabledPowVersions().stream()
                 .flatMap(v -> ProofOfWorkService.forVersion(v).stream())
                 .findFirst();
         if (!service.isPresent()) {

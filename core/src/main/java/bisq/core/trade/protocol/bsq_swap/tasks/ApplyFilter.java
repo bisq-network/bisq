@@ -38,7 +38,7 @@ public class ApplyFilter extends BsqSwapTask {
             runInterceptHook();
 
             TradeUtil.applyFilter(trade,
-                    protocolModel.getFilterManager(),
+                    protocolModel.getFilterPolicyService(),
                     Objects.requireNonNull(trade.getTradingPeerNodeAddress()),
                     null,
                     this::complete,
@@ -48,4 +48,3 @@ public class ApplyFilter extends BsqSwapTask {
         }
     }
 }
-

@@ -19,7 +19,7 @@ package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.crypto.LowRSigningKey;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.User;
@@ -77,7 +77,7 @@ public class SignedWitnessService {
     private final ArbitratorManager arbitratorManager;
     private final SignedWitnessStorageService signedWitnessStorageService;
     private final User user;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
@@ -108,13 +108,13 @@ public class SignedWitnessService {
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
                                 User user,
-                                FilterManager filterManager) {
+                                FilterPolicyService filterPolicyService) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
         this.signedWitnessStorageService = signedWitnessStorageService;
         this.user = user;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -203,7 +203,7 @@ public class SignedWitnessService {
     public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(SignedWitness::getWitnessOwnerPubKey)
-                .anyMatch(ownerPubKey -> filterManager.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
+                .anyMatch(ownerPubKey -> filterPolicyService.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPubKey)));
     }
 
     private byte[] ownerPubKey(AccountAgeWitness accountAgeWitness) {
@@ -480,7 +480,7 @@ public class SignedWitnessService {
     private boolean isValidSignerWitnessInternal(SignedWitness signedWitness,
                                                  long childSignedWitnessDateMillis,
                                                  Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
-        if (filterManager.isWitnessSignerPubKeyBanned(Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))) {
+        if (filterPolicyService.isWitnessSignerPubKeyBanned(Utils.HEX.encode(signedWitness.getWitnessOwnerPubKey()))) {
             return false;
         }
         if (!verifySignature(signedWitness)) {

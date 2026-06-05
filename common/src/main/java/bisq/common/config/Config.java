@@ -83,6 +83,9 @@ public class Config {
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String DUMP_BURNING_MAN_DATA = "dumpBurningManData";
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
+    public static final String IGNORE_NETWORK_FILTER = "ignoreNetworkFilter";
+    public static final String IGNORE_DENY_LIST = "ignoreDenyList";
+    public static final String DENY_LIST_RESOURCE = "denyListResource";
     public static final String PROVIDERS = "providers";
     public static final String SEED_NODES = "seedNodes";
     public static final String BAN_LIST = "banList";
@@ -202,6 +205,9 @@ public class Config {
     public final boolean dumpStatistics;
     public final boolean dumpBurningManData;
     public final boolean ignoreDevMsg;
+    public final boolean ignoreNetworkFilter;
+    public final boolean ignoreDenyList;
+    public final String denyListResource;
     public final List<String> providers;
     public final List<String> seedNodes;
     public final List<String> banList;
@@ -463,13 +469,33 @@ public class Config {
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> ignoreDevMsgOpt =
-                parser.accepts(IGNORE_DEV_MSG, "If set to true all signed " +
-                                "network_messages from bisq developers are ignored (Global " +
-                                "alert, Version update alert, Filters for offers, nodes or " +
-                                "trading account data)")
+                parser.accepts(IGNORE_DEV_MSG, "If set to true signed developer alert " +
+                                "messages (Global alert, Version update alert, private " +
+                                "notifications) are ignored. Use --ignoreNetworkFilter to " +
+                                "ignore signed network filters and --ignoreDenyList to " +
+                                "ignore the bundled deny-list resource.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> ignoreNetworkFilterOpt =
+                parser.accepts(IGNORE_NETWORK_FILTER, "If set to true signed network filters for offers, nodes, " +
+                                "payment accounts and trading policy are ignored")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> ignoreDenyListOpt =
+                parser.accepts(IGNORE_DENY_LIST, "If set to true startup DenyList resources are ignored")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<String> denyListResourceOpt =
+                parser.accepts(DENY_LIST_RESOURCE, "Classpath DenyList resource override for tests and controlled recovery")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<String> providersOpt =
                 parser.accepts(PROVIDERS, "List custom pricenodes")
@@ -925,6 +951,9 @@ public class Config {
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
             this.dumpBurningManData = options.valueOf(dumpBurningManDataOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
+            this.ignoreNetworkFilter = options.valueOf(ignoreNetworkFilterOpt);
+            this.ignoreDenyList = options.valueOf(ignoreDenyListOpt);
+            this.denyListResource = options.valueOf(denyListResourceOpt).trim();
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
             this.banList = options.valuesOf(banListOpt);

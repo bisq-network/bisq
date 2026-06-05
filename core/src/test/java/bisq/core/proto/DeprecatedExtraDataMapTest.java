@@ -31,7 +31,7 @@ import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.filter.Filter;
-import bisq.core.filter.TestFilter;
+import bisq.core.filter.MockFilterFactory;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
@@ -222,7 +222,7 @@ public class DeprecatedExtraDataMapTest {
     }
 
     private static Filter filter() {
-        return TestFilter.createFilter(signaturePublicKey(), HEX.encode(new ECKey().getPubKey()), 1L);
+        return MockFilterFactory.createFilter(signaturePublicKey(), HEX.encode(new ECKey().getPubKey()), 1L);
     }
 
     private static Arbitrator arbitrator() {

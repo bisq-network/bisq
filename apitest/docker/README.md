@@ -3,6 +3,38 @@
 Headless 5-container regtest stack for Bisq DAO governance + trade flows.
 Entry point: [`run-e2e-tests.sh`](run-e2e-tests.sh).
 
+## TLDR
+
+From the repository root:
+
+```bash
+apitest/docker/run-e2e-tests.sh
+```
+
+For a faster local rerun after images already exist:
+
+```bash
+apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build
+```
+
+If local regtest ports are already in use:
+
+```bash
+BITCOIND_RPC_HOST_PORT=18445 BITCOIND_P2P_HOST_PORT=18446 \
+  apitest/docker/run-e2e-tests.sh
+```
+
+Run one JUnit class only:
+
+```bash
+FRESH_STACK_TESTS= RUN_POLICY_E2E_TESTS=false \
+  apitest/docker/run-e2e-tests.sh --tests "bisq.apitest.dao.ProposalPhaseTest"
+```
+
+The default run executes the shared-stack method/DAO tests, fresh-stack tests,
+and deny-list policy phases. Set `RUN_POLICY_E2E_TESTS=false` to skip only the
+policy phases while iterating on unrelated tests.
+
 ## Topology
 
 | Container | Role | Notes |
@@ -13,7 +45,7 @@ Entry point: [`run-e2e-tests.sh`](run-e2e-tests.sh).
 | `alice`    | Lite Bisq node, gRPC `:9998` | dao-setup app dir → `/bisq/data/bisq-BTC_REGTEST_Alice` |
 | `bob`      | Lite Bisq node, gRPC `:9999` | dao-setup app dir → `/bisq/data/bisq-BTC_REGTEST_Bob` |
 
-Bridge network `bisqnet`; bitcoind exposes RPC `:18443` + bitcoinj P2P `:18444`;
+Bridge network `bisqnet`; bitcoind exposes RPC `:18443` + bitcoinj P2P `:18444` by default;
 daemons on `:9997-9999`.
 
 ## dao-setup.zip data placement
@@ -109,6 +141,7 @@ apitest/docker/run-e2e-tests.sh --skip-build                 # reuse gradle outp
 apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build  # fastest iter
 apitest/docker/run-e2e-tests.sh --keep-up                    # leave stack up
 apitest/docker/run-e2e-tests.sh --tests "bisq.apitest.dao.ProposalPhaseTest"
+RUN_POLICY_E2E_TESTS=false apitest/docker/run-e2e-tests.sh   # skip deny-list policy phases
 ```
 
 ## Diagnostics

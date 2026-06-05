@@ -38,7 +38,7 @@ import java.util.UUID;
 
 import static org.bitcoinj.core.Utils.HEX;
 
-public class TestFilter {
+public class MockFilterFactory {
 
     public static ProtectedStorageEntry createProtectedStorageEntryForFilter(Filter filter) {
         return new ProtectedStorageEntry(
@@ -139,7 +139,6 @@ public class TestFilter {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList(),
                 seedNodes,
                 priceRelayNodes,
                 false,
@@ -147,7 +146,6 @@ public class TestFilter {
                 false,
                 "",
                 "",
-                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),

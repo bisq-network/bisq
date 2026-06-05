@@ -109,6 +109,7 @@ public class FilterManagerMockedPrivilegeKeysTests {
                     mock(KeyRing.class),
                     mock(User.class),
                     mock(Preferences.class),
+                    DenyList.empty(),
                     config,
                     mock(PriceFeedNodeAddressProvider.class),
                     mock(BanFilter.class),
@@ -127,19 +128,19 @@ public class FilterManagerMockedPrivilegeKeysTests {
             long creationTime = System.currentTimeMillis();
 
             List<String> bannedPrivilegedDevKey = List.of(secondPrivilegedDevPubKeyHex);
-            Filter firstFilter = TestFilter.createFilter(ownerPublicKey, privilegedDevPubKeyHex,
+            Filter firstFilter = MockFilterFactory.createFilter(ownerPublicKey, privilegedDevPubKeyHex,
                     creationTime, bannedPrivilegedDevKey);
-            Filter firstFilterWithSig = TestFilter.signFilter(firstFilter, privilegedDevEcKey);
+            Filter firstFilterWithSig = MockFilterFactory.signFilter(firstFilter, privilegedDevEcKey);
 
 
-            Filter secondFilterWithSig = TestFilter.createSignedFilter(ownerPublicKey, secondPrivilegedDevEcKey,
+            Filter secondFilterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, secondPrivilegedDevEcKey,
                     creationTime + 100);
 
             assertNotEquals(firstFilterWithSig, secondFilterWithSig);
 
             p2pStorageMap.put(
                     new P2PDataStorage.ByteArray(new byte[100]),
-                    TestFilter.createProtectedStorageEntryForFilter(firstFilterWithSig)
+                    MockFilterFactory.createProtectedStorageEntryForFilter(firstFilterWithSig)
             );
 
             filterManager.onAllServicesInitialized();
@@ -152,7 +153,7 @@ public class FilterManagerMockedPrivilegeKeysTests {
             p2pStorageMap.clear();
             p2pStorageMap.put(
                     new P2PDataStorage.ByteArray(new byte[100]),
-                    TestFilter.createProtectedStorageEntryForFilter(secondFilterWithSig)
+                    MockFilterFactory.createProtectedStorageEntryForFilter(secondFilterWithSig)
             );
 
             filterManager.onAllServicesInitialized();

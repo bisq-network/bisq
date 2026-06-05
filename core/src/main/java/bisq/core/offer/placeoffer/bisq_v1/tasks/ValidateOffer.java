@@ -17,7 +17,10 @@
 
 package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.DisputeAgentSelection;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
 
 import bisq.common.taskrunner.Task;
@@ -88,6 +91,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkNotNull(offer.getVersionNr(), "VersionNr is null");
             checkArgument(offer.getMaxTradePeriod() > 0,
                     "maxTradePeriod must be positive. maxTradePeriod=" + offer.getMaxTradePeriod());
+            checkDisputeAgentAvailability(offer, model);
             // TODO check upper and lower bounds for fiat
             // TODO check rest of new parameters
             // TODO check for account age witness base tradeLimit is missing
@@ -99,6 +103,15 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
                     + e.getMessage());
             failed(e);
         }
+    }
+
+    static void checkDisputeAgentAvailability(Offer offer, PlaceOfferModel model) {
+        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
+        checkArgument(DisputeAgentSelection.hasAvailableAcceptedDisputeAgent(
+                        offerPayload.getMediatorNodeAddresses(), model.getMediatorManager()),
+                Res.get("validation.error.noAcceptedMediatorForOffer"));
+        checkArgument(DisputeAgentSelection.hasAvailableDisputeAgent(model.getRefundAgentManager()),
+                Res.get("validation.error.noRefundAgentForOffer"));
     }
 
     public static void checkCoinNotNullOrZero(Coin value, String name) {

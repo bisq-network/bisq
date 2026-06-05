@@ -1,6 +1,6 @@
 package bisq.core.trade.protocol.bsq_swap.tasks;
 
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
@@ -15,8 +15,8 @@ public class EnforceFilterVersion extends BsqSwapTask {
     protected void run() {
         try {
             runInterceptHook();
-            FilterManager filterManager = protocolModel.getFilterManager();
-            TradeUtil.enforceFilterVersion(filterManager, this::complete, this::failed);
+            FilterPolicyService filterPolicyService = protocolModel.getFilterPolicyService();
+            TradeUtil.enforceFilterVersion(filterPolicyService, this::complete, this::failed);
         } catch (Throwable t) {
             failed(t);
         }
