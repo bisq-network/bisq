@@ -1,0 +1,95 @@
+# Filter and deny-list policy
+
+Bisq has two policy sources for emergency bans and feature switches:
+
+* The signed network `Filter`, managed by `FilterManager` and distributed over P2P.
+* The static startup `DenyList`, loaded from `core/src/main/resources/denylist/<network>.denylist`.
+
+Use `FilterPolicyService` for policy decisions in application code. It merges the static deny-list and the active signed filter where both sources apply. Direct `FilterManager` usage should be limited to filter lifecycle concerns, filter property listeners, developer filter publishing, and compatibility paths where the signed filter object itself is required.
+
+## Signed network filter
+
+The signed network filter is mutable operational policy. Privileged developers publish it through the filter window. It can ban offers, trading peers, network peers, currencies, payment methods, payment account data, witness signer keys, dispute agents, infrastructure nodes, fee receiver addresses, minimum fees, PoW settings, API or mempool validation, BSQ swaps, auto-confirm, and DAO/trading versions.
+
+Only one active network filter is used. `FilterManager` accepts signed filters from trusted developer keys, rejects signatures that do not verify, rejects filters too far in the future, and prefers the newest valid filter by creation date.
+
+Some filter node settings are persisted into the local options file because they must be available before the next P2P or wallet startup:
+
+* `bannedSeedNodes`
+* `bannedBtcNodes`
+* `bannedPriceRelayNodes`
+* `filterProvidedSeedNodes`
+* `filterProvidedBtcNodes`
+
+Those persisted values are filter state, not user preferences. Startup providers ignore them when `--ignoreNetworkFilter=true` is set. The static deny-list still applies unless `--ignoreDenyList=true` is also set.
+
+## Static deny-list
+
+The deny-list is release-bundled policy for startup or fallback cases where waiting for a network filter is too late or not reliable. It is loaded by `DenyList` from the classpath resource matching the configured base-currency network, for example `denylist/btc_mainnet.denylist`.
+
+The deny-list currently supports:
+
+* trading node bans
+* network peer bans
+* banned currencies
+* banned payment methods
+* banned account witness signer pub keys
+* banned mediators and refund agents
+* banned seed nodes
+* banned price relay nodes
+* banned Bitcoin nodes
+* banned auto-confirm explorers
+* required trading version
+
+Set `--ignoreDenyList=true` to skip loading the bundled resource. This is intended for development and controlled recovery scenarios.
+
+## Startup behavior
+
+Startup policy is split by timing:
+
+* Seed nodes are selected before a live network filter can arrive. `DefaultSeedNodeRepository` applies the static deny-list and persisted signed-filter seed-node state.
+* Bitcoin nodes are selected during wallet setup. `BtcNodesSetupPreferences` applies the static deny-list and persisted signed-filter Bitcoin-node state.
+* Price relay nodes are initialized before live filter updates. `PriceFeedNodeAddressProvider` applies the static deny-list and persisted signed-filter price-relay bans, then `FilterManager` can update runtime price relay bans after a valid network filter arrives.
+* P2P network peer bans use the `BanFilter` predicate registered by `FilterManager`, which includes static deny-list network-peer bans and active signed-filter network-peer bans.
+
+When `--ignoreNetworkFilter=true` is set, live network filters are not loaded and persisted network-filter node state is ignored by the startup providers. Manual user options such as custom seed nodes or custom Bitcoin nodes are not part of signed-filter state and are not disabled by that flag.
+
+## Payment account filters
+
+Payment account filters use `PaymentAccountFilter` entries in this format:
+
+```text
+PAYMENT_METHOD_ID|getMethodName|value
+```
+
+Network-published payment account filters should use tagged SHA-256 values:
+
+```text
+PAYMENT_METHOD_ID|getMethodName|sha256-v1:<64 hex chars>
+```
+
+`PaymentAccountFilterMatcher` hashes runtime account payload values with a domain-separated preimage:
+
+```text
+bisq:PaymentAccountFilter:v1
+PAYMENT_METHOD_ID
+getMethodName
+canonicalized value
+```
+
+Only the account value is canonicalized by trimming and lowercasing. The payment method id and getter name remain part of the hash domain exactly as supplied.
+
+The filter window stores plaintext preimages only in local `UserPayload` fields so developers can edit filters later. Those preimages are not included in the signed network `Filter`; the network filter receives only hash values. Plaintext filter values remain supported by the matcher only as transitional compatibility for already-published filters.
+
+## Adding or changing policy
+
+When adding a policy category, prefer this order:
+
+1. Add the signed-filter field if it must be updateable over P2P.
+2. Add the deny-list field only if the policy must apply before a network filter can arrive or must be bundled with a release.
+3. Expose the decision through `FilterPolicyService`.
+4. Route consumers through `FilterPolicyService`, not directly through `FilterManager`.
+5. Add tests for signed-filter behavior, deny-list behavior, and the merged behavior when both sources exist.
+6. If the policy persists filter-derived node state to config, make startup readers honor `--ignoreNetworkFilter=true`.
+
+Keep deny-list values normalized to the format expected by the consuming component. Node-address lists use `host:port`. Price relay bans use the bare onion service id without protocol, slash, or `.onion`.
