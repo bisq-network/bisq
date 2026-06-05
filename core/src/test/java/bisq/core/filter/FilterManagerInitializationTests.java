@@ -70,6 +70,7 @@ public class FilterManagerInitializationTests {
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
                 false,
+                false,
                 true
         );
 
@@ -90,6 +91,7 @@ public class FilterManagerInitializationTests {
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
+                false,
                 false,
                 true
         );
@@ -131,6 +133,7 @@ public class FilterManagerInitializationTests {
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
                 true,
+                false,
                 true
         );
 
@@ -153,6 +156,32 @@ public class FilterManagerInitializationTests {
 
             filterManager.onAllServicesInitialized();
         }
+
+        assertFalse(warningHandlerTriggered.get());
+    }
+
+    @Test
+    void onAllServicesInitializedNoFilterMainnetIgnoreNetworkFilter() {
+        P2PService p2PService = mock(P2PService.class);
+        var filterManager = new FilterManager(
+                p2PService,
+                mock(KeyRing.class),
+                mock(User.class),
+                mock(Preferences.class),
+                DenyList.empty(),
+                mock(Config.class),
+                mock(PriceFeedNodeAddressProvider.class),
+                mock(BanFilter.class),
+                mock(PriceFeedService.class),
+                false,
+                true,
+                true
+        );
+
+        final var warningHandlerTriggered = new AtomicBoolean();
+        filterManager.setFilterWarningHandler(errorMessage -> warningHandlerTriggered.set(true));
+
+        filterManager.onAllServicesInitialized();
 
         assertFalse(warningHandlerTriggered.get());
     }

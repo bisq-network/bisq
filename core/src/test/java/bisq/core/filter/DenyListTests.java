@@ -25,11 +25,34 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 
+import bisq.common.config.Config;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DenyListTests {
+    @Test
+    void buildsClasspathResourceNameFromConfiguredNetwork() {
+        assertEquals("denylist/btc_mainnet.denylist", DenyList.resourceName(new Config()));
+    }
+
+    @Test
+    void loadsMainnetResourceFromConfiguredClasspath() {
+        DenyList denyList = new DenyList(new Config());
+
+        assertTrue(denyList.getNodeAddressesBannedFromTrading().contains("c7r6wr4ful5vr3ie.onion:9999"));
+    }
+
+    @Test
+    void ignoreDenyListConfigSkipsResourceLoading() {
+        DenyList denyList = new DenyList(new Config("--ignoreDenyList=true"));
+
+        assertTrue(denyList.getNodeAddressesBannedFromTrading().isEmpty());
+        assertTrue(denyList.getBannedSeedNodes().isEmpty());
+        assertTrue(denyList.getRequiredVersionForTrading().isEmpty());
+    }
+
     @Test
     void loadsMainnetResource() throws IOException {
         DenyList denyList = DenyList.fromProperties(loadMainnetProperties());

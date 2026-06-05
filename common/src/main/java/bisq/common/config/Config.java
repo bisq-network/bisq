@@ -83,6 +83,8 @@ public class Config {
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String DUMP_BURNING_MAN_DATA = "dumpBurningManData";
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
+    public static final String IGNORE_NETWORK_FILTER = "ignoreNetworkFilter";
+    public static final String IGNORE_DENY_LIST = "ignoreDenyList";
     public static final String PROVIDERS = "providers";
     public static final String SEED_NODES = "seedNodes";
     public static final String BAN_LIST = "banList";
@@ -202,6 +204,8 @@ public class Config {
     public final boolean dumpStatistics;
     public final boolean dumpBurningManData;
     public final boolean ignoreDevMsg;
+    public final boolean ignoreNetworkFilter;
+    public final boolean ignoreDenyList;
     public final List<String> providers;
     public final List<String> seedNodes;
     public final List<String> banList;
@@ -467,6 +471,19 @@ public class Config {
                                 "network_messages from bisq developers are ignored (Global " +
                                 "alert, Version update alert, Filters for offers, nodes or " +
                                 "trading account data)")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> ignoreNetworkFilterOpt =
+                parser.accepts(IGNORE_NETWORK_FILTER, "If set to true signed network filters for offers, nodes, " +
+                                "payment accounts and trading policy are ignored")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> ignoreDenyListOpt =
+                parser.accepts(IGNORE_DENY_LIST, "If set to true startup DenyList resources are ignored")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -925,6 +942,8 @@ public class Config {
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
             this.dumpBurningManData = options.valueOf(dumpBurningManDataOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);
+            this.ignoreNetworkFilter = options.valueOf(ignoreNetworkFilterOpt);
+            this.ignoreDenyList = options.valueOf(ignoreDenyListOpt);
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
             this.banList = options.valuesOf(banListOpt);

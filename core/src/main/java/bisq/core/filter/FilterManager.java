@@ -110,6 +110,7 @@ public class FilterManager {
     private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
     private final PriceFeedService priceFeedService;
     private final boolean ignoreDevMsg;
+    private final boolean ignoreNetworkFilter;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private final List<String> publicKeys;
@@ -133,6 +134,7 @@ public class FilterManager {
                          BanFilter banFilter,
                          PriceFeedService priceFeedService,
                          @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
+                         @Named(Config.IGNORE_NETWORK_FILTER) boolean ignoreNetworkFilter,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
@@ -143,6 +145,7 @@ public class FilterManager {
         this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
         this.priceFeedService = priceFeedService;
         this.ignoreDevMsg = ignoreDevMsg;
+        this.ignoreNetworkFilter = ignoreNetworkFilter;
 
         publicKeys = useDevPrivilegeKeys ?
                 DevEnv.getDevPrivilegePubKeys() :
@@ -159,7 +162,7 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        if (ignoreDevMsg) {
+        if (ignoreDevMsg || ignoreNetworkFilter) {
             return;
         }
 

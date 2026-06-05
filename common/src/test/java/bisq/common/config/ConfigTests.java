@@ -211,6 +211,18 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenIgnoreNetworkFilterOptionIsSet_thenIgnoreNetworkFilterPropertyReflectsItsValue() {
+        assertFalse(new Config().ignoreNetworkFilter);
+        assertTrue(configWithOpts(opt(IGNORE_NETWORK_FILTER, true)).ignoreNetworkFilter);
+    }
+
+    @Test
+    public void whenIgnoreDenyListOptionIsSet_thenIgnoreDenyListPropertyReflectsItsValue() {
+        assertFalse(new Config().ignoreDenyList);
+        assertTrue(configWithOpts(opt(IGNORE_DENY_LIST, true)).ignoreDenyList);
+    }
+
+    @Test
     public void whenP2PDataLimitOptionsAreUnset_thenDefaultValuesAreUsed() {
         Config config = new Config();
         assertThat(config.getDataRequestHandlerMaxEntries, equalTo(DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES));

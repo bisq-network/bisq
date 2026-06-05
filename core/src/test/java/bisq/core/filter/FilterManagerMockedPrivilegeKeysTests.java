@@ -115,6 +115,7 @@ public class FilterManagerMockedPrivilegeKeysTests {
                     mock(BanFilter.class),
                     mock(PriceFeedService.class),
                     false,
+                    false,
                     true
             );
 

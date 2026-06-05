@@ -68,7 +68,10 @@ public class DenyList {
 
     @Inject
     public DenyList(Config config) {
-        this(loadProperties(resourceName(config)));
+        this(config.ignoreDenyList ? new Properties() : loadProperties(resourceName(config)));
+        if (config.ignoreDenyList) {
+            log.info("DenyList resource loading disabled by {}", Config.IGNORE_DENY_LIST);
+        }
     }
 
     @VisibleForTesting
@@ -99,7 +102,8 @@ public class DenyList {
         return new DenyList(properties);
     }
 
-    private static String resourceName(Config config) {
+    @VisibleForTesting
+    static String resourceName(Config config) {
         return RESOURCE_DIRECTORY + "/" +
                 config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH) +
                 RESOURCE_EXTENSION;
@@ -107,7 +111,7 @@ public class DenyList {
 
     private static Properties loadProperties(String resourceName) {
         Properties properties = new Properties();
-        try (InputStream inputStream = DenyList.class.getClassLoader().getResourceAsStream(resourceName)) {
+        try (InputStream inputStream = DenyList.class.getResourceAsStream("/" + resourceName)) {
             if (inputStream == null) {
                 log.info("No DenyList resource found at {}", resourceName);
                 return properties;
