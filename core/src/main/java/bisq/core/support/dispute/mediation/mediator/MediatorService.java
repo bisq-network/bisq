@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute.mediation.mediator;
 
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.support.dispute.agent.DisputeAgentService;
 
 import bisq.network.p2p.NodeAddress;
@@ -27,7 +27,6 @@ import com.google.inject.Singleton;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,10 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class MediatorService extends DisputeAgentService<Mediator> {
+    private final FilterPolicyService filterPolicyService;
 
     @Inject
-    public MediatorService(P2PService p2PService, FilterManager filterManager) {
-        super(p2PService, filterManager);
+    public MediatorService(P2PService p2PService,
+                           FilterPolicyService filterPolicyService) {
+        super(p2PService);
+        this.filterPolicyService = filterPolicyService;
     }
 
     @Override
@@ -57,7 +59,7 @@ public class MediatorService extends DisputeAgentService<Mediator> {
 
     @Override
     protected List<String> getDisputeAgentsFromFilter() {
-        return filterManager.getFilter() != null ? filterManager.getFilter().getMediators() : new ArrayList<>();
+        return filterPolicyService.getBannedMediators();
     }
 
     public Map<NodeAddress, Mediator> getMediators() {

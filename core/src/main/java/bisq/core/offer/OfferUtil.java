@@ -20,7 +20,7 @@ package bisq.core.offer;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -93,7 +93,7 @@ public class OfferUtil {
 
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BsqWalletService bsqWalletService;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final P2PService p2PService;
@@ -106,7 +106,7 @@ public class OfferUtil {
     @Inject
     public OfferUtil(AccountAgeWitnessService accountAgeWitnessService,
                      BsqWalletService bsqWalletService,
-                     FilterManager filterManager,
+                     FilterPolicyService filterPolicyService,
                      Preferences preferences,
                      PriceFeedService priceFeedService,
                      P2PService p2PService,
@@ -114,7 +114,7 @@ public class OfferUtil {
                      TradeStatisticsManager tradeStatisticsManager) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqWalletService = bsqWalletService;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
@@ -399,11 +399,11 @@ public class OfferUtil {
 
     public void validateBasicOfferData(PaymentMethod paymentMethod, String currencyCode) {
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkArgument(!filterManager.isCurrencyBanned(currencyCode),
+        checkArgument(!filterPolicyService.isCurrencyBanned(currencyCode),
                 Res.get("offerbook.warning.currencyBanned"));
-        checkArgument(!filterManager.isPaymentMethodBanned(paymentMethod),
+        checkArgument(!filterPolicyService.isPaymentMethodBanned(paymentMethod),
                 Res.get("offerbook.warning.paymentMethodBanned"));
-        checkArgument(!PaymentMethod.BSQ_SWAP.equals(paymentMethod) || !filterManager.isBsqSwapDisabled(),
+        checkArgument(!PaymentMethod.BSQ_SWAP.equals(paymentMethod) || !filterPolicyService.isBsqSwapDisabled(),
                 Res.get("offerbook.warning.bsqSwapDisabled"));
     }
 

@@ -20,7 +20,7 @@ package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.crypto.LowRSigningKey;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.P2PService;
@@ -81,7 +81,7 @@ public class SignedWitnessServiceTest {
     private long SIGN_AGE_3 = SignedWitnessService.SIGNER_AGE_DAYS + 3;
     private KeyRing keyRing;
     private P2PService p2pService;
-    private FilterManager filterManager;
+    private FilterPolicyService filterPolicyService;
     private ECKey arbitrator1Key;
     KeyPair peer1KeyPair;
     KeyPair peer2KeyPair;
@@ -94,8 +94,8 @@ public class SignedWitnessServiceTest {
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         keyRing = mock(KeyRing.class);
         p2pService = mock(P2PService.class);
-        filterManager = mock(FilterManager.class);
-        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterManager);
+        filterPolicyService = mock(FilterPolicyService.class);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterPolicyService);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
@@ -398,14 +398,14 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw3);
 
         // Second account is banned, first account is still a signer but the other two are no longer signers
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
 
         // First account is banned, no accounts in the tree below it are signers
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(false);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(false);
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
@@ -435,14 +435,14 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw3);
 
         // Only second account is banned, first account is still a signer but the other two are no longer signers
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
 
         // Only first account is banned, account2 and account3 are still signers
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(false);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(false);
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
@@ -485,24 +485,23 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw3p);
 
         // First account is banned, the other two are still signers
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
 
         // Second account is banned, the other two are still signers
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(false);
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(false);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
 
         // First and second account is banned, the third is no longer a signer
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
-        when(filterManager.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner1PubKey))).thenReturn(true);
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(Utilities.bytesAsHexString(witnessOwner2PubKey))).thenReturn(true);
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 }
-

@@ -26,6 +26,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
@@ -398,6 +399,10 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public FilterManager getFilterManager() {
         return provider.getFilterManager();
+    }
+
+    public FilterPolicyService getFilterPolicyService() {
+        return provider.getFilterPolicyService();
     }
 
     public TradeStatisticsManager getTradeStatisticsManager() {

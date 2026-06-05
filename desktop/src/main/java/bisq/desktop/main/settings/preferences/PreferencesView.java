@@ -40,6 +40,7 @@ import bisq.core.dao.burningman.accounting.BurningManAccountingService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -149,6 +150,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final AssetService assetService;
     private final OfferFilterService offerFilterService;
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final DaoFacade daoFacade;
     private final boolean isBmFullNodeFromOptions;
 
@@ -189,6 +191,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            AssetService assetService,
                            OfferFilterService offerFilterService,
                            FilterManager filterManager,
+                           FilterPolicyService filterPolicyService,
                            DaoFacade daoFacade,
                            Config config,
                            User user,
@@ -207,6 +210,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.assetService = assetService;
         this.offerFilterService = offerFilterService;
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.daoFacade = daoFacade;
         this.isBmFullNodeFromOptions = isBmFullNodeFromOptions;
         daoFullModeFromOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
@@ -262,7 +266,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         }
 
         // We want to have it updated in case an asset got removed
-        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
+        allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterPolicyService));
         allCryptoCurrencies.removeAll(cryptoCurrencies);
 
         activateGeneralOptions();
