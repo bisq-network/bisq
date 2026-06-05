@@ -105,6 +105,7 @@ public class FilterManager {
     private final KeyRing keyRing;
     private final User user;
     private final Preferences preferences;
+    private final DenyList denyList;
     private final ConfigFileEditor configFileEditor;
     private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
     private final PriceFeedService priceFeedService;
@@ -126,6 +127,7 @@ public class FilterManager {
                          KeyRing keyRing,
                          User user,
                          Preferences preferences,
+                         DenyList denyList,
                          Config config,
                          PriceFeedNodeAddressProvider priceFeedNodeAddressProvider,
                          BanFilter banFilter,
@@ -136,6 +138,7 @@ public class FilterManager {
         this.keyRing = keyRing;
         this.user = user;
         this.preferences = preferences;
+        this.denyList = denyList;
         this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
         this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
         this.priceFeedService = priceFeedService;
@@ -459,7 +462,8 @@ public class FilterManager {
     }
 
     public boolean isNodeAddressBannedFromNetwork(NodeAddress nodeAddress) {
-        return getFilter() != null &&
+        return denyList.getNodeAddressesBannedFromNetwork().contains(nodeAddress.getFullAddress()) ||
+                getFilter() != null &&
                 getFilter().getNodeAddressesBannedFromNetwork().stream()
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }

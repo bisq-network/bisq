@@ -118,6 +118,7 @@ public class FilterManagerAddFilterToNetworkTests {
                 mock(KeyRing.class),
                 user,
                 mock(Preferences.class),
+                DenyList.empty(),
                 config,
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),

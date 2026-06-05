@@ -24,6 +24,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.BanFilter;
 import bisq.network.p2p.storage.P2PDataStorage;
 
@@ -35,6 +36,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.Security;
 
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mockito.MockedStatic;
@@ -54,6 +56,28 @@ public class FilterManagerInitializationTests {
     }
 
     @Test
+    void networkBansIncludeDenyListBeforeNetworkFilterArrives() {
+        Properties properties = new Properties();
+        properties.setProperty("nodeAddressesBannedFromNetwork", "blocked.onion:9999");
+        var filterManager = new FilterManager(
+                mock(P2PService.class),
+                mock(KeyRing.class),
+                mock(User.class),
+                mock(Preferences.class),
+                DenyList.fromProperties(properties),
+                mock(Config.class),
+                mock(PriceFeedNodeAddressProvider.class),
+                mock(BanFilter.class),
+                mock(PriceFeedService.class),
+                false,
+                true
+        );
+
+        assertTrue(filterManager.isNodeAddressBannedFromNetwork(new NodeAddress("blocked.onion:9999")));
+        assertFalse(filterManager.isNodeAddressBannedFromNetwork(new NodeAddress("allowed.onion:9999")));
+    }
+
+    @Test
     void onAllServicesInitializedNoFilterMainnet() {
         P2PService p2PService = mock(P2PService.class);
         var filterManager = new FilterManager(
@@ -61,6 +85,7 @@ public class FilterManagerInitializationTests {
                 mock(KeyRing.class),
                 mock(User.class),
                 mock(Preferences.class),
+                DenyList.empty(),
                 mock(Config.class),
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
@@ -100,6 +125,7 @@ public class FilterManagerInitializationTests {
                 mock(KeyRing.class),
                 mock(User.class),
                 mock(Preferences.class),
+                DenyList.empty(),
                 mock(Config.class),
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),

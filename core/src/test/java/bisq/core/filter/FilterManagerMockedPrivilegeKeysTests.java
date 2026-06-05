@@ -109,6 +109,7 @@ public class FilterManagerMockedPrivilegeKeysTests {
                     mock(KeyRing.class),
                     mock(User.class),
                     mock(Preferences.class),
+                    DenyList.empty(),
                     config,
                     mock(PriceFeedNodeAddressProvider.class),
                     mock(BanFilter.class),
