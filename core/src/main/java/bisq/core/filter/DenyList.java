@@ -57,7 +57,9 @@ public class DenyList {
     private final List<String> bannedPaymentMethods;
     private final List<String> bannedAccountWitnessSignerPubKeys;
     private final List<String> bannedPaymentAccountDataHashes;
+    private final List<String> bannedArbitrators;
     private final List<String> bannedMediators;
+    private final List<String> bannedRefundAgents;
     private final List<String> bannedSeedNodes;
     private final List<String> bannedPriceRelayNodes;
     private final List<String> bannedBtcNodes;
@@ -78,7 +80,9 @@ public class DenyList {
         bannedPaymentMethods = readList(properties, "bannedPaymentMethods");
         bannedAccountWitnessSignerPubKeys = readList(properties, "bannedAccountWitnessSignerPubKeys");
         bannedPaymentAccountDataHashes = readList(properties, "bannedPaymentAccountDataHashes");
+        bannedArbitrators = readNodeAddressList(properties, "bannedArbitrators");
         bannedMediators = readNodeAddressList(properties, "bannedMediators");
+        bannedRefundAgents = readNodeAddressList(properties, "bannedRefundAgents");
         bannedSeedNodes = readNodeAddressList(properties, "bannedSeedNodes");
         bannedPriceRelayNodes = readList(properties, "bannedPriceRelayNodes");
         bannedBtcNodes = readNodeAddressList(properties, "bannedBtcNodes");

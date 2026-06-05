@@ -82,8 +82,12 @@ bannedAccountWitnessSignerPubKeys=\
 
 bannedPaymentAccountDataHashes=
 
+bannedArbitrators=
+
 bannedMediators=\
 a56olqlmmpxrn5q34itq5g5tb5d3fg7vxekpbceq7xqvfl3cieocgsyd.onion:9999
+
+bannedRefundAgents=
 
 bannedSeedNodes=\
 wizseedscybbttk4bmb2lzvbuk2jtect37lcpva4l3twktmkzemwbead.onion:8000,\
