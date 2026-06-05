@@ -81,11 +81,11 @@ public class BtcNodesSetupPreferences {
                 Stream<String> filterProvidedBtcNodes = config.ignoreNetworkFilter ?
                         Stream.empty() :
                         config.filterProvidedBtcNodes.stream();
-                Stream<String> persistedBannedBtcNodes = config.ignoreNetworkFilter ?
+                Stream<String> persistedBannedBtcNodes = config.bannedBtcNodes.stream();
+                Stream<String> deniedBtcNodes = config.ignoreNetworkFilter ?
                         Stream.empty() :
-                        config.bannedBtcNodes.stream();
-                Stream<String> bannedBtcNodes = Stream.concat(persistedBannedBtcNodes,
-                        denyList.getBannedBtcNodes().stream());
+                        denyList.getBannedBtcNodes().stream();
+                Stream<String> bannedBtcNodes = Stream.concat(persistedBannedBtcNodes, deniedBtcNodes);
                 result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, filterProvidedBtcNodes, bannedBtcNodes);
                 break;
         }

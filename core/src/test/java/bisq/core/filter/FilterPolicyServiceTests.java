@@ -21,10 +21,14 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.network.p2p.NodeAddress;
 
+import org.bitcoinj.core.Coin;
+
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -72,5 +76,41 @@ public class FilterPolicyServiceTests {
         FilterPolicyService filterPolicyService = new FilterPolicyService(denyList, mock(FilterManager.class));
 
         assertTrue(filterPolicyService.requireUpdateToNewVersionForTrading());
+    }
+
+    @Test
+    void readsFeeAndBtcFeeReceiverValuesFromNetworkFilter() {
+        Filter filter = mock(Filter.class);
+        when(filter.getMakerFeeBtc()).thenReturn(1_000L);
+        when(filter.getTakerFeeBtc()).thenReturn(2_000L);
+        when(filter.getMakerFeeBsq()).thenReturn(3_000L);
+        when(filter.getTakerFeeBsq()).thenReturn(4_000L);
+        when(filter.getBtcFeeReceiverAddresses()).thenReturn(List.of("btc-address#owner"));
+
+        FilterManager filterManager = mock(FilterManager.class);
+        when(filterManager.getFilter()).thenReturn(filter);
+        FilterPolicyService filterPolicyService = new FilterPolicyService(DenyList.empty(), filterManager);
+
+        assertEquals(Coin.valueOf(1_000L), filterPolicyService.getFeeFromFilter(true, true).orElseThrow());
+        assertEquals(Coin.valueOf(2_000L), filterPolicyService.getFeeFromFilter(false, true).orElseThrow());
+        assertEquals(Coin.valueOf(3_000L), filterPolicyService.getFeeFromFilter(true, false).orElseThrow());
+        assertEquals(Coin.valueOf(4_000L), filterPolicyService.getFeeFromFilter(false, false).orElseThrow());
+        assertEquals(List.of("btc-address#owner"), filterPolicyService.getBtcFeeReceiverAddresses());
+    }
+
+    @Test
+    void readsPowPolicyFromNetworkFilterAndManager() {
+        Filter filter = mock(Filter.class);
+        when(filter.isDisablePowMessage()).thenReturn(true);
+        when(filter.getPowDifficulty()).thenReturn(512.0);
+
+        FilterManager filterManager = mock(FilterManager.class);
+        when(filterManager.getFilter()).thenReturn(filter);
+        when(filterManager.getEnabledPowVersions()).thenReturn(List.of(1, 0));
+        FilterPolicyService filterPolicyService = new FilterPolicyService(DenyList.empty(), filterManager);
+
+        assertTrue(filterPolicyService.isPowMessageDisabled());
+        assertEquals(512.0, filterPolicyService.getPowDifficulty(), 0.0);
+        assertEquals(List.of(1, 0), filterPolicyService.getEnabledPowVersions());
     }
 }

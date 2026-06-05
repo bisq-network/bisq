@@ -158,6 +158,7 @@ public class FilterManager {
 
     public void onAllServicesInitialized() {
         if (ignoreNetworkFilter) {
+            clearBannedNodes();
             return;
         }
 

@@ -35,6 +35,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.Security;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.io.File;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.mockito.MockedStatic;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -118,15 +125,27 @@ public class FilterManagerInitializationTests {
     }
 
     @Test
-    void onAllServicesInitializedNoFilterMainnetIgnoreNetworkFilter() {
+    void onAllServicesInitializedNoFilterMainnetIgnoreNetworkFilter(@TempDir Path tmpDir) throws IOException {
         P2PService p2PService = mock(P2PService.class);
+        Config config = mock(Config.class);
+        Path configFilePath = tmpDir.resolve("configFile");
+        File configFile = configFilePath.toFile();
+        Files.writeString(configFilePath,
+                "bannedBtcNodes=btc.onion:8333\n" +
+                        "filterProvidedBtcNodes=provided-btc.onion:8333\n" +
+                        "bannedSeedNodes=seed.onion:9999\n" +
+                        "filterProvidedSeedNodes=provided-seed.onion:9999\n" +
+                        "bannedPriceRelayNodes=price\n" +
+                        "otherOption=keep\n");
+        doReturn(configFile).when(config).getConfigFile();
+
         var filterManager = new FilterManager(
                 p2PService,
                 mock(KeyRing.class),
                 mock(User.class),
                 mock(Preferences.class),
                 DenyList.empty(),
-                mock(Config.class),
+                config,
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
@@ -140,5 +159,12 @@ public class FilterManagerInitializationTests {
         filterManager.onAllServicesInitialized();
 
         assertFalse(warningHandlerTriggered.get());
+        String configContent = Files.readString(configFilePath);
+        assertFalse(configContent.contains("bannedBtcNodes"));
+        assertFalse(configContent.contains("filterProvidedBtcNodes"));
+        assertFalse(configContent.contains("bannedSeedNodes"));
+        assertFalse(configContent.contains("filterProvidedSeedNodes"));
+        assertFalse(configContent.contains("bannedPriceRelayNodes"));
+        assertTrue(configContent.contains("otherOption=keep"));
     }
 }

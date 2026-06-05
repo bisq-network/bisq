@@ -84,7 +84,7 @@ public class BtcNodesSetupPreferencesTest {
     }
 
     @Test
-    public void testSelectPreferredNodesIgnoresPersistedNetworkFilterNodesWhenConfigured() {
+    public void testSelectPreferredNodesKeepsLocalBansAndIgnoresDenyListAndFilterProvidedNodesWhenConfigured() {
         Preferences delegate = mock(Preferences.class);
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PROVIDED.ordinal());
 
@@ -106,6 +106,6 @@ public class BtcNodesSetupPreferencesTest {
                 denyList);
         List<BtcNode> nodes = preferences.selectPreferredNodes(btcNodes);
 
-        assertEquals(List.of(bob), nodes);
+        assertEquals(List.of(alice), nodes);
     }
 }

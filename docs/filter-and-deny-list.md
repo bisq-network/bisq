@@ -21,7 +21,7 @@ Some filter node settings are persisted into the local options file because they
 * `filterProvidedSeedNodes`
 * `filterProvidedBtcNodes`
 
-Those persisted values are filter state, not user preferences. Startup providers ignore them when `--ignoreNetworkFilter=true` is set. The static deny-list still applies unless `--ignoreDenyList=true` is also set.
+Those persisted values are filter state, not user preferences. `FilterManager` clears them from the local options file when `--ignoreNetworkFilter=true` is set so stale signed-filter state cannot affect later startup. Explicitly configured `bannedSeedNodes` and `bannedBtcNodes` values that are present in the runtime config are still honored by the seed and Bitcoin node startup providers.
 
 ## Static deny-list
 
@@ -47,12 +47,12 @@ Set `--ignoreDenyList=true` to skip loading the bundled resource. This is intend
 
 Startup policy is split by timing:
 
-* Seed nodes are selected before a live network filter can arrive. `DefaultSeedNodeRepository` applies the static deny-list and persisted signed-filter seed-node state.
-* Bitcoin nodes are selected during wallet setup. `BtcNodesSetupPreferences` applies the static deny-list and persisted signed-filter Bitcoin-node state.
+* Seed nodes are selected before a live network filter can arrive. `DefaultSeedNodeRepository` applies the static deny-list and configured seed-node bans.
+* Bitcoin nodes are selected during wallet setup. `BtcNodesSetupPreferences` applies the static deny-list and configured Bitcoin-node bans.
 * Price relay nodes are initialized before live filter updates. `PriceFeedNodeAddressProvider` applies the static deny-list and persisted signed-filter price-relay bans, then `FilterManager` can update runtime price relay bans after a valid network filter arrives.
 * P2P network peer bans use the `BanFilter` predicate registered by `FilterManager`, which includes static deny-list network-peer bans and active signed-filter network-peer bans.
 
-When `--ignoreNetworkFilter=true` is set, live network filters are not loaded and persisted network-filter node state is ignored by the startup providers. Manual user options such as custom seed nodes or custom Bitcoin nodes are not part of signed-filter state and are not disabled by that flag.
+When `--ignoreNetworkFilter=true` is set, live network filters are not loaded, filter-provided seed or Bitcoin nodes are ignored, and seed/Bitcoin node deny-list bans are not merged into startup selection. Runtime `bannedSeedNodes` and `bannedBtcNodes` options still apply as local operator bans. Manual user options such as custom seed nodes or custom Bitcoin nodes are not part of signed-filter state and are not disabled by that flag.
 
 ## Payment account filters
 

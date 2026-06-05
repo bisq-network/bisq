@@ -84,7 +84,7 @@ public class PriceFeedNodeAddressProvider {
         selectNextProviderBaseUrl();
 
         if (!this.bannedNodes.isEmpty()) {
-            log.info("Excluded provider nodes from filter: nodes={}, selected provider baseUrl={}, providerList={}",
+            log.info("Excluded provider nodes from policy: nodes={}, selected provider baseUrl={}, providerList={}",
                     this.bannedNodes, baseUrl, providerList);
         }
     }

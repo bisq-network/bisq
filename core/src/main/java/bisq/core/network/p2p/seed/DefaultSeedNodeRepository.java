@@ -92,10 +92,11 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
                     .collect(Collectors.toSet());
             cache.addAll(filterProvidedSeedNodes);
 
-            List<String> persistedBannedSeedNodes = config.ignoreNetworkFilter ?
+            List<String> persistedBannedSeedNodes = config.bannedSeedNodes;
+            List<String> deniedSeedNodes = config.ignoreNetworkFilter ?
                     List.of() :
-                    config.bannedSeedNodes;
-            Set<NodeAddress> bannedSeedNodes = merge(persistedBannedSeedNodes, denyList.getBannedSeedNodes()).stream()
+                    denyList.getBannedSeedNodes();
+            Set<NodeAddress> bannedSeedNodes = merge(persistedBannedSeedNodes, deniedSeedNodes).stream()
                     .filter(n -> !n.isEmpty())
                     .map(this::getNodeAddress)
                     .filter(Objects::nonNull)
