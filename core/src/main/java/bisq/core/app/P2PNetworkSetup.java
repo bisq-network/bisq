@@ -18,8 +18,7 @@
 package bisq.core.app;
 
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.filter.Filter;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -76,20 +75,20 @@ public class P2PNetworkSetup {
     final BooleanProperty dataReceived = new SimpleBooleanProperty();
     @Getter
     final BooleanProperty p2pNetworkFailed = new SimpleBooleanProperty();
-    final FilterManager filterManager;
+    final FilterPolicyService filterPolicyService;
 
     @Inject
     public P2PNetworkSetup(PriceFeedService priceFeedService,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
                            Preferences preferences,
-                           FilterManager filterManager) {
+                           FilterPolicyService filterPolicyService) {
 
         this.priceFeedService = priceFeedService;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.preferences = preferences;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
     }
 
     BooleanProperty init(Runnable initWalletServiceHandler,
@@ -235,9 +234,7 @@ public class P2PNetworkSetup {
 
     private void addP2PMessageFilter() {
         p2PService.getP2PDataStorage().setFilterPredicate(payload -> {
-            Filter filter = filterManager.getFilter();
-            return filter == null ||
-                    !filter.isDisablePowMessage() ||
+            return !filterPolicyService.isPowMessageDisabled() ||
                     !(payload instanceof ProofOfWorkPayload);
         });
     }

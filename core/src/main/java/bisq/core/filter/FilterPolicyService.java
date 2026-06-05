@@ -25,11 +25,14 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
 
+import org.bitcoinj.core.Coin;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -99,6 +102,27 @@ public class FilterPolicyService {
         return filter != null && filter.isDisableApi();
     }
 
+    public boolean isMempoolValidationDisabled() {
+        Filter filter = filterManager.getFilter();
+        return filter != null && filter.isDisableMempoolValidation();
+    }
+
+    public boolean isPowMessageDisabled() {
+        Filter filter = filterManager.getFilter();
+        return filter != null && filter.isDisablePowMessage();
+    }
+
+    public boolean isAutoConfDisabled() {
+        Filter filter = filterManager.getFilter();
+        return filter != null && filter.isDisableAutoConf();
+    }
+
+    public boolean isDaoDisabled() {
+        Filter filter = filterManager.getFilter();
+        return filter != null &&
+                (filter.isDisableDao() || filterManager.requireUpdateToNewVersionForDAO());
+    }
+
     public boolean requireUpdateToNewVersionForTrading() {
         return denyList.hasRequiredVersionForTrading() &&
                 Version.isNewVersion(denyList.getRequiredVersionForTrading()) ||
@@ -120,6 +144,30 @@ public class FilterPolicyService {
     public double getPowDifficulty() {
         Filter filter = filterManager.getFilter();
         return filter != null ? filter.getPowDifficulty() : 0.0;
+    }
+
+    public Optional<Coin> getFeeFromFilter(boolean isMaker, boolean isBtcFee) {
+        Filter filter = filterManager.getFilter();
+        if (filter == null) {
+            return Optional.empty();
+        }
+
+        Coin value;
+        if (isMaker) {
+            value = isBtcFee ?
+                    Coin.valueOf(filter.getMakerFeeBtc()) :
+                    Coin.valueOf(filter.getMakerFeeBsq());
+        } else {
+            value = isBtcFee ?
+                    Coin.valueOf(filter.getTakerFeeBtc()) :
+                    Coin.valueOf(filter.getTakerFeeBsq());
+        }
+        return Optional.of(value).filter(Coin::isPositive);
+    }
+
+    public List<String> getBtcFeeReceiverAddresses() {
+        Filter filter = filterManager.getFilter();
+        return filter != null ? filter.getBtcFeeReceiverAddresses() : List.of();
     }
 
     public List<String> getBannedArbitrators() {

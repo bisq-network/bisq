@@ -246,7 +246,7 @@ public class DomainInitialisation {
 
         p2PService.onAllServicesInitialized();
 
-        feeService.onAllServicesInitialized(filterManager);
+        feeService.onAllServicesInitialized();
 
         daoSetup.onAllServicesInitialized(errorMessage -> {
             if (daoErrorMessageHandler != null)

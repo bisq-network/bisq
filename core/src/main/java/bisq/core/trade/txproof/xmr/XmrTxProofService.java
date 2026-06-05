@@ -385,8 +385,7 @@ public class XmrTxProofService implements AssetTxProofService {
     }
 
     private boolean isAutoConfDisabledByFilter() {
-        return filterManager.getFilter() != null &&
-                filterManager.getFilter().isDisableAutoConf();
+        return filterPolicyService.isAutoConfDisabled();
     }
 
     private boolean wasTxKeyReUsed(Trade trade, List<Trade> activeTrades) {

@@ -20,7 +20,7 @@ package bisq.core.provider.mempool;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
@@ -43,7 +43,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -60,7 +59,7 @@ public class MempoolService {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Config config;
     private final Preferences preferences;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final DaoFacade daoFacade;
     private final DaoStateService daoStateService;
     private final BurningManPresentationService burningManPresentationService;
@@ -71,14 +70,14 @@ public class MempoolService {
     public MempoolService(Socks5ProxyProvider socks5ProxyProvider,
                           Config config,
                           Preferences preferences,
-                          FilterManager filterManager,
+                          FilterPolicyService filterPolicyService,
                           DaoFacade daoFacade,
                           DaoStateService daoStateService,
                           BurningManPresentationService burningManPresentationService) {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.config = config;
         this.preferences = preferences;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.daoFacade = daoFacade;
         this.daoStateService = daoStateService;
         this.burningManPresentationService = burningManPresentationService;
@@ -98,7 +97,7 @@ public class MempoolService {
 
     public void validateOfferMakerTx(OfferPayload offerPayload, Consumer<TxValidator> resultHandler) {
         validateOfferMakerTx(new TxValidator(daoStateService, offerPayload.getOfferFeePaymentTxId(), Coin.valueOf(offerPayload.getAmount()),
-                offerPayload.isCurrencyForMakerFeeBtc(), offerPayload.getBlockHeightAtOfferCreation(), filterManager), resultHandler);
+                offerPayload.isCurrencyForMakerFeeBtc(), offerPayload.getBlockHeightAtOfferCreation(), filterPolicyService), resultHandler);
     }
 
     public void validateOfferMakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
@@ -112,7 +111,7 @@ public class MempoolService {
 
     public void validateOfferTakerTx(Trade trade, Consumer<TxValidator> resultHandler) {
         validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getAmount(),
-                trade.isCurrencyForTakerFeeBtc(), trade.getLockTime(), filterManager), resultHandler);
+                trade.isCurrencyForTakerFeeBtc(), trade.getLockTime(), filterPolicyService), resultHandler);
     }
 
     public void validateOfferTakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
@@ -125,7 +124,7 @@ public class MempoolService {
     }
 
     public void checkTxIsConfirmed(String txId, Consumer<TxValidator> resultHandler) {
-        TxValidator txValidator = new TxValidator(daoStateService, txId, filterManager);
+        TxValidator txValidator = new TxValidator(daoStateService, txId, filterPolicyService);
         if (!isServiceSupported()) {
             UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
             return;
@@ -259,9 +258,7 @@ public class MempoolService {
     private List<String> getAllBtcFeeReceivers() {
         List<String> btcFeeReceivers = new ArrayList<>();
         // fee receivers from filter ref: bisq-network/bisq/pull/4294
-        List<String> feeReceivers = Optional.ofNullable(filterManager.getFilter())
-                .flatMap(f -> Optional.ofNullable(f.getBtcFeeReceiverAddresses()))
-                .orElse(List.of());
+        List<String> feeReceivers = filterPolicyService.getBtcFeeReceiverAddresses();
         feeReceivers.forEach(e -> {
             try {
                 btcFeeReceivers.add(e.split("#")[0]); // victim's receiver address
@@ -286,7 +283,7 @@ public class MempoolService {
     }
 
     private boolean isServiceSupported() {
-        if (filterManager.getFilter() != null && filterManager.getFilter().isDisableMempoolValidation()) {
+        if (filterPolicyService.isMempoolValidationDisabled()) {
             log.info("MempoolService bypassed by filter setting disableMempoolValidation=true");
             return false;
         }

@@ -910,8 +910,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         };
 
         filterChangeListener = (observable, oldValue, newValue) ->
-                autoConfirmGridPane.setDisable(newValue != null && newValue.isDisableAutoConf());
-        autoConfirmGridPane.setDisable(filterManager.getFilter() != null && filterManager.getFilter().isDisableAutoConf());
+                autoConfirmGridPane.setDisable(filterPolicyService.isAutoConfDisabled());
+        autoConfirmGridPane.setDisable(filterPolicyService.isAutoConfDisabled());
     }
 
     private void initializeTradeLimitOptions() {
