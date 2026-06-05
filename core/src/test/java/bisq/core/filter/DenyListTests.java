@@ -69,15 +69,27 @@ public class DenyListTests {
     }
 
     @Test
-    void deDuplicatesValuesInEncounterOrder() throws IOException {
+    void mainnetResourceListsAreFreeOfDuplicates() throws IOException {
         DenyList denyList = DenyList.fromProperties(loadMainnetProperties());
 
         assertEquals(new HashSet<>(denyList.getNodeAddressesBannedFromTrading()).size(),
                 denyList.getNodeAddressesBannedFromTrading().size());
-        assertEquals("sqhl7bpblzazkteq.onion:9999",
-                denyList.getNodeAddressesBannedFromTrading().get(25));
-        assertEquals("fjmdtwhnrlrdd7xl.onion:9999",
-                denyList.getNodeAddressesBannedFromTrading().get(26));
+        assertEquals(new HashSet<>(denyList.getNodeAddressesBannedFromNetwork()).size(),
+                denyList.getNodeAddressesBannedFromNetwork().size());
+        assertEquals(new HashSet<>(denyList.getBannedSeedNodes()).size(),
+                denyList.getBannedSeedNodes().size());
+        assertEquals(new HashSet<>(denyList.getBannedBtcNodes()).size(),
+                denyList.getBannedBtcNodes().size());
+    }
+
+    @Test
+    void deDuplicatesValuesInEncounterOrder() {
+        Properties properties = new Properties();
+        properties.setProperty("bannedPaymentMethods", "VENMO, CASH_APP, VENMO, OK_PAY, CASH_APP");
+
+        DenyList denyList = DenyList.fromProperties(properties);
+
+        assertEquals(java.util.List.of("VENMO", "CASH_APP", "OK_PAY"), denyList.getBannedPaymentMethods());
     }
 
     @Test
