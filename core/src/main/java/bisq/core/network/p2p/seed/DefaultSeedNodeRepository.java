@@ -83,6 +83,8 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH));
             cache.addAll(result);
 
+            // --ignoreNetworkFilter only skips signed-filter sources; --ignoreDenyList controls the static
+            // deny-list and is honored by DenyList itself, which returns an empty list when set.
             Set<NodeAddress> filterProvidedSeedNodes = (config.ignoreNetworkFilter ?
                     List.<String>of() :
                     config.filterProvidedSeedNodes).stream()
@@ -93,9 +95,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             cache.addAll(filterProvidedSeedNodes);
 
             List<String> persistedBannedSeedNodes = config.bannedSeedNodes;
-            List<String> deniedSeedNodes = config.ignoreNetworkFilter ?
-                    List.of() :
-                    denyList.getBannedSeedNodes();
+            List<String> deniedSeedNodes = denyList.getBannedSeedNodes();
             Set<NodeAddress> bannedSeedNodes = merge(persistedBannedSeedNodes, deniedSeedNodes).stream()
                     .filter(n -> !n.isEmpty())
                     .map(this::getNodeAddress)

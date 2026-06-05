@@ -84,14 +84,15 @@ public class BtcNodesSetupPreferencesTest {
     }
 
     @Test
-    public void testSelectPreferredNodesKeepsLocalBansAndIgnoresDenyListAndFilterProvidedNodesWhenConfigured() {
+    public void testSelectPreferredNodesKeepsLocalAndDenyListBansAndIgnoresFilterProvidedNodesWhenConfigured() {
         Preferences delegate = mock(Preferences.class);
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PROVIDED.ordinal());
 
         BtcNode alice = new BtcNode(null, "alice.onion", null, BtcNode.DEFAULT_PORT, "@alice");
         BtcNode bob = new BtcNode(null, "bob.onion", null, BtcNode.DEFAULT_PORT, "@bob");
+        BtcNode dave = new BtcNode(null, "dave.onion", null, BtcNode.DEFAULT_PORT, "@dave");
         BtcNodes btcNodes = mock(BtcNodes.class);
-        when(btcNodes.getProvidedBtcNodes()).thenReturn(List.of(alice, bob));
+        when(btcNodes.getProvidedBtcNodes()).thenReturn(List.of(alice, bob, dave));
 
         Config config = new Config("--ignoreNetworkFilter=true",
                 "--bannedBtcNodes=bob.onion:" + BtcNode.DEFAULT_PORT,
@@ -106,6 +107,9 @@ public class BtcNodesSetupPreferencesTest {
                 denyList);
         List<BtcNode> nodes = preferences.selectPreferredNodes(btcNodes);
 
-        assertEquals(List.of(alice), nodes);
+        // --ignoreNetworkFilter skips the filter-provided carol but does NOT skip deny-list bans:
+        // alice is banned by DenyList, bob is banned by local config, carol is excluded as filter-provided,
+        // dave is the only node that survives.
+        assertEquals(List.of(dave), nodes);
     }
 }

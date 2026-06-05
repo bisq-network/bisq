@@ -79,7 +79,7 @@ public class DefaultSeedNodeRepositoryTest {
     }
 
     @Test
-    public void keepsLocalBansAndIgnoresDenyListAndFilterProvidedSeedNodesWhenConfigured() {
+    public void keepsLocalAndDenyListBansAndIgnoresFilterProvidedSeedNodesWhenConfigured() {
         String baseCurrencyNetwork = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
         Config config = new Config(baseCurrencyNetwork,
                 "--ignoreNetworkFilter=true",
@@ -91,8 +91,9 @@ public class DefaultSeedNodeRepositoryTest {
 
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config, denyList);
 
+        // --ignoreNetworkFilter skips the filter-provided seed but does NOT skip deny-list bans.
         assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:2002")));
-        assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:3002")));
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:3002")));
         assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress("localhost:4002")));
     }
 
