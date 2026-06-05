@@ -103,7 +103,9 @@ public final class PaymentAccountFilterMatcher {
         }
 
         // Transitional support for already-published plaintext filters. New filters should use sha256-v1 values.
-        return runtimeValue.equalsIgnoreCase(filterValue);
+        // Apply the same canonicalization on both sides so a runtime value with surrounding whitespace
+        // still matches its corresponding plaintext filter entry.
+        return canonicalize(runtimeValue).equals(canonicalize(filterValue));
     }
 
     private static Optional<String> readRuntimeValue(PaymentAccountPayload paymentAccountPayload,
