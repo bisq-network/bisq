@@ -21,15 +21,36 @@ import bisq.core.alert.Alert;
 import bisq.core.arbitration.ArbitratorTest;
 import bisq.core.arbitration.MediatorTest;
 import bisq.core.filter.Filter;
+import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.proto.CoreProtoResolver;
 
 import com.google.common.collect.Lists;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UserPayloadModelVOTest {
+    @Test
+    public void testDeveloperFilterPreimagesRoundtrip() {
+        List<PaymentAccountFilter> bannedPaymentAccountPreimages = List.of(
+                new PaymentAccountFilter("PERFECT_MONEY", "getAccountNr", "12345"));
+        List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages = List.of(
+                new PaymentAccountFilter("SEPA", "getBic", "COBADEH077X"));
+        UserPayload vo = new UserPayload();
+        vo.setDevelopersFilterBannedPaymentAccountPreimages(bannedPaymentAccountPreimages);
+        vo.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(delayedPayoutPaymentAccountPreimages);
+
+        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
+
+        assertEquals(bannedPaymentAccountPreimages, newVo.getDevelopersFilterBannedPaymentAccountPreimages());
+        assertEquals(delayedPayoutPaymentAccountPreimages, newVo.getDevelopersFilterDelayedPayoutPaymentAccountPreimages());
+    }
+
     @Disabled("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
     public void testRoundtrip() {
         UserPayload vo = new UserPayload();

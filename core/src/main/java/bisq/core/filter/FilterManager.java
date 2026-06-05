@@ -300,6 +300,13 @@ public class FilterManager {
     }
 
     public boolean addDevFilter(Filter filterWithoutSig, String privKeyString) {
+        return addDevFilter(filterWithoutSig, privKeyString, List.of(), List.of());
+    }
+
+    public boolean addDevFilter(Filter filterWithoutSig,
+                                String privKeyString,
+                                List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                                List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
         if (!isFilterValidForAdd(filterWithoutSig)) {
             return false;
         }
@@ -307,7 +314,7 @@ public class FilterManager {
         setFilterSigningKey(privKeyString);
         String signatureAsBase64 = getSignature(filterWithoutSig);
         Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
-        user.setDevelopersFilter(filterWithSig);
+        user.setDevelopersFilter(filterWithSig, bannedPaymentAccountPreimages, delayedPayoutPaymentAccountPreimages);
 
         p2PService.addProtectedStorageEntry(filterWithSig);
 
@@ -417,6 +424,14 @@ public class FilterManager {
     @Nullable
     public Filter getDevFilter() {
         return user.getDevelopersFilter();
+    }
+
+    public List<PaymentAccountFilter> getDevFilterBannedPaymentAccountPreimages() {
+        return user.getDevelopersFilterBannedPaymentAccountPreimages();
+    }
+
+    public List<PaymentAccountFilter> getDevFilterDelayedPayoutPaymentAccountPreimages() {
+        return user.getDevelopersFilterDelayedPayoutPaymentAccountPreimages();
     }
 
     public PublicKey getOwnerPubKey() {

@@ -2026,6 +2026,8 @@ message UserPayload {
     RefundAgent registered_refund_agent = 15;
     map<string, string> cookie = 16;
     repeated SubAccountMapEntry sub_account_map_entries = 17;
+    repeated PaymentAccountFilter developers_filter_banned_payment_account_preimages = 18;
+    repeated PaymentAccountFilter developers_filter_delayed_payout_payment_account_preimages = 19;
 }
 
 message SubAccountMapEntry {

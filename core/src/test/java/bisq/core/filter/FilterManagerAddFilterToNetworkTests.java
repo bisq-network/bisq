@@ -70,6 +70,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -259,6 +260,7 @@ public class FilterManagerAddFilterToNetworkTests {
         assertFalse(filterManager.addDevFilter(filterWithoutSig, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
 
         verify(user, never()).setDevelopersFilter(any(Filter.class));
+        verify(user, never()).setDevelopersFilter(any(Filter.class), anyList(), anyList());
         verify(p2PService, never()).addProtectedStorageEntry(any(Filter.class));
     }
 
@@ -280,7 +282,7 @@ public class FilterManagerAddFilterToNetworkTests {
 
         assertTrue(filterManager.addDevFilter(filterWithoutSig, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
 
-        verify(user).setDevelopersFilter(any(Filter.class));
+        verify(user).setDevelopersFilter(any(Filter.class), anyList(), anyList());
         verify(p2PService).addProtectedStorageEntry(any(Filter.class));
         verify(p2PService, never()).removeData(any(Filter.class));
     }

@@ -144,15 +144,27 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField bannedFromNetworkTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedFromNetwork")).second;
         bannedFromTradingTF.setPromptText("E.g. zqnzx6o3nifef5df.onion:9999"); // Do not translate
+        InputTextField paymentAccountFilterPlainTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.accountsPlain")).second;
+        GridPane.setHalignment(paymentAccountFilterPlainTF, HPos.RIGHT);
+        paymentAccountFilterPlainTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
         InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
+        paymentAccountFilterTF.setEditable(false);
         paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|sha256-v1:<64 hex chars>"); // Do not translate
 
+        InputTextField delayedPayoutPlainTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.delayedPayoutPlain")).second;
+        GridPane.setHalignment(delayedPayoutPlainTF, HPos.RIGHT);
+        delayedPayoutPlainTF.setPromptText("E.g. SEPA|getBic|COBADEH077X"); // Do not translate
         InputTextField delayedPayoutTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.delayedPayout")).second;
         GridPane.setHalignment(delayedPayoutTF, HPos.RIGHT);
+        delayedPayoutTF.setEditable(false);
         delayedPayoutTF.setPromptText("E.g. SEPA|getBic|sha256-v1:<64 hex chars>"); // Do not translate
+        bindPaymentAccountFilterHashField(paymentAccountFilterPlainTF, paymentAccountFilterTF);
+        bindPaymentAccountFilterHashField(delayedPayoutPlainTF, delayedPayoutTF);
 
         InputTextField bannedCurrenciesTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedCurrencies"));
@@ -222,7 +234,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(offerIdsTF, filter.getBannedOfferIds());
             setupFieldFromList(bannedFromTradingTF, filter.getNodeAddressesBannedFromTrading());
             setupFieldFromList(bannedFromNetworkTF, filter.getNodeAddressesBannedFromNetwork());
-            setupFieldFromPaymentAccountFiltersList(paymentAccountFilterTF, filter.getBannedPaymentAccounts());
+            setupPaymentAccountFilterFields(paymentAccountFilterPlainTF,
+                    paymentAccountFilterTF,
+                    filterManager.getDevFilterBannedPaymentAccountPreimages(),
+                    filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesTF, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsTF, filter.getBannedPaymentMethods());
             setupFieldFromList(bannedAccountWitnessSignerPubKeysTF, filter.getBannedAccountWitnessSignerPubKeys());
@@ -254,7 +269,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
             takerFeeBtcTF.setText(btcFormatter.formatCoin(Coin.valueOf(filter.getTakerFeeBtc())));
             makerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getMakerFeeBsq()));
             takerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getTakerFeeBsq()));
-            setupFieldFromPaymentAccountFiltersList(delayedPayoutTF, filter.getDelayedPayoutPaymentAccounts());
+            setupPaymentAccountFilterFields(delayedPayoutPlainTF,
+                    delayedPayoutTF,
+                    filterManager.getDevFilterDelayedPayoutPaymentAccountPreimages(),
+                    filter.getDelayedPayoutPaymentAccounts());
         } else {
             uidTF.setText(UUID.randomUUID().toString());
         }
@@ -268,11 +286,15 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (filterManager.canAddDevFilter(privKeyString)) {
                 String signerPubKeyAsHex = filterManager.getSignerPubKeyAsHex(privKeyString);
                 Filter newFilter;
+                List<PaymentAccountFilter> bannedPaymentAccountPreimages;
+                List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages;
                 try {
+                    bannedPaymentAccountPreimages = readAsPlainPaymentAccountFiltersList(paymentAccountFilterPlainTF);
+                    delayedPayoutPaymentAccountPreimages = readAsPlainPaymentAccountFiltersList(delayedPayoutPlainTF);
                     newFilter = new Filter(
                             readAsList(offerIdsTF),
                             readAsList(bannedFromTradingTF),
-                            readAsPaymentAccountFiltersList(paymentAccountFilterTF),
+                            readAsHashedPaymentAccountFiltersList(paymentAccountFilterTF),
                             readAsList(bannedCurrenciesTF),
                             readAsList(bannedPaymentMethodsTF),
                             readAsList(arbitratorsTF),
@@ -302,7 +324,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
                             ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
                             ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
-                            readAsPaymentAccountFiltersList(delayedPayoutTF),
+                            readAsHashedPaymentAccountFiltersList(delayedPayoutTF),
                             readAsList(addedBtcNodesTF),
                             readAsList(addedSeedNodesTF),
                             uidTF.getText(),
@@ -320,12 +342,24 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 if (filterManager.canRemoveDevFilter(privKeyString)) {
                     filterManager.removeDevFilter(privKeyString);
                     if (DevEnv.isDevMode()) {
-                        addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
+                        addDevFilter(removeFilterMessageButton,
+                                privKeyString,
+                                newFilter,
+                                bannedPaymentAccountPreimages,
+                                delayedPayoutPaymentAccountPreimages);
                     } else {
-                        UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter), 5);
+                        UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton,
+                                privKeyString,
+                                newFilter,
+                                bannedPaymentAccountPreimages,
+                                delayedPayoutPaymentAccountPreimages), 5);
                     }
                 } else {
-                    addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
+                    addDevFilter(removeFilterMessageButton,
+                            privKeyString,
+                            newFilter,
+                            bannedPaymentAccountPreimages,
+                            delayedPayoutPaymentAccountPreimages);
                 }
             } else {
                 new Popup().warning(Res.get("shared.invalidKey")).onClose(this::blurAgain).show();
@@ -356,8 +390,15 @@ public class FilterWindow extends Overlay<FilterWindow> {
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
 
-    private void addDevFilter(Button removeFilterMessageButton, String privKeyString, Filter newFilter) {
-        if (filterManager.addDevFilter(newFilter, privKeyString)) {
+    private void addDevFilter(Button removeFilterMessageButton,
+                              String privKeyString,
+                              Filter newFilter,
+                              List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                              List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
+        if (filterManager.addDevFilter(newFilter,
+                privKeyString,
+                bannedPaymentAccountPreimages,
+                delayedPayoutPaymentAccountPreimages)) {
             removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
             hide();
         } else {
@@ -389,11 +430,60 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
     }
 
+    private void setupPaymentAccountFilterFields(InputTextField plainField,
+                                                 InputTextField hashField,
+                                                 List<PaymentAccountFilter> plainValues,
+                                                 List<PaymentAccountFilter> hashValues) {
+        setupFieldFromPaymentAccountFiltersList(plainField, plainValues);
+        if (plainValues == null || plainValues.isEmpty()) {
+            setupFieldFromPaymentAccountFiltersList(hashField, hashValues);
+        } else {
+            setupFieldFromPaymentAccountFiltersList(hashField, hashPaymentAccountFilters(plainValues));
+        }
+    }
+
+    private void bindPaymentAccountFilterHashField(InputTextField plainField, InputTextField hashField) {
+        plainField.textProperty().addListener((observable, oldValue, newValue) ->
+                updatePaymentAccountFilterHashField(plainField, hashField));
+    }
+
+    private void updatePaymentAccountFilterHashField(InputTextField plainField, InputTextField hashField) {
+        if (plainField.getText() == null || plainField.getText().trim().isEmpty()) {
+            hashField.setText("");
+            return;
+        }
+
+        try {
+            setupFieldFromPaymentAccountFiltersList(hashField,
+                    hashPaymentAccountFilters(readAsPlainPaymentAccountFiltersList(plainField)));
+        } catch (IllegalArgumentException exception) {
+            hashField.setText(exception.getMessage());
+        }
+    }
+
     private List<String> readAsList(InputTextField field) {
         return Splitter.on(',').trimResults().omitEmptyStrings().splitToList(field.getText());
     }
 
-    private List<PaymentAccountFilter> readAsPaymentAccountFiltersList(InputTextField field) {
+    private List<PaymentAccountFilter> readAsPlainPaymentAccountFiltersList(InputTextField field) {
+        return readAsList(field)
+                .stream().map(item -> {
+                    String[] list = item.split("\\|", 3);
+                    if (list.length != 3 ||
+                            list[0].trim().isEmpty() ||
+                            list[1].trim().isEmpty() ||
+                            list[2].trim().isEmpty()) {
+                        throw new IllegalArgumentException("Invalid payment account filter. Expected PAYMENT_METHOD|getMethod|plain text value.");
+                    }
+
+                    return new PaymentAccountFilter(list[0].trim(),
+                            list[1].trim(),
+                            list[2].trim());
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<PaymentAccountFilter> readAsHashedPaymentAccountFiltersList(InputTextField field) {
         return readAsList(field)
                 .stream().map(item -> {
                     String[] list = item.split("\\|", 3);
@@ -410,6 +500,16 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             list[1].trim(),
                             value.toLowerCase(Locale.ROOT));
                 })
+                .collect(Collectors.toList());
+    }
+
+    private List<PaymentAccountFilter> hashPaymentAccountFilters(List<PaymentAccountFilter> paymentAccountFilters) {
+        return paymentAccountFilters.stream()
+                .map(paymentAccountFilter -> new PaymentAccountFilter(paymentAccountFilter.getPaymentMethodId(),
+                        paymentAccountFilter.getGetMethodName(),
+                        PaymentAccountFilterMatcher.hashValue(paymentAccountFilter.getPaymentMethodId(),
+                                paymentAccountFilter.getGetMethodName(),
+                                paymentAccountFilter.getValue())))
                 .collect(Collectors.toList());
     }
 }

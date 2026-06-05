@@ -19,6 +19,7 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.filter.Filter;
+import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
@@ -48,6 +49,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -362,6 +364,19 @@ public class User implements PersistedDataHost {
 
     public void setDevelopersFilter(@Nullable Filter developersFilter) {
         userPayload.setDevelopersFilter(developersFilter);
+        if (developersFilter == null) {
+            userPayload.setDevelopersFilterBannedPaymentAccountPreimages(new ArrayList<>());
+            userPayload.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(new ArrayList<>());
+        }
+        requestPersistence();
+    }
+
+    public void setDevelopersFilter(@Nullable Filter developersFilter,
+                                    List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                                    List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
+        userPayload.setDevelopersFilter(developersFilter);
+        userPayload.setDevelopersFilterBannedPaymentAccountPreimages(bannedPaymentAccountPreimages);
+        userPayload.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(delayedPayoutPaymentAccountPreimages);
         requestPersistence();
     }
 
@@ -495,6 +510,14 @@ public class User implements PersistedDataHost {
     @Nullable
     public Filter getDevelopersFilter() {
         return userPayload.getDevelopersFilter();
+    }
+
+    public List<PaymentAccountFilter> getDevelopersFilterBannedPaymentAccountPreimages() {
+        return userPayload.getDevelopersFilterBannedPaymentAccountPreimages();
+    }
+
+    public List<PaymentAccountFilter> getDevelopersFilterDelayedPayoutPaymentAccountPreimages() {
+        return userPayload.getDevelopersFilterDelayedPayoutPaymentAccountPreimages();
     }
 
     @Nullable
