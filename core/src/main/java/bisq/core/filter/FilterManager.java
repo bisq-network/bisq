@@ -298,7 +298,12 @@ public class FilterManager {
         return getPubKeyAsHex(ecKey);
     }
 
-    public void addDevFilter(Filter filterWithoutSig, String privKeyString) {
+    public boolean addDevFilter(Filter filterWithoutSig, String privKeyString) {
+        if (!arePersistedNodeListsValid(filterWithoutSig)) {
+            log.warn("Developer filter contains invalid persisted node list values. filter={}", filterWithoutSig);
+            return false;
+        }
+
         setFilterSigningKey(privKeyString);
         String signatureAsBase64 = getSignature(filterWithoutSig);
         Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
@@ -310,6 +315,7 @@ public class FilterManager {
         invalidFilters.forEach(filter -> {
             removeInvalidFilters(filter, privKeyString);
         });
+        return true;
     }
 
     public void addToInvalidFilters(Filter filter) {

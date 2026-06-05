@@ -349,9 +349,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
 
     private void addDevFilter(Button removeFilterMessageButton, String privKeyString, Filter newFilter) {
-        filterManager.addDevFilter(newFilter, privKeyString);
-        removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
-        hide();
+        if (filterManager.addDevFilter(newFilter, privKeyString)) {
+            removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
+            hide();
+        } else {
+            new Popup().warning(Res.get("validation.invalidAddressList")).onClose(this::blurAgain).show();
+        }
     }
 
     private void setupFieldFromList(InputTextField field, Collection<?> values) {

@@ -64,11 +64,16 @@ import org.junit.jupiter.api.io.TempDir;
 
 import static org.bitcoinj.core.Utils.HEX;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class FilterManagerAddFilterToNetworkTests {
@@ -78,6 +83,8 @@ public class FilterManagerAddFilterToNetworkTests {
 
     private Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> p2pStorageMap;
     private FilterManager filterManager;
+    private P2PService p2PService;
+    private User user;
 
     private final PublicKey ownerPublicKey;
     private final String privilegedDevPubKeyHex;
@@ -94,19 +101,21 @@ public class FilterManagerAddFilterToNetworkTests {
 
     @BeforeEach
     void beforeEach(@TempDir Path tmpDir, @Mock P2PService p2PService, @Mock P2PDataStorage p2pDataStorage) {
-        doReturn(p2pDataStorage).when(p2PService).getP2PDataStorage();
+        this.p2PService = p2PService;
+        lenient().doReturn(p2pDataStorage).when(p2PService).getP2PDataStorage();
 
         p2pStorageMap = new HashMap<>();
-        doReturn(p2pStorageMap).when(p2pDataStorage).getMap();
+        lenient().doReturn(p2pStorageMap).when(p2pDataStorage).getMap();
 
         Config config = mock(Config.class);
         File configFile = tmpDir.resolve("configFile").toFile();
         doReturn(configFile).when(config).getConfigFile();
+        user = mock(User.class);
 
         filterManager = new FilterManager(
                 p2PService,
                 mock(KeyRing.class),
-                mock(User.class),
+                user,
                 mock(Preferences.class),
                 config,
                 mock(PriceFeedNodeAddressProvider.class),
@@ -231,6 +240,24 @@ public class FilterManagerAddFilterToNetworkTests {
 
         // FilterManager didn't add our filter
         assertNull(filterManager.getFilter());
+    }
+
+    @Test
+    void rejectDevFilterWithUnsafePersistedNodeListValueBeforePublishing() {
+        Filter filterWithoutSig = TestFilter.createFilterWithNodeLists(ownerPublicKey,
+                privilegedDevPubKeyHex,
+                System.currentTimeMillis(),
+                List.of("seed1.onion:8001\napiPassword=secret"),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of("btc1.onion:8333"),
+                List.of("seed2.onion:8002"));
+
+        assertFalse(filterManager.addDevFilter(filterWithoutSig, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
+
+        verify(user, never()).setDevelopersFilter(any(Filter.class));
+        verify(p2PService, never()).addProtectedStorageEntry(any(Filter.class));
     }
 
     @Test
