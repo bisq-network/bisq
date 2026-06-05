@@ -25,7 +25,6 @@ import bisq.core.proto.CoreProtoResolver;
 
 import com.google.common.collect.Lists;
 
-import java.util.HashSet;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Disabled;
@@ -67,7 +66,7 @@ public class UserPayloadModelVOTest {
                 null,
                 false,
                 Lists.newArrayList(),
-                new HashSet<>(),
+                Lists.newArrayList(),
                 false,
                 false,
                 false,

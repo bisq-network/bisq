@@ -58,7 +58,6 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -289,7 +288,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         readAsList(bannedPrivilegedDevPubKeysTF),
                         disableAutoConfCheckBox.isSelected(),
                         readAsList(autoConfExplorersTF),
-                        new HashSet<>(readAsList(bannedFromNetworkTF)),
+                        readAsList(bannedFromNetworkTF),
                         disableMempoolValidationCheckBox.isSelected(),
                         disableApiCheckBox.isSelected(),
                         disablePowMessage.isSelected(),
@@ -305,6 +304,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         uidTF.getText(),
                         disableBsqSwapCheckBox.isSelected()
                 );
+                if (!filterManager.isFilterValidForAdd(newFilter)) {
+                    new Popup().warning(Res.get("validation.invalidAddressList")).onClose(this::blurAgain).show();
+                    return;
+                }
 
                 // We remove first the old filter
                 // We delay a bit with adding as it seems that the instant add/remove calls lead to issues that the
@@ -350,9 +353,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
 
     private void addDevFilter(Button removeFilterMessageButton, String privKeyString, Filter newFilter) {
-        filterManager.addDevFilter(newFilter, privKeyString);
-        removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
-        hide();
+        if (filterManager.addDevFilter(newFilter, privKeyString)) {
+            removeFilterMessageButton.setDisable(filterManager.getDevFilter() == null);
+            hide();
+        } else {
+            new Popup().warning(Res.get("validation.invalidAddressList")).onClose(this::blurAgain).show();
+        }
     }
 
     private void setupFieldFromList(InputTextField field, Collection<?> values) {

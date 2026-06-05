@@ -20,7 +20,6 @@ package bisq.core.filter;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.ExcludeForHash;
 import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.ProtoUtil;
@@ -39,7 +38,6 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -76,6 +74,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final String signerPubKeyAsHex;
 
     // The pub key used for the data protection in the p2p storage
+    @Nullable
     private final byte[] ownerPubKeyBytes;
     private final boolean disableDao;
     private final String disableDaoBelowVersion;
@@ -91,13 +90,14 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
 
     private final List<String> bannedPrivilegedDevPubKeys;
 
-    private transient PublicKey ownerPubKey;
+    @Nullable
+    private transient final PublicKey ownerPubKey;
 
     // added at v1.3.8
     private final boolean disableAutoConf;
 
     // added at v1.5.5
-    private final Set<String> nodeAddressesBannedFromNetwork;
+    private final List<String> nodeAddressesBannedFromNetwork;
     private final boolean disableApi;
 
     // added at v1.6.0
@@ -123,13 +123,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<PaymentAccountFilter> delayedPayoutPaymentAccounts;
 
     // Added at v 1.9.16
-    @ExcludeForHash
     private final List<String> addedBtcNodes;
-    @ExcludeForHash
     private final List<String> addedSeedNodes;
-    // As we might add more ExcludeForHash we want to ensure to have a unique identifier.
-    // The hash of the data is not unique anymore if the only change have been at
-    // the ExcludeForHash annotated fields.
     private final String uid;
 
     // Added at v1.9.24
@@ -243,7 +238,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> bannedPrivilegedDevPubKeys,
                   boolean disableAutoConf,
                   List<String> bannedAutoConfExplorers,
-                  Set<String> nodeAddressesBannedFromNetwork,
+                  List<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
@@ -329,7 +324,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> bannedPrivilegedDevPubKeys,
                   boolean disableAutoConf,
                   List<String> bannedAutoConfExplorers,
-                  Set<String> nodeAddressesBannedFromNetwork,
+                  List<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
@@ -344,43 +339,43 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> addedSeedNodes,
                   String uid,
                   boolean disableBsqSwap) {
-        this.bannedOfferIds = bannedOfferIds;
-        this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
-        this.bannedPaymentAccounts = bannedPaymentAccounts;
-        this.bannedCurrencies = bannedCurrencies;
-        this.bannedPaymentMethods = bannedPaymentMethods;
-        this.arbitrators = arbitrators;
-        this.seedNodes = seedNodes;
-        this.priceRelayNodes = priceRelayNodes;
+        this.bannedOfferIds = copyList(bannedOfferIds);
+        this.nodeAddressesBannedFromTrading = copyList(nodeAddressesBannedFromTrading);
+        this.bannedPaymentAccounts = copyList(bannedPaymentAccounts);
+        this.bannedCurrencies = copyList(bannedCurrencies);
+        this.bannedPaymentMethods = copyList(bannedPaymentMethods);
+        this.arbitrators = copyList(arbitrators);
+        this.seedNodes = copyList(seedNodes);
+        this.priceRelayNodes = copyList(priceRelayNodes);
         this.preventPublicBtcNetwork = preventPublicBtcNetwork;
-        this.btcNodes = btcNodes;
+        this.btcNodes = copyList(btcNodes);
         this.disableDao = disableDao;
         this.disableDaoBelowVersion = disableDaoBelowVersion;
         this.disableTradeBelowVersion = disableTradeBelowVersion;
-        this.mediators = mediators;
-        this.refundAgents = refundAgents;
-        this.bannedAccountWitnessSignerPubKeys = bannedAccountWitnessSignerPubKeys;
-        this.btcFeeReceiverAddresses = btcFeeReceiverAddresses;
-        this.ownerPubKeyBytes = ownerPubKeyBytes;
+        this.mediators = copyList(mediators);
+        this.refundAgents = copyList(refundAgents);
+        this.bannedAccountWitnessSignerPubKeys = copyList(bannedAccountWitnessSignerPubKeys);
+        this.btcFeeReceiverAddresses = copyList(btcFeeReceiverAddresses);
+        this.ownerPubKeyBytes = ownerPubKeyBytes == null ? null : ownerPubKeyBytes.clone();
         this.creationDate = creationDate;
         this.signatureAsBase64 = signatureAsBase64;
         this.signerPubKeyAsHex = signerPubKeyAsHex;
-        this.bannedPrivilegedDevPubKeys = bannedPrivilegedDevPubKeys;
+        this.bannedPrivilegedDevPubKeys = copyList(bannedPrivilegedDevPubKeys);
         this.disableAutoConf = disableAutoConf;
-        this.bannedAutoConfExplorers = bannedAutoConfExplorers;
-        this.nodeAddressesBannedFromNetwork = nodeAddressesBannedFromNetwork;
+        this.bannedAutoConfExplorers = copyList(bannedAutoConfExplorers);
+        this.nodeAddressesBannedFromNetwork = copyList(nodeAddressesBannedFromNetwork);
         this.disableMempoolValidation = disableMempoolValidation;
         this.disableApi = disableApi;
         this.disablePowMessage = disablePowMessage;
         this.powDifficulty = powDifficulty;
-        this.enabledPowVersions = enabledPowVersions;
+        this.enabledPowVersions = copyList(enabledPowVersions);
         this.makerFeeBtc = makerFeeBtc;
         this.takerFeeBtc = takerFeeBtc;
         this.makerFeeBsq = makerFeeBsq;
         this.takerFeeBsq = takerFeeBsq;
-        this.delayedPayoutPaymentAccounts = delayedPayoutPaymentAccounts;
-        this.addedBtcNodes = addedBtcNodes;
-        this.addedSeedNodes = addedSeedNodes;
+        this.delayedPayoutPaymentAccounts = copyList(delayedPayoutPaymentAccounts);
+        this.addedBtcNodes = copyList(addedBtcNodes);
+        this.addedSeedNodes = copyList(addedSeedNodes);
         this.uid = uid;
         this.disableBsqSwap = disableBsqSwap;
 
@@ -390,6 +385,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         } else {
             ownerPubKey = null;
         }
+    }
+
+    private static <T> List<T> copyList(@Nullable List<T> list) {
+        return list == null ? List.of() : List.copyOf(list);
     }
 
     @Override
@@ -436,7 +435,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllRefundAgents(refundAgents)
                 .addAllBannedSignerPubKeys(bannedAccountWitnessSignerPubKeys)
                 .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
-                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
                 .setCreationDate(creationDate)
                 .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys)
@@ -458,6 +456,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .setUid(uid)
                 .setDisableBsqSwap(disableBsqSwap);
 
+        Optional.ofNullable(ownerPubKeyBytes)
+                .map(ByteString::copyFrom)
+                .ifPresent(builder::setOwnerPubKeyBytes);
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
 
         return builder;
@@ -475,6 +476,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         List<PaymentAccountFilter> delayedPayoutPaymentAccounts = proto.getDelayedPayoutPaymentAccountsList().stream()
                 .map(PaymentAccountFilter::fromProto)
                 .collect(Collectors.toList());
+        byte[] ownerPubKeyBytes = proto.getOwnerPubKeyBytes().isEmpty() ?
+                null :
+                proto.getOwnerPubKeyBytes().toByteArray();
 
         return new Filter(ProtoUtil.protocolStringListToList(proto.getBannedOfferIdsList()),
                 ProtoUtil.protocolStringListToList(proto.getNodeAddressesBannedFromTradingList()),
@@ -493,14 +497,14 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getRefundAgentsList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedSignerPubKeysList()),
                 ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
-                proto.getOwnerPubKeyBytes().toByteArray(),
+                ownerPubKeyBytes,
                 proto.getCreationDate(),
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),
                 proto.getDisableAutoConf(),
                 ProtoUtil.protocolStringListToList(proto.getBannedAutoConfExplorersList()),
-                ProtoUtil.protocolStringListToSet(proto.getNodeAddressesBannedFromNetworkList()),
+                ProtoUtil.protocolStringListToList(proto.getNodeAddressesBannedFromNetworkList()),
                 proto.getDisableMempoolValidation(),
                 proto.getDisableApi(),
                 proto.getDisablePowMessage(),
@@ -516,6 +520,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 proto.getUid(),
                 proto.getDisableBsqSwap()
         );
+    }
+
+    @Nullable
+    public byte[] getOwnerPubKeyBytes() {
+        return ownerPubKeyBytes == null ? null : ownerPubKeyBytes.clone();
     }
 
 

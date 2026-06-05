@@ -59,6 +59,27 @@ public class TestFilter {
         return signFilter(unsignedFilter, signerKey);
     }
 
+    public static Filter createSignedFilterWithNodeLists(PublicKey ownerPublicKey,
+                                                         ECKey signerKey,
+                                                         long creationDate,
+                                                         List<String> seedNodes,
+                                                         List<String> priceRelayNodes,
+                                                         List<String> btcNodes,
+                                                         List<String> nodeAddressesBannedFromNetwork,
+                                                         List<String> addedBtcNodes,
+                                                         List<String> addedSeedNodes) {
+        Filter unsignedFilter = createFilterWithNodeLists(ownerPublicKey,
+                HEX.encode(signerKey.getPubKey()),
+                creationDate,
+                seedNodes,
+                priceRelayNodes,
+                btcNodes,
+                nodeAddressesBannedFromNetwork,
+                addedBtcNodes,
+                addedSeedNodes);
+        return signFilter(unsignedFilter, signerKey);
+    }
+
     public static Filter createFilter(PublicKey ownerPublicKey, String signerPubKeyAsHex) {
         return createFilter(ownerPublicKey, signerPubKeyAsHex, System.currentTimeMillis());
     }
@@ -69,6 +90,49 @@ public class TestFilter {
 
     public static Filter createFilter(PublicKey ownerPublicKey, String signerPubKeyAsHex,
                                       long creationDate, List<String> bannedDevKeys) {
+        return createFilter(ownerPublicKey.getEncoded(),
+                signerPubKeyAsHex,
+                creationDate,
+                bannedDevKeys,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                List.of("test1.onion:1221"),
+                List.of("test2.onion:1221"));
+    }
+
+    public static Filter createFilterWithNodeLists(PublicKey ownerPublicKey,
+                                                   String signerPubKeyAsHex,
+                                                   long creationDate,
+                                                   List<String> seedNodes,
+                                                   List<String> priceRelayNodes,
+                                                   List<String> btcNodes,
+                                                   List<String> nodeAddressesBannedFromNetwork,
+                                                   List<String> addedBtcNodes,
+                                                   List<String> addedSeedNodes) {
+        return createFilter(ownerPublicKey.getEncoded(),
+                signerPubKeyAsHex,
+                creationDate,
+                Collections.emptyList(),
+                seedNodes,
+                priceRelayNodes,
+                btcNodes,
+                nodeAddressesBannedFromNetwork,
+                addedBtcNodes,
+                addedSeedNodes);
+    }
+
+    public static Filter createFilter(byte[] ownerPubKeyBytes,
+                                      String signerPubKeyAsHex,
+                                      long creationDate,
+                                      List<String> bannedDevKeys,
+                                      List<String> seedNodes,
+                                      List<String> priceRelayNodes,
+                                      List<String> btcNodes,
+                                      List<String> nodeAddressesBannedFromNetwork,
+                                      List<String> addedBtcNodes,
+                                      List<String> addedSeedNodes) {
         return new Filter(
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -76,10 +140,10 @@ public class TestFilter {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList(),
+                seedNodes,
+                priceRelayNodes,
                 false,
-                Collections.emptyList(),
+                btcNodes,
                 false,
                 "",
                 "",
@@ -87,14 +151,14 @@ public class TestFilter {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                ownerPublicKey.getEncoded(),
+                ownerPubKeyBytes,
                 creationDate,
                 null,
                 signerPubKeyAsHex,
                 bannedDevKeys,
                 false,
                 Collections.emptyList(),
-                Collections.emptySet(),
+                nodeAddressesBannedFromNetwork,
                 false,
                 false,
                 false,
@@ -105,8 +169,8 @@ public class TestFilter {
                 1,
                 1,
                 Collections.emptyList(),
-                List.of("test1.onion:1221"),
-                List.of("test2.onion:1221"),
+                addedBtcNodes,
+                addedSeedNodes,
                 UUID.randomUUID().toString(),
                 false
         );

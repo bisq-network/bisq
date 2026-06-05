@@ -68,6 +68,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import java.lang.reflect.Method;
@@ -85,6 +86,7 @@ import static org.bitcoinj.core.Utils.HEX;
  */
 @Slf4j
 public class FilterManager {
+    private static final long MAX_FILTER_DATE_DRIFT = TimeUnit.HOURS.toMillis(2);
     private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     private static final String BANNED_SEED_NODES = "bannedSeedNodes";
     private static final String BANNED_BTC_NODES = "bannedBtcNodes";
@@ -296,7 +298,11 @@ public class FilterManager {
         return getPubKeyAsHex(ecKey);
     }
 
-    public void addDevFilter(Filter filterWithoutSig, String privKeyString) {
+    public boolean addDevFilter(Filter filterWithoutSig, String privKeyString) {
+        if (!isFilterValidForAdd(filterWithoutSig)) {
+            return false;
+        }
+
         setFilterSigningKey(privKeyString);
         String signatureAsBase64 = getSignature(filterWithoutSig);
         Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
@@ -308,6 +314,16 @@ public class FilterManager {
         invalidFilters.forEach(filter -> {
             removeInvalidFilters(filter, privKeyString);
         });
+        return true;
+    }
+
+    public boolean isFilterValidForAdd(Filter filterWithoutSig) {
+        if (!arePersistedNodeListsValid(filterWithoutSig)) {
+            log.warn("Developer filter contains invalid persisted node list values. {}",
+                    getSafeFilterMetadata(filterWithoutSig));
+            return false;
+        }
+        return true;
     }
 
     public void addToInvalidFilters(Filter filter) {
@@ -315,15 +331,21 @@ public class FilterManager {
     }
 
     public void removeInvalidFilters(Filter filter, String privKeyString) {
+        if (filter.getOwnerPubKey() == null) {
+            log.info("The invalid filter has no owner pub key, so we cannot remove it from the network. {}",
+                    getSafeFilterMetadata(filter));
+            return;
+        }
+
         // We can only remove the filter if it's our own filter
         if (Arrays.equals(filter.getOwnerPubKey().getEncoded(), keyRing.getSignatureKeyPair().getPublic().getEncoded())) {
-            log.info("Remove invalid filter {}", filter);
+            log.info("Remove invalid filter. {}", getSafeFilterMetadata(filter));
             setFilterSigningKey(privKeyString);
             String signatureAsBase64 = getSignature(Filter.cloneWithoutSig(filter));
             Filter filterWithSig = Filter.cloneWithSig(filter, signatureAsBase64);
             boolean result = p2PService.removeData(filterWithSig);
             if (!result) {
-                log.warn("Could not remove filter {}", filter);
+                log.warn("Could not remove filter. {}", getSafeFilterMetadata(filter));
             }
         } else {
             log.info("The invalid filter is not our own, so we cannot remove it from the network");
@@ -557,8 +579,22 @@ public class FilterManager {
             return;
         }
 
+        long filterFromNetworkCreationDate = filterFromNetwork.getCreationDate();
+        long now = System.currentTimeMillis();
+        if (filterFromNetworkCreationDate - now > MAX_FILTER_DATE_DRIFT) {
+            log.warn("Filter from network creation date is too far in the future. " +
+                            "filterFromNetworkCreationDate={}, current time={}",
+                    new Date(filterFromNetworkCreationDate), new Date(now));
+            return;
+        }
+        if (!arePersistedNodeListsValid(filterFromNetwork)) {
+            log.warn("Filter from network contains invalid persisted node list values. {}",
+                    getSafeFilterMetadata(filterFromNetwork));
+            return;
+        }
+
         if (currentFilter != null) {
-            if (currentFilter.getCreationDate() > filterFromNetwork.getCreationDate()) {
+            if (currentFilter.getCreationDate() > filterFromNetworkCreationDate) {
                 log.info("We received a new filter from the network but the creation date is older than the " +
                                 "filter we have already. We ignore the new filter from the network.\n" +
                                 "currentFilter\n{}" +
@@ -652,6 +688,76 @@ public class FilterManager {
             configFileEditor.setOption(optionName, String.join(",", bannedNodes));
         else
             configFileEditor.clearOption(optionName);
+    }
+
+    private boolean arePersistedNodeListsValid(Filter filter) {
+        return isValidNodeAddressList(BANNED_SEED_NODES, filter.getSeedNodes()) &&
+                isValidNodeAddressList(BANNED_BTC_NODES, filter.getBtcNodes()) &&
+                isValidNodeAddressList(FILTER_PROVIDED_BTC_NODES, filter.getAddedBtcNodes()) &&
+                isValidNodeAddressList(FILTER_PROVIDED_SEED_NODES, filter.getAddedSeedNodes()) &&
+                isSafeConfigValueList(BANNED_PRICE_RELAY_NODES, filter.getPriceRelayNodes());
+    }
+
+    private boolean isValidNodeAddressList(String optionName, List<String> values) {
+        if (!isSafeConfigValueList(optionName, values)) {
+            return false;
+        }
+
+        for (String value : values) {
+            try {
+                new NodeAddress(value);
+            } catch (Throwable t) {
+                log.warn("Invalid node address in filter option {}: {}", optionName, value);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isSafeConfigValueList(String optionName, List<String> values) {
+        for (String value : values) {
+            if (!isSafeConfigValue(value)) {
+                log.warn("Unsafe value in filter option {}", optionName);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isSafeConfigValue(String value) {
+        if (value == null || value.isBlank() || !value.equals(value.trim()) ||
+                value.indexOf(',') >= 0 || value.indexOf('=') >= 0) {
+            return false;
+        }
+
+        for (int i = 0; i < value.length(); i++) {
+            if (Character.isISOControl(value.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String getSafeFilterMetadata(Filter filter) {
+        return "signerPubKeyAsHex=" + sanitizeLogValue(filter.getSignerPubKeyAsHex()) +
+                ", creationDate=" + filter.getCreationDate() + " (" + new Date(filter.getCreationDate()) + ")";
+    }
+
+    private String sanitizeLogValue(@Nullable String value) {
+        if (value == null) {
+            return "null";
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        int maxLength = 80;
+        for (int i = 0; i < value.length() && i < maxLength; i++) {
+            char c = value.charAt(i);
+            stringBuilder.append(Character.isISOControl(c) ? '?' : c);
+        }
+        if (value.length() > maxLength) {
+            stringBuilder.append("...");
+        }
+        return stringBuilder.toString();
     }
 
     private boolean isValidDevPrivilegeKey(String privKeyString) {
