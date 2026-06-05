@@ -17,6 +17,7 @@
 
 package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.bisq_v1.OfferPayload;
@@ -113,9 +114,9 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     static void checkDisputeAgentAvailability(Offer offer, PlaceOfferModel model) {
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
         checkArgument(hasAvailableAcceptedDisputeAgent(offerPayload.getMediatorNodeAddresses(), model.getMediatorManager()),
-                "Cannot create offer because no accepted mediator is available.");
+                Res.get("validation.error.noAcceptedMediatorForOffer"));
         checkArgument(DisputeAgentSelection.hasAvailableDisputeAgent(model.getRefundAgentManager()),
-                "Cannot create offer because no refund agent is available.");
+                Res.get("validation.error.noRefundAgentForOffer"));
     }
 
     static boolean hasAvailableAcceptedDisputeAgent(List<NodeAddress> acceptedNodeAddresses,
