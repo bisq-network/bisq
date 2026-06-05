@@ -73,14 +73,4 @@ public class FilterPolicyServiceTests {
 
         assertTrue(filterPolicyService.requireUpdateToNewVersionForTrading());
     }
-
-    @Test
-    void bansPaymentAccountDataHashFromDenyList() {
-        Properties properties = new Properties();
-        properties.setProperty("bannedPaymentAccountDataHashes", "abcdef");
-        DenyList denyList = DenyList.fromProperties(properties);
-        FilterPolicyService filterPolicyService = new FilterPolicyService(denyList, mock(FilterManager.class));
-
-        assertTrue(filterPolicyService.isPaymentAccountDataHashBanned("abcdef"));
-    }
 }

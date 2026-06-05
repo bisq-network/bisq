@@ -26,6 +26,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
+import bisq.core.filter.PaymentAccountFilterMatcher;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -59,6 +60,7 @@ import javafx.geometry.Insets;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -145,12 +147,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField paymentAccountFilterTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
-        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
+        paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|sha256-v1:<64 hex chars>"); // Do not translate
 
         InputTextField delayedPayoutTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.delayedPayout")).second;
         GridPane.setHalignment(delayedPayoutTF, HPos.RIGHT);
-        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|COBADEH077X"); // Do not translate
+        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|sha256-v1:<64 hex chars>"); // Do not translate
 
         InputTextField bannedCurrenciesTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedCurrencies"));
@@ -265,47 +267,49 @@ public class FilterWindow extends Overlay<FilterWindow> {
             String privKeyString = keyTF.getText();
             if (filterManager.canAddDevFilter(privKeyString)) {
                 String signerPubKeyAsHex = filterManager.getSignerPubKeyAsHex(privKeyString);
-                Filter newFilter = new Filter(
-                        readAsList(offerIdsTF),
-                        readAsList(bannedFromTradingTF),
-                        readAsPaymentAccountFiltersList(paymentAccountFilterTF),
-                        readAsList(bannedCurrenciesTF),
-                        readAsList(bannedPaymentMethodsTF),
-                        readAsList(arbitratorsTF),
-                        readAsList(seedNodesTF),
-                        readAsList(priceRelayNodesTF),
-                        preventPublicBtcNetworkCheckBox.isSelected(),
-                        readAsList(btcNodesTF),
-                        disableDaoCheckBox.isSelected(),
-                        disableDaoBelowVersionTF.getText(),
-                        disableTradeBelowVersionTF.getText(),
-                        readAsList(mediatorsTF),
-                        readAsList(refundAgentsTF),
-                        readAsList(bannedAccountWitnessSignerPubKeysTF),
-                        readAsList(btcFeeReceiverAddressesTF),
-                        filterManager.getOwnerPubKey(),
-                        signerPubKeyAsHex,
-                        readAsList(bannedPrivilegedDevPubKeysTF),
-                        disableAutoConfCheckBox.isSelected(),
-                        readAsList(autoConfExplorersTF),
-                        readAsList(bannedFromNetworkTF),
-                        disableMempoolValidationCheckBox.isSelected(),
-                        disableApiCheckBox.isSelected(),
-                        disablePowMessage.isSelected(),
-                        Double.parseDouble(powDifficultyTF.getText()),
-                        readAsList(enabledPowVersionsTF).stream().map(Integer::parseInt).collect(Collectors.toList()),
-                        ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
-                        ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
-                        ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
-                        ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
-                        readAsPaymentAccountFiltersList(delayedPayoutTF),
-                        readAsList(addedBtcNodesTF),
-                        readAsList(addedSeedNodesTF),
-                        uidTF.getText(),
-                        disableBsqSwapCheckBox.isSelected()
-                );
-                if (!filterManager.isFilterValidForAdd(newFilter)) {
-                    new Popup().warning(Res.get("validation.invalidAddressList")).onClose(this::blurAgain).show();
+                Filter newFilter;
+                try {
+                    newFilter = new Filter(
+                            readAsList(offerIdsTF),
+                            readAsList(bannedFromTradingTF),
+                            readAsPaymentAccountFiltersList(paymentAccountFilterTF),
+                            readAsList(bannedCurrenciesTF),
+                            readAsList(bannedPaymentMethodsTF),
+                            readAsList(arbitratorsTF),
+                            readAsList(seedNodesTF),
+                            readAsList(priceRelayNodesTF),
+                            preventPublicBtcNetworkCheckBox.isSelected(),
+                            readAsList(btcNodesTF),
+                            disableDaoCheckBox.isSelected(),
+                            disableDaoBelowVersionTF.getText(),
+                            disableTradeBelowVersionTF.getText(),
+                            readAsList(mediatorsTF),
+                            readAsList(refundAgentsTF),
+                            readAsList(bannedAccountWitnessSignerPubKeysTF),
+                            readAsList(btcFeeReceiverAddressesTF),
+                            filterManager.getOwnerPubKey(),
+                            signerPubKeyAsHex,
+                            readAsList(bannedPrivilegedDevPubKeysTF),
+                            disableAutoConfCheckBox.isSelected(),
+                            readAsList(autoConfExplorersTF),
+                            readAsList(bannedFromNetworkTF),
+                            disableMempoolValidationCheckBox.isSelected(),
+                            disableApiCheckBox.isSelected(),
+                            disablePowMessage.isSelected(),
+                            Double.parseDouble(powDifficultyTF.getText()),
+                            readAsList(enabledPowVersionsTF).stream().map(Integer::parseInt).collect(Collectors.toList()),
+                            ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
+                            ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
+                            ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
+                            ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
+                            readAsPaymentAccountFiltersList(delayedPayoutTF),
+                            readAsList(addedBtcNodesTF),
+                            readAsList(addedSeedNodesTF),
+                            uidTF.getText(),
+                            disableBsqSwapCheckBox.isSelected()
+                    );
+                } catch (IllegalArgumentException exception) {
+                    new Popup().warning(exception.getMessage()).onClose(this::blurAgain).show();
                     return;
                 }
 
@@ -392,11 +396,19 @@ public class FilterWindow extends Overlay<FilterWindow> {
     private List<PaymentAccountFilter> readAsPaymentAccountFiltersList(InputTextField field) {
         return readAsList(field)
                 .stream().map(item -> {
-                    String[] list = item.split("\\|");
-                    if (list.length == 3)
-                        return new PaymentAccountFilter(list[0], list[1], list[2]);
-                    else
-                        return new PaymentAccountFilter("", "", "");
+                    String[] list = item.split("\\|", 3);
+                    if (list.length != 3 || list[0].trim().isEmpty() || list[1].trim().isEmpty()) {
+                        throw new IllegalArgumentException("Invalid payment account filter. Expected PAYMENT_METHOD|getMethod|sha256-v1:<64 hex chars>.");
+                    }
+
+                    String value = list[2].trim();
+                    if (!PaymentAccountFilterMatcher.isValidHashValue(value)) {
+                        throw new IllegalArgumentException("Invalid payment account filter hash. Expected sha256-v1:<64 hex chars>.");
+                    }
+
+                    return new PaymentAccountFilter(list[0].trim(),
+                            list[1].trim(),
+                            value.toLowerCase(Locale.ROOT));
                 })
                 .collect(Collectors.toList());
     }

@@ -71,8 +71,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import java.lang.reflect.Method;
-
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -509,36 +507,16 @@ public class FilterManager {
         return getFilter() != null &&
                 paymentAccountPayload != null &&
                 getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(paymentAccountPayload.getPaymentMethodId()))
-                        .anyMatch(paymentAccountFilter -> {
-                            try {
-                                Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                // We invoke getter methods (no args), e.g. getHolderName
-                                String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
-                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
-                            } catch (Throwable e) {
-                                log.error(e.getMessage());
-                                return false;
-                            }
-                        });
+                        .anyMatch(paymentAccountFilter ->
+                                PaymentAccountFilterMatcher.matches(paymentAccountPayload, paymentAccountFilter));
     }
 
     public boolean isDelayedPayoutPaymentAccount(PaymentAccountPayload paymentAccountPayload) {
         return getFilter() != null &&
                 paymentAccountPayload != null &&
                 getFilter().getDelayedPayoutPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(paymentAccountPayload.getPaymentMethodId()))
-                        .anyMatch(paymentAccountFilter -> {
-                            try {
-                                Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                // We invoke getter methods (no args), e.g. getHolderName
-                                String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
-                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
-                            } catch (Throwable e) {
-                                log.error(e.getMessage());
-                                return false;
-                            }
-                        });
+                        .anyMatch(paymentAccountFilter ->
+                                PaymentAccountFilterMatcher.matches(paymentAccountPayload, paymentAccountFilter));
     }
 
     public boolean isWitnessSignerPubKeyBanned(String witnessSignerPubKeyAsHex) {

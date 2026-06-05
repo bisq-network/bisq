@@ -40,8 +40,6 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Getter
 @Slf4j
 @Singleton
@@ -55,7 +53,6 @@ public class DenyList {
     private final List<String> bannedCurrencies;
     private final List<String> bannedPaymentMethods;
     private final List<String> bannedAccountWitnessSignerPubKeys;
-    private final List<String> bannedPaymentAccountDataHashes;
     private final List<String> bannedMediators;
     private final List<String> bannedRefundAgents;
     private final List<String> bannedSeedNodes;
@@ -79,7 +76,6 @@ public class DenyList {
         bannedCurrencies = readList(properties, "bannedCurrencies");
         bannedPaymentMethods = readList(properties, "bannedPaymentMethods");
         bannedAccountWitnessSignerPubKeys = readList(properties, "bannedAccountWitnessSignerPubKeys");
-        bannedPaymentAccountDataHashes = readList(properties, "bannedPaymentAccountDataHashes");
         bannedMediators = readNodeAddressList(properties, "bannedMediators");
         bannedRefundAgents = readNodeAddressList(properties, "bannedRefundAgents");
         bannedSeedNodes = readNodeAddressList(properties, "bannedSeedNodes");
@@ -139,10 +135,5 @@ public class DenyList {
 
     boolean hasRequiredVersionForTrading() {
         return !requiredVersionForTrading.isEmpty();
-    }
-
-    boolean isPaymentAccountDataHashBanned(String paymentAccountDataHash) {
-        checkArgument(paymentAccountDataHash != null, "paymentAccountDataHash must not be null");
-        return bannedPaymentAccountDataHashes.contains(paymentAccountDataHash);
     }
 }

@@ -24,9 +24,6 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.util.Utilities;
-
-import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -86,17 +83,7 @@ public class FilterPolicyService {
     }
 
     public boolean arePeersPaymentAccountDataBanned(@Nullable PaymentAccountPayload paymentAccountPayload) {
-        return isPaymentAccountDataHashBanned(paymentAccountPayload) ||
-                filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload);
-    }
-
-    public boolean isPaymentAccountDataHashBanned(@Nullable PaymentAccountPayload paymentAccountPayload) {
-        return paymentAccountPayload != null &&
-                isPaymentAccountDataHashBanned(Utilities.bytesAsHexString(paymentAccountPayload.getHashForContract()));
-    }
-
-    public boolean isPaymentAccountDataHashBanned(String paymentAccountDataHash) {
-        return denyList.isPaymentAccountDataHashBanned(paymentAccountDataHash);
+        return filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload);
     }
 
     public boolean isDelayedPayoutPaymentAccount(PaymentAccountPayload paymentAccountPayload) {
