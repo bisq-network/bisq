@@ -331,15 +331,21 @@ public class FilterManager {
     }
 
     public void removeInvalidFilters(Filter filter, String privKeyString) {
+        if (filter.getOwnerPubKey() == null) {
+            log.info("The invalid filter has no owner pub key, so we cannot remove it from the network. {}",
+                    getSafeFilterMetadata(filter));
+            return;
+        }
+
         // We can only remove the filter if it's our own filter
         if (Arrays.equals(filter.getOwnerPubKey().getEncoded(), keyRing.getSignatureKeyPair().getPublic().getEncoded())) {
-            log.info("Remove invalid filter {}", filter);
+            log.info("Remove invalid filter. {}", getSafeFilterMetadata(filter));
             setFilterSigningKey(privKeyString);
             String signatureAsBase64 = getSignature(Filter.cloneWithoutSig(filter));
             Filter filterWithSig = Filter.cloneWithSig(filter, signatureAsBase64);
             boolean result = p2PService.removeData(filterWithSig);
             if (!result) {
-                log.warn("Could not remove filter {}", filter);
+                log.warn("Could not remove filter. {}", getSafeFilterMetadata(filter));
             }
         } else {
             log.info("The invalid filter is not our own, so we cannot remove it from the network");

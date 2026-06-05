@@ -68,6 +68,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
@@ -258,6 +259,29 @@ public class FilterManagerAddFilterToNetworkTests {
 
         verify(user, never()).setDevelopersFilter(any(Filter.class));
         verify(p2PService, never()).addProtectedStorageEntry(any(Filter.class));
+    }
+
+    @Test
+    void addDevFilterSkipsInvalidFilterCleanupWhenOwnerPubKeyIsMissing() {
+        Filter invalidFilterWithoutOwnerPubKey = TestFilter.createFilter((byte[]) null,
+                privilegedDevPubKeyHex,
+                System.currentTimeMillis(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of("btc1.onion:8333"),
+                List.of("seed1.onion:8001"));
+        Filter filterWithoutSig = TestFilter.createFilter(ownerPublicKey, privilegedDevPubKeyHex);
+
+        filterManager.addToInvalidFilters(invalidFilterWithoutOwnerPubKey);
+
+        assertTrue(filterManager.addDevFilter(filterWithoutSig, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
+
+        verify(user).setDevelopersFilter(any(Filter.class));
+        verify(p2PService).addProtectedStorageEntry(any(Filter.class));
+        verify(p2PService, never()).removeData(any(Filter.class));
     }
 
     @Test
