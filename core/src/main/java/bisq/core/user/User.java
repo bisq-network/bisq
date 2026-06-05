@@ -363,11 +363,11 @@ public class User implements PersistedDataHost {
     }
 
     public void setDevelopersFilter(@Nullable Filter developersFilter) {
+        // Always reset preimage lists so we never retain stale plaintext that no longer matches the published hash list.
+        // Callers that publish with preimage data must use the 3-arg overload.
         userPayload.setDevelopersFilter(developersFilter);
-        if (developersFilter == null) {
-            userPayload.setDevelopersFilterBannedPaymentAccountPreimages(new ArrayList<>());
-            userPayload.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(new ArrayList<>());
-        }
+        userPayload.setDevelopersFilterBannedPaymentAccountPreimages(new ArrayList<>());
+        userPayload.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(new ArrayList<>());
         requestPersistence();
     }
 
