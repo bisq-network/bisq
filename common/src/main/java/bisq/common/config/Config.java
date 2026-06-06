@@ -467,10 +467,11 @@ public class Config {
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> ignoreDevMsgOpt =
-                parser.accepts(IGNORE_DEV_MSG, "If set to true all signed " +
-                                "network_messages from bisq developers are ignored (Global " +
-                                "alert, Version update alert, Filters for offers, nodes or " +
-                                "trading account data)")
+                parser.accepts(IGNORE_DEV_MSG, "If set to true signed developer alert " +
+                                "messages (Global alert, Version update alert, private " +
+                                "notifications) are ignored. Use --ignoreNetworkFilter to " +
+                                "ignore signed network filters and --ignoreDenyList to " +
+                                "ignore the bundled deny-list resource.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
