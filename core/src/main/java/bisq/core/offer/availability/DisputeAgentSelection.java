@@ -20,10 +20,14 @@ package bisq.core.offer.availability;
 import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.core.support.dispute.agent.DisputeAgentManager;
 
+import bisq.network.p2p.NodeAddress;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +47,26 @@ public class DisputeAgentSelection {
 
     public static boolean hasAvailableDisputeAgent(DisputeAgentManager<? extends DisputeAgent> disputeAgentManager) {
         return !disputeAgentManager.getObservableMap().isEmpty();
+    }
+
+    public static <T extends DisputeAgent> boolean hasAvailableAcceptedDisputeAgent(
+            List<NodeAddress> acceptedNodeAddresses,
+            DisputeAgentManager<T> disputeAgentManager) {
+        return acceptedNodeAddresses != null &&
+                acceptedNodeAddresses.stream().anyMatch(nodeAddress -> disputeAgentManager.getObservableMap().containsKey(nodeAddress));
+    }
+
+    public static <T extends DisputeAgent> T getRandomAcceptedMediator(List<NodeAddress> acceptedNodeAddresses,
+                                                                       DisputeAgentManager<T> disputeAgentManager) {
+        List<T> acceptedDisputeAgents = acceptedNodeAddresses == null ? List.of() :
+                acceptedNodeAddresses.stream()
+                        .map(disputeAgentManager.getObservableMap()::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(acceptedDisputeAgents);
+        Optional<T> optionalDisputeAgent = acceptedDisputeAgents.stream().findFirst();
+        checkArgument(optionalDisputeAgent.isPresent(), "No accepted mediator available for offer");
+        return optionalDisputeAgent.get();
     }
 
     private static <T extends DisputeAgent> T getRandomDisputeAgent(DisputeAgentManager<T> disputeAgentManager) {

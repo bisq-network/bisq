@@ -22,17 +22,11 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
-import bisq.core.support.dispute.agent.DisputeAgent;
-import bisq.core.support.dispute.agent.DisputeAgentManager;
-
-import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
-
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -113,16 +107,11 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
 
     static void checkDisputeAgentAvailability(Offer offer, PlaceOfferModel model) {
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
-        checkArgument(hasAvailableAcceptedDisputeAgent(offerPayload.getMediatorNodeAddresses(), model.getMediatorManager()),
+        checkArgument(DisputeAgentSelection.hasAvailableAcceptedDisputeAgent(
+                        offerPayload.getMediatorNodeAddresses(), model.getMediatorManager()),
                 Res.get("validation.error.noAcceptedMediatorForOffer"));
         checkArgument(DisputeAgentSelection.hasAvailableDisputeAgent(model.getRefundAgentManager()),
                 Res.get("validation.error.noRefundAgentForOffer"));
-    }
-
-    static boolean hasAvailableAcceptedDisputeAgent(List<NodeAddress> acceptedNodeAddresses,
-                                                    DisputeAgentManager<? extends DisputeAgent> disputeAgentManager) {
-        return acceptedNodeAddresses != null &&
-                acceptedNodeAddresses.stream().anyMatch(nodeAddress -> disputeAgentManager.getObservableMap().containsKey(nodeAddress));
     }
 
     public static void checkCoinNotNullOrZero(Coin value, String name) {
