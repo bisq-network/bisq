@@ -3,11 +3,7 @@ package bisq.gradle.packaging
 import bisq.gradle.packaging.jpackage.JPackageAppConfig
 import bisq.gradle.packaging.jpackage.JPackageConfig
 import bisq.gradle.packaging.jpackage.PackageFactory
-import bisq.gradle.packaging.jpackage.package_formats.JPackagePackageFormatConfigs
-import bisq.gradle.packaging.jpackage.package_formats.LinuxPackages
-import bisq.gradle.packaging.jpackage.package_formats.MacPackage
-import bisq.gradle.packaging.jpackage.package_formats.PackageFormat
-import bisq.gradle.packaging.jpackage.package_formats.WindowsPackage
+import bisq.gradle.packaging.jpackage.package_formats.*
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
@@ -44,12 +40,19 @@ abstract class JPackageTask : DefaultTask() {
     abstract val outputDirectory: DirectoryProperty
 
     @TaskAction
-    fun run() {
+    open fun run() {
         val jPackagePath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jpackage")
+        val jPackageConfig = createJPackageConfig()
+
+        val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
+        packageFactory.createPackages()
+    }
+
+    fun createJPackageConfig(): JPackageConfig {
         val outputDirectoryFile = outputDirectory.asFile.get()
         deleteExistingInstallerArtifacts(outputDirectoryFile)
 
-        val jPackageConfig = JPackageConfig(
+        return JPackageConfig(
             inputDirPath = distDirFile.get().toPath().resolve("lib"),
             outputDirPath = outputDirectoryFile.toPath(),
             jPackageTempDirPath = outputDirectoryFile.toPath().resolve("jpackage_temp"),
@@ -62,28 +65,25 @@ abstract class JPackageTask : DefaultTask() {
                 jvmArgs = jvmArgs.get()
             ),
 
-            packageFormatConfigs = getPackageFormatConfigs()
+            packageFormatConfigs = computePackageFormatConfigs()
         )
-
-        val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
-        packageFactory.createPackages()
     }
 
     private fun deleteExistingInstallerArtifacts(outputDirectoryFile: File) {
         outputDirectoryFile.mkdirs()
         val installerExtensions = PackageFormat.values()
-                .map { it.fileExtension }
-                .toSet()
+            .map { it.fileExtension }
+            .toSet()
         outputDirectoryFile.listFiles()
-                ?.filter { it.isFile && it.extension.lowercase() in installerExtensions }
-                ?.forEach { installerArtifact ->
-                    if (!installerArtifact.delete()) {
-                        throw GradleException("Failed to delete stale installer artifact: ${installerArtifact.absolutePath}")
-                    }
+            ?.filter { it.isFile && it.extension.lowercase() in installerExtensions }
+            ?.forEach { installerArtifact ->
+                if (!installerArtifact.delete()) {
+                    throw GradleException("Failed to delete stale installer artifact: ${installerArtifact.absolutePath}")
                 }
+            }
     }
 
-    private fun getPackageFormatConfigs(): JPackagePackageFormatConfigs {
+    fun computePackageFormatConfigs(): JPackagePackageFormatConfigs {
         val packagePath = packageResourcesDir.asFile.get().toPath()
         return when (getOS()) {
             OS.WINDOWS -> {

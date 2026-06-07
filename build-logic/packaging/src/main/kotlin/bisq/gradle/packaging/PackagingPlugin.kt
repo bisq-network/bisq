@@ -29,20 +29,30 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val javaApplicationExtension = project.extensions.findByType<JavaApplication>()
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
-        project.tasks.register<JPackageTask>("generateInstallers") {
-            jdkDirectory.set(getProjectJdkDirectory(project))
-            distDirFile.set(installDistTask.map { it.destinationDir })
-            mainJarFile.set(jarTask.flatMap { it.archiveFile })
+        val jPackageTaskConfiguration = jPackageTaskConfiguration(installDistTask, jarTask, javaApplicationExtension)
 
-            mainClassName.set(javaApplicationExtension.mainClass)
-            jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
-            appVersion.set(APP_VERSION)
+        project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
+        project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
+        project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+    }
 
-            val packageResourcesDirFile = File(project.projectDir, "package")
-            packageResourcesDir.set(packageResourcesDirFile)
+    private fun jPackageTaskConfiguration(
+        installDistTask: TaskProvider<Sync>,
+        jarTask: TaskProvider<Jar>,
+        javaApplicationExtension: JavaApplication
+    ): JPackageTask.() -> Unit = {
+        jdkDirectory.set(getProjectJdkDirectory(project))
+        distDirFile.set(installDistTask.map { it.destinationDir })
+        mainJarFile.set(jarTask.flatMap { it.archiveFile })
 
-            outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
-        }
+        mainClassName.set(javaApplicationExtension.mainClass)
+        jvmArgs.set(javaApplicationExtension.applicationDefaultJvmArgs)
+        appVersion.set(APP_VERSION)
+
+        val packageResourcesDirFile = File(project.projectDir, "package")
+        packageResourcesDir.set(packageResourcesDirFile)
+
+        outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
     }
 
     private fun getProjectJdkDirectory(project: Project): Provider<Directory> {
