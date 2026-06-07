@@ -186,7 +186,7 @@ message OfferAvailabilityResponse {
     AvailabilityResult availability_result = 2;
     repeated int32 supported_capabilities = 3;
     string uid = 4;
-    NodeAddress arbitrator = 5;
+    NodeAddress arbitrator = 5 [deprecated = true];
     NodeAddress mediator = 6;
     NodeAddress refund_agent = 7;
 }
@@ -598,7 +598,7 @@ message SealedAndSigned {
 message StoragePayload {
     oneof message {
         Alert alert = 1;
-        Arbitrator arbitrator = 2;
+        Arbitrator arbitrator = 2 [deprecated = true];
         Mediator mediator = 3;
         Filter filter = 4;
 
@@ -739,7 +739,7 @@ message Filter {
     map<string, string> extra_data = 6 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
     repeated string banned_currencies = 7;
     repeated string banned_payment_methods = 8;
-    repeated string arbitrators = 9;
+    repeated string arbitrators = 9 [deprecated = true]; // Legacy arbitrator filters are ignored.
     repeated string seed_nodes = 10;
     repeated string price_relay_nodes = 11;
     bool prevent_public_btc_network = 12;
@@ -750,7 +750,8 @@ message Filter {
     repeated string mediators = 17;
     repeated string refundAgents = 18;
     repeated string bannedSignerPubKeys = 19;
-    repeated string btc_fee_receiver_addresses = 20;
+    reserved 20; // Formerly: repeated string btc_fee_receiver_addresses = 20;
+    reserved "btc_fee_receiver_addresses";
     int64 creation_date = 21;
     string signer_pub_key_as_hex = 22;
     repeated string bannedPrivilegedDevPubKeys = 23;
@@ -2026,6 +2027,8 @@ message UserPayload {
     RefundAgent registered_refund_agent = 15;
     map<string, string> cookie = 16;
     repeated SubAccountMapEntry sub_account_map_entries = 17;
+    repeated PaymentAccountFilter developers_filter_banned_payment_account_preimages = 18;
+    repeated PaymentAccountFilter developers_filter_delayed_payout_payment_account_preimages = 19;
 }
 
 message SubAccountMapEntry {

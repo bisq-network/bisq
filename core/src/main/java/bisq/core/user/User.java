@@ -19,6 +19,7 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.filter.Filter;
+import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
@@ -48,6 +49,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -361,7 +363,26 @@ public class User implements PersistedDataHost {
     }
 
     public void setDevelopersFilter(@Nullable Filter developersFilter) {
+        // Always reset preimage lists so we never retain stale plaintext that no longer matches the published hash list.
+        // Callers that publish with preimage data must use the 3-arg overload.
         userPayload.setDevelopersFilter(developersFilter);
+        userPayload.setDevelopersFilterBannedPaymentAccountPreimages(new ArrayList<>());
+        userPayload.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(new ArrayList<>());
+        requestPersistence();
+    }
+
+    public void setDevelopersFilter(@Nullable Filter developersFilter,
+                                    @Nullable List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                                    @Nullable List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
+        List<PaymentAccountFilter> bannedPaymentAccountPreimagesCopy = bannedPaymentAccountPreimages == null ?
+                new ArrayList<>() :
+                new ArrayList<>(bannedPaymentAccountPreimages);
+        List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimagesCopy = delayedPayoutPaymentAccountPreimages == null ?
+                new ArrayList<>() :
+                new ArrayList<>(delayedPayoutPaymentAccountPreimages);
+        userPayload.setDevelopersFilter(developersFilter);
+        userPayload.setDevelopersFilterBannedPaymentAccountPreimages(bannedPaymentAccountPreimagesCopy);
+        userPayload.setDevelopersFilterDelayedPayoutPaymentAccountPreimages(delayedPayoutPaymentAccountPreimagesCopy);
         requestPersistence();
     }
 
@@ -495,6 +516,14 @@ public class User implements PersistedDataHost {
     @Nullable
     public Filter getDevelopersFilter() {
         return userPayload.getDevelopersFilter();
+    }
+
+    public List<PaymentAccountFilter> getDevelopersFilterBannedPaymentAccountPreimages() {
+        return userPayload.getDevelopersFilterBannedPaymentAccountPreimages();
+    }
+
+    public List<PaymentAccountFilter> getDevelopersFilterDelayedPayoutPaymentAccountPreimages() {
+        return userPayload.getDevelopersFilterDelayedPayoutPaymentAccountPreimages();
     }
 
     @Nullable

@@ -19,6 +19,7 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.filter.Filter;
+import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
@@ -91,6 +92,10 @@ public class UserPayload implements PersistableEnvelope {
     // mainAddress + accountIndex combinations.
     private Map<String, Set<PaymentAccount>> subAccountsById = new HashMap<>();
 
+    // Local-only plaintext preimages for developer filter editing. The network Filter stores only hashes.
+    private List<PaymentAccountFilter> developersFilterBannedPaymentAccountPreimages = new ArrayList<>();
+    private List<PaymentAccountFilter> developersFilterDelayedPayoutPaymentAccountPreimages = new ArrayList<>();
+
     public UserPayload() {
     }
 
@@ -111,6 +116,46 @@ public class UserPayload implements PersistableEnvelope {
                        List<RefundAgent> acceptedRefundAgents,
                        Cookie cookie,
                        Map<String, Set<PaymentAccount>> subAccountsById) {
+        this(accountId,
+                paymentAccounts,
+                currentPaymentAccount,
+                acceptedLanguageLocaleCodes,
+                developersAlert,
+                displayedAlert,
+                developersFilter,
+                registeredArbitrator,
+                registeredMediator,
+                acceptedArbitrators,
+                acceptedMediators,
+                priceAlertFilter,
+                marketAlertFilters,
+                registeredRefundAgent,
+                acceptedRefundAgents,
+                cookie,
+                subAccountsById,
+                new ArrayList<>(),
+                new ArrayList<>());
+    }
+
+    public UserPayload(String accountId,
+                       Set<PaymentAccount> paymentAccounts,
+                       PaymentAccount currentPaymentAccount,
+                       List<String> acceptedLanguageLocaleCodes,
+                       Alert developersAlert,
+                       Alert displayedAlert,
+                       Filter developersFilter,
+                       Arbitrator registeredArbitrator,
+                       Mediator registeredMediator,
+                       List<Arbitrator> acceptedArbitrators,
+                       List<Mediator> acceptedMediators,
+                       PriceAlertFilter priceAlertFilter,
+                       List<MarketAlertFilter> marketAlertFilters,
+                       RefundAgent registeredRefundAgent,
+                       List<RefundAgent> acceptedRefundAgents,
+                       Cookie cookie,
+                       Map<String, Set<PaymentAccount>> subAccountsById,
+                       List<PaymentAccountFilter> developersFilterBannedPaymentAccountPreimages,
+                       List<PaymentAccountFilter> developersFilterDelayedPayoutPaymentAccountPreimages) {
         this.accountId = accountId;
         this.paymentAccounts = paymentAccounts;
         this.currentPaymentAccount = currentPaymentAccount;
@@ -128,6 +173,8 @@ public class UserPayload implements PersistableEnvelope {
         this.acceptedRefundAgents = acceptedRefundAgents;
         this.cookie = cookie;
         this.subAccountsById = subAccountsById;
+        this.developersFilterBannedPaymentAccountPreimages = developersFilterBannedPaymentAccountPreimages;
+        this.developersFilterDelayedPayoutPaymentAccountPreimages = developersFilterDelayedPayoutPaymentAccountPreimages;
     }
 
     @Override
@@ -146,6 +193,14 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(displayedAlert -> builder.setDisplayedAlert(displayedAlert.toProtoMessage().getAlert()));
         Optional.ofNullable(developersFilter)
                 .ifPresent(developersFilter -> builder.setDevelopersFilter(developersFilter.toProtoMessage().getFilter()));
+        Optional.ofNullable(developersFilterBannedPaymentAccountPreimages)
+                .ifPresent(e -> builder.addAllDevelopersFilterBannedPaymentAccountPreimages(e.stream()
+                        .map(PaymentAccountFilter::toProtoMessage)
+                        .collect(Collectors.toList())));
+        Optional.ofNullable(developersFilterDelayedPayoutPaymentAccountPreimages)
+                .ifPresent(e -> builder.addAllDevelopersFilterDelayedPayoutPaymentAccountPreimages(e.stream()
+                        .map(PaymentAccountFilter::toProtoMessage)
+                        .collect(Collectors.toList())));
         Optional.ofNullable(registeredArbitrator)
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
@@ -215,7 +270,13 @@ public class UserPayload implements PersistableEnvelope {
                         .map(RefundAgent::fromProto)
                         .collect(Collectors.toList())),
                 Cookie.fromProto(proto.getCookieMap()),
-                subAccounts
+                subAccounts,
+                proto.getDevelopersFilterBannedPaymentAccountPreimagesList().stream()
+                        .map(PaymentAccountFilter::fromProto)
+                        .collect(Collectors.toList()),
+                proto.getDevelopersFilterDelayedPayoutPaymentAccountPreimagesList().stream()
+                        .map(PaymentAccountFilter::fromProto)
+                        .collect(Collectors.toList())
         );
     }
 }

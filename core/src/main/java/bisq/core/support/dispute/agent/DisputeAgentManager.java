@@ -213,6 +213,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                 })
                 .collect(Collectors.toMap(DisputeAgent::getNodeAddress, Function.identity()));
 
+        clearAcceptedDisputeAgentsAtUser();
         observableMap.putAll(filtered);
         observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
     }

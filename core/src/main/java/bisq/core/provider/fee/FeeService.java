@@ -20,13 +20,16 @@ package bisq.core.provider.fee;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.DenyList;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.util.Validator;
 
 import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import javafx.beans.property.IntegerProperty;
@@ -51,7 +54,7 @@ public class FeeService {
     static final long BTC_MAX_TX_FEE = 600;
     private static DaoStateService daoStateService;
     private static PeriodService periodService;
-    private static FilterManager filterManager = null;
+    private static FilterPolicyService filterPolicyService = null;
 
     private static Coin getFeeFromParamAsCoin(Param param) {
         // if specified, filter values take precedence
@@ -63,19 +66,19 @@ public class FeeService {
     }
 
     private static Coin getFilterFromParamAsCoin(Param param) {
-        Coin filterVal = Coin.ZERO;
-        if (filterManager != null && filterManager.getFilter() != null) {
-            if (param == Param.DEFAULT_MAKER_FEE_BTC) {
-                filterVal = Coin.valueOf(filterManager.getFilter().getMakerFeeBtc());
-            } else if (param == Param.DEFAULT_TAKER_FEE_BTC) {
-                filterVal = Coin.valueOf(filterManager.getFilter().getTakerFeeBtc());
-            } else if (param == Param.DEFAULT_MAKER_FEE_BSQ) {
-                filterVal = Coin.valueOf(filterManager.getFilter().getMakerFeeBsq());
-            } else if (param == Param.DEFAULT_TAKER_FEE_BSQ) {
-                filterVal = Coin.valueOf(filterManager.getFilter().getTakerFeeBsq());
-            }
+        if (filterPolicyService == null) {
+            return Coin.ZERO;
         }
-        return filterVal;
+        if (param == Param.DEFAULT_MAKER_FEE_BTC) {
+            return filterPolicyService.getFeeFromFilter(true, true).orElse(Coin.ZERO);
+        } else if (param == Param.DEFAULT_TAKER_FEE_BTC) {
+            return filterPolicyService.getFeeFromFilter(false, true).orElse(Coin.ZERO);
+        } else if (param == Param.DEFAULT_MAKER_FEE_BSQ) {
+            return filterPolicyService.getFeeFromFilter(true, false).orElse(Coin.ZERO);
+        } else if (param == Param.DEFAULT_TAKER_FEE_BSQ) {
+            return filterPolicyService.getFeeFromFilter(false, false).orElse(Coin.ZERO);
+        }
+        return Coin.ZERO;
     }
 
     public static Coin getMakerFeePerBtc(boolean currencyForFeeIsBtc) {
@@ -122,9 +125,22 @@ public class FeeService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized(FilterManager providedFilterManager) {
-        filterManager = providedFilterManager;
+    public void onAllServicesInitialized() {
         minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+    }
+
+    public void onAllServicesInitialized(FilterPolicyService providedFilterPolicyService) {
+        filterPolicyService = providedFilterPolicyService;
+        onAllServicesInitialized();
+    }
+
+    // Test-only: wraps a FilterManager in a FilterPolicyService backed by an empty DenyList so existing
+    // tests can pass a mock without constructing the full policy graph. Production code uses the
+    // FilterPolicyService overload above.
+    @VisibleForTesting
+    public void onAllServicesInitialized(FilterManager providedFilterManager) {
+        filterPolicyService = new FilterPolicyService(DenyList.empty(), providedFilterManager);
+        onAllServicesInitialized();
     }
 
 

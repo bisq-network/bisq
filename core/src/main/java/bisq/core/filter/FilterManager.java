@@ -71,8 +71,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import java.lang.reflect.Method;
-
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -105,10 +103,11 @@ public class FilterManager {
     private final KeyRing keyRing;
     private final User user;
     private final Preferences preferences;
+    private final DenyList denyList;
     private final ConfigFileEditor configFileEditor;
     private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
     private final PriceFeedService priceFeedService;
-    private final boolean ignoreDevMsg;
+    private final boolean ignoreNetworkFilter;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private final List<String> publicKeys;
@@ -126,20 +125,22 @@ public class FilterManager {
                          KeyRing keyRing,
                          User user,
                          Preferences preferences,
+                         DenyList denyList,
                          Config config,
                          PriceFeedNodeAddressProvider priceFeedNodeAddressProvider,
                          BanFilter banFilter,
                          PriceFeedService priceFeedService,
-                         @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
+                         @Named(Config.IGNORE_NETWORK_FILTER) boolean ignoreNetworkFilter,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
         this.preferences = preferences;
+        this.denyList = denyList;
         this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
         this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
         this.priceFeedService = priceFeedService;
-        this.ignoreDevMsg = ignoreDevMsg;
+        this.ignoreNetworkFilter = ignoreNetworkFilter;
 
         publicKeys = useDevPrivilegeKeys ?
                 DevEnv.getDevPrivilegePubKeys() :
@@ -156,7 +157,8 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        if (ignoreDevMsg) {
+        if (ignoreNetworkFilter) {
+            clearBannedNodes();
             return;
         }
 
@@ -299,6 +301,13 @@ public class FilterManager {
     }
 
     public boolean addDevFilter(Filter filterWithoutSig, String privKeyString) {
+        return addDevFilter(filterWithoutSig, privKeyString, List.of(), List.of());
+    }
+
+    public boolean addDevFilter(Filter filterWithoutSig,
+                                String privKeyString,
+                                List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                                List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
         if (!isFilterValidForAdd(filterWithoutSig)) {
             return false;
         }
@@ -306,7 +315,7 @@ public class FilterManager {
         setFilterSigningKey(privKeyString);
         String signatureAsBase64 = getSignature(filterWithoutSig);
         Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
-        user.setDevelopersFilter(filterWithSig);
+        user.setDevelopersFilter(filterWithSig, bannedPaymentAccountPreimages, delayedPayoutPaymentAccountPreimages);
 
         p2PService.addProtectedStorageEntry(filterWithSig);
 
@@ -418,6 +427,14 @@ public class FilterManager {
         return user.getDevelopersFilter();
     }
 
+    public List<PaymentAccountFilter> getDevFilterBannedPaymentAccountPreimages() {
+        return user.getDevelopersFilterBannedPaymentAccountPreimages();
+    }
+
+    public List<PaymentAccountFilter> getDevFilterDelayedPayoutPaymentAccountPreimages() {
+        return user.getDevelopersFilterDelayedPayoutPaymentAccountPreimages();
+    }
+
     public PublicKey getOwnerPubKey() {
         return keyRing.getSignatureKeyPair().getPublic();
     }
@@ -459,9 +476,14 @@ public class FilterManager {
     }
 
     public boolean isNodeAddressBannedFromNetwork(NodeAddress nodeAddress) {
-        return getFilter() != null &&
-                getFilter().getNodeAddressesBannedFromNetwork().stream()
-                        .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
+        if (nodeAddress == null) {
+            return false;
+        }
+        String fullAddress = nodeAddress.getFullAddress();
+        return denyList.getNodeAddressesBannedFromNetwork().contains(fullAddress) ||
+                (getFilter() != null &&
+                        getFilter().getNodeAddressesBannedFromNetwork().stream()
+                                .anyMatch(e -> e.equals(fullAddress)));
     }
 
     public boolean isAutoConfExplorerBanned(String address) {
@@ -502,36 +524,16 @@ public class FilterManager {
         return getFilter() != null &&
                 paymentAccountPayload != null &&
                 getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(paymentAccountPayload.getPaymentMethodId()))
-                        .anyMatch(paymentAccountFilter -> {
-                            try {
-                                Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                // We invoke getter methods (no args), e.g. getHolderName
-                                String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
-                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
-                            } catch (Throwable e) {
-                                log.error(e.getMessage());
-                                return false;
-                            }
-                        });
+                        .anyMatch(paymentAccountFilter ->
+                                PaymentAccountFilterMatcher.matches(paymentAccountPayload, paymentAccountFilter));
     }
 
     public boolean isDelayedPayoutPaymentAccount(PaymentAccountPayload paymentAccountPayload) {
         return getFilter() != null &&
                 paymentAccountPayload != null &&
                 getFilter().getDelayedPayoutPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(paymentAccountPayload.getPaymentMethodId()))
-                        .anyMatch(paymentAccountFilter -> {
-                            try {
-                                Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
-                                // We invoke getter methods (no args), e.g. getHolderName
-                                String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
-                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
-                            } catch (Throwable e) {
-                                log.error(e.getMessage());
-                                return false;
-                            }
-                        });
+                        .anyMatch(paymentAccountFilter ->
+                                PaymentAccountFilterMatcher.matches(paymentAccountPayload, paymentAccountFilter));
     }
 
     public boolean isWitnessSignerPubKeyBanned(String witnessSignerPubKeyAsHex) {

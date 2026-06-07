@@ -24,6 +24,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.BanFilter;
 import bisq.network.p2p.storage.P2PDataStorage;
 
@@ -34,12 +35,20 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.Security;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.io.File;
+import java.io.IOException;
+
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mockito.MockedStatic;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,6 +63,28 @@ public class FilterManagerInitializationTests {
     }
 
     @Test
+    void networkBansIncludeDenyListBeforeNetworkFilterArrives() {
+        Properties properties = new Properties();
+        properties.setProperty("nodeAddressesBannedFromNetwork", "blocked.onion:9999");
+        var filterManager = new FilterManager(
+                mock(P2PService.class),
+                mock(KeyRing.class),
+                mock(User.class),
+                mock(Preferences.class),
+                DenyList.fromProperties(properties),
+                mock(Config.class),
+                mock(PriceFeedNodeAddressProvider.class),
+                mock(BanFilter.class),
+                mock(PriceFeedService.class),
+                false,
+                true
+        );
+
+        assertTrue(filterManager.isNodeAddressBannedFromNetwork(new NodeAddress("blocked.onion:9999")));
+        assertFalse(filterManager.isNodeAddressBannedFromNetwork(new NodeAddress("allowed.onion:9999")));
+    }
+
+    @Test
     void onAllServicesInitializedNoFilterMainnet() {
         P2PService p2PService = mock(P2PService.class);
         var filterManager = new FilterManager(
@@ -61,6 +92,7 @@ public class FilterManagerInitializationTests {
                 mock(KeyRing.class),
                 mock(User.class),
                 mock(Preferences.class),
+                DenyList.empty(),
                 mock(Config.class),
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
@@ -93,14 +125,27 @@ public class FilterManagerInitializationTests {
     }
 
     @Test
-    void onAllServicesInitializedNoFilterMainnetIgnoreDevMsg() {
+    void onAllServicesInitializedNoFilterMainnetIgnoreNetworkFilter(@TempDir Path tmpDir) throws IOException {
         P2PService p2PService = mock(P2PService.class);
+        Config config = mock(Config.class);
+        Path configFilePath = tmpDir.resolve("configFile");
+        File configFile = configFilePath.toFile();
+        Files.writeString(configFilePath,
+                "bannedBtcNodes=btc.onion:8333\n" +
+                        "filterProvidedBtcNodes=provided-btc.onion:8333\n" +
+                        "bannedSeedNodes=seed.onion:9999\n" +
+                        "filterProvidedSeedNodes=provided-seed.onion:9999\n" +
+                        "bannedPriceRelayNodes=price\n" +
+                        "otherOption=keep\n");
+        doReturn(configFile).when(config).getConfigFile();
+
         var filterManager = new FilterManager(
                 p2PService,
                 mock(KeyRing.class),
                 mock(User.class),
                 mock(Preferences.class),
-                mock(Config.class),
+                DenyList.empty(),
+                config,
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
@@ -108,26 +153,18 @@ public class FilterManagerInitializationTests {
                 true
         );
 
-        var p2pStorageMap = new HashMap<>();
-        P2PDataStorage p2pDataStorage = mock(P2PDataStorage.class);
-
-        doReturn(p2pStorageMap).when(p2pDataStorage).getMap();
-        doReturn(p2pDataStorage).when(p2PService).getP2PDataStorage();
-
         final var warningHandlerTriggered = new AtomicBoolean();
-        try (MockedStatic<Res> mocked = mockStatic(Res.class)) {
-            mocked.when(() -> Res.get("popup.warning.noFilter"))
-                    .thenReturn("No filter.");
+        filterManager.setFilterWarningHandler(errorMessage -> warningHandlerTriggered.set(true));
 
-            filterManager.setFilterWarningHandler(errorMessage -> {
-                if (errorMessage.equals(Res.get("popup.warning.noFilter"))) {
-                    warningHandlerTriggered.set(true);
-                }
-            });
-
-            filterManager.onAllServicesInitialized();
-        }
+        filterManager.onAllServicesInitialized();
 
         assertFalse(warningHandlerTriggered.get());
+        String configContent = Files.readString(configFilePath);
+        assertFalse(configContent.contains("bannedBtcNodes"));
+        assertFalse(configContent.contains("filterProvidedBtcNodes"));
+        assertFalse(configContent.contains("bannedSeedNodes"));
+        assertFalse(configContent.contains("filterProvidedSeedNodes"));
+        assertFalse(configContent.contains("bannedPriceRelayNodes"));
+        assertTrue(configContent.contains("otherOption=keep"));
     }
 }

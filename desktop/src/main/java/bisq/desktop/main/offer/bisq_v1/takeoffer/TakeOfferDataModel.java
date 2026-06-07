@@ -30,7 +30,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -94,7 +94,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private final User user;
     private final FeeService feeService;
     private final MempoolService mempoolService;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     final Preferences preferences;
     private final TxFeeEstimationService txFeeEstimationService;
     private final PriceFeedService priceFeedService;
@@ -138,7 +138,7 @@ class TakeOfferDataModel extends OfferDataModel {
                        BsqWalletService bsqWalletService,
                        User user, FeeService feeService,
                        MempoolService mempoolService,
-                       FilterManager filterManager,
+                       FilterPolicyService filterPolicyService,
                        Preferences preferences,
                        TxFeeEstimationService txFeeEstimationService,
                        PriceFeedService priceFeedService,
@@ -154,7 +154,7 @@ class TakeOfferDataModel extends OfferDataModel {
         this.user = user;
         this.feeService = feeService;
         this.mempoolService = mempoolService;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.preferences = preferences;
         this.txFeeEstimationService = txFeeEstimationService;
         this.priceFeedService = priceFeedService;
@@ -314,15 +314,15 @@ class TakeOfferDataModel extends OfferDataModel {
         if (isBuyOffer())
             fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
 
-        if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
+        if (filterPolicyService.isCurrencyBanned(offer.getCurrencyCode())) {
             new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
-        } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
+        } else if (filterPolicyService.isPaymentMethodBanned(offer.getPaymentMethod())) {
             new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
-        } else if (filterManager.isOfferIdBanned(offer.getId())) {
+        } else if (filterPolicyService.isOfferIdBanned(offer.getId())) {
             new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
-        } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
+        } else if (filterPolicyService.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
-        } else if (filterManager.requireUpdateToNewVersionForTrading()) {
+        } else if (filterPolicyService.requireUpdateToNewVersionForTrading()) {
             new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
             new Popup().warning(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade")).show();

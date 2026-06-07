@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Deprecated
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter

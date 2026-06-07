@@ -16,9 +16,13 @@
 #
 # Env overrides:
 #   GRADLE         path to gradle wrapper (default: ./gradlew)
-#   TEST_PATTERN   junit pattern (default: bisq.apitest.dao.*)
-#   GLOBAL_TIMEOUT_SECS  hard ceiling for whole run (default: 1800)
+#   TEST_PATTERN   junit pattern (default: bisq.apitest.method.* bisq.apitest.dao.*)
+#   GLOBAL_TIMEOUT_SECS  hard ceiling for whole run (default: 3600)
 #   READY_TIMEOUT_SECS   per-daemon readiness wait (default: 300)
+#   RUN_POLICY_E2E_TESTS  run deny-list policy phases after the main suite (default: true)
+#   POLICY_DENY_LIST_RESOURCE  classpath fixture for policy phases
+#   BITCOIND_RPC_HOST_PORT  host port published for bitcoind RPC (default: 18443)
+#   BITCOIND_P2P_HOST_PORT  host port published for bitcoind P2P (default: 18444)
 
 set -euo pipefail
 
@@ -37,6 +41,8 @@ TEST_PATTERN="${TEST_PATTERN:-bisq.apitest.method.* bisq.apitest.dao.*}"
 # while staying well under GitHub's 6h job cap. A trip now hard-fails (see TIMEOUT_MARKER).
 GLOBAL_TIMEOUT_SECS="${GLOBAL_TIMEOUT_SECS:-3600}"
 READY_TIMEOUT_SECS="${READY_TIMEOUT_SECS:-300}"
+RUN_POLICY_E2E_TESTS="${RUN_POLICY_E2E_TESTS:-true}"
+POLICY_DENY_LIST_RESOURCE="${POLICY_DENY_LIST_RESOURCE:-denylist/btc_regtest_e2e.denylist}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -47,7 +53,7 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 && -n "${2:-}" && "$2" != -* ]] \
           || { echo "[ERROR] --tests requires a non-empty pattern" >&2; exit 2; }
       TEST_PATTERN="$2"; shift 2 ;;
-    -h|--help)     sed -n '3,21p' "$0"; exit 0 ;;
+    -h|--help)     sed -n '3,/^$/p' "$0"; exit 0 ;;
     *) echo "[ERROR] unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -108,7 +114,7 @@ trap early_cleanup EXIT INT TERM HUP QUIT
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-bisq-e2e-tests}"
 
 # Host ports the stack binds. Keep in sync with dao-compose.yml.
-HOST_PORTS=(18443 9997 9998 9999)
+HOST_PORTS=("${BITCOIND_RPC_HOST_PORT:-18443}" "${BITCOIND_P2P_HOST_PORT:-18444}" 9997 9998 9999)
 BISQ_CONTAINERS=(seednode arb alice bob)
 ALL_CONTAINERS=(bitcoind "${BISQ_CONTAINERS[@]}")
 
@@ -467,9 +473,66 @@ if [[ ${#FRESH_STACK_TESTS_ARR[@]} -gt 0 ]]; then
   done
 fi
 
+run_policy_tests() {
+  local phase_name="$1"
+  local extra_args="$2"
+  local test_pattern="$3"
+
+  step "Resetting stack for ${phase_name}"
+  local old_extra_args="${BISQ_EXTRA_ARGS-}"
+  local had_extra_args=0
+  [[ -n "${BISQ_EXTRA_ARGS+x}" ]] && had_extra_args=1
+  export BISQ_EXTRA_ARGS="${extra_args}"
+  reset_stack
+  if [[ "${had_extra_args}" -eq 1 ]]; then
+    export BISQ_EXTRA_ARGS="${old_extra_args}"
+  else
+    unset BISQ_EXTRA_ARGS
+  fi
+
+  step "Running ${phase_name}: ${test_pattern}"
+  set +e
+  "${GRADLE}" --no-daemon :apitest:test \
+    --tests "${test_pattern}" \
+    "${JVM_PROPS[@]}"
+  local phase_exit=$?
+  set -e
+
+  if [[ -d "${REPO_ROOT}/apitest/build/reports/tests/test" ]]; then
+    mkdir -p "${REPO_ROOT}/apitest/build/reports/policy/${phase_name}"
+    cp -r "${REPO_ROOT}/apitest/build/reports/tests/test/." \
+      "${REPO_ROOT}/apitest/build/reports/policy/${phase_name}/" || true
+  fi
+  if [[ ${phase_exit} -ne 0 ]]; then
+    err "${phase_name} failed (exit ${phase_exit}); collecting logs"
+    mkdir -p "${LOGS_DIR}/policy/${phase_name}"
+    for c in "${ALL_CONTAINERS[@]}"; do
+      docker logs "$c" > "${LOGS_DIR}/policy/${phase_name}/${c}.log" 2>&1 || true
+    done
+    TEST_EXIT=${phase_exit}
+  fi
+}
+
+if [[ "${RUN_POLICY_E2E_TESTS}" == "true" ]]; then
+  run_policy_tests \
+    "deny-list-blocks" \
+    "--denyListResource=${POLICY_DENY_LIST_RESOURCE}" \
+    "bisq.apitest.policy.DenyListBlocksCreateOfferTest"
+
+  run_policy_tests \
+    "deny-list-ignored" \
+    "--denyListResource=${POLICY_DENY_LIST_RESOURCE} --ignoreDenyList=true" \
+    "bisq.apitest.policy.IgnoreDenyListAllowsCreateOfferTest"
+fi
+
 if [[ ${TEST_EXIT} -ne 0 ]]; then
   err "tests failed (exit ${TEST_EXIT}). Inspect:"
   err "  apitest/build/reports/tests/test/index.html"
+  err "  apitest/build/reports/tests/freshstack/"
+  err "  apitest/build/reports/policy/"
   err "  ${LOGS_DIR}/{alice,bob,arb,seednode,bitcoind}.log"
+  err "  ${LOGS_DIR}/freshstack/"
+  err "  ${LOGS_DIR}/policy/"
 fi
+
 exit ${TEST_EXIT}

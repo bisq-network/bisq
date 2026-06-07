@@ -20,12 +20,15 @@ package bisq.core.provider.mempool;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.filter.DenyList;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -50,7 +53,7 @@ public class TxValidator {
     private final static long BLOCK_TOLERANCE = 599999;  // allow really old offers with weird fee addresses
 
     private final DaoStateService daoStateService;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private long feePaymentBlockHeight; // applicable to maker and taker fees
     private FeeValidationStatus status;
     private final String txId;
@@ -61,28 +64,46 @@ public class TxValidator {
     @Setter
     private String jsonTxt;
 
+    // Test-only constructor. Production code should pass FilterPolicyService directly so deny-list policy applies.
+    @VisibleForTesting
     public TxValidator(DaoStateService daoStateService,
                        String txId,
                        Coin amount,
                        boolean isFeeCurrencyBtc,
                        long feePaymentBlockHeight,
                        FilterManager filterManager) {
+        this(daoStateService, txId, amount, isFeeCurrencyBtc, feePaymentBlockHeight,
+                new FilterPolicyService(DenyList.empty(), filterManager));
+    }
+
+    public TxValidator(DaoStateService daoStateService,
+                       String txId,
+                       Coin amount,
+                       boolean isFeeCurrencyBtc,
+                       long feePaymentBlockHeight,
+                       FilterPolicyService filterPolicyService) {
         this.daoStateService = daoStateService;
         this.txId = txId;
         this.amount = amount;
         this.isFeeCurrencyBtc = isFeeCurrencyBtc;
         this.feePaymentBlockHeight = feePaymentBlockHeight;
         this.chainHeight = (long) daoStateService.getChainHeight();
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.jsonTxt = "";
         this.status = FeeValidationStatus.NOT_CHECKED_YET;
     }
 
+    // Test-only constructor. Production code should pass FilterPolicyService directly so deny-list policy applies.
+    @VisibleForTesting
     public TxValidator(DaoStateService daoStateService, String txId, FilterManager filterManager) {
+        this(daoStateService, txId, new FilterPolicyService(DenyList.empty(), filterManager));
+    }
+
+    public TxValidator(DaoStateService daoStateService, String txId, FilterPolicyService filterPolicyService) {
         this.daoStateService = daoStateService;
         this.txId = txId;
         this.chainHeight = (long) daoStateService.getChainHeight();
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.jsonTxt = "";
         this.status = FeeValidationStatus.NOT_CHECKED_YET;
     }
@@ -435,21 +456,7 @@ public class TxValidator {
     }
 
     private Optional<Coin> getFeeFromFilter(boolean isMaker, boolean isBtcFee) {
-        return Optional.ofNullable(filterManager.getFilter())
-                .map(filter -> {
-                    Coin value;
-                    if (isMaker) {
-                        value = isBtcFee ?
-                                Coin.valueOf(filter.getMakerFeeBtc()) :
-                                Coin.valueOf(filter.getMakerFeeBsq());
-                    } else {
-                        value = isBtcFee ?
-                                Coin.valueOf(filter.getTakerFeeBtc()) :
-                                Coin.valueOf(filter.getTakerFeeBsq());
-                    }
-                    return value;
-                })
-                .filter(Coin::isPositive);
+        return filterPolicyService.getFeeFromFilter(isMaker, isBtcFee);
     }
 
     private boolean testWithFeeFromFilter(Coin tradeAmount,

@@ -18,6 +18,7 @@
 package bisq.core.btc.nodes;
 
 import bisq.core.btc.nodes.BtcNodes.BtcNode;
+import bisq.core.filter.DenyList;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
@@ -25,6 +26,7 @@ import bisq.common.util.Utilities;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -37,13 +39,23 @@ public class BtcNodesSetupPreferences {
     private final Preferences preferences;
     private final int numConnectionsForBtc;
     private final Config config;
+    private final DenyList denyList;
 
     public BtcNodesSetupPreferences(Preferences preferences,
                                     int numConnectionsForBtc,
                                     Config config) {
+        this(preferences, numConnectionsForBtc, config, DenyList.empty());
+    }
+
+    public BtcNodesSetupPreferences(Preferences preferences,
+                                    int numConnectionsForBtc,
+                                    Config config,
+                                    DenyList denyList) {
         this.preferences = preferences;
         this.numConnectionsForBtc = numConnectionsForBtc;
         this.config = config;
+        Objects.requireNonNull(denyList, "denyList must not be null");
+        this.denyList = denyList;
     }
 
     public List<BtcNode> selectPreferredNodes(BtcNodes btcNodes) {
@@ -68,8 +80,14 @@ public class BtcNodesSetupPreferences {
             case PROVIDED:
             default:
                 Stream<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes().stream();
-                Stream<String> filterProvidedBtcNodes = config.filterProvidedBtcNodes.stream();
-                Stream<String> bannedBtcNodes = config.bannedBtcNodes.stream();
+                // --ignoreNetworkFilter only skips signed-filter sources; --ignoreDenyList controls the static
+                // deny-list and is honored by DenyList itself, which returns an empty list when set.
+                Stream<String> filterProvidedBtcNodes = config.ignoreNetworkFilter ?
+                        Stream.empty() :
+                        config.filterProvidedBtcNodes.stream();
+                Stream<String> persistedBannedBtcNodes = config.bannedBtcNodes.stream();
+                Stream<String> deniedBtcNodes = denyList.getBannedBtcNodes().stream();
+                Stream<String> bannedBtcNodes = Stream.concat(persistedBannedBtcNodes, deniedBtcNodes);
                 result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, filterProvidedBtcNodes, bannedBtcNodes);
                 break;
         }

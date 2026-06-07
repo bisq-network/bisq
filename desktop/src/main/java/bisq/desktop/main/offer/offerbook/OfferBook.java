@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer.offerbook;
 
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.offer.OfferRestrictions;
@@ -59,6 +60,7 @@ public class OfferBook {
     private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
     private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
     private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final InvalidationListener priceFeedServiceUpdateListener;
 
 
@@ -67,16 +69,20 @@ public class OfferBook {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBook(OfferBookService offerBookService, FilterManager filterManager, PriceFeedService priceFeedService) {
+    OfferBook(OfferBookService offerBookService,
+              FilterManager filterManager,
+              FilterPolicyService filterPolicyService,
+              PriceFeedService priceFeedService) {
         this.offerBookService = offerBookService;
         this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
 
         // Re-evaluate on every price feed update (not just the first one).
         // Otherwise offers in currencies whose market price arrived after the first tick
         // would never be pruned, and stale state could survive feed recovery.
         priceFeedServiceUpdateListener = observable -> {
             List<OfferBookListItem> toRemove = offerBookListItems.stream()
-                    .filter(item -> !filterManager.isPriceInBounds(item.getOffer()))
+                    .filter(item -> !filterPolicyService.isPriceInBounds(item.getOffer()))
                     .collect(Collectors.toList());
             if (!toRemove.isEmpty()) {
                 toRemove.forEach(offerBookListItems::remove);
@@ -93,12 +99,12 @@ public class OfferBook {
                 // We filter here to only add new offers if the same offer (using equals) was not already added and it
                 // is not banned.
 
-                if (filterManager.isOfferIdBanned(offer.getId())) {
+                if (filterPolicyService.isOfferIdBanned(offer.getId())) {
                     log.debug("Ignored banned offer. ID={}", offer.getId());
                     return;
                 }
 
-                if (offer.isBsqSwapOffer() && !filterManager.isProofOfWorkValid(offer)) {
+                if (offer.isBsqSwapOffer() && !filterPolicyService.isProofOfWorkValid(offer)) {
                     log.info("Proof of work of offer with id {} is not valid.", offer.getId());
                     return;
                 }
@@ -148,7 +154,7 @@ public class OfferBook {
     private void onProofOfWorkDifficultyChanged() {
         List<OfferBookListItem> toRemove = offerBookListItems.stream()
                 .filter(item -> item.getOffer().isBsqSwapOffer())
-                .filter(item -> !filterManager.isProofOfWorkValid(item.getOffer()))
+                .filter(item -> !filterPolicyService.isProofOfWorkValid(item.getOffer()))
                 .collect(Collectors.toList());
         toRemove.forEach(offerBookListItems::remove);
     }
@@ -240,7 +246,7 @@ public class OfferBook {
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
                     .filter(this::isOfferAllowed)
-                    .filter(offer -> !offer.isBsqSwapOffer() || filterManager.isProofOfWorkValid(offer))
+                    .filter(offer -> !offer.isBsqSwapOffer() || filterPolicyService.isProofOfWorkValid(offer))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
@@ -274,11 +280,11 @@ public class OfferBook {
     }
 
     private boolean isOfferAllowed(Offer offer) {
-        if (!filterManager.isPriceInBounds(offer)) {
+        if (!filterPolicyService.isPriceInBounds(offer)) {
             return false;
         }
-        boolean isBanned = filterManager.isOfferIdBanned(offer.getId())
-                || filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
+        boolean isBanned = filterPolicyService.isOfferIdBanned(offer.getId())
+                || filterPolicyService.isNodeAddressBanned(offer.getMakerNodeAddress());
         boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()
                 || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
         return !isBanned && isV3NodeAddressCompliant;

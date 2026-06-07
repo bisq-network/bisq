@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
@@ -228,6 +229,10 @@ public class BsqSwapProtocolModel implements ProtocolModel<BsqSwapTradePeer> {
 
     public FilterManager getFilterManager() {
         return provider.getFilterManager();
+    }
+
+    public FilterPolicyService getFilterPolicyService() {
+        return provider.getFilterPolicyService();
     }
 
     public OpenOfferManager getOpenOfferManager() {

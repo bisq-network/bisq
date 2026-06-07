@@ -17,7 +17,6 @@
 
 package bisq.core.support.dispute.arbitration.arbitrator;
 
-import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.agent.DisputeAgentService;
 
 import bisq.network.p2p.NodeAddress;
@@ -27,17 +26,17 @@ import com.google.inject.Singleton;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Deprecated
 @Singleton
 public class ArbitratorService extends DisputeAgentService<Arbitrator> {
     @Inject
-    public ArbitratorService(P2PService p2PService, FilterManager filterManager) {
-        super(p2PService, filterManager);
+    public ArbitratorService(P2PService p2PService) {
+        super(p2PService);
     }
 
     @Override
@@ -52,7 +51,7 @@ public class ArbitratorService extends DisputeAgentService<Arbitrator> {
 
     @Override
     protected List<String> getDisputeAgentsFromFilter() {
-        return filterManager.getFilter() != null ? filterManager.getFilter().getArbitrators() : new ArrayList<>();
+        return List.of();
     }
 
     public Map<NodeAddress, Arbitrator> getArbitrators() {

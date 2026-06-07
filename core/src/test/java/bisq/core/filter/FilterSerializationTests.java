@@ -66,14 +66,14 @@ public class FilterSerializationTests {
 
     @Test
     void serializeForHashIncludesFormerExcludedFields() {
-        Filter filterWithoutSig = TestFilter.createFilter(ownerPublicKey, signerPubKeyAsHex);
+        Filter filterWithoutSig = MockFilterFactory.createFilter(ownerPublicKey, signerPubKeyAsHex);
 
         assertArrayEquals(filterWithoutSig.serialize(), filterWithoutSig.serializeForHash());
     }
 
     @Test
     void serializeHandlesNullOwnerPubKeyBytes() {
-        Filter filter = TestFilter.createFilter(null,
+        Filter filter = MockFilterFactory.createFilter(null,
                 signerPubKeyAsHex,
                 1_700_000_000_000L,
                 List.of(),
@@ -91,7 +91,7 @@ public class FilterSerializationTests {
 
     @Test
     void fromProtoPreservesNetworkBanOrderForSignedHash() {
-        Filter signedFilter = TestFilter.createSignedFilterWithNodeLists(ownerPublicKey,
+        Filter signedFilter = MockFilterFactory.createSignedFilterWithNodeLists(ownerPublicKey,
                 signerKey,
                 1_700_000_000_000L,
                 List.of(),
@@ -111,12 +111,24 @@ public class FilterSerializationTests {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
+    void fromProtoDropsDeprecatedArbitrators() {
+        protobuf.Filter proto = protobuf.Filter.newBuilder()
+                .addArbitrators("legacy-arbitrator.onion:9999")
+                .build();
+
+        Filter roundTrippedFilter = Filter.fromProto(proto);
+
+        assertTrue(roundTrippedFilter.toProtoMessage().getFilter().getArbitratorsList().isEmpty());
+    }
+
+    @Test
     void constructorDefensivelyCopiesSignedState() {
         byte[] ownerPubKeyBytes = ownerPublicKey.getEncoded();
         byte[] originalOwnerPubKeyBytes = ownerPubKeyBytes.clone();
         List<String> addedBtcNodes = new ArrayList<>(List.of("btc1.onion:8333"));
 
-        Filter filter = TestFilter.createFilter(ownerPubKeyBytes,
+        Filter filter = MockFilterFactory.createFilter(ownerPubKeyBytes,
                 signerPubKeyAsHex,
                 1_700_000_000_000L,
                 List.of(),

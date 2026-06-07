@@ -61,7 +61,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
     private final List<String> bannedCurrencies;
     private final List<String> bannedPaymentMethods;
-    private final List<String> arbitrators;
     private final List<String> seedNodes;
     private final List<String> priceRelayNodes;
     private final boolean preventPublicBtcNetwork;
@@ -83,8 +82,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<String> refundAgents;
 
     private final List<String> bannedAccountWitnessSignerPubKeys;
-
-    private final List<String> btcFeeReceiverAddresses;
 
     private final long creationDate;
 
@@ -137,7 +134,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getBannedPaymentAccounts(),
                 filter.getBannedCurrencies(),
                 filter.getBannedPaymentMethods(),
-                filter.getArbitrators(),
                 filter.getSeedNodes(),
                 filter.getPriceRelayNodes(),
                 filter.isPreventPublicBtcNetwork(),
@@ -148,7 +144,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getMediators(),
                 filter.getRefundAgents(),
                 filter.getBannedAccountWitnessSignerPubKeys(),
-                filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
                 signatureAsBase64,
@@ -180,7 +175,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getBannedPaymentAccounts(),
                 filter.getBannedCurrencies(),
                 filter.getBannedPaymentMethods(),
-                filter.getArbitrators(),
                 filter.getSeedNodes(),
                 filter.getPriceRelayNodes(),
                 filter.isPreventPublicBtcNetwork(),
@@ -191,7 +185,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getMediators(),
                 filter.getRefundAgents(),
                 filter.getBannedAccountWitnessSignerPubKeys(),
-                filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
                 null,
@@ -221,7 +214,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<PaymentAccountFilter> bannedPaymentAccounts,
                   List<String> bannedCurrencies,
                   List<String> bannedPaymentMethods,
-                  List<String> arbitrators,
                   List<String> seedNodes,
                   List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
@@ -232,7 +224,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
-                  List<String> btcFeeReceiverAddresses,
                   PublicKey ownerPubKey,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
@@ -258,7 +249,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 bannedPaymentAccounts,
                 bannedCurrencies,
                 bannedPaymentMethods,
-                arbitrators,
                 seedNodes,
                 priceRelayNodes,
                 preventPublicBtcNetwork,
@@ -269,7 +259,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 mediators,
                 refundAgents,
                 bannedAccountWitnessSignerPubKeys,
-                btcFeeReceiverAddresses,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 System.currentTimeMillis(),
                 null,
@@ -305,7 +294,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<PaymentAccountFilter> bannedPaymentAccounts,
                   List<String> bannedCurrencies,
                   List<String> bannedPaymentMethods,
-                  List<String> arbitrators,
                   List<String> seedNodes,
                   List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
@@ -316,7 +304,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
-                  List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
                   @Nullable String signatureAsBase64,
@@ -344,7 +331,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.bannedPaymentAccounts = copyList(bannedPaymentAccounts);
         this.bannedCurrencies = copyList(bannedCurrencies);
         this.bannedPaymentMethods = copyList(bannedPaymentMethods);
-        this.arbitrators = copyList(arbitrators);
         this.seedNodes = copyList(seedNodes);
         this.priceRelayNodes = copyList(priceRelayNodes);
         this.preventPublicBtcNetwork = preventPublicBtcNetwork;
@@ -355,7 +341,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.mediators = copyList(mediators);
         this.refundAgents = copyList(refundAgents);
         this.bannedAccountWitnessSignerPubKeys = copyList(bannedAccountWitnessSignerPubKeys);
-        this.btcFeeReceiverAddresses = copyList(btcFeeReceiverAddresses);
         this.ownerPubKeyBytes = ownerPubKeyBytes == null ? null : ownerPubKeyBytes.clone();
         this.creationDate = creationDate;
         this.signatureAsBase64 = signatureAsBase64;
@@ -423,7 +408,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .addAllBannedCurrencies(bannedCurrencies)
                 .addAllBannedPaymentMethods(bannedPaymentMethods)
-                .addAllArbitrators(arbitrators)
                 .addAllSeedNodes(seedNodes)
                 .addAllPriceRelayNodes(priceRelayNodes)
                 .setPreventPublicBtcNetwork(preventPublicBtcNetwork)
@@ -434,7 +418,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllMediators(mediators)
                 .addAllRefundAgents(refundAgents)
                 .addAllBannedSignerPubKeys(bannedAccountWitnessSignerPubKeys)
-                .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
                 .setCreationDate(creationDate)
                 .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys)
@@ -485,7 +468,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 bannedPaymentAccountsList,
                 ProtoUtil.protocolStringListToList(proto.getBannedCurrenciesList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedPaymentMethodsList()),
-                ProtoUtil.protocolStringListToList(proto.getArbitratorsList()),
                 ProtoUtil.protocolStringListToList(proto.getSeedNodesList()),
                 ProtoUtil.protocolStringListToList(proto.getPriceRelayNodesList()),
                 proto.getPreventPublicBtcNetwork(),
@@ -496,7 +478,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getMediatorsList()),
                 ProtoUtil.protocolStringListToList(proto.getRefundAgentsList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedSignerPubKeysList()),
-                ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
                 ownerPubKeyBytes,
                 proto.getCreationDate(),
                 proto.getSignatureAsBase64(),
@@ -553,7 +534,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     bannedPaymentAccounts=" + bannedPaymentAccounts +
                 ",\n     bannedCurrencies=" + bannedCurrencies +
                 ",\n     bannedPaymentMethods=" + bannedPaymentMethods +
-                ",\n     arbitrators=" + arbitrators +
                 ",\n     seedNodes=" + seedNodes +
                 ",\n     priceRelayNodes=" + priceRelayNodes +
                 ",\n     preventPublicBtcNetwork=" + preventPublicBtcNetwork +
@@ -567,7 +547,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     mediators=" + mediators +
                 ",\n     refundAgents=" + refundAgents +
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
-                ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     ownerPubKey=" + Hex.encode(ownerPubKeyBytes) +
                 ",\n     disableAutoConf=" + disableAutoConf +

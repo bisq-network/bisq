@@ -34,6 +34,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+@Deprecated
 @Slf4j
 @Singleton
 public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {

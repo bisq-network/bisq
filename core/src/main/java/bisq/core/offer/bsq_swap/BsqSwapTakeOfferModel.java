@@ -19,7 +19,7 @@ package bisq.core.offer.bsq_swap;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BsqSwapTakeOfferModel extends BsqSwapOfferModel {
     private final TradeManager tradeManager;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     @Getter
     private Offer offer;
 
@@ -55,10 +55,10 @@ public class BsqSwapTakeOfferModel extends BsqSwapOfferModel {
                                  BsqWalletService bsqWalletService,
                                  FeeService feeService,
                                  TradeManager tradeManager,
-                                 FilterManager filterManager) {
+                                 FilterPolicyService filterPolicyService) {
         super(offerUtil, btcWalletService, bsqWalletService, feeService);
         this.tradeManager = tradeManager;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
     }
 
 
@@ -100,17 +100,17 @@ public class BsqSwapTakeOfferModel extends BsqSwapOfferModel {
                             ErrorMessageHandler warningHandler,
                             ErrorMessageHandler errorHandler,
                             boolean isTakerApiUser) {
-        if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
+        if (filterPolicyService.isCurrencyBanned(offer.getCurrencyCode())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.currencyBanned"));
-        } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
+        } else if (filterPolicyService.isPaymentMethodBanned(offer.getPaymentMethod())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.paymentMethodBanned"));
-        } else if (filterManager.isOfferIdBanned(offer.getId())) {
+        } else if (filterPolicyService.isOfferIdBanned(offer.getId())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.offerBlocked"));
-        } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
+        } else if (filterPolicyService.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.nodeBlocked"));
-        } else if (filterManager.isBsqSwapDisabled()) {
+        } else if (filterPolicyService.isBsqSwapDisabled()) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.bsqSwapDisabled"));
-        } else if (filterManager.requireUpdateToNewVersionForTrading()) {
+        } else if (filterPolicyService.requireUpdateToNewVersionForTrading()) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.requireUpdateToNewVersion"));
         } else if (tradeManager.wasOfferAlreadyUsedInTrade(offer.getId())) {
             warningHandler.handleErrorMessage(Res.get("offerbook.warning.offerWasAlreadyUsedInTrade"));

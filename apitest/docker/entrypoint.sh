@@ -46,6 +46,11 @@ COMMON_ARGS=(
   --bitcoinRegtestHost=bitcoind
 )
 
+EXTRA_ARGS=()
+if [[ -n "${BISQ_EXTRA_ARGS:-}" ]]; then
+  read -r -a EXTRA_ARGS <<< "${BISQ_EXTRA_ARGS}"
+fi
+
 case "${ROLE}" in
   seednode|daemon) ;;
   *)
@@ -65,6 +70,7 @@ if [[ "${ROLE}" == "seednode" ]]; then
     --rpcPort=18443 \
     --rpcBlockNotificationPort="${RPC_BLOCK_NOTIFICATION_PORT}" \
     --rpcBlockNotificationHost=0.0.0.0 \
+    "${EXTRA_ARGS[@]}" \
     "$@"
 fi
 
@@ -127,4 +133,5 @@ fi
 exec /bisq/daemon/bin/daemon \
   "${COMMON_ARGS[@]}" \
   "${DAEMON_ARGS[@]}" \
+  "${EXTRA_ARGS[@]}" \
   "$@"

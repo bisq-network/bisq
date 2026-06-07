@@ -17,7 +17,7 @@
 
 package bisq.core.trade.txproof.xmr;
 
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
@@ -58,7 +58,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     private final Trade trade;
     private final AutoConfirmSettings autoConfirmSettings;
     private final MediationManager mediationManager;
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final RefundManager refundManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final boolean allowLanForHttpRequests;
@@ -83,7 +83,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
                                Trade trade,
                                AutoConfirmSettings autoConfirmSettings,
                                MediationManager mediationManager,
-                               FilterManager filterManager,
+                               FilterPolicyService filterPolicyService,
                                RefundManager refundManager,
                                boolean allowLanForHttpRequests,
                                boolean allowClearnetHttpRequests) {
@@ -91,7 +91,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         this.trade = trade;
         this.autoConfirmSettings = autoConfirmSettings;
         this.mediationManager = mediationManager;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         this.refundManager = refundManager;
         this.allowLanForHttpRequests = allowLanForHttpRequests;
         this.allowClearnetHttpRequests = allowClearnetHttpRequests;
@@ -153,7 +153,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
         // autoConfirmSettings at result parsing.
         List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses().stream()
                 .filter(address -> {
-                    if (filterManager.isAutoConfExplorerBanned(address)) {
+                    if (filterPolicyService.isAutoConfExplorerBanned(address)) {
                         log.warn("Filtered out auto-confirmation address: {}", address);
                         return false;  // #4683: filter for auto-confirm explorers
                     }

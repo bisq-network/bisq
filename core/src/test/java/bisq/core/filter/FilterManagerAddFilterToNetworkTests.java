@@ -70,6 +70,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -118,6 +119,7 @@ public class FilterManagerAddFilterToNetworkTests {
                 mock(KeyRing.class),
                 user,
                 mock(Preferences.class),
+                DenyList.empty(),
                 config,
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
@@ -132,10 +134,10 @@ public class FilterManagerAddFilterToNetworkTests {
         // There should exist no filter before we add our filter
         assertNull(filterManager.getFilter());
 
-        Filter filter = TestFilter.createFilter(ownerPublicKey, "invalidPubKeyAsHex");
+        Filter filter = MockFilterFactory.createFilter(ownerPublicKey, "invalidPubKeyAsHex");
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(filter)
+                MockFilterFactory.createProtectedStorageEntryForFilter(filter)
         );
 
         filterManager.onAllServicesInitialized();
@@ -149,10 +151,10 @@ public class FilterManagerAddFilterToNetworkTests {
         // No filter before adding our filter
         assertNull(filterManager.getFilter());
 
-        Filter filter = TestFilter.createFilter(ownerPublicKey, privilegedDevPubKeyHex);
+        Filter filter = MockFilterFactory.createFilter(ownerPublicKey, privilegedDevPubKeyHex);
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(filter)
+                MockFilterFactory.createProtectedStorageEntryForFilter(filter)
         );
 
         filterManager.onAllServicesInitialized();
@@ -166,10 +168,10 @@ public class FilterManagerAddFilterToNetworkTests {
         // No filter before adding our filter
         assertNull(filterManager.getFilter());
 
-        Filter filterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey);
+        Filter filterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey);
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(filterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -186,10 +188,10 @@ public class FilterManagerAddFilterToNetworkTests {
         assertNull(filterManager.getFilter());
 
         long creationTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1);
-        Filter filterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
+        Filter filterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(filterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -206,10 +208,10 @@ public class FilterManagerAddFilterToNetworkTests {
         assertNull(filterManager.getFilter());
 
         long creationTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(3);
-        Filter filterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
+        Filter filterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(filterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -223,7 +225,7 @@ public class FilterManagerAddFilterToNetworkTests {
         // No filter before adding our filter
         assertNull(filterManager.getFilter());
 
-        Filter filterWithSig = TestFilter.createSignedFilterWithNodeLists(ownerPublicKey,
+        Filter filterWithSig = MockFilterFactory.createSignedFilterWithNodeLists(ownerPublicKey,
                 privilegedDevEcKey,
                 System.currentTimeMillis(),
                 List.of("seed1.onion:8001\napiPassword=secret"),
@@ -234,7 +236,7 @@ public class FilterManagerAddFilterToNetworkTests {
                 List.of("seed2.onion:8002"));
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(filterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(filterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -245,7 +247,7 @@ public class FilterManagerAddFilterToNetworkTests {
 
     @Test
     void rejectDevFilterWithUnsafePersistedNodeListValueBeforePublishing() {
-        Filter filterWithoutSig = TestFilter.createFilterWithNodeLists(ownerPublicKey,
+        Filter filterWithoutSig = MockFilterFactory.createFilterWithNodeLists(ownerPublicKey,
                 privilegedDevPubKeyHex,
                 System.currentTimeMillis(),
                 List.of("seed1.onion:8001\napiPassword=secret"),
@@ -258,12 +260,13 @@ public class FilterManagerAddFilterToNetworkTests {
         assertFalse(filterManager.addDevFilter(filterWithoutSig, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
 
         verify(user, never()).setDevelopersFilter(any(Filter.class));
+        verify(user, never()).setDevelopersFilter(any(Filter.class), anyList(), anyList());
         verify(p2PService, never()).addProtectedStorageEntry(any(Filter.class));
     }
 
     @Test
     void addDevFilterSkipsInvalidFilterCleanupWhenOwnerPubKeyIsMissing() {
-        Filter invalidFilterWithoutOwnerPubKey = TestFilter.createFilter((byte[]) null,
+        Filter invalidFilterWithoutOwnerPubKey = MockFilterFactory.createFilter((byte[]) null,
                 privilegedDevPubKeyHex,
                 System.currentTimeMillis(),
                 List.of(),
@@ -273,13 +276,13 @@ public class FilterManagerAddFilterToNetworkTests {
                 List.of(),
                 List.of("btc1.onion:8333"),
                 List.of("seed1.onion:8001"));
-        Filter filterWithoutSig = TestFilter.createFilter(ownerPublicKey, privilegedDevPubKeyHex);
+        Filter filterWithoutSig = MockFilterFactory.createFilter(ownerPublicKey, privilegedDevPubKeyHex);
 
         filterManager.addToInvalidFilters(invalidFilterWithoutOwnerPubKey);
 
         assertTrue(filterManager.addDevFilter(filterWithoutSig, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
 
-        verify(user).setDevelopersFilter(any(Filter.class));
+        verify(user).setDevelopersFilter(any(Filter.class), anyList(), anyList());
         verify(p2PService).addProtectedStorageEntry(any(Filter.class));
         verify(p2PService, never()).removeData(any(Filter.class));
     }
@@ -290,15 +293,15 @@ public class FilterManagerAddFilterToNetworkTests {
         assertNull(filterManager.getFilter());
 
         long creationTime = System.currentTimeMillis();
-        Filter firstFilterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
-        Filter secondFilterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey,
+        Filter firstFilterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
+        Filter secondFilterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey,
                 creationTime + 100);
 
         assertNotEquals(firstFilterWithSig, secondFilterWithSig);
 
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(secondFilterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(secondFilterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -311,7 +314,7 @@ public class FilterManagerAddFilterToNetworkTests {
         p2pStorageMap.clear();
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(firstFilterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(firstFilterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -328,15 +331,15 @@ public class FilterManagerAddFilterToNetworkTests {
         assertNull(filterManager.getFilter());
 
         long creationTime = System.currentTimeMillis();
-        Filter firstFilterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
-        Filter secondFilterWithSig = TestFilter.createSignedFilter(ownerPublicKey, privilegedDevEcKey,
+        Filter firstFilterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey, creationTime);
+        Filter secondFilterWithSig = MockFilterFactory.createSignedFilter(ownerPublicKey, privilegedDevEcKey,
                 creationTime + 100);
 
         assertNotEquals(firstFilterWithSig, secondFilterWithSig);
 
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(firstFilterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(firstFilterWithSig)
         );
 
         filterManager.onAllServicesInitialized();
@@ -349,7 +352,7 @@ public class FilterManagerAddFilterToNetworkTests {
         p2pStorageMap.clear();
         p2pStorageMap.put(
                 new P2PDataStorage.ByteArray(new byte[100]),
-                TestFilter.createProtectedStorageEntryForFilter(secondFilterWithSig)
+                MockFilterFactory.createProtectedStorageEntryForFilter(secondFilterWithSig)
         );
 
         filterManager.onAllServicesInitialized();

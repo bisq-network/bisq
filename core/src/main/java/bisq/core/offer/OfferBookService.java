@@ -17,7 +17,7 @@
 
 package bisq.core.offer;
 
-import bisq.core.filter.FilterManager;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
@@ -65,7 +65,7 @@ public class OfferBookService {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
-    private final FilterManager filterManager;
+    private final FilterPolicyService filterPolicyService;
     private final JsonFileManager jsonFileManager;
 
 
@@ -76,12 +76,12 @@ public class OfferBookService {
     @Inject
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
-                            FilterManager filterManager,
+                            FilterPolicyService filterPolicyService,
                             @Named(Config.STORAGE_DIR) File storageDir,
                             @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
-        this.filterManager = filterManager;
+        this.filterPolicyService = filterPolicyService;
         jsonFileManager = new JsonFileManager(storageDir);
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
@@ -137,7 +137,7 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (filterManager.requireUpdateToNewVersionForTrading()) {
+        if (filterPolicyService.requireUpdateToNewVersionForTrading()) {
             errorMessageHandler.handleErrorMessage(Res.get("popup.warning.mandatoryUpdate.trading"));
             return;
         }
@@ -161,7 +161,7 @@ public class OfferBookService {
     public void refreshTTL(OfferPayloadBase offerPayloadBase,
                            ResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
-        if (filterManager.requireUpdateToNewVersionForTrading()) {
+        if (filterPolicyService.requireUpdateToNewVersionForTrading()) {
             errorMessageHandler.handleErrorMessage(Res.get("popup.warning.mandatoryUpdate.trading"));
             return;
         }
