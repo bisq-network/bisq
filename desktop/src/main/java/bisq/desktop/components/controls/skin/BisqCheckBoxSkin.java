@@ -50,7 +50,10 @@ public class BisqCheckBoxSkin extends CheckBoxSkin {
     private final DoubleProperty fillIntensity = new SimpleDoubleProperty(0);
     private Node mark;
     private Region box;
+    private final Region indeterminateMark = new Region();
     private Circle currentRipple;
+    private boolean applyingFill;
+    private final ChangeListener<Background> boxBackgroundListener;
     private final ChangeListener<Bounds> boxBoundsListener;
     private final javafx.event.EventHandler<MouseEvent> pressHandler;
     private final javafx.event.EventHandler<MouseEvent> releaseHandler;
@@ -66,7 +69,24 @@ public class BisqCheckBoxSkin extends CheckBoxSkin {
         rippleOverlay.setClip(clipShape);
         getChildren().add(rippleOverlay);
 
+        // Indeterminate state mark — a small filled square shown inside the box only while the
+        // checkbox is indeterminate. Styled via the ".jfx-check-box ... .indeterminate-mark" CSS.
+        // Installed into the box (a StackPane) in layoutChildren so it is centered automatically.
+        indeterminateMark.getStyleClass().add("indeterminate-mark");
+        indeterminateMark.setMouseTransparent(true);
+        indeterminateMark.visibleProperty().bind(control.indeterminateProperty());
+
         boxBoundsListener = (o, oldB, newB) -> syncOverlayToBox();
+
+        // CSS declares `-fx-background-color: transparent` on the box in every state, so any
+        // pseudo-class change (hover / armed / focused) re-runs CSS on the box and clobbers the
+        // inline green fill set in applyFillIntensity. Re-assert our fill whenever that happens.
+        // The applyingFill guard prevents the re-entrant set from looping.
+        boxBackgroundListener = (o, oldB, newB) -> {
+            if (!applyingFill) {
+                applyFillIntensity(fillIntensity.get());
+            }
+        };
 
         // Drive the box background from the fillIntensity property — single source of truth
         // for the green fill, animatable, no child overlay required.
@@ -105,7 +125,9 @@ public class BisqCheckBoxSkin extends CheckBoxSkin {
         }
         if (box != null) {
             box.boundsInParentProperty().removeListener(boxBoundsListener);
+            box.backgroundProperty().removeListener(boxBackgroundListener);
         }
+        indeterminateMark.visibleProperty().unbind();
         animation.stop();
         super.dispose();
     }
@@ -122,6 +144,10 @@ public class BisqCheckBoxSkin extends CheckBoxSkin {
             if (node instanceof Region rb) {
                 box = rb;
                 box.boundsInParentProperty().addListener(boxBoundsListener);
+                box.backgroundProperty().addListener(boxBackgroundListener);
+                if (box instanceof Pane bp && !bp.getChildren().contains(indeterminateMark)) {
+                    bp.getChildren().add(indeterminateMark);
+                }
                 applyFillIntensity(getSkinnable().isSelected() ? 1 : 0);
                 syncOverlayToBox();
             }
@@ -139,7 +165,9 @@ public class BisqCheckBoxSkin extends CheckBoxSkin {
         double clamped = Math.min(1, Math.max(0, a));
         Color fill = clamped <= 0 ? Color.TRANSPARENT
                 : Color.color(FILL_COLOR.getRed(), FILL_COLOR.getGreen(), FILL_COLOR.getBlue(), clamped);
+        applyingFill = true;
         box.setBackground(new Background(new BackgroundFill(fill, CornerRadii.EMPTY, Insets.EMPTY)));
+        applyingFill = false;
     }
 
     private void syncOverlayToBox() {

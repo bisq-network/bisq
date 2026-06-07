@@ -207,11 +207,6 @@
     -fx-underline: false;
 }
 
-.jfx-checkbox {
-    -jfx-checked-color: -bs-color-primary;
-    -fx-font-size: 0.692em;
-}
-
 .jfx-check-box .box,
 .jfx-check-box:indeterminate .box,
 .jfx-check-box:indeterminate:selected .box {
@@ -382,7 +377,8 @@ tree-table-view:focused {
     -jfx-unfocus-color: -bs-rd-error-red;
 }
 
-.jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label {
+.jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label,
+.jfx-combo-box .error-label {
     -fx-text-fill: -bs-rd-error-red;
     -fx-font-size: 0.692em;
     -fx-padding: -0.5em 0 0 0;

@@ -1,5 +1,6 @@
 package bisq.desktop.components.controls.skin;
 
+import bisq.desktop.components.controls.BisqJfxComboBox;
 import bisq.desktop.components.controls.LabelFloatable;
 
 import javafx.animation.Interpolator;
@@ -28,6 +29,7 @@ public class BisqComboBoxSkin<T> extends ComboBoxListViewSkin<T> {
     private final Region line = new Region();
     private final Region focusedLine = new Region();
     private final Label topLabel = new Label();
+    private final Label errorLabel = new Label();
     private final Timeline focusAnim = new Timeline();
     private final Timeline floatAnim = new Timeline();
     private final javafx.scene.transform.Scale promptScaleTransform =
@@ -66,7 +68,18 @@ public class BisqComboBoxSkin<T> extends ComboBoxListViewSkin<T> {
                         : combo.focusedProperty());
         topLabel.visibleProperty().bind(showTopLabel);
 
-        getChildren().addAll(line, focusedLine, topLabel);
+        // Error label below the combo, bound to BisqJfxComboBox.errorMessageProperty(). Unmanaged
+        // so it doesn't grow the combo's prefHeight (mirrors BisqTextFieldSkin).
+        errorLabel.getStyleClass().add("error-label");
+        errorLabel.setManaged(false);
+        errorLabel.setMouseTransparent(true);
+        errorLabel.setWrapText(true);
+        if (combo instanceof BisqJfxComboBox<?> bjcb) {
+            errorLabel.textProperty().bind(bjcb.errorMessageProperty());
+        }
+        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+
+        getChildren().addAll(line, focusedLine, topLabel, errorLabel);
 
         focusListener = (o, ov, nv) -> { animateFocus(); updateFloatAnim(); };
         valueListener = (o, ov, nv) -> updateFloatAnim();
@@ -101,6 +114,8 @@ public class BisqComboBoxSkin<T> extends ComboBoxListViewSkin<T> {
         topLabel.textProperty().unbind();
         topLabel.translateYProperty().unbind();
         topLabel.visibleProperty().unbind();
+        errorLabel.textProperty().unbind();
+        errorLabel.visibleProperty().unbind();
         showTopLabel.dispose();
         focusAnim.stop();
         floatAnim.stop();
@@ -136,14 +151,18 @@ public class BisqComboBoxSkin<T> extends ComboBoxListViewSkin<T> {
         super.layoutChildren(x, y, w, h);
         double cw = getSkinnable().getWidth();
         double ch = getSkinnable().getHeight();
-        double lineY = ch - LINE_HEIGHT;
-        line.resizeRelocate(0, lineY, cw, LINE_HEIGHT);
-        double focusedY = ch - FOCUSED_LINE_HEIGHT;
-        focusedLine.resizeRelocate(0, focusedY, cw, FOCUSED_LINE_HEIGHT);
+        // Lines sit at the combo's bottom edge (y = ch), matching jfoenix's PromptLinesWrapper
+        // and BisqTextFieldSkin, so the underline rests on the box's bottom border.
+        line.resizeRelocate(0, ch, cw, LINE_HEIGHT);
+        focusedLine.resizeRelocate(0, ch, cw, FOCUSED_LINE_HEIGHT);
         if (topLabel.isVisible()) {
             double labelH = topLabel.prefHeight(-1);
             // Idle position: vertically centered inside the combo (prompt position).
             topLabel.resizeRelocate(x, y + (h - labelH) / 2, w, labelH);
+        }
+        if (errorLabel.isVisible()) {
+            double errH = errorLabel.prefHeight(cw);
+            errorLabel.resizeRelocate(0, ch + 3, cw, errH);
         }
     }
 }

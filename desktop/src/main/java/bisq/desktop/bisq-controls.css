@@ -94,7 +94,8 @@
  * is actually visible. */
 .jfx-text-field .error-label,
 .jfx-password-field .error-label,
-.jfx-text-area .error-label {
+.jfx-text-area .error-label,
+.jfx-combo-box .error-label {
     -fx-padding: 0;
 }
 
@@ -274,7 +275,9 @@
 .jfx-check-box:hover > .box {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
-    -fx-border-color: -bs-color-gray-bbb;
+    /* -bs-color-gray-bbb (#d8d8d8 light) rendered too faint; use the shared input/line border
+       colour so the unchecked box reads clearly, matching jfoenix's darker default. */
+    -fx-border-color: -bs-color-gray-line;
 }
 
 .jfx-check-box:selected > .box,

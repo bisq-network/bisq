@@ -48,6 +48,7 @@ public class BisqTabPaneSkin extends SkinBase<TabPane> {
     private final StackPane contentArea = new StackPane();
     private final Region selectedLine = new Region();
     private final Timeline anim = new Timeline();
+    private final Rectangle paneClip = new Rectangle();
 
     private final ListChangeListener<Tab> tabsListener;
     private final ChangeListener<Tab> selectionListener;
@@ -70,6 +71,14 @@ public class BisqTabPaneSkin extends SkinBase<TabPane> {
 
         // Content first (below), then header (on top), then the slider line over the header.
         getChildren().addAll(contentArea, header, selectedLine);
+
+        // Clip the whole tab pane to its bounds (mirrors jfoenix's JFXTabPaneSkin). Combined with
+        // the computeMinHeight override below, this lets an ancestor shrink the pane: the content
+        // is clipped at the bottom instead of forcing the pane — and the surrounding chrome (main
+        // nav, sub-tabs) — taller than the window and scrolling it off-screen.
+        paneClip.widthProperty().bind(tabPane.widthProperty());
+        paneClip.heightProperty().bind(tabPane.heightProperty());
+        tabPane.setClip(paneClip);
 
         tabsListener = c -> {
             // (Un)wire content listeners on tabs added or removed.
@@ -268,6 +277,17 @@ public class BisqTabPaneSkin extends SkinBase<TabPane> {
     }
 
     @Override
+    protected double computeMinHeight(double width, double topInset, double rightInset,
+                                      double bottomInset, double leftInset) {
+        // Only the header is mandatory; the content is clipped (paneClip) when space is tight, so
+        // the pane can shrink to the header height. The default SkinBase implementation would add
+        // the content's (large) min height, making the pane unshrinkable and pushing surrounding
+        // chrome off-screen on resize.
+        double headerH = Math.max(header.prefHeight(width), 32);
+        return topInset + bottomInset + headerH;
+    }
+
+    @Override
     protected void layoutChildren(double x, double y, double w, double h) {
         double headerH = Math.max(header.prefHeight(w), 32);
         header.resizeRelocate(x, y, w, headerH);
@@ -286,6 +306,9 @@ public class BisqTabPaneSkin extends SkinBase<TabPane> {
     public void dispose() {
         TabPane tp = getSkinnable();
         if (tp != null) {
+            paneClip.widthProperty().unbind();
+            paneClip.heightProperty().unbind();
+            tp.setClip(null);
             tp.getTabs().removeListener(tabsListener);
             tp.getSelectionModel().selectedItemProperty().removeListener(selectionListener);
             tp.getSelectionModel().selectedItemProperty().removeListener(selectedClassListener);
