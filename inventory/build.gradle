@@ -33,7 +33,4 @@ dependencies {
     }
 
     implementation libs.spark.core
-    implementation libs.pushy
-    implementation libs.commons.codec
-    implementation libs.grpc.auth
 }

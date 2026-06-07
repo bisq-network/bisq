@@ -88,10 +88,7 @@ dependencies {
     compileOnly libs.lombok
     implementation libs.logback.classic
     implementation libs.logback.core
-    implementation libs.google.gson
-    implementation libs.google.guava
     implementation libs.jopt
-    implementation libs.apache.commons.lang3
     implementation libs.slf4j.api
     implementation(libs.bitcoinj) {
         exclude(module: 'bcprov-jdk15on')
