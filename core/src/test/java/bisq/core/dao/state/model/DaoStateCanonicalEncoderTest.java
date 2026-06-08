@@ -46,6 +46,9 @@ class DaoStateCanonicalEncoderTest {
     private static final List<String> KEYS = IntStream.range(0, 40)
             .mapToObj(i -> String.format("k%02d", i))
             .collect(Collectors.toList());
+    private static final List<String> TX_OUTPUT_KEY_TREE_MAP_ORDER = KEYS.stream()
+            .map(key -> key + ":0")
+            .collect(Collectors.toList());
     private static final List<String> JAVA_11_HASH_MAP_ORDER = List.of(
             "k31", "k30", "k11", "k33", "k10", "k32", "k13", "k35", "k12", "k34",
             "k15", "k37", "k14", "k36", "k17", "k39", "k16", "k38", "k19", "k18",
@@ -95,6 +98,33 @@ class DaoStateCanonicalEncoderTest {
     }
 
     @Test
+    void serializesNormalDaoStateMapsInTreeMapOrder() {
+        DaoState daoState = getDaoStateWithMaps();
+
+        protobuf.DaoState proto = DaoState.getBsqStateCloneExcludingBlocks(daoState);
+
+        assertEquals(KEYS, new ArrayList<>(proto.getIssuanceMapMap().keySet()));
+        assertEquals(TX_OUTPUT_KEY_TREE_MAP_ORDER,
+                new ArrayList<>(proto.getUnspentTxOutputMapMap().keySet()));
+        assertEquals(TX_OUTPUT_KEY_TREE_MAP_ORDER,
+                new ArrayList<>(proto.getSpentInfoMapMap().keySet()));
+    }
+
+    @Test
+    void serializesFullDaoStateMapsInTreeMapOrder() {
+        DaoState daoState = getDaoStateWithMaps();
+
+        protobuf.DaoState proto = (protobuf.DaoState) daoState.toProtoMessage();
+
+        assertEquals(2, proto.getBlocksCount());
+        assertEquals(KEYS, new ArrayList<>(proto.getIssuanceMapMap().keySet()));
+        assertEquals(TX_OUTPUT_KEY_TREE_MAP_ORDER,
+                new ArrayList<>(proto.getUnspentTxOutputMapMap().keySet()));
+        assertEquals(TX_OUTPUT_KEY_TREE_MAP_ORDER,
+                new ArrayList<>(proto.getSpentInfoMapMap().keySet()));
+    }
+
+    @Test
     void serializesDaoStateMapsInJava11HashMapIterationOrder() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 
@@ -105,6 +135,37 @@ class DaoStateCanonicalEncoderTest {
                 new ArrayList<>(proto.getUnspentTxOutputMapMap().keySet()));
         assertEquals(JAVA_11_TX_OUTPUT_KEY_HASH_MAP_ORDER,
                 new ArrayList<>(proto.getSpentInfoMapMap().keySet()));
+    }
+
+    @Test
+    void serializesLegacyDaoStateMapsInJava11HashMapIterationOrder() throws Exception {
+        DaoState daoState = getDaoStateWithMaps();
+
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChainLegacy());
+
+        assertEquals(JAVA_11_HASH_MAP_ORDER, new ArrayList<>(proto.getIssuanceMapMap().keySet()));
+        assertEquals(JAVA_11_TX_OUTPUT_KEY_HASH_MAP_ORDER,
+                new ArrayList<>(proto.getUnspentTxOutputMapMap().keySet()));
+        assertEquals(JAVA_11_TX_OUTPUT_KEY_HASH_MAP_ORDER,
+                new ArrayList<>(proto.getSpentInfoMapMap().keySet()));
+    }
+
+    @Test
+    void serializesEmptyDaoStateCloneExcludingBlocksForGenesisResync() {
+        protobuf.DaoState proto = DaoState.getBsqStateCloneExcludingBlocks(new DaoState());
+
+        assertEquals(0, proto.getChainHeight());
+        assertEquals(0, proto.getBlocksCount());
+        assertEquals(0, proto.getCyclesCount());
+        assertEquals(0, proto.getUnspentTxOutputMapCount());
+        assertEquals(0, proto.getSpentInfoMapCount());
+        assertEquals(0, proto.getConfiscatedLockupTxListCount());
+        assertEquals(0, proto.getIssuanceMapCount());
+        assertEquals(0, proto.getParamChangeListCount());
+        assertEquals(0, proto.getEvaluatedProposalListCount());
+        assertEquals(0, proto.getDecryptedBallotsWithMeritsListCount());
+        assertArrayEquals(proto.toByteArray(),
+                DaoState.getBsqStateCloneExcludingBlocks(DaoState.fromProto(proto)).toByteArray());
     }
 
     @Test

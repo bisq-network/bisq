@@ -198,6 +198,38 @@ public class DaoState implements PersistablePayload, Canonical {
         builder.setChainHeight(chainHeight)
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
                 .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().toString(),
+                                e -> e.getValue().toProtoMessage(),
+                                DaoState::failOnDuplicateProtoMapKey,
+                                TreeMap::new)))
+                .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().toString(),
+                                entry -> entry.getValue().toProtoMessage(),
+                                DaoState::failOnDuplicateProtoMapKey,
+                                TreeMap::new)))
+                .addAllConfiscatedLockupTxList(confiscatedLockupTxList)
+                .putAllIssuanceMap(issuanceMap.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                entry -> entry.getValue().toProtoMessage(),
+                                DaoState::failOnDuplicateProtoMapKey,
+                                TreeMap::new)))
+                .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()))
+                .addAllEvaluatedProposalList(evaluatedProposalList.stream().map(EvaluatedProposal::toProtoMessage).collect(Collectors.toList()))
+                .addAllDecryptedBallotsWithMeritsList(decryptedBallotsWithMeritsList.stream().map(DecryptedBallotsWithMerits::toProtoMessage).collect(Collectors.toList()));
+        return builder;
+    }
+
+    private static <T> T failOnDuplicateProtoMapKey(T existing, T replacement) {
+        throw new IllegalStateException("Duplicate DAO state protobuf map key");
+    }
+
+    // Used by the optional legacy hash-chain serialization verification/dump path.
+    // It preserves the old Collectors.toMap order; normal persistence uses TreeMap order.
+    private protobuf.DaoState.Builder getLegacyBsqStateBuilderExcludingBlocks() {
+        protobuf.DaoState.Builder builder = protobuf.DaoState.newBuilder();
+        builder.setChainHeight(chainHeight)
+                .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
+                .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
                 .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().toString(), entry -> entry.getValue().toProtoMessage())))
@@ -266,7 +298,7 @@ public class DaoState implements PersistablePayload, Canonical {
     // Only present for verifying that legacy implementation results in same hash as
     // new canonical version.
     public byte[] getSerializedStateForHashChainLegacy() {
-        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage())
+        return getLegacyBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage())
                 .build().toByteArray();
     }
 
