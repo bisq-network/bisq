@@ -1,6 +1,6 @@
 # Protobuf Hash Use Cases
 
-Date: 2026-06-08
+Date: 2026-06-09
 
 ## Purpose
 
@@ -28,93 +28,17 @@ Bisq instead of depending on protobuf runtime serialization behavior.
 | Developer filter signature | `FilterManager` signs `Sha256Hash.of(filter.serializeForHash())` | `FilterManager`, `Filter`, `PaymentAccountFilter` | Migrated by adding canonical support for `double` and packed repeated `int32` fields, then adding canonical schemas for `Filter` and `PaymentAccountFilter` with protobuf parity tests. |
 | P2P protected storage keys and sequence signatures | `P2PDataStorage.get32ByteHash` hashes `NetworkPayload.serializeForHash()` and signs `DataAndSeqNrPair` hashes | `P2PDataStorage`, `DataAndSeqNrPair`, `ProtectedStorageEntry`, `ProtectedMailboxStorageEntry`, protected payload implementations | Migrated by adding a canonical `DataAndSeqNrPair` wrapper and schemas for the current `StoragePayload` variants: alert, dispute-agent, filter, mailbox, offer, and temp-proposal payloads. `DataAndSeqNrPair` intentionally delegates its payload field to `ProtectedStoragePayload.serializeForHash()`, so each storage payload owns its canonical hash preimage. |
 | Offer payload hashes | `OfferPayloadBase.getHash()` and `OfferPayload.getHash()` hash offer payload serialization | `OfferPayloadBase`, `OfferPayload`, `BsqSwapOfferPayload`, `OfferPayloadExtraDataMap`, `ProofOfWork`, `NodeAddress`, `PubKeyRing` | Migrated by adding canonical schemas for both offer storage wrappers and nested offer value types, preserving existing extra-data map iteration order with protobuf parity tests. |
-| Payment account contract hash | `PaymentAccountPayload.getHashForContract()` hashes payment account payload serialization | `PaymentAccountPayload` and all concrete payment-account payload subclasses | Not migrated in this change. This is a large oneof hierarchy and needs a complete schema set with contract-hash parity vectors. |
+| Payment account contract hash | `PaymentAccountPayload.getHashForContract()` hashes payment account payload serialization | `PaymentAccountPayload` and all concrete payment-account payload subclasses | Migrated by adding a complete payment-account canonical schema hierarchy. `getHashForContract()` now hashes `serializeForHash()`, and parity tests cover protobuf-loaded and locally-created payloads. |
 | Temp proposal protected payload | P2P storage hashes `TempProposalPayload.serializeForHash()` through protected storage | `TempProposalPayload`, `Proposal`, `P2PDataStorage` | Migrated by adding a canonical `TempProposalPayload` storage wrapper schema over the existing `Proposal` canonical schema. |
 
 ## Intentional Legacy Protobuf Fallbacks
 
 `Proto.serializeForHash()` and `ExcludeForHashAwareProto.serializeForHash()`
 return canonical bytes only when the object implements `Canonical`. The
-following hash preimage still intentionally uses legacy protobuf bytes until its
-complete object graph has schemas, protobuf parity vectors, and a compatibility
-plan for the affected signatures or identifiers.
-
-### Payment Account Contract Hashes
-
-`PaymentAccountPayload.getHashForContract()` still hashes legacy protobuf bytes
-for the complete payment-account hierarchy. This is not just storage-key
-compatibility: the hash is exchanged and checked during the trade protocol, so a
-partial migration would risk maker/taker contract-hash mismatches.
-
-The unmigrated hierarchy includes the abstract/wrapper classes
-`PaymentAccountPayload`, `CountryBasedPaymentAccountPayload`,
-`BankAccountPayload`, `IfscBasedAccountPayload`, and `AssetsAccountPayload`, plus
-these concrete payload classes:
-
-- `AchTransferAccountPayload`
-- `AdvancedCashAccountPayload`
-- `AliPayAccountPayload`
-- `AmazonGiftCardAccountPayload`
-- `AustraliaPayidAccountPayload`
-- `BizumAccountPayload`
-- `BsqSwapAccountPayload`
-- `CapitualAccountPayload`
-- `CashAppAccountPayload`
-- `CashByMailAccountPayload`
-- `CashDepositAccountPayload`
-- `CelPayAccountPayload`
-- `ChaseQuickPayAccountPayload`
-- `ClearXchangeAccountPayload`
-- `CryptoCurrencyAccountPayload`
-- `DomesticWireTransferAccountPayload`
-- `F2FAccountPayload`
-- `FasterPaymentsAccountPayload`
-- `HalCashAccountPayload`
-- `ImpsAccountPayload`
-- `InstantCryptoCurrencyPayload`
-- `InteracETransferAccountPayload`
-- `JapanBankAccountPayload`
-- `MercadoPagoAccountPayload`
-- `MoneyBeamAccountPayload`
-- `MoneyGramAccountPayload`
-- `MoneseAccountPayload`
-- `NationalBankAccountPayload`
-- `NeftAccountPayload`
-- `NequiAccountPayload`
-- `OKPayAccountPayload`
-- `PaxumAccountPayload`
-- `PayseraAccountPayload`
-- `PaytmAccountPayload`
-- `PerfectMoneyAccountPayload`
-- `PixAccountPayload`
-- `PopmoneyAccountPayload`
-- `PromptPayAccountPayload`
-- `RevolutAccountPayload`
-- `RtgsAccountPayload`
-- `SameBankAccountPayload`
-- `SatispayAccountPayload`
-- `SbpAccountPayload`
-- `SepaAccountPayload`
-- `SepaInstantAccountPayload`
-- `SpecificBanksAccountPayload`
-- `StrikeAccountPayload`
-- `SwiftAccountPayload`
-- `SwishAccountPayload`
-- `TikkieAccountPayload`
-- `TransferwiseAccountPayload`
-- `TransferwiseUsdAccountPayload`
-- `UpholdAccountPayload`
-- `UpiAccountPayload`
-- `USPostalMoneyOrderAccountPayload`
-- `VenmoAccountPayload`
-- `VerseAccountPayload`
-- `WeChatPayAccountPayload`
-- `WesternUnionAccountPayload`
-
-The migration blocker is the multi-level protobuf oneof shape, deprecated
-fields, and the `excludeFromJsonDataMap` salt/metadata map. Migrating this path
-should be done as one complete hierarchy with contract-hash parity vectors for
-each concrete payload type.
+current inventory has no known production `serializeForHash()` hash preimage
+that intentionally remains on the legacy protobuf fallback. Keep this section as
+the review point for future non-`Canonical` payloads before they are used in a
+signature, storage-key, contract-hash, or consensus-hash preimage.
 
 ## Adjacent Serialization-Sensitive Payloads
 
@@ -124,13 +48,21 @@ before a consensus hash is produced.
 
 ### Blind Vote Encrypted Plaintexts
 
-`BlindVoteConsensus.getEncryptedVotes()` serializes
-`VoteWithProposalTxIdList` with protobuf `serialize()`, encrypts those bytes,
-and `MyBlindVoteListService.getOpReturnData()` hashes the encrypted vote bytes
-for the blind-vote op-return commitment. `getEncryptedMeritList()` similarly
-serializes `MeritList` with protobuf before encryption; that ciphertext is then
-stored as `BlindVote.encryptedMeritList` and included as bytes in the canonical
-`BlindVote` hash preimage.
+`MyBlindVoteListService.getEncryptedVotes()` now serializes
+`VoteWithProposalTxIdList` with canonical `serializeForHash()`, optionally
+compares those bytes with the legacy protobuf bytes under
+`verifyBlindVoteEncryptedVotesSerialization`, and passes the canonical plaintext
+to `BlindVoteConsensus.getEncryptedVotes(byte[], SecretKey)`.
+`MyBlindVoteListService.getOpReturnData()` then hashes the encrypted vote bytes
+for the blind-vote op-return commitment.
+
+`BlindVoteConsensus.getEncryptedMeritList()` still serializes `MeritList` with
+protobuf `serialize()` before encryption. That ciphertext is stored as
+`BlindVote.encryptedMeritList` and included as bytes in the canonical
+`BlindVote` hash preimage. `MeritList` already implements `Canonical`, and vote
+result processing decrypts the bytes with `MeritConsensus.decryptMeritList()`
+and parses protobuf bytes, so this path should be migrated only after the same
+byte-identity and decrypt/parse guarantees are covered for the merit plaintext.
 
 This differs from the migration targets above because Bisq does not directly
 hash the protobuf plaintext. The hash preimage is ciphertext. Still, the
@@ -140,21 +72,17 @@ parsers. A naive switch from protobuf plaintext to canonical bytes would break
 decoding and could invalidate blind-vote commitments unless all affected peers
 agree on the new format.
 
-Recommended handling:
+Recommended handling for the remaining merit plaintext:
 
-- Do not change this path as part of the hash-preimage migration.
-- Treat any future change as a separate DAO/protocol compatibility change, not
-  as a local `serializeForHash()` migration.
-- Define a versioned encrypted plaintext format or envelope before changing the
-  plaintext bytes. The existing canonical encoder is one-way hash encoding, so
-  a migration needs an explicit decoder or another stable wire format, not just
-  `encodeCanonical()`.
-- Preserve legacy protobuf decoding for historical blind votes and old-cycle
-  reveals. Prefer an explicit version or activation signal over parse-fallback
-  ambiguity.
-- Add parity and compatibility vectors covering plaintext bytes, ciphertext,
-  op-return hash, decrypted parsing, and the resulting `BlindVote` canonical
-  hash before activation.
+- Add explicit canonical/protobuf byte parity tests for `MeritList` plaintext
+  cases used by blind votes.
+- Verify encrypted canonical merit plaintext still decrypts and parses through
+  `MeritConsensus.decryptMeritList()`.
+- Add a live verification switch, or generalize the existing blind-vote
+  plaintext verification switch, so resync can compare canonical and legacy
+  merit plaintext bytes before the encryption input is changed.
+- Preserve legacy protobuf parsing after decryption as long as canonical bytes
+  remain byte-identical to protobuf bytes for the supported plaintext shapes.
 
 ## Non-Protobuf Hashes
 
