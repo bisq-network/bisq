@@ -25,6 +25,8 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
 
 import com.google.protobuf.ByteString;
@@ -97,6 +99,27 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
                 ProtoUtil.stringOrNullFromProto(proto.getInfo()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<RefundAgent> PAYLOAD_SCHEMA =
+            DisputeAgent.<RefundAgent>getDisputeAgentSchemaBuilder()
+                    .string(7, refundAgent -> refundAgent.emailAddress)
+                    .string(8, refundAgent -> refundAgent.info)
+                    .build();
+
+    public static final CanonicalSchema<RefundAgent> SCHEMA =
+            CanonicalSchema.<RefundAgent>newBuilder()
+                    .oneof(9, refundAgent -> refundAgent, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

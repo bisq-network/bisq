@@ -22,6 +22,8 @@ import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
@@ -107,6 +109,29 @@ public final class Arbitrator extends DisputeAgent {
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
                 ProtoUtil.stringOrNullFromProto(proto.getInfo()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<Arbitrator> PAYLOAD_SCHEMA =
+            DisputeAgent.<Arbitrator>getDisputeAgentSchemaBuilder()
+                    .bytes(7, arbitrator -> arbitrator.btcPubKey)
+                    .string(8, arbitrator -> arbitrator.btcAddress)
+                    .string(9, arbitrator -> arbitrator.emailAddress)
+                    .string(10, arbitrator -> arbitrator.info)
+                    .build();
+
+    public static final CanonicalSchema<Arbitrator> SCHEMA =
+            CanonicalSchema.<Arbitrator>newBuilder()
+                    .oneof(2, arbitrator -> arbitrator, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

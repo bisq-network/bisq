@@ -22,6 +22,8 @@ import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
 
 import com.google.protobuf.ByteString;
@@ -91,6 +93,27 @@ public final class Mediator extends DisputeAgent {
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
                 ProtoUtil.stringOrNullFromProto(proto.getInfo()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<Mediator> PAYLOAD_SCHEMA =
+            DisputeAgent.<Mediator>getDisputeAgentSchemaBuilder()
+                    .string(7, mediator -> mediator.emailAddress)
+                    .string(8, mediator -> mediator.info)
+                    .build();
+
+    public static final CanonicalSchema<Mediator> SCHEMA =
+            CanonicalSchema.<Mediator>newBuilder()
+                    .oneof(3, mediator -> mediator, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

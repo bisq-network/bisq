@@ -22,6 +22,8 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.Utilities;
 
@@ -39,7 +41,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public abstract class DisputeAgent implements ProtectedStoragePayload, ExpirablePayload {
+public abstract class DisputeAgent implements ProtectedStoragePayload, ExpirablePayload, Canonical {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     protected final NodeAddress nodeAddress;
@@ -69,6 +71,21 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected static <T extends DisputeAgent> CanonicalSchema.Builder<T> getDisputeAgentSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                .compose(1, disputeAgent -> disputeAgent.nodeAddress, NodeAddress.SCHEMA)
+                .repeatedString(2, disputeAgent -> disputeAgent.languageCodes)
+                .int64(3, disputeAgent -> disputeAgent.registrationDate)
+                .string(4, disputeAgent -> disputeAgent.registrationSignature)
+                .bytes(5, disputeAgent -> disputeAgent.registrationPubKey)
+                .compose(6, disputeAgent -> disputeAgent.pubKeyRing, PubKeyRing.SCHEMA);
     }
 
 
