@@ -76,6 +76,61 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         });
     }
 
+    @Test
+    public void canonicalBytesMatchProtobufBytesForLocallyCreatedPayloads() {
+        // The existing matrix decodes every payload through fromProto, which always constructs
+        // PaymentAccountPayloadExcludeFromJsonMap with preserveInsertionOrder=true, hides the
+        // PaymentAccountPayload constructor's auto-salt logic and never exercises the default
+        // maxTradePeriod=-1. Build the payloads via the public Java constructors so the
+        // canonical schema is exercised against the LEGACY_HASHMAP_ORDER reorder and the
+        // signed-int64 default-trade-period path that producers actually emit on the wire.
+        locallyCreatedPayloads().forEach(named -> {
+            PaymentAccountPayload paymentAccountPayload = named.payload();
+            byte[] protobufBytes = paymentAccountPayload.toProtoMessage().toByteArray();
+
+            assertArrayEquals(protobufBytes,
+                    PaymentAccountPayloadCanonicalSchemas.encode(paymentAccountPayload, CanonicalEncoder.DEFAULT),
+                    named.name() + " canonical bytes");
+            assertArrayEquals(protobufBytes,
+                    paymentAccountPayload.serializeForHash(),
+                    named.name() + " serializeForHash bytes");
+            assertArrayEquals(Hash.getRipemd160hash(protobufBytes),
+                    paymentAccountPayload.getHashForContract(),
+                    named.name() + " contract hash");
+        });
+    }
+
+    private static List<NamedPayload> locallyCreatedPayloads() {
+        AliPayAccountPayload aliPayWithSaltOnly = new AliPayAccountPayload(PaymentMethod.ALI_PAY_ID, "local-ali-1");
+        aliPayWithSaltOnly.setAccountNr("local-ali-account");
+
+        AliPayAccountPayload aliPayWithHolderName = new AliPayAccountPayload(PaymentMethod.ALI_PAY_ID, "local-ali-2");
+        aliPayWithHolderName.setAccountNr("local-ali-account-2");
+        aliPayWithHolderName.setHolderName("Local Holder");
+
+        NationalBankAccountPayload nationalBankDefaults = new NationalBankAccountPayload(PaymentMethod.NATIONAL_BANK_ID,
+                "local-national-bank");
+        nationalBankDefaults.setCountryCode("US");
+        nationalBankDefaults.setHolderName("Bank Holder");
+
+        SepaAccountPayload sepa = new SepaAccountPayload(PaymentMethod.SEPA_ID,
+                "local-sepa",
+                List.of());
+        sepa.setCountryCode("DE");
+        sepa.setHolderName("Sepa Holder");
+        sepa.setIban("DE89370400440532013000");
+        sepa.setBic("COBADEFFXXX");
+
+        return List.of(
+                new NamedPayload("aliPaySaltOnly", aliPayWithSaltOnly),
+                new NamedPayload("aliPayWithHolderName", aliPayWithHolderName),
+                new NamedPayload("nationalBankDefaults", nationalBankDefaults),
+                new NamedPayload("sepaWithEmptyAcceptedCountries", sepa));
+    }
+
+    private record NamedPayload(String name, PaymentAccountPayload payload) {
+    }
+
     private static List<TestCase> nullableFieldProtos() {
         return List.of(
                 testCase("nationalBankAllOptionalFieldsEmpty", countryBased(PaymentMethod.NATIONAL_BANK_ID,
