@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import java.util.function.ToLongFunction;
 
@@ -62,6 +63,7 @@ public final class CanonicalSchema<T> {
         INT32,
         UINT32,
         INT64,
+        DOUBLE,
         BOOL,
         ENUM,
         STRING,
@@ -69,6 +71,7 @@ public final class CanonicalSchema<T> {
         COMPOSE,
         EXTEND,
         REPEATED_COMPOSE,
+        PACKED_REPEATED_INT32,
         REPEATED_STRING,
         MAP
     }
@@ -241,6 +244,11 @@ public final class CanonicalSchema<T> {
                     getter::applyAsLong);
         }
 
+        public Builder<T> doubleField(int number, ToDoubleFunction<T> getter) {
+            return add(number, FieldType.DOUBLE, Rule.OMIT_DEFAULT,
+                    getter::applyAsDouble);
+        }
+
         public Builder<T> bool(int number, Predicate<T> getter) {
             return add(number, FieldType.BOOL, Rule.OMIT_DEFAULT,
                     getter::test);
@@ -256,6 +264,10 @@ public final class CanonicalSchema<T> {
 
         public Builder<T> repeatedString(int number, Function<T, List<String>> getter) {
             return add(number, FieldType.REPEATED_STRING, Rule.LIST_ORDER, getter);
+        }
+
+        public Builder<T> packedRepeatedInt32(int number, Function<T, List<Integer>> getter) {
+            return add(number, FieldType.PACKED_REPEATED_INT32, Rule.LIST_ORDER, getter);
         }
 
         public Builder<T> bytes(int number, Function<T, byte[]> getter) {
@@ -466,6 +478,7 @@ public final class CanonicalSchema<T> {
         return type == FieldType.INT32 ||
                 type == FieldType.UINT32 ||
                 type == FieldType.INT64 ||
+                type == FieldType.DOUBLE ||
                 type == FieldType.BOOL ||
                 type == FieldType.ENUM ||
                 type == FieldType.STRING ||

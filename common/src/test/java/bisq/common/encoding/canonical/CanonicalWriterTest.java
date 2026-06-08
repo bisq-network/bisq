@@ -77,6 +77,38 @@ public class CanonicalWriterTest {
     }
 
     @Test
+    public void writeDoubleUsesFixed64LittleEndian() {
+        CanonicalWriter writer = new CanonicalWriter();
+
+        writer.writeDouble(1, 1.5);
+        writer.writeDouble(2, -0.0);
+
+        assertArrayEquals(bytes(
+                        0x09, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0xf8, 0x3f,
+                        0x11, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x80),
+                writer.toByteArray());
+    }
+
+    @Test
+    public void writePackedRepeatedInt32PreservesZeroAndNegativeElements() {
+        CanonicalWriter writer = new CanonicalWriter();
+
+        writer.writePackedRepeatedInt32(1, List.of(0, 1, 128, -1));
+        writer.writePackedRepeatedInt32(2, List.of());
+
+        assertArrayEquals(bytes(
+                        0x0a, 0x0e,
+                        0x00,
+                        0x01,
+                        0x80, 0x01,
+                        0xff, 0xff, 0xff, 0xff, 0xff,
+                        0xff, 0xff, 0xff, 0xff, 0x01),
+                writer.toByteArray());
+    }
+
+    @Test
     public void writeTagUsesMultiByteVarint() {
         CanonicalWriter writer = new CanonicalWriter();
 

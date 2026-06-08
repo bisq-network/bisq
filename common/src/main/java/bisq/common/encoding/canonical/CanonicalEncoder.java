@@ -49,6 +49,9 @@ public final class CanonicalEncoder {
             case INT64:
                 writer.writeInt64(field.getNumber(), (long) fieldValue);
                 break;
+            case DOUBLE:
+                writer.writeDouble(field.getNumber(), (double) fieldValue);
+                break;
             case BOOL:
                 writer.writeBool(field.getNumber(), (boolean) fieldValue);
                 break;
@@ -69,6 +72,9 @@ public final class CanonicalEncoder {
                 break;
             case REPEATED_COMPOSE:
                 writeRepeatedCompose(writer, field, fieldValue);
+                break;
+            case PACKED_REPEATED_INT32:
+                writePackedRepeatedInt32(writer, field, fieldValue);
                 break;
             case REPEATED_STRING:
                 writeRepeatedString(writer, field, fieldValue);
@@ -100,6 +106,11 @@ public final class CanonicalEncoder {
         List<?> values = (List<?>) Objects.requireNonNull(fieldValue);
         CanonicalSchema<?> schema = Objects.requireNonNull(field.getSchema());
         values.forEach(value -> writer.writeCompose(field.getNumber(), encodeNested(value, schema)));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void writePackedRepeatedInt32(CanonicalWriter writer, CanonicalSchema.Field<T> field, Object fieldValue) {
+        writer.writePackedRepeatedInt32(field.getNumber(), (List<Integer>) fieldValue);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -139,12 +150,15 @@ public final class CanonicalEncoder {
             case INT64:
                 writer.writeInt64Value(fieldNumber, (long) fieldValue);
                 break;
+            case DOUBLE:
+                writer.writeDoubleValue(fieldNumber, (double) fieldValue);
+                break;
             case BOOL:
                 writer.writeBoolValue(fieldNumber, (boolean) fieldValue);
                 break;
             case ENUM:
-                if (fieldValue instanceof CanonicalEnum) {
-                    writer.writeEnumValue(fieldNumber, ((CanonicalEnum) fieldValue).getCode());
+                if (fieldValue instanceof CanonicalEnum canonicalEnum) {
+                    writer.writeEnumValue(fieldNumber, canonicalEnum.getCode());
                 } else {
                     writer.writeEnumValue(fieldNumber, (int) fieldValue);
                 }
@@ -161,6 +175,7 @@ public final class CanonicalEncoder {
             case EXTEND:
                 writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
                 break;
+            case PACKED_REPEATED_INT32:
             case REPEATED_COMPOSE:
             case REPEATED_STRING:
             case MAP:

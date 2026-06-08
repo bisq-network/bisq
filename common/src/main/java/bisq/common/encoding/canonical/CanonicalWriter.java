@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 public final class CanonicalWriter {
     private static final int WIRE_TYPE_VARINT = 0;
+    private static final int WIRE_TYPE_FIXED64 = 1;
     private static final int WIRE_TYPE_LENGTH_DELIMITED = 2;
 
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -48,6 +49,12 @@ public final class CanonicalWriter {
     public void writeInt64(int fieldNumber, long value) {
         if (value != 0) {
             writeInt64Value(fieldNumber, value);
+        }
+    }
+
+    public void writeDouble(int fieldNumber, double value) {
+        if (Double.doubleToRawLongBits(value) != 0) {
+            writeDoubleValue(fieldNumber, value);
         }
     }
 
@@ -77,6 +84,16 @@ public final class CanonicalWriter {
 
     public void writeRepeatedString(int fieldNumber, List<String> values) {
         values.forEach(value -> writeStringValue(fieldNumber, value));
+    }
+
+    public void writePackedRepeatedInt32(int fieldNumber, List<Integer> values) {
+        if (values.isEmpty()) {
+            return;
+        }
+
+        CanonicalWriter packedWriter = new CanonicalWriter();
+        values.forEach(packedWriter::writeInt32NoTag);
+        writeLengthDelimitedValue(fieldNumber, packedWriter.toByteArray());
     }
 
     public void writeBytes(int fieldNumber, @Nullable byte[] value) {
@@ -116,6 +133,11 @@ public final class CanonicalWriter {
         writeVarint64(value);
     }
 
+    void writeDoubleValue(int fieldNumber, double value) {
+        writeTag(fieldNumber, WIRE_TYPE_FIXED64);
+        writeLittleEndian64(Double.doubleToRawLongBits(value));
+    }
+
     void writeBoolValue(int fieldNumber, boolean value) {
         writeInt32Value(fieldNumber, value ? 1 : 0);
     }
@@ -143,6 +165,13 @@ public final class CanonicalWriter {
             writeVarint32(value);
         } else {
             writeVarint64(value);
+        }
+    }
+
+    private void writeLittleEndian64(long value) {
+        for (int i = 0; i < Long.BYTES; i++) {
+            out.write((int) value & 0xff);
+            value >>>= Byte.SIZE;
         }
     }
 

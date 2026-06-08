@@ -46,6 +46,25 @@ public class CanonicalEncoderTest {
             .build();
 
     @Test
+    public void supportsDoubleAndPackedRepeatedInt32() {
+        NumberContainer container = new NumberContainer(1.5, List.of(0, 1, 128));
+
+        CanonicalSchema<NumberContainer> schema = CanonicalSchema.<NumberContainer>newBuilder()
+                .doubleField(1, NumberContainer::getDifficulty)
+                .packedRepeatedInt32(2, NumberContainer::getVersions)
+                .build();
+
+        assertArrayEquals(bytes(
+                        0x09, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0xf8, 0x3f,
+                        0x12, 0x04,
+                        0x00,
+                        0x01,
+                        0x80, 0x01),
+                CanonicalEncoder.DEFAULT.encode(container, schema));
+    }
+
+    @Test
     public void supportsUInt32BoolRepeatedComposeAndMapStringToString() {
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put("b", "second");
@@ -283,10 +302,28 @@ public class CanonicalEncoderTest {
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof SourceKey)) {
+            if (!(obj instanceof SourceKey that)) {
                 return false;
             }
-            return sourceKey.equals(((SourceKey) obj).sourceKey);
+            return sourceKey.equals(that.sourceKey);
+        }
+    }
+
+    private static final class NumberContainer {
+        private final double difficulty;
+        private final List<Integer> versions;
+
+        private NumberContainer(double difficulty, List<Integer> versions) {
+            this.difficulty = difficulty;
+            this.versions = versions;
+        }
+
+        private double getDifficulty() {
+            return difficulty;
+        }
+
+        private List<Integer> getVersions() {
+            return versions;
         }
     }
 
