@@ -20,6 +20,7 @@ package bisq.network.p2p.storage;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.ByteString;
@@ -29,7 +30,10 @@ import org.junit.jupiter.api.Test;
 
 import java.security.PublicKey;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class P2PDataStorageCanonicalEncoderTest {
     @Test
@@ -42,6 +46,22 @@ public class P2PDataStorageCanonicalEncoderTest {
                 pair.encodeCanonical(CanonicalEncoder.DEFAULT));
         assertArrayEquals(pair.encodeCanonical(CanonicalEncoder.DEFAULT),
                 pair.serializeForHash());
+    }
+
+    @Test
+    public void dataAndSeqNrPairDelegatesPayloadFieldToSerializeForHash() {
+        P2PDataStorage.DataAndSeqNrPair pair = new P2PDataStorage.DataAndSeqNrPair(
+                new CanonicalStoragePayloadStub(),
+                7);
+
+        byte[] canonicalBytes = pair.encodeCanonical(CanonicalEncoder.DEFAULT);
+
+        assertArrayEquals(new byte[]{
+                        0x0a, 0x02, 0x08, 0x2a,
+                        0x10, 0x07},
+                canonicalBytes);
+        assertArrayEquals(canonicalBytes, pair.serializeForHash());
+        assertFalse(Arrays.equals(pair.toProtoMessage().toByteArray(), canonicalBytes));
     }
 
     private static final class StoragePayloadStub implements ProtectedStoragePayload {
@@ -62,6 +82,28 @@ public class P2PDataStorageCanonicalEncoderTest {
             return protobuf.StoragePayload.newBuilder()
                     .setMailboxStoragePayload(mailboxStoragePayload)
                     .build();
+        }
+    }
+
+    private static final class CanonicalStoragePayloadStub implements ProtectedStoragePayload, Canonical {
+        private final PublicKey ownerPubKey = Sig.generateKeyPair().getPublic();
+
+        @Override
+        public PublicKey getOwnerPubKey() {
+            return ownerPubKey;
+        }
+
+        @Override
+        public Message toProtoMessage() {
+            return protobuf.StoragePayload.newBuilder()
+                    .setAlert(protobuf.Alert.newBuilder()
+                            .setMessage("legacy-protobuf-payload"))
+                    .build();
+        }
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+            return new byte[]{0x08, 0x2a};
         }
     }
 }
