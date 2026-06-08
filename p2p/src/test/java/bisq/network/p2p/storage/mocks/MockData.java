@@ -20,8 +20,11 @@ package bisq.network.p2p.storage.mocks;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
+import bisq.common.encoding.canonical.CanonicalEncoder;
+
 import org.apache.commons.lang3.NotImplementedException;
 
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 
 @SuppressWarnings("ALL")
@@ -71,5 +74,10 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     @Override
     public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
         throw new NotImplementedException("toProtoMessage not impl.");
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return msg == null ? new byte[0] : msg.getBytes(StandardCharsets.UTF_8);
     }
 }

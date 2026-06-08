@@ -273,10 +273,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         return BlindVoteConsensus.getEncryptedVotes(canonicalPlaintext, secretKey);
     }
 
+    @SuppressWarnings("deprecation")
     private void verifyBlindVoteEncryptedVotesSerializationMatchesLegacy(
             VoteWithProposalTxIdList voteWithProposalTxIdList,
             byte[] canonicalPlaintext) {
-        byte[] legacyPlaintext = voteWithProposalTxIdList.serialize();
+        byte[] legacyPlaintext = voteWithProposalTxIdList.serializeForHash();
         verifyBlindVotePlaintextSerializationMatchesLegacy("encrypted votes", canonicalPlaintext, legacyPlaintext);
     }
 
@@ -307,9 +308,14 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         if (verifyBlindVoteEncryptedMeritListSerialization) {
             verifyBlindVotePlaintextSerializationMatchesLegacy("encrypted merit list",
                     canonicalPlaintext,
-                    meritList.serialize());
+                    getLegacyEncryptedMeritListPlaintext(meritList));
         }
         return BlindVoteConsensus.getEncryptedMeritList(canonicalPlaintext, secretKey);
+    }
+
+    @SuppressWarnings("deprecation")
+    private byte[] getLegacyEncryptedMeritListPlaintext(MeritList meritList) {
+        return meritList.serializeForHash();
     }
 
     // blindVoteTxId is null if we use the method from the getCurrentlyAvailableMerit call.

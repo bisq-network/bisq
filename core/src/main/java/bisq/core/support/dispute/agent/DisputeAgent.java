@@ -22,7 +22,6 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.Utilities;
@@ -41,7 +40,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public abstract class DisputeAgent implements ProtectedStoragePayload, ExpirablePayload, Canonical {
+public abstract class DisputeAgent implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     protected final NodeAddress nodeAddress;

@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.mocks;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.Message;
 
@@ -64,5 +65,10 @@ public class ProtectedStoragePayloadStub implements ProtectedStoragePayload {
     @Override
     public Message toProtoMessage() {
         return this.messageMock;
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return toProtoMessage().toByteArray();
     }
 }

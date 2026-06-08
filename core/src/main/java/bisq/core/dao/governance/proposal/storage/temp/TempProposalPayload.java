@@ -24,7 +24,6 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -55,7 +54,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TempProposalPayload implements ProcessOncePersistableNetworkPayload, ProtectedStoragePayload,
-        ExpirablePayload, PersistablePayload, Canonical {
+        ExpirablePayload, PersistablePayload {
     // We keep data 2 months to be safe if we increase durations of cycle. Also give a bit more resilience in case
     // of any issues with the append-only data store
     public static final long TTL = TimeUnit.DAYS.toMillis(60);

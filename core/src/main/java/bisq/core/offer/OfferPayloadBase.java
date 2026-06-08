@@ -26,7 +26,6 @@ import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalMapEntryIterator;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.util.Hex;
@@ -48,8 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(exclude = {"hash"})
 @Getter
-public abstract class OfferPayloadBase implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload,
-        Canonical {
+public abstract class OfferPayloadBase implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
     public static final long TTL = TimeUnit.MINUTES.toMillis(9);
 
     protected final String id;

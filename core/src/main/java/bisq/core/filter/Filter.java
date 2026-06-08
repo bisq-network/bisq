@@ -21,7 +21,6 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
@@ -54,7 +53,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Filter implements ProtectedStoragePayload, ExpirablePayload, Canonical {
+public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
     private final List<String> bannedOfferIds;

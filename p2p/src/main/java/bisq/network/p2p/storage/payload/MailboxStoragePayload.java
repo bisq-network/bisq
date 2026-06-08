@@ -21,7 +21,6 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 
 import bisq.common.crypto.Sig;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.util.CollectionUtils;
@@ -57,7 +56,7 @@ import javax.annotation.Nullable;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload, Canonical {
+public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(15);
 
     // Added in 1.5.5

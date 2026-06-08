@@ -20,7 +20,6 @@ package bisq.network.p2p.storage;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.ByteString;
@@ -80,9 +79,14 @@ public class P2PDataStorageCanonicalEncoderTest {
                     .setMailboxStoragePayload(mailboxStoragePayload)
                     .build();
         }
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+            return toProtoMessage().toByteArray();
+        }
     }
 
-    private static final class CanonicalStoragePayloadStub implements ProtectedStoragePayload, Canonical {
+    private static final class CanonicalStoragePayloadStub implements ProtectedStoragePayload {
         private final PublicKey ownerPubKey = Sig.generateKeyPair().getPublic();
 
         @Override
