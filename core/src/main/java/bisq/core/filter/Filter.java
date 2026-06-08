@@ -559,7 +559,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
 
     public static final CanonicalSchema<Filter> SCHEMA =
             CanonicalSchema.<Filter>newBuilder()
-                    .extend(4, filter -> filter, PAYLOAD_SCHEMA)
+                    .oneof(4, filter -> filter, PAYLOAD_SCHEMA)
                     .build();
 
     @Override

@@ -97,7 +97,7 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload, C
     public static final CanonicalSchema<RawTxOutput> SCHEMA = RawTxOutput.<RawTxOutput>getBaseTxOutputSchemaBuilder()
             .extend(8,
                     rawTxOutput -> rawTxOutput,
-                    CanonicalSchema.<RawTxOutput>newBuilder())
+                    CanonicalSchema.newBuilder())
             .build();
 
     @Override

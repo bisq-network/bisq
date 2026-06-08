@@ -164,7 +164,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
 
     public static final CanonicalSchema<BsqSwapOfferPayload> SCHEMA =
             CanonicalSchema.<BsqSwapOfferPayload>newBuilder()
-                    .extend(10, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
+                    .oneof(10, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
                     .build();
 
     @Override

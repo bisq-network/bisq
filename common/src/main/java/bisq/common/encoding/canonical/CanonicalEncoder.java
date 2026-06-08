@@ -70,6 +70,9 @@ public final class CanonicalEncoder {
             case EXTEND:
                 writeExtend(writer, field, fieldValue);
                 break;
+            case ONEOF:
+                writeOneof(writer, field, fieldValue);
+                break;
             case REPEATED_COMPOSE:
                 writeRepeatedCompose(writer, field, fieldValue);
                 break;
@@ -94,6 +97,12 @@ public final class CanonicalEncoder {
     private <T> void writeExtend(CanonicalWriter writer, CanonicalSchema.Field<T> field, @Nullable Object fieldValue) {
         if (fieldValue != null) {
             writer.writeExtend(field.getNumber(), encodeNested(fieldValue, Objects.requireNonNull(field.getSchema())));
+        }
+    }
+
+    private <T> void writeOneof(CanonicalWriter writer, CanonicalSchema.Field<T> field, @Nullable Object fieldValue) {
+        if (fieldValue != null) {
+            writer.writeOneof(field.getNumber(), encodeNested(fieldValue, Objects.requireNonNull(field.getSchema())));
         }
     }
 

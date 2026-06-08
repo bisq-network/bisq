@@ -103,12 +103,18 @@ public final class CanonicalWriter {
     }
 
     public void writeCompose(int fieldNumber, @Nullable byte[] value) {
-        if (value != null) {
-            writeLengthDelimitedValue(fieldNumber, value);
-        }
+        writeNestedMessage(fieldNumber, value);
     }
 
     public void writeExtend(int fieldNumber, @Nullable byte[] value) {
+        writeNestedMessage(fieldNumber, value);
+    }
+
+    public void writeOneof(int fieldNumber, @Nullable byte[] value) {
+        writeNestedMessage(fieldNumber, value);
+    }
+
+    private void writeNestedMessage(int fieldNumber, @Nullable byte[] value) {
         if (value != null) {
             writeLengthDelimitedValue(fieldNumber, value);
         }

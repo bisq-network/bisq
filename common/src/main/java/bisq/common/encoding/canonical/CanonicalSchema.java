@@ -70,6 +70,7 @@ public final class CanonicalSchema<T> {
         BYTES,
         COMPOSE,
         EXTEND,
+        ONEOF,
         REPEATED_COMPOSE,
         PACKED_REPEATED_INT32,
         REPEATED_STRING,
@@ -292,6 +293,18 @@ public final class CanonicalSchema<T> {
             return add(number, FieldType.EXTEND, Rule.OMIT_NULL, getter, schemaBuilder);
         }
 
+        public <N> Builder<T> oneof(int number,
+                                    Function<T, N> getter,
+                                    CanonicalSchema<N> schema) {
+            return add(number, FieldType.ONEOF, Rule.OMIT_NULL, getter, schema);
+        }
+
+        public <N> Builder<T> oneof(int number,
+                                    Function<T, N> getter,
+                                    Builder<N> schemaBuilder) {
+            return add(number, FieldType.ONEOF, Rule.OMIT_NULL, getter, schemaBuilder);
+        }
+
         public <N> Builder<T> repeatedCompose(int number,
                                               Function<T, ? extends List<N>> getter,
                                               CanonicalSchema<N> schema) {
@@ -428,16 +441,16 @@ public final class CanonicalSchema<T> {
                     throw new IllegalArgumentException("Map fields must declare a map encoding");
                 }
                 if (schema != null || schemaBuilder != null) {
-                    throw new IllegalArgumentException("Map fields cannot declare a compose or extend nested schema");
+                    throw new IllegalArgumentException("Map fields cannot declare a nested schema outside map encoding");
                 }
             } else if (mapEncoding != null) {
                 throw new IllegalArgumentException("Only map fields can declare a map encoding");
             } else if (hasNestedSchema(type)) {
                 if ((schema == null && schemaBuilder == null) || (schema != null && schemaBuilder != null)) {
-                    throw new IllegalArgumentException("Compose, extend and repeated compose fields must declare exactly one nested schema or schema builder");
+                    throw new IllegalArgumentException("Compose, extend, oneof and repeated compose fields must declare exactly one nested schema or schema builder");
                 }
             } else if (schema != null || schemaBuilder != null) {
-                throw new IllegalArgumentException("Only compose and extend fields can declare a nested schema or schema builder");
+                throw new IllegalArgumentException("Only compose, extend and oneof fields can declare a nested schema or schema builder");
             }
 
             fields.add(new FieldDefinition<>(number,
@@ -462,7 +475,10 @@ public final class CanonicalSchema<T> {
     }
 
     private static boolean hasNestedSchema(FieldType type) {
-        return type == FieldType.COMPOSE || type == FieldType.EXTEND || type == FieldType.REPEATED_COMPOSE;
+        return type == FieldType.COMPOSE ||
+                type == FieldType.EXTEND ||
+                type == FieldType.ONEOF ||
+                type == FieldType.REPEATED_COMPOSE;
     }
 
     private static boolean isSupportedMapKeyType(FieldType type) {

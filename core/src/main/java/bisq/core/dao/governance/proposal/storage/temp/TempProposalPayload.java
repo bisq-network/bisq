@@ -118,7 +118,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
 
     public static final CanonicalSchema<TempProposalPayload> SCHEMA =
             CanonicalSchema.<TempProposalPayload>newBuilder()
-                    .extend(8, tempProposalPayload -> tempProposalPayload, PAYLOAD_SCHEMA)
+                    .oneof(8, tempProposalPayload -> tempProposalPayload, PAYLOAD_SCHEMA)
                     .build();
 
     @Override

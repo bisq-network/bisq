@@ -100,9 +100,31 @@ public class CanonicalSchemaTest {
         assertNotNull(field.getMapEncoding());
     }
 
+    @Test
+    public void oneofDeclaresNestedSchemaAndOmitNullRule() {
+        CanonicalSchema<MapValue> nestedSchema = CanonicalSchema.<MapValue>newBuilder()
+                .int32(1, MapValue::getValue)
+                .build();
+
+        CanonicalSchema<OneofHolder> schema = CanonicalSchema.<OneofHolder>newBuilder()
+                .oneof(4, OneofHolder::getValue, nestedSchema)
+                .build();
+
+        CanonicalSchema.Field<OneofHolder> field = schema.getFields().get(0);
+        assertEquals(CanonicalSchema.FieldType.ONEOF, field.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_NULL, field.getRule());
+        assertEquals(nestedSchema, field.getSchema());
+    }
+
     private static final class MapHolder {
         private Map<String, MapValue> getValues() {
             return Collections.emptyMap();
+        }
+    }
+
+    private static final class OneofHolder {
+        private MapValue getValue() {
+            return new MapValue();
         }
     }
 

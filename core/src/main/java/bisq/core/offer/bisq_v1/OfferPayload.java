@@ -366,7 +366,7 @@ public final class OfferPayload extends OfferPayloadBase implements Canonical {
 
     public static final CanonicalSchema<OfferPayload> SCHEMA =
             CanonicalSchema.<OfferPayload>newBuilder()
-                    .extend(7, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
+                    .oneof(7, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
                     .build();
 
     @Override

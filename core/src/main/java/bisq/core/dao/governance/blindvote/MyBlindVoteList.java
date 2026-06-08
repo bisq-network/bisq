@@ -79,7 +79,7 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
 
     public static final CanonicalSchema<MyBlindVoteList> SCHEMA =
             CanonicalSchema.<MyBlindVoteList>newBuilder()
-                    .extend(22, myBlindVoteList -> myBlindVoteList, PAYLOAD_SCHEMA)
+                    .oneof(22, myBlindVoteList -> myBlindVoteList, PAYLOAD_SCHEMA)
                     .build();
 
     @Override

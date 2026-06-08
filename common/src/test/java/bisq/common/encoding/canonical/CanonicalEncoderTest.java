@@ -91,6 +91,20 @@ public class CanonicalEncoderTest {
     }
 
     @Test
+    public void supportsOneofNestedMessage() {
+        CanonicalSchema<OneofContainer> schema = CanonicalSchema.<OneofContainer>newBuilder()
+                .oneof(4, OneofContainer::getValue, VALUE_SCHEMA)
+                .build();
+
+        assertArrayEquals(bytes(
+                        0x22, 0x02,
+                        0x08, 0x01),
+                CanonicalEncoder.DEFAULT.encode(new OneofContainer(new Value(1)), schema));
+        assertArrayEquals(bytes(),
+                CanonicalEncoder.DEFAULT.encode(new OneofContainer(null), schema));
+    }
+
+    @Test
     public void mapStringToComposeUsesTreeMapOrder() {
         Map<String, Value> values = new LinkedHashMap<>();
         values.put("b", new Value(2));
@@ -279,6 +293,18 @@ public class CanonicalEncoderTest {
 
         private Map<String, String> getTags() {
             return tags;
+        }
+    }
+
+    private static final class OneofContainer {
+        private final Value value;
+
+        private OneofContainer(Value value) {
+            this.value = value;
+        }
+
+        private Value getValue() {
+            return value;
         }
     }
 

@@ -80,7 +80,7 @@ public class MyProposalList extends PersistableList<Proposal> implements Consens
 
     public static final CanonicalSchema<MyProposalList> SCHEMA =
             CanonicalSchema.<MyProposalList>newBuilder()
-                    .extend(19, myProposalList -> myProposalList, PAYLOAD_SCHEMA)
+                    .oneof(19, myProposalList -> myProposalList, PAYLOAD_SCHEMA)
                     .build();
 
     @Override
