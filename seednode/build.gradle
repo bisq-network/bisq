@@ -27,7 +27,6 @@ dependencies {
     implementation libs.protobuf.java
     annotationProcessor libs.lombok
     compileOnly libs.lombok
-    implementation libs.google.guava
     implementation libs.slf4j.api
     implementation(libs.google.guice) {
         exclude(module: 'guava')

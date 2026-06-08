@@ -34,7 +34,6 @@ dependencies {
     implementation libs.commons.io
     implementation libs.jopt
     implementation libs.apache.commons.lang3
-    implementation libs.apache.httpcore
     implementation libs.fxmisc.easybind
     implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
@@ -58,9 +57,6 @@ dependencies {
     }
     implementation(libs.google.guice) {
         exclude(module: 'guava')
-    }
-    implementation(libs.apache.httpclient) {
-        exclude(module: 'commons-codec')
     }
     testAnnotationProcessor libs.lombok
     testCompileOnly libs.lombok

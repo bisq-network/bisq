@@ -1,7 +1,6 @@
 [versions]
 apache-commons-lang3 = { strictly = '3.20.0' }
 apache-httpclient = { strictly = '4.5.14' }
-apache-httpcore = { strictly = '4.4.16' }
 
 bitcoinj = { strictly = '6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a' }
 bouncycastle = { strictly = '1.84' }
@@ -44,7 +43,6 @@ javafx = { strictly = '21.0.10' }
 openjfx-javafx-plugin = { strictly = '0.1.0' }
 protobuf = { strictly = '3.25.8' }
 protobuf-plugin = { strictly = '0.9.5' }
-pushy = { strictly = '0.13.10' }
 qrgen = { strictly = '1.4' }
 slf4j = { strictly = '2.0.17' }
 spark = { strictly = '2.9.4' }
@@ -52,7 +50,6 @@ swagger-lib = { strictly = '2.2.49' }
 
 [libraries]
 apache-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache-httpclient" }
-apache-httpcore = { module = "org.apache.httpcomponents:httpcore", version.ref = "apache-httpcore" }
 apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "apache-commons-lang3" }
 
 bitcoinj = { module = "com.github.bisq-network:bitcoinj", version.ref = "bitcoinj" }
@@ -76,7 +73,6 @@ grpc-core = { module = "io.grpc:grpc-core", version.ref = "grpc" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
 grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
 grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
-grpc-auth = { module = "io.grpc:grpc-auth", version.ref = "grpc" }
 
 hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
 
@@ -113,7 +109,6 @@ netlayer-tor-native = { module = "com.github.bisq-network.netlayer:tor.native", 
 
 openjfx-javafx-plugin = { module = "org.openjfx:javafx-plugin", version.ref = "openjfx-javafx-plugin" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
-pushy = { module = "com.turo:pushy", version.ref = "pushy" }
 qrgen = { module = "net.glxn:qrgen", version.ref = "qrgen" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 spark-core = { module = "com.sparkjava:spark-core", version.ref = "spark" }

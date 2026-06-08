@@ -24,7 +24,6 @@ dependencies {
         exclude(module: 'slf4j-api')
     }
     implementation libs.google.findbugs
-    implementation libs.google.gson
     implementation libs.google.guava
     implementation(libs.google.guice) {
         exclude(module: 'guava')

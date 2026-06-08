@@ -34,7 +34,6 @@ dependencies {
     }
 
     implementation libs.google.guava
-    implementation libs.google.guice
 
     implementation libs.glassfish.jaxb
     implementation libs.bundles.jersey.libs
