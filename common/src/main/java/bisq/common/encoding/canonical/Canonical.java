@@ -19,4 +19,8 @@ package bisq.common.encoding.canonical;
 
 public interface Canonical {
     byte[] encodeCanonical(CanonicalEncoder canonicalEncoder);
+
+    default byte[] encodeCanonical() {
+        return encodeCanonical(CanonicalEncoder.DEFAULT);
+    }
 }
