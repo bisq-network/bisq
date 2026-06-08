@@ -19,6 +19,7 @@ package bisq.core.payment.payload;
 
 import bisq.core.proto.CoreProtoResolver;
 
+import bisq.common.crypto.Hash;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import java.util.LinkedHashMap;
@@ -40,10 +41,17 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
     public void canonicalBytesMatchProtobufBytesForEveryPaymentAccountPayload() {
         paymentAccountPayloadProtos().forEach(testCase -> {
             PaymentAccountPayload paymentAccountPayload = CORE_PROTO_RESOLVER.fromProto(testCase.proto());
+            byte[] protobufBytes = paymentAccountPayload.toProtoMessage().toByteArray();
 
-            assertArrayEquals(paymentAccountPayload.toProtoMessage().toByteArray(),
+            assertArrayEquals(protobufBytes,
                     PaymentAccountPayloadCanonicalSchemas.encode(paymentAccountPayload, CanonicalEncoder.DEFAULT),
-                    testCase.name());
+                    testCase.name() + " canonical bytes");
+            assertArrayEquals(protobufBytes,
+                    paymentAccountPayload.serializeForHash(),
+                    testCase.name() + " serializeForHash bytes");
+            assertArrayEquals(Hash.getRipemd160hash(protobufBytes),
+                    paymentAccountPayload.getHashForContract(),
+                    testCase.name() + " contract hash");
         });
     }
 
