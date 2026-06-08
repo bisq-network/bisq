@@ -49,6 +49,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -64,6 +65,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.beans.value.ChangeListener;
 
@@ -71,6 +73,7 @@ import javax.crypto.SecretKey;
 
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -104,6 +107,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private final BallotListService ballotListService;
     private final MyVoteListService myVoteListService;
     private final MyProposalListService myProposalListService;
+    private final boolean verifyBlindVoteEncryptedVotesSerialization;
     private final ChangeListener<Number> numConnectedPeersListener;
     @Getter
     private final MyBlindVoteList myBlindVoteList = new MyBlindVoteList();
@@ -123,7 +127,9 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                                   BtcWalletService btcWalletService,
                                   BallotListService ballotListService,
                                   MyVoteListService myVoteListService,
-                                  MyProposalListService myProposalListService) {
+                                  MyProposalListService myProposalListService,
+                                  @Named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION)
+                                  boolean verifyBlindVoteEncryptedVotesSerialization) {
         this.p2PService = p2PService;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
@@ -134,6 +140,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.ballotListService = ballotListService;
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
+        this.verifyBlindVoteEncryptedVotesSerialization = verifyBlindVoteEncryptedVotesSerialization;
 
         this.persistenceManager.initialize(myBlindVoteList, PersistenceManager.Source.PRIVATE);
 
@@ -255,7 +262,24 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                 .collect(Collectors.toList());
         final VoteWithProposalTxIdList voteWithProposalTxIdList = new VoteWithProposalTxIdList(list);
         log.info("voteWithProposalTxIdList used in blind vote. voteWithProposalTxIdList={}", voteWithProposalTxIdList);
-        return BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdList, secretKey);
+        byte[] canonicalPlaintext = voteWithProposalTxIdList.serializeForHash();
+        if (verifyBlindVoteEncryptedVotesSerialization) {
+            verifyBlindVoteEncryptedVotesSerializationMatchesLegacy(voteWithProposalTxIdList, canonicalPlaintext);
+        }
+        return BlindVoteConsensus.getEncryptedVotes(canonicalPlaintext, secretKey);
+    }
+
+    private void verifyBlindVoteEncryptedVotesSerializationMatchesLegacy(
+            VoteWithProposalTxIdList voteWithProposalTxIdList,
+            byte[] canonicalPlaintext) {
+        byte[] legacyPlaintext = voteWithProposalTxIdList.serialize();
+        if (!Arrays.equals(canonicalPlaintext, legacyPlaintext)) {
+            throw new IllegalStateException("Canonical blind vote encrypted votes plaintext serialization differs " +
+                    "from legacy protobuf serialization. canonicalLength=" + canonicalPlaintext.length +
+                    ", canonicalSha256=" + Utilities.bytesAsHexString(Hash.getSha256Hash(canonicalPlaintext)) +
+                    ", legacyLength=" + legacyPlaintext.length +
+                    ", legacySha256=" + Utilities.bytesAsHexString(Hash.getSha256Hash(legacyPlaintext)));
+        }
     }
 
     private byte[] getOpReturnData(byte[] encryptedVotes) throws IOException {

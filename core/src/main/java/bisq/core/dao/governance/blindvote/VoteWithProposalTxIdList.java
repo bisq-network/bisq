@@ -20,6 +20,9 @@ package bisq.core.dao.governance.blindvote;
 import bisq.core.dao.governance.ConsensusCritical;
 
 import bisq.common.Proto;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -37,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Value
-public class VoteWithProposalTxIdList implements Proto, ConsensusCritical {
+public class VoteWithProposalTxIdList implements Proto, ConsensusCritical, Canonical {
     private final List<VoteWithProposalTxId> list;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +67,21 @@ public class VoteWithProposalTxIdList implements Proto, ConsensusCritical {
         final ArrayList<VoteWithProposalTxId> list = proto.getItemList().stream()
                 .map(VoteWithProposalTxId::fromProto).collect(Collectors.toCollection(ArrayList::new));
         return new VoteWithProposalTxIdList(list);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<VoteWithProposalTxIdList> SCHEMA =
+            CanonicalSchema.<VoteWithProposalTxIdList>newBuilder()
+                    .repeatedCompose(1, VoteWithProposalTxIdList::getList, VoteWithProposalTxId.SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

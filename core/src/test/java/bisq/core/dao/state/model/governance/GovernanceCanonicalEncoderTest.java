@@ -17,11 +17,14 @@
 
 package bisq.core.dao.state.model.governance;
 
-import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
+import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
+import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
@@ -32,10 +35,15 @@ import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
 
+import javax.crypto.SecretKey;
+
 import java.util.List;
 import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GovernanceCanonicalEncoderTest {
     @Test
@@ -206,6 +214,70 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     @Test
+    public void emptyVoteWithProposalTxIdListEncodeCanonicalMatchesProtobuf() throws Exception {
+        assertVoteWithProposalTxIdListCanonicalMatchesProtobuf(protobuf.VoteWithProposalTxIdList.newBuilder()
+                .build());
+    }
+
+    @Test
+    public void voteWithProposalTxIdListWithoutVoteEncodeCanonicalMatchesProtobuf() throws Exception {
+        assertVoteWithProposalTxIdListCanonicalMatchesProtobuf(protobuf.VoteWithProposalTxIdList.newBuilder()
+                .addItem(voteWithProposalTxIdProto("proposal-without-vote"))
+                .build());
+    }
+
+    @Test
+    public void voteWithProposalTxIdListWithRejectedVoteEncodeCanonicalMatchesProtobuf() throws Exception {
+        byte[] canonicalBytes = assertVoteWithProposalTxIdListCanonicalMatchesProtobuf(
+                protobuf.VoteWithProposalTxIdList.newBuilder()
+                        .addItem(voteWithProposalTxIdProto("proposal-rejected", false))
+                        .build());
+
+        protobuf.VoteWithProposalTxIdList parsed = protobuf.VoteWithProposalTxIdList.parseFrom(canonicalBytes);
+        assertTrue(parsed.getItem(0).hasVote());
+        assertFalse(parsed.getItem(0).getVote().getAccepted());
+    }
+
+    @Test
+    public void voteWithProposalTxIdListWithAcceptedVoteEncodeCanonicalMatchesProtobuf() throws Exception {
+        assertVoteWithProposalTxIdListCanonicalMatchesProtobuf(protobuf.VoteWithProposalTxIdList.newBuilder()
+                .addItem(voteWithProposalTxIdProto("proposal-accepted", true))
+                .build());
+    }
+
+    @Test
+    public void voteWithProposalTxIdListEncodeCanonicalPreservesListOrder() throws Exception {
+        byte[] canonicalBytes = assertVoteWithProposalTxIdListCanonicalMatchesProtobuf(
+                protobuf.VoteWithProposalTxIdList.newBuilder()
+                        .addItem(voteWithProposalTxIdProto("proposal-a", true))
+                        .addItem(voteWithProposalTxIdProto("proposal-b"))
+                        .addItem(voteWithProposalTxIdProto("proposal-c", false))
+                        .build());
+
+        protobuf.VoteWithProposalTxIdList parsed = protobuf.VoteWithProposalTxIdList.parseFrom(canonicalBytes);
+        assertEquals("proposal-a", parsed.getItem(0).getProposalTxId());
+        assertEquals("proposal-b", parsed.getItem(1).getProposalTxId());
+        assertEquals("proposal-c", parsed.getItem(2).getProposalTxId());
+    }
+
+    @Test
+    public void encryptedCanonicalVoteWithProposalTxIdListDecryptsAndParsesAsProtobuf() throws Exception {
+        protobuf.VoteWithProposalTxIdList proto = protobuf.VoteWithProposalTxIdList.newBuilder()
+                .addItem(voteWithProposalTxIdProto("proposal-a", true))
+                .addItem(voteWithProposalTxIdProto("proposal-b", false))
+                .build();
+        VoteWithProposalTxIdList voteWithProposalTxIdList =
+                VoteWithProposalTxIdList.getVoteWithProposalTxIdListFromBytes(proto.toByteArray());
+
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        byte[] encryptedVotes = BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdList.serializeForHash(),
+                secretKey);
+        VoteWithProposalTxIdList decrypted = VoteResultConsensus.decryptVotes(encryptedVotes, secretKey);
+
+        assertArrayEquals(proto.toByteArray(), decrypted.toProtoMessage().toByteArray());
+    }
+
+    @Test
     public void ballotAndBallotListEncodeCanonicalMatchesProtobuf() {
         protobuf.Ballot ballotProto = protobuf.Ballot.newBuilder()
                 .setProposal(getCompensationProposalProto())
@@ -303,6 +375,32 @@ public class GovernanceCanonicalEncoderTest {
 
         assertArrayEquals(proposal.toProtoMessage().toByteArray(),
                 proposal.encodeCanonical(CanonicalEncoder.DEFAULT));
+    }
+
+    private static byte[] assertVoteWithProposalTxIdListCanonicalMatchesProtobuf(protobuf.VoteWithProposalTxIdList proto)
+            throws Exception {
+        VoteWithProposalTxIdList voteWithProposalTxIdList =
+                VoteWithProposalTxIdList.getVoteWithProposalTxIdListFromBytes(proto.toByteArray());
+
+        byte[] canonicalBytes = voteWithProposalTxIdList.encodeCanonical(CanonicalEncoder.DEFAULT);
+        assertArrayEquals(proto.toByteArray(), canonicalBytes);
+        assertArrayEquals(canonicalBytes, voteWithProposalTxIdList.serializeForHash());
+        assertArrayEquals(proto.toByteArray(), protobuf.VoteWithProposalTxIdList.parseFrom(canonicalBytes).toByteArray());
+        return canonicalBytes;
+    }
+
+    private static protobuf.VoteWithProposalTxId voteWithProposalTxIdProto(String proposalTxId) {
+        return protobuf.VoteWithProposalTxId.newBuilder()
+                .setProposalTxId(proposalTxId)
+                .build();
+    }
+
+    private static protobuf.VoteWithProposalTxId voteWithProposalTxIdProto(String proposalTxId, boolean accepted) {
+        return protobuf.VoteWithProposalTxId.newBuilder()
+                .setProposalTxId(proposalTxId)
+                .setVote(protobuf.Vote.newBuilder()
+                        .setAccepted(accepted))
+                .build();
     }
 
     private static protobuf.Proposal getCompensationProposalProto() {

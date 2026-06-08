@@ -19,6 +19,9 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.state.model.governance.Vote;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import java.util.Optional;
@@ -31,7 +34,7 @@ import javax.annotation.Nullable;
 
 
 @Value
-public class VoteWithProposalTxId implements PersistablePayload {
+public class VoteWithProposalTxId implements PersistablePayload, Canonical {
     private final String proposalTxId;
     @Nullable
     private final Vote vote;
@@ -63,5 +66,21 @@ public class VoteWithProposalTxId implements PersistablePayload {
     public static VoteWithProposalTxId fromProto(protobuf.VoteWithProposalTxId proto) {
         return new VoteWithProposalTxId(proto.getProposalTxId(),
                 proto.hasVote() ? Vote.fromProto(proto.getVote()) : null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<VoteWithProposalTxId> SCHEMA =
+            CanonicalSchema.<VoteWithProposalTxId>newBuilder()
+                    .string(1, VoteWithProposalTxId::getProposalTxId)
+                    .compose(2, VoteWithProposalTxId::getVote, Vote.SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 }

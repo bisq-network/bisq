@@ -83,9 +83,9 @@ public class BlindVoteConsensus {
         return Encryption.generateSecretKey(128);
     }
 
-    public static byte[] getEncryptedVotes(VoteWithProposalTxIdList voteWithProposalTxIdList, SecretKey secretKey) throws CryptoException {
-        byte[] bytes = voteWithProposalTxIdList.serialize();
-        byte[] encrypted = Encryption.encrypt(bytes, secretKey);
+    public static byte[] getEncryptedVotes(byte[] voteWithProposalTxIdListBytes,
+                                           SecretKey secretKey) throws CryptoException {
+        byte[] encrypted = Encryption.encrypt(voteWithProposalTxIdListBytes, secretKey);
         log.info("EncryptedVotes: " + Utilities.bytesAsHexString(encrypted));
         return encrypted;
     }
