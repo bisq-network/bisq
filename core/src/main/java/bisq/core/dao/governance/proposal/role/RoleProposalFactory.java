@@ -31,6 +31,8 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
+import java.util.TreeMap;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -65,6 +67,6 @@ public class RoleProposalFactory extends BaseProposalFactory<RoleProposal> {
 
     @Override
     protected RoleProposal createProposalWithoutTxId() {
-        return new RoleProposal(role);
+        return new RoleProposal(role, new TreeMap<>());
     }
 }

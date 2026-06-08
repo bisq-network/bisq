@@ -26,16 +26,17 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -43,12 +44,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Value
 public final class GenericProposal extends Proposal implements ImmutableDaoStateModel {
 
-    public GenericProposal(String name, String link) {
+    public GenericProposal(String name,
+                           String link,
+                           @Nullable TreeMap<String, String> extraDataMap) {
         this(name,
                 link,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null);
+                null,
+                extraDataMap);
     }
 
 
@@ -60,13 +64,14 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                             String link,
                             byte version,
                             long creationDate,
-                            String txId) {
+                            String txId,
+                            @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                null);
+                extraDataMap);
     }
 
     @Override
@@ -76,16 +81,13 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
     }
 
     public static GenericProposal fromProto(protobuf.Proposal proto) {
-        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in GenericProposal");
-
         return new GenericProposal(proto.getName(),
                 proto.getLink(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
@@ -142,7 +144,8 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                 getLink(),
                 getVersion(),
                 getCreationDate(),
-                txId);
+                txId,
+                extraDataMap == null ? null : new TreeMap<>(extraDataMap));
     }
 
     @Override

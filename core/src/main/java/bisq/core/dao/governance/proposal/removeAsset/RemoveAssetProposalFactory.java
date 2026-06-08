@@ -32,6 +32,8 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
+import java.util.TreeMap;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -71,6 +73,7 @@ public class RemoveAssetProposalFactory extends BaseProposalFactory<RemoveAssetP
         return new RemoveAssetProposal(
                 name,
                 link,
-                asset.getTickerSymbol());
+                asset.getTickerSymbol(),
+                new TreeMap<>());
     }
 }

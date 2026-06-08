@@ -54,6 +54,7 @@ import java.security.PublicKey;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,7 @@ import org.junit.jupiter.api.Test;
 import static org.bitcoinj.core.Utils.HEX;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -155,43 +157,54 @@ public class DeprecatedExtraDataMapTest {
     }
 
     @Test
-    public void reimbursementProposalRejectsNonEmptyExtraDataMap() {
-        assertProposalDeprecatedExtraDataMap(reimbursementProposal());
+    public void reimbursementProposalPreservesNonEmptyExtraDataMap() {
+        assertProposalExtraDataMapPreserved(reimbursementProposal());
     }
 
     @Test
-    public void changeParamProposalRejectsNonEmptyExtraDataMap() {
-        assertProposalDeprecatedExtraDataMap(changeParamProposal());
+    public void changeParamProposalPreservesNonEmptyExtraDataMap() {
+        assertProposalExtraDataMapPreserved(changeParamProposal());
     }
 
     @Test
-    public void roleProposalRejectsNonEmptyExtraDataMap() {
-        assertProposalDeprecatedExtraDataMap(roleProposal());
+    public void roleProposalPreservesNonEmptyExtraDataMap() {
+        assertProposalExtraDataMapPreserved(roleProposal());
     }
 
     @Test
-    public void confiscateBondProposalRejectsNonEmptyExtraDataMap() {
-        assertProposalDeprecatedExtraDataMap(confiscateBondProposal());
+    public void confiscateBondProposalPreservesNonEmptyExtraDataMap() {
+        assertProposalExtraDataMapPreserved(confiscateBondProposal());
     }
 
     @Test
-    public void genericProposalRejectsNonEmptyExtraDataMap() {
-        assertProposalDeprecatedExtraDataMap(genericProposal());
+    public void genericProposalPreservesNonEmptyExtraDataMap() {
+        assertProposalExtraDataMapPreserved(genericProposal());
     }
 
     @Test
-    public void removeAssetProposalRejectsNonEmptyExtraDataMap() {
-        assertProposalDeprecatedExtraDataMap(removeAssetProposal());
+    public void removeAssetProposalPreservesNonEmptyExtraDataMap() {
+        assertProposalExtraDataMapPreserved(removeAssetProposal());
     }
 
-    private static void assertProposalDeprecatedExtraDataMap(Proposal proposal) {
+    private static void assertProposalExtraDataMapPreserved(Proposal proposal) {
         protobuf.Proposal proto = proposal.toProtoMessage();
 
-        assertDeprecatedExtraDataMap(proto,
-                p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
-                p -> p.toBuilder().putExtraData("key", "value").build(),
-                Proposal::fromProto,
-                protobuf.Proposal::getExtraDataMap);
+        assertTrue(proto.getExtraDataMap().isEmpty());
+        assertNotNull(Proposal.fromProto(proto));
+
+        protobuf.Proposal protoWithEmptyExtraDataMap = proto.toBuilder()
+                .putAllExtraData(Collections.emptyMap())
+                .build();
+        assertTrue(protoWithEmptyExtraDataMap.getExtraDataMap().isEmpty());
+        assertArrayEquals(proto.toByteArray(), protoWithEmptyExtraDataMap.toByteArray());
+        assertNotNull(Proposal.fromProto(protoWithEmptyExtraDataMap));
+
+        protobuf.Proposal protoWithNonEmptyExtraDataMap = proto.toBuilder()
+                .putExtraData("key", "value")
+                .build();
+        Proposal proposalWithExtraDataMap = Proposal.fromProto(protoWithNonEmptyExtraDataMap);
+        assertEquals(Collections.singletonMap("key", "value"), proposalWithExtraDataMap.getExtraDataMap());
+        assertEquals(Collections.singletonMap("key", "value"), proposalWithExtraDataMap.toProtoMessage().getExtraDataMap());
     }
 
     private static <T extends Message> void assertDeprecatedExtraDataMap(
@@ -287,27 +300,27 @@ public class DeprecatedExtraDataMapTest {
     }
 
     private static ReimbursementProposal reimbursementProposal() {
-        return new ReimbursementProposal("name", "link", Coin.valueOf(1), "bsqAddress");
+        return new ReimbursementProposal("name", "link", Coin.valueOf(1), "bsqAddress", new TreeMap<>());
     }
 
     private static ChangeParamProposal changeParamProposal() {
-        return new ChangeParamProposal("name", "link", Param.PROPOSAL_FEE, "3");
+        return new ChangeParamProposal("name", "link", Param.PROPOSAL_FEE, "3", new TreeMap<>());
     }
 
     private static RoleProposal roleProposal() {
-        return new RoleProposal(new Role("name", "link", BondedRoleType.BTC_NODE_OPERATOR));
+        return new RoleProposal(new Role("name", "link", BondedRoleType.BTC_NODE_OPERATOR), new TreeMap<>());
     }
 
     private static ConfiscateBondProposal confiscateBondProposal() {
-        return new ConfiscateBondProposal("name", "link", "lockupTxId");
+        return new ConfiscateBondProposal("name", "link", "lockupTxId", new TreeMap<>());
     }
 
     private static GenericProposal genericProposal() {
-        return new GenericProposal("name", "link");
+        return new GenericProposal("name", "link", new TreeMap<>());
     }
 
     private static RemoveAssetProposal removeAssetProposal() {
-        return new RemoveAssetProposal("name", "link", "BSQ");
+        return new RemoveAssetProposal("name", "link", "BSQ", new TreeMap<>());
     }
 
     private static ProofOfWork proofOfWork() {

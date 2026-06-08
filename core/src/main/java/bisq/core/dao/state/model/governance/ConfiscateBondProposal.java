@@ -26,16 +26,17 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -46,13 +47,15 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
 
     public ConfiscateBondProposal(String name,
                                   String link,
-                                  String lockupTxId) {
+                                  String lockupTxId,
+                                  @Nullable TreeMap<String, String> extraDataMap) {
         this(name,
                 link,
                 lockupTxId,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null);
+                null,
+                extraDataMap);
     }
 
 
@@ -65,13 +68,14 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                                    String lockupTxId,
                                    byte version,
                                    long creationDate,
-                                   String txId) {
+                                   String txId,
+                                   @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                null);
+                extraDataMap);
         this.lockupTxId = lockupTxId;
     }
 
@@ -83,18 +87,15 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     }
 
     public static ConfiscateBondProposal fromProto(protobuf.Proposal proto) {
-        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in ConfiscateBondProposal");
-
         final protobuf.ConfiscateBondProposal proposalProto = proto.getConfiscateBondProposal();
         return new ConfiscateBondProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getLockupTxId(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
@@ -154,7 +155,8 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 getLockupTxId(),
                 getVersion(),
                 getCreationDate(),
-                txId);
+                txId,
+                extraDataMap == null ? null : new TreeMap<>(extraDataMap));
     }
 
     @Override

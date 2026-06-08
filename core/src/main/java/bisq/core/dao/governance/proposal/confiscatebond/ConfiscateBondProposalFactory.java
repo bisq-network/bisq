@@ -30,6 +30,8 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
+import java.util.TreeMap;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -69,6 +71,7 @@ public class ConfiscateBondProposalFactory extends BaseProposalFactory<Confiscat
         return new ConfiscateBondProposal(
                 name,
                 link,
-                lockupTxId);
+                lockupTxId,
+                new TreeMap<>());
     }
 }

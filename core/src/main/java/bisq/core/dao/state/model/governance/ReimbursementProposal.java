@@ -27,18 +27,19 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
+import bisq.common.util.CollectionUtils;
 
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -51,14 +52,16 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
     public ReimbursementProposal(String name,
                                  String link,
                                  Coin requestedBsq,
-                                 String bsqAddress) {
+                                 String bsqAddress,
+                                 @Nullable TreeMap<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
                 requestedBsq.value,
                 Version.REIMBURSEMENT_REQUEST,
                 new Date().getTime(),
-                null);
+                null,
+                extraDataMap);
     }
 
 
@@ -72,13 +75,14 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                                   long requestedBsq,
                                   byte version,
                                   long creationDate,
-                                  String txId) {
+                                  String txId,
+                                  @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                null);
+                extraDataMap);
 
         this.requestedBsq = requestedBsq;
         this.bsqAddress = bsqAddress;
@@ -93,11 +97,6 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
     }
 
     public static ReimbursementProposal fromProto(protobuf.Proposal proto) {
-        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in ReimbursementProposal");
-
         final protobuf.ReimbursementProposal proposalProto = proto.getReimbursementProposal();
         return new ReimbursementProposal(proto.getName(),
                 proto.getLink(),
@@ -105,7 +104,9 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 proposalProto.getRequestedBsq(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
@@ -172,7 +173,8 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 getRequestedBsq().value,
                 getVersion(),
                 getCreationDate(),
-                txId);
+                txId,
+                extraDataMap == null ? null : new TreeMap<>(extraDataMap));
     }
 
     @Override
