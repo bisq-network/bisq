@@ -44,8 +44,8 @@ TOOL_SOURCES="$OUT_DIR/sources.txt"
 mkdir -p "$TOOL_CLASSES"
 
 {
-  echo "$ROOT_DIR/core/src/main/java/bisq/core/encoding/canonical/CanonicalMapEntryIterator.java"
-  echo "$ROOT_DIR/core/src/main/java/bisq/core/encoding/canonical/LegacyCollectorsToMapIterator.java"
+  echo "$ROOT_DIR/common/src/main/java/bisq/common/encoding/canonical/CanonicalMapEntryIterator.java"
+  echo "$ROOT_DIR/common/src/main/java/bisq/common/encoding/canonical/LegacyCollectorsToMapIterator.java"
   echo "$ROOT_DIR/core/src/test/java/bisq/core/dao/tools/HashMapIntrospection.java"
   echo "$ROOT_DIR/core/src/test/java/bisq/core/dao/tools/HashMapOrderPathProbe.java"
 } > "$TOOL_SOURCES"
