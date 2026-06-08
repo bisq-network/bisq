@@ -90,6 +90,49 @@ public class FilterSerializationTests {
     }
 
     @Test
+    void serializeForHashMatchesProtobufForCanonicalSchema() {
+        Filter filter = new Filter(List.of("offer-1", "offer-2"),
+                List.of("trading-node-2.onion:8002", "trading-node-1.onion:8001"),
+                List.of(new PaymentAccountFilter("SEPA", "getIban", "sha256-v1:abcdef")),
+                List.of("USD", "EUR"),
+                List.of("SEPA", "ZELLE"),
+                List.of("seed2.onion:8002", "seed1.onion:8001"),
+                List.of("price2.onion:8002", "price1.onion:8001"),
+                true,
+                List.of("btc2.onion:8333", "btc1.onion:8333"),
+                true,
+                "1.9.0",
+                "1.9.1",
+                List.of("mediator2.onion:8002", "mediator1.onion:8001"),
+                List.of("refund2.onion:8002", "refund1.onion:8001"),
+                List.of("signer-key-2", "signer-key-1"),
+                ownerPublicKey.getEncoded(),
+                1_700_000_000_000L,
+                "signature-base64",
+                signerPubKeyAsHex,
+                List.of("dev-key-2", "dev-key-1"),
+                true,
+                List.of("auto-conf-2", "auto-conf-1"),
+                List.of("network-node-2.onion:8002", "network-node-1.onion:8001"),
+                true,
+                true,
+                true,
+                -0.0,
+                List.of(0, 1, 128, -1),
+                1_000L,
+                2_000L,
+                3_000L,
+                4_000L,
+                List.of(new PaymentAccountFilter("ZELLE", "getEmail", "sha256-v1:123456")),
+                List.of("added-btc-2.onion:8333", "added-btc-1.onion:8333"),
+                List.of("added-seed-2.onion:8002", "added-seed-1.onion:8001"),
+                "filter-uid",
+                true);
+
+        assertArrayEquals(filter.serialize(), filter.serializeForHash());
+    }
+
+    @Test
     void fromProtoPreservesNetworkBanOrderForSignedHash() {
         Filter signedFilter = MockFilterFactory.createSignedFilterWithNodeLists(ownerPublicKey,
                 signerKey,

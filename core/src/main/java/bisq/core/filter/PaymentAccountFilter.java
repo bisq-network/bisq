@@ -17,6 +17,9 @@
 
 package bisq.core.filter;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 
 import lombok.Value;
@@ -24,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Slf4j
-public class PaymentAccountFilter implements NetworkPayload {
+public class PaymentAccountFilter implements NetworkPayload, Canonical {
     private final String paymentMethodId;
     private final String getMethodName;
     private final String value;
@@ -48,6 +51,23 @@ public class PaymentAccountFilter implements NetworkPayload {
         return new PaymentAccountFilter(proto.getPaymentMethodId(),
                 proto.getGetMethodName(),
                 proto.getValue());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<PaymentAccountFilter> SCHEMA =
+            CanonicalSchema.<PaymentAccountFilter>newBuilder()
+                    .string(1, PaymentAccountFilter::getPaymentMethodId)
+                    .string(2, PaymentAccountFilter::getGetMethodName)
+                    .string(3, PaymentAccountFilter::getValue)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

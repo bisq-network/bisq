@@ -22,6 +22,9 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.Hex;
@@ -52,7 +55,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Filter implements ProtectedStoragePayload, ExpirablePayload, ExcludeForHashAwareProto {
+public final class Filter implements ProtectedStoragePayload, ExpirablePayload, ExcludeForHashAwareProto, Canonical {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
     private final List<String> bannedOfferIds;
@@ -506,6 +509,62 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     @Nullable
     public byte[] getOwnerPubKeyBytes() {
         return ownerPubKeyBytes == null ? null : ownerPubKeyBytes.clone();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<Filter> PAYLOAD_SCHEMA =
+            CanonicalSchema.<Filter>newBuilder()
+                    .repeatedString(1, Filter::getNodeAddressesBannedFromTrading)
+                    .repeatedString(2, Filter::getBannedOfferIds)
+                    .repeatedCompose(3, Filter::getBannedPaymentAccounts, PaymentAccountFilter.SCHEMA)
+                    .string(4, Filter::getSignatureAsBase64)
+                    .bytes(5, Filter::getOwnerPubKeyBytes)
+                    .repeatedString(7, Filter::getBannedCurrencies)
+                    .repeatedString(8, Filter::getBannedPaymentMethods)
+                    .repeatedString(10, Filter::getSeedNodes)
+                    .repeatedString(11, Filter::getPriceRelayNodes)
+                    .bool(12, Filter::isPreventPublicBtcNetwork)
+                    .repeatedString(13, Filter::getBtcNodes)
+                    .bool(14, Filter::isDisableDao)
+                    .string(15, Filter::getDisableDaoBelowVersion)
+                    .string(16, Filter::getDisableTradeBelowVersion)
+                    .repeatedString(17, Filter::getMediators)
+                    .repeatedString(18, Filter::getRefundAgents)
+                    .repeatedString(19, Filter::getBannedAccountWitnessSignerPubKeys)
+                    .int64(21, Filter::getCreationDate)
+                    .string(22, Filter::getSignerPubKeyAsHex)
+                    .repeatedString(23, Filter::getBannedPrivilegedDevPubKeys)
+                    .bool(24, Filter::isDisableAutoConf)
+                    .repeatedString(25, Filter::getBannedAutoConfExplorers)
+                    .repeatedString(26, Filter::getNodeAddressesBannedFromNetwork)
+                    .bool(27, Filter::isDisableApi)
+                    .bool(28, Filter::isDisableMempoolValidation)
+                    .bool(29, Filter::isDisablePowMessage)
+                    .doubleField(30, Filter::getPowDifficulty)
+                    .int64(31, Filter::getMakerFeeBtc)
+                    .int64(32, Filter::getTakerFeeBtc)
+                    .int64(33, Filter::getMakerFeeBsq)
+                    .int64(34, Filter::getTakerFeeBsq)
+                    .packedRepeatedInt32(35, Filter::getEnabledPowVersions)
+                    .repeatedCompose(36, Filter::getDelayedPayoutPaymentAccounts, PaymentAccountFilter.SCHEMA)
+                    .repeatedString(37, Filter::getAddedBtcNodes)
+                    .repeatedString(38, Filter::getAddedSeedNodes)
+                    .string(39, Filter::getUid)
+                    .bool(40, Filter::isDisableBsqSwap)
+                    .build();
+
+    public static final CanonicalSchema<Filter> SCHEMA =
+            CanonicalSchema.<Filter>newBuilder()
+                    .extend(4, filter -> filter, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 
