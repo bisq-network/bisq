@@ -8,11 +8,11 @@ iteration order that the canonical encoder must mimic for DAO state maps.
 
 - `HashMapOrderPathProbe.java` compares selected small key vectors across
   `HashMap(Map)`, `putAll`, `Collectors.toMap`, and
-  `LegacyCollectorsToMapHashMapOrderMapEntryIterator`.
+  `LegacyCollectorsToMapIterator`.
 - `HashMapIntrospection.java` contains the reflection code that reads `HashMap.table`, `threshold`, `loadFactor`, bucket chain lengths, and tree-bin counts.
 - `compare-hashmap-order-jdks.sh` runs the probe under Java 11 and Java 21. It
   fails if the `Collectors.toMap` HashMap order differs from
-  `LegacyCollectorsToMapHashMapOrderMapEntryIterator`, or if either output
+  `LegacyCollectorsToMapIterator`, or if either output
   differs across JDKs.
 
 ## Run
