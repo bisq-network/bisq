@@ -49,6 +49,24 @@ public class AccountingCanonicalEncoderTest {
     }
 
     @Test
+    public void accountingTxWithDefaultTypeOrdinalEncodeCanonicalMatchesProtobuf() {
+        // Type.BTC_TRADE_FEE_TX has ordinal 0, which exercises the proto3 default-value
+        // omission path for the `uint32 type = 1` field. Without this case only DPT_TX
+        // (ordinal 1) is covered, leaving the omit-when-zero path untested.
+        protobuf.AccountingTx proto = protobuf.AccountingTx.newBuilder()
+                .setType(AccountingTx.Type.BTC_TRADE_FEE_TX.ordinal())
+                .addOutputs(getAccountingTxOutputProto())
+                .setTruncatedTxId(ByteString.copyFrom(new byte[]{0x0a, 0x0b, 0x0c, 0x0d}))
+                .build();
+        AccountingTx tx = AccountingTx.fromProto(proto);
+
+        assertArrayEquals(tx.toProtoMessage().toByteArray(),
+                tx.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(tx.encodeCanonical(CanonicalEncoder.DEFAULT),
+                tx.serializeForHash());
+    }
+
+    @Test
     public void accountingBlockEncodeCanonicalMatchesProtobuf() {
         protobuf.AccountingBlock proto = protobuf.AccountingBlock.newBuilder()
                 .setHeight(1_234_567)
