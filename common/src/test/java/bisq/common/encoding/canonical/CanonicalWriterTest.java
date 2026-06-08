@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.encoding.canonical;
+package bisq.common.encoding.canonical;
 
 import org.junit.jupiter.api.Test;
 

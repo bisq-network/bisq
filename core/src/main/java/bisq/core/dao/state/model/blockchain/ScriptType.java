@@ -18,7 +18,7 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
-import bisq.core.encoding.canonical.CanonicalEnum;
+import bisq.common.encoding.canonical.CanonicalEnum;
 
 import bisq.common.proto.ProtoUtil;
 

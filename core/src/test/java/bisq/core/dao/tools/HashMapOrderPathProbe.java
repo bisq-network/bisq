@@ -17,7 +17,7 @@
 
 package bisq.core.dao.tools;
 
-import bisq.core.encoding.canonical.LegacyCollectorsToMapIterator;
+import bisq.common.encoding.canonical.LegacyCollectorsToMapIterator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

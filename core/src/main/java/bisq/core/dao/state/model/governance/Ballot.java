@@ -19,9 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
-import bisq.core.encoding.canonical.Canonical;
-import bisq.core.encoding.canonical.CanonicalEncoder;
-import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 

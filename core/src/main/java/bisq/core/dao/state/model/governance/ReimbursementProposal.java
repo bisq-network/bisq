@@ -22,9 +22,9 @@ import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.encoding.canonical.CanonicalEncoder;
-import bisq.core.encoding.canonical.CanonicalSchema;
-import bisq.core.encoding.canonical.TreeMapIterator;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
 

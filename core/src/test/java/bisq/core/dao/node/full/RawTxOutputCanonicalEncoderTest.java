@@ -18,8 +18,8 @@
 package bisq.core.dao.node.full;
 
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
-import bisq.core.encoding.canonical.CanonicalEncoder;
-import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import com.google.protobuf.ByteString;
 

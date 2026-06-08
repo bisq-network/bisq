@@ -20,9 +20,9 @@ package bisq.core.dao.node.full;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.encoding.canonical.Canonical;
-import bisq.core.encoding.canonical.CanonicalEncoder;
-import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Utilities;

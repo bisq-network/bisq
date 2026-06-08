@@ -18,7 +18,7 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.param.Param;
-import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.ByteString;
 

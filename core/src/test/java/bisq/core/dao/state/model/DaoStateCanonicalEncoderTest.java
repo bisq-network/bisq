@@ -23,9 +23,9 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
-import bisq.core.encoding.canonical.CanonicalEncoder;
-import bisq.core.encoding.canonical.CanonicalSchema;
-import bisq.core.encoding.canonical.LegacyCollectorsToMapIterator;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.LegacyCollectorsToMapIterator;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
