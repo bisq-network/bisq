@@ -116,6 +116,46 @@ fields, and the `excludeFromJsonDataMap` salt/metadata map. Migrating this path
 should be done as one complete hierarchy with contract-hash parity vectors for
 each concrete payload type.
 
+## Adjacent Serialization-Sensitive Payloads
+
+The following path is intentionally not classified as a remaining
+`serializeForHash()` fallback, but it still depends on protobuf serialization
+before a consensus hash is produced.
+
+### Blind Vote Encrypted Plaintexts
+
+`BlindVoteConsensus.getEncryptedVotes()` serializes
+`VoteWithProposalTxIdList` with protobuf `serialize()`, encrypts those bytes,
+and `MyBlindVoteListService.getOpReturnData()` hashes the encrypted vote bytes
+for the blind-vote op-return commitment. `getEncryptedMeritList()` similarly
+serializes `MeritList` with protobuf before encryption; that ciphertext is then
+stored as `BlindVote.encryptedMeritList` and included as bytes in the canonical
+`BlindVote` hash preimage.
+
+This differs from the migration targets above because Bisq does not directly
+hash the protobuf plaintext. The hash preimage is ciphertext. Still, the
+ciphertext and the op-return hash depend on the plaintext serialization format,
+and vote reveal currently decrypts those bytes and parses them with protobuf
+parsers. A naive switch from protobuf plaintext to canonical bytes would break
+decoding and could invalidate blind-vote commitments unless all affected peers
+agree on the new format.
+
+Recommended handling:
+
+- Do not change this path as part of the hash-preimage migration.
+- Treat any future change as a separate DAO/protocol compatibility change, not
+  as a local `serializeForHash()` migration.
+- Define a versioned encrypted plaintext format or envelope before changing the
+  plaintext bytes. The existing canonical encoder is one-way hash encoding, so
+  a migration needs an explicit decoder or another stable wire format, not just
+  `encodeCanonical()`.
+- Preserve legacy protobuf decoding for historical blind votes and old-cycle
+  reveals. Prefer an explicit version or activation signal over parse-fallback
+  ambiguity.
+- Add parity and compatibility vectors covering plaintext bytes, ciphertext,
+  op-return hash, decrypted parsing, and the resulting `BlindVote` canonical
+  hash before activation.
+
 ## Non-Protobuf Hashes
 
 The following nearby hash or signature paths do not hash serialized protobuf
