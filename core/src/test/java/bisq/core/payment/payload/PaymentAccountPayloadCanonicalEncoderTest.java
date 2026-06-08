@@ -47,8 +47,8 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                     PaymentAccountPayloadCanonicalSchemas.encode(paymentAccountPayload, CanonicalEncoder.DEFAULT),
                     testCase.name() + " canonical bytes");
             assertArrayEquals(protobufBytes,
-                    paymentAccountPayload.serializeForHash(),
-                    testCase.name() + " serializeForHash bytes");
+                    paymentAccountPayload.encodeCanonical(),
+                    testCase.name() + " encodeCanonical bytes");
             assertArrayEquals(Hash.getRipemd160hash(protobufBytes),
                     paymentAccountPayload.getHashForContract(),
                     testCase.name() + " contract hash");
@@ -68,8 +68,8 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                     PaymentAccountPayloadCanonicalSchemas.encode(paymentAccountPayload, CanonicalEncoder.DEFAULT),
                     testCase.name() + " canonical bytes");
             assertArrayEquals(protobufBytes,
-                    paymentAccountPayload.serializeForHash(),
-                    testCase.name() + " serializeForHash bytes");
+                    paymentAccountPayload.encodeCanonical(),
+                    testCase.name() + " encodeCanonical bytes");
             assertArrayEquals(Hash.getRipemd160hash(protobufBytes),
                     paymentAccountPayload.getHashForContract(),
                     testCase.name() + " contract hash");
@@ -92,8 +92,8 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                     PaymentAccountPayloadCanonicalSchemas.encode(paymentAccountPayload, CanonicalEncoder.DEFAULT),
                     named.name() + " canonical bytes");
             assertArrayEquals(protobufBytes,
-                    paymentAccountPayload.serializeForHash(),
-                    named.name() + " serializeForHash bytes");
+                    paymentAccountPayload.encodeCanonical(),
+                    named.name() + " encodeCanonical bytes");
             assertArrayEquals(Hash.getRipemd160hash(protobufBytes),
                     paymentAccountPayload.getHashForContract(),
                     named.name() + " contract hash");

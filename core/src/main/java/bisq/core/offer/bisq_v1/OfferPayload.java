@@ -24,7 +24,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
@@ -56,7 +55,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class OfferPayload extends OfferPayloadBase implements Canonical {
+public final class OfferPayload extends OfferPayloadBase {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -203,7 +202,7 @@ public final class OfferPayload extends OfferPayloadBase implements Canonical {
         if (this.hash == null && this.offerFeePaymentTxId != null) {
             // A proto message can be created only after the offerFeePaymentTxId is
             // set to a non-null value;  now is the time to cache the payload hash.
-            this.hash = Hash.getSha256Hash(serializeForHash());
+            this.hash = Hash.getSha256Hash(encodeCanonical());
         }
         return this.hash;
     }

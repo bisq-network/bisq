@@ -82,7 +82,6 @@ public class DisputeAgentCanonicalEncoderTest {
 
     private static void assertCanonicalMatchesProtobuf(DisputeAgent disputeAgent) {
         assertArrayEquals(disputeAgent.serialize(), disputeAgent.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(disputeAgent.encodeCanonical(CanonicalEncoder.DEFAULT), disputeAgent.serializeForHash());
     }
 
     private static PubKeyRing pubKeyRing() {

@@ -44,12 +44,10 @@ public class P2PDataStorageCanonicalEncoderTest {
 
         assertArrayEquals(pair.toProtoMessage().toByteArray(),
                 pair.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(pair.encodeCanonical(CanonicalEncoder.DEFAULT),
-                pair.serializeForHash());
     }
 
     @Test
-    public void dataAndSeqNrPairDelegatesPayloadFieldToSerializeForHash() {
+    public void dataAndSeqNrPairDelegatesPayloadFieldToCanonicalEncoding() {
         P2PDataStorage.DataAndSeqNrPair pair = new P2PDataStorage.DataAndSeqNrPair(
                 new CanonicalStoragePayloadStub(),
                 7);
@@ -60,7 +58,6 @@ public class P2PDataStorageCanonicalEncoderTest {
                         0x0a, 0x02, 0x08, 0x2a,
                         0x10, 0x07},
                 canonicalBytes);
-        assertArrayEquals(canonicalBytes, pair.serializeForHash());
         assertFalse(Arrays.equals(pair.toProtoMessage().toByteArray(), canonicalBytes));
     }
 

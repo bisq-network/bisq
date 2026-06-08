@@ -129,8 +129,6 @@ public class GovernanceCanonicalEncoderTest {
 
         assertArrayEquals(tempProposalPayload.toProtoMessage().toByteArray(),
                 tempProposalPayload.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(tempProposalPayload.encodeCanonical(CanonicalEncoder.DEFAULT),
-                tempProposalPayload.serializeForHash());
     }
 
     @Test
@@ -139,8 +137,6 @@ public class GovernanceCanonicalEncoderTest {
 
         assertArrayEquals(myProposalList.toProtoMessage().toByteArray(),
                 myProposalList.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(myProposalList.encodeCanonical(CanonicalEncoder.DEFAULT),
-                myProposalList.serializeForHash());
     }
 
     @Test
@@ -156,15 +152,11 @@ public class GovernanceCanonicalEncoderTest {
 
         assertArrayEquals(blindVote.toProtoMessage().toByteArray(),
                 blindVote.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(blindVote.encodeCanonical(CanonicalEncoder.DEFAULT),
-                blindVote.serializeForHash());
 
         MyBlindVoteList myBlindVoteList = new MyBlindVoteList(List.of(blindVote));
 
         assertArrayEquals(myBlindVoteList.toProtoMessage().toByteArray(),
                 myBlindVoteList.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(myBlindVoteList.encodeCanonical(CanonicalEncoder.DEFAULT),
-                myBlindVoteList.serializeForHash());
     }
 
     @Test
@@ -271,7 +263,7 @@ public class GovernanceCanonicalEncoderTest {
                 VoteWithProposalTxIdList.getVoteWithProposalTxIdListFromBytes(proto.toByteArray());
 
         SecretKey secretKey = BlindVoteConsensus.createSecretKey();
-        byte[] encryptedVotes = BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdList.serializeForHash(),
+        byte[] encryptedVotes = BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdList.encodeCanonical(),
                 secretKey);
         VoteWithProposalTxIdList decrypted = VoteResultConsensus.decryptVotes(encryptedVotes, secretKey);
 
@@ -341,7 +333,7 @@ public class GovernanceCanonicalEncoderTest {
         MeritList meritList = MeritList.getMeritListFromBytes(proto.toByteArray());
 
         SecretKey secretKey = BlindVoteConsensus.createSecretKey();
-        byte[] encryptedMeritList = BlindVoteConsensus.getEncryptedMeritList(meritList.serializeForHash(), secretKey);
+        byte[] encryptedMeritList = BlindVoteConsensus.getEncryptedMeritList(meritList.encodeCanonical(), secretKey);
         MeritList decrypted = MeritConsensus.decryptMeritList(encryptedMeritList, secretKey);
 
         assertArrayEquals(proto.toByteArray(), decrypted.toProtoMessage().toByteArray());
@@ -413,7 +405,6 @@ public class GovernanceCanonicalEncoderTest {
 
         byte[] canonicalBytes = voteWithProposalTxIdList.encodeCanonical(CanonicalEncoder.DEFAULT);
         assertArrayEquals(proto.toByteArray(), canonicalBytes);
-        assertArrayEquals(canonicalBytes, voteWithProposalTxIdList.serializeForHash());
         assertArrayEquals(proto.toByteArray(), protobuf.VoteWithProposalTxIdList.parseFrom(canonicalBytes).toByteArray());
         return canonicalBytes;
     }
@@ -423,7 +414,6 @@ public class GovernanceCanonicalEncoderTest {
 
         byte[] canonicalBytes = meritList.encodeCanonical(CanonicalEncoder.DEFAULT);
         assertArrayEquals(proto.toByteArray(), canonicalBytes);
-        assertArrayEquals(canonicalBytes, meritList.serializeForHash());
         assertArrayEquals(proto.toByteArray(), protobuf.MeritList.parseFrom(canonicalBytes).toByteArray());
         return canonicalBytes;
     }

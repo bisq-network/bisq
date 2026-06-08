@@ -828,7 +828,7 @@ public class FilterManager {
     }
 
     private Sha256Hash getSha256Hash(Filter filter) {
-        return Sha256Hash.of(filter.serializeForHash());
+        return Sha256Hash.of(filter.encodeCanonical());
     }
 
     private String getPubKeyAsHex(ECKey ecKey) {

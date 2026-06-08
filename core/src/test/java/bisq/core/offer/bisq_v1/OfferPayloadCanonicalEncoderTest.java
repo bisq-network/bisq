@@ -43,8 +43,6 @@ public class OfferPayloadCanonicalEncoderTest {
 
         assertArrayEquals(offerPayload.serialize(),
                 offerPayload.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(offerPayload.encodeCanonical(CanonicalEncoder.DEFAULT),
-                offerPayload.serializeForHash());
     }
 
     @Test
@@ -69,8 +67,6 @@ public class OfferPayloadCanonicalEncoderTest {
 
         assertArrayEquals(offerPayload.serialize(),
                 offerPayload.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(offerPayload.encodeCanonical(CanonicalEncoder.DEFAULT),
-                offerPayload.serializeForHash());
     }
 
     private static OfferPayload getOfferPayload() {

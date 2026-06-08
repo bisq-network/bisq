@@ -266,7 +266,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                 .collect(Collectors.toList());
         final VoteWithProposalTxIdList voteWithProposalTxIdList = new VoteWithProposalTxIdList(list);
         log.info("voteWithProposalTxIdList used in blind vote. voteWithProposalTxIdList={}", voteWithProposalTxIdList);
-        byte[] canonicalPlaintext = voteWithProposalTxIdList.serializeForHash();
+        byte[] canonicalPlaintext = voteWithProposalTxIdList.encodeCanonical();
         if (verifyBlindVoteEncryptedVotesSerialization) {
             verifyBlindVoteEncryptedVotesSerializationMatchesLegacy(voteWithProposalTxIdList, canonicalPlaintext);
         }
@@ -303,7 +303,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private byte[] getEncryptedMeritList(String blindVoteTxId, SecretKey secretKey) throws CryptoException {
         MeritList meritList = getMerits(blindVoteTxId);
-        byte[] canonicalPlaintext = meritList.serializeForHash();
+        byte[] canonicalPlaintext = meritList.encodeCanonical();
         if (verifyBlindVoteEncryptedMeritListSerialization) {
             verifyBlindVotePlaintextSerializationMatchesLegacy("encrypted merit list",
                     canonicalPlaintext,

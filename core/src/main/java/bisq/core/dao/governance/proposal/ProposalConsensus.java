@@ -40,7 +40,7 @@ public class ProposalConsensus {
     }
 
     public static byte[] getHashOfPayload(Proposal payload) {
-        final byte[] bytes = payload.serializeForHash();
+        final byte[] bytes = payload.encodeCanonical();
         return Hash.getSha256Ripemd160hash(bytes);
     }
 

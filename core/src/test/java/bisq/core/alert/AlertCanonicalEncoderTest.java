@@ -35,6 +35,5 @@ public class AlertCanonicalEncoderTest {
                 "signature-base64");
 
         assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(alert.encodeCanonical(CanonicalEncoder.DEFAULT), alert.serializeForHash());
     }
 }

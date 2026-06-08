@@ -161,7 +161,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     }
 
     public final byte[] getHashForContract() {
-        return Hash.getRipemd160hash(serializeForHash());
+        return Hash.getRipemd160hash(encodeCanonical());
     }
 
     @Override

@@ -30,7 +30,6 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.ProofOfWork;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
@@ -46,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public final class BsqSwapOfferPayload extends OfferPayloadBase
-        implements ProofOfWorkPayload, CapabilityRequiringPayload, Canonical {
+        implements ProofOfWorkPayload, CapabilityRequiringPayload {
 
     public static BsqSwapOfferPayload from(BsqSwapOfferPayload original,
                                            String offerId,

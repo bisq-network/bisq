@@ -35,8 +35,6 @@ public class AccountingCanonicalEncoderTest {
 
         assertArrayEquals(output.toProtoMessage().toByteArray(),
                 output.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(output.encodeCanonical(CanonicalEncoder.DEFAULT),
-                output.serializeForHash());
     }
 
     @Test
@@ -63,8 +61,6 @@ public class AccountingCanonicalEncoderTest {
 
         assertArrayEquals(tx.toProtoMessage().toByteArray(),
                 tx.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(tx.encodeCanonical(CanonicalEncoder.DEFAULT),
-                tx.serializeForHash());
     }
 
     @Test
@@ -81,8 +77,6 @@ public class AccountingCanonicalEncoderTest {
 
         assertArrayEquals(tx.toProtoMessage().toByteArray(),
                 tx.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(tx.encodeCanonical(CanonicalEncoder.DEFAULT),
-                tx.serializeForHash());
     }
 
     @Test
@@ -98,8 +92,6 @@ public class AccountingCanonicalEncoderTest {
 
         assertArrayEquals(block.toProtoMessage().toByteArray(),
                 block.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(block.encodeCanonical(CanonicalEncoder.DEFAULT),
-                block.serializeForHash());
     }
 
     private static protobuf.AccountingTx getAccountingTxProto() {

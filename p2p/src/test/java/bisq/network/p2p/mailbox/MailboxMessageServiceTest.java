@@ -133,7 +133,7 @@ public class MailboxMessageServiceTest {
         when(protectedMailboxStorageEntry.getProtectedStoragePayload()).thenReturn(mailboxStoragePayload);
         when(protectedMailboxStorageEntry.getReceiversPubKey()).thenReturn(receiversPubKey);
         when(mailboxStoragePayload.getPrefixedSealedAndSignedMessage()).thenReturn(prefixedSealedAndSignedMessage);
-        when(mailboxStoragePayload.serializeForHash()).thenReturn("mailboxPayload".getBytes(StandardCharsets.UTF_8));
+        when(mailboxStoragePayload.encodeCanonical()).thenReturn("mailboxPayload".getBytes(StandardCharsets.UTF_8));
         when(prefixedSealedAndSignedMessage.getUid()).thenReturn("uid");
         when(prefixedSealedAndSignedMessage.getSenderNodeAddress()).thenReturn(PEER_NODE_ADDRESS);
         when(prefixedSealedAndSignedMessage.getSealedAndSigned()).thenReturn(sealedAndSigned);

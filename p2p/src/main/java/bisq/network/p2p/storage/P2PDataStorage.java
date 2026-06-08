@@ -1253,6 +1253,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * @return Hash of data
      */
     public static byte[] get32ByteHash(NetworkPayload data) {
+        if (data instanceof Canonical canonical) {
+            return Hash.getSha256Hash(canonical.encodeCanonical());
+        }
         return Hash.getSha256Hash(data.serializeForHash());
     }
 
@@ -1306,14 +1309,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
             CanonicalWriter writer = new CanonicalWriter();
             // DataAndSeqNrPair is a hash/signature preimage wrapper for the protected payload bytes
-            // and the sequence number. Keep field 1 delegated to ProtectedStoragePayload.serializeForHash()
+            // and the sequence number. Keep field 1 delegated to the protected payload's own hash preimage
             // instead of trying to model the whole StoragePayload oneof here: protected payload variants are
-            // migrated independently. Migrated variants contribute canonical bytes, while variants without
-            // schemas still contribute the legacy protobuf bytes, preserving byte compatibility for those
-            // P2P storage keys and sequence-number signatures until each payload has parity tests and an
-            // explicit compatibility plan. Field numbers still mirror protobuf.DataAndSeqNrPair:
+            // migrated independently. Migrated variants contribute canonical bytes directly, while variants
+            // without schemas still contribute the legacy protobuf bytes, preserving byte compatibility for
+            // those P2P storage keys and sequence-number signatures until each payload has parity tests and
+            // an explicit compatibility plan. Field numbers still mirror protobuf.DataAndSeqNrPair:
             // payload = 1 and sequence_number = 2.
-            writer.writeCompose(1, protectedStoragePayload.serializeForHash());
+            byte[] payloadBytes = protectedStoragePayload instanceof Canonical canonical ?
+                    canonical.encodeCanonical() :
+                    protectedStoragePayload.serializeForHash();
+            writer.writeCompose(1, payloadBytes);
             writer.writeInt32(2, sequenceNumber);
             return writer.toByteArray();
         }

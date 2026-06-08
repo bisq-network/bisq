@@ -269,8 +269,8 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                     .sorted(Comparator.comparing(Proposal::getTxId))
                     .collect(Collectors.toList());
 
-            // We use MyProposalList to get the serialized bytes from the proposals list
-            byte[] serializedProposals = new MyProposalList(proposals).serializeForHash();
+            // We use MyProposalList to get the canonical bytes from the proposals list
+            byte[] serializedProposals = new MyProposalList(proposals).encodeCanonical();
 
             byte[] prevHash;
             if (proposalStateBlockChain.isEmpty()) {

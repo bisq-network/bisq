@@ -364,7 +364,7 @@ public class TestState {
         when(payloadMock.getSenderPubKeyForAddOperation()).thenReturn(senderKey);
         when(payloadMock.toProtoMessage()).thenReturn(messageMock);
         when(payloadMock.serialize()).thenReturn(new byte[]{});
-        when(payloadMock.serializeForHash()).thenReturn(new byte[]{});
+        when(payloadMock.encodeCanonical()).thenReturn(new byte[]{});
 
         return payloadMock;
     }

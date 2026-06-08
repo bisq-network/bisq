@@ -175,7 +175,7 @@ public class MockFilterFactory {
     }
 
     public static Filter signFilter(Filter unsignedFilter, ECKey signerKey) {
-        byte[] filterData = unsignedFilter.serializeForHash();
+        byte[] filterData = unsignedFilter.encodeCanonical();
         Sha256Hash hash = Sha256Hash.of(filterData);
 
         ECKey.ECDSASignature ecdsaSignature = LowRSigningKey.from(signerKey).sign(hash);

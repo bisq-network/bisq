@@ -119,7 +119,6 @@ public class MailboxStoragePayloadTest {
 
     private static void assertCanonicalMatchesProtobuf(MailboxStoragePayload payload) {
         assertArrayEquals(payload.serialize(), payload.encodeCanonical(CanonicalEncoder.DEFAULT));
-        assertArrayEquals(payload.encodeCanonical(CanonicalEncoder.DEFAULT), payload.serializeForHash());
     }
 
     private static protobuf.StoragePayload buildStoragePayloadWithHashMapExtraData() throws NoSuchAlgorithmException {

@@ -81,7 +81,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
         this.link = link;
         this.bondedRoleType = bondedRoleType;
 
-        hash = Hash.getSha256Ripemd160hash(serializeForHash());
+        hash = Hash.getSha256Ripemd160hash(encodeCanonical());
     }
 
     @Override

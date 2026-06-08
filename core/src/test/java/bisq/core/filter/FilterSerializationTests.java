@@ -65,10 +65,10 @@ public class FilterSerializationTests {
     }
 
     @Test
-    void serializeForHashIncludesFormerExcludedFields() {
+    void canonicalEncodingIncludesFormerExcludedFields() {
         Filter filterWithoutSig = MockFilterFactory.createFilter(ownerPublicKey, signerPubKeyAsHex);
 
-        assertArrayEquals(filterWithoutSig.serialize(), filterWithoutSig.serializeForHash());
+        assertArrayEquals(filterWithoutSig.serialize(), filterWithoutSig.encodeCanonical());
     }
 
     @Test
@@ -86,11 +86,11 @@ public class FilterSerializationTests {
 
         assertTrue(filter.toProtoMessage().getFilter().getOwnerPubKeyBytes().isEmpty());
         assertNull(Filter.fromProto(filter.toProtoMessage().getFilter()).getOwnerPubKeyBytes());
-        assertArrayEquals(filter.serialize(), filter.serializeForHash());
+        assertArrayEquals(filter.serialize(), filter.encodeCanonical());
     }
 
     @Test
-    void serializeForHashMatchesProtobufForCanonicalSchema() {
+    void encodeCanonicalMatchesProtobufForCanonicalSchema() {
         Filter filter = new Filter(List.of("offer-1", "offer-2"),
                 List.of("trading-node-2.onion:8002", "trading-node-1.onion:8001"),
                 List.of(new PaymentAccountFilter("SEPA", "getIban", "sha256-v1:abcdef")),
@@ -129,7 +129,7 @@ public class FilterSerializationTests {
                 "filter-uid",
                 true);
 
-        assertArrayEquals(filter.serialize(), filter.serializeForHash());
+        assertArrayEquals(filter.serialize(), filter.encodeCanonical());
     }
 
     @Test
@@ -148,8 +148,8 @@ public class FilterSerializationTests {
 
         assertEquals(signedFilter.getNodeAddressesBannedFromNetwork(),
                 roundTrippedFilter.getNodeAddressesBannedFromNetwork());
-        assertArrayEquals(Filter.cloneWithoutSig(signedFilter).serializeForHash(),
-                Filter.cloneWithoutSig(roundTrippedFilter).serializeForHash());
+        assertArrayEquals(Filter.cloneWithoutSig(signedFilter).encodeCanonical(),
+                Filter.cloneWithoutSig(roundTrippedFilter).encodeCanonical());
         assertEquals(signedFilter.getSignatureAsBase64(), roundTrippedFilter.getSignatureAsBase64());
     }
 
