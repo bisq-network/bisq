@@ -20,6 +20,9 @@ package bisq.core.dao.governance.proposal;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.governance.Proposal;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.persistable.PersistableList;
 
 import java.util.ArrayList;
@@ -32,7 +35,7 @@ import lombok.EqualsAndHashCode;
  * PersistableEnvelope wrapper for list of proposals. Used in vote consensus, so changes can break consensus!
  */
 @EqualsAndHashCode(callSuper = true)
-public class MyProposalList extends PersistableList<Proposal> implements ConsensusCritical {
+public class MyProposalList extends PersistableList<Proposal> implements ConsensusCritical, Canonical {
 
     public MyProposalList(List<Proposal> list) {
         super(list);
@@ -63,6 +66,26 @@ public class MyProposalList extends PersistableList<Proposal> implements Consens
         return new MyProposalList(new ArrayList<>(proto.getProposalList().stream()
                 .map(Proposal::fromProto)
                 .collect(Collectors.toList())));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<MyProposalList> PAYLOAD_SCHEMA =
+            CanonicalSchema.<MyProposalList>newBuilder()
+                    .repeatedCompose(1, MyProposalList::getList, Proposal.getProposalSchemaBuilder().build())
+                    .build();
+
+    public static final CanonicalSchema<MyProposalList> SCHEMA =
+            CanonicalSchema.<MyProposalList>newBuilder()
+                    .extend(19, myProposalList -> myProposalList, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

@@ -32,6 +32,7 @@ import bisq.common.util.CollectionUtils;
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 

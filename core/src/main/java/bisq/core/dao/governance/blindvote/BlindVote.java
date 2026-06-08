@@ -19,6 +19,9 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.governance.ConsensusCritical;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -41,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Immutable
 @Slf4j
 @Value
-public final class BlindVote implements PersistablePayload, NetworkPayload, ConsensusCritical {
+public final class BlindVote implements PersistablePayload, NetworkPayload, ConsensusCritical, Canonical {
     private final byte[] encryptedVotes; // created from voteWithProposalTxIdList
     private final String txId;
     // Stake is revealed in the BSQ tx anyway as output value so no reason to encrypt it here.
@@ -102,6 +105,24 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 proto.getStake(),
                 proto.getEncryptedMeritList().toByteArray(),
                 proto.getDate());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<BlindVote> SCHEMA = CanonicalSchema.<BlindVote>newBuilder()
+            .bytes(1, BlindVote::getEncryptedVotes)
+            .string(2, BlindVote::getTxId)
+            .int64(3, BlindVote::getStake)
+            .bytes(4, BlindVote::getEncryptedMeritList)
+            .int64(5, BlindVote::getDate)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

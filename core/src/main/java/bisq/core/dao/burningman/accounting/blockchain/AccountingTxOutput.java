@@ -19,6 +19,9 @@ package bisq.core.dao.burningman.accounting.blockchain;
 
 import bisq.core.dao.burningman.BurningManPresentationService;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 
 import lombok.EqualsAndHashCode;
@@ -32,7 +35,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 // Name is burningman candidate name. For legacy Burningman we shorten to safe space.
 @Slf4j
 @EqualsAndHashCode
-public final class AccountingTxOutput implements NetworkPayload {
+public final class AccountingTxOutput implements NetworkPayload, Canonical {
     private static final String LEGACY_BM_FEES_SHORT = "LBMF";
     private static final String LEGACY_BM_DPT_SHORT = "LBMD";
 
@@ -68,10 +71,9 @@ public final class AccountingTxOutput implements NetworkPayload {
 
     @Override
     public protobuf.AccountingTxOutput toProtoMessage() {
-        checkArgument(value < Integer.MAX_VALUE,
-                "We only support integer values in protobuf storage for the amount.");
+        int intValue = getProtoValue();
         return protobuf.AccountingTxOutput.newBuilder()
-                .setValue((int) value)
+                .setValue(intValue)
                 .setName(name).build();
     }
 
@@ -79,6 +81,28 @@ public final class AccountingTxOutput implements NetworkPayload {
         int intValue = proto.getValue();
         checkArgument(intValue >= 0, "Value must not be negative");
         return new AccountingTxOutput(intValue, proto.getName());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<AccountingTxOutput> SCHEMA =
+            CanonicalSchema.<AccountingTxOutput>newBuilder()
+                    .uint32(1, AccountingTxOutput::getProtoValue)
+                    .string(2, output -> output.name)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private int getProtoValue() {
+        checkArgument(value < Integer.MAX_VALUE,
+                "We only support integer values in protobuf storage for the amount.");
+        return (int) value;
     }
 
     @Override

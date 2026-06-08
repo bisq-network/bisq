@@ -18,6 +18,10 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.blindvote.MyBlindVoteList;
+import bisq.core.dao.governance.proposal.MyProposalList;
+
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.ByteString;
@@ -104,6 +108,40 @@ public class GovernanceCanonicalEncoderTest {
                 .setRemoveAssetProposal(protobuf.RemoveAssetProposal.newBuilder()
                         .setTickerSymbol("XYZ"))
                 .build());
+    }
+
+    @Test
+    public void myProposalListEncodeCanonicalMatchesPersistableEnvelopeProtobuf() {
+        MyProposalList myProposalList = new MyProposalList(List.of(Proposal.fromProto(getCompensationProposalProto())));
+
+        assertArrayEquals(myProposalList.toProtoMessage().toByteArray(),
+                myProposalList.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(myProposalList.encodeCanonical(CanonicalEncoder.DEFAULT),
+                myProposalList.serializeForHash());
+    }
+
+    @Test
+    public void blindVoteAndMyBlindVoteListEncodeCanonicalMatchesProtobuf() {
+        protobuf.BlindVote proto = protobuf.BlindVote.newBuilder()
+                .setEncryptedVotes(ByteString.copyFrom(new byte[]{0x01, 0x02, 0x03}))
+                .setTxId("blind-vote-tx")
+                .setStake(123_456)
+                .setEncryptedMeritList(ByteString.copyFrom(new byte[]{0x04, 0x05}))
+                .setDate(1_700_000_000_000L)
+                .build();
+        BlindVote blindVote = BlindVote.fromProto(proto);
+
+        assertArrayEquals(blindVote.toProtoMessage().toByteArray(),
+                blindVote.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(blindVote.encodeCanonical(CanonicalEncoder.DEFAULT),
+                blindVote.serializeForHash());
+
+        MyBlindVoteList myBlindVoteList = new MyBlindVoteList(List.of(blindVote));
+
+        assertArrayEquals(myBlindVoteList.toProtoMessage().toByteArray(),
+                myBlindVoteList.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(myBlindVoteList.encodeCanonical(CanonicalEncoder.DEFAULT),
+                myBlindVoteList.serializeForHash());
     }
 
     @Test
