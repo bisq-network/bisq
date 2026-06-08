@@ -18,6 +18,9 @@
 package bisq.common.crypto;
 
 import bisq.common.consensus.UsedForTradeContractJson;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Utilities;
 
@@ -40,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJson {
+public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJson, Canonical {
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
 
@@ -89,6 +92,21 @@ public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJso
         return new PubKeyRing(
                 proto.getSignaturePubKeyBytes().toByteArray(),
                 proto.getEncryptionPubKeyBytes().toByteArray());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<PubKeyRing> SCHEMA = CanonicalSchema.<PubKeyRing>newBuilder()
+            .bytes(1, PubKeyRing::getSignaturePubKeyBytes)
+            .bytes(2, PubKeyRing::getEncryptionPubKeyBytes)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

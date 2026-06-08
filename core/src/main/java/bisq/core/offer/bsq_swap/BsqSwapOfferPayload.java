@@ -30,20 +30,23 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.ProofOfWork;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.ProtoUtil;
-import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
 public final class BsqSwapOfferPayload extends OfferPayloadBase
-        implements ProofOfWorkPayload, CapabilityRequiringPayload {
+        implements ProofOfWorkPayload, CapabilityRequiringPayload, Canonical {
 
     public static BsqSwapOfferPayload from(BsqSwapOfferPayload original,
                                            String offerId,
@@ -143,6 +146,35 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 proto.getVersionNr(),
                 proto.getProtocolVersion()
         );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<BsqSwapOfferPayload> PAYLOAD_SCHEMA =
+            OfferPayloadBase.<BsqSwapOfferPayload>getBaseOfferPayloadSchemaBuilder()
+                    .int64(7, offerPayload -> offerPayload.amount)
+                    .int64(8, offerPayload -> offerPayload.minAmount)
+                    .compose(9, BsqSwapOfferPayload::getProofOfWorkForCanonical, ProofOfWork.SCHEMA)
+                    .string(11, offerPayload -> offerPayload.versionNr)
+                    .int32(12, offerPayload -> offerPayload.protocolVersion)
+                    .build();
+
+    public static final CanonicalSchema<BsqSwapOfferPayload> SCHEMA =
+            CanonicalSchema.<BsqSwapOfferPayload>newBuilder()
+                    .extend(10, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private ProofOfWork getProofOfWorkForCanonical() {
+        return checkNotNull(proofOfWork,
+                "BsqSwapOfferPayload is in invalid state: proofOfWork is not set when adding to P2P network.");
     }
 
 

@@ -17,9 +17,10 @@
 
 package bisq.core.offer;
 
+import bisq.common.encoding.canonical.CanonicalEnum;
 import bisq.common.proto.ProtoUtil;
 
-public enum OfferDirection {
+public enum OfferDirection implements CanonicalEnum {
     BUY,
     SELL;
 
@@ -29,5 +30,10 @@ public enum OfferDirection {
 
     public static protobuf.OfferDirection toProtoMessage(OfferDirection direction) {
         return protobuf.OfferDirection.valueOf(direction.name());
+    }
+
+    @Override
+    public int getCode() {
+        return toProtoMessage(this).getNumber();
     }
 }

@@ -17,6 +17,9 @@
 
 package bisq.common.crypto;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 
 import com.google.protobuf.ByteString;
@@ -25,7 +28,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
-public final class ProofOfWork implements NetworkPayload {
+public final class ProofOfWork implements NetworkPayload, Canonical {
     @Getter
     private final byte[] payload;
     @Getter
@@ -85,6 +88,26 @@ public final class ProofOfWork implements NetworkPayload {
                 proto.getSolution().toByteArray(),
                 proto.getVersion()
         );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<ProofOfWork> SCHEMA = CanonicalSchema.<ProofOfWork>newBuilder()
+            .bytes(1, ProofOfWork::getPayload)
+            .int64(2, ProofOfWork::getCounter)
+            .bytes(3, ProofOfWork::getChallenge)
+            .doubleField(4, ProofOfWork::getDifficulty)
+            .int64(5, ProofOfWork::getDuration)
+            .bytes(6, ProofOfWork::getSolution)
+            .int32(7, ProofOfWork::getVersion)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

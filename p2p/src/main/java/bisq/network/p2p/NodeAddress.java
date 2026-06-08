@@ -19,6 +19,9 @@ package bisq.network.p2p;
 
 import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.crypto.Hash;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
@@ -34,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class NodeAddress implements PersistablePayload, NetworkPayload, UsedForTradeContractJson {
+public final class NodeAddress implements PersistablePayload, NetworkPayload, UsedForTradeContractJson, Canonical {
     private final String hostName;
     private final int port;
 
@@ -73,6 +76,21 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload, Us
 
     public static NodeAddress fromProto(protobuf.NodeAddress proto) {
         return new NodeAddress(proto.getHostName(), proto.getPort());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<NodeAddress> SCHEMA = CanonicalSchema.<NodeAddress>newBuilder()
+            .string(1, NodeAddress::getHostName)
+            .int32(2, NodeAddress::getPort)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 
