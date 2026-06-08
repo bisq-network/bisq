@@ -63,6 +63,9 @@ import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalWriter;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -1263,7 +1266,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     @EqualsAndHashCode
     @ToString
-    public static final class DataAndSeqNrPair implements NetworkPayload, ExcludeForHashAwareProto {
+    public static final class DataAndSeqNrPair implements NetworkPayload, ExcludeForHashAwareProto, Canonical {
         // data are only used for calculating cryptographic hash from both values, so they are kept private
         private final ProtectedStoragePayload protectedStoragePayload;
         private final int sequenceNumber;
@@ -1291,13 +1294,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         private protobuf.StoragePayload toStoragePayloadProto(boolean serializeForHash) {
-            if (protectedStoragePayload instanceof ExcludeForHashAwareProto) {
-                ExcludeForHashAwareProto proto = (ExcludeForHashAwareProto) protectedStoragePayload;
+            if (protectedStoragePayload instanceof ExcludeForHashAwareProto proto) {
                 StoragePayload.Builder builder = (StoragePayload.Builder) proto.getBuilder(serializeForHash);
                 return resolveBuilder(builder, serializeForHash).build();
             } else {
                 return (StoragePayload) protectedStoragePayload.toProtoMessage();
             }
+        }
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+            CanonicalWriter writer = new CanonicalWriter();
+            writer.writeCompose(1, protectedStoragePayload.serializeForHash());
+            writer.writeInt32(2, sequenceNumber);
+            return writer.toByteArray();
         }
     }
 
