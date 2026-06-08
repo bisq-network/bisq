@@ -110,7 +110,7 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static final CanonicalSchema<PrefixedSealedAndSignedMessage> PAYLOAD_SCHEMA =
+    public static final CanonicalSchema<PrefixedSealedAndSignedMessage> SCHEMA =
             CanonicalSchema.<PrefixedSealedAndSignedMessage>newBuilder()
                     .compose(1, message -> message.senderNodeAddress, NodeAddress.SCHEMA)
                     .compose(2, message -> message.sealedAndSigned, SealedAndSigned.SCHEMA)

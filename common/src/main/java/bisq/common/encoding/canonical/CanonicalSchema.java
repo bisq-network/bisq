@@ -67,17 +67,6 @@ public final class CanonicalSchema<T> {
 
     public static <T> CanonicalSchema<T> oneof(String wrapperMessageName,
                                                int fieldNumber,
-                                               CanonicalSchema<T> payloadSchema) {
-        if (wrapperMessageName == null || wrapperMessageName.isBlank()) {
-            throw new IllegalArgumentException("Canonical oneof wrapper message name must not be blank");
-        }
-        return CanonicalSchema.<T>newBuilder()
-                .oneof(fieldNumber, Function.identity(), payloadSchema)
-                .build(wrapperMessageName);
-    }
-
-    public static <T> CanonicalSchema<T> oneof(String wrapperMessageName,
-                                               int fieldNumber,
                                                CanonicalSchema.Builder<T> payloadSchemaBuilder) {
         if (wrapperMessageName == null || wrapperMessageName.isBlank()) {
             throw new IllegalArgumentException("Canonical oneof wrapper message name must not be blank");

@@ -100,16 +100,12 @@ public final class Mediator extends DisputeAgent {
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<Mediator> PAYLOAD_SCHEMA =
-            DisputeAgent.<Mediator>getDisputeAgentSchemaBuilder()
-                    .string(7, mediator -> mediator.emailAddress)
-                    .string(8, mediator -> mediator.info)
-                    .build();
-
     public static final CanonicalSchema<Mediator> SCHEMA =
-            CanonicalSchema.<Mediator>newBuilder()
-                    .oneof(3, mediator -> mediator, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    3,
+                    DisputeAgent.<Mediator>getDisputeAgentSchemaBuilder()
+                            .string(7, mediator -> mediator.emailAddress)
+                            .string(8, mediator -> mediator.info));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

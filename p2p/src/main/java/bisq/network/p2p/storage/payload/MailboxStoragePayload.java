@@ -142,22 +142,18 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<MailboxStoragePayload> PAYLOAD_SCHEMA =
-            CanonicalSchema.<MailboxStoragePayload>newBuilder()
-                    .compose(1,
-                            mailboxStoragePayload -> mailboxStoragePayload.prefixedSealedAndSignedMessage,
-                            PrefixedSealedAndSignedMessage.PAYLOAD_SCHEMA)
-                    .bytes(2, mailboxStoragePayload -> mailboxStoragePayload.senderPubKeyForAddOperationBytes)
-                    .bytes(3, mailboxStoragePayload -> mailboxStoragePayload.ownerPubKeyBytes)
-                    .mapStringToString(4,
-                            MailboxStoragePayload::getExtraDataMapForCanonical,
-                            List::iterator)
-                    .build();
-
     public static final CanonicalSchema<MailboxStoragePayload> SCHEMA =
-            CanonicalSchema.<MailboxStoragePayload>newBuilder()
-                    .oneof(6, mailboxStoragePayload -> mailboxStoragePayload, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    6,
+                    CanonicalSchema.<MailboxStoragePayload>newBuilder()
+                            .compose(1,
+                                    mailboxStoragePayload -> mailboxStoragePayload.prefixedSealedAndSignedMessage,
+                                    PrefixedSealedAndSignedMessage.SCHEMA)
+                            .bytes(2, mailboxStoragePayload -> mailboxStoragePayload.senderPubKeyForAddOperationBytes)
+                            .bytes(3, mailboxStoragePayload -> mailboxStoragePayload.ownerPubKeyBytes)
+                            .mapStringToString(4,
+                                    MailboxStoragePayload::getExtraDataMapForCanonical,
+                                    List::iterator));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

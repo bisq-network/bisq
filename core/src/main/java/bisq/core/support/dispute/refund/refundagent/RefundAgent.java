@@ -106,16 +106,12 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<RefundAgent> PAYLOAD_SCHEMA =
-            DisputeAgent.<RefundAgent>getDisputeAgentSchemaBuilder()
-                    .string(7, refundAgent -> refundAgent.emailAddress)
-                    .string(8, refundAgent -> refundAgent.info)
-                    .build();
-
     public static final CanonicalSchema<RefundAgent> SCHEMA =
-            CanonicalSchema.<RefundAgent>newBuilder()
-                    .oneof(9, refundAgent -> refundAgent, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    9,
+                    DisputeAgent.<RefundAgent>getDisputeAgentSchemaBuilder()
+                            .string(7, refundAgent -> refundAgent.emailAddress)
+                            .string(8, refundAgent -> refundAgent.info));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

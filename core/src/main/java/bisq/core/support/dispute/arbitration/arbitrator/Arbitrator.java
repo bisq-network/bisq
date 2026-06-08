@@ -116,18 +116,14 @@ public final class Arbitrator extends DisputeAgent {
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<Arbitrator> PAYLOAD_SCHEMA =
-            DisputeAgent.<Arbitrator>getDisputeAgentSchemaBuilder()
-                    .bytes(7, arbitrator -> arbitrator.btcPubKey)
-                    .string(8, arbitrator -> arbitrator.btcAddress)
-                    .string(9, arbitrator -> arbitrator.emailAddress)
-                    .string(10, arbitrator -> arbitrator.info)
-                    .build();
-
     public static final CanonicalSchema<Arbitrator> SCHEMA =
-            CanonicalSchema.<Arbitrator>newBuilder()
-                    .oneof(2, arbitrator -> arbitrator, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    2,
+                    DisputeAgent.<Arbitrator>getDisputeAgentSchemaBuilder()
+                            .bytes(7, arbitrator -> arbitrator.btcPubKey)
+                            .string(8, arbitrator -> arbitrator.btcAddress)
+                            .string(9, arbitrator -> arbitrator.emailAddress)
+                            .string(10, arbitrator -> arbitrator.info));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

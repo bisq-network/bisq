@@ -109,7 +109,10 @@ public class CanonicalEncoderTest {
         CanonicalSchema<Value> legacyShape = CanonicalSchema.<Value>newBuilder()
                 .oneof(22, value -> value, VALUE_SCHEMA)
                 .build();
-        CanonicalSchema<Value> wrapperShape = CanonicalSchema.oneof("PersistableEnvelope", 22, VALUE_SCHEMA);
+        CanonicalSchema<Value> wrapperShape = CanonicalSchema.oneof("PersistableEnvelope",
+                22,
+                CanonicalSchema.<Value>newBuilder()
+                        .int32(1, Value::getValue));
         Value value = new Value(1);
 
         assertArrayEquals(CanonicalEncoder.DEFAULT.encode(value, legacyShape),

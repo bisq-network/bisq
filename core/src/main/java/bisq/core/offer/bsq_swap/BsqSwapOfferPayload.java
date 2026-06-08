@@ -153,19 +153,15 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<BsqSwapOfferPayload> PAYLOAD_SCHEMA =
-            OfferPayloadBase.<BsqSwapOfferPayload>getBaseOfferPayloadSchemaBuilder()
-                    .int64(7, offerPayload -> offerPayload.amount)
-                    .int64(8, offerPayload -> offerPayload.minAmount)
-                    .compose(9, BsqSwapOfferPayload::getProofOfWorkForCanonical, ProofOfWork.SCHEMA)
-                    .string(11, offerPayload -> offerPayload.versionNr)
-                    .int32(12, offerPayload -> offerPayload.protocolVersion)
-                    .build();
-
     public static final CanonicalSchema<BsqSwapOfferPayload> SCHEMA =
-            CanonicalSchema.<BsqSwapOfferPayload>newBuilder()
-                    .oneof(10, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    10,
+                    OfferPayloadBase.<BsqSwapOfferPayload>getBaseOfferPayloadSchemaBuilder()
+                            .int64(7, offerPayload -> offerPayload.amount)
+                            .int64(8, offerPayload -> offerPayload.minAmount)
+                            .compose(9, BsqSwapOfferPayload::getProofOfWorkForCanonical, ProofOfWork.SCHEMA)
+                            .string(11, offerPayload -> offerPayload.versionNr)
+                            .int32(12, offerPayload -> offerPayload.protocolVersion));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

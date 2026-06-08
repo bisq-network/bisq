@@ -326,48 +326,44 @@ public final class OfferPayload extends OfferPayloadBase implements Canonical {
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<OfferPayload> PAYLOAD_SCHEMA =
-            OfferPayloadBase.<OfferPayload>getBaseOfferPayloadSchemaBuilder()
-                    .doubleField(7, offerPayload -> offerPayload.marketPriceMargin)
-                    .bool(8, offerPayload -> offerPayload.useMarketBasedPrice)
-                    .int64(9, offerPayload -> offerPayload.amount)
-                    .int64(10, offerPayload -> offerPayload.minAmount)
-                    .string(11, offerPayload -> offerPayload.baseCurrencyCode)
-                    .string(12, offerPayload -> offerPayload.counterCurrencyCode)
-                    .repeatedCompose(13, offerPayload -> offerPayload.arbitratorNodeAddresses, NodeAddress.SCHEMA)
-                    .repeatedCompose(14, offerPayload -> offerPayload.mediatorNodeAddresses, NodeAddress.SCHEMA)
-                    .string(15, offerPayload -> offerPayload.paymentMethodId)
-                    .string(16, offerPayload -> offerPayload.makerPaymentAccountId)
-                    .string(17, OfferPayload::getOfferFeePaymentTxIdForCanonical)
-                    .string(18, offerPayload -> offerPayload.countryCode)
-                    .repeatedString(19, OfferPayload::getAcceptedCountryCodesForCanonical)
-                    .string(20, offerPayload -> offerPayload.bankId)
-                    .repeatedString(21, OfferPayload::getAcceptedBankIdsForCanonical)
-                    .string(22, offerPayload -> offerPayload.versionNr)
-                    .int64(23, offerPayload -> offerPayload.blockHeightAtOfferCreation)
-                    .int64(24, offerPayload -> offerPayload.txFee)
-                    .int64(25, offerPayload -> offerPayload.makerFee)
-                    .bool(26, offerPayload -> offerPayload.isCurrencyForMakerFeeBtc)
-                    .int64(27, offerPayload -> offerPayload.buyerSecurityDeposit)
-                    .int64(28, offerPayload -> offerPayload.sellerSecurityDeposit)
-                    .int64(29, offerPayload -> offerPayload.maxTradeLimit)
-                    .int64(30, offerPayload -> offerPayload.maxTradePeriod)
-                    .bool(31, offerPayload -> offerPayload.useAutoClose)
-                    .bool(32, offerPayload -> offerPayload.useReOpenAfterAutoClose)
-                    .int64(33, offerPayload -> offerPayload.lowerClosePrice)
-                    .int64(34, offerPayload -> offerPayload.upperClosePrice)
-                    .bool(35, offerPayload -> offerPayload.isPrivateOffer)
-                    .string(36, offerPayload -> offerPayload.hashOfChallenge)
-                    .mapStringToString(37,
-                            OfferPayload::getExtraDataMapForCanonical,
-                            SOURCE_ITERATION_ORDER)
-                    .int32(38, offerPayload -> offerPayload.protocolVersion)
-                    .build();
-
     public static final CanonicalSchema<OfferPayload> SCHEMA =
-            CanonicalSchema.<OfferPayload>newBuilder()
-                    .oneof(7, offerPayload -> offerPayload, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    7,
+                    OfferPayloadBase.<OfferPayload>getBaseOfferPayloadSchemaBuilder()
+                            .doubleField(7, offerPayload -> offerPayload.marketPriceMargin)
+                            .bool(8, offerPayload -> offerPayload.useMarketBasedPrice)
+                            .int64(9, offerPayload -> offerPayload.amount)
+                            .int64(10, offerPayload -> offerPayload.minAmount)
+                            .string(11, offerPayload -> offerPayload.baseCurrencyCode)
+                            .string(12, offerPayload -> offerPayload.counterCurrencyCode)
+                            .repeatedCompose(13, offerPayload -> offerPayload.arbitratorNodeAddresses, NodeAddress.SCHEMA)
+                            .repeatedCompose(14, offerPayload -> offerPayload.mediatorNodeAddresses, NodeAddress.SCHEMA)
+                            .string(15, offerPayload -> offerPayload.paymentMethodId)
+                            .string(16, offerPayload -> offerPayload.makerPaymentAccountId)
+                            .string(17, OfferPayload::getOfferFeePaymentTxIdForCanonical)
+                            .string(18, offerPayload -> offerPayload.countryCode)
+                            .repeatedString(19, OfferPayload::getAcceptedCountryCodesForCanonical)
+                            .string(20, offerPayload -> offerPayload.bankId)
+                            .repeatedString(21, OfferPayload::getAcceptedBankIdsForCanonical)
+                            .string(22, offerPayload -> offerPayload.versionNr)
+                            .int64(23, offerPayload -> offerPayload.blockHeightAtOfferCreation)
+                            .int64(24, offerPayload -> offerPayload.txFee)
+                            .int64(25, offerPayload -> offerPayload.makerFee)
+                            .bool(26, offerPayload -> offerPayload.isCurrencyForMakerFeeBtc)
+                            .int64(27, offerPayload -> offerPayload.buyerSecurityDeposit)
+                            .int64(28, offerPayload -> offerPayload.sellerSecurityDeposit)
+                            .int64(29, offerPayload -> offerPayload.maxTradeLimit)
+                            .int64(30, offerPayload -> offerPayload.maxTradePeriod)
+                            .bool(31, offerPayload -> offerPayload.useAutoClose)
+                            .bool(32, offerPayload -> offerPayload.useReOpenAfterAutoClose)
+                            .int64(33, offerPayload -> offerPayload.lowerClosePrice)
+                            .int64(34, offerPayload -> offerPayload.upperClosePrice)
+                            .bool(35, offerPayload -> offerPayload.isPrivateOffer)
+                            .string(36, offerPayload -> offerPayload.hashOfChallenge)
+                            .mapStringToString(37,
+                                    OfferPayload::getExtraDataMapForCanonical,
+                                    SOURCE_ITERATION_ORDER)
+                            .int32(38, offerPayload -> offerPayload.protocolVersion));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

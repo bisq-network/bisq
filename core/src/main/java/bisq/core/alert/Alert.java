@@ -140,20 +140,16 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload, C
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<Alert> PAYLOAD_SCHEMA =
-            CanonicalSchema.<Alert>newBuilder()
-                    .string(1, alert -> alert.message)
-                    .string(2, alert -> alert.version)
-                    .bool(3, alert -> alert.isUpdateInfo)
-                    .string(4, alert -> alert.signatureAsBase64)
-                    .bytes(5, alert -> alert.ownerPubKeyBytes)
-                    .bool(7, alert -> alert.isPreReleaseInfo)
-                    .build();
-
     public static final CanonicalSchema<Alert> SCHEMA =
-            CanonicalSchema.<Alert>newBuilder()
-                    .oneof(1, alert -> alert, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    1,
+                    CanonicalSchema.<Alert>newBuilder()
+                            .string(1, alert -> alert.message)
+                            .string(2, alert -> alert.version)
+                            .bool(3, alert -> alert.isUpdateInfo)
+                            .string(4, alert -> alert.signatureAsBase64)
+                            .bytes(5, alert -> alert.ownerPubKeyBytes)
+                            .bool(7, alert -> alert.isPreReleaseInfo));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

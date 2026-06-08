@@ -73,15 +73,11 @@ public class MyProposalList extends PersistableList<Proposal> implements Consens
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<MyProposalList> PAYLOAD_SCHEMA =
-            CanonicalSchema.<MyProposalList>newBuilder()
-                    .repeatedCompose(1, MyProposalList::getList, Proposal.getProposalSchemaBuilder().build())
-                    .build();
-
     public static final CanonicalSchema<MyProposalList> SCHEMA =
-            CanonicalSchema.<MyProposalList>newBuilder()
-                    .oneof(19, myProposalList -> myProposalList, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("PersistableEnvelope",
+                    19,
+                    CanonicalSchema.<MyProposalList>newBuilder()
+                            .repeatedCompose(1, MyProposalList::getList, Proposal.getProposalSchemaBuilder().build()));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

@@ -110,16 +110,12 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final CanonicalSchema<TempProposalPayload> PAYLOAD_SCHEMA =
-            CanonicalSchema.<TempProposalPayload>newBuilder()
-                    .compose(1, TempProposalPayload::getProposal, Proposal.getProposalSchemaBuilder().build())
-                    .bytes(2, TempProposalPayload::getOwnerPubKeyEncoded)
-                    .build();
-
     public static final CanonicalSchema<TempProposalPayload> SCHEMA =
-            CanonicalSchema.<TempProposalPayload>newBuilder()
-                    .oneof(8, tempProposalPayload -> tempProposalPayload, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("StoragePayload",
+                    8,
+                    CanonicalSchema.<TempProposalPayload>newBuilder()
+                            .compose(1, TempProposalPayload::getProposal, Proposal.getProposalSchemaBuilder().build())
+                            .bytes(2, TempProposalPayload::getOwnerPubKeyEncoded));
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
