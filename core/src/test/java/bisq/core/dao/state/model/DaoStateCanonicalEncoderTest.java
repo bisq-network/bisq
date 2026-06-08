@@ -180,6 +180,14 @@ class DaoStateCanonicalEncoderTest {
     }
 
     @Test
+    void serializesEmptyDaoStateForHashChainWithoutLastBlock() throws Exception {
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(new DaoState().getSerializedStateForHashChain());
+
+        assertEquals(0, proto.getChainHeight());
+        assertEquals(0, proto.getBlocksCount());
+    }
+
+    @Test
     void hashChainSerializationUsesCanonicalEncoderAndOnlyLastBlock() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 

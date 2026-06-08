@@ -339,7 +339,9 @@ public class DaoState implements PersistablePayload, Canonical {
 
         builder.repeatedCompose(2, daoState -> {
             if (includeLastBlockOnly) {
-                return Collections.singletonList(daoState.getLastBlock());
+                return daoState.getBlocks().isEmpty() ?
+                        Collections.emptyList() :
+                        Collections.singletonList(daoState.getLastBlock());
             } else {
                 return daoState.getBlocks();
             }
