@@ -24,6 +24,9 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.GetDataResponsePriority;
 
 import com.google.protobuf.ByteString;
@@ -48,7 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @ToString
 @Slf4j
-public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
+public final class Alert implements ProtectedStoragePayload, ExpirablePayload, Canonical {
     public static final long TTL = TimeUnit.DAYS.toMillis(90);
 
     private final String message;
@@ -130,6 +133,31 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getVersion(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSignatureAsBase64());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<Alert> PAYLOAD_SCHEMA =
+            CanonicalSchema.<Alert>newBuilder()
+                    .string(1, alert -> alert.message)
+                    .string(2, alert -> alert.version)
+                    .bool(3, alert -> alert.isUpdateInfo)
+                    .string(4, alert -> alert.signatureAsBase64)
+                    .bytes(5, alert -> alert.ownerPubKeyBytes)
+                    .bool(7, alert -> alert.isPreReleaseInfo)
+                    .build();
+
+    public static final CanonicalSchema<Alert> SCHEMA =
+            CanonicalSchema.<Alert>newBuilder()
+                    .oneof(1, alert -> alert, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

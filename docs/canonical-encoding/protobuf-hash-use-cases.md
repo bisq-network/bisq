@@ -26,7 +26,7 @@ Bisq instead of depending on protobuf runtime serialization behavior.
 | Bonded role hash | `Role` constructor hashes `Role.serializeForHash()` | `Role`, `BondedRoleType` | Migrated by making `serializeForHash()` use canonical bytes for `Canonical` models. Role schema already exists. |
 | Burning Man accounting oracle signatures | `AccountingNode.getSha256Hash` hashes `AccountingBlock.serializeForHash()` for single blocks and block collections before signing or verifying | `AccountingNode`, `AccountingBlock`, `AccountingTx`, `AccountingTxOutput`, accounting network messages | Migrated by adding canonical schemas for the accounting block model. |
 | Developer filter signature | `FilterManager` signs `Sha256Hash.of(filter.serializeForHash())` | `FilterManager`, `Filter`, `PaymentAccountFilter` | Migrated by adding canonical support for `double` and packed repeated `int32` fields, then adding canonical schemas for `Filter` and `PaymentAccountFilter` with protobuf parity tests. |
-| P2P protected storage keys and sequence signatures | `P2PDataStorage.get32ByteHash` hashes `NetworkPayload.serializeForHash()` and signs `DataAndSeqNrPair` hashes | `P2PDataStorage`, `DataAndSeqNrPair`, `ProtectedStorageEntry`, `ProtectedMailboxStorageEntry`, protected payload implementations | Partially migrated by adding a canonical `DataAndSeqNrPair` wrapper and schemas for filter, offer, and temp-proposal protected payloads. `DataAndSeqNrPair` intentionally delegates its payload field to `ProtectedStoragePayload.serializeForHash()`, so migrated payloads contribute canonical bytes and the unmigrated payloads listed below still contribute legacy protobuf bytes. |
+| P2P protected storage keys and sequence signatures | `P2PDataStorage.get32ByteHash` hashes `NetworkPayload.serializeForHash()` and signs `DataAndSeqNrPair` hashes | `P2PDataStorage`, `DataAndSeqNrPair`, `ProtectedStorageEntry`, `ProtectedMailboxStorageEntry`, protected payload implementations | Partially migrated by adding a canonical `DataAndSeqNrPair` wrapper and schemas for alert, filter, offer, and temp-proposal protected payloads. `DataAndSeqNrPair` intentionally delegates its payload field to `ProtectedStoragePayload.serializeForHash()`, so migrated payloads contribute canonical bytes and the unmigrated payloads listed below still contribute legacy protobuf bytes. |
 | Offer payload hashes | `OfferPayloadBase.getHash()` and `OfferPayload.getHash()` hash offer payload serialization | `OfferPayloadBase`, `OfferPayload`, `BsqSwapOfferPayload`, `OfferPayloadExtraDataMap`, `ProofOfWork`, `NodeAddress`, `PubKeyRing` | Migrated by adding canonical schemas for both offer storage wrappers and nested offer value types, preserving existing extra-data map iteration order with protobuf parity tests. |
 | Payment account contract hash | `PaymentAccountPayload.getHashForContract()` hashes payment account payload serialization | `PaymentAccountPayload` and all concrete payment-account payload subclasses | Not migrated in this change. This is a large oneof hierarchy and needs a complete schema set with contract-hash parity vectors. |
 | Temp proposal protected payload | P2P storage hashes `TempProposalPayload.serializeForHash()` through protected storage | `TempProposalPayload`, `Proposal`, `P2PDataStorage` | Migrated by adding a canonical `TempProposalPayload` storage wrapper schema over the existing `Proposal` canonical schema. |
@@ -41,15 +41,11 @@ compatibility plan for the affected signatures or identifiers.
 
 ### P2P Protected Storage Payloads
 
-Migrated `StoragePayload` variants are `Filter`, `OfferPayload`,
+Migrated `StoragePayload` variants are `Alert`, `Filter`, `OfferPayload`,
 `BsqSwapOfferPayload`, and `TempProposalPayload`. The remaining protected
 storage variants still use legacy protobuf bytes when they are nested into
 `DataAndSeqNrPair` or hashed directly as protected-storage keys:
 
-- `Alert`: not migrated yet because it is an owner-signed, high-priority
-  administrative protected payload. It needs a dedicated `StoragePayload.alert`
-  wrapper schema and parity tests that cover its deprecated `extraDataMap`
-  rejection behavior before changing the signed/storage preimage.
 - `Arbitrator`: not migrated yet because the payload is deprecated but can still
   appear in old persisted or network data. Any migration should be handled with
   the full `DisputeAgent` schema set and historical byte-compatibility vectors.
