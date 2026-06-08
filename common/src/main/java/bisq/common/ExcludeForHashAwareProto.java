@@ -18,6 +18,9 @@
 package bisq.common;
 
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 
@@ -53,6 +56,9 @@ public interface ExcludeForHashAwareProto extends Proto {
     }
 
     default byte[] serializeForHash() {
+        if (this instanceof Canonical canonical) {
+            return canonical.encodeCanonical(CanonicalEncoder.DEFAULT);
+        }
         return resolveProto(true).toByteArray();
     }
 

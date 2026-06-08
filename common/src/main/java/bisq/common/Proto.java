@@ -17,6 +17,9 @@
 
 package bisq.common;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+
 import com.google.protobuf.Message;
 
 /**
@@ -32,6 +35,9 @@ public interface Proto {
     // If the class implements ExcludedFieldsProto this method will be overwritten so that
     // fields annotated with ExcludeForHash will be excluded.
     default byte[] serializeForHash() {
+        if (this instanceof Canonical canonical) {
+            return canonical.encodeCanonical(CanonicalEncoder.DEFAULT);
+        }
         return serialize();
     }
 }
