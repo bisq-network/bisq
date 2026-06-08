@@ -24,6 +24,9 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import com.google.protobuf.ByteString;
@@ -52,7 +55,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TempProposalPayload implements ProcessOncePersistableNetworkPayload, ProtectedStoragePayload,
-        ExpirablePayload, PersistablePayload {
+        ExpirablePayload, PersistablePayload, Canonical {
     // We keep data 2 months to be safe if we increase durations of cycle. Also give a bit more resilience in case
     // of any issues with the append-only data store
     public static final long TTL = TimeUnit.DAYS.toMillis(60);
@@ -100,6 +103,27 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
 
         return new TempProposalPayload(Proposal.fromProto(proto.getProposal()),
                 proto.getOwnerPubKeyEncoded().toByteArray());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<TempProposalPayload> PAYLOAD_SCHEMA =
+            CanonicalSchema.<TempProposalPayload>newBuilder()
+                    .compose(1, TempProposalPayload::getProposal, Proposal.getProposalSchemaBuilder().build())
+                    .bytes(2, TempProposalPayload::getOwnerPubKeyEncoded)
+                    .build();
+
+    public static final CanonicalSchema<TempProposalPayload> SCHEMA =
+            CanonicalSchema.<TempProposalPayload>newBuilder()
+                    .extend(8, tempProposalPayload -> tempProposalPayload, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

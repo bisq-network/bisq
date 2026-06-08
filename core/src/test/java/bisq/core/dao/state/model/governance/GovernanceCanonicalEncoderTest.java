@@ -21,7 +21,9 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.proposal.MyProposalList;
+import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 
+import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.ByteString;
@@ -108,6 +110,18 @@ public class GovernanceCanonicalEncoderTest {
                 .setRemoveAssetProposal(protobuf.RemoveAssetProposal.newBuilder()
                         .setTickerSymbol("XYZ"))
                 .build());
+    }
+
+    @Test
+    public void tempProposalPayloadEncodeCanonicalMatchesStoragePayloadProtobuf() {
+        TempProposalPayload tempProposalPayload = new TempProposalPayload(
+                Proposal.fromProto(getCompensationProposalProto()),
+                Sig.generateKeyPair().getPublic());
+
+        assertArrayEquals(tempProposalPayload.toProtoMessage().toByteArray(),
+                tempProposalPayload.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(tempProposalPayload.encodeCanonical(CanonicalEncoder.DEFAULT),
+                tempProposalPayload.serializeForHash());
     }
 
     @Test
