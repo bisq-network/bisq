@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -38,7 +41,7 @@ import javax.annotation.concurrent.Immutable;
 @Value
 @EqualsAndHashCode
 @Slf4j
-public final class TxInput implements PersistablePayload, ImmutableDaoStateModel {
+public final class TxInput implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final String connectedTxOutputTxId;
     private final int connectedTxOutputIndex;
     @Nullable
@@ -69,6 +72,22 @@ public final class TxInput implements PersistablePayload, ImmutableDaoStateModel
         return new TxInput(proto.getConnectedTxOutputTxId(),
                 proto.getConnectedTxOutputIndex(),
                 proto.getPubKey().isEmpty() ? null : proto.getPubKey());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<TxInput> SCHEMA = CanonicalSchema.<TxInput>newBuilder()
+            .string(1, TxInput::getConnectedTxOutputTxId)
+            .int32(2, TxInput::getConnectedTxOutputIndex)
+            .string(3, TxInput::getPubKey)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

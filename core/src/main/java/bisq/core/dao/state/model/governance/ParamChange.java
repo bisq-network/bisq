@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -30,7 +33,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class ParamChange implements PersistablePayload, ImmutableDaoStateModel {
+public class ParamChange implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     // We use the enum name instead of the enum to be more flexible with changes at updates
     private final String paramName;
     private final String value;
@@ -60,5 +63,21 @@ public class ParamChange implements PersistablePayload, ImmutableDaoStateModel {
         return new ParamChange(proto.getParamName(),
                 proto.getParamValue(),
                 proto.getActivationHeight());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<ParamChange> SCHEMA = CanonicalSchema.<ParamChange>newBuilder()
+            .string(1, ParamChange::getParamName)
+            .string(2, ParamChange::getValue)
+            .int32(3, ParamChange::getActivationHeight)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 }

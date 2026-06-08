@@ -18,6 +18,7 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.CanonicalEnum;
 
 import bisq.common.proto.ProtoUtil;
 
@@ -40,7 +41,7 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public enum ScriptType implements ImmutableDaoStateModel {
+public enum ScriptType implements ImmutableDaoStateModel, CanonicalEnum {
     UNDEFINED("undefined"),
     // https://github.com/bitcoin/bitcoin/blob/master/src/script/standard.cpp
     NONSTANDARD("nonstandard"),
@@ -90,5 +91,40 @@ public enum ScriptType implements ImmutableDaoStateModel {
 
     public protobuf.ScriptType toProtoMessage() {
         return protobuf.ScriptType.valueOf(name());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // CanonicalEnum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public int getCode() {
+        switch (this) {
+            case UNDEFINED:
+                return 0;
+            case PUB_KEY:
+                return 1;
+            case PUB_KEY_HASH:
+                return 2;
+            case SCRIPT_HASH:
+                return 3;
+            case MULTISIG:
+                return 4;
+            case NULL_DATA:
+                return 5;
+            case WITNESS_V0_KEYHASH:
+                return 6;
+            case WITNESS_V0_SCRIPTHASH:
+                return 7;
+            case NONSTANDARD:
+                return 8;
+            case WITNESS_UNKNOWN:
+                return 9;
+            case WITNESS_V1_TAPROOT:
+                return 10;
+            default:
+                throw new IllegalStateException("Unhandled script type " + this);
+        }
     }
 }

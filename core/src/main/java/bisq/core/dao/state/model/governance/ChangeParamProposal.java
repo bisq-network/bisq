@@ -21,6 +21,9 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.core.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
 
@@ -98,6 +101,32 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    static final CanonicalSchema<ChangeParamProposal> EXTENSION_SCHEMA =
+            CanonicalSchema.<ChangeParamProposal>newBuilder()
+                    .string(1, proposal -> proposal.getParam().name())
+                    .string(2, ChangeParamProposal::getParamValue)
+                    .build();
+
+    public static final CanonicalSchema<ChangeParamProposal> SCHEMA =
+            ChangeParamProposal.<ChangeParamProposal>getBaseProposalSchemaBuilder()
+                    .extend(8, proposal -> proposal, EXTENSION_SCHEMA)
+                    // extra_data keeps protobuf field 20 and must stay after proposal subtype
+                    // extensions, which occupy fields 6 through 12.
+                    .mapStringToString(20,
+                            Proposal::getExtraDataMapForCanonical,
+                            TreeMapIterator.naturalOrder())
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

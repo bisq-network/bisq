@@ -28,6 +28,10 @@ import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.ParamChange;
+import bisq.core.encoding.canonical.Canonical;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.core.encoding.canonical.LegacyCollectorsToMapIterator;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
@@ -61,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
  * TreeMap which is sorted by the key.
  */
 @Slf4j
-public class DaoState implements PersistablePayload {
+public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -256,8 +260,54 @@ public class DaoState implements PersistablePayload {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage()).build().toByteArray();
+        return encodeCanonical(CanonicalEncoder.DEFAULT);
     }
+
+    // Only present for verifying that legacy implementation results in same hash as
+    // new canonical version.
+    public byte[] getSerializedStateForHashChainLegacy() {
+        return getBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage())
+                .build().toByteArray();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<DaoState> SCHEMA = CanonicalSchema.<DaoState>newBuilder()
+            .int32(1, DaoState::getChainHeight)
+            .repeatedCompose(2, daoState -> Collections.singletonList(daoState.getLastBlock()), Block.SCHEMA)
+            .repeatedCompose(3, DaoState::getCycles, Cycle.SCHEMA)
+            .mapStringToCompose(4,
+                    DaoState::getUnspentTxOutputMap,
+                    entry -> entry.getKey().toString(),
+                    Map.Entry::getValue,
+                    TxOutput.SCHEMA,
+                    new LegacyCollectorsToMapIterator<>())
+            .mapStringToCompose(5,
+                    DaoState::getIssuanceMap,
+                    Issuance.SCHEMA,
+                    new LegacyCollectorsToMapIterator<>())
+            .repeatedString(6, DaoState::getConfiscatedLockupTxList)
+            .mapStringToCompose(7,
+                    DaoState::getSpentInfoMap,
+                    entry -> entry.getKey().toString(),
+                    Map.Entry::getValue,
+                    SpentInfo.SCHEMA,
+                    new LegacyCollectorsToMapIterator<>())
+            .repeatedCompose(8, DaoState::getParamChangeList, ParamChange.SCHEMA)
+            .repeatedCompose(9, DaoState::getEvaluatedProposalList,
+                    EvaluatedProposal.SCHEMA)
+            .repeatedCompose(10, DaoState::getDecryptedBallotsWithMeritsList,
+                    DecryptedBallotsWithMerits.SCHEMA)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     public void addToTxCache(Tx tx) {
         // We shouldn't get duplicate txIds, but use putIfAbsent instead of put for consistency with the map merge
@@ -319,7 +369,7 @@ public class DaoState implements PersistablePayload {
     }
 
     public void addBlock(Block block) {
-        // The block added here does not have any tx, 
+        // The block added here does not have any tx,
         // so we do not need to update the txCache or txOutputsByTxOutputType
         blocks.add(block);
         blocksByHeight.put(block.getHeight(), block);

@@ -18,6 +18,7 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.CanonicalEnum;
 
 import bisq.common.proto.ProtoUtil;
 
@@ -27,7 +28,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public enum TxType implements ImmutableDaoStateModel {
+public enum TxType implements ImmutableDaoStateModel, CanonicalEnum {
     UNDEFINED(false, false), // only fallback for backward compatibility in case we add a new value and old clients fall back to UNDEFINED
     UNDEFINED_TX_TYPE(false, false),
     UNVERIFIED(false, false),
@@ -68,5 +69,52 @@ public enum TxType implements ImmutableDaoStateModel {
 
     public protobuf.TxType toProtoMessage() {
         return protobuf.TxType.valueOf(name());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // CanonicalEnum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public int getCode() {
+        switch (this) {
+            case UNDEFINED:
+                return 0;
+            case UNDEFINED_TX_TYPE:
+                return 1;
+            case UNVERIFIED:
+                return 2;
+            case INVALID:
+                return 3;
+            case GENESIS:
+                return 4;
+            case TRANSFER_BSQ:
+                return 5;
+            case PAY_TRADE_FEE:
+                return 6;
+            case PROPOSAL:
+                return 7;
+            case COMPENSATION_REQUEST:
+                return 8;
+            case REIMBURSEMENT_REQUEST:
+                return 9;
+            case BLIND_VOTE:
+                return 10;
+            case VOTE_REVEAL:
+                return 11;
+            case LOCKUP:
+                return 12;
+            case UNLOCK:
+                return 13;
+            case ASSET_LISTING_FEE:
+                return 14;
+            case PROOF_OF_BURN:
+                return 15;
+            case IRREGULAR:
+                return 16;
+            default:
+                throw new IllegalStateException("Unhandled tx type " + this);
+        }
     }
 }

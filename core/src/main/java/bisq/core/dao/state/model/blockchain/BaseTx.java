@@ -18,6 +18,7 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.core.encoding.canonical.CanonicalSchema;
 
 import com.google.common.collect.ImmutableList;
 
@@ -78,6 +79,22 @@ public abstract class BaseTx implements ImmutableDaoStateModel {
                         .map(TxInput::toProtoMessage)
                         .collect(Collectors.toList()));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected static <T extends BaseTx> CanonicalSchema.Builder<T> getBaseTxSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                .string(1, tx -> tx.txVersion)
+                .string(2, tx -> tx.id)
+                .int32(3, tx -> tx.blockHeight)
+                .string(4, tx -> tx.blockHash)
+                .int64(5, tx -> tx.time)
+                .repeatedCompose(6, tx -> tx.txInputs, TxInput.SCHEMA);
+    }
+
 
     @Override
     public String toString() {

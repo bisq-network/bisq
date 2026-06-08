@@ -22,6 +22,9 @@ import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.core.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
 import bisq.common.util.CollectionUtils;
@@ -116,6 +119,32 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 proto.getTxId(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                         null : new TreeMap<>(proto.getExtraDataMap()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    static final CanonicalSchema<CompensationProposal> EXTENSION_SCHEMA =
+            CanonicalSchema.<CompensationProposal>newBuilder()
+                    .int64(1, proposal -> proposal.getRequestedBsq().value)
+                    .string(2, CompensationProposal::getBsqAddress)
+                    .build();
+
+    public static final CanonicalSchema<CompensationProposal> SCHEMA =
+            CompensationProposal.<CompensationProposal>getBaseProposalSchemaBuilder()
+                    .extend(6, proposal -> proposal, EXTENSION_SCHEMA)
+                    // extra_data keeps protobuf field 20 and must stay after proposal subtype
+                    // extensions, which occupy fields 6 through 12.
+                    .mapStringToString(20,
+                            Proposal::getExtraDataMapForCanonical,
+                            TreeMapIterator.naturalOrder())
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

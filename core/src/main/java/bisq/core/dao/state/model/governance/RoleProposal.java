@@ -21,6 +21,9 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
+import bisq.core.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
 
@@ -103,6 +106,33 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    static final CanonicalSchema<RoleProposal> EXTENSION_SCHEMA =
+            CanonicalSchema.<RoleProposal>newBuilder()
+                    .compose(1, RoleProposal::getRole, Role.SCHEMA)
+                    .int64(2, RoleProposal::getRequiredBondUnit)
+                    .int32(3, RoleProposal::getUnlockTime)
+                    .build();
+
+    public static final CanonicalSchema<RoleProposal> SCHEMA =
+            RoleProposal.<RoleProposal>getBaseProposalSchemaBuilder()
+                    .extend(9, proposal -> proposal, EXTENSION_SCHEMA)
+                    // extra_data keeps protobuf field 20 and must stay after proposal subtype
+                    // extensions, which occupy fields 6 through 12.
+                    .mapStringToString(20,
+                            Proposal::getExtraDataMapForCanonical,
+                            TreeMapIterator.naturalOrder())
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 
