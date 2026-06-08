@@ -235,14 +235,17 @@ public class ConfigTests {
         assertFalse(defaultConfig.verifyDaoStateHashChainSerialization);
         assertFalse(defaultConfig.dumpDaoStateHashChainSerialization);
         assertFalse(defaultConfig.verifyBlindVoteEncryptedVotesSerialization);
+        assertFalse(defaultConfig.verifyBlindVoteEncryptedMeritListSerialization);
 
         Config config = configWithOpts(
                 opt(VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION, true),
                 opt(DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION, true),
-                opt(VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION, true));
+                opt(VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION, true),
+                opt(VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION, true));
         assertTrue(config.verifyDaoStateHashChainSerialization);
         assertTrue(config.dumpDaoStateHashChainSerialization);
         assertTrue(config.verifyBlindVoteEncryptedVotesSerialization);
+        assertTrue(config.verifyBlindVoteEncryptedMeritListSerialization);
     }
 
     @Test

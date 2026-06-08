@@ -56,33 +56,21 @@ to `BlindVoteConsensus.getEncryptedVotes(byte[], SecretKey)`.
 `MyBlindVoteListService.getOpReturnData()` then hashes the encrypted vote bytes
 for the blind-vote op-return commitment.
 
-`BlindVoteConsensus.getEncryptedMeritList()` still serializes `MeritList` with
-protobuf `serialize()` before encryption. That ciphertext is stored as
-`BlindVote.encryptedMeritList` and included as bytes in the canonical
-`BlindVote` hash preimage. `MeritList` already implements `Canonical`, and vote
-result processing decrypts the bytes with `MeritConsensus.decryptMeritList()`
-and parses protobuf bytes, so this path should be migrated only after the same
-byte-identity and decrypt/parse guarantees are covered for the merit plaintext.
+`MyBlindVoteListService.getEncryptedMeritList()` now serializes `MeritList`
+with canonical `serializeForHash()`, optionally compares those bytes with the
+legacy protobuf bytes under
+`verifyBlindVoteEncryptedMeritListSerialization`, and passes the canonical
+plaintext to `BlindVoteConsensus.getEncryptedMeritList(byte[], SecretKey)`.
+The resulting ciphertext is stored as `BlindVote.encryptedMeritList` and
+included as bytes in the canonical `BlindVote` hash preimage.
 
-This differs from the migration targets above because Bisq does not directly
-hash the protobuf plaintext. The hash preimage is ciphertext. Still, the
-ciphertext and the op-return hash depend on the plaintext serialization format,
-and vote reveal currently decrypts those bytes and parses them with protobuf
-parsers. A naive switch from protobuf plaintext to canonical bytes would break
-decoding and could invalidate blind-vote commitments unless all affected peers
-agree on the new format.
-
-Recommended handling for the remaining merit plaintext:
-
-- Add explicit canonical/protobuf byte parity tests for `MeritList` plaintext
-  cases used by blind votes.
-- Verify encrypted canonical merit plaintext still decrypts and parses through
-  `MeritConsensus.decryptMeritList()`.
-- Add a live verification switch, or generalize the existing blind-vote
-  plaintext verification switch, so resync can compare canonical and legacy
-  merit plaintext bytes before the encryption input is changed.
-- Preserve legacy protobuf parsing after decryption as long as canonical bytes
-  remain byte-identical to protobuf bytes for the supported plaintext shapes.
+These encrypted plaintext paths differ from the migration targets above because
+Bisq does not directly hash the plaintext. The hash preimage is ciphertext.
+Still, the ciphertext and the op-return hash depend on the plaintext
+serialization format, and vote reveal decrypts those bytes and parses them with
+protobuf parsers. The current migration relies on canonical bytes being
+byte-identical to protobuf bytes for the supported plaintext shapes, with
+verification switches available for live resync checks.
 
 ## Non-Protobuf Hashes
 

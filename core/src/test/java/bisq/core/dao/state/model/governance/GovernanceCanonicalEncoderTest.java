@@ -21,6 +21,7 @@ import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
+import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
@@ -299,23 +300,51 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     @Test
-    public void meritAndMeritListEncodeCanonicalMatchesProtobuf() {
-        protobuf.Merit meritProto = protobuf.Merit.newBuilder()
-                .setIssuance(getIssuanceProto())
-                .setSignature(ByteString.copyFrom(new byte[]{0x01, 0x02, 0x03}))
-                .build();
+    public void meritAndMeritListEncodeCanonicalMatchesProtobuf() throws Exception {
+        protobuf.Merit meritProto = getMeritProto("issuance-tx", new byte[]{0x01, 0x02, 0x03});
         Merit merit = Merit.fromProto(meritProto);
 
         assertArrayEquals(merit.toProtoMessage().toByteArray(),
                 merit.encodeCanonical(CanonicalEncoder.DEFAULT));
 
-        protobuf.MeritList meritListProto = protobuf.MeritList.newBuilder()
+        assertMeritListCanonicalMatchesProtobuf(protobuf.MeritList.newBuilder()
                 .addMerit(meritProto)
-                .build();
-        MeritList meritList = MeritList.fromProto(meritListProto);
+                .build());
+    }
 
-        assertArrayEquals(meritList.toProtoMessage().toByteArray(),
-                meritList.encodeCanonical(CanonicalEncoder.DEFAULT));
+    @Test
+    public void emptyMeritListEncodeCanonicalMatchesProtobuf() throws Exception {
+        assertMeritListCanonicalMatchesProtobuf(protobuf.MeritList.newBuilder()
+                .build());
+    }
+
+    @Test
+    public void meritListEncodeCanonicalPreservesListOrder() throws Exception {
+        byte[] canonicalBytes = assertMeritListCanonicalMatchesProtobuf(protobuf.MeritList.newBuilder()
+                .addMerit(getMeritProto("issuance-a", new byte[]{0x01}))
+                .addMerit(getMeritProto("issuance-b", new byte[]{}))
+                .addMerit(getMeritProto("issuance-c", new byte[]{0x02, 0x03}))
+                .build());
+
+        protobuf.MeritList parsed = protobuf.MeritList.parseFrom(canonicalBytes);
+        assertEquals("issuance-a", parsed.getMerit(0).getIssuance().getTxId());
+        assertEquals("issuance-b", parsed.getMerit(1).getIssuance().getTxId());
+        assertEquals("issuance-c", parsed.getMerit(2).getIssuance().getTxId());
+    }
+
+    @Test
+    public void encryptedCanonicalMeritListDecryptsAndParsesAsProtobuf() throws Exception {
+        protobuf.MeritList proto = protobuf.MeritList.newBuilder()
+                .addMerit(getMeritProto("issuance-a", new byte[]{0x01}))
+                .addMerit(getMeritProto("issuance-b", new byte[]{0x02, 0x03}))
+                .build();
+        MeritList meritList = MeritList.getMeritListFromBytes(proto.toByteArray());
+
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        byte[] encryptedMeritList = BlindVoteConsensus.getEncryptedMeritList(meritList.serializeForHash(), secretKey);
+        MeritList decrypted = MeritConsensus.decryptMeritList(encryptedMeritList, secretKey);
+
+        assertArrayEquals(proto.toByteArray(), decrypted.toProtoMessage().toByteArray());
     }
 
     @Test
@@ -389,6 +418,23 @@ public class GovernanceCanonicalEncoderTest {
         return canonicalBytes;
     }
 
+    private static byte[] assertMeritListCanonicalMatchesProtobuf(protobuf.MeritList proto) throws Exception {
+        MeritList meritList = MeritList.getMeritListFromBytes(proto.toByteArray());
+
+        byte[] canonicalBytes = meritList.encodeCanonical(CanonicalEncoder.DEFAULT);
+        assertArrayEquals(proto.toByteArray(), canonicalBytes);
+        assertArrayEquals(canonicalBytes, meritList.serializeForHash());
+        assertArrayEquals(proto.toByteArray(), protobuf.MeritList.parseFrom(canonicalBytes).toByteArray());
+        return canonicalBytes;
+    }
+
+    private static protobuf.Merit getMeritProto(String issuanceTxId, byte[] signature) {
+        return protobuf.Merit.newBuilder()
+                .setIssuance(getIssuanceProto(issuanceTxId))
+                .setSignature(ByteString.copyFrom(signature))
+                .build();
+    }
+
     private static protobuf.VoteWithProposalTxId voteWithProposalTxIdProto(String proposalTxId) {
         return protobuf.VoteWithProposalTxId.newBuilder()
                 .setProposalTxId(proposalTxId)
@@ -430,8 +476,12 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     private static protobuf.Issuance getIssuanceProto() {
+        return getIssuanceProto("issuance-tx");
+    }
+
+    private static protobuf.Issuance getIssuanceProto(String txId) {
         return protobuf.Issuance.newBuilder()
-                .setTxId("issuance-tx")
+                .setTxId(txId)
                 .setChainHeight(12345)
                 .setAmount(100_000)
                 .setPubKey("02abcdef")
