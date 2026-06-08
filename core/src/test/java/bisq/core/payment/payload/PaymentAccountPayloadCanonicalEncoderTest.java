@@ -55,6 +55,59 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         });
     }
 
+    @Test
+    public void canonicalBytesMatchProtobufBytesWhenBankFieldsAreNull() {
+        // fromProto converts empty bank-level strings to null for BankAccountPayload subclasses and
+        // CashDepositAccountPayload. The canonical schema must skip null lambda returns the same way
+        // protobuf skips unset strings, so the byte streams stay identical.
+        nullableFieldProtos().forEach(testCase -> {
+            PaymentAccountPayload paymentAccountPayload = CORE_PROTO_RESOLVER.fromProto(testCase.proto());
+            byte[] protobufBytes = paymentAccountPayload.toProtoMessage().toByteArray();
+
+            assertArrayEquals(protobufBytes,
+                    PaymentAccountPayloadCanonicalSchemas.encode(paymentAccountPayload, CanonicalEncoder.DEFAULT),
+                    testCase.name() + " canonical bytes");
+            assertArrayEquals(protobufBytes,
+                    paymentAccountPayload.serializeForHash(),
+                    testCase.name() + " serializeForHash bytes");
+            assertArrayEquals(Hash.getRipemd160hash(protobufBytes),
+                    paymentAccountPayload.getHashForContract(),
+                    testCase.name() + " contract hash");
+        });
+    }
+
+    private static List<TestCase> nullableFieldProtos() {
+        return List.of(
+                testCase("nationalBankAllOptionalFieldsEmpty", countryBased(PaymentMethod.NATIONAL_BANK_ID,
+                        country()
+                                .setBankAccountPayload(protobuf.BankAccountPayload.newBuilder()
+                                        .setHolderName("Only Required Holder")
+                                        .setNationalBankAccountPayload(protobuf.NationalBankAccountPayload.newBuilder())))),
+                testCase("specificBanksOptionalFieldsEmpty", countryBased(PaymentMethod.SPECIFIC_BANKS_ID,
+                        country()
+                                .setBankAccountPayload(protobuf.BankAccountPayload.newBuilder()
+                                        .setHolderName("Specific Holder")
+                                        .setSpecificBanksAccountPayload(protobuf.SpecificBanksAccountPayload.newBuilder())))),
+                testCase("cashDepositOptionalFieldsEmpty", countryBased(PaymentMethod.CASH_DEPOSIT_ID,
+                        country()
+                                .setCashDepositAccountPayload(protobuf.CashDepositAccountPayload.newBuilder()
+                                        .setHolderName("Cash Holder")))),
+                testCase("sepaWithoutDeprecatedEmail", countryBased(PaymentMethod.SEPA_ID,
+                        country()
+                                .setSepaAccountPayload(protobuf.SepaAccountPayload.newBuilder()
+                                        .setHolderName("Sepa Holder")
+                                        .setIban("DE89370400440532013000")
+                                        .setBic("COBADEFFXXX")
+                                        .addAllAcceptedCountryCodes(List.of("DE", "FR"))))),
+                testCase("sepaInstantWithoutAcceptedCountries", countryBased(PaymentMethod.SEPA_INSTANT_ID,
+                        country()
+                                .setSepaInstantAccountPayload(protobuf.SepaInstantAccountPayload.newBuilder()
+                                        .setHolderName("Instant Holder")
+                                        .setIban("FR1420041010050500013M02606")
+                                        .setBic("PSSTFRPPXXX"))))
+        );
+    }
+
     private static List<TestCase> paymentAccountPayloadProtos() {
         return List.of(
                 testCase("aliPay", account(PaymentMethod.ALI_PAY_ID)
