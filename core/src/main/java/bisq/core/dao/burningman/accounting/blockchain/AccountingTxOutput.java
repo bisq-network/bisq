@@ -38,6 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AccountingTxOutput implements NetworkPayload, Canonical {
     private static final String LEGACY_BM_FEES_SHORT = "LBMF";
     private static final String LEGACY_BM_DPT_SHORT = "LBMD";
+    private static final long UINT32_MAX_VALUE = 0xFFFF_FFFFL;
 
     @Getter
     private final long value;
@@ -78,9 +79,9 @@ public final class AccountingTxOutput implements NetworkPayload, Canonical {
     }
 
     public static AccountingTxOutput fromProto(protobuf.AccountingTxOutput proto) {
-        int intValue = proto.getValue();
-        checkArgument(intValue >= 0, "Value must not be negative");
-        return new AccountingTxOutput(intValue, proto.getName());
+        long value = Integer.toUnsignedLong(proto.getValue());
+        checkArgument(value >= 0 && value <= UINT32_MAX_VALUE, "Value must be in uint32 range 0..4294967295");
+        return new AccountingTxOutput(value, proto.getName());
     }
 
 
@@ -100,8 +101,8 @@ public final class AccountingTxOutput implements NetworkPayload, Canonical {
     }
 
     private int getProtoValue() {
-        checkArgument(value < Integer.MAX_VALUE,
-                "We only support integer values in protobuf storage for the amount.");
+        checkArgument(value >= 0 && value <= UINT32_MAX_VALUE,
+                "Value must be in uint32 range 0..4294967295");
         return (int) value;
     }
 

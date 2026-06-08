@@ -24,6 +24,8 @@ import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AccountingCanonicalEncoderTest {
     @Test
@@ -35,6 +37,23 @@ public class AccountingCanonicalEncoderTest {
                 output.encodeCanonical(CanonicalEncoder.DEFAULT));
         assertArrayEquals(output.encodeCanonical(CanonicalEncoder.DEFAULT),
                 output.serializeForHash());
+    }
+
+    @Test
+    public void accountingTxOutputRejectsNegativeValues() {
+        AccountingTxOutput output = new AccountingTxOutput(-1, "candidate-name");
+
+        assertThrows(IllegalArgumentException.class, output::toProtoMessage);
+    }
+
+    @Test
+    public void accountingTxOutputSupportsFullUInt32Range() {
+        AccountingTxOutput output = new AccountingTxOutput(0xFFFF_FFFFL, "candidate-name");
+        protobuf.AccountingTxOutput proto = output.toProtoMessage();
+
+        assertEquals(-1, proto.getValue());
+        assertEquals(0xFFFF_FFFFL, AccountingTxOutput.fromProto(proto).getValue());
+        assertArrayEquals(proto.toByteArray(), output.encodeCanonical(CanonicalEncoder.DEFAULT));
     }
 
     @Test
