@@ -1305,6 +1305,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         @Override
         public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
             CanonicalWriter writer = new CanonicalWriter();
+            // DataAndSeqNrPair is a hash/signature preimage wrapper for the protected payload bytes
+            // and the sequence number. Keep field 1 delegated to ProtectedStoragePayload.serializeForHash()
+            // instead of trying to model the whole StoragePayload oneof here: protected payload variants are
+            // migrated independently. Migrated variants contribute canonical bytes, while variants without
+            // schemas still contribute the legacy protobuf bytes, preserving byte compatibility for those
+            // P2P storage keys and sequence-number signatures until each payload has parity tests and an
+            // explicit compatibility plan. Field numbers still mirror protobuf.DataAndSeqNrPair:
+            // payload = 1 and sequence_number = 2.
             writer.writeCompose(1, protectedStoragePayload.serializeForHash());
             writer.writeInt32(2, sequenceNumber);
             return writer.toByteArray();
