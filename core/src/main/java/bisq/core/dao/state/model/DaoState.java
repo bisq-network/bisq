@@ -69,6 +69,7 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static DaoState getClone(DaoState daoState) {
@@ -128,6 +129,7 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
@@ -148,6 +150,7 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private DaoState(int chainHeight,
@@ -197,30 +200,38 @@ public class DaoState implements PersistablePayload, Canonical {
         protobuf.DaoState.Builder builder = protobuf.DaoState.newBuilder();
         builder.setChainHeight(chainHeight)
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
-                .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(),
-                                e -> e.getValue().toProtoMessage(),
-                                DaoState::failOnDuplicateProtoMapKey,
-                                TreeMap::new)))
-                .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(),
-                                entry -> entry.getValue().toProtoMessage(),
-                                DaoState::failOnDuplicateProtoMapKey,
-                                TreeMap::new)))
+                .putAllUnspentTxOutputMap(toProtoTreeMap(unspentTxOutputMap,
+                        e -> e.getKey().toString(),
+                        e -> e.getValue().toProtoMessage()))
+                .putAllSpentInfoMap(toProtoTreeMap(spentInfoMap,
+                        e -> e.getKey().toString(),
+                        entry -> entry.getValue().toProtoMessage()))
                 .addAllConfiscatedLockupTxList(confiscatedLockupTxList)
-                .putAllIssuanceMap(issuanceMap.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                entry -> entry.getValue().toProtoMessage(),
-                                DaoState::failOnDuplicateProtoMapKey,
-                                TreeMap::new)))
+                .putAllIssuanceMap(toProtoTreeMap(issuanceMap,
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().toProtoMessage()))
                 .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()))
                 .addAllEvaluatedProposalList(evaluatedProposalList.stream().map(EvaluatedProposal::toProtoMessage).collect(Collectors.toList()))
                 .addAllDecryptedBallotsWithMeritsList(decryptedBallotsWithMeritsList.stream().map(DecryptedBallotsWithMerits::toProtoMessage).collect(Collectors.toList()));
         return builder;
     }
 
-    private static <T> T failOnDuplicateProtoMapKey(T existing, T replacement) {
-        throw new IllegalStateException("Duplicate DAO state protobuf map key");
+    private static <K, V, T> Map<String, T> toProtoTreeMap(Map<K, V> source,
+                                                           Function<Map.Entry<K, V>, String> keyMapper,
+                                                           Function<Map.Entry<K, V>, T> valueMapper) {
+        Map<String, T> protoMap = new TreeMap<>();
+        for (Map.Entry<K, V> entry : source.entrySet()) {
+            String key = keyMapper.apply(entry);
+            T previous = protoMap.putIfAbsent(key, valueMapper.apply(entry));
+            if (previous != null) {
+                failOnDuplicateProtoMapKey(key);
+            }
+        }
+        return protoMap;
+    }
+
+    private static void failOnDuplicateProtoMapKey(String key) {
+        throw new IllegalStateException("Duplicate DAO state protobuf map key: " + key);
     }
 
     // Used by the optional legacy hash-chain serialization verification/dump path.
@@ -280,6 +291,7 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
+
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setChainHeight(int chainHeight) {
@@ -292,11 +304,13 @@ public class DaoState implements PersistablePayload, Canonical {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return encodeCanonical(CanonicalEncoder.DEFAULT);
+        return encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT);
     }
 
     // Only present for verifying that legacy implementation results in same hash as
     // new canonical version.
+    // TODO: remove after canonical encoding migration verification complete; also remove getLegacyBsqStateBuilderExcludingBlocks and getLastBlock dependency.
+    @Deprecated
     public byte[] getSerializedStateForHashChainLegacy() {
         return getLegacyBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage())
                 .build().toByteArray();
@@ -307,37 +321,57 @@ public class DaoState implements PersistablePayload, Canonical {
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static final CanonicalSchema<DaoState> SCHEMA = CanonicalSchema.<DaoState>newBuilder()
-            .int32(1, DaoState::getChainHeight)
-            .repeatedCompose(2, daoState -> Collections.singletonList(daoState.getLastBlock()), Block.SCHEMA)
-            .repeatedCompose(3, DaoState::getCycles, Cycle.SCHEMA)
-            .mapStringToCompose(4,
-                    DaoState::getUnspentTxOutputMap,
-                    entry -> entry.getKey().toString(),
-                    Map.Entry::getValue,
-                    TxOutput.SCHEMA,
-                    new LegacyCollectorsToMapIterator<>())
-            .mapStringToCompose(5,
-                    DaoState::getIssuanceMap,
-                    Issuance.SCHEMA,
-                    new LegacyCollectorsToMapIterator<>())
-            .repeatedString(6, DaoState::getConfiscatedLockupTxList)
-            .mapStringToCompose(7,
-                    DaoState::getSpentInfoMap,
-                    entry -> entry.getKey().toString(),
-                    Map.Entry::getValue,
-                    SpentInfo.SCHEMA,
-                    new LegacyCollectorsToMapIterator<>())
-            .repeatedCompose(8, DaoState::getParamChangeList, ParamChange.SCHEMA)
-            .repeatedCompose(9, DaoState::getEvaluatedProposalList,
-                    EvaluatedProposal.SCHEMA)
-            .repeatedCompose(10, DaoState::getDecryptedBallotsWithMeritsList,
-                    DecryptedBallotsWithMerits.SCHEMA)
-            .build();
+    public static final CanonicalSchema<DaoState> SCHEMA = createSchema(false);
+    public static final CanonicalSchema<DaoState> STATE_HASH_CHAIN_SCHEMA = createSchema(true);
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
         return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    public byte[] encodeCanonicalForStateHashChain(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, STATE_HASH_CHAIN_SCHEMA);
+    }
+
+    private static CanonicalSchema<DaoState> createSchema(boolean includeLastBlockOnly) {
+        CanonicalSchema.Builder<DaoState> builder = CanonicalSchema.<DaoState>newBuilder()
+                .int32(1, DaoState::getChainHeight);
+
+        builder.repeatedCompose(2, daoState -> {
+            if (includeLastBlockOnly) {
+                return Collections.singletonList(daoState.getLastBlock());
+            } else {
+                return daoState.getBlocks();
+            }
+        }, Block.SCHEMA);
+
+        // getUnspentTxOutputMap, getIssuanceMap, and getSpentInfoMap intentionally pass
+        // LegacyCollectorsToMapIterator to preserve JAVA_11_HASH_MAP_ORDER for hash-chain canonicalization.
+        // Normal protobuf persistence still writes TreeMap order, and includeLastBlockOnly only changes block selection.
+        return builder.repeatedCompose(3, DaoState::getCycles, Cycle.SCHEMA)
+                .mapStringToCompose(4,
+                        DaoState::getUnspentTxOutputMap,
+                        entry -> entry.getKey().toString(),
+                        Map.Entry::getValue,
+                        TxOutput.SCHEMA,
+                        new LegacyCollectorsToMapIterator<>())
+                .mapStringToCompose(5,
+                        DaoState::getIssuanceMap,
+                        Issuance.SCHEMA,
+                        new LegacyCollectorsToMapIterator<>())
+                .repeatedString(6, DaoState::getConfiscatedLockupTxList)
+                .mapStringToCompose(7,
+                        DaoState::getSpentInfoMap,
+                        entry -> entry.getKey().toString(),
+                        Map.Entry::getValue,
+                        SpentInfo.SCHEMA,
+                        new LegacyCollectorsToMapIterator<>())
+                .repeatedCompose(8, DaoState::getParamChangeList, ParamChange.SCHEMA)
+                .repeatedCompose(9, DaoState::getEvaluatedProposalList,
+                        EvaluatedProposal.SCHEMA)
+                .repeatedCompose(10, DaoState::getDecryptedBallotsWithMeritsList,
+                        DecryptedBallotsWithMerits.SCHEMA)
+                .build();
     }
 
 

@@ -46,6 +46,10 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel, Can
      * We don't want to use an enum with the duration as field because the duration can change by voting and enums
      * should be considered immutable.
      */
+    // WARNING: This enum order is serialization-stable. Values are persisted by ordinal in protobuf and
+    // canonical encoding, so existing entries MUST NOT be reordered, removed, or inserted between values.
+    // New entries must be appended only. Any ordering change requires a compatibility migration plus updates
+    // to toProtoMessage() and the canonical schema.
     @Immutable
     public enum Phase implements ImmutableDaoStateModel {
         UNDEFINED,

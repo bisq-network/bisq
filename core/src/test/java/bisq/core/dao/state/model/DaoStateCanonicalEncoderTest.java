@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.encoding.canonical.CanonicalEncoder;
+import bisq.core.encoding.canonical.CanonicalSchema;
 import bisq.core.encoding.canonical.LegacyCollectorsToMapIterator;
 
 import java.nio.charset.StandardCharsets;
@@ -125,6 +126,16 @@ class DaoStateCanonicalEncoderTest {
     }
 
     @Test
+    void genericCanonicalEncodingIncludesFullBlockList() throws Exception {
+        DaoState daoState = getDaoStateWithMaps();
+
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.encodeCanonical(CanonicalEncoder.DEFAULT));
+
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fieldNumbers(DaoState.SCHEMA));
+        assertEquals(2, proto.getBlocksCount());
+    }
+
+    @Test
     void serializesDaoStateMapsInJava11HashMapIterationOrder() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 
@@ -175,7 +186,10 @@ class DaoStateCanonicalEncoderTest {
         byte[] serializedStateForHashChain = daoState.getSerializedStateForHashChain();
         protobuf.DaoState proto = protobuf.DaoState.parseFrom(serializedStateForHashChain);
 
-        assertArrayEquals(daoState.encodeCanonical(CanonicalEncoder.DEFAULT), serializedStateForHashChain);
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                fieldNumbers(DaoState.STATE_HASH_CHAIN_SCHEMA));
+        assertArrayEquals(daoState.encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT),
+                serializedStateForHashChain);
         assertEquals(1, proto.getBlocksCount());
         assertEquals(100, proto.getBlocks(0).getHeight());
     }
@@ -258,5 +272,11 @@ class DaoStateCanonicalEncoderTest {
             stringBuilder.append(String.format("%02x", b));
         }
         return stringBuilder.toString();
+    }
+
+    private static List<Integer> fieldNumbers(CanonicalSchema<?> schema) {
+        return schema.getFields().stream()
+                .map(CanonicalSchema.Field::getNumber)
+                .collect(Collectors.toList());
     }
 }

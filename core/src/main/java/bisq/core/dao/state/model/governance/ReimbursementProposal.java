@@ -115,7 +115,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
 
     static final CanonicalSchema<ReimbursementProposal> EXTENSION_SCHEMA =
             CanonicalSchema.<ReimbursementProposal>newBuilder()
-                    .int64(1, proposal -> proposal.getRequestedBsq().value)
+                    .int64(1, proposal -> proposal.requestedBsq)
                     .string(2, ReimbursementProposal::getBsqAddress)
                     .build();
 

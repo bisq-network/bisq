@@ -85,6 +85,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class DaoStateService implements DaoSetupService {
     private static final String CANONICAL_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME = "_canonical_dao_state_hash_chain.log";
     private static final String LEGACY_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME = "_legacy_dao_state_hash_chain.log";
+    private static final String DAO_STATE_HASH_CHAIN_DUMP_LINE_SEPARATOR = "\n";
 
     private final DaoState daoState;
     private final GenesisTxInfo genesisTxInfo;
@@ -358,13 +359,25 @@ public class DaoStateService implements DaoSetupService {
             return;
         }
 
+        long ts = System.currentTimeMillis();
         byte[] canonicalDaoStateBytes = daoState.getSerializedStateForHashChain();
+        long timeForCanonical = System.currentTimeMillis() - ts;
+        ts = System.currentTimeMillis();
         byte[] legacyDaoStateBytes = daoState.getSerializedStateForHashChainLegacy();
+        long timeForLegacy = System.currentTimeMillis() - ts;
+        if (timeForLegacy > 0 || timeForCanonical > 0) {
+            log.info("DaoStateHashChainSerialization verification for height {} took \n" +
+                            "{} ms for canonical and \n" +
+                            "{} ms for legacy serialization",
+                    height, timeForCanonical, timeForLegacy);
+        }
         if (verifyDaoStateHashChainSerialization &&
                 !Arrays.equals(canonicalDaoStateBytes, legacyDaoStateBytes)) {
-            log.error("DaoStateBytes not matching at height {}. " +
-                            "canonicalDaoStateBytes: {}, legacyDaoStateBytes: {}",
-                    height, Hex.encode(canonicalDaoStateBytes), Hex.encode(legacyDaoStateBytes));
+            log.error("DaoStateBytes not matching at height {}. canonical.bytes={}, canonical.sha256={}, legacy.bytes={}, legacy.sha256={}",
+                    height,
+                    canonicalDaoStateBytes.length, Hex.encode(Hash.getSha256Hash(canonicalDaoStateBytes)),
+                    legacyDaoStateBytes.length, Hex.encode(Hash.getSha256Hash(legacyDaoStateBytes)));
+
             throw new IllegalStateException("DaoStateBytes not matching at height " + height);
         }
 
@@ -389,7 +402,7 @@ public class DaoStateService implements DaoSetupService {
         String line = "height=" + height +
                 " bytes=" + stateBytes.length +
                 " stateBytesSha256=" + Hex.encode(Hash.getSha256Hash(stateBytes)) +
-                System.lineSeparator();
+                DAO_STATE_HASH_CHAIN_DUMP_LINE_SEPARATOR;
         try {
             Files.writeString(filePath,
                     line,

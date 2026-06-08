@@ -422,7 +422,7 @@ public final class CanonicalSchema<T> {
                 throw new IllegalArgumentException("Only map fields can declare a map encoding");
             } else if (hasNestedSchema(type)) {
                 if ((schema == null && schemaBuilder == null) || (schema != null && schemaBuilder != null)) {
-                    throw new IllegalArgumentException("Compose and extend fields must declare exactly one nested schema or schema builder");
+                    throw new IllegalArgumentException("Compose, extend and repeated compose fields must declare exactly one nested schema or schema builder");
                 }
             } else if (schema != null || schemaBuilder != null) {
                 throw new IllegalArgumentException("Only compose and extend fields can declare a nested schema or schema builder");

@@ -18,5 +18,5 @@
 package bisq.core.encoding.canonical;
 
 public interface CanonicalEnum {
-     int getCode();
+    int getCode();
 }

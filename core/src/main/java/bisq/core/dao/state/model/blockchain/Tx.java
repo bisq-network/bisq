@@ -132,6 +132,10 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
     // Canonical
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // SCHEMA extends BaseTx.getBaseTxSchemaBuilder() with field 8. The extend(8, tx -> tx, ...)
+    // call nests the CanonicalSchema.newBuilder() inline schema under that parent field, so its
+    // repeatedCompose(1), enumField(2), and int64(3) numbers are scoped inside field 8 and do not
+    // collide with BaseTx fields 1-6.
     public static final CanonicalSchema<Tx> SCHEMA = BaseTx.<Tx>getBaseTxSchemaBuilder()
             .extend(8,
                     tx -> tx,
