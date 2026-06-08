@@ -22,9 +22,12 @@ import bisq.core.encoding.canonical.CanonicalEncoder;
 
 import com.google.protobuf.ByteString;
 
+import org.bitcoinj.core.Coin;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
@@ -101,6 +104,22 @@ public class GovernanceCanonicalEncoderTest {
                 .setRemoveAssetProposal(protobuf.RemoveAssetProposal.newBuilder()
                         .setTickerSymbol("XYZ"))
                 .build());
+    }
+
+    @Test
+    public void compensationProposalWithExtraDataMapEncodeCanonicalMatchesProtobuf() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+        extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, "receiverAddress");
+        Proposal proposal = new CompensationProposal("proposal-name",
+                "https://bisq.network/proposal",
+                Coin.valueOf(100_000),
+                "B1111111111111111111111111111111111",
+                extraDataMap)
+                .cloneProposalAndAddTxId("proposal-tx");
+
+        assertArrayEquals(proposal.toProtoMessage().toByteArray(),
+                proposal.encodeCanonical(CanonicalEncoder.DEFAULT));
     }
 
     @Test

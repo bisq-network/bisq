@@ -17,26 +17,42 @@
 
 package bisq.core.dao.tools;
 
+import bisq.core.encoding.canonical.LegacyCollectorsToMapIterator;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HashMapOrderPathProbe {
-    private static final String[] KEYS = {
-            "31zf35rkuu6yf",
-            "1dbjp2a6kyqox",
-            "3b4553177plvg",
-            "bnvj3t0lpa79",
-            "3hr4261uk5i8i",
-            "2r912h4yyjucd",
-            "3m5w96199x87i",
-            "2uent5s0widco",
-            "gx5ryb218zq7",
-            "1ctcw65e5psnx",
-            "2hx74lb7768rt",
-            "2wzuozo92awxl"
-    };
+    private static final List<Case> CASES = Arrays.asList(
+            new Case("bulkPathRegression", Arrays.asList(
+                    "31zf35rkuu6yf",
+                    "1dbjp2a6kyqox",
+                    "3b4553177plvg",
+                    "bnvj3t0lpa79",
+                    "3hr4261uk5i8i",
+                    "2r912h4yyjucd",
+                    "3m5w96199x87i",
+                    "2uent5s0widco",
+                    "gx5ryb218zq7",
+                    "1ctcw65e5psnx",
+                    "2hx74lb7768rt",
+                    "2wzuozo92awxl")),
+            new Case("daoMapVector", Arrays.asList(
+                    "k00", "k01", "k02", "k03", "k04", "k05", "k06", "k07", "k08", "k09",
+                    "k10", "k11", "k12", "k13", "k14", "k15", "k16", "k17", "k18", "k19",
+                    "k20", "k21", "k22", "k23", "k24", "k25", "k26", "k27", "k28", "k29",
+                    "k30", "k31", "k32", "k33", "k34", "k35", "k36", "k37", "k38", "k39")),
+            new Case("treeifiedCollisions", getSameHashStrings(4))
+    );
 
     public static void main(String[] args) {
         boolean comparableOnly = args.length == 1 && "--comparable-only".equals(args[0]);
@@ -47,11 +63,16 @@ public class HashMapOrderPathProbe {
 
         printConstants();
 
-        LinkedHashMap<String, Integer> source = new LinkedHashMap<>();
-        for (int i = 0; i < KEYS.length; i++) {
-            source.put(KEYS[i], i);
+        for (Case testCase : CASES) {
+            printCase(testCase);
         }
+    }
 
+    private static void printCase(Case testCase) {
+        LinkedHashMap<String, Integer> source = new LinkedHashMap<>();
+        for (int i = 0; i < testCase.keys.size(); i++) {
+            source.put(testCase.keys.get(i), i);
+        }
         HashMap<String, Integer> viaConstructor = new HashMap<>(source);
         HashMap<String, Integer> viaPutAll = new HashMap<>();
         viaPutAll.putAll(source);
@@ -63,10 +84,14 @@ public class HashMapOrderPathProbe {
         @SuppressWarnings("unchecked")
         HashMap<String, Integer> viaCollector = (HashMap<String, Integer>) collectorMap;
 
-        System.out.println("source.size=" + source.size());
-        print("constructor", viaConstructor);
-        print("putAll", viaPutAll);
-        print("collector", viaCollector);
+        List<String> legacyIteratorOrder =
+                LegacyCollectorsToMapIterator.getJava11HashMapIterationOrder(testCase.keys);
+
+        System.out.println("case." + testCase.name + ".source.size=" + source.size());
+        printHashMapPath(testCase.name, "constructor", viaConstructor, legacyIteratorOrder);
+        printHashMapPath(testCase.name, "putAll", viaPutAll, legacyIteratorOrder);
+        printHashMapPath(testCase.name, "collector", viaCollector, legacyIteratorOrder);
+        printLegacyIterator(testCase.name, legacyIteratorOrder);
     }
 
     private static void printConstants() {
@@ -79,14 +104,68 @@ public class HashMapOrderPathProbe {
         System.out.println("hashMap.minTreeifyCapacity=" + HashMapIntrospection.MIN_TREEIFY_CAPACITY);
     }
 
-    private static void print(String label, HashMap<String, Integer> map) {
+    private static void printHashMapPath(String caseName,
+                                         String label,
+                                         HashMap<String, Integer> map,
+                                         List<String> legacyIteratorOrder) {
         HashMapIntrospection.Stats stats = HashMapIntrospection.inspect(map);
-        System.out.println(label + ".size=" + stats.size);
-        System.out.println(label + ".tableLength=" + stats.tableLength);
-        System.out.println(label + ".threshold=" + stats.threshold);
-        System.out.println(label + ".maxBinLength=" + stats.maxBinLength);
-        System.out.println(label + ".treeBins=" + stats.treeBins);
-        System.out.println(label + ".iterationSha256=" + HashMapIntrospection.keyIterationFingerprint(map));
-        System.out.println(label + ".keys=" + map.keySet());
+        List<String> keys = new ArrayList<>(map.keySet());
+        String prefix = "case." + caseName + "." + label;
+        System.out.println(prefix + ".size=" + stats.size);
+        System.out.println(prefix + ".tableLength=" + stats.tableLength);
+        System.out.println(prefix + ".threshold=" + stats.threshold);
+        System.out.println(prefix + ".maxBinLength=" + stats.maxBinLength);
+        System.out.println(prefix + ".treeBins=" + stats.treeBins);
+        System.out.println(prefix + ".iterationSha256=" + listFingerprint(keys));
+        System.out.println(prefix + ".matchesLegacyIterator=" + keys.equals(legacyIteratorOrder));
+        System.out.println(prefix + ".keys=" + keys);
+    }
+
+    private static void printLegacyIterator(String caseName, List<String> legacyIteratorOrder) {
+        String prefix = "case." + caseName + ".legacyIterator";
+        System.out.println(prefix + ".iterationSha256=" + listFingerprint(legacyIteratorOrder));
+        System.out.println(prefix + ".keys=" + legacyIteratorOrder);
+    }
+
+    private static List<String> getSameHashStrings(int parts) {
+        List<String> result = new ArrayList<>();
+        int count = 1 << parts;
+        for (int i = 0; i < count; i++) {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int bit = parts - 1; bit >= 0; bit--) {
+                stringBuilder.append(((i >>> bit) & 1) == 0 ? "Aa" : "BB");
+            }
+            result.add(stringBuilder.toString());
+        }
+        result.sort(String::compareTo);
+        return result;
+    }
+
+    private static String listFingerprint(List<String> keys) {
+        MessageDigest digest = sha256();
+        for (String key : keys) {
+            byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
+            digest.update(ByteBuffer.allocate(Integer.BYTES).putInt(bytes.length).array());
+            digest.update(bytes);
+        }
+        return HashMapIntrospection.toHex(digest.digest());
+    }
+
+    private static MessageDigest sha256() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static final class Case {
+        private final String name;
+        private final List<String> keys;
+
+        private Case(String name, List<String> keys) {
+            this.name = name;
+            this.keys = new ArrayList<>(keys);
+        }
     }
 }
