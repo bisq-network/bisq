@@ -20,7 +20,6 @@ package bisq.core.filter;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
@@ -55,7 +54,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Filter implements ProtectedStoragePayload, ExpirablePayload, ExcludeForHashAwareProto, Canonical {
+public final class Filter implements ProtectedStoragePayload, ExpirablePayload, Canonical {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
     private final List<String> bannedOfferIds;
@@ -381,24 +380,14 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        return toProto(false);
+        return StoragePayload.newBuilder().setFilter(toFilterProto()).build();
     }
 
-    @Override
-    public protobuf.StoragePayload toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+    private protobuf.Filter toFilterProto() {
+        return getFilterBuilder().build();
     }
 
-    @Override
-    public protobuf.StoragePayload.Builder getBuilder(boolean serializeForHash) {
-        return StoragePayload.newBuilder().setFilter(toFilterProto(serializeForHash));
-    }
-
-    private protobuf.Filter toFilterProto(boolean serializeForHash) {
-        return resolveBuilder(getFilterBuilder(serializeForHash), serializeForHash).build();
-    }
-
-    private protobuf.Filter.Builder getFilterBuilder(boolean serializeForHash) {
+    private protobuf.Filter.Builder getFilterBuilder() {
         List<protobuf.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoMessage)
                 .collect(Collectors.toList());

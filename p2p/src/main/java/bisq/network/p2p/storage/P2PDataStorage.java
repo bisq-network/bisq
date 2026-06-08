@@ -55,7 +55,6 @@ import bisq.network.p2p.storage.persistence.RemovedPayloadsService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
-import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
@@ -1252,6 +1251,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * @param data Network payload
      * @return Hash of data
      */
+    @SuppressWarnings("deprecation")
     public static byte[] get32ByteHash(NetworkPayload data) {
         if (data instanceof Canonical canonical) {
             return Hash.getSha256Hash(canonical.encodeCanonical());
@@ -1269,7 +1269,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     @EqualsAndHashCode
     @ToString
-    public static final class DataAndSeqNrPair implements NetworkPayload, ExcludeForHashAwareProto, Canonical {
+    public static final class DataAndSeqNrPair implements NetworkPayload, Canonical {
         // data are only used for calculating cryptographic hash from both values, so they are kept private
         private final ProtectedStoragePayload protectedStoragePayload;
         private final int sequenceNumber;
@@ -1281,31 +1281,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         @Override
         public protobuf.DataAndSeqNrPair toProtoMessage() {
-            return toProto(false);
-        }
-
-        @Override
-        public protobuf.DataAndSeqNrPair toProto(boolean serializeForHash) {
-            return resolveProto(serializeForHash);
-        }
-
-        @Override
-        public protobuf.DataAndSeqNrPair.Builder getBuilder(boolean serializeForHash) {
             return protobuf.DataAndSeqNrPair.newBuilder()
-                    .setPayload(toStoragePayloadProto(serializeForHash))
-                    .setSequenceNumber(sequenceNumber);
-        }
-
-        private protobuf.StoragePayload toStoragePayloadProto(boolean serializeForHash) {
-            if (protectedStoragePayload instanceof ExcludeForHashAwareProto proto) {
-                StoragePayload.Builder builder = (StoragePayload.Builder) proto.getBuilder(serializeForHash);
-                return resolveBuilder(builder, serializeForHash).build();
-            } else {
-                return (StoragePayload) protectedStoragePayload.toProtoMessage();
-            }
+                    .setPayload((StoragePayload) protectedStoragePayload.toProtoMessage())
+                    .setSequenceNumber(sequenceNumber)
+                    .build();
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
             CanonicalWriter writer = new CanonicalWriter();
             // DataAndSeqNrPair is a hash/signature preimage wrapper for the protected payload bytes

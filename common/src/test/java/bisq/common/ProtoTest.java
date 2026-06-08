@@ -29,10 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class ProtoTest {
     @Test
-    public void serializeForHashUsesCanonicalEncodingWhenAvailable() {
+    @SuppressWarnings("deprecation")
+    public void serializeForHashUsesProtobufSerialization() {
         CanonicalPayload payload = new CanonicalPayload();
 
-        assertArrayEquals(new byte[]{0x01, 0x02, 0x03}, payload.serializeForHash());
+        assertArrayEquals(payload.serialize(), payload.serializeForHash());
     }
 
     private static final class CanonicalPayload implements Payload, Canonical {
