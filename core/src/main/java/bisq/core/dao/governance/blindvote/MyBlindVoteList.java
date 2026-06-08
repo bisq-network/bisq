@@ -78,9 +78,7 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
                     .build();
 
     public static final CanonicalSchema<MyBlindVoteList> SCHEMA =
-            CanonicalSchema.<MyBlindVoteList>newBuilder()
-                    .oneof(22, myBlindVoteList -> myBlindVoteList, PAYLOAD_SCHEMA)
-                    .build();
+            CanonicalSchema.oneof("PersistableEnvelope", 22, PAYLOAD_SCHEMA);
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {

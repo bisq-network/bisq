@@ -105,6 +105,18 @@ public class CanonicalEncoderTest {
     }
 
     @Test
+    public void oneofWrapperMessageNameDoesNotChangeEncodedBytes() {
+        CanonicalSchema<Value> legacyShape = CanonicalSchema.<Value>newBuilder()
+                .oneof(22, value -> value, VALUE_SCHEMA)
+                .build();
+        CanonicalSchema<Value> wrapperShape = CanonicalSchema.oneof("PersistableEnvelope", 22, VALUE_SCHEMA);
+        Value value = new Value(1);
+
+        assertArrayEquals(CanonicalEncoder.DEFAULT.encode(value, legacyShape),
+                CanonicalEncoder.DEFAULT.encode(value, wrapperShape));
+    }
+
+    @Test
     public void mapStringToComposeUsesTreeMapOrder() {
         Map<String, Value> values = new LinkedHashMap<>();
         values.put("b", new Value(2));

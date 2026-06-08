@@ -116,6 +116,32 @@ public class CanonicalSchemaTest {
         assertEquals(nestedSchema, field.getSchema());
     }
 
+    @Test
+    public void oneofWrapperSchemaStoresMessageNameMetadata() {
+        CanonicalSchema<MapValue> nestedSchema = CanonicalSchema.<MapValue>newBuilder()
+                .int32(1, MapValue::getValue)
+                .build();
+
+        CanonicalSchema<MapValue> schema = CanonicalSchema.oneof("PersistableEnvelope", 22, nestedSchema);
+
+        CanonicalSchema.Field<MapValue> field = schema.getFields().get(0);
+        assertEquals("PersistableEnvelope", schema.getWrapperMessageName());
+        assertEquals(CanonicalSchema.FieldType.ONEOF, field.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_NULL, field.getRule());
+        assertEquals(22, field.getNumber());
+        assertEquals(nestedSchema, field.getSchema());
+    }
+
+    @Test
+    public void oneofWrapperMessageNameMustNotBeBlank() {
+        CanonicalSchema<MapValue> nestedSchema = CanonicalSchema.<MapValue>newBuilder()
+                .int32(1, MapValue::getValue)
+                .build();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> CanonicalSchema.oneof("", 22, nestedSchema));
+    }
+
     private static final class MapHolder {
         private Map<String, MapValue> getValues() {
             return Collections.emptyMap();

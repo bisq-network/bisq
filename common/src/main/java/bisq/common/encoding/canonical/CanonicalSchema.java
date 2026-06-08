@@ -44,10 +44,16 @@ public final class CanonicalSchema<T> {
     @Getter
     private final int version;
     @Getter
+    @Nullable
+    private final String wrapperMessageName;
+    @Getter
     private final List<Field<T>> fields;
 
-    private CanonicalSchema(int version, List<Field<T>> fields) {
+    private CanonicalSchema(int version,
+                            @Nullable String wrapperMessageName,
+                            List<Field<T>> fields) {
         this.version = version;
+        this.wrapperMessageName = wrapperMessageName;
         this.fields = Collections.unmodifiableList(new ArrayList<>(fields));
     }
 
@@ -57,6 +63,17 @@ public final class CanonicalSchema<T> {
 
     public static <T> Builder<T> newBuilder(int version) {
         return new Builder<T>().version(version);
+    }
+
+    public static <T> CanonicalSchema<T> oneof(String wrapperMessageName,
+                                               int fieldNumber,
+                                               CanonicalSchema<T> payloadSchema) {
+        if (wrapperMessageName == null || wrapperMessageName.isBlank()) {
+            throw new IllegalArgumentException("Canonical oneof wrapper message name must not be blank");
+        }
+        return CanonicalSchema.<T>newBuilder()
+                .oneof(fieldNumber, Function.identity(), payloadSchema)
+                .build(wrapperMessageName);
     }
 
     public enum FieldType {
@@ -373,9 +390,13 @@ public final class CanonicalSchema<T> {
         }
 
         public CanonicalSchema<T> build() {
+            return build(null);
+        }
+
+        private CanonicalSchema<T> build(@Nullable String wrapperMessageName) {
             List<Field<T>> builtFields = new ArrayList<>(fields.size());
             fields.forEach(field -> builtFields.add(field.build()));
-            return new CanonicalSchema<>(version, builtFields);
+            return new CanonicalSchema<>(version, wrapperMessageName, builtFields);
         }
 
         private Builder<T> add(int number,
