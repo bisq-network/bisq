@@ -22,7 +22,10 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.TestUtils;
 
 import bisq.common.crypto.SealedAndSigned;
+import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.util.ExtraDataMapValidator;
+
+import com.google.protobuf.ByteString;
 
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -41,6 +44,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MailboxStoragePayloadTest {
     private static final long CUSTOM_TTL = MailboxStoragePayload.TTL - 1;
+
+    @Test
+    public void serializeForHashMatchesProtobufForCanonicalSchema() throws NoSuchAlgorithmException {
+        assertCanonicalMatchesProtobuf(newMailboxStoragePayload(MailboxStoragePayload.TTL));
+        assertCanonicalMatchesProtobuf(newMailboxStoragePayload(CUSTOM_TTL));
+        assertCanonicalMatchesProtobuf(newMailboxStoragePayloadWithAddressPrefixHash());
+    }
 
     @Test
     public void singleEntryExtraDataMapSerializesLikeHashMap() throws NoSuchAlgorithmException {
@@ -107,6 +117,11 @@ public class MailboxStoragePayloadTest {
         assertTrue(payload.toProtoMessage().getMailboxStoragePayload().getExtraDataMap().isEmpty());
     }
 
+    private static void assertCanonicalMatchesProtobuf(MailboxStoragePayload payload) {
+        assertArrayEquals(payload.serialize(), payload.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(payload.encodeCanonical(CanonicalEncoder.DEFAULT), payload.serializeForHash());
+    }
+
     private static protobuf.StoragePayload buildStoragePayloadWithHashMapExtraData() throws NoSuchAlgorithmException {
         protobuf.StoragePayload treeMapProto = newMailboxStoragePayload(CUSTOM_TTL).toProtoMessage();
         Map<String, String> hashMap = new HashMap<>();
@@ -116,6 +131,21 @@ public class MailboxStoragePayloadTest {
                         .clearExtraData()
                         .putAllExtraData(hashMap))
                 .build();
+    }
+
+    private static MailboxStoragePayload newMailboxStoragePayloadWithAddressPrefixHash()
+            throws NoSuchAlgorithmException {
+        protobuf.MailboxStoragePayload proto = newMailboxStoragePayload(CUSTOM_TTL)
+                .toProtoMessage()
+                .getMailboxStoragePayload();
+        protobuf.PrefixedSealedAndSignedMessage message = proto.getPrefixedSealedAndSignedMessage()
+                .toBuilder()
+                .setAddressPrefixHash(ByteString.copyFrom(new byte[] { 0x0d, 0x0e }))
+                .setUid("fixed-uid")
+                .build();
+        return MailboxStoragePayload.fromProto(proto.toBuilder()
+                .setPrefixedSealedAndSignedMessage(message)
+                .build());
     }
 
     private static MailboxStoragePayload newMailboxStoragePayload(long ttl) throws NoSuchAlgorithmException {

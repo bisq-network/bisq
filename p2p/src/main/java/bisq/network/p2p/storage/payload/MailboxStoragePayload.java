@@ -21,6 +21,9 @@ import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 
@@ -28,6 +31,7 @@ import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -53,7 +57,7 @@ import javax.annotation.Nullable;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload {
+public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload, Canonical {
     public static final long TTL = TimeUnit.DAYS.toMillis(15);
 
     // Added in 1.5.5
@@ -131,6 +135,37 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
                 proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final CanonicalSchema<MailboxStoragePayload> PAYLOAD_SCHEMA =
+            CanonicalSchema.<MailboxStoragePayload>newBuilder()
+                    .compose(1,
+                            mailboxStoragePayload -> mailboxStoragePayload.prefixedSealedAndSignedMessage,
+                            PrefixedSealedAndSignedMessage.PAYLOAD_SCHEMA)
+                    .bytes(2, mailboxStoragePayload -> mailboxStoragePayload.senderPubKeyForAddOperationBytes)
+                    .bytes(3, mailboxStoragePayload -> mailboxStoragePayload.ownerPubKeyBytes)
+                    .mapStringToString(4,
+                            MailboxStoragePayload::getExtraDataMapForCanonical,
+                            List::iterator)
+                    .build();
+
+    public static final CanonicalSchema<MailboxStoragePayload> SCHEMA =
+            CanonicalSchema.<MailboxStoragePayload>newBuilder()
+                    .oneof(6, mailboxStoragePayload -> mailboxStoragePayload, PAYLOAD_SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Map.of() : extraDataMap;
     }
 
 

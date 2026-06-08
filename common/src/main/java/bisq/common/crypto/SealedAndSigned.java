@@ -17,6 +17,7 @@
 
 package bisq.common.crypto;
 
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 
 import com.google.protobuf.ByteString;
@@ -77,4 +78,17 @@ public final class SealedAndSigned implements NetworkPayload {
                 proto.getSignature().toByteArray(),
                 proto.getSigPublicKeyBytes().toByteArray());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<SealedAndSigned> SCHEMA =
+            CanonicalSchema.<SealedAndSigned>newBuilder()
+                    .bytes(1, sealedAndSigned -> sealedAndSigned.encryptedSecretKey)
+                    .bytes(2, sealedAndSigned -> sealedAndSigned.encryptedPayloadWithHmac)
+                    .bytes(3, sealedAndSigned -> sealedAndSigned.signature)
+                    .bytes(4, sealedAndSigned -> sealedAndSigned.sigPublicKeyBytes)
+                    .build();
 }
