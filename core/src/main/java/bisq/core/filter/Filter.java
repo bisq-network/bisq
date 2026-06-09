@@ -87,6 +87,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final List<String> refundAgents;
 
     private final List<String> bannedAccountWitnessSignerPubKeys;
+    private final List<String> btcFeeReceiverAddresses;
 
     private final long creationDate;
     @Nullable
@@ -151,6 +152,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getMediators(),
                 filter.getRefundAgents(),
                 filter.getBannedAccountWitnessSignerPubKeys(),
+                filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
                 filter.getExtraDataMap() == null ? null : new TreeMap<>(filter.getExtraDataMap()),
@@ -193,6 +195,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getMediators(),
                 filter.getRefundAgents(),
                 filter.getBannedAccountWitnessSignerPubKeys(),
+                filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
                 filter.getExtraDataMap() == null ? null : new TreeMap<>(filter.getExtraDataMap()),
@@ -233,6 +236,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
                   PublicKey ownerPubKey,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
@@ -268,6 +272,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 mediators,
                 refundAgents,
                 bannedAccountWitnessSignerPubKeys,
+                btcFeeReceiverAddresses,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 System.currentTimeMillis(),
                 null,
@@ -314,6 +319,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
                   @Nullable String signatureAsBase64,
@@ -351,6 +357,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 mediators,
                 refundAgents,
                 bannedAccountWitnessSignerPubKeys,
+                btcFeeReceiverAddresses,
                 ownerPubKeyBytes,
                 creationDate,
                 null,
@@ -392,6 +399,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
                   @Nullable TreeMap<String, String> extraDataMap,
@@ -430,6 +438,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.mediators = copyList(mediators);
         this.refundAgents = copyList(refundAgents);
         this.bannedAccountWitnessSignerPubKeys = copyList(bannedAccountWitnessSignerPubKeys);
+        this.btcFeeReceiverAddresses = copyList(btcFeeReceiverAddresses);
         this.ownerPubKeyBytes = ownerPubKeyBytes == null ? null : ownerPubKeyBytes.clone();
         this.creationDate = creationDate;
         Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
@@ -499,6 +508,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .addAllMediators(mediators)
                 .addAllRefundAgents(refundAgents)
                 .addAllBannedSignerPubKeys(bannedAccountWitnessSignerPubKeys)
+                .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
                 .setCreationDate(creationDate)
                 .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys)
@@ -555,6 +565,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ProtoUtil.protocolStringListToList(proto.getMediatorsList()),
                 ProtoUtil.protocolStringListToList(proto.getRefundAgentsList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedSignerPubKeysList()),
+                ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
                 ownerPubKeyBytes,
                 proto.getCreationDate(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()),
@@ -615,6 +626,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                             .repeatedString(17, Filter::getMediators)
                             .repeatedString(18, Filter::getRefundAgents)
                             .repeatedString(19, Filter::getBannedAccountWitnessSignerPubKeys)
+                            .repeatedString(20, Filter::getBtcFeeReceiverAddresses)
                             .int64(21, Filter::getCreationDate)
                             .string(22, Filter::getSignerPubKeyAsHex)
                             .repeatedString(23, Filter::getBannedPrivilegedDevPubKeys)
@@ -691,6 +703,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     refundAgents=" + refundAgents +
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
                 ",\n     extraDataMap=" + extraDataMap +
+                ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     ownerPubKey=" + Hex.encode(ownerPubKeyBytes) +
                 ",\n     disableAutoConf=" + disableAutoConf +

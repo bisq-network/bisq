@@ -110,6 +110,7 @@ public class FilterSerializationTests {
                 List.of("mediator2.onion:8002", "mediator1.onion:8001"),
                 List.of("refund2.onion:8002", "refund1.onion:8001"),
                 List.of("signer-key-2", "signer-key-1"),
+                List.of("btc-receiver-1#0.2;btc-receiver-2#0.3"),
                 ownerPublicKey.getEncoded(),
                 1_700_000_000_000L,
                 extraDataMap,
@@ -135,6 +136,8 @@ public class FilterSerializationTests {
                 true);
 
         assertArrayEquals(filter.serialize(), filter.encodeCanonical());
+        assertEquals(List.of("btc-receiver-1#0.2;btc-receiver-2#0.3"),
+                Filter.fromProto(filter.toProtoMessage().getFilter()).getBtcFeeReceiverAddresses());
     }
 
     @Test

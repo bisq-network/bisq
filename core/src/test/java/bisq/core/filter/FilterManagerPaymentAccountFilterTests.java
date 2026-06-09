@@ -128,6 +128,7 @@ public class FilterManagerPaymentAccountFilterTests {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 null,
                 System.currentTimeMillis(),
                 null,

@@ -149,6 +149,7 @@ public class MockFilterFactory {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 ownerPubKeyBytes,
                 creationDate,
                 null,

@@ -26,6 +26,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BtcFeeReceiverServiceTest {
     @Test
@@ -72,5 +73,52 @@ public class BtcFeeReceiverServiceTest {
         assertEquals(3, BtcFeeReceiverService.findIndex(Longs.asList(0, 0, 0, 1, 2, 3), 1));
         assertEquals(4, BtcFeeReceiverService.findIndex(Longs.asList(0, 0, 0, 1, 2, 3), 2));
         assertEquals(6, BtcFeeReceiverService.findIndex(Longs.asList(0, 0, 0, 1, 0, 0, 2, 3), 2));
+    }
+
+    @Test
+    public void parseWeightedFilterReceiversKeepsRemainderForBurningMan() {
+        BtcFeeReceiverService.FeeReceiverConfig config = BtcFeeReceiverService.parseBtcFeeReceiverAddresses(
+                List.of("address1#0.2;address2#0.3"));
+
+        assertEquals(List.of("address1", "address2"), config.getReceiverAddresses());
+        assertEquals(List.of(2000L, 3000L), config.getReceiverWeights());
+        assertEquals(5000L, config.getBurningManReceiverWeight());
+    }
+
+    @Test
+    public void parsePlainFilterReceiversUsesLegacyUniformSelection() {
+        BtcFeeReceiverService.FeeReceiverConfig config = BtcFeeReceiverService.parseBtcFeeReceiverAddresses(
+                List.of("address1", "address2"));
+
+        assertEquals(List.of("address1", "address2"), config.getReceiverAddresses());
+        assertEquals(List.of(1L, 1L), config.getReceiverWeights());
+        assertEquals(0L, config.getBurningManReceiverWeight());
+    }
+
+    @Test
+    public void parseEmptyFilterReceiversUsesBurningManOnly() {
+        BtcFeeReceiverService.FeeReceiverConfig config = BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of());
+
+        assertEquals(List.of(), config.getReceiverAddresses());
+        assertEquals(List.of(), config.getReceiverWeights());
+        assertEquals(BtcFeeReceiverService.RECEIVER_SELECTION_CEILING, config.getBurningManReceiverWeight());
+    }
+
+    @Test
+    public void rejectsMixedPlainAndWeightedFilterReceivers() {
+        assertThrows(IllegalArgumentException.class,
+                () -> BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of("address1#0.2", "address2")));
+    }
+
+    @Test
+    public void rejectsWeightedFilterReceiversOverOneHundredPercent() {
+        assertThrows(IllegalArgumentException.class,
+                () -> BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of("address1#0.8;address2#0.3")));
+    }
+
+    @Test
+    public void extractsConfiguredReceiverAddressesForMempoolValidation() {
+        assertEquals(List.of("address1", "address2"),
+                BtcFeeReceiverService.getConfiguredReceiverAddresses(List.of("address1#0.2;address2#0.3")));
     }
 }

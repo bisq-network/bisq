@@ -78,6 +78,7 @@ public class UserPayloadModelVOTest {
                 Lists.newArrayList(),
                 Lists.newArrayList(),
                 Lists.newArrayList(),
+                Lists.newArrayList(),
                 null,
                 0,
                 null,
