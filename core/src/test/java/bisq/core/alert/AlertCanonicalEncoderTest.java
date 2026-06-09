@@ -22,6 +22,8 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.TreeMap;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -34,6 +36,21 @@ public class AlertCanonicalEncoderTest {
                 "1.9.99",
                 Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic()),
                 "signature-base64");
+
+        assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
+    }
+
+    @Test
+    void serializeForHashMatchesProtobufWithExtraDataMap() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+        Alert alert = new Alert("Mandatory update is available",
+                true,
+                true,
+                "1.9.99",
+                Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic()),
+                "signature-base64",
+                extraDataMap);
 
         assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
     }

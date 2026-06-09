@@ -35,6 +35,7 @@ import java.math.BigInteger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -91,6 +92,9 @@ public class FilterSerializationTests {
 
     @Test
     void encodeCanonicalMatchesProtobufForCanonicalSchema() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+
         Filter filter = new Filter(List.of("offer-1", "offer-2"),
                 List.of("trading-node-2.onion:8002", "trading-node-1.onion:8001"),
                 List.of(new PaymentAccountFilter("SEPA", "getIban", "sha256-v1:abcdef")),
@@ -108,6 +112,7 @@ public class FilterSerializationTests {
                 List.of("signer-key-2", "signer-key-1"),
                 ownerPublicKey.getEncoded(),
                 1_700_000_000_000L,
+                extraDataMap,
                 "signature-base64",
                 signerPubKeyAsHex,
                 List.of("dev-key-2", "dev-key-1"),

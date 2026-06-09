@@ -31,6 +31,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.TreeMap;
 
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.ACCOUNT_AGE_WITNESS_HASH;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.CAPABILITIES;
@@ -47,6 +48,9 @@ public class OfferPayloadCanonicalEncoderTest {
 
     @Test
     public void bsqSwapOfferPayloadEncodeCanonicalMatchesStoragePayloadProtobuf() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+
         BsqSwapOfferPayload offerPayload = new BsqSwapOfferPayload("bsq-swap-offer-id",
                 1_700_000_000_000L,
                 new NodeAddress("maker2.onion", 9999),
@@ -62,6 +66,7 @@ public class OfferPayloadCanonicalEncoderTest {
                         4L,
                         new byte[]{0x05},
                         1),
+                extraDataMap,
                 "1.9.9",
                 4);
 

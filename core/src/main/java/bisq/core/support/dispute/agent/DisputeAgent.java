@@ -24,11 +24,14 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.GetDataResponsePriority;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import java.security.PublicKey;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
@@ -53,6 +56,8 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
     protected final String emailAddress;
     @Nullable
     protected final String info;
+    @Nullable
+    protected final TreeMap<String, String> extraDataMap;
 
     public DisputeAgent(NodeAddress nodeAddress,
                         PubKeyRing pubKeyRing,
@@ -62,6 +67,26 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
                         String registrationSignature,
                         @Nullable String emailAddress,
                         @Nullable String info) {
+        this(nodeAddress,
+                pubKeyRing,
+                languageCodes,
+                registrationDate,
+                registrationPubKey,
+                registrationSignature,
+                emailAddress,
+                info,
+                null);
+    }
+
+    public DisputeAgent(NodeAddress nodeAddress,
+                        PubKeyRing pubKeyRing,
+                        List<String> languageCodes,
+                        long registrationDate,
+                        byte[] registrationPubKey,
+                        String registrationSignature,
+                        @Nullable String emailAddress,
+                        @Nullable String info,
+                        @Nullable TreeMap<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
@@ -70,6 +95,8 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
     }
 
 
@@ -107,6 +134,12 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
         return pubKeyRing.getSignaturePubKey();
     }
 
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
     @Override
     public String toString() {
         return "DisputeAgent{" +
@@ -118,6 +151,7 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
                 ",\n     registrationSignature='" + registrationSignature + '\'' +
                 ",\n     emailAddress='" + emailAddress + '\'' +
                 ",\n     info='" + info + '\'' +
+                ",\n     extraDataMap=" + extraDataMap +
                 "\n}";
     }
 }

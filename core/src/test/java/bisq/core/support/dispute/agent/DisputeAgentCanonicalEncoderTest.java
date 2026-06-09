@@ -29,6 +29,7 @@ import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
 import java.util.List;
+import java.util.TreeMap;
 
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +48,8 @@ public class DisputeAgentCanonicalEncoderTest {
                 new byte[]{0x04, 0x05, 0x06},
                 "registration-signature",
                 "arbitrator@example.com",
-                "arbitrator-info");
+                "arbitrator-info",
+                extraDataMap());
 
         assertCanonicalMatchesProtobuf(arbitrator);
     }
@@ -61,7 +63,8 @@ public class DisputeAgentCanonicalEncoderTest {
                 new byte[]{0x07, 0x08, 0x09},
                 "registration-signature",
                 null,
-                "mediator-info");
+                "mediator-info",
+                extraDataMap());
 
         assertCanonicalMatchesProtobuf(mediator);
     }
@@ -75,7 +78,8 @@ public class DisputeAgentCanonicalEncoderTest {
                 new byte[]{0x0a, 0x0b, 0x0c},
                 "registration-signature",
                 "refund-agent@example.com",
-                null);
+                null,
+                extraDataMap());
 
         assertCanonicalMatchesProtobuf(refundAgent);
     }
@@ -87,5 +91,11 @@ public class DisputeAgentCanonicalEncoderTest {
     private static PubKeyRing pubKeyRing() {
         return new PubKeyRing(Sig.generateKeyPair().getPublic(),
                 Encryption.generateKeyPair().getPublic());
+    }
+
+    private static TreeMap<String, String> extraDataMap() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+        return extraDataMap;
     }
 }

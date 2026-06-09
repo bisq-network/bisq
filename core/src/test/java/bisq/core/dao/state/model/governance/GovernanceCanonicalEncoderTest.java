@@ -132,6 +132,19 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     @Test
+    public void tempProposalPayloadWithExtraDataMapEncodeCanonicalMatchesStoragePayloadProtobuf() {
+        protobuf.TempProposalPayload proto = protobuf.TempProposalPayload.newBuilder()
+                .setProposal(getCompensationProposalProto())
+                .setOwnerPubKeyEncoded(ByteString.copyFrom(Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic())))
+                .putExtraData("futureKey", "futureValue")
+                .build();
+        TempProposalPayload tempProposalPayload = TempProposalPayload.fromProto(proto);
+
+        assertArrayEquals(tempProposalPayload.toProtoMessage().toByteArray(),
+                tempProposalPayload.encodeCanonical(CanonicalEncoder.DEFAULT));
+    }
+
+    @Test
     public void myProposalListEncodeCanonicalMatchesPersistableEnvelopeProtobuf() {
         MyProposalList myProposalList = new MyProposalList(List.of(Proposal.fromProto(getCompensationProposalProto())));
 

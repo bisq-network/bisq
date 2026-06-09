@@ -26,12 +26,19 @@ import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.network.GetDataResponsePriority;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
@@ -43,7 +50,6 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
@@ -65,15 +71,31 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     @Nullable
     private PublicKey ownerPubKey;
 
+    @Nullable
+    private final TreeMap<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
                  boolean isPreReleaseInfo,
                  String version) {
+        this(message,
+                isUpdateInfo,
+                isPreReleaseInfo,
+                version,
+                null);
+    }
+
+    public Alert(String message,
+                 boolean isUpdateInfo,
+                 boolean isPreReleaseInfo,
+                 String version,
+                 @Nullable TreeMap<String, String> extraDataMap) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.isPreReleaseInfo = isPreReleaseInfo;
         this.version = version;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
     }
 
 
@@ -82,7 +104,6 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("NullableProblems")
     @VisibleForTesting
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -90,12 +111,32 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                  String version,
                  byte[] ownerPubKeyBytes,
                  String signatureAsBase64) {
+        this(message,
+                isUpdateInfo,
+                isPreReleaseInfo,
+                version,
+                ownerPubKeyBytes,
+                signatureAsBase64,
+                null);
+    }
+
+    @SuppressWarnings("NullableProblems")
+    @VisibleForTesting
+    public Alert(String message,
+                 boolean isUpdateInfo,
+                 boolean isPreReleaseInfo,
+                 String version,
+                 byte[] ownerPubKeyBytes,
+                 String signatureAsBase64,
+                 @Nullable TreeMap<String, String> extraDataMap) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.isPreReleaseInfo = isPreReleaseInfo;
         this.version = version;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
@@ -111,16 +152,12 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignatureAsBase64(signatureAsBase64);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
     @Nullable
     public static Alert fromProto(protobuf.Alert proto) {
-        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in Alert");
-
         // We got in dev testing sometimes an empty protobuf Alert. Not clear why that happened but as it causes an
         // exception and corrupted user db file we prefer to set it to null.
         if (proto.getSignatureAsBase64().isEmpty())
@@ -131,7 +168,9 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getIsPreReleaseInfo(),
                 proto.getVersion(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
-                proto.getSignatureAsBase64());
+                proto.getSignatureAsBase64(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
@@ -148,6 +187,9 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                             .bool(3, alert -> alert.isUpdateInfo)
                             .string(4, alert -> alert.signatureAsBase64)
                             .bytes(5, alert -> alert.ownerPubKeyBytes)
+                            .mapStringToString(6,
+                                    Alert::getExtraDataMapForCanonical,
+                                    TreeMapIterator.naturalOrder())
                             .bool(7, alert -> alert.isPreReleaseInfo));
 
     @Override
@@ -161,11 +203,20 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 
+    private Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
-
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
 
     @Override
     public GetDataResponsePriority getGetDataResponsePriority() {

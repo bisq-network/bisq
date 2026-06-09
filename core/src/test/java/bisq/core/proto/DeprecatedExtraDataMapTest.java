@@ -54,6 +54,7 @@ import java.security.PublicKey;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 
@@ -64,84 +65,97 @@ import static org.bitcoinj.core.Utils.HEX;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DeprecatedExtraDataMapTest {
     @Test
-    public void alertRejectsNonEmptyExtraDataMap() {
+    public void alertPreservesNonEmptyExtraDataMap() {
         protobuf.Alert proto = alert().toProtoMessage().getAlert();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 Alert::fromProto,
+                Alert::getExtraDataMap,
+                alert -> alert.toProtoMessage().getAlert(),
                 protobuf.Alert::getExtraDataMap);
     }
 
     @Test
-    public void filterRejectsNonEmptyExtraDataMap() {
+    public void filterPreservesNonEmptyExtraDataMap() {
         protobuf.Filter proto = filter().toProtoMessage().getFilter();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 Filter::fromProto,
+                Filter::getExtraDataMap,
+                filter -> filter.toProtoMessage().getFilter(),
                 protobuf.Filter::getExtraDataMap);
     }
 
     @Test
-    public void arbitratorRejectsNonEmptyExtraDataMap() {
+    public void arbitratorPreservesNonEmptyExtraDataMap() {
         protobuf.Arbitrator proto = arbitrator().toProtoMessage().getArbitrator();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 Arbitrator::fromProto,
+                Arbitrator::getExtraDataMap,
+                arbitrator -> arbitrator.toProtoMessage().getArbitrator(),
                 protobuf.Arbitrator::getExtraDataMap);
     }
 
     @Test
-    public void mediatorRejectsNonEmptyExtraDataMap() {
+    public void mediatorPreservesNonEmptyExtraDataMap() {
         protobuf.Mediator proto = mediator().toProtoMessage().getMediator();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 Mediator::fromProto,
+                Mediator::getExtraDataMap,
+                mediator -> mediator.toProtoMessage().getMediator(),
                 protobuf.Mediator::getExtraDataMap);
     }
 
     @Test
-    public void refundAgentRejectsNonEmptyExtraDataMap() {
+    public void refundAgentPreservesNonEmptyExtraDataMap() {
         protobuf.RefundAgent proto = refundAgent().toProtoMessage().getRefundAgent();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 RefundAgent::fromProto,
+                RefundAgent::getExtraDataMap,
+                refundAgent -> refundAgent.toProtoMessage().getRefundAgent(),
                 protobuf.RefundAgent::getExtraDataMap);
     }
 
     @Test
-    public void tempProposalPayloadRejectsNonEmptyExtraDataMap() {
+    public void tempProposalPayloadPreservesNonEmptyExtraDataMap() {
         protobuf.TempProposalPayload proto = tempProposalPayload().toProtoMessage().getTempProposalPayload();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 TempProposalPayload::fromProto,
+                TempProposalPayload::getExtraDataMap,
+                tempProposalPayload -> tempProposalPayload.toProtoMessage().getTempProposalPayload(),
                 protobuf.TempProposalPayload::getExtraDataMap);
     }
 
     @Test
-    public void bsqSwapOfferPayloadRejectsNonEmptyExtraDataMap() {
+    public void bsqSwapOfferPayloadPreservesNonEmptyExtraDataMap() {
         protobuf.BsqSwapOfferPayload proto = bsqSwapOfferPayload().toProtoMessage().getBsqSwapOfferPayload();
 
-        assertDeprecatedExtraDataMap(proto,
+        assertStoragePayloadExtraDataMapPreserved(proto,
                 p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
                 p -> p.toBuilder().putExtraData("key", "value").build(),
                 BsqSwapOfferPayload::fromProto,
+                BsqSwapOfferPayload::getExtraDataMap,
+                bsqSwapOfferPayload -> bsqSwapOfferPayload.toProtoMessage().getBsqSwapOfferPayload(),
                 protobuf.BsqSwapOfferPayload::getExtraDataMap);
     }
 
@@ -218,22 +232,28 @@ public class DeprecatedExtraDataMapTest {
         assertEquals(Collections.singletonMap("key", "value"), proposalWithExtraDataMap.toProtoMessage().getExtraDataMap());
     }
 
-    private static <T extends Message> void assertDeprecatedExtraDataMap(
+    private static <T extends Message, P> void assertStoragePayloadExtraDataMapPreserved(
             T proto,
             Function<T, T> addEmptyExtraDataMap,
             Function<T, T> addNonEmptyExtraDataMap,
-            Function<T, ?> fromProto,
-            Function<T, ? extends java.util.Map<String, String>> extraDataMap) {
-        assertTrue(extraDataMap.apply(proto).isEmpty());
+            Function<T, P> fromProto,
+            Function<P, ? extends Map<String, String>> payloadExtraDataMap,
+            Function<P, T> toProto,
+            Function<T, ? extends Map<String, String>> protoExtraDataMap) {
+        assertTrue(protoExtraDataMap.apply(proto).isEmpty());
         assertNotNull(fromProto.apply(proto));
 
         T protoWithEmptyExtraDataMap = addEmptyExtraDataMap.apply(proto);
-        assertTrue(extraDataMap.apply(protoWithEmptyExtraDataMap).isEmpty());
+        assertTrue(protoExtraDataMap.apply(protoWithEmptyExtraDataMap).isEmpty());
         assertArrayEquals(proto.toByteArray(), protoWithEmptyExtraDataMap.toByteArray());
         assertNotNull(fromProto.apply(protoWithEmptyExtraDataMap));
 
         T protoWithNonEmptyExtraDataMap = addNonEmptyExtraDataMap.apply(proto);
-        assertThrows(IllegalArgumentException.class, () -> fromProto.apply(protoWithNonEmptyExtraDataMap));
+        P payloadWithExtraDataMap = fromProto.apply(protoWithNonEmptyExtraDataMap);
+        assertNotNull(payloadWithExtraDataMap);
+        assertEquals(Collections.singletonMap("key", "value"), payloadExtraDataMap.apply(payloadWithExtraDataMap));
+        assertEquals(Collections.singletonMap("key", "value"),
+                protoExtraDataMap.apply(toProto.apply(payloadWithExtraDataMap)));
     }
 
     private static Alert alert() {
