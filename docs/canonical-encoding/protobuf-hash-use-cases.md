@@ -92,6 +92,7 @@ object shapes, or when the protocol has an explicit activation and legacy
 verification plan.
 
 This change applies canonical encoding only to bounded model graphs with existing
-or added schemas and focused parity tests. The larger P2P protected-payload and
-payment-account hierarchies remain documented follow-up work because they need a
-broader schema and compatibility surface.
+or added schemas and focused parity tests, including the current P2P
+protected-payload storage wrappers and payment-account hierarchy. Future variants
+in those hierarchies still need explicit schemas and parity tests before they are
+used in hash preimages.

@@ -85,6 +85,9 @@ public final class CanonicalEncoder {
             case MAP:
                 writeMap(writer, field, fieldValue);
                 break;
+            default:
+                throw new IllegalStateException("Unsupported canonical field type " + field.getType() +
+                        " for field " + field.getNumber());
         }
     }
 
@@ -123,7 +126,7 @@ public final class CanonicalEncoder {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private <T> void writeMap(CanonicalWriter writer, CanonicalSchema.Field<T> field, @Nullable Object fieldValue) {
+    private <T> void writeMap(CanonicalWriter writer, CanonicalSchema.Field<T> field, Object fieldValue) {
         Map<?, ?> source = (Map<?, ?>) Objects.requireNonNull(fieldValue);
         if (source.isEmpty()) {
             return;

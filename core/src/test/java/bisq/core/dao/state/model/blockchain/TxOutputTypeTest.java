@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TxOutputTypeTest {
     @Test
     public void getCodeMatchesProtobufOrder() {
+        assertEquals(20, TxOutputType.values().length);
         assertEquals(0, TxOutputType.UNDEFINED.getCode());
         assertEquals(1, TxOutputType.UNDEFINED_OUTPUT.getCode());
         assertEquals(2, TxOutputType.GENESIS_OUTPUT.getCode());

@@ -61,10 +61,10 @@ PROBE_CLASS="bisq.core.dao.tools.HashMapOrderPathProbe"
 "$JAVA11_HOME/bin/java" "${JAVA_ARGS[@]}" "$PROBE_CLASS" > "$OUT_DIR/hashmap-order-java11.full.txt"
 "$JAVA21_HOME/bin/java" "${JAVA_ARGS[@]}" "$PROBE_CLASS" > "$OUT_DIR/hashmap-order-java21.full.txt"
 
-grep '\.collector\.' "$OUT_DIR/hashmap-order-java11.comparable.txt" > "$OUT_DIR/hashmap-order-java11.collector.txt"
-grep '\.collector\.' "$OUT_DIR/hashmap-order-java21.comparable.txt" > "$OUT_DIR/hashmap-order-java21.collector.txt"
-grep '\.legacyIterator\.' "$OUT_DIR/hashmap-order-java11.comparable.txt" > "$OUT_DIR/hashmap-order-java11.legacy-iterator.txt"
-grep '\.legacyIterator\.' "$OUT_DIR/hashmap-order-java21.comparable.txt" > "$OUT_DIR/hashmap-order-java21.legacy-iterator.txt"
+grep '\.collector\.' "$OUT_DIR/hashmap-order-java11.comparable.txt" > "$OUT_DIR/hashmap-order-java11.collector.txt" || true
+grep '\.collector\.' "$OUT_DIR/hashmap-order-java21.comparable.txt" > "$OUT_DIR/hashmap-order-java21.collector.txt" || true
+grep '\.legacyIterator\.' "$OUT_DIR/hashmap-order-java11.comparable.txt" > "$OUT_DIR/hashmap-order-java11.legacy-iterator.txt" || true
+grep '\.legacyIterator\.' "$OUT_DIR/hashmap-order-java21.comparable.txt" > "$OUT_DIR/hashmap-order-java21.legacy-iterator.txt" || true
 
 COLLECTOR_DIFF="$OUT_DIR/hashmap-collector-java11-vs-java21.diff"
 ITERATOR_DIFF="$OUT_DIR/hashmap-legacy-iterator-java11-vs-java21.diff"

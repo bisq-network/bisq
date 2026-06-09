@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ScriptTypeTest {
     @Test
     public void getCodeMatchesProtobufOrder() {
+        assertEquals(11, ScriptType.values().length);
         assertEquals(protobuf.ScriptType.PB_ERROR_SCRIPT_TYPES.getNumber(), ScriptType.UNDEFINED.getCode());
         assertEquals(protobuf.ScriptType.PUB_KEY.getNumber(), ScriptType.PUB_KEY.getCode());
         assertEquals(protobuf.ScriptType.PUB_KEY_HASH.getNumber(), ScriptType.PUB_KEY_HASH.getCode());

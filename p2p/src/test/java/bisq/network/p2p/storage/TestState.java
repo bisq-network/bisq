@@ -45,6 +45,7 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import java.security.PublicKey;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -355,16 +356,21 @@ public class TestState {
     }
 
     static MailboxStoragePayload buildMailboxStoragePayload(PublicKey senderKey, PublicKey receiverKey) {
+        byte[] senderPubKeyBytes = Sig.getPublicKeyBytes(senderKey);
+        byte[] receiverPubKeyBytes = Sig.getPublicKeyBytes(receiverKey);
+        byte[] payloadBytes = Arrays.copyOf(receiverPubKeyBytes, receiverPubKeyBytes.length + senderPubKeyBytes.length);
+        System.arraycopy(senderPubKeyBytes, 0, payloadBytes, receiverPubKeyBytes.length, senderPubKeyBytes.length);
+
         // Need to be able to take the hash which leverages protobuf Messages
         protobuf.StoragePayload messageMock = mock(protobuf.StoragePayload.class);
-        when(messageMock.toByteArray()).thenReturn(Sig.getPublicKeyBytes(receiverKey));
+        when(messageMock.toByteArray()).thenReturn(payloadBytes);
 
         MailboxStoragePayload payloadMock = mock(MailboxStoragePayload.class);
         when(payloadMock.getOwnerPubKey()).thenReturn(receiverKey);
         when(payloadMock.getSenderPubKeyForAddOperation()).thenReturn(senderKey);
         when(payloadMock.toProtoMessage()).thenReturn(messageMock);
-        when(payloadMock.serialize()).thenReturn(new byte[]{});
-        when(payloadMock.encodeCanonical()).thenReturn(new byte[]{});
+        when(payloadMock.serialize()).thenReturn(payloadBytes);
+        when(payloadMock.encodeCanonical()).thenReturn(payloadBytes);
 
         return payloadMock;
     }
