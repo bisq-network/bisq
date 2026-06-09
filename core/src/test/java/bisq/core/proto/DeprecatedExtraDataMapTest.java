@@ -146,14 +146,25 @@ public class DeprecatedExtraDataMapTest {
     }
 
     @Test
-    public void blindVoteRejectsNonEmptyExtraDataMap() {
+    public void blindVotePreservesNonEmptyExtraDataMap() {
         protobuf.BlindVote proto = blindVote().toProtoMessage();
 
-        assertDeprecatedExtraDataMap(proto,
-                p -> p.toBuilder().putAllExtraData(Collections.emptyMap()).build(),
-                p -> p.toBuilder().putExtraData("key", "value").build(),
-                BlindVote::fromProto,
-                protobuf.BlindVote::getExtraDataMap);
+        assertTrue(proto.getExtraDataMap().isEmpty());
+        assertNotNull(BlindVote.fromProto(proto));
+
+        protobuf.BlindVote protoWithEmptyExtraDataMap = proto.toBuilder()
+                .putAllExtraData(Collections.emptyMap())
+                .build();
+        assertTrue(protoWithEmptyExtraDataMap.getExtraDataMap().isEmpty());
+        assertArrayEquals(proto.toByteArray(), protoWithEmptyExtraDataMap.toByteArray());
+        assertNotNull(BlindVote.fromProto(protoWithEmptyExtraDataMap));
+
+        protobuf.BlindVote protoWithNonEmptyExtraDataMap = proto.toBuilder()
+                .putExtraData("key", "value")
+                .build();
+        BlindVote blindVoteWithExtraDataMap = BlindVote.fromProto(protoWithNonEmptyExtraDataMap);
+        assertEquals(Collections.singletonMap("key", "value"), blindVoteWithExtraDataMap.getExtraDataMap());
+        assertEquals(Collections.singletonMap("key", "value"), blindVoteWithExtraDataMap.toProtoMessage().getExtraDataMap());
     }
 
     @Test
@@ -296,7 +307,8 @@ public class DeprecatedExtraDataMapTest {
                 "txId",
                 1L,
                 new byte[]{2},
-                3L);
+                3L,
+                new TreeMap<>());
     }
 
     private static ReimbursementProposal reimbursementProposal() {

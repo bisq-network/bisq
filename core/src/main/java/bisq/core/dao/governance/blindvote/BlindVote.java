@@ -22,20 +22,27 @@ import bisq.core.dao.governance.ConsensusCritical;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Holds encryptedVotes, encryptedMeritList, txId of blindVote tx and stake.
@@ -59,17 +66,37 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     // As adding that field later would break consensus we prefer to add it now. In the worst case it will stay
     // an unused field.
     private final long date;
+    // This hash map allows addition of data in future versions without breaking consensus
+    @Nullable
+    private final TreeMap<String, String> extraDataMap;
 
     public BlindVote(byte[] encryptedVotes,
                      String txId,
                      long stake,
                      byte[] encryptedMeritList,
                      long date) {
+        this(encryptedVotes,
+                txId,
+                stake,
+                encryptedMeritList,
+                date,
+                new TreeMap<>());
+    }
+
+    public BlindVote(byte[] encryptedVotes,
+                     String txId,
+                     long stake,
+                     byte[] encryptedMeritList,
+                     long date,
+                     @Nullable TreeMap<String, String> extraDataMap) {
         this.encryptedVotes = encryptedVotes;
         this.txId = txId;
         this.stake = stake;
         this.encryptedMeritList = encryptedMeritList;
         this.date = date;
+
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
     }
 
 
@@ -91,20 +118,18 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 .setStake(stake)
                 .setEncryptedMeritList(ByteString.copyFrom(encryptedMeritList))
                 .setDate(date);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return builder;
     }
 
     public static BlindVote fromProto(protobuf.BlindVote proto) {
-        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in BlindVote");
-
         return new BlindVote(proto.getEncryptedVotes().toByteArray(),
                 proto.getTxId(),
                 proto.getStake(),
                 proto.getEncryptedMeritList().toByteArray(),
-                proto.getDate());
+                proto.getDate(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()));
     }
 
 
@@ -118,11 +143,18 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
             .int64(3, BlindVote::getStake)
             .bytes(4, BlindVote::getEncryptedMeritList)
             .int64(5, BlindVote::getDate)
+            .mapStringToString(6,
+                    BlindVote::getExtraDataMapForCanonical,
+                    TreeMapIterator.naturalOrder())
             .build();
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
         return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
     }
 
 
@@ -137,6 +169,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 ",\n     stake=" + stake +
                 ",\n     encryptedMeritList=" + Utilities.bytesAsHexString(encryptedMeritList) +
                 ",\n     date=" + date +
+                ",\n     extraDataMap=" + extraDataMap +
                 "\n}";
     }
 }

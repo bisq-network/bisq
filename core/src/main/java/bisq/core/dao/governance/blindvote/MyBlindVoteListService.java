@@ -76,10 +76,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -225,7 +225,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                     blindVoteTxId,
                     stake.value,
                     encryptedMeritList,
-                    new Date().getTime());
+                    new Date().getTime(),
+                    new TreeMap<>());
             addBlindVoteToList(blindVote);
 
             addToP2PNetwork(blindVote, errorMessage -> {

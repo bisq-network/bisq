@@ -160,6 +160,22 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     @Test
+    public void blindVoteWithExtraDataMapEncodeCanonicalMatchesProtobuf() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+
+        BlindVote blindVote = new BlindVote(new byte[]{0x01, 0x02, 0x03},
+                "blind-vote-tx",
+                123_456,
+                new byte[]{0x04, 0x05},
+                1_700_000_000_000L,
+                extraDataMap);
+
+        assertArrayEquals(blindVote.toProtoMessage().toByteArray(),
+                blindVote.encodeCanonical(CanonicalEncoder.DEFAULT));
+    }
+
+    @Test
     public void compensationProposalWithExtraDataMapEncodeCanonicalMatchesProtobuf() {
         TreeMap<String, String> extraDataMap = new TreeMap<>();
         extraDataMap.put("futureKey", "futureValue");
