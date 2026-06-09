@@ -180,6 +180,13 @@ class DaoStateCanonicalEncoderTest {
     }
 
     @Test
+    void serializesLegacyEmptyDaoStateHashChainWithoutLastBlock() throws Exception {
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(new DaoState().getSerializedStateForHashChainLegacy());
+
+        assertEquals(0, proto.getBlocksCount());
+    }
+
+    @Test
     void serializesEmptyDaoStateForHashChainWithoutLastBlock() throws Exception {
         protobuf.DaoState proto = protobuf.DaoState.parseFrom(new DaoState().getSerializedStateForHashChain());
 

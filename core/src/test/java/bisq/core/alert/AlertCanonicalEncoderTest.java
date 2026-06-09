@@ -23,6 +23,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AlertCanonicalEncoderTest {
     @Test
@@ -35,5 +36,15 @@ public class AlertCanonicalEncoderTest {
                 "signature-base64");
 
         assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
+    }
+
+    @Test
+    void encodeCanonicalRejectsUnsignedAlert() {
+        Alert alert = new Alert("Mandatory update is available",
+                true,
+                true,
+                "1.9.99");
+
+        assertThrows(IllegalStateException.class, () -> alert.encodeCanonical(CanonicalEncoder.DEFAULT));
     }
 }

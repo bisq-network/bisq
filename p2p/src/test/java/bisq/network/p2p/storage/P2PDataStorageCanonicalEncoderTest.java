@@ -33,6 +33,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class P2PDataStorageCanonicalEncoderTest {
     @Test
@@ -58,6 +59,17 @@ public class P2PDataStorageCanonicalEncoderTest {
                         0x10, 0x07},
                 canonicalBytes);
         assertFalse(Arrays.equals(pair.toProtoMessage().toByteArray(), canonicalBytes));
+    }
+
+    @Test
+    public void dataAndSeqNrPairPassesCanonicalEncoderToPayload() {
+        CanonicalStoragePayloadStub payload = new CanonicalStoragePayloadStub();
+        P2PDataStorage.DataAndSeqNrPair pair = new P2PDataStorage.DataAndSeqNrPair(payload, 7);
+        CanonicalEncoder canonicalEncoder = new CanonicalEncoder();
+
+        pair.encodeCanonical(canonicalEncoder);
+
+        assertSame(canonicalEncoder, payload.lastCanonicalEncoder);
     }
 
     private static final class StoragePayloadStub implements ProtectedStoragePayload {
@@ -104,7 +116,10 @@ public class P2PDataStorageCanonicalEncoderTest {
 
         @Override
         public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+            lastCanonicalEncoder = canonicalEncoder;
             return new byte[]{0x08, 0x2a};
         }
+
+        private CanonicalEncoder lastCanonicalEncoder;
     }
 }

@@ -24,31 +24,27 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-import javax.annotation.Nullable;
-
 public final class TreeMapIterator<K, V> implements CanonicalMapEntryIterator<K, V> {
-    @Nullable
     private final Comparator<? super K> comparator;
 
-    public TreeMapIterator() {
-        this(null);
-    }
-
-    public TreeMapIterator(@Nullable Comparator<? super K> comparator) {
+    private TreeMapIterator(Comparator<? super K> comparator) {
+        if (comparator == null) {
+            throw new IllegalArgumentException("comparator must not be null");
+        }
         this.comparator = comparator;
     }
 
     public static <K extends Comparable<? super K>, V> TreeMapIterator<K, V> naturalOrder() {
-        return new TreeMapIterator<>();
+        return new TreeMapIterator<>(Comparator.naturalOrder());
     }
 
     public static <K, V> TreeMapIterator<K, V> comparing(Comparator<? super K> comparator) {
-        return new TreeMapIterator<>(Objects.requireNonNull(comparator));
+        return new TreeMapIterator<>(comparator);
     }
 
     @Override
     public Iterator<Map.Entry<K, V>> iterate(List<Map.Entry<K, V>> entries) {
-        TreeMap<K, V> sortedEntries = comparator == null ? new TreeMap<>() : new TreeMap<>(comparator);
+        TreeMap<K, V> sortedEntries = new TreeMap<>(comparator);
         entries.forEach(entry -> {
             K key = Objects.requireNonNull(entry.getKey(), "Canonical map keys must not be null");
             if (sortedEntries.containsKey(key)) {

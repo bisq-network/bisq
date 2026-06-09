@@ -65,6 +65,11 @@ public class CanonicalEncoderTest {
     }
 
     @Test
+    public void rejectsNullTreeMapComparator() {
+        assertThrows(IllegalArgumentException.class, () -> TreeMapIterator.comparing(null));
+    }
+
+    @Test
     public void supportsUInt32BoolRepeatedComposeAndMapStringToString() {
         Map<String, String> tags = new LinkedHashMap<>();
         tags.put("b", "second");

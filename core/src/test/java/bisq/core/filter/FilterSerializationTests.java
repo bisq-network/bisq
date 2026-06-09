@@ -115,7 +115,7 @@ public class FilterSerializationTests {
                 List.of("auto-conf-2", "auto-conf-1"),
                 List.of("network-node-2.onion:8002", "network-node-1.onion:8001"),
                 true,
-                true,
+                false,
                 true,
                 -0.0,
                 List.of(0, 1, 128, -1),

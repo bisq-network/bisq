@@ -312,8 +312,11 @@ public class DaoState implements PersistablePayload, Canonical {
     // TODO: remove after canonical encoding migration verification complete; also remove getLegacyBsqStateBuilderExcludingBlocks and getLastBlock dependency.
     @Deprecated
     public byte[] getSerializedStateForHashChainLegacy() {
-        return getLegacyBsqStateBuilderExcludingBlocks().addBlocks(getLastBlock().toProtoMessage())
-                .build().toByteArray();
+        protobuf.DaoState.Builder builder = getLegacyBsqStateBuilderExcludingBlocks();
+        if (!blocks.isEmpty()) {
+            builder.addBlocks(getLastBlock().toProtoMessage());
+        }
+        return builder.build().toByteArray();
     }
 
 

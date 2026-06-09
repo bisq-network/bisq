@@ -1294,7 +1294,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             // and the sequence number. Keep field 1 delegated to the protected payload's own hash preimage
             // instead of trying to model the whole StoragePayload oneof here. Field numbers still mirror
             // protobuf.DataAndSeqNrPair: payload = 1 and sequence_number = 2.
-            writer.writeCompose(1, protectedStoragePayload.encodeCanonical());
+            writer.writeCompose(1, protectedStoragePayload.encodeCanonical(canonicalEncoder));
             writer.writeInt32(2, sequenceNumber);
             return writer.toByteArray();
         }

@@ -75,7 +75,7 @@ diff -u "$OUT_DIR/hashmap-order-java11.collector.txt" "$OUT_DIR/hashmap-order-ja
 COLLECTOR_STATUS=$?
 diff -u "$OUT_DIR/hashmap-order-java11.legacy-iterator.txt" "$OUT_DIR/hashmap-order-java21.legacy-iterator.txt" > "$ITERATOR_DIFF"
 ITERATOR_STATUS=$?
-diff -u "$OUT_DIR/hashmap-order-java11.comparable.txt" "$OUT_DIR/hashmap-order-java21.comparable.txt" > "$FULL_DIFF"
+diff -u "$OUT_DIR/hashmap-order-java11.full.txt" "$OUT_DIR/hashmap-order-java21.full.txt" > "$FULL_DIFF"
 FULL_STATUS=$?
 set -e
 

@@ -152,6 +152,12 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        if (signatureAsBase64 == null) {
+            throw new IllegalStateException("signatureAsBase64 must not be null for canonical Alert encoding");
+        }
+        if (ownerPubKeyBytes == null) {
+            throw new IllegalStateException("ownerPubKeyBytes must not be null for canonical Alert encoding");
+        }
         return canonicalEncoder.encode(this, SCHEMA);
     }
 
