@@ -21,12 +21,14 @@ import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
+import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.governance.voteresult.VoteResultConsensus;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -189,6 +192,39 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     @Test
+    public void blindVoteWithoutExtraDataMapConstructorMatchesFromProto() {
+        BlindVote blindVote = new BlindVote(new byte[]{0x01, 0x02, 0x03},
+                "blind-vote-tx",
+                123_456,
+                new byte[]{0x04, 0x05},
+                1_700_000_000_000L);
+
+        BlindVote fromProto = BlindVote.fromProto(blindVote.toProtoMessage());
+
+        assertEquals(fromProto, blindVote);
+        assertEquals(fromProto.hashCode(), blindVote.hashCode());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    public void blindVotePayloadHashUsesLegacyBlindVoteHashInput() {
+        BlindVote blindVote = new BlindVote(new byte[]{0x01, 0x02, 0x03},
+                "blind-vote-tx",
+                123_456,
+                new byte[]{0x04, 0x05},
+                1_700_000_000_000L);
+        byte[] bytesA = blindVote.encodeCanonical(CanonicalEncoder.DEFAULT);
+        byte[] bytesB = blindVote.serializeForHash();
+
+        assertTrue(Arrays.equals(bytesA, bytesB));
+        assertArrayEquals(blindVote.toProtoMessage().toByteArray(), bytesB);
+
+        byte[] expectedHash = Hash.getRipemd160hash(bytesA);
+        assertTrue(Arrays.equals(expectedHash, Hash.getRipemd160hash(bytesB)));
+        assertArrayEquals(expectedHash, new BlindVotePayload(blindVote).getHash());
+    }
+
+    @Test
     public void compensationProposalWithExtraDataMapEncodeCanonicalMatchesProtobuf() {
         TreeMap<String, String> extraDataMap = new TreeMap<>();
         extraDataMap.put("futureKey", "futureValue");
@@ -321,6 +357,15 @@ public class GovernanceCanonicalEncoderTest {
     }
 
     @Test
+    public void ballotWithoutVoteEncodeCanonicalMatchesProtobuf() {
+        Ballot ballot = new Ballot(Proposal.fromProto(getCompensationProposalProto()));
+
+        assertFalse(ballot.toProtoMessage().hasVote());
+        assertArrayEquals(ballot.toProtoMessage().toByteArray(),
+                CanonicalEncoder.DEFAULT.encode(ballot, Ballot.SCHEMA));
+    }
+
+    @Test
     public void meritAndMeritListEncodeCanonicalMatchesProtobuf() throws Exception {
         protobuf.Merit meritProto = getMeritProto("issuance-tx", new byte[]{0x01, 0x02, 0x03});
         Merit merit = Merit.fromProto(meritProto);
@@ -331,6 +376,19 @@ public class GovernanceCanonicalEncoderTest {
         assertMeritListCanonicalMatchesProtobuf(protobuf.MeritList.newBuilder()
                 .addMerit(meritProto)
                 .build());
+    }
+
+    @Test
+    public void meritDefensivelyCopiesSignature() {
+        byte[] signature = new byte[]{0x01, 0x02, 0x03};
+        Merit merit = new Merit(Issuance.fromProto(getIssuanceProto()), signature);
+
+        signature[0] = 0x7f;
+        assertArrayEquals(new byte[]{0x01, 0x02, 0x03}, merit.getSignature());
+
+        byte[] exposedSignature = merit.getSignature();
+        exposedSignature[1] = 0x7f;
+        assertArrayEquals(new byte[]{0x01, 0x02, 0x03}, merit.getSignature());
     }
 
     @Test

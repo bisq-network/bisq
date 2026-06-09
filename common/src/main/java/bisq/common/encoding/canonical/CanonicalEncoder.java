@@ -184,6 +184,7 @@ public final class CanonicalEncoder {
             case EXTEND:
                 writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
                 break;
+            case ONEOF:
             case PACKED_REPEATED_INT32:
             case REPEATED_COMPOSE:
             case REPEATED_STRING:

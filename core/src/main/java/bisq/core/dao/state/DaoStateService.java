@@ -410,7 +410,8 @@ public class DaoStateService implements DaoSetupService {
                     StandardOpenOption.WRITE,
                     StandardOpenOption.APPEND);
         } catch (IOException e) {
-            throw new IllegalStateException("Could not write DAO state hash chain serialization dump file " + filePath, e);
+            log.error("Could not write DAO state hash chain serialization dump file. height={}, filePath={}",
+                    height, filePath, e);
         }
     }
 

@@ -24,16 +24,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ScriptTypeTest {
     @Test
     public void getCodeMatchesProtobufOrder() {
-        assertEquals(0, ScriptType.UNDEFINED.getCode());
-        assertEquals(1, ScriptType.PUB_KEY.getCode());
-        assertEquals(2, ScriptType.PUB_KEY_HASH.getCode());
-        assertEquals(3, ScriptType.SCRIPT_HASH.getCode());
-        assertEquals(4, ScriptType.MULTISIG.getCode());
-        assertEquals(5, ScriptType.NULL_DATA.getCode());
-        assertEquals(6, ScriptType.WITNESS_V0_KEYHASH.getCode());
-        assertEquals(7, ScriptType.WITNESS_V0_SCRIPTHASH.getCode());
-        assertEquals(8, ScriptType.NONSTANDARD.getCode());
-        assertEquals(9, ScriptType.WITNESS_UNKNOWN.getCode());
-        assertEquals(10, ScriptType.WITNESS_V1_TAPROOT.getCode());
+        assertEquals(protobuf.ScriptType.PB_ERROR_SCRIPT_TYPES.getNumber(), ScriptType.UNDEFINED.getCode());
+        assertEquals(protobuf.ScriptType.PUB_KEY.getNumber(), ScriptType.PUB_KEY.getCode());
+        assertEquals(protobuf.ScriptType.PUB_KEY_HASH.getNumber(), ScriptType.PUB_KEY_HASH.getCode());
+        assertEquals(protobuf.ScriptType.SCRIPT_HASH.getNumber(), ScriptType.SCRIPT_HASH.getCode());
+        assertEquals(protobuf.ScriptType.MULTISIG.getNumber(), ScriptType.MULTISIG.getCode());
+        assertEquals(protobuf.ScriptType.NULL_DATA.getNumber(), ScriptType.NULL_DATA.getCode());
+        assertEquals(protobuf.ScriptType.WITNESS_V0_KEYHASH.getNumber(), ScriptType.WITNESS_V0_KEYHASH.getCode());
+        assertEquals(protobuf.ScriptType.WITNESS_V0_SCRIPTHASH.getNumber(), ScriptType.WITNESS_V0_SCRIPTHASH.getCode());
+        assertEquals(protobuf.ScriptType.NONSTANDARD.getNumber(), ScriptType.NONSTANDARD.getCode());
+        assertEquals(protobuf.ScriptType.WITNESS_UNKNOWN.getNumber(), ScriptType.WITNESS_UNKNOWN.getCode());
+        assertEquals(protobuf.ScriptType.WITNESS_V1_TAPROOT.getNumber(), ScriptType.WITNESS_V1_TAPROOT.getCode());
     }
 }

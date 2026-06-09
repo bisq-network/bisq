@@ -80,7 +80,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 stake,
                 encryptedMeritList,
                 date,
-                new TreeMap<>());
+                null);
     }
 
     public BlindVote(byte[] encryptedVotes,
@@ -96,7 +96,9 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
         this.date = date;
 
         Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
-        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null || validatedExtraDataMap.isEmpty()
+                ? null
+                : new TreeMap<>(validatedExtraDataMap);
     }
 
 

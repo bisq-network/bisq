@@ -37,7 +37,7 @@ public class AlertCanonicalEncoderTest {
                 Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic()),
                 "signature-base64");
 
-        assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(alert.toProtoMessage().toByteArray(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class AlertCanonicalEncoderTest {
                 "signature-base64",
                 extraDataMap);
 
-        assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
+        assertArrayEquals(alert.toProtoMessage().toByteArray(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
     }
 
     @Test

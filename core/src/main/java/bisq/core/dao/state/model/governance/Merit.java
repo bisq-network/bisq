@@ -29,6 +29,8 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Arrays;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -39,12 +41,11 @@ import javax.annotation.concurrent.Immutable;
 public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel, Canonical {
     @Getter
     private final Issuance issuance;
-    @Getter
     private final byte[] signature;
 
     public Merit(Issuance issuance, byte[] signature) {
         this.issuance = issuance;
-        this.signature = signature;
+        this.signature = Arrays.copyOf(signature, signature.length);
     }
 
 
@@ -83,6 +84,10 @@ public class Merit implements PersistablePayload, NetworkPayload, ConsensusCriti
 
     public String getIssuanceTxId() {
         return issuance.getTxId();
+    }
+
+    public byte[] getSignature() {
+        return Arrays.copyOf(signature, signature.length);
     }
 
     @Override
