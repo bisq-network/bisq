@@ -11,6 +11,7 @@ application {
 
 dependencies {
     implementation project(':proto')
+    implementation project(':proto-grpc')
     annotationProcessor libs.lombok
     compileOnly libs.checker.qual
     compileOnly libs.lombok

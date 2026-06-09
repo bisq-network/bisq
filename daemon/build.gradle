@@ -16,6 +16,7 @@ javafx {
 
 dependencies {
     implementation project(':proto')
+    implementation project(':proto-grpc')
     implementation project(':common')
     implementation project(':p2p')
     implementation project(':core')

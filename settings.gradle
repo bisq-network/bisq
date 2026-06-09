@@ -20,6 +20,7 @@ toolchainManagement {
 }
 
 include 'proto'
+include 'proto-grpc'
 include 'assets'
 include 'bridge'
 include 'btcnodemonitor'

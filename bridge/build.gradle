@@ -19,6 +19,7 @@ dependencies {
     implementation enforcedPlatform(project(':platform'))
     implementation project(':common')
     implementation project(':proto')
+    implementation project(':proto-grpc')
     implementation project(':p2p')
     implementation project(':core')
     implementation libs.protobuf.java

@@ -1,0 +1,64 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
+plugins {
+    id 'bisq.java-conventions'
+    id 'idea'
+    alias(libs.plugins.protobuf)
+}
+
+def versionCatalog = extensions.getByType(VersionCatalogsExtension).named("libs")
+def getStrictVersion = { versionAlias ->
+    def version = versionCatalog.findVersion(versionAlias).get()
+    version.strictVersion ?: version.requiredVersion
+}
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    annotationProcessor libs.lombok
+    compileOnly libs.javax.annotation
+    compileOnly libs.lombok
+
+    // Service stubs generated here reference message types defined in :proto.
+    // Consumers needing the stubs must also depend on :proto for those messages.
+    // The protobuf plugin also extracts the .proto files packaged in proto.jar
+    // onto protoc's import path (import-only), so grpc_services.proto /
+    // bridge_services.proto can `import "grpc.proto"` / "bridge.proto" without
+    // recompiling those messages here.
+    implementation project(':proto')
+
+    implementation libs.google.guava
+    implementation libs.protobuf.java
+    implementation libs.slf4j.api
+    implementation(libs.grpc.protobuf) {
+        exclude(module: 'animal-sniffer-annotations')
+        exclude(module: 'guava')
+    }
+    implementation(libs.grpc.stub) {
+        exclude(module: 'animal-sniffer-annotations')
+        exclude(module: 'guava')
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${getStrictVersion("protobuf")}"
+    }
+
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${getStrictVersion("grpc")}"
+        }
+    }
+
+    generateProtoTasks {
+        ofSourceSet('main').configureEach {
+            plugins {
+                // Apply the "grpc" plugin whose spec is defined above, without
+                // options.  Note the braces cannot be omitted, otherwise the
+                // plugin will not be added. This is because of the implicit way
+                // NamedDomainObjectContainer binds the methods.
+                grpc { }
+            }
+        }
+    }
+}
