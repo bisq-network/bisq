@@ -24,12 +24,21 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
@@ -38,9 +47,8 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * TempProposalPayload is wrapper for proposal sent over wire as well as it gets persisted.
@@ -59,13 +67,15 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
 
     protected final Proposal proposal;
     protected final byte[] ownerPubKeyEncoded;
+    @Nullable
+    protected final TreeMap<String, String> extraDataMap;
 
     // Used just for caching. Don't persist.
     private final transient PublicKey ownerPubKey;
 
     public TempProposalPayload(Proposal proposal,
                                PublicKey ownerPublicKey) {
-        this(proposal, Sig.getPublicKeyBytes(ownerPublicKey));
+        this(proposal, Sig.getPublicKeyBytes(ownerPublicKey), null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,9 +83,12 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TempProposalPayload(Proposal proposal,
-                                byte[] ownerPubPubKeyEncoded) {
+                                byte[] ownerPubPubKeyEncoded,
+                                @Nullable TreeMap<String, String> extraDataMap) {
         this.proposal = proposal;
         this.ownerPubKeyEncoded = ownerPubPubKeyEncoded;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyEncoded);
     }
@@ -84,6 +97,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
         final protobuf.TempProposalPayload.Builder builder = protobuf.TempProposalPayload.newBuilder()
                 .setProposal(proposal.getProposalBuilder())
                 .setOwnerPubKeyEncoded(ByteString.copyFrom(ownerPubKeyEncoded));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return builder;
     }
 
@@ -93,13 +107,33 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     }
 
     public static TempProposalPayload fromProto(protobuf.TempProposalPayload proto) {
-        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in TempProposalPayload");
-
         return new TempProposalPayload(Proposal.fromProto(proto.getProposal()),
-                proto.getOwnerPubKeyEncoded().toByteArray());
+                proto.getOwnerPubKeyEncoded().toByteArray(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<TempProposalPayload> SCHEMA =
+            CanonicalSchema.oneof("StoragePayload",
+                    8,
+                    CanonicalSchema.<TempProposalPayload>newBuilder()
+                            .compose(1, TempProposalPayload::getProposal, Proposal.getProposalSchemaBuilder().build())
+                            .bytes(2, TempProposalPayload::getOwnerPubKeyEncoded)
+                            .mapStringToString(3,
+                                    TempProposalPayload::getExtraDataMapForCanonical,
+                                    TreeMapIterator.naturalOrder()));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
     }
 
 
@@ -110,6 +144,12 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     @Override
     public PublicKey getOwnerPubKey() {
         return ownerPubKey;
+    }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
     }
 
 

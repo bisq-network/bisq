@@ -688,7 +688,7 @@ message Alert {
     bool is_update_info = 3;
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
-    map<string, string> extra_data = 6 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2
+    map<string, string> extra_data = 6;
     bool is_pre_release_info = 7;
 }
 
@@ -703,7 +703,7 @@ message Arbitrator {
     string btc_address = 8;
     string email_address = 9;
     string info = 10;
-    map<string, string> extra_data = 11 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
+    map<string, string> extra_data = 11;
 }
 
 message Mediator {
@@ -715,7 +715,7 @@ message Mediator {
     PubKeyRing pub_key_ring = 6;
     string email_address = 7;
     string info = 8;
-    map<string, string> extra_data = 9 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
+    map<string, string> extra_data = 9;
 }
 
 message RefundAgent {
@@ -727,7 +727,7 @@ message RefundAgent {
     PubKeyRing pub_key_ring = 6;
     string email_address = 7;
     string info = 8;
-    map<string, string> extra_data = 9 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
+    map<string, string> extra_data = 9;
 }
 
 message Filter {
@@ -736,7 +736,7 @@ message Filter {
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
-    map<string, string> extra_data = 6 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
+    map<string, string> extra_data = 6;
     repeated string banned_currencies = 7;
     repeated string banned_payment_methods = 8;
     repeated string arbitrators = 9 [deprecated = true]; // Legacy arbitrator filters are ignored.
@@ -750,8 +750,7 @@ message Filter {
     repeated string mediators = 17;
     repeated string refundAgents = 18;
     repeated string bannedSignerPubKeys = 19;
-    reserved 20; // Formerly: repeated string btc_fee_receiver_addresses = 20;
-    reserved "btc_fee_receiver_addresses";
+    repeated string btc_fee_receiver_addresses = 20;
     int64 creation_date = 21;
     string signer_pub_key_as_hex = 22;
     repeated string bannedPrivilegedDevPubKeys = 23;
@@ -872,7 +871,7 @@ message BsqSwapOfferPayload {
     int64 amount = 7;
     int64 min_amount = 8;
     ProofOfWork proof_of_work = 9;
-    map<string, string> extra_data = 10 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
+    map<string, string> extra_data = 10;
     string version_nr = 11;
     int32 protocol_version = 12;
 }
@@ -2286,7 +2285,6 @@ message Proposal {
         RemoveAssetProposal remove_asset_proposal = 12;
     }
     // We leave some index space here in case we add more subclasses.
-    // extra_data is only used in CompensationProposal, the other subclasses have set it to null
     map<string, string> extra_data = 20;
 }
 
@@ -2354,7 +2352,7 @@ message UnconfirmedBsqChangeOutputList {
 message TempProposalPayload {
     Proposal proposal = 1;
     bytes owner_pub_key_encoded = 2;
-    map<string, string> extra_data = 3 [deprecated = true]; // Was always null and is not supported anymore since v1.10.2;
+    map<string, string> extra_data = 3;
 }
 
 message ProposalPayload {
@@ -2421,7 +2419,7 @@ message BlindVote {
     int64 stake = 3;
     bytes encrypted_merit_list = 4;
     int64 date = 5;
-    map<string, string> extra_data = 6 [deprecated = true]; // Was always empty map and is not supported anymore since v1.10.2
+    map<string, string> extra_data = 6;
 }
 
 message MyBlindVoteList {

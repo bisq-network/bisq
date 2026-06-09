@@ -19,6 +19,9 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.governance.ConsensusCritical;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
@@ -33,7 +36,7 @@ import lombok.EqualsAndHashCode;
  * List of my own blind votes. Blind votes received from other voters are stored in the BlindVoteStore.
  */
 @EqualsAndHashCode(callSuper = true)
-public class MyBlindVoteList extends PersistableList<BlindVote> implements ConsensusCritical {
+public class MyBlindVoteList extends PersistableList<BlindVote> implements ConsensusCritical, Canonical {
 
     MyBlindVoteList() {
         super();
@@ -62,6 +65,22 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
         return new MyBlindVoteList(new ArrayList<>(proto.getBlindVoteList().stream()
                 .map(BlindVote::fromProto)
                 .collect(Collectors.toList())));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<MyBlindVoteList> SCHEMA =
+            CanonicalSchema.oneof("PersistableEnvelope",
+                    22,
+                    CanonicalSchema.<MyBlindVoteList>newBuilder()
+                            .repeatedCompose(1, MyBlindVoteList::getList, BlindVote.SCHEMA));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

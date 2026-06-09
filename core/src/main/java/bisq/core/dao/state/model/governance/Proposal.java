@@ -22,12 +22,16 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -47,7 +51,8 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public abstract class Proposal implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel {
+public abstract class Proposal implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel,
+        Canonical {
     protected final String name;
     protected final String link;
     protected final byte version;
@@ -116,6 +121,81 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
             default:
                 throw new ProtobufferRuntimeException("Unknown message case: " + proto);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected static <T extends Proposal> CanonicalSchema.Builder<T> getBaseProposalSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                .string(1, Proposal::getName)
+                .string(2, Proposal::getLink)
+                .uint32(3, proposal -> proposal.version)
+                .int64(4, Proposal::getCreationDate)
+                .string(5, Proposal::getTxId);
+    }
+
+    // Proposal is composed through this abstract base type by Ballot and ProposalVoteResult.
+    // The canonical schema must therefore describe every concrete proposal variant. The subtype
+    // getters below return null for non-matching variants, and null fields are omitted by the
+    // encoder, so only the active proposal extension is encoded.
+    public static CanonicalSchema.Builder<Proposal> getProposalSchemaBuilder() {
+        return Proposal.<Proposal>getBaseProposalSchemaBuilder()
+                .extend(6, Proposal::getCompensationProposal, CompensationProposal.EXTENSION_SCHEMA)
+                .extend(7, Proposal::getReimbursementProposal, ReimbursementProposal.EXTENSION_SCHEMA)
+                .extend(8, Proposal::getChangeParamProposal, ChangeParamProposal.EXTENSION_SCHEMA)
+                .extend(9, Proposal::getRoleProposal, RoleProposal.EXTENSION_SCHEMA)
+                .extend(10, Proposal::getConfiscateBondProposal, ConfiscateBondProposal.EXTENSION_SCHEMA)
+                .extend(11, Proposal::getGenericProposal, GenericProposal.EXTENSION_SCHEMA)
+                .extend(12, Proposal::getRemoveAssetProposal, RemoveAssetProposal.EXTENSION_SCHEMA)
+                // extra_data keeps protobuf field 20 and must stay after proposal subtype
+                // extensions, which occupy fields 6 through 12.
+                .mapStringToString(20,
+                        Proposal::getExtraDataMapForCanonical,
+                        TreeMapIterator.naturalOrder());
+    }
+
+    // These methods adapt the runtime subtype into fixed schema fields. A null result means the
+    // field is not the active proposal variant and must be skipped by canonical encoding.
+    @Nullable
+    private static CompensationProposal getCompensationProposal(Proposal proposal) {
+        return proposal instanceof CompensationProposal ? (CompensationProposal) proposal : null;
+    }
+
+    @Nullable
+    private static ReimbursementProposal getReimbursementProposal(Proposal proposal) {
+        return proposal instanceof ReimbursementProposal ? (ReimbursementProposal) proposal : null;
+    }
+
+    @Nullable
+    private static ChangeParamProposal getChangeParamProposal(Proposal proposal) {
+        return proposal instanceof ChangeParamProposal ? (ChangeParamProposal) proposal : null;
+    }
+
+    @Nullable
+    private static RoleProposal getRoleProposal(Proposal proposal) {
+        return proposal instanceof RoleProposal ? (RoleProposal) proposal : null;
+    }
+
+    @Nullable
+    private static ConfiscateBondProposal getConfiscateBondProposal(Proposal proposal) {
+        return proposal instanceof ConfiscateBondProposal ? (ConfiscateBondProposal) proposal : null;
+    }
+
+    @Nullable
+    private static GenericProposal getGenericProposal(Proposal proposal) {
+        return proposal instanceof GenericProposal ? (GenericProposal) proposal : null;
+    }
+
+    @Nullable
+    private static RemoveAssetProposal getRemoveAssetProposal(Proposal proposal) {
+        return proposal instanceof RemoveAssetProposal ? (RemoveAssetProposal) proposal : null;
+    }
+
+    protected Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
     }
 
 

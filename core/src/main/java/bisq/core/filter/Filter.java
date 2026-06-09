@@ -20,10 +20,14 @@ package bisq.core.filter;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
@@ -35,9 +39,12 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -47,12 +54,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Filter implements ProtectedStoragePayload, ExpirablePayload, ExcludeForHashAwareProto {
+public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
     private final List<String> bannedOfferIds;
@@ -82,8 +87,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<String> refundAgents;
 
     private final List<String> bannedAccountWitnessSignerPubKeys;
+    private final List<String> btcFeeReceiverAddresses;
 
     private final long creationDate;
+    @Nullable
+    private final TreeMap<String, String> extraDataMap;
 
     private final List<String> bannedPrivilegedDevPubKeys;
 
@@ -144,8 +152,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getMediators(),
                 filter.getRefundAgents(),
                 filter.getBannedAccountWitnessSignerPubKeys(),
+                filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
+                filter.getExtraDataMap() == null ? null : new TreeMap<>(filter.getExtraDataMap()),
                 signatureAsBase64,
                 filter.getSignerPubKeyAsHex(),
                 filter.getBannedPrivilegedDevPubKeys(),
@@ -185,8 +195,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getMediators(),
                 filter.getRefundAgents(),
                 filter.getBannedAccountWitnessSignerPubKeys(),
+                filter.getBtcFeeReceiverAddresses(),
                 filter.getOwnerPubKeyBytes(),
                 filter.getCreationDate(),
+                filter.getExtraDataMap() == null ? null : new TreeMap<>(filter.getExtraDataMap()),
                 null,
                 filter.getSignerPubKeyAsHex(),
                 filter.getBannedPrivilegedDevPubKeys(),
@@ -224,6 +236,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
                   PublicKey ownerPubKey,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
@@ -259,8 +272,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 mediators,
                 refundAgents,
                 bannedAccountWitnessSignerPubKeys,
+                btcFeeReceiverAddresses,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 System.currentTimeMillis(),
+                null,
                 null,
                 signerPubKeyAsHex,
                 bannedPrivilegedDevPubKeys,
@@ -304,8 +319,90 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   List<String> mediators,
                   List<String> refundAgents,
                   List<String> bannedAccountWitnessSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
                   byte[] ownerPubKeyBytes,
                   long creationDate,
+                  @Nullable String signatureAsBase64,
+                  String signerPubKeyAsHex,
+                  List<String> bannedPrivilegedDevPubKeys,
+                  boolean disableAutoConf,
+                  List<String> bannedAutoConfExplorers,
+                  List<String> nodeAddressesBannedFromNetwork,
+                  boolean disableMempoolValidation,
+                  boolean disableApi,
+                  boolean disablePowMessage,
+                  double powDifficulty,
+                  List<Integer> enabledPowVersions,
+                  long makerFeeBtc,
+                  long takerFeeBtc,
+                  long makerFeeBsq,
+                  long takerFeeBsq,
+                  List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
+                  List<String> addedBtcNodes,
+                  List<String> addedSeedNodes,
+                  String uid,
+                  boolean disableBsqSwap) {
+        this(bannedOfferIds,
+                nodeAddressesBannedFromTrading,
+                bannedPaymentAccounts,
+                bannedCurrencies,
+                bannedPaymentMethods,
+                seedNodes,
+                priceRelayNodes,
+                preventPublicBtcNetwork,
+                btcNodes,
+                disableDao,
+                disableDaoBelowVersion,
+                disableTradeBelowVersion,
+                mediators,
+                refundAgents,
+                bannedAccountWitnessSignerPubKeys,
+                btcFeeReceiverAddresses,
+                ownerPubKeyBytes,
+                creationDate,
+                null,
+                signatureAsBase64,
+                signerPubKeyAsHex,
+                bannedPrivilegedDevPubKeys,
+                disableAutoConf,
+                bannedAutoConfExplorers,
+                nodeAddressesBannedFromNetwork,
+                disableMempoolValidation,
+                disableApi,
+                disablePowMessage,
+                powDifficulty,
+                enabledPowVersions,
+                makerFeeBtc,
+                takerFeeBtc,
+                makerFeeBsq,
+                takerFeeBsq,
+                delayedPayoutPaymentAccounts,
+                addedBtcNodes,
+                addedSeedNodes,
+                uid,
+                disableBsqSwap);
+    }
+
+    @VisibleForTesting
+    public Filter(List<String> bannedOfferIds,
+                  List<String> nodeAddressesBannedFromTrading,
+                  List<PaymentAccountFilter> bannedPaymentAccounts,
+                  List<String> bannedCurrencies,
+                  List<String> bannedPaymentMethods,
+                  List<String> seedNodes,
+                  List<String> priceRelayNodes,
+                  boolean preventPublicBtcNetwork,
+                  List<String> btcNodes,
+                  boolean disableDao,
+                  String disableDaoBelowVersion,
+                  String disableTradeBelowVersion,
+                  List<String> mediators,
+                  List<String> refundAgents,
+                  List<String> bannedAccountWitnessSignerPubKeys,
+                  List<String> btcFeeReceiverAddresses,
+                  byte[] ownerPubKeyBytes,
+                  long creationDate,
+                  @Nullable TreeMap<String, String> extraDataMap,
                   @Nullable String signatureAsBase64,
                   String signerPubKeyAsHex,
                   List<String> bannedPrivilegedDevPubKeys,
@@ -341,8 +438,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.mediators = copyList(mediators);
         this.refundAgents = copyList(refundAgents);
         this.bannedAccountWitnessSignerPubKeys = copyList(bannedAccountWitnessSignerPubKeys);
+        this.btcFeeReceiverAddresses = copyList(btcFeeReceiverAddresses);
         this.ownerPubKeyBytes = ownerPubKeyBytes == null ? null : ownerPubKeyBytes.clone();
         this.creationDate = creationDate;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
         this.signatureAsBase64 = signatureAsBase64;
         this.signerPubKeyAsHex = signerPubKeyAsHex;
         this.bannedPrivilegedDevPubKeys = copyList(bannedPrivilegedDevPubKeys);
@@ -378,24 +478,14 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        return toProto(false);
+        return StoragePayload.newBuilder().setFilter(toFilterProto()).build();
     }
 
-    @Override
-    public protobuf.StoragePayload toProto(boolean serializeForHash) {
-        return resolveProto(serializeForHash);
+    private protobuf.Filter toFilterProto() {
+        return getFilterBuilder().build();
     }
 
-    @Override
-    public protobuf.StoragePayload.Builder getBuilder(boolean serializeForHash) {
-        return StoragePayload.newBuilder().setFilter(toFilterProto(serializeForHash));
-    }
-
-    private protobuf.Filter toFilterProto(boolean serializeForHash) {
-        return resolveBuilder(getFilterBuilder(serializeForHash), serializeForHash).build();
-    }
-
-    private protobuf.Filter.Builder getFilterBuilder(boolean serializeForHash) {
+    private protobuf.Filter.Builder getFilterBuilder() {
         List<protobuf.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoMessage)
                 .collect(Collectors.toList());
@@ -418,6 +508,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .addAllMediators(mediators)
                 .addAllRefundAgents(refundAgents)
                 .addAllBannedSignerPubKeys(bannedAccountWitnessSignerPubKeys)
+                .addAllBtcFeeReceiverAddresses(btcFeeReceiverAddresses)
                 .setSignerPubKeyAsHex(signerPubKeyAsHex)
                 .setCreationDate(creationDate)
                 .addAllBannedPrivilegedDevPubKeys(bannedPrivilegedDevPubKeys)
@@ -443,16 +534,12 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .map(ByteString::copyFrom)
                 .ifPresent(builder::setOwnerPubKeyBytes);
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
         return builder;
     }
 
     public static Filter fromProto(protobuf.Filter proto) {
-        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in Filter");
-
         List<PaymentAccountFilter> bannedPaymentAccountsList = proto.getBannedPaymentAccountsList().stream()
                 .map(PaymentAccountFilter::fromProto)
                 .collect(Collectors.toList());
@@ -478,8 +565,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getMediatorsList()),
                 ProtoUtil.protocolStringListToList(proto.getRefundAgentsList()),
                 ProtoUtil.protocolStringListToList(proto.getBannedSignerPubKeysList()),
+                ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
                 ownerPubKeyBytes,
                 proto.getCreationDate(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()),
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),
@@ -510,8 +599,74 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Filter> SCHEMA =
+            CanonicalSchema.oneof("StoragePayload",
+                    4,
+                    CanonicalSchema.<Filter>newBuilder()
+                            .repeatedString(1, Filter::getNodeAddressesBannedFromTrading)
+                            .repeatedString(2, Filter::getBannedOfferIds)
+                            .repeatedCompose(3, Filter::getBannedPaymentAccounts, PaymentAccountFilter.SCHEMA)
+                            .string(4, Filter::getSignatureAsBase64)
+                            .bytes(5, Filter::getOwnerPubKeyBytes)
+                            .mapStringToString(6,
+                                    Filter::getExtraDataMapForCanonical,
+                                    TreeMapIterator.naturalOrder())
+                            .repeatedString(7, Filter::getBannedCurrencies)
+                            .repeatedString(8, Filter::getBannedPaymentMethods)
+                            .repeatedString(10, Filter::getSeedNodes)
+                            .repeatedString(11, Filter::getPriceRelayNodes)
+                            .bool(12, Filter::isPreventPublicBtcNetwork)
+                            .repeatedString(13, Filter::getBtcNodes)
+                            .bool(14, Filter::isDisableDao)
+                            .string(15, Filter::getDisableDaoBelowVersion)
+                            .string(16, Filter::getDisableTradeBelowVersion)
+                            .repeatedString(17, Filter::getMediators)
+                            .repeatedString(18, Filter::getRefundAgents)
+                            .repeatedString(19, Filter::getBannedAccountWitnessSignerPubKeys)
+                            .repeatedString(20, Filter::getBtcFeeReceiverAddresses)
+                            .int64(21, Filter::getCreationDate)
+                            .string(22, Filter::getSignerPubKeyAsHex)
+                            .repeatedString(23, Filter::getBannedPrivilegedDevPubKeys)
+                            .bool(24, Filter::isDisableAutoConf)
+                            .repeatedString(25, Filter::getBannedAutoConfExplorers)
+                            .repeatedString(26, Filter::getNodeAddressesBannedFromNetwork)
+                            .bool(27, Filter::isDisableApi)
+                            .bool(28, Filter::isDisableMempoolValidation)
+                            .bool(29, Filter::isDisablePowMessage)
+                            .doubleField(30, Filter::getPowDifficulty)
+                            .int64(31, Filter::getMakerFeeBtc)
+                            .int64(32, Filter::getTakerFeeBtc)
+                            .int64(33, Filter::getMakerFeeBsq)
+                            .int64(34, Filter::getTakerFeeBsq)
+                            .packedRepeatedInt32(35, Filter::getEnabledPowVersions)
+                            .repeatedCompose(36, Filter::getDelayedPayoutPaymentAccounts, PaymentAccountFilter.SCHEMA)
+                            .repeatedString(37, Filter::getAddedBtcNodes)
+                            .repeatedString(38, Filter::getAddedSeedNodes)
+                            .string(39, Filter::getUid)
+                            .bool(40, Filter::isDisableBsqSwap));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
 
     @Override
     public GetDataResponsePriority getGetDataResponsePriority() {
@@ -547,6 +702,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     mediators=" + mediators +
                 ",\n     refundAgents=" + refundAgents +
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
+                ",\n     extraDataMap=" + extraDataMap +
+                ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     ownerPubKey=" + Hex.encode(ownerPubKeyBytes) +
                 ",\n     disableAutoConf=" + disableAutoConf +

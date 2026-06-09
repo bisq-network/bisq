@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -31,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Immutable
 @Value
 @Slf4j
-public class ProposalVoteResult implements PersistablePayload, ImmutableDaoStateModel {
+public class ProposalVoteResult implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final Proposal proposal;
     private final long stakeOfAcceptedVotes;
     private final long stakeOfRejectedVotes;
@@ -74,6 +77,27 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
                 proto.getNumRejectedVotes(),
                 proto.getNumIgnoredVotes());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<ProposalVoteResult> SCHEMA =
+            CanonicalSchema.<ProposalVoteResult>newBuilder()
+                    .compose(1, ProposalVoteResult::getProposal, Proposal.getProposalSchemaBuilder().build())
+                    .int64(2, ProposalVoteResult::getStakeOfAcceptedVotes)
+                    .int64(3, ProposalVoteResult::getStakeOfRejectedVotes)
+                    .int32(4, ProposalVoteResult::getNumAcceptedVotes)
+                    .int32(5, ProposalVoteResult::getNumRejectedVotes)
+                    .int32(6, ProposalVoteResult::getNumIgnoredVotes)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

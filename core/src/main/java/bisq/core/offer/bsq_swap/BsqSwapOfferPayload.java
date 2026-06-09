@@ -30,14 +30,25 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.ProofOfWork;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.CollectionUtils;
+import bisq.common.util.ExtraDataMapValidator;
+
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
@@ -57,12 +68,15 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 original.getAmount(),
                 original.getMinAmount(),
                 proofOfWork,
+                copyExtraDataMap(original.getExtraDataMap()),
                 original.getVersionNr(),
                 original.getProtocolVersion()
         );
     }
 
     private final ProofOfWork proofOfWork;
+    @Nullable
+    private final TreeMap<String, String> extraDataMap;
 
     public BsqSwapOfferPayload(String id,
                                long date,
@@ -73,6 +87,32 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                                long amount,
                                long minAmount,
                                ProofOfWork proofOfWork,
+                               String versionNr,
+                               int protocolVersion) {
+        this(id,
+                date,
+                ownerNodeAddress,
+                pubKeyRing,
+                direction,
+                price,
+                amount,
+                minAmount,
+                proofOfWork,
+                null,
+                versionNr,
+                protocolVersion);
+    }
+
+    public BsqSwapOfferPayload(String id,
+                               long date,
+                               NodeAddress ownerNodeAddress,
+                               PubKeyRing pubKeyRing,
+                               OfferDirection direction,
+                               long price,
+                               long amount,
+                               long minAmount,
+                               ProofOfWork proofOfWork,
+                               @Nullable TreeMap<String, String> extraDataMap,
                                String versionNr,
                                int protocolVersion) {
         super(id,
@@ -92,6 +132,8 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 protocolVersion);
 
         this.proofOfWork = proofOfWork;
+        Map<String, String> validatedExtraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
+        this.extraDataMap = validatedExtraDataMap == null ? null : new TreeMap<>(validatedExtraDataMap);
     }
 
 
@@ -121,16 +163,12 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 .setProofOfWork(proofOfWork.toProtoMessage())
                 .setVersionNr(versionNr)
                 .setProtocolVersion(protocolVersion);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
         return protobuf.StoragePayload.newBuilder().setBsqSwapOfferPayload(builder).build();
     }
 
     public static BsqSwapOfferPayload fromProto(protobuf.BsqSwapOfferPayload proto) {
-        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in BsqSwapOfferPayload");
-
         return new BsqSwapOfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
@@ -140,9 +178,55 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 proto.getAmount(),
                 proto.getMinAmount(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()),
                 proto.getVersionNr(),
                 proto.getProtocolVersion()
         );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<BsqSwapOfferPayload> SCHEMA =
+            CanonicalSchema.oneof("StoragePayload",
+                    10,
+                    OfferPayloadBase.<BsqSwapOfferPayload>getBaseOfferPayloadSchemaBuilder()
+                            .int64(7, offerPayload -> offerPayload.amount)
+                            .int64(8, offerPayload -> offerPayload.minAmount)
+                            .compose(9, BsqSwapOfferPayload::getProofOfWorkForCanonical, ProofOfWork.SCHEMA)
+                            .mapStringToString(10,
+                                    BsqSwapOfferPayload::getExtraDataMapForCanonical,
+                                    TreeMapIterator.naturalOrder())
+                            .string(11, offerPayload -> offerPayload.versionNr)
+                            .int32(12, offerPayload -> offerPayload.protocolVersion));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private ProofOfWork getProofOfWorkForCanonical() {
+        return checkNotNull(proofOfWork,
+                "BsqSwapOfferPayload is in invalid state: proofOfWork is not set when adding to P2P network.");
+    }
+
+    @Override
+    protected Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
+    }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
+    @Nullable
+    private static TreeMap<String, String> copyExtraDataMap(@Nullable Map<String, String> extraDataMap) {
+        return extraDataMap == null ? null : new TreeMap<>(extraDataMap);
     }
 
 
@@ -159,6 +243,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
     public String toString() {
         return "BsqSwapOfferPayload{" +
                 "\r\n     proofOfWork=" + proofOfWork +
+                "\r\n     extraDataMap=" + extraDataMap +
                 "\r\n} " + super.toString();
     }
 }

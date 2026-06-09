@@ -35,6 +35,7 @@ import java.math.BigInteger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -65,10 +66,10 @@ public class FilterSerializationTests {
     }
 
     @Test
-    void serializeForHashIncludesFormerExcludedFields() {
+    void canonicalEncodingIncludesFormerExcludedFields() {
         Filter filterWithoutSig = MockFilterFactory.createFilter(ownerPublicKey, signerPubKeyAsHex);
 
-        assertArrayEquals(filterWithoutSig.serialize(), filterWithoutSig.serializeForHash());
+        assertArrayEquals(filterWithoutSig.serialize(), filterWithoutSig.encodeCanonical());
     }
 
     @Test
@@ -86,7 +87,57 @@ public class FilterSerializationTests {
 
         assertTrue(filter.toProtoMessage().getFilter().getOwnerPubKeyBytes().isEmpty());
         assertNull(Filter.fromProto(filter.toProtoMessage().getFilter()).getOwnerPubKeyBytes());
-        assertArrayEquals(filter.serialize(), filter.serializeForHash());
+        assertArrayEquals(filter.serialize(), filter.encodeCanonical());
+    }
+
+    @Test
+    void encodeCanonicalMatchesProtobufForCanonicalSchema() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+
+        Filter filter = new Filter(List.of("offer-1", "offer-2"),
+                List.of("trading-node-2.onion:8002", "trading-node-1.onion:8001"),
+                List.of(new PaymentAccountFilter("SEPA", "getIban", "sha256-v1:abcdef")),
+                List.of("USD", "EUR"),
+                List.of("SEPA", "ZELLE"),
+                List.of("seed2.onion:8002", "seed1.onion:8001"),
+                List.of("price2.onion:8002", "price1.onion:8001"),
+                true,
+                List.of("btc2.onion:8333", "btc1.onion:8333"),
+                true,
+                "1.9.0",
+                "1.9.1",
+                List.of("mediator2.onion:8002", "mediator1.onion:8001"),
+                List.of("refund2.onion:8002", "refund1.onion:8001"),
+                List.of("signer-key-2", "signer-key-1"),
+                List.of("btc-receiver-1#0.2;btc-receiver-2#0.3"),
+                ownerPublicKey.getEncoded(),
+                1_700_000_000_000L,
+                extraDataMap,
+                "signature-base64",
+                signerPubKeyAsHex,
+                List.of("dev-key-2", "dev-key-1"),
+                true,
+                List.of("auto-conf-2", "auto-conf-1"),
+                List.of("network-node-2.onion:8002", "network-node-1.onion:8001"),
+                true,
+                false,
+                true,
+                -0.0,
+                List.of(0, 1, 128, -1),
+                1_000L,
+                2_000L,
+                3_000L,
+                4_000L,
+                List.of(new PaymentAccountFilter("ZELLE", "getEmail", "sha256-v1:123456")),
+                List.of("added-btc-2.onion:8333", "added-btc-1.onion:8333"),
+                List.of("added-seed-2.onion:8002", "added-seed-1.onion:8001"),
+                "filter-uid",
+                true);
+
+        assertArrayEquals(filter.serialize(), filter.encodeCanonical());
+        assertEquals(List.of("btc-receiver-1#0.2;btc-receiver-2#0.3"),
+                Filter.fromProto(filter.toProtoMessage().getFilter()).getBtcFeeReceiverAddresses());
     }
 
     @Test
@@ -105,8 +156,8 @@ public class FilterSerializationTests {
 
         assertEquals(signedFilter.getNodeAddressesBannedFromNetwork(),
                 roundTrippedFilter.getNodeAddressesBannedFromNetwork());
-        assertArrayEquals(Filter.cloneWithoutSig(signedFilter).serializeForHash(),
-                Filter.cloneWithoutSig(roundTrippedFilter).serializeForHash());
+        assertArrayEquals(Filter.cloneWithoutSig(signedFilter).encodeCanonical(),
+                Filter.cloneWithoutSig(roundTrippedFilter).encodeCanonical());
         assertEquals(signedFilter.getSignatureAsBase64(), roundTrippedFilter.getSignatureAsBase64());
     }
 

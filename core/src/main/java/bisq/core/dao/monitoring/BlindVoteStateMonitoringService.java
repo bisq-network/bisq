@@ -267,8 +267,8 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
                     .sorted(Comparator.comparing(BlindVote::getTxId))
                     .collect(Collectors.toList());
 
-            // We use MyBlindVoteList to get the serialized bytes from the blindVotes list
-            byte[] serializedBlindVotes = new MyBlindVoteList(blindVotes).serializeForHash();
+            // We use MyBlindVoteList to get the canonical bytes from the blindVotes list
+            byte[] serializedBlindVotes = new MyBlindVoteList(blindVotes).encodeCanonical();
 
             byte[] prevHash;
             if (blindVoteStateBlockChain.isEmpty()) {

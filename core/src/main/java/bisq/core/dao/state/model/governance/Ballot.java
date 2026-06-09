@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -42,7 +45,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Ballot implements PersistablePayload, ConsensusCritical, ImmutableDaoStateModel {
+public final class Ballot implements PersistablePayload, ConsensusCritical, ImmutableDaoStateModel, Canonical {
     protected final Proposal proposal;
 
     @Nullable
@@ -78,6 +81,21 @@ public final class Ballot implements PersistablePayload, ConsensusCritical, Immu
     public static Ballot fromProto(protobuf.Ballot proto) {
         return new Ballot(Proposal.fromProto(proto.getProposal()),
                 proto.hasVote() ? Vote.fromProto(proto.getVote()) : null);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Ballot> SCHEMA = CanonicalSchema.<Ballot>newBuilder()
+            .compose(1, Ballot::getProposal, Proposal.getProposalSchemaBuilder().build())
+            .compose(2, Ballot::getVote, Vote.SCHEMA)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

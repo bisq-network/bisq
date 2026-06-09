@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
@@ -36,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDaoStateModel {
+public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDaoStateModel, Canonical {
     private final String txId; // comp. request txId
     private final int chainHeight; // of issuance (first block of result phase)
     private final long amount;
@@ -78,6 +81,25 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
                 proto.getPubKey().isEmpty() ? null : proto.getPubKey(),
                 proto.getIssuanceType().isEmpty() ? IssuanceType.UNDEFINED : ProtoUtil.enumFromProto(IssuanceType.class, proto.getIssuanceType()));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Issuance> SCHEMA = CanonicalSchema.<Issuance>newBuilder()
+            .string(1, Issuance::getTxId)
+            .int32(2, Issuance::getChainHeight)
+            .int64(3, Issuance::getAmount)
+            .string(4, Issuance::getPubKey)
+            .string(5, issuance -> issuance.issuanceType.name())
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     @Override
     public String toString() {

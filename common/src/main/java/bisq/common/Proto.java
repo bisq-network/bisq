@@ -29,8 +29,11 @@ public interface Proto {
         return toProtoMessage().toByteArray();
     }
 
-    // If the class implements ExcludedFieldsProto this method will be overwritten so that
-    // fields annotated with ExcludeForHash will be excluded.
+    /**
+     * @deprecated Use {@link bisq.common.encoding.canonical.Canonical#encodeCanonical()} for canonical hash preimages
+     * and {@link #serialize()} for protobuf serialization. This method remains only as a legacy protobuf fallback.
+     */
+    @Deprecated
     default byte[] serializeForHash() {
         return serialize();
     }

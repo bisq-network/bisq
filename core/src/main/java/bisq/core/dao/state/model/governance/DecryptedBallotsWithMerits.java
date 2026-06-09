@@ -20,6 +20,9 @@ package bisq.core.dao.state.model.governance;
 import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -39,7 +42,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public class DecryptedBallotsWithMerits implements PersistablePayload, ImmutableDaoStateModel {
+public class DecryptedBallotsWithMerits implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final byte[] hashOfBlindVoteList;
     private final String blindVoteTxId;
     private final String voteRevealTxId;
@@ -86,6 +89,26 @@ public class DecryptedBallotsWithMerits implements PersistablePayload, Immutable
                 proto.getStake(),
                 BallotList.fromProto(proto.getBallotList()),
                 MeritList.fromProto(proto.getMeritList()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<DecryptedBallotsWithMerits> SCHEMA =
+            CanonicalSchema.<DecryptedBallotsWithMerits>newBuilder()
+                    .bytes(1, DecryptedBallotsWithMerits::getHashOfBlindVoteList)
+                    .string(2, DecryptedBallotsWithMerits::getBlindVoteTxId)
+                    .string(3, DecryptedBallotsWithMerits::getVoteRevealTxId)
+                    .int64(4, DecryptedBallotsWithMerits::getStake)
+                    .compose(5, DecryptedBallotsWithMerits::getBallotList, BallotList.SCHEMA)
+                    .compose(6, DecryptedBallotsWithMerits::getMeritList, MeritList.SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

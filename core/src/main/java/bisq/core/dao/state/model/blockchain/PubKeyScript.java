@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.node.full.rpc.DtoPubKeyScript;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -32,7 +35,8 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 @Getter
-public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel {
+public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel, Canonical {
+
     private final int reqSigs;
     private final ScriptType scriptType;
     private final ImmutableList<String> addresses;
@@ -54,6 +58,7 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
         this.asm = asm;
         this.hex = hex;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -80,6 +85,25 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
                 proto.getAsm(),
                 proto.getHex());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<PubKeyScript> SCHEMA = CanonicalSchema
+            .<PubKeyScript>newBuilder()
+            .int32(1, pubKeyScript -> pubKeyScript.reqSigs)
+            .enumField(2, pubKeyScript -> pubKeyScript.scriptType)
+            .repeatedString(3, pubKeyScript -> pubKeyScript.addresses)
+            .string(4, pubKeyScript -> pubKeyScript.asm)
+            .string(5, pubKeyScript -> pubKeyScript.hex).build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
     // The equals and hashCode methods cannot be overwritten in Enums.

@@ -25,6 +25,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
@@ -237,8 +238,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disablePowMessage"));
 
         // Fees
-        addFilterWindowGroup(4, Res.get("filterWindow.group.fees"));
-        InputTextField makerFeeBtcTF = addInputTextField(gridPane, rowIndex,
+        addFilterWindowGroup(5, Res.get("filterWindow.group.fees"));
+        InputTextField btcFeeReceiverAddressesTF = addInputTextField(gridPane, rowIndex,
+                Res.get("filterWindow.btcFeeReceiverAddresses"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
+        InputTextField makerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.makerFeeBtc"), Layout.TWICE_FIRST_ROW_DISTANCE).second;
         InputTextField takerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.takerFeeBtc")).second;
@@ -279,6 +282,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
             setupFieldFromList(autoConfExplorersTF, filter.getBannedAutoConfExplorers());
             setupFieldFromList(enabledPowVersionsTF, filter.getEnabledPowVersions());
+            setupFieldFromList(btcFeeReceiverAddressesTF, filter.getBtcFeeReceiverAddresses());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
@@ -317,6 +321,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 try {
                     bannedPaymentAccountPreimages = readAsPlainPaymentAccountFiltersList(paymentAccountFilterPlainTF);
                     delayedPayoutPaymentAccountPreimages = readAsPlainPaymentAccountFiltersList(delayedPayoutPlainTF);
+                    List<String> btcFeeReceiverAddresses = readAsList(btcFeeReceiverAddressesTF);
+                    BtcFeeReceiverService.validateBtcFeeReceiverAddresses(btcFeeReceiverAddresses);
                     newFilter = new Filter(
                             readAsList(offerIdsTF),
                             readAsList(bannedFromTradingTF),
@@ -333,6 +339,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             readAsList(mediatorsTF),
                             readAsList(refundAgentsTF),
                             readAsList(bannedAccountWitnessSignerPubKeysTF),
+                            btcFeeReceiverAddresses,
                             filterManager.getOwnerPubKey(),
                             signerPubKeyAsHex,
                             readAsList(bannedPrivilegedDevPubKeysTF),

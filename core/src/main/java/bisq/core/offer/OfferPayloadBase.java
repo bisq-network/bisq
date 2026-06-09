@@ -26,11 +26,15 @@ import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.CanonicalMapEntryIterator;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.util.Hex;
 import bisq.common.util.JsonExclude;
 
 import java.security.PublicKey;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +42,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(exclude = {"hash"})
 @Getter
@@ -101,7 +107,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
 
     public byte[] getHash() {
         if (this.hash == null) {
-            this.hash = Hash.getSha256Hash(serializeForHash());
+            this.hash = Hash.getSha256Hash(encodeCanonical());
         }
         return this.hash;
     }
@@ -128,6 +134,37 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
     @Nullable
     public Map<String, String> getExtraDataMap() {
         return offerPayloadExtraDataMap != null ? offerPayloadExtraDataMap.getMap() : null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected static final CanonicalMapEntryIterator<String, String> SOURCE_ITERATION_ORDER = List::iterator;
+
+    protected static <T extends OfferPayloadBase> CanonicalSchema.Builder<T> getBaseOfferPayloadSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                .string(1, offerPayload -> offerPayload.id)
+                .int64(2, offerPayload -> offerPayload.date)
+                .compose(3, OfferPayloadBase::getOwnerNodeAddressForCanonical, NodeAddress.SCHEMA)
+                .compose(4, OfferPayloadBase::getPubKeyRingForCanonical, PubKeyRing.SCHEMA)
+                .enumField(5, offerPayload -> offerPayload.direction)
+                .int64(6, offerPayload -> offerPayload.price);
+    }
+
+    protected NodeAddress getOwnerNodeAddressForCanonical() {
+        return checkNotNull(ownerNodeAddress,
+                "OfferPayload is in invalid state: ownerNodeAddress is not set when adding to P2P network.");
+    }
+
+    protected PubKeyRing getPubKeyRingForCanonical() {
+        return checkNotNull(pubKeyRing,
+                "OfferPayload is in invalid state: pubKeyRing is not set when adding to P2P network.");
+    }
+
+    protected Map<String, String> getExtraDataMapForCanonical() {
+        return offerPayloadExtraDataMap == null ? Collections.emptyMap() : offerPayloadExtraDataMap.getMap();
     }
 
     @Override

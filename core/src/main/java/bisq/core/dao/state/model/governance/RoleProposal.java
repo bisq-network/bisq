@@ -21,18 +21,22 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
+import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Immutable
 @Slf4j
@@ -43,7 +47,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private final long requiredBondUnit;
     private final int unlockTime; // in blocks
 
-    public RoleProposal(Role role) {
+    public RoleProposal(Role role, @Nullable TreeMap<String, String> extraDataMap) {
         this(role.getName(),
                 role.getLink(),
                 role,
@@ -51,7 +55,8 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
-                null);
+                null,
+                extraDataMap);
     }
 
 
@@ -66,13 +71,14 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                          int unlockTime,
                          byte version,
                          long creationDate,
-                         String txId) {
+                         String txId,
+                         @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
                 txId,
-                null);
+                extraDataMap);
 
         this.role = role;
         this.requiredBondUnit = requiredBondUnit;
@@ -89,11 +95,6 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     }
 
     public static RoleProposal fromProto(protobuf.Proposal proto) {
-        // ExtraDataMap was always empty and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in RoleProposal");
-
         protobuf.RoleProposal proposalProto = proto.getRoleProposal();
         return new RoleProposal(proto.getName(),
                 proto.getLink(),
@@ -102,7 +103,36 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 proposalProto.getUnlockTime(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : new TreeMap<>(proto.getExtraDataMap()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    static final CanonicalSchema<RoleProposal> EXTENSION_SCHEMA =
+            CanonicalSchema.<RoleProposal>newBuilder()
+                    .compose(1, RoleProposal::getRole, Role.SCHEMA)
+                    .int64(2, RoleProposal::getRequiredBondUnit)
+                    .int32(3, RoleProposal::getUnlockTime)
+                    .build();
+
+    public static final CanonicalSchema<RoleProposal> SCHEMA =
+            RoleProposal.<RoleProposal>getBaseProposalSchemaBuilder()
+                    .extend(9, proposal -> proposal, EXTENSION_SCHEMA)
+                    // extra_data keeps protobuf field 20 and must stay after proposal subtype
+                    // extensions, which occupy fields 6 through 12.
+                    .mapStringToString(20,
+                            Proposal::getExtraDataMapForCanonical,
+                            TreeMapIterator.naturalOrder())
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 
@@ -139,7 +169,8 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 unlockTime,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap == null ? null : new TreeMap<>(extraDataMap));
     }
 
     @Override

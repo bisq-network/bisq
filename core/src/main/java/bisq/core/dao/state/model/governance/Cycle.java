@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -36,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public class Cycle implements PersistablePayload, ImmutableDaoStateModel {
+public class Cycle implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     // List is ordered according to the Phase enum.
     private final ImmutableList<DaoPhase> daoPhaseList;
     private final int heightOfFirstBlock;
@@ -71,6 +74,21 @@ public class Cycle implements PersistablePayload, ImmutableDaoStateModel {
                 .map(DaoPhase::fromProto)
                 .collect(Collectors.toList()));
         return new Cycle(proto.getHeightOfFirstLock(), daoPhaseList);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Cycle> SCHEMA = CanonicalSchema.<Cycle>newBuilder()
+            .int32(1, Cycle::getHeightOfFirstBlock)
+            .repeatedCompose(2, Cycle::getDaoPhaseList, DaoPhase.SCHEMA)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

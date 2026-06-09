@@ -17,6 +17,9 @@
 
 package bisq.core.dao.burningman.accounting.blockchain;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Hex;
 
@@ -32,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AccountingTx implements NetworkPayload {
+public final class AccountingTx implements NetworkPayload, Canonical {
     public enum Type {
         BTC_TRADE_FEE_TX,
         DPT_TX
@@ -74,6 +77,22 @@ public final class AccountingTx implements NetworkPayload {
         return new AccountingTx(Type.values()[proto.getType()],
                 outputs,
                 proto.getTruncatedTxId().toByteArray());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<AccountingTx> SCHEMA = CanonicalSchema.<AccountingTx>newBuilder()
+            .uint32(1, accountingTx -> accountingTx.type.ordinal())
+            .repeatedCompose(2, AccountingTx::getOutputs, AccountingTxOutput.SCHEMA)
+            .bytes(3, AccountingTx::getTruncatedTxId)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

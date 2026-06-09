@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state.model.blockchain;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.util.JsonExclude;
@@ -38,7 +40,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Immutable
 @Data
-public abstract class BaseTxOutput implements ImmutableDaoStateModel {
+public abstract class BaseTxOutput implements ImmutableDaoStateModel, Canonical {
     protected final int index;
     protected final long value;
     protected final String txId;
@@ -87,6 +89,22 @@ public abstract class BaseTxOutput implements ImmutableDaoStateModel {
         Optional.ofNullable(opReturnData).ifPresent(e -> builder.setOpReturnData(ByteString.copyFrom(opReturnData)));
 
         return builder;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected static <T extends BaseTxOutput> CanonicalSchema.Builder<T> getBaseTxOutputSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                .int32(1, txOutput -> txOutput.index)
+                .int64(2, txOutput -> txOutput.value)
+                .string(3, txOutput -> txOutput.txId)
+                .compose(4, txOutput -> txOutput.pubKeyScript, PubKeyScript.SCHEMA)
+                .string(5, txOutput -> txOutput.address)
+                .bytes(6, txOutput -> txOutput.opReturnData)
+                .int32(7, txOutput -> txOutput.blockHeight);
     }
 
 

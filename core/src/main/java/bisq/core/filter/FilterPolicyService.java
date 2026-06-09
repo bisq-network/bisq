@@ -165,6 +165,11 @@ public class FilterPolicyService {
         return Optional.of(value).filter(Coin::isPositive);
     }
 
+    public List<String> getBtcFeeReceiverAddresses() {
+        Filter filter = filterManager.getFilter();
+        return filter != null ? filter.getBtcFeeReceiverAddresses() : List.of();
+    }
+
     public List<String> getBannedMediators() {
         Filter filter = filterManager.getFilter();
         return merge(denyList.getBannedMediators(), filter != null ? filter.getMediators() : List.of());

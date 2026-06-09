@@ -30,7 +30,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +64,6 @@ public class GenericProposalFactory extends BaseProposalFactory<GenericProposal>
 
     @Override
     protected GenericProposal createProposalWithoutTxId() {
-        return new GenericProposal(name, link);
+        return new GenericProposal(name, link, new TreeMap<>());
     }
 }

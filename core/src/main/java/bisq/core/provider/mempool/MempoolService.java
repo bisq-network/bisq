@@ -18,6 +18,7 @@
 package bisq.core.provider.mempool;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterPolicyService;
@@ -258,6 +259,8 @@ public class MempoolService {
     private List<String> getAllBtcFeeReceivers() {
         List<String> btcFeeReceivers = new ArrayList<>();
         btcFeeReceivers.addAll(daoFacade.getAllDonationAddresses());
+        btcFeeReceivers.addAll(BtcFeeReceiverService.getConfiguredReceiverAddresses(
+                filterPolicyService.getBtcFeeReceiverAddresses()));
 
         // We use all BM who had ever had burned BSQ to avoid if a BM just got "deactivated" due decayed burn amounts
         // that it would trigger a failure here. There is still a small risk that new BM used for the trade fee payment

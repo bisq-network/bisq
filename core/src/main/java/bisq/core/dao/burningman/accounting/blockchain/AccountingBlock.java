@@ -17,6 +17,9 @@
 
 package bisq.core.dao.burningman.accounting.blockchain;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Hex;
 
@@ -42,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 
-public final class AccountingBlock implements NetworkPayload {
+public final class AccountingBlock implements NetworkPayload, Canonical {
     @Getter
     private final int height;
     private final int timeInSec;
@@ -97,6 +100,25 @@ public final class AccountingBlock implements NetworkPayload {
 
     public long getDate() {
         return timeInSec * 1000L;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<AccountingBlock> SCHEMA =
+            CanonicalSchema.<AccountingBlock>newBuilder()
+                    .uint32(1, AccountingBlock::getHeight)
+                    .uint32(2, accountingBlock -> accountingBlock.timeInSec)
+                    .bytes(3, AccountingBlock::getTruncatedHash)
+                    .bytes(4, AccountingBlock::getTruncatedPreviousBlockHash)
+                    .repeatedCompose(5, AccountingBlock::getTxs, AccountingTx.SCHEMA)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override

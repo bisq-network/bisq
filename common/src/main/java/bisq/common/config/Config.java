@@ -126,6 +126,10 @@ public class Config {
     public static final String RPC_BLOCK_NOTIFICATION_PORT = "rpcBlockNotificationPort";
     public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
+    public static final String VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION = "verifyDaoStateHashChainSerialization";
+    public static final String DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION = "dumpDaoStateHashChainSerialization";
+    public static final String VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION = "verifyBlindVoteEncryptedVotesSerialization";
+    public static final String VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION = "verifyBlindVoteEncryptedMeritListSerialization";
     public static final String FULL_DAO_NODE = "fullDaoNode";
     public static final String GENESIS_TX_ID = "genesisTxId";
     public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
@@ -247,6 +251,10 @@ public class Config {
     public final int rpcBlockNotificationPort;
     public final String rpcBlockNotificationHost;
     public final boolean dumpBlockchainData;
+    public final boolean verifyDaoStateHashChainSerialization;
+    public final boolean dumpDaoStateHashChainSerialization;
+    public final boolean verifyBlindVoteEncryptedVotesSerialization;
+    public final boolean verifyBlindVoteEncryptedMeritListSerialization;
     public final boolean fullDaoNode;
     public final boolean fullDaoNodeOptionSetExplicitly;
     public final String genesisTxId;
@@ -742,6 +750,38 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Boolean> verifyDaoStateHashChainSerializationOpt =
+                parser.accepts(VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION,
+                                "If set to true the canonical DAO state hash chain serialization is verified " +
+                                        "against the legacy protobuf serialization at each parsed block.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> dumpDaoStateHashChainSerializationOpt =
+                parser.accepts(DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION,
+                                "If set to true the canonical and legacy DAO state hash chain serialization hashes " +
+                                        "are dumped at each parsed block.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> verifyBlindVoteEncryptedVotesSerializationOpt =
+                parser.accepts(VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION,
+                                "If set to true the canonical blind vote encrypted votes plaintext serialization is " +
+                                        "verified against the legacy protobuf serialization.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> verifyBlindVoteEncryptedMeritListSerializationOpt =
+                parser.accepts(VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION,
+                                "If set to true the canonical blind vote encrypted merit list plaintext serialization " +
+                                        "is verified against the legacy protobuf serialization.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         ArgumentAcceptingOptionSpec<Boolean> fullDaoNodeOpt =
                 parser.accepts(FULL_DAO_NODE, "If set to true the node requests the blockchain data via RPC requests " +
                                 "from Bitcoin Core and provide the validated BSQ txs to the network. It requires that the " +
@@ -985,6 +1025,12 @@ public class Config {
             this.rpcBlockNotificationPort = options.valueOf(rpcBlockNotificationPortOpt);
             this.rpcBlockNotificationHost = options.valueOf(rpcBlockNotificationHostOpt);
             this.dumpBlockchainData = options.valueOf(dumpBlockchainDataOpt);
+            this.verifyDaoStateHashChainSerialization = options.valueOf(verifyDaoStateHashChainSerializationOpt);
+            this.dumpDaoStateHashChainSerialization = options.valueOf(dumpDaoStateHashChainSerializationOpt);
+            this.verifyBlindVoteEncryptedVotesSerialization =
+                    options.valueOf(verifyBlindVoteEncryptedVotesSerializationOpt);
+            this.verifyBlindVoteEncryptedMeritListSerialization =
+                    options.valueOf(verifyBlindVoteEncryptedMeritListSerializationOpt);
             this.fullDaoNode = options.valueOf(fullDaoNodeOpt);
             this.fullDaoNodeOptionSetExplicitly = options.has(fullDaoNodeOpt);
             this.genesisTxId = options.valueOf(genesisTxIdOpt);

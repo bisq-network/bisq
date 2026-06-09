@@ -225,6 +225,14 @@ public class DaoModule extends AppModule {
         bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_PORT)).to(config.rpcBlockNotificationPort);
         bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_HOST)).to(config.rpcBlockNotificationHost);
         bindConstant().annotatedWith(named(Config.DUMP_BLOCKCHAIN_DATA)).to(config.dumpBlockchainData);
+        bindConstant().annotatedWith(named(Config.VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION))
+                .to(config.verifyDaoStateHashChainSerialization);
+        bindConstant().annotatedWith(named(Config.DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION))
+                .to(config.dumpDaoStateHashChainSerialization);
+        bindConstant().annotatedWith(named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION))
+                .to(config.verifyBlindVoteEncryptedVotesSerialization);
+        bindConstant().annotatedWith(named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION))
+                .to(config.verifyBlindVoteEncryptedMeritListSerialization);
         bindConstant().annotatedWith(named(Config.DUMP_BURNING_MAN_DATA)).to(config.dumpBurningManData);
         bindConstant().annotatedWith(named(Config.FULL_DAO_NODE)).to(config.fullDaoNode);
         bindConstant().annotatedWith(named(Config.IS_BM_FULL_NODE)).to(config.isBmFullNode);

@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.Proto;
 
@@ -31,7 +34,7 @@ import java.util.stream.Collectors;
 import lombok.Value;
 
 @Value
-public class MeritList implements Proto, ConsensusCritical, ImmutableDaoStateModel {
+public class MeritList implements Proto, ConsensusCritical, ImmutableDaoStateModel, Canonical {
     private final List<Merit> list;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,5 +61,19 @@ public class MeritList implements Proto, ConsensusCritical, ImmutableDaoStateMod
 
     public static MeritList getMeritListFromBytes(byte[] bytes) throws InvalidProtocolBufferException {
         return MeritList.fromProto(protobuf.MeritList.parseFrom(bytes));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<MeritList> SCHEMA = CanonicalSchema.<MeritList>newBuilder()
+            .repeatedCompose(1, MeritList::getList, Merit.SCHEMA)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 }

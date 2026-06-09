@@ -39,11 +39,24 @@ import bisq.core.dao.state.model.governance.ParamChange;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
+import bisq.common.config.Config;
+import bisq.common.crypto.Hash;
+import bisq.common.util.Hex;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -70,14 +83,23 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class DaoStateService implements DaoSetupService {
+    private static final String CANONICAL_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME = "_canonical_dao_state_hash_chain.log";
+    private static final String LEGACY_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME = "_legacy_dao_state_hash_chain.log";
+    private static final String DAO_STATE_HASH_CHAIN_DUMP_LINE_SEPARATOR = "\n";
+
     private final DaoState daoState;
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
+    private final File appDataDir;
+    private final boolean verifyDaoStateHashChainSerialization;
+    private final boolean dumpDaoStateHashChainSerialization;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
     @Getter
     private boolean parseBlockChainComplete;
     private boolean allowDaoStateChange;
     private final Map<String, Set<String>> cachedTxIdSetByAddress = new HashMap<>();
+    private Path canonicalDaoStateHashChainDumpFilePath;
+    private Path legacyDaoStateHashChainDumpFilePath;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +107,24 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
+    public DaoStateService(DaoState daoState,
+                           GenesisTxInfo genesisTxInfo,
+                           BsqFormatter bsqFormatter,
+                           @Named(Config.APP_DATA_DIR) File appDataDir,
+                           @Named(Config.VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION)
+                           boolean verifyDaoStateHashChainSerialization,
+                           @Named(Config.DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION)
+                           boolean dumpDaoStateHashChainSerialization) {
         this.daoState = daoState;
         this.genesisTxInfo = genesisTxInfo;
         this.bsqFormatter = bsqFormatter;
+        this.appDataDir = appDataDir;
+        this.verifyDaoStateHashChainSerialization = verifyDaoStateHashChainSerialization;
+        this.dumpDaoStateHashChainSerialization = dumpDaoStateHashChainSerialization;
+    }
+
+    public DaoStateService(DaoState daoState, GenesisTxInfo genesisTxInfo, BsqFormatter bsqFormatter) {
+        this(daoState, genesisTxInfo, bsqFormatter, null, false, false);
     }
 
 
@@ -305,6 +341,77 @@ public class DaoStateService implements DaoSetupService {
 
         if (!block.getTxs().isEmpty()) {
             cachedTxIdSetByAddress.clear();
+        }
+
+        maybeVerifyDaoStatePerBlock(block);
+    }
+
+    private void maybeVerifyDaoStatePerBlock(Block block) {
+        if (!verifyDaoStateHashChainSerialization && !dumpDaoStateHashChainSerialization) {
+            return;
+        }
+
+        Optional<Block> optionalLastBlock = getLastBlock();
+        int height = block.getHeight();
+        if (optionalLastBlock.isEmpty() || optionalLastBlock.get().getHeight() != height) {
+            log.warn("Skip DAO state hash chain serialization verification. blockHeight={}, lastBlockHeight={}",
+                    height, optionalLastBlock.map(Block::getHeight).orElse(null));
+            return;
+        }
+
+        long ts = System.currentTimeMillis();
+        byte[] canonicalDaoStateBytes = daoState.getSerializedStateForHashChain();
+        long timeForCanonical = System.currentTimeMillis() - ts;
+        ts = System.currentTimeMillis();
+        byte[] legacyDaoStateBytes = daoState.getSerializedStateForHashChainLegacy();
+        long timeForLegacy = System.currentTimeMillis() - ts;
+        if (timeForLegacy > 0 || timeForCanonical > 0) {
+            log.info("DaoStateHashChainSerialization verification for height {} took \n" +
+                            "{} ms for canonical and \n" +
+                            "{} ms for legacy serialization",
+                    height, timeForCanonical, timeForLegacy);
+        }
+        if (verifyDaoStateHashChainSerialization &&
+                !Arrays.equals(canonicalDaoStateBytes, legacyDaoStateBytes)) {
+            log.error("DaoStateBytes not matching at height {}. canonical.bytes={}, canonical.sha256={}, legacy.bytes={}, legacy.sha256={}",
+                    height,
+                    canonicalDaoStateBytes.length, Hex.encode(Hash.getSha256Hash(canonicalDaoStateBytes)),
+                    legacyDaoStateBytes.length, Hex.encode(Hash.getSha256Hash(legacyDaoStateBytes)));
+
+            throw new IllegalStateException("DaoStateBytes not matching at height " + height);
+        }
+
+        if (dumpDaoStateHashChainSerialization) {
+            if (canonicalDaoStateHashChainDumpFilePath == null) {
+                canonicalDaoStateHashChainDumpFilePath = appDataDir.toPath().resolve(height + CANONICAL_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME);
+            }
+            if (legacyDaoStateHashChainDumpFilePath == null) {
+                legacyDaoStateHashChainDumpFilePath = appDataDir.toPath().resolve(height + LEGACY_DAO_STATE_HASH_CHAIN_DUMP_FILE_NAME);
+
+            }
+            dumpDaoStateHashChainSerialization(height,
+                    canonicalDaoStateBytes,
+                    canonicalDaoStateHashChainDumpFilePath);
+            dumpDaoStateHashChainSerialization(height,
+                    legacyDaoStateBytes,
+                    legacyDaoStateHashChainDumpFilePath);
+        }
+    }
+
+    private void dumpDaoStateHashChainSerialization(int height, byte[] stateBytes, Path filePath) {
+        String line = "height=" + height +
+                " bytes=" + stateBytes.length +
+                " stateBytesSha256=" + Hex.encode(Hash.getSha256Hash(stateBytes)) +
+                DAO_STATE_HASH_CHAIN_DUMP_LINE_SEPARATOR;
+        try {
+            Files.writeString(filePath,
+                    line,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            log.error("Could not write DAO state hash chain serialization dump file. height={}, filePath={}",
+                    height, filePath, e);
         }
     }
 
@@ -1169,4 +1276,3 @@ public class DaoStateService implements DaoSetupService {
             throw new RuntimeException("We got a call which would change the daoState outside of the allowed event phase");
     }
 }
-

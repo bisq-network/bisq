@@ -19,6 +19,7 @@ package bisq.network.p2p.storage.payload;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.encoding.canonical.Canonical;
 
 import java.security.PublicKey;
 
@@ -34,7 +35,7 @@ import javax.annotation.Nullable;
  * io.bisq.arbitration.Arbitrator
  * io.bisq.trade.offer.OfferPayload
  */
-public interface ProtectedStoragePayload extends NetworkPayload {
+public interface ProtectedStoragePayload extends NetworkPayload, Canonical {
     /**
      * Used for check if the add or remove operation is permitted.
      * Only data owner can add or remove the data.

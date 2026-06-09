@@ -230,6 +230,25 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenDaoStateHashChainSerializationOptionsAreSet_thenPropertiesReflectTheirValues() {
+        Config defaultConfig = new Config();
+        assertFalse(defaultConfig.verifyDaoStateHashChainSerialization);
+        assertFalse(defaultConfig.dumpDaoStateHashChainSerialization);
+        assertFalse(defaultConfig.verifyBlindVoteEncryptedVotesSerialization);
+        assertFalse(defaultConfig.verifyBlindVoteEncryptedMeritListSerialization);
+
+        Config config = configWithOpts(
+                opt(VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION, true),
+                opt(DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION, true),
+                opt(VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION, true),
+                opt(VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION, true));
+        assertTrue(config.verifyDaoStateHashChainSerialization);
+        assertTrue(config.dumpDaoStateHashChainSerialization);
+        assertTrue(config.verifyBlindVoteEncryptedVotesSerialization);
+        assertTrue(config.verifyBlindVoteEncryptedMeritListSerialization);
+    }
+
+    @Test
     public void whenP2PDataLimitOptionsAreUnset_thenDefaultValuesAreUsed() {
         Config config = new Config();
         assertThat(config.getDataRequestHandlerMaxEntries, equalTo(DEFAULT_GET_DATA_REQUEST_HANDLER_MAX_ENTRIES));

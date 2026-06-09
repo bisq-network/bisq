@@ -97,6 +97,25 @@ public class FilterPolicyServiceTests {
     }
 
     @Test
+    void readsBtcFeeReceiverAddressesFromNetworkFilter() {
+        Filter filter = mock(Filter.class);
+        when(filter.getBtcFeeReceiverAddresses()).thenReturn(List.of("address1#0.2;address2#0.3"));
+
+        FilterManager filterManager = mock(FilterManager.class);
+        when(filterManager.getFilter()).thenReturn(filter);
+        FilterPolicyService filterPolicyService = new FilterPolicyService(DenyList.empty(), filterManager);
+
+        assertEquals(List.of("address1#0.2;address2#0.3"), filterPolicyService.getBtcFeeReceiverAddresses());
+    }
+
+    @Test
+    void returnsEmptyBtcFeeReceiverAddressesWithoutNetworkFilter() {
+        FilterPolicyService filterPolicyService = new FilterPolicyService(DenyList.empty(), mock(FilterManager.class));
+
+        assertEquals(List.of(), filterPolicyService.getBtcFeeReceiverAddresses());
+    }
+
+    @Test
     void readsPowPolicyFromNetworkFilterAndManager() {
         Filter filter = mock(Filter.class);
         when(filter.isDisablePowMessage()).thenReturn(true);

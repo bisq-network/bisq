@@ -18,6 +18,9 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -35,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Value
 @Slf4j
-public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
+public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel, Canonical {
 
     /**
      * Enum for phase of a cycle.
@@ -43,6 +46,10 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
      * We don't want to use an enum with the duration as field because the duration can change by voting and enums
      * should be considered immutable.
      */
+    // WARNING: This enum order is serialization-stable. Values are persisted by ordinal in protobuf and
+    // canonical encoding, so existing entries MUST NOT be reordered, removed, or inserted between values.
+    // New entries must be appended only. Any ordering change requires a compatibility migration plus updates
+    // to toProtoMessage() and the canonical schema.
     @Immutable
     public enum Phase implements ImmutableDaoStateModel {
         UNDEFINED,
@@ -85,6 +92,21 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
         }
 
         return new DaoPhase(Phase.values()[ordinal], proto.getDuration());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<DaoPhase> SCHEMA = CanonicalSchema.<DaoPhase>newBuilder()
+            .int32(1, daoPhase -> daoPhase.phase.ordinal())
+            .int32(2, daoPhase -> daoPhase.duration)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

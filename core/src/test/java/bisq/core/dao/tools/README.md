@@ -1,14 +1,19 @@
-# DAO Hash JDK Comparison Tools
+# DAO HashMap Order Tools
 
-These tools compare the DAO-state protobuf serialization path under two JDKs.
-They are diagnostic tools, not production code.
+These tools validate the only remaining useful JDK-sensitive part of the DAO
+hash migration: the legacy Java 11 `Collectors.toMap(...)` default `HashMap`
+iteration order that the canonical encoder must mimic for DAO state maps.
 
 ## Files
 
-- `DaoHashJdkComparisonTool.java` loads a `DaoStateStore` and BSQ block bucket files, rebuilds the hash-relevant protobuf bytes, prints byte hashes, and prints the intermediate `HashMap` layout used by `getBsqStateBuilderExcludingBlocks()`. It deliberately uses only protobuf classes and JDK APIs so the script can compile it as Java 11 bytecode and run the same classes under both JDKs.
-- `HashMapOrderPathProbe.java` demonstrates the JDK 11 -> 21 `HashMap` path difference: `HashMap(Map)` / `putAll` can differ, while the collector path used by the DAO should remain stable.
+- `HashMapOrderPathProbe.java` compares selected small key vectors across
+  `HashMap(Map)`, `putAll`, `Collectors.toMap`, and
+  `LegacyCollectorsToMapIterator`.
 - `HashMapIntrospection.java` contains the reflection code that reads `HashMap.table`, `threshold`, `loadFactor`, bucket chain lengths, and tree-bin counts.
-- `compare-dao-hash-jdks.sh` runs the tools under Java 11 and Java 21 and fails if the comparable DAO output differs.
+- `compare-hashmap-order-jdks.sh` runs the probe under Java 11 and Java 21. It
+  fails if the `Collectors.toMap` HashMap order differs from
+  `LegacyCollectorsToMapIterator`, or if either output
+  differs across JDKs.
 
 ## Run
 
@@ -19,64 +24,17 @@ export JAVA11_HOME=/path/to/jdk-11
 export JAVA21_HOME=/path/to/jdk-21
 ```
 
-Run the default mainnet resource snapshot:
+Run the comparison:
 
 ```bash
-core/src/test/java/bisq/core/dao/tools/compare-dao-hash-jdks.sh
+core/src/test/java/bisq/core/dao/tools/compare-hashmap-order-jdks.sh
 ```
 
-Run a specific block height:
-
-```bash
-core/src/test/java/bisq/core/dao/tools/compare-dao-hash-jdks.sh \
-  --from-height 949481 \
-  --to-height 949481
-```
-
-Run a range of block heights:
-
-```bash
-core/src/test/java/bisq/core/dao/tools/compare-dao-hash-jdks.sh \
-  --from-height 949001 \
-  --to-height 949481
-```
-
-Use custom files:
-
-```bash
-core/src/test/java/bisq/core/dao/tools/compare-dao-hash-jdks.sh \
-  --dao-state-store /path/to/DaoStateStore_BTC_MAINNET \
-  --blocks-dir /path/to/BsqBlocks_BTC_MAINNET \
-  --from-height 949481
-```
-
-The script writes full outputs and diffs below `temp/dao-hash-jdk-compare-*`.
-Exit code `0` means the comparable DAO outputs matched. Exit code `2` means
-Java 11 and Java 21 produced different comparable DAO output.
-
-The `hash.<height>.stateBytesSha256` lines are SHA-256 fingerprints of the
-serialized bytes used for JDK-to-JDK byte identity checks. They are not the DAO
-network hash-chain link, which is `RIPEMD160(SHA256(previousHash || stateBytes))`.
-
-The script compiles the tool classes and generated protobuf sources into a
-temporary Java-11-compatible class directory under the output directory. This is
-necessary because the normal project test classes may be Java 21 bytecode and
-cannot be loaded by a Java 11 runtime.
-
-## What the Height Range Means
-
-The tool loads one DAO state snapshot from `DaoStateStore`, sorts map entries by
-string key to mirror the DAO `TreeMap` order, collects them through
-`Collectors.toMap(...)`, and then serializes that same snapshot with each
-selected block as the single `blocks` entry. This matches the map-order behavior
-and output shape of `DaoState.getSerializedStateForHashChain()` without loading
-the Java-21-compiled production classes into the Java 11 runtime.
-
-For the default resource files this is the correct current snapshot check at the
-snapshot chain height. A wider range is useful for detecting JDK-dependent map
-ordering while varying the last-block bytes, but it is not a historical DAO
-replay. To validate historical state at multiple heights, provide snapshots for
-those heights or replay the parser separately.
+The script writes full outputs and diffs below
+`temp/hashmap-order-jdk-compare-*`. Exit code `0` means the comparable
+collector and iterator outputs matched. Exit code `2` means the legacy-order
+iterator no longer matches the JDK HashMap collector path, or the collector or
+iterator output differed across JDKs.
 
 ## HashMap Internals Reported
 

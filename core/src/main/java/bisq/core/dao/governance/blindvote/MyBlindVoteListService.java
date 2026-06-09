@@ -49,6 +49,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ExceptionHandler;
 import bisq.common.handlers.ResultHandler;
@@ -64,6 +65,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.beans.value.ChangeListener;
 
@@ -71,12 +73,13 @@ import javax.crypto.SecretKey;
 
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -104,6 +107,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private final BallotListService ballotListService;
     private final MyVoteListService myVoteListService;
     private final MyProposalListService myProposalListService;
+    private final boolean verifyBlindVoteEncryptedVotesSerialization;
+    private final boolean verifyBlindVoteEncryptedMeritListSerialization;
     private final ChangeListener<Number> numConnectedPeersListener;
     @Getter
     private final MyBlindVoteList myBlindVoteList = new MyBlindVoteList();
@@ -123,7 +128,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                                   BtcWalletService btcWalletService,
                                   BallotListService ballotListService,
                                   MyVoteListService myVoteListService,
-                                  MyProposalListService myProposalListService) {
+                                  MyProposalListService myProposalListService,
+                                  @Named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION)
+                                  boolean verifyBlindVoteEncryptedVotesSerialization,
+                                  @Named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION)
+                                  boolean verifyBlindVoteEncryptedMeritListSerialization) {
         this.p2PService = p2PService;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
@@ -134,6 +143,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.ballotListService = ballotListService;
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
+        this.verifyBlindVoteEncryptedVotesSerialization = verifyBlindVoteEncryptedVotesSerialization;
+        this.verifyBlindVoteEncryptedMeritListSerialization = verifyBlindVoteEncryptedMeritListSerialization;
 
         this.persistenceManager.initialize(myBlindVoteList, PersistenceManager.Source.PRIVATE);
 
@@ -214,7 +225,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                     blindVoteTxId,
                     stake.value,
                     encryptedMeritList,
-                    new Date().getTime());
+                    new Date().getTime(),
+                    new TreeMap<>());
             addBlindVoteToList(blindVote);
 
             addToP2PNetwork(blindVote, errorMessage -> {
@@ -255,7 +267,32 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                 .collect(Collectors.toList());
         final VoteWithProposalTxIdList voteWithProposalTxIdList = new VoteWithProposalTxIdList(list);
         log.info("voteWithProposalTxIdList used in blind vote. voteWithProposalTxIdList={}", voteWithProposalTxIdList);
-        return BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdList, secretKey);
+        byte[] canonicalPlaintext = voteWithProposalTxIdList.encodeCanonical();
+        if (verifyBlindVoteEncryptedVotesSerialization) {
+            verifyBlindVoteEncryptedVotesSerializationMatchesLegacy(voteWithProposalTxIdList, canonicalPlaintext);
+        }
+        return BlindVoteConsensus.getEncryptedVotes(canonicalPlaintext, secretKey);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void verifyBlindVoteEncryptedVotesSerializationMatchesLegacy(
+            VoteWithProposalTxIdList voteWithProposalTxIdList,
+            byte[] canonicalPlaintext) {
+        byte[] legacyPlaintext = voteWithProposalTxIdList.serializeForHash();
+        verifyBlindVotePlaintextSerializationMatchesLegacy("encrypted votes", canonicalPlaintext, legacyPlaintext);
+    }
+
+    private void verifyBlindVotePlaintextSerializationMatchesLegacy(String plaintextName,
+                                                                    byte[] canonicalPlaintext,
+                                                                    byte[] legacyPlaintext) {
+        if (!Arrays.equals(canonicalPlaintext, legacyPlaintext)) {
+            throw new IllegalStateException("Canonical blind vote " + plaintextName +
+                    " plaintext serialization differs " +
+                    "from legacy protobuf serialization. canonicalLength=" + canonicalPlaintext.length +
+                    ", canonicalSha256=" + Utilities.bytesAsHexString(Hash.getSha256Hash(canonicalPlaintext)) +
+                    ", legacyLength=" + legacyPlaintext.length +
+                    ", legacySha256=" + Utilities.bytesAsHexString(Hash.getSha256Hash(legacyPlaintext)));
+        }
     }
 
     private byte[] getOpReturnData(byte[] encryptedVotes) throws IOException {
@@ -268,7 +305,18 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private byte[] getEncryptedMeritList(String blindVoteTxId, SecretKey secretKey) throws CryptoException {
         MeritList meritList = getMerits(blindVoteTxId);
-        return BlindVoteConsensus.getEncryptedMeritList(meritList, secretKey);
+        byte[] canonicalPlaintext = meritList.encodeCanonical();
+        if (verifyBlindVoteEncryptedMeritListSerialization) {
+            verifyBlindVotePlaintextSerializationMatchesLegacy("encrypted merit list",
+                    canonicalPlaintext,
+                    getLegacyEncryptedMeritListPlaintext(meritList));
+        }
+        return BlindVoteConsensus.getEncryptedMeritList(canonicalPlaintext, secretKey);
+    }
+
+    @SuppressWarnings("deprecation")
+    private byte[] getLegacyEncryptedMeritListPlaintext(MeritList meritList) {
+        return meritList.serializeForHash();
     }
 
     // blindVoteTxId is null if we use the method from the getCurrentlyAvailableMerit call.

@@ -55,7 +55,6 @@ import bisq.network.p2p.storage.persistence.RemovedPayloadsService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
-import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
@@ -63,6 +62,9 @@ import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalWriter;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -1249,7 +1251,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * @param data Network payload
      * @return Hash of data
      */
+    @SuppressWarnings("deprecation")
     public static byte[] get32ByteHash(NetworkPayload data) {
+        if (data instanceof Canonical canonical) {
+            return Hash.getSha256Hash(canonical.encodeCanonical());
+        }
         return Hash.getSha256Hash(data.serializeForHash());
     }
 
@@ -1263,7 +1269,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     @EqualsAndHashCode
     @ToString
-    public static final class DataAndSeqNrPair implements NetworkPayload, ExcludeForHashAwareProto {
+    public static final class DataAndSeqNrPair implements NetworkPayload, Canonical {
         // data are only used for calculating cryptographic hash from both values, so they are kept private
         private final ProtectedStoragePayload protectedStoragePayload;
         private final int sequenceNumber;
@@ -1275,29 +1281,22 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         @Override
         public protobuf.DataAndSeqNrPair toProtoMessage() {
-            return toProto(false);
-        }
-
-        @Override
-        public protobuf.DataAndSeqNrPair toProto(boolean serializeForHash) {
-            return resolveProto(serializeForHash);
-        }
-
-        @Override
-        public protobuf.DataAndSeqNrPair.Builder getBuilder(boolean serializeForHash) {
             return protobuf.DataAndSeqNrPair.newBuilder()
-                    .setPayload(toStoragePayloadProto(serializeForHash))
-                    .setSequenceNumber(sequenceNumber);
+                    .setPayload((StoragePayload) protectedStoragePayload.toProtoMessage())
+                    .setSequenceNumber(sequenceNumber)
+                    .build();
         }
 
-        private protobuf.StoragePayload toStoragePayloadProto(boolean serializeForHash) {
-            if (protectedStoragePayload instanceof ExcludeForHashAwareProto) {
-                ExcludeForHashAwareProto proto = (ExcludeForHashAwareProto) protectedStoragePayload;
-                StoragePayload.Builder builder = (StoragePayload.Builder) proto.getBuilder(serializeForHash);
-                return resolveBuilder(builder, serializeForHash).build();
-            } else {
-                return (StoragePayload) protectedStoragePayload.toProtoMessage();
-            }
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+            CanonicalWriter writer = new CanonicalWriter();
+            // DataAndSeqNrPair is a hash/signature preimage wrapper for the protected payload bytes
+            // and the sequence number. Keep field 1 delegated to the protected payload's own hash preimage
+            // instead of trying to model the whole StoragePayload oneof here. Field numbers still mirror
+            // protobuf.DataAndSeqNrPair: payload = 1 and sequence_number = 2.
+            writer.writeCompose(1, protectedStoragePayload.encodeCanonical(canonicalEncoder));
+            writer.writeInt32(2, sequenceNumber);
+            return writer.toByteArray();
         }
     }
 

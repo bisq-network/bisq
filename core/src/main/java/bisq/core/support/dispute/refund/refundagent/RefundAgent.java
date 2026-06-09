@@ -25,21 +25,26 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.CollectionUtils;
 
 import com.google.protobuf.ByteString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
@@ -54,6 +59,26 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                        String registrationSignature,
                        @Nullable String emailAddress,
                        @Nullable String info) {
+        this(nodeAddress,
+                pubKeyRing,
+                languageCodes,
+                registrationDate,
+                registrationPubKey,
+                registrationSignature,
+                emailAddress,
+                info,
+                null);
+    }
+
+    public RefundAgent(NodeAddress nodeAddress,
+                       PubKeyRing pubKeyRing,
+                       List<String> languageCodes,
+                       long registrationDate,
+                       byte[] registrationPubKey,
+                       String registrationSignature,
+                       @Nullable String emailAddress,
+                       @Nullable String info,
+                       @Nullable TreeMap<String, String> extraDataMap) {
 
         super(nodeAddress,
                 pubKeyRing,
@@ -62,7 +87,8 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 registrationPubKey,
                 registrationSignature,
                 emailAddress,
-                info);
+                info,
+                extraDataMap);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,15 +106,11 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 .setRegistrationSignature(registrationSignature);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setRefundAgent(builder).build();
     }
 
     public static RefundAgent fromProto(protobuf.RefundAgent proto) {
-        // ExtraDataMap was always null and is not supported anymore since v1.10.2.
-        // It is not expected that any historical data exist with a non-empty ExtraDataMap.
-        checkArgument(proto.getExtraDataMap().isEmpty(),
-                "ExtraDataMap is expected to be not set in RefundAgent");
-
         return new RefundAgent(NodeAddress.fromProto(proto.getNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 new ArrayList<>(proto.getLanguageCodesList()),
@@ -96,7 +118,32 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
-                ProtoUtil.stringOrNullFromProto(proto.getInfo()));
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<RefundAgent> SCHEMA =
+            CanonicalSchema.oneof("StoragePayload",
+                    9,
+                    DisputeAgent.<RefundAgent>getDisputeAgentSchemaBuilder()
+                            .string(7, refundAgent -> refundAgent.emailAddress)
+                            .string(8, refundAgent -> refundAgent.info)
+                            .mapStringToString(9,
+                                    RefundAgent::getExtraDataMapForCanonical,
+                                    TreeMapIterator.naturalOrder()));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private Map<String, String> getExtraDataMapForCanonical() {
+        return extraDataMap == null ? Collections.emptyMap() : extraDataMap;
     }
 
 

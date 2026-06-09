@@ -273,6 +273,9 @@ Regtest DPT and fee markers use preimages `dpt` and `fee`, respectively.
 ## BTC Trade Fee Receiver Selection
 
 `BtcFeeReceiverService.getAddress()` selects a receiver for normal BTC trade fees.
+When the signed network filter provides BTC fee receiver addresses, filter-controlled receiver weights are applied before
+the remaining probability is delegated to the Burning Man selection below. See
+`docs/burningman/filter-controlled-btc-fee-receiver-routing.md` for that filter-controlled routing spec.
 
 1. Get active candidates at the current DAO chain height.
 2. If none exist, return the legacy Burning Man address.

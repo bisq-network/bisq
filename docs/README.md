@@ -8,8 +8,10 @@
  - [Makefile](../Makefile): (new) Set up a self-contained local Bisq network on Bitcoin regtest
  - [dev-setup.md](dev-setup.md): (deprecated) Set up a self-contained local Bisq network on Bitcoin regtest
  - [dao-setup.md](dao-setup.md): (deprecated) Set up a complete Bisq DAO development environment
-- [burning-man-address-list.md](burning-man-address-list.md): Understand the versioned Burning Man DPT receiver
+ - [burning-man-address-list.md](burning-man-address-list.md): Understand the versioned Burning Man DPT receiver
   allowlist
+ - [burningman/filter-controlled-btc-fee-receiver-routing.md](burningman/filter-controlled-btc-fee-receiver-routing.md):
+  Filter-controlled BTC trade-fee receiver routing for Burning Man
  - [testing.md](testing.md): Learn about the Bisq testing process and how you can contribute.
 
 Looking for user-facing documentation? See https://bisq.wiki.

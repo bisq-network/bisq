@@ -22,6 +22,8 @@ import bisq.core.locale.Res;
 import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.crypto.CryptoUtils;
 import bisq.common.crypto.Hash;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
@@ -49,7 +51,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @ToString
 @Slf4j
-public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTradeContractJson {
+public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTradeContractJson, Canonical {
     protected final String paymentMethodId;
     protected final String id;
 
@@ -159,6 +161,11 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     }
 
     public final byte[] getHashForContract() {
-        return Hash.getRipemd160hash(serializeForHash());
+        return Hash.getRipemd160hash(encodeCanonical());
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return PaymentAccountPayloadCanonicalSchemas.encode(this, canonicalEncoder);
     }
 }

@@ -21,6 +21,7 @@ import bisq.network.p2p.mailbox.MailboxMessage;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.SealedAndSigned;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.protobuf.ByteString;
@@ -103,6 +104,19 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
                 proto.getUid(),
                 -1);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<PrefixedSealedAndSignedMessage> SCHEMA =
+            CanonicalSchema.<PrefixedSealedAndSignedMessage>newBuilder()
+                    .compose(1, message -> message.senderNodeAddress, NodeAddress.SCHEMA)
+                    .compose(2, message -> message.sealedAndSigned, SealedAndSigned.SCHEMA)
+                    .bytes(3, message -> message.addressPrefixHash)
+                    .string(4, message -> message.uid)
+                    .build();
 
     @Override
     public long getTTL() {

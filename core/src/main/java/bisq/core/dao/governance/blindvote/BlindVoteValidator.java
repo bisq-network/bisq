@@ -23,6 +23,7 @@ import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.common.util.ExtraDataMapValidator;
 
 import javax.inject.Inject;
 
@@ -71,6 +72,8 @@ public class BlindVoteValidator {
                     "getEncryptedMeritList must not be empty");
             checkArgument(blindVote.getEncryptedMeritList().length <= 100000,
                     "getEncryptedMeritList must not exceed 100kb");
+
+            ExtraDataMapValidator.validate(blindVote.getExtraDataMap());
         } catch (Throwable e) {
             log.warn(e.toString());
             throw new ProposalValidationException(e);

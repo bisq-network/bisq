@@ -19,6 +19,9 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistableList;
 
@@ -35,7 +38,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @EqualsAndHashCode(callSuper = true)
-public class BallotList extends PersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateModel {
+public class BallotList extends PersistableList<Ballot> implements ConsensusCritical, ImmutableDaoStateModel, Canonical {
 
     public BallotList(List<Ballot> list) {
         super(list);
@@ -67,6 +70,21 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
                 .map(Ballot::fromProto)
                 .collect(Collectors.toList())));
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<BallotList> SCHEMA = CanonicalSchema.<BallotList>newBuilder()
+            .repeatedCompose(1, BallotList::getList, Ballot.SCHEMA)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
 
     @Override
     public String toString() {
