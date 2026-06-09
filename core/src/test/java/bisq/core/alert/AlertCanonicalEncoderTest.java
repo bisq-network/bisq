@@ -56,6 +56,21 @@ public class AlertCanonicalEncoderTest {
     }
 
     @Test
+    void serializeForHashMatchesProtobufWithExtraDataMap() {
+        TreeMap<String, String> extraDataMap = new TreeMap<>();
+        extraDataMap.put("futureKey", "futureValue");
+        Alert alert = new Alert("Mandatory update is available",
+                true,
+                true,
+                "1.9.99",
+                Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic()),
+                "signature-base64",
+                extraDataMap);
+
+        assertArrayEquals(alert.serialize(), alert.encodeCanonical(CanonicalEncoder.DEFAULT));
+    }
+
+    @Test
     void encodeCanonicalRejectsUnsignedAlert() {
         Alert alert = new Alert("Mandatory update is available",
                 true,
