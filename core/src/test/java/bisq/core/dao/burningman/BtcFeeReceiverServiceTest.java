@@ -17,16 +17,23 @@
 
 package bisq.core.dao.burningman;
 
+import bisq.core.dao.burningman.model.BurningManCandidate;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.FilterPolicyService;
 
 import com.google.common.primitives.Longs;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.random.RandomGenerator;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BtcFeeReceiverServiceTest {
     @Test
@@ -76,6 +83,20 @@ public class BtcFeeReceiverServiceTest {
     }
 
     @Test
+    public void findIndexUsesLongAccumulator() {
+        List<Long> weights = List.of((long) Integer.MAX_VALUE, 1L);
+
+        assertEquals(0, BtcFeeReceiverService.findIndex(weights, Integer.MAX_VALUE));
+        assertEquals(1, BtcFeeReceiverService.findIndex(weights, (long) Integer.MAX_VALUE + 1));
+    }
+
+    @Test
+    public void getRandomIndexRejectsNegativeWeights() {
+        assertThrows(IllegalArgumentException.class,
+                () -> BtcFeeReceiverService.getRandomIndex(List.of(1L, -1L, 1L), new Random(1)));
+    }
+
+    @Test
     public void parseWeightedFilterReceiversKeepsRemainderForBurningMan() {
         BtcFeeReceiverService.FeeReceiverConfig config = BtcFeeReceiverService.parseBtcFeeReceiverAddresses(
                 List.of("address1#0.2;address2#0.3"));
@@ -120,5 +141,64 @@ public class BtcFeeReceiverServiceTest {
     public void extractsConfiguredReceiverAddressesForMempoolValidation() {
         assertEquals(List.of("address1", "address2"),
                 BtcFeeReceiverService.getConfiguredReceiverAddresses(List.of("address1#0.2;address2#0.3")));
+    }
+
+    @Test
+    public void weightedBurningManRemainderKeepsSelectionCeiling() {
+        BtcFeeReceiverService service = newService(
+                List.of("filterAddress#0.5"),
+                List.of(candidate("candidate1Address", 0.8),
+                        candidate("candidate2Address", 0.8)));
+        RecordingRandomGenerator random = new RecordingRandomGenerator(0);
+
+        assertEquals("filterAddress", service.getAddress(random));
+        assertEquals(BtcFeeReceiverService.RECEIVER_SELECTION_CEILING, random.getLastBound());
+    }
+
+    private static BtcFeeReceiverService newService(List<String> filterReceivers,
+                                                    List<BurningManCandidate> candidates) {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        when(daoStateService.getLastBlock()).thenReturn(Optional.empty());
+        BurningManService burningManService = mock(BurningManService.class);
+        when(burningManService.getActiveBurningManCandidates(0)).thenReturn(candidates);
+        when(burningManService.getLegacyBurningManAddress(0)).thenReturn("legacyAddress");
+        FilterPolicyService filterPolicyService = mock(FilterPolicyService.class);
+        when(filterPolicyService.getBtcFeeReceiverAddresses()).thenReturn(filterReceivers);
+        return new BtcFeeReceiverService(daoStateService, burningManService, filterPolicyService);
+    }
+
+    private static BurningManCandidate candidate(String receiverAddress, double cappedBurnAmountShare) {
+        return new TestBurningManCandidate(receiverAddress, cappedBurnAmountShare);
+    }
+
+    private static class TestBurningManCandidate extends BurningManCandidate {
+        private TestBurningManCandidate(String receiverAddress, double cappedBurnAmountShare) {
+            this.receiverAddress = Optional.of(receiverAddress);
+            this.cappedBurnAmountShare = cappedBurnAmountShare;
+        }
+    }
+
+    private static class RecordingRandomGenerator implements RandomGenerator {
+        private final long nextLong;
+        private long lastBound;
+
+        private RecordingRandomGenerator(long nextLong) {
+            this.nextLong = nextLong;
+        }
+
+        @Override
+        public long nextLong() {
+            return nextLong;
+        }
+
+        @Override
+        public long nextLong(long bound) {
+            lastBound = bound;
+            return nextLong;
+        }
+
+        private long getLastBound() {
+            return lastBound;
+        }
     }
 }

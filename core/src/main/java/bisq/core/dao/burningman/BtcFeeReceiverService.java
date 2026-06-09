@@ -34,7 +34,8 @@ import java.math.RoundingMode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
 import lombok.Getter;
@@ -52,7 +53,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
     private final BurningManService burningManService;
     private final FilterPolicyService filterPolicyService;
 
-    private int currentChainHeight;
+    private volatile int currentChainHeight;
 
     @Inject
     public BtcFeeReceiverService(DaoStateService daoStateService,
@@ -85,15 +86,24 @@ public class BtcFeeReceiverService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getAddress() {
+        return getAddress(ThreadLocalRandom.current());
+    }
+
+    @VisibleForTesting
+    String getAddress(RandomGenerator random) {
+        int chainHeight = currentChainHeight;
         FeeReceiverConfig feeReceiverConfig = getFeeReceiverConfig();
 
         List<String> receiverAddresses = new ArrayList<>(feeReceiverConfig.getReceiverAddresses());
-        List<Long> amountList = new ArrayList<>(feeReceiverConfig.getReceiverWeights());
-        addBurningManFeeReceivers(receiverAddresses, amountList, feeReceiverConfig.getBurningManReceiverWeight());
+        List<Long> receiverWeights = new ArrayList<>(feeReceiverConfig.getReceiverWeights());
+        addBurningManFeeReceivers(receiverAddresses,
+                receiverWeights,
+                feeReceiverConfig.getBurningManReceiverWeight(),
+                chainHeight);
 
-        int winnerIndex = getRandomIndex(amountList, new Random());
+        int winnerIndex = getRandomIndex(receiverWeights, random);
         if (winnerIndex == -1) {
-            return burningManService.getLegacyBurningManAddress(currentChainHeight);
+            return burningManService.getLegacyBurningManAddress(chainHeight);
         }
         return receiverAddresses.get(winnerIndex);
     }
@@ -120,16 +130,19 @@ public class BtcFeeReceiverService implements DaoStateListener {
         }
     }
 
-    private void addBurningManFeeReceivers(List<String> receiverAddresses, List<Long> amountList, long ceiling) {
-        if (ceiling == 0) {
+    private void addBurningManFeeReceivers(List<String> receiverAddresses,
+                                           List<Long> receiverWeights,
+                                           long ceiling,
+                                           int chainHeight) {
+        if (ceiling <= 0) {
             return;
         }
 
-        List<BurningManCandidate> activeBurningManCandidates = burningManService.getActiveBurningManCandidates(currentChainHeight);
+        List<BurningManCandidate> activeBurningManCandidates = burningManService.getActiveBurningManCandidates(chainHeight);
         if (activeBurningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
-            receiverAddresses.add(burningManService.getLegacyBurningManAddress(currentChainHeight));
-            amountList.add(ceiling);
+            receiverAddresses.add(burningManService.getLegacyBurningManAddress(chainHeight));
+            receiverWeights.add(ceiling);
             return;
         }
 
@@ -138,23 +151,30 @@ public class BtcFeeReceiverService implements DaoStateListener {
         // cappedBurnAmountShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
         // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
         // Entries with 0 will be ignored in the selection method, so we do not need to filter them out.
-        String legacyBurningManAddress = burningManService.getLegacyBurningManAddress(currentChainHeight);
-        List<Long> burningManAmountList = activeBurningManCandidates.stream()
-                .map(BurningManCandidate::getCappedBurnAmountShare)
-                .map(cappedBurnAmountShare -> (long) Math.floor(cappedBurnAmountShare * ceiling))
-                .toList();
-        long sum = burningManAmountList.stream().mapToLong(e -> e).sum();
+        String legacyBurningManAddress = burningManService.getLegacyBurningManAddress(chainHeight);
+        long assignedBurningManWeight = 0;
 
         for (int i = 0; i < activeBurningManCandidates.size(); i++) {
+            long calculatedWeight = getSelectionWeight(activeBurningManCandidates.get(i).getCappedBurnAmountShare(), ceiling);
+            long remainingBurningManWeight = ceiling - assignedBurningManWeight;
+            long receiverWeight = Math.min(calculatedWeight, remainingBurningManWeight);
             receiverAddresses.add(activeBurningManCandidates.get(i).getReceiverAddress().orElse(legacyBurningManAddress));
-            amountList.add(burningManAmountList.get(i));
+            receiverWeights.add(receiverWeight);
+            assignedBurningManWeight += receiverWeight;
         }
 
         // If we have not reached the 100% we fill the missing gap with the legacy BM
-        if (sum < ceiling) {
+        if (assignedBurningManWeight < ceiling) {
             receiverAddresses.add(legacyBurningManAddress);
-            amountList.add(ceiling - sum);
+            receiverWeights.add(ceiling - assignedBurningManWeight);
         }
+    }
+
+    private static long getSelectionWeight(double share, long ceiling) {
+        if (!Double.isFinite(share) || share <= 0) {
+            return 0;
+        }
+        return (long) Math.floor(share * ceiling);
     }
 
     @VisibleForTesting
@@ -250,18 +270,33 @@ public class BtcFeeReceiverService implements DaoStateListener {
     }
 
     @VisibleForTesting
-    static int getRandomIndex(List<Long> weights, Random random) {
-        long sum = weights.stream().mapToLong(n -> n).sum();
+    static int getRandomIndex(List<Long> weights, RandomGenerator random) {
+        long sum = getWeightSum(weights);
         if (sum == 0) {
             return -1;
         }
-        long target = random.longs(0, sum).findFirst().orElseThrow() + 1;
+        long target = random.nextLong(sum) + 1;
         return findIndex(weights, target);
+    }
+
+    private static long getWeightSum(List<Long> weights) {
+        long sum = 0;
+        for (long weight : weights) {
+            if (weight < 0) {
+                throw new IllegalArgumentException("Receiver selection weights must not be negative.");
+            }
+            try {
+                sum = Math.addExact(sum, weight);
+            } catch (ArithmeticException exception) {
+                throw new IllegalArgumentException("Total receiver selection weight is too large.", exception);
+            }
+        }
+        return sum;
     }
 
     @VisibleForTesting
     static int findIndex(List<Long> weights, long target) {
-        int currentRange = 0;
+        long currentRange = 0;
         for (int i = 0; i < weights.size(); i++) {
             currentRange += weights.get(i);
             if (currentRange >= target) {
