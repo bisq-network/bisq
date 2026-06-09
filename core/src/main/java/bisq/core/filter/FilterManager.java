@@ -114,6 +114,7 @@ public class FilterManager {
     private ECKey filterSigningKey;
     private final Set<Filter> invalidFilters = new HashSet<>();
     private Consumer<String> filterWarningHandler;
+    private boolean noFilterWarningShown;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -168,12 +169,6 @@ public class FilterManager {
                 .map(protectedStoragePayload -> (Filter) protectedStoragePayload)
                 .forEach(this::onFilterAddedFromNetwork);
 
-        // On mainNet we expect to have received a filter object, if not show a popup to the user to inform the
-        // Bisq devs.
-        if (Config.baseCurrencyNetwork().isMainnet() && getFilter() == null && filterWarningHandler != null) {
-            filterWarningHandler.accept(Res.get("popup.warning.noFilter"));
-        }
-
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
@@ -204,6 +199,15 @@ public class FilterManager {
                 // remove message if we have not been online.
                 if (filterProperty.get() == null) {
                     clearBannedNodes();
+
+                    // On mainNet we expect to have received a filter object by the time the initial data request
+                    // from the seed nodes has completed. We check here (not at startup) so that a slow network,
+                    // where the filter has not arrived yet, does not trigger a false-positive warning. We only
+                    // warn once.
+                    if (Config.baseCurrencyNetwork().isMainnet() && filterWarningHandler != null && !noFilterWarningShown) {
+                        noFilterWarningShown = true;
+                        filterWarningHandler.accept(Res.get("popup.warning.noFilter"));
+                    }
                 }
             }
 
