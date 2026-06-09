@@ -36,6 +36,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class BtcFeeReceiverServiceTest {
+    private static final String ADDRESS_1 = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT";
+    private static final String ADDRESS_2 = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
+
     @Test
     public void testGetRandomIndex() {
         Random rnd = new Random(456);
@@ -99,9 +102,9 @@ public class BtcFeeReceiverServiceTest {
     @Test
     public void parseWeightedFilterReceiversKeepsRemainderForBurningMan() {
         BtcFeeReceiverService.FeeReceiverConfig config = BtcFeeReceiverService.parseBtcFeeReceiverAddresses(
-                List.of("address1#0.2;address2#0.3"));
+                List.of(ADDRESS_1 + "#0.2;" + ADDRESS_2 + "#0.3"));
 
-        assertEquals(List.of("address1", "address2"), config.getReceiverAddresses());
+        assertEquals(List.of(ADDRESS_1, ADDRESS_2), config.getReceiverAddresses());
         assertEquals(List.of(2000L, 3000L), config.getReceiverWeights());
         assertEquals(5000L, config.getBurningManReceiverWeight());
     }
@@ -134,24 +137,36 @@ public class BtcFeeReceiverServiceTest {
     @Test
     public void rejectsWeightedFilterReceiversOverOneHundredPercent() {
         assertThrows(IllegalArgumentException.class,
-                () -> BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of("address1#0.8;address2#0.3")));
+                () -> BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of(ADDRESS_1 + "#0.8;" + ADDRESS_2 + "#0.3")));
+    }
+
+    @Test
+    public void rejectsWeightedFilterReceiversWithInvalidAddress() {
+        assertThrows(IllegalArgumentException.class,
+                () -> BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of("not-an-address#0.2")));
+    }
+
+    @Test
+    public void rejectsWeightedFilterReceiversWithTooFineFraction() {
+        assertThrows(IllegalArgumentException.class,
+                () -> BtcFeeReceiverService.parseBtcFeeReceiverAddresses(List.of(ADDRESS_1 + "#0.00011")));
     }
 
     @Test
     public void extractsConfiguredReceiverAddressesForMempoolValidation() {
-        assertEquals(List.of("address1", "address2"),
-                BtcFeeReceiverService.getConfiguredReceiverAddresses(List.of("address1#0.2;address2#0.3")));
+        assertEquals(List.of(ADDRESS_1, ADDRESS_2),
+                BtcFeeReceiverService.getConfiguredReceiverAddresses(List.of(ADDRESS_1 + "#0.2;" + ADDRESS_2 + "#0.3")));
     }
 
     @Test
     public void weightedBurningManRemainderKeepsSelectionCeiling() {
         BtcFeeReceiverService service = newService(
-                List.of("filterAddress#0.5"),
+                List.of(ADDRESS_1 + "#0.5"),
                 List.of(candidate("candidate1Address", 0.8),
                         candidate("candidate2Address", 0.8)));
         RecordingRandomGenerator random = new RecordingRandomGenerator(0);
 
-        assertEquals("filterAddress", service.getAddress(random));
+        assertEquals(ADDRESS_1, service.getAddress(random));
         assertEquals(BtcFeeReceiverService.RECEIVER_SELECTION_CEILING, random.getLastBound());
     }
 

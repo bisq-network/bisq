@@ -17,6 +17,8 @@
 
 package bisq.core.dao.burningman;
 
+import bisq.common.config.Config;
+
 import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -30,13 +32,14 @@ import com.google.common.base.Splitter;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
+
+import org.bitcoinj.core.Address;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -229,11 +232,14 @@ public class BtcFeeReceiverService implements DaoStateListener {
             if (address.isEmpty()) {
                 throw new IllegalArgumentException("Invalid BTC fee receiver configuration. Address must not be empty.");
             }
+            validateAddress(address);
 
             BigDecimal share = parseShare(receiverSpec[1].trim());
-            long weight = share.multiply(RECEIVER_SELECTION_CEILING_AS_DECIMAL)
-                    .setScale(0, RoundingMode.FLOOR)
-                    .longValueExact();
+            BigDecimal scaledShare = share.multiply(RECEIVER_SELECTION_CEILING_AS_DECIMAL);
+            if (scaledShare.remainder(ONE).compareTo(BigDecimal.ZERO) != 0) {
+                throw new IllegalArgumentException("Invalid BTC fee receiver configuration. Fractions finer than 0.0001 are not allowed.");
+            }
+            long weight = scaledShare.longValueExact();
             if (weight == 0) {
                 throw new IllegalArgumentException("Invalid BTC fee receiver configuration. Smallest supported fraction is 0.0001.");
             }
@@ -249,6 +255,14 @@ public class BtcFeeReceiverService implements DaoStateListener {
         }
 
         return new FeeReceiverConfig(receiverAddresses, receiverWeights, RECEIVER_SELECTION_CEILING - totalWeight);
+    }
+
+    private static void validateAddress(String address) {
+        try {
+            Address.fromString(Config.baseCurrencyNetworkParameters(), address);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException("Invalid BTC fee receiver configuration. Address is invalid: " + address, exception);
+        }
     }
 
     private static BigDecimal parseShare(String value) {
