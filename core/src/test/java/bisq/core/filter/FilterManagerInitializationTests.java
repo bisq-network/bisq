@@ -24,6 +24,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.BanFilter;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -45,6 +46,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import org.junit.jupiter.api.Test;
@@ -55,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 
 public class FilterManagerInitializationTests {
 
@@ -85,15 +88,20 @@ public class FilterManagerInitializationTests {
     }
 
     @Test
-    void onAllServicesInitializedNoFilterMainnet() {
+    void onAllServicesInitializedNoFilterMainnet(@TempDir Path tmpDir) throws IOException {
         P2PService p2PService = mock(P2PService.class);
+        Config config = mock(Config.class);
+        Path configFilePath = tmpDir.resolve("configFile");
+        Files.writeString(configFilePath, "otherOption=keep\n");
+        doReturn(configFilePath.toFile()).when(config).getConfigFile();
+
         var filterManager = new FilterManager(
                 p2PService,
                 mock(KeyRing.class),
                 mock(User.class),
                 mock(Preferences.class),
                 DenyList.empty(),
-                mock(Config.class),
+                config,
                 mock(PriceFeedNodeAddressProvider.class),
                 mock(BanFilter.class),
                 mock(PriceFeedService.class),
@@ -119,6 +127,13 @@ public class FilterManagerInitializationTests {
             });
 
             filterManager.onAllServicesInitialized();
+
+            // The no-filter warning is deferred: it is raised only once the initial seed-node data
+            // request completes (onDataReceived), not synchronously at startup. Capture the listener
+            // and simulate the data handshake finishing with no filter received.
+            ArgumentCaptor<P2PServiceListener> listenerCaptor = ArgumentCaptor.forClass(P2PServiceListener.class);
+            verify(p2PService).addP2PServiceListener(listenerCaptor.capture());
+            listenerCaptor.getValue().onDataReceived();
         }
 
         assertTrue(warningHandlerTriggered.get());
