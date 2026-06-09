@@ -22,12 +22,6 @@ package bisq.bridge.protobuf;
 option java_package = "bisq.bridge.protobuf";
 option java_multiple_files = true;
 
-service BsqBlockGrpcService {
-    rpc Subscribe (BsqBlockSubscription) returns (stream BsqBlockDto);
-
-    rpc RequestBsqBlocks (BsqBlocksRequest) returns (BsqBlocksResponse);
-}
-
 message BsqBlockSubscription {
 }
 
@@ -64,11 +58,6 @@ message BondedReputationDto {
     optional string unlockTxId = 5;
 }
 
-service BurningmanGrpcService {
-    rpc Subscribe (BurningmanBlockSubscription) returns (stream BurningmanBlockDto);
-
-    rpc RequestBurningmanBlocks (BurningmanBlocksRequest) returns (BurningmanBlocksResponse);
-}
 
 message BurningmanBlockSubscription {
 }
@@ -91,9 +80,6 @@ message BurningmanDto {
     double cappedBurnAmountShare = 2;
 }
 
-service AccountTimestampGrpcService {
-    rpc RequestAccountTimestamp (AccountTimestampRequest) returns (AccountTimestampResponse);
-}
 
 message AccountTimestampRequest {
     bytes hash = 1;
@@ -102,9 +88,6 @@ message AccountTimestampResponse {
     sint64 date = 1;
 }
 
-service AccountAgeWitnessGrpcService {
-    rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
-}
 
 message AccountAgeWitnessDateRequest {
     string hashAsHex = 1;
@@ -113,9 +96,6 @@ message AccountAgeWitnessDateResponse {
     sint64 date = 1;
 }
 
-service SignedWitnessGrpcService {
-    rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);
-}
 
 message SignedWitnessDateRequest {
     string hashAsHex = 1;
@@ -125,9 +105,6 @@ message SignedWitnessDateResponse {
 }
 
 
-service BondedRoleGrpcService {
-    rpc RequestBondedRoleVerification (BondedRoleVerificationRequest) returns (BondedRoleVerificationResponse);
-}
 message BondedRoleVerificationRequest {
     string bondUserName = 1;
     string roleType = 2;
