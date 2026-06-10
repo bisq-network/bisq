@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.QRCodeUtil;
 
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -50,8 +51,6 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -315,12 +314,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void updateQRCode() {
         if (addressTextField.getAddress() != null && !addressTextField.getAddress().isEmpty()) {
-            final byte[] imageBytes = QRCode
-                    .from(getStringToEncode())
-                    .withSize(150, 150) // code has 41 elements 8 px is border with 150 we get 3x scale and min. border
-                    .to(ImageType.PNG)
-                    .stream()
-                    .toByteArray();
+            final byte[] imageBytes = QRCodeUtil.toPngBytes(getStringToEncode(), 150);
             Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
             qrCodeImageView.setImage(qrImage);
         }

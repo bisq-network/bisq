@@ -50,6 +50,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.QRCodeUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.CurrencyUtil;
@@ -74,8 +75,6 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -575,12 +574,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             }
         }
 
-        final byte[] imageBytes = QRCode
-                .from(getStringToEncode())
-                .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
-                .to(ImageType.PNG)
-                .stream()
-                .toByteArray();
+        final byte[] imageBytes = QRCodeUtil.toPngBytes(getStringToEncode(), 98);
         Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
         qrCodeImageView.setImage(qrImage);
     }

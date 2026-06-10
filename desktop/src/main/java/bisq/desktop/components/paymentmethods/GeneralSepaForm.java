@@ -178,11 +178,18 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
 
     // see https://en.wikipedia.org/wiki/EPC_QR_code
     private static String constructQRCodeString(String bic, String iban, String recipient, String amountCcy) {
-        String paymentBase = "BCD\n001\n1\nSCT\n" + bic + "\n" + recipient + "\n" + iban;
+        // The EPC format is line-break delimited, so strip any CR/LF from field values to prevent
+        // a field-injection that would corrupt the payment data.
+        String paymentBase = "BCD\n001\n1\nSCT\n" + stripLineBreaks(bic) + "\n"
+                + stripLineBreaks(recipient) + "\n" + stripLineBreaks(iban);
         String[] amountSplit = amountCcy.split(" ");
         if (amountSplit.length == 2) {
             return paymentBase + "\n" + amountSplit[1] + amountSplit[0]; // ccy and amount combined, EPC_QR_code spec
         }
         return paymentBase;
+    }
+
+    private static String stripLineBreaks(String value) {
+        return value == null ? "" : value.replaceAll("[\\r\\n]", "");
     }
 }

@@ -18,11 +18,9 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.QRCodeUtil;
 
 import bisq.core.locale.Res;
-
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -57,12 +55,7 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         spacer.setMinHeight(prefHeight / 8);
         gridPane.add(spacer, 0, ++rowIndex);
 
-        final byte[] imageBytes = QRCode
-                .from(bitcoinAddressOrURI)
-                .withSize((int) prefWidth / 2, (int) prefHeight / 2)
-                .to(ImageType.PNG)
-                .stream()
-                .toByteArray();
+        final byte[] imageBytes = QRCodeUtil.toPngBytes(bitcoinAddressOrURI, (int) prefWidth / 2);
         Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
         qrCodeImageView = new ImageView(qrImage);
 
