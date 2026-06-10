@@ -34,7 +34,7 @@ dependencies {
     implementation libs.google.guava
     implementation libs.jcsv
     implementation libs.commons.io
-    implementation libs.qrgen
+    implementation libs.zxing.core
     implementation libs.apache.commons.lang3
     implementation libs.bouncycastle.bcpg.jdk18on
     implementation libs.fxmisc.easybind

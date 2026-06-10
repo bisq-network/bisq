@@ -47,6 +47,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.QRCodeUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -69,8 +70,6 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
-import net.glxn.qrgen.QRCode;
-import net.glxn.qrgen.image.ImageType;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
@@ -862,12 +861,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         missingCoinListener = (observable, oldValue, newValue) -> {
             if (!newValue.toString().equals("")) {
-                final byte[] imageBytes = QRCode
-                        .from(getStringToEncode())
-                        .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
-                        .to(ImageType.PNG)
-                        .stream()
-                        .toByteArray();
+                final byte[] imageBytes = QRCodeUtil.toPngBytes(getStringToEncode(), 98);
                 Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
                 qrCodeImageView.setImage(qrImage);
             }
