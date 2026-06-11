@@ -145,8 +145,8 @@ public final class CanonicalEncoder {
             }
         }
 
-        // At a cache hit we use a temporary mapWriter to contain only the map field bytes, not the parent message.
-        // At the end we write the mapWriter bytes to the parent writer.
+        // After a full-map cache miss, cache-enabled maps use a temporary writer to contain only the map field bytes,
+        // not the parent message. At the end we write the mapWriter bytes to the parent writer.
         CanonicalWriter mapWriter = cache == null ? writer : new CanonicalWriter();
         List<Map.Entry<?, ?>> entries = mapEncoding.getEntries((Map) source);
         mapEncoding.iterate(entries).forEachRemaining(entry -> {

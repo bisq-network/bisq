@@ -30,12 +30,21 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
         implements CanonicalMapEntryByteCache<String, SpentInfo> {
     private static final long serialVersionUID = 1L;
 
+    // These caches intentionally trade steady-state heap for avoiding repeated canonical encoding of the large
+    // spentInfoMap. The full-map snapshot is shallow: it duplicates TreeMap structure, but not TxOutputKey or
+    // SpentInfo instances.
     private final transient Map<String, CachedMapEntryBytes> encodedMapEntryBytesByKey = new HashMap<>();
 
     // The encoded-map cache stores the bytes for one complete canonical map field, including that field's tags.
     // It must therefore be keyed by the exact CanonicalSchema.Field instance, not by structural equality: the same
     // source map can be encoded differently by another schema field number or map encoding.
     private final transient Map<Object, byte[]> encodedMapBytesByCacheKey = new IdentityHashMap<>();
+
+    // TreeMap view removals do not call our overridden mutators, and TreeMap.modCount is not accessible here.
+    // Keep a shallow snapshot of the map content that produced the full-map cache and drop both cache tiers if
+    // current content no longer matches it.
+    @Nullable
+    private transient Map<TxOutputKey, SpentInfo> encodedMapSnapshot;
 
     public SpentInfoMap() {
     }
@@ -47,19 +56,30 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
     @Override
     @Nullable
     public byte[] getEncodedMap(Object cacheKey) {
-        return encodedMapBytesByCacheKey.get(cacheKey);
+        byte[] encodedMap = encodedMapBytesByCacheKey.get(cacheKey);
+        if (encodedMap == null) {
+            return null;
+        }
+
+        if (!matchesEncodedMapSnapshot()) {
+            invalidateAllEncodedCaches();
+            return null;
+        }
+
+        return encodedMap;
     }
 
     @Override
     public void putEncodedMap(Object cacheKey, byte[] encodedMap) {
         encodedMapBytesByCacheKey.put(cacheKey, encodedMap);
+        encodedMapSnapshot = new TreeMap<>(this);
     }
 
     @Override
     @Nullable
     public byte[] getEncodedMapEntry(String canonicalKey, SpentInfo canonicalValue) {
         CachedMapEntryBytes cached = encodedMapEntryBytesByKey.get(canonicalKey);
-        return cached != null && cached.spentInfo.equals(canonicalValue) ? cached.encodedMapEntry : null;
+        return cached != null && cached.spentInfo == canonicalValue ? cached.encodedMapEntry : null;
     }
 
     @Override
@@ -69,28 +89,31 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
 
     @Override
     public SpentInfo put(TxOutputKey key, SpentInfo value) {
-        encodedMapBytesByCacheKey.clear();
+        invalidateEncodedMapCache();
         return super.put(key, value);
     }
 
     @Override
     public void putAll(Map<? extends TxOutputKey, ? extends SpentInfo> map) {
         if (!map.isEmpty()) {
-            encodedMapBytesByCacheKey.clear();
+            invalidateEncodedMapCache();
         }
         super.putAll(map);
     }
 
     @Override
     public SpentInfo remove(Object key) {
-        encodedMapBytesByCacheKey.clear();
-        return super.remove(key);
+        SpentInfo removed = super.remove(key);
+        if (removed != null) {
+            invalidateEncodedMapCache();
+            encodedMapEntryBytesByKey.remove(key.toString());
+        }
+        return removed;
     }
 
     @Override
     public void clear() {
-        encodedMapBytesByCacheKey.clear();
-        encodedMapEntryBytesByKey.clear();
+        invalidateAllEncodedCaches();
         super.clear();
     }
 
@@ -98,7 +121,8 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
     public Map.Entry<TxOutputKey, SpentInfo> pollFirstEntry() {
         Map.Entry<TxOutputKey, SpentInfo> entry = super.pollFirstEntry();
         if (entry != null) {
-            encodedMapBytesByCacheKey.clear();
+            invalidateEncodedMapCache();
+            encodedMapEntryBytesByKey.remove(entry.getKey().toString());
         }
         return entry;
     }
@@ -107,9 +131,27 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
     public Map.Entry<TxOutputKey, SpentInfo> pollLastEntry() {
         Map.Entry<TxOutputKey, SpentInfo> entry = super.pollLastEntry();
         if (entry != null) {
-            encodedMapBytesByCacheKey.clear();
+            invalidateEncodedMapCache();
+            encodedMapEntryBytesByKey.remove(entry.getKey().toString());
         }
         return entry;
+    }
+
+    private boolean matchesEncodedMapSnapshot() {
+        return encodedMapSnapshot != null &&
+                size() == encodedMapSnapshot.size() &&
+                entrySet().equals(encodedMapSnapshot.entrySet());
+    }
+
+    private void invalidateEncodedMapCache() {
+        encodedMapBytesByCacheKey.clear();
+        encodedMapSnapshot = null;
+    }
+
+    private void invalidateAllEncodedCaches() {
+        encodedMapBytesByCacheKey.clear();
+        encodedMapEntryBytesByKey.clear();
+        encodedMapSnapshot = null;
     }
 
     private static final class CachedMapEntryBytes {

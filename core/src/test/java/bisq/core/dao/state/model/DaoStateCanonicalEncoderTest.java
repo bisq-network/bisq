@@ -152,6 +152,7 @@ class DaoStateCanonicalEncoderTest {
     @SuppressWarnings("unchecked")
     void spentInfoMapCachesAndInvalidatesEncodedMapField() {
         DaoState daoState = getDaoStateWithMaps();
+        // DaoState maps TxOutputKey to its canonical string form before the encoder uses the map-entry cache.
         CanonicalMapEntryByteCache<String, SpentInfo> cache =
                 (CanonicalMapEntryByteCache<String, SpentInfo>) daoState.getSpentInfoMap();
         CanonicalSchema.Field<DaoState> spentInfoMapField = DaoState.STATE_HASH_CHAIN_SCHEMA.getFields().stream()
@@ -168,6 +169,36 @@ class DaoStateCanonicalEncoderTest {
         daoState.getSpentInfoMap().put(new TxOutputKey("changed", 0), new SpentInfo(101, "changed", 0));
 
         assertNull(cache.getEncodedMap(spentInfoMapField));
+    }
+
+    @Test
+    void spentInfoMapInvalidatesEncodedMapFieldForEntrySetIteratorRemove() throws Exception {
+        DaoState daoState = getDaoStateWithMaps();
+        int initialCount = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain())
+                .getSpentInfoMapCount();
+
+        var iterator = daoState.getSpentInfoMap().entrySet().iterator();
+        iterator.next();
+        iterator.remove();
+
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain());
+
+        assertEquals(initialCount - 1, proto.getSpentInfoMapCount());
+    }
+
+    @Test
+    void spentInfoMapInvalidatesEncodedMapFieldForSubMapClear() throws Exception {
+        DaoState daoState = getDaoStateWithMaps();
+        int initialCount = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain())
+                .getSpentInfoMapCount();
+
+        daoState.getSpentInfoMap()
+                .subMap(new TxOutputKey("k00", 0), true, new TxOutputKey("k02", 0), true)
+                .clear();
+
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain());
+
+        assertEquals(initialCount - 3, proto.getSpentInfoMapCount());
     }
 
     @Test

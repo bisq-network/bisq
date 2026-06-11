@@ -66,6 +66,13 @@ public class CanonicalEncoderTest {
     }
 
     @Test
+    public void writeRawBytesRejectsNull() {
+        CanonicalWriter writer = new CanonicalWriter();
+
+        assertThrows(NullPointerException.class, () -> writer.writeRawBytes(null));
+    }
+
+    @Test
     public void rejectsNullTreeMapComparator() {
         assertThrows(IllegalArgumentException.class, () -> TreeMapIterator.comparing(null));
     }

@@ -413,7 +413,7 @@ public class RpcService {
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     if (!shutdownInProgress) {
-                        log.error("Error at requestRawDtoBlock: blockHeight={}", blockHeight);
+                        log.error("Error at requestRawDtoBlock: blockHeight={}", blockHeight, throwable);
                         UserThread.execute(() -> errorHandler.accept(throwable));
                     }
                 }
