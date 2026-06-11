@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalMapEntryByteCache;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.LegacyCollectorsToMapIterator;
 
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DaoStateCanonicalEncoderTest {
     private static final int RANDOMIZED_TX_OUTPUT_KEY_COUNT = 50_000;
@@ -123,6 +125,15 @@ class DaoStateCanonicalEncoderTest {
                 new ArrayList<>(proto.getUnspentTxOutputMapMap().keySet()));
         assertEquals(TX_OUTPUT_KEY_TREE_MAP_ORDER,
                 new ArrayList<>(proto.getSpentInfoMapMap().keySet()));
+    }
+
+    @Test
+    void spentInfoMapOptsIntoCanonicalMapEntryCaching() {
+        DaoState daoState = getDaoStateWithMaps();
+        DaoState fromProto = DaoState.fromProto((protobuf.DaoState) daoState.toProtoMessage());
+
+        assertTrue(daoState.getSpentInfoMap() instanceof CanonicalMapEntryByteCache);
+        assertTrue(fromProto.getSpentInfoMap() instanceof CanonicalMapEntryByteCache);
     }
 
     @Test

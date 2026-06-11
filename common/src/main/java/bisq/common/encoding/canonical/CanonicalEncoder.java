@@ -134,8 +134,23 @@ public final class CanonicalEncoder {
 
         CanonicalSchema.MapEncoding mapEncoding = Objects.requireNonNull(field.getMapEncoding());
         List<Map.Entry<?, ?>> entries = mapEncoding.getEntries((Map) source);
-        mapEncoding.iterate(entries).forEachRemaining(entry ->
-                writer.writeMapEntry(field.getNumber(), encodeMapEntry((Map.Entry<?, ?>) entry, mapEncoding)));
+        @Nullable
+        CanonicalMapEntryByteCache cache = source instanceof CanonicalMapEntryByteCache ?
+                (CanonicalMapEntryByteCache) source :
+                null;
+        mapEncoding.iterate(entries).forEachRemaining(entry -> {
+            Map.Entry<?, ?> mapEntry = (Map.Entry<?, ?>) entry;
+            byte[] encodedEntry = cache == null ?
+                    null :
+                    cache.getEncodedMapEntry(mapEntry.getKey(), mapEntry.getValue());
+            if (encodedEntry == null) {
+                encodedEntry = encodeMapEntry(mapEntry, mapEncoding);
+                if (cache != null) {
+                    cache.putEncodedMapEntry(mapEntry.getKey(), mapEntry.getValue(), encodedEntry);
+                }
+            }
+            writer.writeMapEntry(field.getNumber(), encodedEntry);
+        });
     }
 
     private byte[] encodeMapEntry(Map.Entry<?, ?> entry, CanonicalSchema.MapEncoding<?, ?, ?, ?> mapEncoding) {

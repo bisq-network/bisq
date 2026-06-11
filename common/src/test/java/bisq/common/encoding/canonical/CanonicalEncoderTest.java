@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,6 +179,31 @@ public class CanonicalEncoderTest {
 
         assertEquals(JAVA_11_HASH_MAP_ORDER,
                 readMapKeys(CanonicalEncoder.DEFAULT.encode(new Container(values), schema)));
+    }
+
+    @Test
+    public void mapStringToComposeUsesMapEntryCacheWhenSourceOptsIn() {
+        CountingCacheMap values = new CountingCacheMap();
+        values.put("b", new Value(2));
+        values.put("a", new Value(1));
+
+        CanonicalSchema<Container> schema = CanonicalSchema.<Container>newBuilder()
+                .mapStringToCompose(1,
+                        Container::getValues,
+                        VALUE_SCHEMA,
+                        TreeMapIterator.naturalOrder())
+                .build();
+
+        byte[] first = CanonicalEncoder.DEFAULT.encode(new Container(values), schema);
+        assertEquals(2, values.cacheWrites);
+
+        assertArrayEquals(first, CanonicalEncoder.DEFAULT.encode(new Container(values), schema));
+        assertEquals(2, values.cacheWrites);
+
+        values.put("b", new Value(3));
+
+        CanonicalEncoder.DEFAULT.encode(new Container(values), schema);
+        assertEquals(3, values.cacheWrites);
     }
 
     @Test
@@ -370,6 +396,34 @@ public class CanonicalEncoderTest {
 
         private List<Integer> getVersions() {
             return versions;
+        }
+    }
+
+    private static final class CountingCacheMap extends LinkedHashMap<String, Value>
+            implements CanonicalMapEntryByteCache<String, Value> {
+        private final Map<String, CachedMapEntryBytes> encodedMapEntryBytesByKey = new HashMap<>();
+        private int cacheWrites;
+
+        @Override
+        public byte[] getEncodedMapEntry(String canonicalKey, Value canonicalValue) {
+            CachedMapEntryBytes cached = encodedMapEntryBytesByKey.get(canonicalKey);
+            return cached != null && cached.value == canonicalValue ? cached.encodedMapEntry : null;
+        }
+
+        @Override
+        public void putEncodedMapEntry(String canonicalKey, Value canonicalValue, byte[] encodedMapEntry) {
+            encodedMapEntryBytesByKey.put(canonicalKey, new CachedMapEntryBytes(canonicalValue, encodedMapEntry));
+            cacheWrites++;
+        }
+    }
+
+    private static final class CachedMapEntryBytes {
+        private final Value value;
+        private final byte[] encodedMapEntry;
+
+        private CachedMapEntryBytes(Value value, byte[] encodedMapEntry) {
+            this.value = value;
+            this.encodedMapEntry = encodedMapEntry;
         }
     }
 
