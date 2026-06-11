@@ -313,6 +313,9 @@ public class RpcService {
     }
 
     public void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
         try {
             ListenableFuture<Integer> future = executor.submit(client::getBlockCount);
             Futures.addCallback(future, new FutureCallback<>() {
@@ -321,8 +324,10 @@ public class RpcService {
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Error at requestChainHeadHeight", throwable);
-                    UserThread.execute(() -> errorHandler.accept(throwable));
+                    if (!shutdownInProgress) {
+                        log.error("Error at requestChainHeadHeight", throwable);
+                        UserThread.execute(() -> errorHandler.accept(throwable));
+                    }
                 }
             }, MoreExecutors.directExecutor());
         } catch (RejectedExecutionException e) {
@@ -339,6 +344,9 @@ public class RpcService {
     void requestDtoBlock(int blockHeight,
                          Consumer<RawBlock> resultHandler,
                          Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
         try {
             ListenableFuture<RawBlock> future = executor.submit(() -> {
                 long startTs = System.currentTimeMillis();
@@ -358,8 +366,10 @@ public class RpcService {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Error at requestDtoBlock: blockHeight={}, error={}", blockHeight, throwable);
-                    UserThread.execute(() -> errorHandler.accept(throwable));
+                    if (!shutdownInProgress) {
+                        log.error("Error at requestDtoBlock: blockHeight={}, error={}", blockHeight, throwable);
+                        UserThread.execute(() -> errorHandler.accept(throwable));
+                    }
                 }
             }, MoreExecutors.directExecutor());
         } catch (RejectedExecutionException e) {
