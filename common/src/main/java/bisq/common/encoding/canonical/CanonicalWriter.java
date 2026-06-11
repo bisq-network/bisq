@@ -20,6 +20,7 @@ package bisq.common.encoding.canonical;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -32,6 +33,15 @@ public final class CanonicalWriter {
 
     public byte[] toByteArray() {
         return out.toByteArray();
+    }
+
+    /**
+     * Writes pre-encoded bytes directly to the output without adding field tags,
+     * wire types, lengths, or any other canonical encoding.
+     */
+    public void writeRawBytes(byte[] bytes) {
+        Objects.requireNonNull(bytes, "Canonical raw bytes must not be null");
+        out.write(bytes, 0, bytes.length);
     }
 
     public void writeInt32(int fieldNumber, int value) {

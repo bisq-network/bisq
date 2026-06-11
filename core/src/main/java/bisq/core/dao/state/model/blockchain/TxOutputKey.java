@@ -19,7 +19,8 @@ package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -30,19 +31,23 @@ import javax.annotation.concurrent.Immutable;
  * Used as key in maps in the daoState.
  */
 @Immutable
-@Value
+@EqualsAndHashCode
 public final class TxOutputKey implements ImmutableDaoStateModel, Comparable<Object> {
+    @Getter
     private final String txId;
+    @Getter
     private final int index;
+    private final transient String keyAsString;
 
     public TxOutputKey(String txId, int index) {
         this.txId = txId;
         this.index = index;
+        keyAsString = txId + ":" + index;
     }
 
     @Override
     public String toString() {
-        return txId + ":" + index;
+        return keyAsString;
     }
 
     public static TxOutputKey getKeyFromString(String keyAsString) {

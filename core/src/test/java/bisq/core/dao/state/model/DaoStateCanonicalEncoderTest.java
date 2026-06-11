@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalMapEntryByteCache;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.LegacyCollectorsToMapIterator;
 
@@ -39,6 +40,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DaoStateCanonicalEncoderTest {
     private static final int RANDOMIZED_TX_OUTPUT_KEY_COUNT = 50_000;
@@ -126,6 +130,15 @@ class DaoStateCanonicalEncoderTest {
     }
 
     @Test
+    void spentInfoMapOptsIntoCanonicalMapEntryCaching() {
+        DaoState daoState = getDaoStateWithMaps();
+        DaoState fromProto = DaoState.fromProto((protobuf.DaoState) daoState.toProtoMessage());
+
+        assertTrue(daoState.getSpentInfoMap() instanceof CanonicalMapEntryByteCache);
+        assertTrue(fromProto.getSpentInfoMap() instanceof CanonicalMapEntryByteCache);
+    }
+
+    @Test
     void genericCanonicalEncodingIncludesFullBlockList() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 
@@ -133,6 +146,59 @@ class DaoStateCanonicalEncoderTest {
 
         assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fieldNumbers(DaoState.SCHEMA));
         assertEquals(2, proto.getBlocksCount());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void spentInfoMapCachesAndInvalidatesEncodedMapField() {
+        DaoState daoState = getDaoStateWithMaps();
+        // DaoState maps TxOutputKey to its canonical string form before the encoder uses the map-entry cache.
+        CanonicalMapEntryByteCache<String, SpentInfo> cache =
+                (CanonicalMapEntryByteCache<String, SpentInfo>) daoState.getSpentInfoMap();
+        CanonicalSchema.Field<DaoState> spentInfoMapField = DaoState.STATE_HASH_CHAIN_SCHEMA.getFields().stream()
+                .filter(field -> field.getNumber() == 7)
+                .findFirst()
+                .orElseThrow();
+
+        assertNull(cache.getEncodedMap(spentInfoMapField));
+
+        daoState.getSerializedStateForHashChain();
+
+        assertNotNull(cache.getEncodedMap(spentInfoMapField));
+
+        daoState.getSpentInfoMap().put(new TxOutputKey("changed", 0), new SpentInfo(101, "changed", 0));
+
+        assertNull(cache.getEncodedMap(spentInfoMapField));
+    }
+
+    @Test
+    void spentInfoMapInvalidatesEncodedMapFieldForEntrySetIteratorRemove() throws Exception {
+        DaoState daoState = getDaoStateWithMaps();
+        int initialCount = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain())
+                .getSpentInfoMapCount();
+
+        var iterator = daoState.getSpentInfoMap().entrySet().iterator();
+        iterator.next();
+        iterator.remove();
+
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain());
+
+        assertEquals(initialCount - 1, proto.getSpentInfoMapCount());
+    }
+
+    @Test
+    void spentInfoMapInvalidatesEncodedMapFieldForSubMapClear() throws Exception {
+        DaoState daoState = getDaoStateWithMaps();
+        int initialCount = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain())
+                .getSpentInfoMapCount();
+
+        daoState.getSpentInfoMap()
+                .subMap(new TxOutputKey("k00", 0), true, new TxOutputKey("k02", 0), true)
+                .clear();
+
+        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChain());
+
+        assertEquals(initialCount - 3, proto.getSpentInfoMapCount());
     }
 
     @Test

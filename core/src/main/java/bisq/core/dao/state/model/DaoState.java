@@ -19,6 +19,7 @@ package bisq.core.dao.state.model;
 
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
+import bisq.core.dao.state.model.blockchain.SpentInfoMap;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
@@ -69,7 +70,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static DaoState getClone(DaoState daoState) {
@@ -129,7 +129,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
@@ -138,7 +137,7 @@ public class DaoState implements PersistablePayload, Canonical {
                 new LinkedList<>(),
                 new LinkedList<>(),
                 new TreeMap<>(),
-                new TreeMap<>(),
+                new SpentInfoMap(),
                 new ArrayList<>(),
                 new TreeMap<>(),
                 new ArrayList<>(),
@@ -150,7 +149,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private DaoState(int chainHeight,
@@ -168,7 +166,9 @@ public class DaoState implements PersistablePayload, Canonical {
         this.cycles = cycles;
 
         this.unspentTxOutputMap = unspentTxOutputMap;
-        this.spentInfoMap = spentInfoMap;
+        this.spentInfoMap = spentInfoMap instanceof SpentInfoMap ?
+                spentInfoMap :
+                new SpentInfoMap(spentInfoMap);
 
         this.confiscatedLockupTxList = confiscatedLockupTxList;
         this.issuanceMap = issuanceMap;
@@ -291,7 +291,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setChainHeight(int chainHeight) {
@@ -304,7 +303,15 @@ public class DaoState implements PersistablePayload, Canonical {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT);
+
+        long ts = System.currentTimeMillis();
+        byte[] encodedState = encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT);
+        log.trace("encodeCanonicalForStateHashChain at chain height {} took \n" +
+                        "{} ms for canonical.\n" +
+                        "spentInfoMap size={}",
+                getChainHeight(), System.currentTimeMillis() - ts,
+                spentInfoMap.size());
+        return encodedState;
     }
 
     // Only present for verifying that legacy implementation results in same hash as

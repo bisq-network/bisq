@@ -133,9 +133,40 @@ public final class CanonicalEncoder {
         }
 
         CanonicalSchema.MapEncoding mapEncoding = Objects.requireNonNull(field.getMapEncoding());
+        @Nullable
+        CanonicalMapEntryByteCache cache = source instanceof CanonicalMapEntryByteCache ?
+                (CanonicalMapEntryByteCache) source :
+                null;
+        if (cache != null) {
+            byte[] encodedMap = cache.getEncodedMap(field);
+            if (encodedMap != null) {
+                writer.writeRawBytes(encodedMap);
+                return;
+            }
+        }
+
+        // After a full-map cache miss, cache-enabled maps use a temporary writer to contain only the map field bytes,
+        // not the parent message. At the end we write the mapWriter bytes to the parent writer.
+        CanonicalWriter mapWriter = cache == null ? writer : new CanonicalWriter();
         List<Map.Entry<?, ?>> entries = mapEncoding.getEntries((Map) source);
-        mapEncoding.iterate(entries).forEachRemaining(entry ->
-                writer.writeMapEntry(field.getNumber(), encodeMapEntry((Map.Entry<?, ?>) entry, mapEncoding)));
+        mapEncoding.iterate(entries).forEachRemaining(entry -> {
+            Map.Entry<?, ?> mapEntry = (Map.Entry<?, ?>) entry;
+            byte[] encodedEntry = cache == null ?
+                    null :
+                    cache.getEncodedMapEntry(mapEntry.getKey(), mapEntry.getValue());
+            if (encodedEntry == null) {
+                encodedEntry = encodeMapEntry(mapEntry, mapEncoding);
+                if (cache != null) {
+                    cache.putEncodedMapEntry(mapEntry.getKey(), mapEntry.getValue(), encodedEntry);
+                }
+            }
+            mapWriter.writeMapEntry(field.getNumber(), encodedEntry);
+        });
+        if (cache != null) {
+            byte[] encodedMap = mapWriter.toByteArray();
+            cache.putEncodedMap(field, encodedMap);
+            writer.writeRawBytes(encodedMap);
+        }
     }
 
     private byte[] encodeMapEntry(Map.Entry<?, ?> entry, CanonicalSchema.MapEncoding<?, ?, ?, ?> mapEncoding) {
