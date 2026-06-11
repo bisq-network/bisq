@@ -377,6 +377,9 @@ public class RpcService {
                                    Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
                                            rawDtoBlockHandler,
                                    Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
         try {
             ListenableFuture<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
                     future = executor.submit(() -> {
@@ -399,8 +402,10 @@ public class RpcService {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Error at requestRawDtoBlock: blockHeight={}", blockHeight);
-                    UserThread.execute(() -> errorHandler.accept(throwable));
+                    if (!shutdownInProgress) {
+                        log.error("Error at requestRawDtoBlock: blockHeight={}", blockHeight);
+                        UserThread.execute(() -> errorHandler.accept(throwable));
+                    }
                 }
             }, MoreExecutors.directExecutor());
         } catch (RejectedExecutionException e) {
