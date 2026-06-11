@@ -40,6 +40,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DaoStateCanonicalEncoderTest {
@@ -144,6 +146,28 @@ class DaoStateCanonicalEncoderTest {
 
         assertEquals(List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fieldNumbers(DaoState.SCHEMA));
         assertEquals(2, proto.getBlocksCount());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void spentInfoMapCachesAndInvalidatesEncodedMapField() {
+        DaoState daoState = getDaoStateWithMaps();
+        CanonicalMapEntryByteCache<String, SpentInfo> cache =
+                (CanonicalMapEntryByteCache<String, SpentInfo>) daoState.getSpentInfoMap();
+        CanonicalSchema.Field<DaoState> spentInfoMapField = DaoState.STATE_HASH_CHAIN_SCHEMA.getFields().stream()
+                .filter(field -> field.getNumber() == 7)
+                .findFirst()
+                .orElseThrow();
+
+        assertNull(cache.getEncodedMap(spentInfoMapField));
+
+        daoState.getSerializedStateForHashChain();
+
+        assertNotNull(cache.getEncodedMap(spentInfoMapField));
+
+        daoState.getSpentInfoMap().put(new TxOutputKey("changed", 0), new SpentInfo(101, "changed", 0));
+
+        assertNull(cache.getEncodedMap(spentInfoMapField));
     }
 
     @Test

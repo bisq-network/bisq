@@ -133,11 +133,22 @@ public final class CanonicalEncoder {
         }
 
         CanonicalSchema.MapEncoding mapEncoding = Objects.requireNonNull(field.getMapEncoding());
-        List<Map.Entry<?, ?>> entries = mapEncoding.getEntries((Map) source);
         @Nullable
         CanonicalMapEntryByteCache cache = source instanceof CanonicalMapEntryByteCache ?
                 (CanonicalMapEntryByteCache) source :
                 null;
+        if (cache != null) {
+            byte[] encodedMap = cache.getEncodedMap(field);
+            if (encodedMap != null) {
+                writer.writeRawBytes(encodedMap);
+                return;
+            }
+        }
+
+        // At a cache hit we use a temporary mapWriter to contain only the map field bytes, not the parent message.
+        // At the end we write the mapWriter bytes to the parent writer.
+        CanonicalWriter mapWriter = cache == null ? writer : new CanonicalWriter();
+        List<Map.Entry<?, ?>> entries = mapEncoding.getEntries((Map) source);
         mapEncoding.iterate(entries).forEachRemaining(entry -> {
             Map.Entry<?, ?> mapEntry = (Map.Entry<?, ?>) entry;
             byte[] encodedEntry = cache == null ?
@@ -149,8 +160,13 @@ public final class CanonicalEncoder {
                     cache.putEncodedMapEntry(mapEntry.getKey(), mapEntry.getValue(), encodedEntry);
                 }
             }
-            writer.writeMapEntry(field.getNumber(), encodedEntry);
+            mapWriter.writeMapEntry(field.getNumber(), encodedEntry);
         });
+        if (cache != null) {
+            byte[] encodedMap = mapWriter.toByteArray();
+            cache.putEncodedMap(field, encodedMap);
+            writer.writeRawBytes(encodedMap);
+        }
     }
 
     private byte[] encodeMapEntry(Map.Entry<?, ?> entry, CanonicalSchema.MapEncoding<?, ?, ?, ?> mapEncoding) {

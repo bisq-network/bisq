@@ -21,6 +21,14 @@ import javax.annotation.Nullable;
 
 public interface CanonicalMapEntryByteCache<K, V> {
     @Nullable
+    default byte[] getEncodedMap(Object cacheKey) {
+        return null;
+    }
+
+    default void putEncodedMap(Object cacheKey, byte[] encodedMap) {
+    }
+
+    @Nullable
     byte[] getEncodedMapEntry(K canonicalKey, V canonicalValue);
 
     void putEncodedMapEntry(K canonicalKey, V canonicalValue, byte[] encodedMapEntry);

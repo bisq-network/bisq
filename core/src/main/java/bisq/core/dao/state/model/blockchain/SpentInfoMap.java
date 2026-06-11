@@ -20,6 +20,7 @@ package bisq.core.dao.state.model.blockchain;
 import bisq.common.encoding.canonical.CanonicalMapEntryByteCache;
 
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -31,11 +32,27 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
 
     private final transient Map<String, CachedMapEntryBytes> encodedMapEntryBytesByKey = new HashMap<>();
 
+    // The encoded-map cache stores the bytes for one complete canonical map field, including that field's tags.
+    // It must therefore be keyed by the exact CanonicalSchema.Field instance, not by structural equality: the same
+    // source map can be encoded differently by another schema field number or map encoding.
+    private final transient Map<Object, byte[]> encodedMapBytesByCacheKey = new IdentityHashMap<>();
+
     public SpentInfoMap() {
     }
 
     public SpentInfoMap(Map<TxOutputKey, SpentInfo> source) {
         putAll(source);
+    }
+
+    @Override
+    @Nullable
+    public byte[] getEncodedMap(Object cacheKey) {
+        return encodedMapBytesByCacheKey.get(cacheKey);
+    }
+
+    @Override
+    public void putEncodedMap(Object cacheKey, byte[] encodedMap) {
+        encodedMapBytesByCacheKey.put(cacheKey, encodedMap);
     }
 
     @Override
@@ -51,9 +68,48 @@ public final class SpentInfoMap extends TreeMap<TxOutputKey, SpentInfo>
     }
 
     @Override
+    public SpentInfo put(TxOutputKey key, SpentInfo value) {
+        encodedMapBytesByCacheKey.clear();
+        return super.put(key, value);
+    }
+
+    @Override
+    public void putAll(Map<? extends TxOutputKey, ? extends SpentInfo> map) {
+        if (!map.isEmpty()) {
+            encodedMapBytesByCacheKey.clear();
+        }
+        super.putAll(map);
+    }
+
+    @Override
+    public SpentInfo remove(Object key) {
+        encodedMapBytesByCacheKey.clear();
+        return super.remove(key);
+    }
+
+    @Override
     public void clear() {
+        encodedMapBytesByCacheKey.clear();
         encodedMapEntryBytesByKey.clear();
         super.clear();
+    }
+
+    @Override
+    public Map.Entry<TxOutputKey, SpentInfo> pollFirstEntry() {
+        Map.Entry<TxOutputKey, SpentInfo> entry = super.pollFirstEntry();
+        if (entry != null) {
+            encodedMapBytesByCacheKey.clear();
+        }
+        return entry;
+    }
+
+    @Override
+    public Map.Entry<TxOutputKey, SpentInfo> pollLastEntry() {
+        Map.Entry<TxOutputKey, SpentInfo> entry = super.pollLastEntry();
+        if (entry != null) {
+            encodedMapBytesByCacheKey.clear();
+        }
+        return entry;
     }
 
     private static final class CachedMapEntryBytes {

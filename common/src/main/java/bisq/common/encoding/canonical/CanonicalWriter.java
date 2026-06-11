@@ -34,6 +34,10 @@ public final class CanonicalWriter {
         return out.toByteArray();
     }
 
+    public void writeRawBytes(byte[] bytes) {
+        out.write(bytes, 0, bytes.length);
+    }
+
     public void writeInt32(int fieldNumber, int value) {
         if (value != 0) {
             writeInt32Value(fieldNumber, value);
