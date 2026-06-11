@@ -69,7 +69,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static DaoState getClone(DaoState daoState) {
@@ -129,7 +128,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
@@ -150,7 +148,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private DaoState(int chainHeight,
@@ -291,7 +288,6 @@ public class DaoState implements PersistablePayload, Canonical {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
-
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setChainHeight(int chainHeight) {
@@ -304,7 +300,15 @@ public class DaoState implements PersistablePayload, Canonical {
         // Reorgs are handled by rebuilding the hash chain from last snapshot.
         // Using the full blocks list becomes quite heavy. 7000 blocks are
         // about 1.4 MB and creating the hash takes 30 sec. By using just the last block we reduce the time to 7 sec.
-        return encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT);
+
+        long ts = System.currentTimeMillis();
+        byte[] encodedState = encodeCanonicalForStateHashChain(CanonicalEncoder.DEFAULT);
+        log.info("encodeCanonicalForStateHashChain at chain height {} took \n" +
+                        "{} ms for canonical.\n" +
+                        "spentInfoMap size={}",
+                getChainHeight(), System.currentTimeMillis() - ts,
+                spentInfoMap.size());
+        return encodedState;
     }
 
     // Only present for verifying that legacy implementation results in same hash as

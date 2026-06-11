@@ -24,17 +24,26 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-@Value
+@EqualsAndHashCode
+@Getter
 public final class SpentInfo implements PersistablePayload, ImmutableDaoStateModel, Canonical {
     private final long blockHeight;
     // Spending tx
     private final String txId;
     private final int inputIndex;
+
+    public SpentInfo(long blockHeight, String txId, int inputIndex) {
+        this.blockHeight = blockHeight;
+        this.txId = txId;
+        this.inputIndex = inputIndex;
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
