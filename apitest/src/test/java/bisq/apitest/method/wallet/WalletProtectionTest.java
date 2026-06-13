@@ -90,13 +90,14 @@ public class WalletProtectionTest extends DockerMethodTest {
     @Order(7)
     public void testUnlockWalletTimeoutOverride() {
         // Override a short unlock window with a longer one before the first expires;
-        // wallet must remain unlocked past the original timeout. The 1s sleep below
-        // sits past the original 1s window but before the new 3s window — the only
-        // way to observe the override actually took effect.
+        // wallet must remain unlocked past the original timeout. The 1.5s sleep sits
+        // past the original 1s window — proving the override took effect — while the
+        // new window is set far wider (60s) so a CI stall between the override and the
+        // balance read cannot cross the re-lock deadline and flake the test.
         aliceClient.unlockWallet(PW1, 1);
-        aliceClient.unlockWallet(PW1, 3); // override before 1s expires
-        sleep(1_500);                     // past original (1s), inside new (3s)
-        aliceClient.getBtcBalances();     // must succeed
+        aliceClient.unlockWallet(PW1, 60); // override before 1s expires
+        sleep(1_500);                      // past original (1s), far inside new (60s)
+        aliceClient.getBtcBalances();      // must succeed
     }
 
     @Test

@@ -95,9 +95,9 @@ public class TradeScenarioTest extends DaoTestBase {
     @Order(1)
     public void aliceSellsBtc_bobTakes_v1() {
         ensureAccounts();
-        OfferInfo offer = alice.createFixedPricedOffer(
+        OfferInfo offer = DaoTestUtils.placeV1OfferWhenReady(() -> alice.createFixedPricedOffer(
                 "SELL", CURRENCY, BTC_AMOUNT_SATS, BTC_AMOUNT_SATS, FIXED_FIAT_PRICE,
-                SECURITY_DEPOSIT_PCT, aliceF2F.getId(), "BTC");
+                SECURITY_DEPOSIT_PCT, aliceF2F.getId(), "BTC"));
         runV1Trade(offer, /*bobIsBtcBuyer=*/ true);
     }
 
@@ -105,9 +105,9 @@ public class TradeScenarioTest extends DaoTestBase {
     @Order(2)
     public void aliceBuysBtc_bobTakes_v1() {
         ensureAccounts();
-        OfferInfo offer = alice.createFixedPricedOffer(
+        OfferInfo offer = DaoTestUtils.placeV1OfferWhenReady(() -> alice.createFixedPricedOffer(
                 "BUY", CURRENCY, BTC_AMOUNT_SATS, BTC_AMOUNT_SATS, FIXED_FIAT_PRICE,
-                SECURITY_DEPOSIT_PCT, aliceF2F.getId(), "BTC");
+                SECURITY_DEPOSIT_PCT, aliceF2F.getId(), "BTC"));
         runV1Trade(offer, /*bobIsBtcBuyer=*/ false);
     }
 

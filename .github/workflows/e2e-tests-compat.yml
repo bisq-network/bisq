@@ -1,0 +1,154 @@
+name: e2e-tests-compat
+
+# Cross-version compatibility run of the e2e suite: identical to e2e-tests.yml
+# except one peer (bob) runs the latest tagged release instead of master, so the
+# DAO + trade scenarios exercise release<->master P2P/protocol compatibility.
+#
+# Dispatch-only — it builds an extra (release) source tree and is meaningful only
+# on demand (e.g. before cutting a release), not on every PR.
+on:
+  workflow_dispatch:
+    inputs:
+      release_ref:
+        description: "Git tag/ref for the release peer (default: latest tag)"
+        required: false
+        default: ""
+
+jobs:
+  e2e-tests-compat:
+    name: Run e2e suite with one release-version peer
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          submodules: true
+          persist-credentials: false
+          # Full history + tags so we can check out the release tag into a worktree.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: zulu
+          java-version: '21.0.6'
+          check-latest: false
+
+      - name: Gradle cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Pre-pull bitcoind image
+        run: docker pull lnliz/bitcoind:29.3 &
+
+      # Master (current branch) install dists + dao-setup — the stack harness and
+      # the seednode/arb/alice peers all run these.
+      - name: Build master install dists + dao-setup
+        run: |
+          ./gradlew --no-daemon \
+            :seednode:installDist :daemon:installDist :cli:installDist \
+            :apitest:installDaoSetup
+
+      # Resolve the release ref (explicit input, else latest tag) and build its
+      # install dists in a detached worktree so the master checkout is untouched.
+      # The release app binaries are staged where Dockerfile.bisq-release expects.
+      - name: Build release install dists
+        # Pass the user input through the environment, never interpolated into the
+        # script body — a ${{ }} expansion in `run:` would allow shell injection.
+        env:
+          RAW_REF: ${{ github.event.inputs.release_ref }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${RAW_REF}" ]]; then
+            # Validate the (untrusted) input resolves to a real commit before use.
+            git rev-parse --verify --quiet "${RAW_REF}^{commit}" >/dev/null \
+              || { echo "Invalid release_ref: ${RAW_REF}" >&2; exit 1; }
+            REF="${RAW_REF}"
+          else
+            REF="$(git describe --tags --abbrev=0)"
+          fi
+          echo "Building release peer from ref: ${REF}"
+          echo "RELEASE_REF=${REF}" >> "${GITHUB_ENV}"
+
+          WORKTREE="${RUNNER_TEMP}/bisq-release"
+          git worktree add --detach "${WORKTREE}" "${REF}"
+          git -C "${WORKTREE}" submodule update --init --recursive
+
+          # Build with the release tree's own gradle wrapper.
+          ( cd "${WORKTREE}" && ./gradlew --no-daemon \
+              :seednode:installDist :daemon:installDist :cli:installDist )
+
+          DEST="apitest/docker/.release-dist"
+          rm -rf "${DEST}"
+          mkdir -p "${DEST}"
+          cp -r "${WORKTREE}/seednode/build/install/seednode" "${DEST}/seednode"
+          cp -r "${WORKTREE}/daemon/build/install/daemon"     "${DEST}/daemon"
+          cp -r "${WORKTREE}/cli/build/install/cli"           "${DEST}/cli"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+
+      - name: Cache Docker image layers
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('apitest/docker/Dockerfile.*', 'apitest/docker/*entrypoint.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Build bitcoind + master daemon images, then the release image FROM the
+      # master image with only the app binaries swapped (Dockerfile.bisq-release).
+      - name: Build docker images with layer cache
+        run: |
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t bisq-bitcoind:ci \
+            -f apitest/docker/Dockerfile.bitcoind .
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t bisq-daemon:ci \
+            -f apitest/docker/Dockerfile.bisq .
+          # Release peer image: inherits the master harness, swaps app binaries.
+          docker buildx build \
+            --build-arg BASE_IMAGE=bisq-daemon:ci \
+            --load \
+            -t bisq-daemon:release \
+            -f apitest/docker/Dockerfile.bisq-release .
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Run e2e test stack (compose up + test, bob on ${{ env.RELEASE_REF }})
+        env:
+          COMPOSE_OVERRIDE_FILE: apitest/docker/dao-compose.compat.yml
+          # Skip the deny-list policy phase: it injects the master-only
+          # --denyListResource daemon flag, which an older release peer does not
+          # recognize and exits on. It tests a single-node master feature, not
+          # cross-version compatibility.
+          RUN_POLICY_E2E_TESTS: "false"
+        run: apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build
+
+      - name: Upload container logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-tests-compat-logs
+          path: apitest/docker/logs
+          retention-days: 7
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-tests-compat-reports
+          path: apitest/build/reports/tests
+          retention-days: 7

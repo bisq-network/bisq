@@ -87,10 +87,10 @@ public class DaoStaysInSyncTest extends DaoTestBase {
         dao.awaitBlindVotePropagation(bob, 2, "bob");
         assertInSync("after blind votes confirmed + propagated");
 
-        // VOTE_REVEAL: each node auto-broadcasts its reveal tx; confirm both.
+        // VOTE_REVEAL: each node auto-broadcasts its reveal tx; confirm both together in one
+        // in-phase block (see confirmAutoRevealsForAll).
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_VOTE_REVEAL);
-        dao.confirmAutoRevealsFor(alice);
-        dao.confirmAutoRevealsFor(bob);
+        dao.confirmAutoRevealsForAll(alice, bob);
         assertInSync("after vote reveal");
 
         // RESULT: the proposal both accepted must be accepted, and both nodes must still

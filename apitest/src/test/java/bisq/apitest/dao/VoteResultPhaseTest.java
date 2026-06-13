@@ -114,9 +114,9 @@ public class VoteResultPhaseTest extends DaoTestBase {
         dao.awaitBlindVotePropagation(alice, 2, "alice");
         dao.awaitBlindVotePropagation(bob, 2, "bob");
 
+        // Confirm both reveals in one block so neither crosses out of the 2-block phase.
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_VOTE_REVEAL);
-        dao.confirmAutoRevealsFor(alice);
-        dao.confirmAutoRevealsFor(bob);
+        dao.confirmAutoRevealsForAll(alice, bob);
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_RESULT);
         dao.generateBlocks(1);
 
@@ -163,10 +163,13 @@ public class VoteResultPhaseTest extends DaoTestBase {
             dao.awaitBlindVotePropagation(bob, expectedBlindVotes, "bob");
         }
 
+        // Confirm every voter's reveal together in one in-phase block — mining one block per
+        // voter would push a later reveal past the 2-block regtest VOTE_REVEAL phase and drop
+        // that vote (see confirmAutoRevealsForAll).
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_VOTE_REVEAL);
-        // Bisq auto-broadcasts a reveal tx on entering VOTE_REVEAL; inject + confirm it.
-        if (aliceBv != null) dao.confirmAutoRevealsFor(alice);
-        if (bobBv != null) dao.confirmAutoRevealsFor(bob);
+        if (aliceBv != null && bobBv != null) dao.confirmAutoRevealsForAll(alice, bob);
+        else if (aliceBv != null) dao.confirmAutoRevealsForAll(alice);
+        else if (bobBv != null) dao.confirmAutoRevealsForAll(bob);
 
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_RESULT);
         // Stay in RESULT (2 blocks) long enough for VoteResultService to evaluate.

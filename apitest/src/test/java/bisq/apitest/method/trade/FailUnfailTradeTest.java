@@ -50,9 +50,9 @@ public class FailUnfailTradeTest extends DockerTradeTest {
     @Test
     public void testFailAndUnFailBuyBTCTrade() {
         ensureF2FAccounts("US");
-        OfferInfo offer = aliceClient.createFixedPricedOffer(BUY.name(),
+        OfferInfo offer = DaoTestUtils.placeV1OfferWhenReady(() -> aliceClient.createFixedPricedOffer(BUY.name(),
                 USD, 1_250_000L, 1_250_000L, "50000",
-                defaultBuyerSecurityDepositPct.get(), alicesF2F.getId(), BTC);
+                defaultBuyerSecurityDepositPct.get(), alicesF2F.getId(), BTC));
         TradeInfo trade = driveUpToDepositConfirmed(offer);
         assertFailUnfailCycle(trade.getTradeId());
     }
@@ -60,9 +60,9 @@ public class FailUnfailTradeTest extends DockerTradeTest {
     @Test
     public void testFailAndUnFailSellBTCTrade() {
         ensureF2FAccounts("US");
-        OfferInfo offer = aliceClient.createFixedPricedOffer(SELL.name(),
+        OfferInfo offer = DaoTestUtils.placeV1OfferWhenReady(() -> aliceClient.createFixedPricedOffer(SELL.name(),
                 USD, 1_250_000L, 1_250_000L, "50000",
-                defaultBuyerSecurityDepositPct.get(), alicesF2F.getId(), BTC);
+                defaultBuyerSecurityDepositPct.get(), alicesF2F.getId(), BTC));
         TradeInfo trade = driveUpToDepositConfirmed(offer);
         assertFailUnfailCycle(trade.getTradeId());
     }
