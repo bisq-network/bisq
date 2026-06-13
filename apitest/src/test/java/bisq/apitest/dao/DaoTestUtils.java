@@ -21,6 +21,7 @@ import bisq.cli.GrpcClient;
 
 import bisq.proto.grpc.DaoPhaseEnum;
 import bisq.proto.grpc.GetCycleInfoReply;
+import bisq.proto.grpc.OfferInfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -153,6 +155,14 @@ public class DaoTestUtils {
      * </ol>
      */
     public void confirmTx(GrpcClient owner, String txId) {
+        injectRawTx(owner, txId);
+        generateBlocks(1);
+    }
+
+    /** Push a Bisq-broadcast tx into bitcoind's mempool WITHOUT mining (see {@link #confirmTx}
+     *  for the inject-vs-P2P-relay rationale). Lets a caller stage several txs and then
+     *  confirm them all in a single block. Dedupes if bitcoinj's relay already landed it. */
+    private void injectRawTx(GrpcClient owner, String txId) {
         String hex = owner.getRawTransaction(txId);
         if (hex == null || hex.isEmpty()) {
             throw new AssertionError("daemon does not know tx " + txId
@@ -169,7 +179,6 @@ public class DaoTestUtils {
                     || msg.contains("inserttx");
             if (!dedupe) throw ex;
         }
-        generateBlocks(1);
     }
 
     /** Convenience: confirm a tx owned by {@code alice}. */
@@ -216,6 +225,37 @@ public class DaoTestUtils {
         return revealTxIds;
     }
 
+    /**
+     * Confirm every owner's auto-broadcast vote-reveal tx together in a SINGLE block.
+     *
+     * <p>A reveal tx only counts toward the result if it is confirmed inside the
+     * VOTE_REVEAL phase — just 2 blocks on regtest ({@code Param.PHASE_VOTE_REVEAL}).
+     * Confirming one owner per call (repeated {@link #confirmAutoRevealsFor}) mines one
+     * block each, so a second voter's reveal lands in the block that crosses out of the
+     * phase and its vote is silently dropped from the tally. Staging all reveals into the
+     * mempool and mining once keeps them in the same in-phase block.
+     *
+     * <p>Call right after entering VOTE_REVEAL ({@code advanceToPhase(DAO_PHASE_VOTE_REVEAL)}
+     * lands on the phase's first block): the single block this mines is then the phase's
+     * second/last block, still in-phase.
+     */
+    public void confirmAutoRevealsForAll(GrpcClient... owners) {
+        java.util.List<String> injected = new java.util.ArrayList<>();
+        for (GrpcClient owner : owners) {
+            await(() -> owner.getMyVotes().getVotesList().stream()
+                            .anyMatch(v -> !v.getRevealTxId().isEmpty()),
+                    10_000, "auto-reveal tx broadcast");
+            for (bisq.proto.grpc.MyVoteInfo v : owner.getMyVotes().getVotesList()) {
+                String revealTxId = v.getRevealTxId();
+                if (!revealTxId.isEmpty() && !injected.contains(revealTxId)) {
+                    injectRawTx(owner, revealTxId);
+                    injected.add(revealTxId);
+                }
+            }
+        }
+        generateBlocks(1);
+    }
+
     public void awaitDaoStateReady(GrpcClient client, String label) {
         // isDaoStateInSync also checks consensus with seed node — but seed and daemon
         // can legitimately disagree on the *proposal payload set* (P2P gossip races)
@@ -229,6 +269,59 @@ public class DaoTestUtils {
                 return false;
             }
         }, 60_000, "DAO state ready on " + label);
+    }
+
+    /**
+     * Place a v1 offer, retrying while {@code ValidateOffer} rejects it because the maker
+     * has not yet observed an available mediator + refund agent.
+     *
+     * <p>Those agents are registered on the arb node at stack startup and reach the maker
+     * via P2P gossip. On a freshly reset stack the maker's very first {@code createoffer}
+     * can run before that payload arrives, so {@code ValidateOffer.checkDisputeAgentAvailability}
+     * fails ("no accepted mediator" / "no refund agent") and the call throws. {@code ValidateOffer}
+     * is the first task in the place-offer protocol — it runs before the maker-fee tx is
+     * built and before any funds are reserved — so a rejected attempt leaves no offer and no
+     * wallet state, making retries side-effect free.
+     *
+     * <p>Only the dispute-agent race is retried: every other {@code ValidateOffer} check is
+     * deterministic in the request, so a genuinely bad offer fails identically on each attempt
+     * and surfaces at the timeout. Gate on the placement succeeding; the timeout is the safety net.
+     */
+    public static OfferInfo placeV1OfferWhenReady(Supplier<OfferInfo> placeOffer) {
+        long deadline = System.currentTimeMillis() + 60_000;
+        RuntimeException last = null;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                return placeOffer.get();
+            } catch (RuntimeException ex) {
+                if (!isMakerNotYetReadyForOffer(ex)) throw ex;
+                last = ex;
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+        throw new AssertionError("offer placement never accepted within 60s — maker may never "
+                + "have received the mediator/refund-agent payloads", last);
+    }
+
+    /**
+     * True if {@code ex} is a place-offer {@code ValidateOffer} failure.
+     *
+     * <p>The daemon collapses every ValidateOffer failure to a single lowercased line
+     * ("...at task: validateoffer") before it reaches the gRPC client — {@code Task.failed}
+     * does not append the cause and {@code GrpcExceptionHandler} keeps only the last line —
+     * so the specific reason ("no accepted mediator", etc.) is never transmitted and cannot
+     * be matched. The dispute-agent race is the only non-deterministic ValidateOffer
+     * rejection for a well-formed offer; a genuinely invalid offer fails identically on
+     * every retry and surfaces when {@link #placeV1OfferWhenReady} times out.
+     */
+    private static boolean isMakerNotYetReadyForOffer(RuntimeException ex) {
+        String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+        return msg.contains("validateoffer");
     }
 
     public static void await(BooleanSupplier cond, long timeoutMillis, String what) {

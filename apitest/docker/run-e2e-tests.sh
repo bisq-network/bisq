@@ -61,6 +61,16 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COMPOSE_FILE="${SCRIPT_DIR}/dao-compose.yml"
+# Optional compose override layered on top of the base file (e.g.
+# dao-compose.compat.yml, which swaps one peer to the release image). Every
+# `docker compose` call uses COMPOSE_ARGS so the override applies to up/down/build.
+COMPOSE_OVERRIDE_FILE="${COMPOSE_OVERRIDE_FILE:-}"
+COMPOSE_ARGS=(-f "${COMPOSE_FILE}")
+if [[ -n "${COMPOSE_OVERRIDE_FILE}" ]]; then
+  [[ -f "${COMPOSE_OVERRIDE_FILE}" ]] \
+    || { echo "[ERROR] COMPOSE_OVERRIDE_FILE not found: ${COMPOSE_OVERRIDE_FILE}" >&2; exit 2; }
+  COMPOSE_ARGS+=(-f "${COMPOSE_OVERRIDE_FILE}")
+fi
 LOGS_DIR="${SCRIPT_DIR}/logs"
 GRADLE="${GRADLE:-${REPO_ROOT}/gradlew}"
 PID_FILE="${PID_FILE:-/tmp/bisq-e2e-tests.pid}"
@@ -155,7 +165,7 @@ assert_all_running() {
 
 # Stop containers + remove volumes + sweep any straggler containers by name.
 teardown_stack() {
-  docker compose -f "${COMPOSE_FILE}" down -v --remove-orphans 2>/dev/null || true
+  docker compose "${COMPOSE_ARGS[@]}" down -v --remove-orphans 2>/dev/null || true
   # Belt-and-braces: catch any leftover containers (e.g. from a run with a different
   # COMPOSE_PROJECT_NAME) that would otherwise block the port reclaim below.
   for c in "${ALL_CONTAINERS[@]}"; do
@@ -167,7 +177,7 @@ teardown_stack() {
 # (or 'started' if no healthcheck). On failure, dump per-container state + logs
 # and fatal-exit.
 start_stack() {
-  if ! docker compose -f "${COMPOSE_FILE}" up -d --wait --wait-timeout 240; then
+  if ! docker compose "${COMPOSE_ARGS[@]}" up -d --wait --wait-timeout 240; then
     err "compose up failed; showing state + last 80 log lines for every container:"
     for c in "${ALL_CONTAINERS[@]}"; do
       local s; s="$(container_status "${c}")"
@@ -362,7 +372,7 @@ cleanup() {
     teardown_stack
   else
     log "Stack left running (--keep-up). Tear down with:"
-    log "  docker compose -f ${COMPOSE_FILE} down -v"
+    log "  docker compose ${COMPOSE_ARGS[*]} down -v"
   fi
   rm -f "${PID_FILE}" "${TIMEOUT_MARKER}"
   log "==> Exiting with code ${exit_code}"
@@ -376,13 +386,17 @@ trap cleanup EXIT INT TERM HUP QUIT
 
 if [[ "${SKIP_DOCKER_BUILD}" -eq 1 ]]; then
   step "Skipping docker build (--skip-docker-build); verifying images present"
-  for img in bisq-bitcoind:ci bisq-daemon:ci; do
+  REQUIRED_IMAGES=(bisq-bitcoind:ci bisq-daemon:ci)
+  # The compat override references bisq-daemon:release; it has no build: stanza so
+  # it must already exist (built by the compat workflow before invoking us).
+  [[ -n "${COMPOSE_OVERRIDE_FILE}" ]] && REQUIRED_IMAGES+=(bisq-daemon:release)
+  for img in "${REQUIRED_IMAGES[@]}"; do
     docker image inspect "${img}" >/dev/null 2>&1 \
       || fatal "image '${img}' missing; rerun without --skip-docker-build"
   done
 else
   step "Building docker images"
-  docker compose -f "${COMPOSE_FILE}" build || fatal "image build failed"
+  docker compose "${COMPOSE_ARGS[@]}" build || fatal "image build failed"
   for img in bisq-bitcoind:ci bisq-daemon:ci; do
     docker image inspect "${img}" >/dev/null 2>&1 \
       || fatal "image '${img}' not present after build (check compose 'image:' / 'build:' fields)"

@@ -17,6 +17,8 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.apitest.dao.DaoTestUtils;
+
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.TradeInfo;
 
@@ -44,9 +46,9 @@ public class TakeSellXMROfferTest extends DockerTradeTest {
     public void testTakeAlicesBuyBTCForXMROffer() {
         ensureXmrAccounts();
 
-        OfferInfo offer = aliceClient.createFixedPricedOffer(BUY.name(),
+        OfferInfo offer = DaoTestUtils.placeV1OfferWhenReady(() -> aliceClient.createFixedPricedOffer(BUY.name(),
                 XMR, 1_250_000L, 1_000_000L, "0.00455500",
-                defaultBuyerSecurityDepositPct.get(), alicesXmrAcct.getId(), BSQ);
+                defaultBuyerSecurityDepositPct.get(), alicesXmrAcct.getId(), BSQ));
         // Maker fee currency may be auto-converted by the daemon — don't assert.
         mineBlocks(1);
         awaitOfferActivated(offer.getId());

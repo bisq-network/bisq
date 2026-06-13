@@ -67,8 +67,7 @@ public class FullCycleScenarioTest extends DaoTestBase {
         dao.awaitBlindVotePropagation(alice, 2, "alice");
         dao.awaitBlindVotePropagation(bob, 2, "bob");
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_VOTE_REVEAL);
-        dao.confirmAutoRevealsFor(alice);
-        dao.confirmAutoRevealsFor(bob);
+        dao.confirmAutoRevealsForAll(alice, bob);
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_RESULT);
         dao.generateBlocks(1);
 
@@ -117,8 +116,7 @@ public class FullCycleScenarioTest extends DaoTestBase {
         dao.awaitBlindVotePropagation(alice, 2, "alice");
         dao.awaitBlindVotePropagation(bob, 2, "bob");
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_VOTE_REVEAL);
-        dao.confirmAutoRevealsFor(alice);
-        dao.confirmAutoRevealsFor(bob);
+        dao.confirmAutoRevealsForAll(alice, bob);
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_RESULT);
         dao.generateBlocks(1);
         return p;

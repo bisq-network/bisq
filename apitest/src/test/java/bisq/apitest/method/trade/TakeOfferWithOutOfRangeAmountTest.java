@@ -17,6 +17,8 @@
 
 package bisq.apitest.method.trade;
 
+import bisq.apitest.dao.DaoTestUtils;
+
 import bisq.proto.grpc.OfferInfo;
 
 import io.grpc.StatusRuntimeException;
@@ -48,10 +50,10 @@ public class TakeOfferWithOutOfRangeAmountTest extends DockerTradeTest {
     public void testTakeOfferWithInvalidAmountParam() {
         ensureF2FAccounts("US");
 
-        OfferInfo offer = aliceClient.createFixedPricedOffer(BUY.name(),
+        OfferInfo offer = DaoTestUtils.placeV1OfferWhenReady(() -> aliceClient.createFixedPricedOffer(BUY.name(),
                 USD, 1_250_000L, 1_000_000L, "50000",
                 defaultBuyerSecurityDepositPct.get(),
-                alicesF2F.getId(), BTC);
+                alicesF2F.getId(), BTC));
 
         awaitOfferActivated(offer.getId());
         awaitBobSeesOffer(offer.getId(), USD);
