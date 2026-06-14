@@ -170,6 +170,14 @@ class CoreWalletsService {
         return daoFacade.isDaoStateReadyAndInSync();
     }
 
+    boolean isChainHeightSyncedWithinTolerance() {
+        return btcWalletService.isChainHeightSyncedWithinTolerance();
+    }
+
+    int getBestChainHeight() {
+        return btcWalletService.getBestChainHeight();
+    }
+
     BalancesInfo getBalances(String currencyCode) {
         verifyWalletCurrencyCodeIsValid(currencyCode);
         verifyWalletsAreAvailable();

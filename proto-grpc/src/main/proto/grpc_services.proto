@@ -173,6 +173,9 @@ service Wallets {
     // Get status of the DAO.
     rpc GetDaoStatus (GetDaoStatusRequest) returns (GetDaoStatusReply) {
     }
+    // Get the bitcoinj wallet's chain-sync status (height + within-tolerance flag).
+    rpc GetWalletSyncStatus (GetWalletSyncStatusRequest) returns (GetWalletSyncStatusReply) {
+    }
     // Get the Bisq wallet's current BSQ and BTC balances.
     rpc GetBalances (GetBalancesRequest) returns (GetBalancesReply) {
     }

@@ -538,7 +538,24 @@ public class WalletsSetup {
     public boolean isChainHeightSyncedWithinTolerance() {
         int peersChainHeight = PeerGroup.getMostCommonChainHeight(connectedPeers.get());
         int bestChainHeight = walletConfig.chain().getBestChainHeight();
-        if (Math.abs(peersChainHeight - bestChainHeight) <= 3) {
+        if (params.getId().equals(NetworkParameters.ID_REGTEST)) {
+            // Regtest mines blocks in bursts far faster than bitcoinj refreshes a peer's
+            // tracked best height, so our own downloaded chain height routinely runs AHEAD of
+            // the height the PeerGroup last recorded for the peer. Being ahead is never a real
+            // out-of-sync condition — we only extend the chain with blocks a peer served us, so
+            // bestChainHeight cannot outrun the true network height; "ahead of the tracked peer
+            // height" just means stale tracking. The symmetric Math.abs() check below then
+            // spuriously reports "not synced" while the wallet is fully at the chain tip, making
+            // makers NACK offer-availability requests ("chain is not synced") in rapid-mining
+            // e2e tests. Treat at-or-ahead as synced; only a genuine lag (> tolerance behind)
+            // is unsynced. Require a known peer height (> 0) so a disconnected wallet still
+            // reports not-synced. Scoped to regtest: at mainnet/testnet block cadence the
+            // tracking lag never approaches the 3-block window, so production keeps the original
+            // symmetric tolerance unchanged.
+            if (peersChainHeight > 0 && bestChainHeight >= peersChainHeight - 3) {
+                return true;
+            }
+        } else if (Math.abs(peersChainHeight - bestChainHeight) <= 3) {
             return true;
         }
         log.warn("Our chain height: {} is out of sync with peer nodes chain height: {}", chainHeight.get(), peersChainHeight);
