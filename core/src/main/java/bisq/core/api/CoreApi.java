@@ -394,6 +394,14 @@ public class CoreApi {
         return walletsService.isDaoStateReadyAndInSync();
     }
 
+    public boolean isChainHeightSyncedWithinTolerance() {
+        return walletsService.isChainHeightSyncedWithinTolerance();
+    }
+
+    public int getBestChainHeight() {
+        return walletsService.getBestChainHeight();
+    }
+
     public BalancesInfo getBalances(String currencyCode) {
         return walletsService.getBalances(currencyCode);
     }

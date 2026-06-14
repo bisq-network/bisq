@@ -2,6 +2,11 @@ name: e2e-tests
 
 on:
   workflow_dispatch:
+    inputs:
+      run_long_running_tests:
+        description: "Run ONLY the long-running soak/coverage tests (@Tag(\"longrunning\")); skips the normal suite"
+        type: boolean
+        default: false
   pull_request:
     paths:
       # Modules whose source is directly compiled into the e2e stack.
@@ -101,6 +106,10 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Run e2e test stack (compose up + test)
+        # Empty on pull_request → run-e2e-tests.sh defaults it to false (normal suite,
+        # long-running tests excluded). Set true via workflow_dispatch to run ONLY them.
+        env:
+          RUN_LONG_RUNNING_TESTS: ${{ inputs.run_long_running_tests }}
         run: apitest/docker/run-e2e-tests.sh --skip-build --skip-docker-build
 
       - name: Upload container logs

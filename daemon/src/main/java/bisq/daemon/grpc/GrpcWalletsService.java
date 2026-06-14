@@ -41,6 +41,8 @@ import bisq.proto.grpc.GetTxFeeRateReply;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressReply;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
+import bisq.proto.grpc.GetWalletSyncStatusReply;
+import bisq.proto.grpc.GetWalletSyncStatusRequest;
 import bisq.proto.grpc.LockWalletReply;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.RemoveWalletPasswordReply;
@@ -121,6 +123,21 @@ class GrpcWalletsService extends WalletsImplBase {
         try {
             var reply = GetDaoStatusReply.newBuilder()
                     .setIsDaoStateReadyAndInSync(coreApi.isDaoStateReadyAndInSync())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getWalletSyncStatus(GetWalletSyncStatusRequest req,
+                                    StreamObserver<GetWalletSyncStatusReply> responseObserver) {
+        try {
+            var reply = GetWalletSyncStatusReply.newBuilder()
+                    .setIsChainHeightSyncedWithinTolerance(coreApi.isChainHeightSyncedWithinTolerance())
+                    .setBestChainHeight(coreApi.getBestChainHeight())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -427,6 +444,7 @@ class GrpcWalletsService extends WalletsImplBase {
                         new HashMap<>() {{
                             put(getGetNetworkMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetDaoStatusMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetWalletSyncStatusMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetBalancesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetAddressBalanceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetFundingAddressesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));

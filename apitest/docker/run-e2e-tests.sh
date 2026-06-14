@@ -43,6 +43,13 @@ GLOBAL_TIMEOUT_SECS="${GLOBAL_TIMEOUT_SECS:-3600}"
 READY_TIMEOUT_SECS="${READY_TIMEOUT_SECS:-300}"
 RUN_POLICY_E2E_TESTS="${RUN_POLICY_E2E_TESTS:-true}"
 POLICY_DENY_LIST_RESOURCE="${POLICY_DENY_LIST_RESOURCE:-denylist/btc_regtest_e2e.denylist}"
+# Opt-in flag for the heavy soak/coverage tests tagged @Tag("longrunning"). They are
+# excluded from every normal run (too slow for per-PR CI, and they probe the v29 SPV
+# block-relay ceiling). When true, run ONLY those long-running tests — the shared-stack
+# phase, the other fresh-stack tests, and the policy phase are all skipped.
+RUN_LONG_RUNNING_TESTS="${RUN_LONG_RUNNING_TESTS:-false}"
+# Long-running-only mode skips the policy phase too.
+[[ "${RUN_LONG_RUNNING_TESTS}" == "true" ]] && RUN_POLICY_E2E_TESTS=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -89,12 +96,23 @@ rm -f "${TIMEOUT_MARKER}"
 #
 # Override the discovery with FRESH_STACK_TESTS=<space-separated FQCNs>; empty
 # value = skip the fresh-stack phase entirely.
+#
+# Otherwise discovery depends on RUN_LONG_RUNNING_TESTS:
+#   false (default) → every @Tag("freshstack") class EXCEPT the @Tag("longrunning") ones.
+#   true            → ONLY the @Tag("longrunning") classes (run via the fresh-stack machinery).
+TEST_SRC="${REPO_ROOT}/apitest/src/test/java"
 if [[ -n "${FRESH_STACK_TESTS+x}" ]]; then
   read -r -a FRESH_STACK_TESTS_ARR <<< "${FRESH_STACK_TESTS}"
+elif [[ "${RUN_LONG_RUNNING_TESTS}" == "true" ]]; then
+  mapfile -t FRESH_STACK_TESTS_ARR < <(
+    grep -rlE '@Tag\("longrunning"\)' "${TEST_SRC}/bisq/apitest" 2>/dev/null \
+      | sed -E "s|^${TEST_SRC}/||; s|\.java\$||; s|/|.|g" \
+      | sort
+  )
 else
-  TEST_SRC="${REPO_ROOT}/apitest/src/test/java"
   mapfile -t FRESH_STACK_TESTS_ARR < <(
     grep -rlE '@Tag\("freshstack"\)' "${TEST_SRC}/bisq/apitest" 2>/dev/null \
+      | grep -vxFf <(grep -rlE '@Tag\("longrunning"\)' "${TEST_SRC}/bisq/apitest" 2>/dev/null) \
       | sed -E "s|^${TEST_SRC}/||; s|\.java\$||; s|/|.|g" \
       | sort
   )
@@ -412,12 +430,6 @@ wait_for_daemons
 # Run tests
 ###############################################################################
 
-step "Running shared-stack tests: ${TEST_PATTERN}"
-# Expand each space-delimited pattern into its own `--tests` arg so Gradle can OR them.
-TESTS_ARGS=()
-for p in ${TEST_PATTERN}; do
-  TESTS_ARGS+=(--tests "${p}")
-done
 # Phase 1 excludes @Tag("freshstack")-tagged tests via -PexcludeFreshStack.
 # Phase 2 invocations (one per fresh-stack class) omit the property → tag included.
 JVM_PROPS=(
@@ -428,13 +440,26 @@ JVM_PROPS=(
   -DapiPassword=xyz
   -DbitcoindContainer=bitcoind
 )
-set +e
-"${GRADLE}" --no-daemon :apitest:test \
-  "${TESTS_ARGS[@]}" \
-  -PexcludeFreshStack \
-  "${JVM_PROPS[@]}"
-TEST_EXIT=$?
-set -e
+TEST_EXIT=0
+if [[ "${RUN_LONG_RUNNING_TESTS}" == "true" ]]; then
+  # Long-running-only mode: skip the shared-stack phase entirely; only the
+  # @Tag("longrunning") classes run, each in its own fresh stack below.
+  step "Long-running-only mode: skipping shared-stack phase"
+else
+  step "Running shared-stack tests: ${TEST_PATTERN}"
+  # Expand each space-delimited pattern into its own `--tests` arg so Gradle can OR them.
+  TESTS_ARGS=()
+  for p in ${TEST_PATTERN}; do
+    TESTS_ARGS+=(--tests "${p}")
+  done
+  set +e
+  "${GRADLE}" --no-daemon :apitest:test \
+    "${TESTS_ARGS[@]}" \
+    -PexcludeFreshStack \
+    "${JVM_PROPS[@]}"
+  TEST_EXIT=$?
+  set -e
+fi
 
 # Capture the shared-stack containers' logs NOW if the phase failed. The fresh-stack
 # loop below tears this stack down on its first reset_stack, and the final cleanup()

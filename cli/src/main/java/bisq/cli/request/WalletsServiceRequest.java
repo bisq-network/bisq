@@ -30,6 +30,8 @@ import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTransactionsRequest;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
+import bisq.proto.grpc.GetWalletSyncStatusReply;
+import bisq.proto.grpc.GetWalletSyncStatusRequest;
 import bisq.proto.grpc.LockWalletRequest;
 import bisq.proto.grpc.MarketPriceRequest;
 import bisq.proto.grpc.RemoveWalletPasswordRequest;
@@ -65,6 +67,11 @@ public class WalletsServiceRequest {
     public boolean getDaoStatus() {
         var request = GetDaoStatusRequest.newBuilder().build();
         return grpcStubs.walletsService.getDaoStatus(request).getIsDaoStateReadyAndInSync();
+    }
+
+    public GetWalletSyncStatusReply getWalletSyncStatus() {
+        var request = GetWalletSyncStatusRequest.newBuilder().build();
+        return grpcStubs.walletsService.getWalletSyncStatus(request);
     }
 
     public BalancesInfo getBalances() {

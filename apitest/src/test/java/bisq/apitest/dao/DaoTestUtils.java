@@ -187,6 +187,57 @@ public class DaoTestUtils {
     }
 
     /**
+     * Confirm a tx whose confirmation the {@code owner}'s own SPV (bitcoinj) wallet must
+     * observe — i.e. where {@code owner.getTrade(..).getIsDepositConfirmed()} (or the payout
+     * equivalent) is the gate. Unlike {@link #confirmTx}, this first waits until bitcoind's
+     * mempool holds the tx via the owner's bitcoinj P2P broadcast, and only then mines.
+     *
+     * <p>Why this matters: bitcoind serves the SPV wallet bloom-filtered {@code merkleblock}s.
+     * When the owner builds this tx, bitcoinj adds its scripts/outpoints to the wallet and
+     * sends an updated {@code filterload} to bitcoind, immediately followed by the tx
+     * broadcast — both on the SAME TCP connection. If we mine the confirming block before
+     * that {@code filterload} reaches bitcoind (a race the rapid back-to-back soak loses
+     * around trade ~34), the {@code merkleblock} for that block omits this tx and the owner's
+     * wallet connects the block WITHOUT ever marking the tx confirmed — it stays "unconfirmed"
+     * in the wallet for minutes (until bitcoinj's next periodic filter resend) even though it
+     * is buried on-chain. Because filterload precedes the tx on the same ordered connection,
+     * observing the tx in bitcoind's mempool (from the owner's broadcast) proves bitcoind
+     * already holds the updated filter; mining after that yields a matching merkleblock.
+     *
+     * <p>If the broadcast has not landed within {@code BROADCAST_GRACE_MS} (bitcoinj's P2P
+     * broadcast can itself stall against bitcoind v29 — the reason {@link #confirmTx} injects),
+     * fall back to direct injection and mine anyway; a rare filter-race miss self-heals on the
+     * next wallet activity and is covered by the caller's generous confirmation timeout.
+     */
+    public void confirmTxAfterFilterPropagation(GrpcClient owner, String txId) {
+        if (!awaitTxInMempool(txId, BROADCAST_GRACE_MS)) {
+            injectRawTx(owner, txId);
+        }
+        generateBlocks(1);
+    }
+
+    private static final long BROADCAST_GRACE_MS = 15_000;
+
+    /** Poll bitcoind until {@code txId} is in its mempool, up to {@code graceMs}. */
+    private boolean awaitTxInMempool(String txId, long graceMs) {
+        long deadline = System.currentTimeMillis() + graceMs;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                runBitcoinCli("getmempoolentry", txId); // exits non-zero if absent
+                return true;
+            } catch (RuntimeException notYet) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Bisq's VoteRevealService auto-broadcasts a reveal tx for every unrevealed
      * {@link bisq.proto.grpc.MyVoteInfo} when the chain enters VOTE_REVEAL phase.
      * The broadcast is fire-and-forget over bitcoinj P2P; for deterministic
