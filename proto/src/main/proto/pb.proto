@@ -1756,7 +1756,7 @@ message Trade {
     bytes arbitrator_btc_pub_key = 23 [deprecated = true]; // Legacy arbitration BTC pub key is ignored.
     string taker_payment_account_id = 24;
     string error_message = 25;
-    PubKeyRing arbitrator_pub_key_ring = 26;
+    PubKeyRing arbitrator_pub_key_ring = 26 [deprecated = true]; // Legacy arbitration pub key ring is ignored.
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
     repeated ChatMessage chat_message = 29;

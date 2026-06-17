@@ -341,10 +341,6 @@ public abstract class Trade extends TradeModel {
     @Nullable
     @Getter
     @Setter
-    private PubKeyRing arbitratorPubKeyRing;
-    @Nullable
-    @Getter
-    @Setter
     private NodeAddress mediatorNodeAddress;
     @Nullable
     @Getter
@@ -546,7 +542,6 @@ public abstract class Trade extends TradeModel {
         Optional.ofNullable(refundAgentNodeAddress).ifPresent(e -> builder.setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage()));
         Optional.ofNullable(takerPaymentAccountId).ifPresent(builder::setTakerPaymentAccountId);
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
-        Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(refundAgentPubKeyRing).ifPresent(e -> builder.setRefundAgentPubKeyRing(refundAgentPubKeyRing.toProtoMessage()));
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
@@ -577,7 +572,6 @@ public abstract class Trade extends TradeModel {
         trade.setRefundAgentNodeAddress(proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null);
         trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
-        trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setRefundAgentPubKeyRing(proto.hasRefundAgentPubKeyRing() ? PubKeyRing.fromProto(proto.getRefundAgentPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
@@ -609,10 +603,6 @@ public abstract class Trade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize(Provider serviceProvider) {
-        serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
-            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-        });
-
         serviceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress)
                 .ifPresent(mediator -> mediatorPubKeyRing = mediator.getPubKeyRing());
 
@@ -1146,7 +1136,6 @@ public abstract class Trade extends TradeModel {
                 ",\n     takerContractSignature='" + takerContractSignature + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
-                ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
