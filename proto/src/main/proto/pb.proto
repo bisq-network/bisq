@@ -1753,7 +1753,7 @@ message Trade {
     string maker_contract_signature = 20;
     NodeAddress arbitrator_node_address = 21;
     NodeAddress mediator_node_address = 22;
-    bytes arbitrator_btc_pub_key = 23;
+    bytes arbitrator_btc_pub_key = 23 [deprecated = true]; // Legacy arbitration BTC pub key is ignored.
     string taker_payment_account_id = 24;
     string error_message = 25;
     PubKeyRing arbitrator_pub_key_ring = 26;
