@@ -169,7 +169,7 @@ public abstract class SupportManager {
     }
 
     private void onAckMessage(AckMessage ackMessage, PublicKey senderSignaturePubKey) {
-        if (ackMessage.getSourceType() == getAckMessageSourceType()) {
+        if (canProcessAckMessage(ackMessage)) {
             List<ChatMessage> allChatMessages = getAllChatMessages(ackMessage.getSourceId());
             Optional<ChatMessage> sourceMessage = allChatMessages.stream()
                     .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
@@ -209,6 +209,10 @@ public abstract class SupportManager {
     }
 
     protected abstract AckMessageSourceType getAckMessageSourceType();
+
+    protected boolean canProcessAckMessage(AckMessage ackMessage) {
+        return ackMessage.getSourceType() == getAckMessageSourceType();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -1481,6 +1481,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private String getCounterpartyName() {
         if (senderFlag()) {
             return Res.get("offerbook.trader");
+        } else if (getType() == SupportType.ARBITRATION) {
+            // TODO: Delete with the legacy arbitration UI once historical cases move to a dedicated read-only view.
+            return Res.get("shared.arbitrator");
         } else {
             return (disputeManager instanceof MediationManager) ? Res.get("shared.mediator") : Res.get("shared.refundAgent");
         }

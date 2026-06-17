@@ -70,6 +70,17 @@ public class ArbitrationClientView extends DisputeClientView {
     }
 
     @Override
+    public void initialize() {
+        super.initialize();
+
+        // TODO: Delete with the legacy arbitration UI once historical cases move to a dedicated read-only view.
+        openOrCloseButton.setVisible(false);
+        openOrCloseButton.setManaged(false);
+        sendPrivateNotificationButton.setVisible(false);
+        sendPrivateNotificationButton.setManaged(false);
+    }
+
+    @Override
     protected SupportType getType() {
         return SupportType.ARBITRATION;
     }
