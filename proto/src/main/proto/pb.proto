@@ -1640,7 +1640,7 @@ message OpenOffer {
 
     Offer offer = 1;
     State state = 2;
-    NodeAddress arbitrator_node_address = 3;
+    NodeAddress arbitrator_node_address = 3 [deprecated = true]; // Legacy OpenOffer arbitrator address is ignored.
     NodeAddress mediator_node_address = 4;
     NodeAddress refund_agent_node_address = 5;
     int64 trigger_price = 6;
