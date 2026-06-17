@@ -174,14 +174,18 @@ public abstract class SupportManager {
             Optional<ChatMessage> sourceMessage = allChatMessages.stream()
                     .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
                     .findFirst();
-            if (sourceMessage.isPresent()) {
-                PubKeyRing expectedSenderPubKeyRing = getPeerPubKeyRing(sourceMessage.get());
-                if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
-                        expectedSenderPubKeyRing,
-                        ackMessage.getClass().getSimpleName(),
-                        ackMessage.getSourceId())) {
-                    return;
-                }
+            if (sourceMessage.isEmpty()) {
+                log.warn("Ignoring AckMessage for {} with tradeId {} and uid {} because the source message was not found",
+                        ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
+                return;
+            }
+
+            PubKeyRing expectedSenderPubKeyRing = getPeerPubKeyRing(sourceMessage.get());
+            if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                    expectedSenderPubKeyRing,
+                    ackMessage.getClass().getSimpleName(),
+                    ackMessage.getSourceId())) {
+                return;
             }
 
             if (ackMessage.isSuccess()) {

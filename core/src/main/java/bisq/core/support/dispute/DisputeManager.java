@@ -399,12 +399,15 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
+        if (dispute == null) {
+            log.warn("Ignoring {} because dispute is null", openNewDisputeMessage.getClass().getSimpleName());
+            return;
+        }
+
         // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
         dispute.setSupportType(openNewDisputeMessage.getSupportType());
         // disputes from clients < 1.6.0 have state not set as the field didn't exist before
         dispute.setState(Dispute.State.NEW);    // this can be removed a few months after 1.6.0 release
-
-        Contract contract = dispute.getContract();
 
         if (!isDisputeOpenerSignaturePubKeyValid(dispute,
                 senderSignaturePubKey,
@@ -412,6 +415,21 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             return;
         }
 
+        try {
+            DisputeValidation.validateDisputeData(dispute, btcWalletService);
+            DisputeValidation.validateNodeAddresses(dispute, config);
+            DisputeValidation.validateSenderNodeAddress(dispute, openNewDisputeMessage.getSenderNodeAddress());
+            DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            if (dispute.isUsingLegacyBurningMan()) {
+                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            }
+        } catch (DisputeValidation.ValidationException e) {
+            log.error(e.toString());
+            validationExceptions.add(e);
+            return;
+        }
+
+        Contract contract = dispute.getContract();
         addPriceInfoMessage(dispute, 0);
 
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
@@ -444,19 +462,6 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
 
         addMediationResultMessage(dispute);
-
-        try {
-            DisputeValidation.validateDisputeData(dispute, btcWalletService);
-            DisputeValidation.validateNodeAddresses(dispute, config);
-            DisputeValidation.validateSenderNodeAddress(dispute, openNewDisputeMessage.getSenderNodeAddress());
-            DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-            if (dispute.isUsingLegacyBurningMan()) {
-                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            }
-        } catch (DisputeValidation.ValidationException e) {
-            log.error(e.toString());
-            validationExceptions.add(e);
-        }
         requestPersistence();
     }
 
@@ -467,8 +472,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, false),
             () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
                 closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade)closedTradable, senderSignaturePubKey),
-                () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresent(
-                    trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey))));
+                () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
+                    trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey),
+                    () -> log.warn("Dropping {} for trade {}: no local trade, closed tradable, or failed trade found.",
+                            peerOpenedDisputeMessage.getClass().getSimpleName(), dispute.getTradeId()))));
     }
 
     private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
@@ -973,6 +980,11 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected boolean isDisputeAgentSignaturePubKeyValid(Dispute dispute,
                                                          PublicKey senderSignaturePubKey,
                                                          String messageClassName) {
+        if (dispute == null) {
+            log.warn("Ignoring {} because dispute is missing", messageClassName);
+            return false;
+        }
+
         Optional<Trade> tradeOptional = findTrade(dispute);
         if (tradeOptional.isPresent()) {
             return isDisputeAgentSignaturePubKeyValid(dispute,
@@ -981,12 +993,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     messageClassName);
         }
 
-        log.warn("Cannot pin dispute agent for {} because trade {} was not found. Falling back to stored dispute agent key.",
+        log.warn("Ignoring {} for trade {} because no local trade record was found to authenticate the dispute agent",
                 messageClassName, dispute.getTradeId());
-        return isSenderSignaturePubKeyExpected(senderSignaturePubKey,
-                dispute.getAgentPubKeyRing(),
-                messageClassName,
-                dispute.getTradeId());
+        return false;
     }
 
     private boolean isDisputeAgentSignaturePubKeyValid(Dispute dispute,
@@ -1013,15 +1022,37 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     private boolean isDisputeOpenerSignaturePubKeyValid(Dispute dispute,
                                                         PublicKey senderSignaturePubKey,
                                                         String messageClassName) {
+        if (dispute == null) {
+            log.warn("Ignoring {} because dispute is missing", messageClassName);
+            return false;
+        }
+
         Contract contract = dispute.getContract();
+        if (contract == null) {
+            log.warn("Ignoring {} for trade {} because dispute contract is missing",
+                    messageClassName, dispute.getTradeId());
+            return false;
+        }
+
         PubKeyRing expectedOpenerPubKeyRing = dispute.isDisputeOpenerIsBuyer() ?
                 contract.getBuyerPubKeyRing() :
                 contract.getSellerPubKeyRing();
+        if (expectedOpenerPubKeyRing == null) {
+            log.warn("Ignoring {} for trade {} because expected opener pubKeyRing is missing",
+                    messageClassName, dispute.getTradeId());
+            return false;
+        }
 
         if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
                 expectedOpenerPubKeyRing,
                 messageClassName,
                 dispute.getTradeId())) {
+            return false;
+        }
+
+        if (dispute.getTraderPubKeyRing() == null) {
+            log.warn("Ignoring {} for trade {} because dispute trader pubKeyRing is missing",
+                    messageClassName, dispute.getTradeId());
             return false;
         }
 
@@ -1071,11 +1102,12 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
     public Optional<Trade> findTrade(Dispute dispute) {
-        Optional<Trade> retVal = tradeManager.getTradeById(dispute.getTradeId());
-        if (retVal.isEmpty()) {
-            retVal = closedTradableManager.getClosedTrades().stream().filter(e -> e.getId().equals(dispute.getTradeId())).findFirst();
-        }
-        return retVal;
+        String tradeId = dispute.getTradeId();
+        return tradeManager.getTradeById(tradeId)
+                .or(() -> closedTradableManager.getClosedTrades().stream()
+                        .filter(e -> e.getId().equals(tradeId))
+                        .findFirst())
+                .or(() -> failedTradesManager.getTradeById(tradeId));
     }
 
     private void addMediationResultMessage(Dispute dispute) {

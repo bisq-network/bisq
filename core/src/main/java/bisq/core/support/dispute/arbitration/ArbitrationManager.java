@@ -75,6 +75,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Deprecated
 @Slf4j
 @Singleton
+// TODO: Remove active legacy arbitration handling in a dedicated cleanup PR.
+// Keep read-only access to persisted user arbitration cases until the UI has a replacement display path.
 public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +113,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
     @Override
     public void onSupportMessage(SupportMessage message, PublicKey senderSignaturePubKey) {
+        // TODO: Ignore or remove inbound ARBITRATION support messages; old arbitration messages are no longer supported.
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
@@ -134,32 +137,38 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Nullable
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
+        // TODO: Remove active arbitrator-agent routing; persisted user cases should not need an agent address.
         return null;
     }
 
     @Nullable
     @Override
     protected PubKeyRing getExpectedAgentPubKeyRing(Trade trade) {
+        // TODO: Remove with inbound arbitration message authentication.
         return trade.getArbitratorPubKeyRing();
     }
 
     @Override
     protected Trade.DisputeState getDisputeStateStartedByPeer() {
+        // TODO: Remove active ARBITRATION dispute-state transitions; preserve persisted states for display only.
         return Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
     }
 
     @Override
     protected AckMessageSourceType getAckMessageSourceType() {
+        // TODO: Remove ARBITRATION_MESSAGE ACK handling with inbound arbitration support.
         return AckMessageSourceType.ARBITRATION_MESSAGE;
     }
 
     @Override
     public void cleanupDisputes() {
+        // TODO: Do not drop persisted arbitration cases; replace active cleanup with read-only historical display support.
         disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED));
     }
 
     @Override
     protected String getDisputeInfo(Dispute dispute) {
+        // TODO: Remove dispute-opening UI text; keep separate labels for persisted user arbitration case display.
         String role = Res.get("shared.arbitrator").toLowerCase();
         String link = "https://bisq.wiki/Arbitrator#Arbitrator_versus_Legacy_Arbitrator";
         return Res.get("support.initialInfo", role, "", role, link);        // Arbitration is not used anymore
@@ -167,16 +176,19 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
     @Override
     protected String getDisputeIntroForPeer(String disputeInfo) {
+        // TODO: Remove dispute-opening UI text; keep separate labels for persisted user arbitration case display.
         return Res.get("support.peerOpenedDispute", disputeInfo, Version.VERSION);
     }
 
     @Override
     protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
+        // TODO: Remove dispute-opening UI text; keep separate labels for persisted user arbitration case display.
         return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
     }
 
     @Override
     protected void addPriceInfoMessage(Dispute dispute, int counter) {
+        // TODO: Remove this no-op override with ArbitrationManager.
         // Arbitrator is not used anymore.
     }
 
@@ -187,6 +199,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Override
     // We get that message at both peers. The dispute object is in context of the trader
     public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage, PublicKey senderSignaturePubKey) {
+        // TODO: Remove legacy arbitration result processing; persisted results should be displayed, not updated by messages.
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         ChatMessage chatMessage = disputeResult.getChatMessage();
         checkNotNull(chatMessage, "chatMessage must not be null");
@@ -313,6 +326,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
     private void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage,
                                            PublicKey senderSignaturePubKey) {
+        // TODO: Remove legacy peer-published arbitration payout transaction handling; old messages are not supported.
         String uid = peerPublishedDisputePayoutTxMessage.getUid();
         String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
@@ -360,6 +374,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
     // winner (or buyer in case of 50/50) sends tx to other peer
     private void sendPeerPublishedPayoutTxMessage(Transaction transaction, Dispute dispute, Contract contract) {
+        // TODO: Remove legacy arbitration payout transaction relay; no active arbitrator role remains.
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
         NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
         log.trace("sendPeerPublishedPayoutTxMessage to peerAddress {}", peersNodeAddress);
@@ -396,6 +411,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     }
 
     private void updateTradeOrOpenOfferManager(String tradeId) {
+        // TODO: Remove active arbitration close helper; persisted closed cases should remain visible from storage.
         // set state after payout as we call swapTradeEntryToAvailableEntry
         if (tradeManager.getTradeById(tradeId).isPresent()) {
             tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED);
