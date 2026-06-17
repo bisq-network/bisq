@@ -121,9 +121,10 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                 mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(), user);
                 refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
                         processModel.getRefundAgentManager());
+                // Set both only after both lookups pass so legacy fallback cannot leave partial trade state.
                 trade.setMediatorPubKeyRing(mediatorPubKeyRing);
                 trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
-            } catch (RuntimeException e) {
+            } catch (NullPointerException | IllegalArgumentException e) {
                 if (Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
                     throw e;
                 }

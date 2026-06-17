@@ -106,6 +106,8 @@ public class DisputeValidation {
 
     private static void validateContractDisputeAgentPubKeys(Dispute dispute, Contract contract, Date now) {
         if (!contract.hasDisputeAgentPubKeyVersion()) {
+            // Compatibility/advisory gate only: dispute.getTradeDate() is sender-supplied payload data.
+            // Do not treat this as an auth boundary; callers must keep authenticating senders against local trade state.
             if (Contract.requiresDisputeAgentPubKeyVersion(now, dispute.getTradeDate())) {
                 throw new IllegalArgumentException("Contract must include dispute agent pubKeyRings");
             }
@@ -133,6 +135,7 @@ public class DisputeValidation {
             return contract.getRefundAgentPubKeyRing();
         }
 
+        // Legacy arbitration has no contract-bound dispute-agent pubKeyRing.
         return null;
     }
 

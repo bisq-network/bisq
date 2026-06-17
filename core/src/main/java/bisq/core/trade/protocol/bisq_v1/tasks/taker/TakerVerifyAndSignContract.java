@@ -102,6 +102,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             PubKeyRing mediatorPubKeyRing = null;
             PubKeyRing refundAgentPubKeyRing = null;
             if (makerUsesContractDisputeAgentPubKeys) {
+                // New-version contracts fail closed if the local dispute-agent registry cannot resolve the keys.
                 mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(),
                         processModel.getUser());
                 refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),

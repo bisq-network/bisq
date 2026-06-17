@@ -63,6 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 public final class Contract implements NetworkPayload {
     public static final int VERSION_WITH_DISPUTE_AGENT_PUB_KEYS = 2;
+    // GregorianCalendar months are zero-based.
     public static final Date DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE =
             Utilities.getUTCDate(2026, GregorianCalendar.SEPTEMBER, 1);
 
@@ -483,7 +484,9 @@ public final class Contract implements NetworkPayload {
     }
 
     public static boolean hasDisputeAgentPubKeyFields(String contractAsJson) {
+        // Throws on malformed or non-object JSON. Callers use this while processing peer input and fail the task closed.
         JsonObject object = JsonParser.parseString(contractAsJson).getAsJsonObject();
+        // Any new field marks the maker JSON as new-version; exact JSON equality later rejects partial/inconsistent data.
         return object.has("mediatorPubKeyRing") ||
                 object.has("refundAgentPubKeyRing") ||
                 object.has("contractVersion");

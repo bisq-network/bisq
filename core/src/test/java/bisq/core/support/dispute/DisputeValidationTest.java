@@ -31,6 +31,8 @@ class DisputeValidationTest {
     private static final NodeAddress SELLER_NODE_ADDRESS = new NodeAddress("seller.onion", 9999);
     private static final NodeAddress MEDIATOR_NODE_ADDRESS = new NodeAddress("mediator.onion", 9999);
     private static final NodeAddress REFUND_AGENT_NODE_ADDRESS = new NodeAddress("refund.onion", 9999);
+    private static final long PRE_ACTIVATION_TRADE_DATE =
+            Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() - 1;
     private static final long POST_ACTIVATION_TRADE_DATE =
             Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() + 1;
     private static final Date POST_ACTIVATION_NOW =
@@ -45,6 +47,17 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, mediatorPubKeyRing, contract, SupportType.MEDIATION);
 
         assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataAcceptsLegacyContractAfterActivationForPreActivationTrade() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
+        Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION, PRE_ACTIVATION_TRADE_DATE);
+
+        assertDoesNotThrow(
                 () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
     }
 
@@ -71,10 +84,52 @@ class DisputeValidationTest {
                 () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
     }
 
+    @Test
+    void validateDisputeDataAcceptsMatchingRefundAgentPubKeyFromNewContract() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), refundAgentPubKeyRing);
+        Dispute dispute = dispute(buyerPubKeyRing, refundAgentPubKeyRing, contract, SupportType.REFUND);
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsMismatchedRefundAgentPubKeyFromNewContract() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), pubKeyRing());
+        Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.REFUND);
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataDoesNotRequireContractBoundAgentKeyForLegacyArbitration() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), pubKeyRing());
+        Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.ARBITRATION);
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
     private static Dispute dispute(PubKeyRing traderPubKeyRing,
                                    PubKeyRing agentPubKeyRing,
                                    Contract contract,
                                    SupportType supportType) {
+        return dispute(traderPubKeyRing, agentPubKeyRing, contract, supportType, POST_ACTIVATION_TRADE_DATE);
+    }
+
+    private static Dispute dispute(PubKeyRing traderPubKeyRing,
+                                   PubKeyRing agentPubKeyRing,
+                                   Contract contract,
+                                   SupportType supportType,
+                                   long tradeDate) {
         String contractAsJson = JsonUtil.objectToJson(contract);
         return new Dispute(
                 0,
@@ -83,7 +138,7 @@ class DisputeValidationTest {
                 true,
                 true,
                 traderPubKeyRing,
-                POST_ACTIVATION_TRADE_DATE,
+                tradeDate,
                 0,
                 contract,
                 Hash.getSha256Hash(contractAsJson),
