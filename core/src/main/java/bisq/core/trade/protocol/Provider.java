@@ -30,7 +30,6 @@ import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -60,7 +59,6 @@ public class Provider {
     private final FilterPolicyService filterPolicyService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final KeyRing keyRing;
@@ -83,7 +81,6 @@ public class Provider {
                     FilterPolicyService filterPolicyService,
                     AccountAgeWitnessService accountAgeWitnessService,
                     TradeStatisticsManager tradeStatisticsManager,
-                    ArbitratorManager arbitratorManager,
                     MediatorManager mediatorManager,
                     RefundAgentManager refundAgentManager,
                     KeyRing keyRing,
@@ -105,7 +102,6 @@ public class Provider {
         this.filterPolicyService = filterPolicyService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.keyRing = keyRing;

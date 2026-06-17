@@ -247,8 +247,6 @@ public class BisqV1MessageIntegrityTest {
                 () -> new DepositTxMessage(UID, TRADE_ID, new NodeAddress("peer.onion", 65_536), bytes(1)));
         assertThrows(IllegalArgumentException.class, () -> newRequest(args -> args.acceptedMediatorNodeAddresses =
                 List.of(new NodeAddress("", 9999))));
-        assertThrows(IllegalArgumentException.class, () -> newRequest(args ->
-                args.arbitratorNodeAddress = new NodeAddress("", 9999)));
     }
 
     @Test
@@ -415,10 +413,8 @@ public class BisqV1MessageIntegrityTest {
                 args.takerPubKeyRing,
                 args.takerAccountId,
                 args.takerFeeTxId,
-                args.acceptedArbitratorNodeAddresses,
                 args.acceptedMediatorNodeAddresses,
                 args.acceptedRefundAgentNodeAddresses,
-                args.arbitratorNodeAddress,
                 args.mediatorNodeAddress,
                 args.refundAgentNodeAddress,
                 args.uid,
@@ -506,10 +502,8 @@ public class BisqV1MessageIntegrityTest {
         private PubKeyRing takerPubKeyRing = mock(PubKeyRing.class);
         private String takerAccountId = "taker-account-id";
         private String takerFeeTxId = "taker-fee-tx-id";
-        private List<NodeAddress> acceptedArbitratorNodeAddresses = List.of();
         private List<NodeAddress> acceptedMediatorNodeAddresses = List.of(new NodeAddress("mediator.onion", 9999));
         private List<NodeAddress> acceptedRefundAgentNodeAddresses = List.of();
-        private NodeAddress arbitratorNodeAddress = null;
         private NodeAddress mediatorNodeAddress = new NodeAddress("mediator.onion", 9999);
         private NodeAddress refundAgentNodeAddress = new NodeAddress("refund.onion", 9999);
         private String uid = UID;

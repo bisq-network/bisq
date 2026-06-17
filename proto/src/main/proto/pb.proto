@@ -253,9 +253,9 @@ message InputsForDepositTxRequest {
     PaymentAccountPayload taker_payment_account_payload = 14 [deprecated = true]; // Deprecated since v1.9.24
     string taker_account_id = 15;
     string taker_fee_tx_id = 16;
-    repeated NodeAddress accepted_arbitrator_node_addresses = 17;
+    repeated NodeAddress accepted_arbitrator_node_addresses = 17 [deprecated = true]; // Legacy arbitration address list is ignored.
     repeated NodeAddress accepted_mediator_node_addresses = 18;
-    NodeAddress arbitrator_node_address = 19;
+    NodeAddress arbitrator_node_address = 19 [deprecated = true]; // Legacy arbitration address is ignored.
     NodeAddress mediator_node_address = 20;
     string uid = 21;
     bytes account_age_witness_signature_of_offer_id = 22;

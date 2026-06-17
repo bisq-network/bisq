@@ -28,7 +28,6 @@ import bisq.core.dao.node.full.RpcService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.payment.TradeLimits;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.Preferences;
@@ -202,7 +201,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 injector.getInstance(OpenBsqSwapOfferService.class).shutDown();
                 injector.getInstance(RpcService.class).shutDown();
                 injector.getInstance(DaoSetup.class).shutDown();
-                injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
                     injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
                         module.close(injector);

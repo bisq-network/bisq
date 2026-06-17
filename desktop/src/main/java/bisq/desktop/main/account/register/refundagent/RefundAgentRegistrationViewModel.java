@@ -37,12 +37,12 @@ import java.util.Date;
 public class RefundAgentRegistrationViewModel extends AgentRegistrationViewModel<RefundAgent, RefundAgentManager> {
 
     @Inject
-    public RefundAgentRegistrationViewModel(RefundAgentManager arbitratorManager,
+    public RefundAgentRegistrationViewModel(RefundAgentManager refundAgentManager,
                                             User user,
                                             P2PService p2PService,
                                             BtcWalletService walletService,
                                             KeyRing keyRing) {
-        super(arbitratorManager, user, p2PService, walletService, keyRing);
+        super(refundAgentManager, user, p2PService, walletService, keyRing);
     }
 
     @Override

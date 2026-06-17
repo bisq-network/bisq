@@ -62,14 +62,14 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Override
     protected void startRepublishDisputeAgent() {
-        // TODO: Delete with ArbitratorManager once trade setup no longer needs legacy arbitrator lookup data.
+        // TODO Delete with ArbitratorManager once signed-witness verification no longer needs legacy arbitrator keys.
         log.info("{}: not republishing persisted legacy arbitrator registration",
                 LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
     }
 
     @Override
     protected void republish() {
-        // TODO: Delete with ArbitratorManager once trade setup no longer needs legacy arbitrator lookup data.
+        // TODO Delete with ArbitratorManager once signed-witness verification no longer needs legacy arbitrator keys.
         log.info("{}: ignoring legacy arbitrator republish request",
                 LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
     }
