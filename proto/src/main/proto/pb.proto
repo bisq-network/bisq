@@ -2025,7 +2025,7 @@ message UserPayload {
     Alert developers_alert = 5;
     Alert displayed_alert = 6;
     Filter developers_filter = 7;
-    repeated Arbitrator accepted_arbitrators = 8;
+    repeated Arbitrator accepted_arbitrators = 8 [deprecated = true]; // Legacy arbitration accepted agents are ignored.
     repeated Mediator accepted_mediators = 9;
     Arbitrator registered_arbitrator = 10;
     Mediator registered_mediator = 11;

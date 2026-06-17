@@ -64,9 +64,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             Coin tradeAmount = checkNotNull(trade.getAmount(), "TradeAmount must not be null");
             String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
             User user = checkNotNull(processModel.getUser(), "User must not be null");
-            List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses() == null ?
-                    new ArrayList<>() :
-                    user.getAcceptedArbitratorAddresses();
+            List<NodeAddress> acceptedArbitratorAddresses = new ArrayList<>();
             List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
             List<NodeAddress> acceptedRefundAgentAddresses = user.getAcceptedRefundAgentAddresses() == null ?
                     new ArrayList<>() :

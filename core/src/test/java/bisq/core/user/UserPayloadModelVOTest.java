@@ -104,7 +104,6 @@ public class UserPayloadModelVOTest {
 
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
-        vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));
         vo.setAcceptedMediators(Lists.newArrayList(MediatorTest.getMediatorMock()));
         UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
     }

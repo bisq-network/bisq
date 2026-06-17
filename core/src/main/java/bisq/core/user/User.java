@@ -164,19 +164,6 @@ public class User implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        final List<Arbitrator> acceptedArbitrators = userPayload.getAcceptedArbitrators();
-        if (acceptedArbitrators != null) {
-            Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
-                    .filter(e -> e.getNodeAddress().equals(nodeAddress))
-                    .findFirst();
-            return arbitratorOptional.orElse(null);
-        } else {
-            return null;
-        }
-    }
-
-    @Nullable
     public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
         final List<Mediator> acceptedMediators = userPayload.getAcceptedMediators();
         if (acceptedMediators != null) {
@@ -257,32 +244,6 @@ public class User implements PersistedDataHost {
         boolean changed = paymentAccountsAsObservable.remove(paymentAccount);
         if (changed)
             requestPersistence();
-    }
-
-    public boolean addAcceptedArbitrator(Arbitrator arbitrator) {
-        List<Arbitrator> arbitrators = userPayload.getAcceptedArbitrators();
-        if (arbitrators != null && !arbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
-            arbitrators.add(arbitrator);
-            requestPersistence();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public void removeAcceptedArbitrator(Arbitrator arbitrator) {
-        if (userPayload.getAcceptedArbitrators() != null) {
-            boolean changed = userPayload.getAcceptedArbitrators().remove(arbitrator);
-            if (changed)
-                requestPersistence();
-        }
-    }
-
-    public void clearAcceptedArbitrators() {
-        if (userPayload.getAcceptedArbitrators() != null) {
-            userPayload.getAcceptedArbitrators().clear();
-            requestPersistence();
-        }
     }
 
     public boolean addAcceptedMediator(Mediator mediator) {
@@ -466,11 +427,6 @@ public class User implements PersistedDataHost {
     }
 
     @Nullable
-    public List<Arbitrator> getAcceptedArbitrators() {
-        return userPayload.getAcceptedArbitrators();
-    }
-
-    @Nullable
     public List<Mediator> getAcceptedMediators() {
         return userPayload.getAcceptedMediators();
     }
@@ -478,13 +434,6 @@ public class User implements PersistedDataHost {
     @Nullable
     public List<RefundAgent> getAcceptedRefundAgents() {
         return userPayload.getAcceptedRefundAgents();
-    }
-
-    @Nullable
-    public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return userPayload.getAcceptedArbitrators() != null ?
-                userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList()) :
-                null;
     }
 
     @Nullable
@@ -499,10 +448,6 @@ public class User implements PersistedDataHost {
         return userPayload.getAcceptedRefundAgents() != null ?
                 userPayload.getAcceptedRefundAgents().stream().map(RefundAgent::getNodeAddress).collect(Collectors.toList()) :
                 null;
-    }
-
-    public boolean hasAcceptedArbitrators() {
-        return getAcceptedArbitrators() != null && !getAcceptedArbitrators().isEmpty();
     }
 
     public boolean hasAcceptedMediators() {
@@ -534,10 +479,6 @@ public class User implements PersistedDataHost {
     @Nullable
     public Alert getDisplayedAlert() {
         return userPayload.getDisplayedAlert();
-    }
-
-    public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
-        return arbitrator.equals(userPayload.getRegisteredArbitrator());
     }
 
     public boolean isMyOwnRegisteredMediator(Mediator mediator) {

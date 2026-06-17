@@ -100,22 +100,22 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Override
     protected void addAcceptedDisputeAgentToUser(Arbitrator disputeAgent) {
-        user.addAcceptedArbitrator(disputeAgent);
+        // Legacy arbitrator lookup remains in observableMap only; do not persist accepted arbitrators anymore.
     }
 
     @Override
     protected void removeAcceptedDisputeAgentFromUser(ProtectedStorageEntry data) {
-        user.removeAcceptedArbitrator((Arbitrator) data.getProtectedStoragePayload());
+        // Legacy arbitrator lookup remains in observableMap only; do not persist accepted arbitrators anymore.
     }
 
     @Override
     protected List<Arbitrator> getAcceptedDisputeAgentsFromUser() {
-        return user.getAcceptedArbitrators();
+        return List.of();
     }
 
     @Override
     protected void clearAcceptedDisputeAgentsAtUser() {
-        user.clearAcceptedArbitrators();
+        // Legacy arbitrator lookup remains in observableMap only; do not persist accepted arbitrators anymore.
     }
 
     @Override

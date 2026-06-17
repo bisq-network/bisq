@@ -23,7 +23,6 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
@@ -1063,15 +1062,8 @@ public abstract class Trade extends TradeModel {
                 getDelayedPayoutTxBytes() == null;
     }
 
+    @Deprecated
     public byte[] getArbitratorBtcPubKey() {
-        // In case we are already in a trade the arbitrator can have been revoked and we still can complete the trade
-        // Only new trades cannot start without any arbitrator
-        if (arbitratorBtcPubKey == null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-        }
-
         checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
         return arbitratorBtcPubKey;
     }

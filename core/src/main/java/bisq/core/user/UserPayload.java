@@ -68,8 +68,6 @@ public class UserPayload implements PersistableEnvelope {
     @Nullable
     private Mediator registeredMediator;
     @Nullable
-    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    @Nullable
     private List<Mediator> acceptedMediators = new ArrayList<>();
     @Nullable
     private PriceAlertFilter priceAlertFilter;
@@ -108,7 +106,6 @@ public class UserPayload implements PersistableEnvelope {
                        Filter developersFilter,
                        Arbitrator registeredArbitrator,
                        Mediator registeredMediator,
-                       List<Arbitrator> acceptedArbitrators,
                        List<Mediator> acceptedMediators,
                        PriceAlertFilter priceAlertFilter,
                        List<MarketAlertFilter> marketAlertFilters,
@@ -125,7 +122,6 @@ public class UserPayload implements PersistableEnvelope {
                 developersFilter,
                 registeredArbitrator,
                 registeredMediator,
-                acceptedArbitrators,
                 acceptedMediators,
                 priceAlertFilter,
                 marketAlertFilters,
@@ -146,7 +142,6 @@ public class UserPayload implements PersistableEnvelope {
                        Filter developersFilter,
                        Arbitrator registeredArbitrator,
                        Mediator registeredMediator,
-                       List<Arbitrator> acceptedArbitrators,
                        List<Mediator> acceptedMediators,
                        PriceAlertFilter priceAlertFilter,
                        List<MarketAlertFilter> marketAlertFilters,
@@ -165,7 +160,6 @@ public class UserPayload implements PersistableEnvelope {
         this.developersFilter = developersFilter;
         this.registeredArbitrator = registeredArbitrator;
         this.registeredMediator = registeredMediator;
-        this.acceptedArbitrators = acceptedArbitrators;
         this.acceptedMediators = acceptedMediators;
         this.priceAlertFilter = priceAlertFilter;
         this.marketAlertFilters = marketAlertFilters;
@@ -205,9 +199,6 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
                 .ifPresent(registeredMediator -> builder.setRegisteredMediator(registeredMediator.toProtoMessage().getMediator()));
-        Optional.ofNullable(acceptedArbitrators)
-                .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
-                        message -> ((protobuf.StoragePayload) message).getArbitrator())));
         Optional.ofNullable(acceptedMediators)
                 .ifPresent(e -> builder.addAllAcceptedMediators(ProtoUtil.collectionToProto(acceptedMediators,
                         message -> ((protobuf.StoragePayload) message).getMediator())));
@@ -255,9 +246,6 @@ public class UserPayload implements PersistableEnvelope {
                 proto.hasDevelopersFilter() ? Filter.fromProto(proto.getDevelopersFilter()) : null,
                 proto.hasRegisteredArbitrator() ? Arbitrator.fromProto(proto.getRegisteredArbitrator()) : null,
                 proto.hasRegisteredMediator() ? Mediator.fromProto(proto.getRegisteredMediator()) : null,
-                proto.getAcceptedArbitratorsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedArbitratorsList().stream()
-                        .map(Arbitrator::fromProto)
-                        .collect(Collectors.toList())),
                 proto.getAcceptedMediatorsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedMediatorsList().stream()
                         .map(Mediator::fromProto)
                         .collect(Collectors.toList())),
