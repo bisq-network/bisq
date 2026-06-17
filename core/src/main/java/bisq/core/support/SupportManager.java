@@ -35,6 +35,8 @@ import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import java.security.PublicKey;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +87,7 @@ public abstract class SupportManager {
     // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void onSupportMessage(SupportMessage networkEnvelope);
+    protected abstract void onSupportMessage(SupportMessage networkEnvelope, PublicKey senderSignaturePubKey);
 
     public abstract NodeAddress getPeerNodeAddress(ChatMessage message);
 
@@ -133,14 +135,14 @@ public abstract class SupportManager {
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void onChatMessage(ChatMessage chatMessage) {
+    protected void onChatMessage(ChatMessage chatMessage, PublicKey senderSignaturePubKey) {
         final String tradeId = chatMessage.getTradeId();
         final String uid = chatMessage.getUid();
         boolean channelOpen = channelOpen(chatMessage);
         if (!channelOpen) {
             log.debug("We got a chatMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
-                Timer timer = UserThread.runAfter(() -> onChatMessage(chatMessage), 1);
+                Timer timer = UserThread.runAfter(() -> onChatMessage(chatMessage, senderSignaturePubKey), 1);
                 delayMsgMap.put(uid, timer);
             } else {
                 String msg = "We got a chatMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
@@ -160,7 +162,7 @@ public abstract class SupportManager {
             sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
     }
 
-    private void onAckMessage(AckMessage ackMessage) {
+    private void onAckMessage(AckMessage ackMessage, PublicKey senderSignaturePubKey) {
         if (ackMessage.getSourceType() == getAckMessageSourceType()) {
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
@@ -305,10 +307,10 @@ public abstract class SupportManager {
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof SupportMessage) {
-                onSupportMessage((SupportMessage) networkEnvelope);
-            } else if (networkEnvelope instanceof AckMessage) {
-                onAckMessage((AckMessage) networkEnvelope);
+            if (networkEnvelope instanceof SupportMessage supportMessage) {
+                onSupportMessage(supportMessage, decryptedMessageWithPubKey.getSignaturePubKey());
+            } else if (networkEnvelope instanceof AckMessage ackMessage) {
+                onAckMessage(ackMessage, decryptedMessageWithPubKey.getSignaturePubKey());
             }
         });
         decryptedDirectMessageWithPubKeys.clear();
@@ -316,13 +318,11 @@ public abstract class SupportManager {
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             log.trace("## decryptedMessageWithPubKey message={}", networkEnvelope.getClass().getSimpleName());
-            if (networkEnvelope instanceof SupportMessage) {
-                SupportMessage supportMessage = (SupportMessage) networkEnvelope;
-                onSupportMessage(supportMessage);
+            if (networkEnvelope instanceof SupportMessage supportMessage) {
+                onSupportMessage(supportMessage, decryptedMessageWithPubKey.getSignaturePubKey());
                 mailboxMessageService.removeMailboxMsg(supportMessage);
-            } else if (networkEnvelope instanceof AckMessage) {
-                AckMessage ackMessage = (AckMessage) networkEnvelope;
-                onAckMessage(ackMessage);
+            } else if (networkEnvelope instanceof AckMessage ackMessage) {
+                onAckMessage(ackMessage, decryptedMessageWithPubKey.getSignaturePubKey());
                 mailboxMessageService.removeMailboxMsg(ackMessage);
             }
         });

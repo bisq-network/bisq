@@ -60,6 +60,8 @@ import org.bitcoinj.core.Transaction;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import java.security.PublicKey;
+
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -108,21 +110,21 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     }
 
     @Override
-    public void onSupportMessage(SupportMessage message) {
+    public void onSupportMessage(SupportMessage message, PublicKey senderSignaturePubKey) {
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
-            if (message instanceof OpenNewDisputeMessage) {
-                onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-            } else if (message instanceof PeerOpenedDisputeMessage) {
-                onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-            } else if (message instanceof ChatMessage) {
-                onChatMessage((ChatMessage) message);
-            } else if (message instanceof DisputeResultMessage) {
-                onDisputeResultMessage((DisputeResultMessage) message);
-            } else if (message instanceof PeerPublishedDisputePayoutTxMessage) {
-                onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
+            if (message instanceof OpenNewDisputeMessage openNewDisputeMessage) {
+                onOpenNewDisputeMessage(openNewDisputeMessage);
+            } else if (message instanceof PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage);
+            } else if (message instanceof ChatMessage chatMessage) {
+                onChatMessage(chatMessage, senderSignaturePubKey);
+            } else if (message instanceof DisputeResultMessage disputeResultMessage) {
+                onDisputeResultMessage(disputeResultMessage, senderSignaturePubKey);
+            } else if (message instanceof PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
+                onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage);
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
@@ -178,7 +180,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
     @Override
     // We get that message at both peers. The dispute object is in context of the trader
-    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
+    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage, PublicKey senderSignaturePubKey) {
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         ChatMessage chatMessage = disputeResult.getChatMessage();
         checkNotNull(chatMessage, "chatMessage must not be null");
@@ -197,7 +199,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                     "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
                 // We delay 2 sec. to be sure the comm. msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage), 2);
+                Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage, senderSignaturePubKey), 2);
                 delayMsgMap.put(uid, timer);
             } else {
                 log.warn("We got a dispute result msg after we already repeated to apply the message after a delay. " +

@@ -67,6 +67,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
 
 import java.time.Instant;
 
@@ -207,7 +208,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We get that message at both peers. The dispute object is in context of the trader
-    public abstract void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
+    public abstract void onDisputeResultMessage(DisputeResultMessage disputeResultMessage, PublicKey senderSignaturePubKey);
 
     @Nullable
     public abstract NodeAddress getAgentNodeAddress(Dispute dispute);
