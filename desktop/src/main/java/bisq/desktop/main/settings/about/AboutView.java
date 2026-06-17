@@ -115,7 +115,7 @@ public class AboutView extends ActivatableView<GridPane, Void> {
                         Version.LOCAL_DB_VERSION,
                         Version.TRADE_PROTOCOL_VERSION));
 
-        addTitledGroupBg(root, ++gridRow, 19, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 17, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
 
         // basics
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.shortcuts.menuNav"),
