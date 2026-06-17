@@ -25,11 +25,21 @@ import javax.annotation.Nullable;
  * Interface for payloads that include the sender's signature public key.
  */
 public interface SendersSignaturePubKeyProvidingPayload {
+    @Nullable
     PublicKey getSenderSignaturePubKey();
 
+    default boolean isSenderSignaturePubKeyRequired() {
+        return true;
+    }
+
     static boolean isSenderSignaturePubKeyMatching(@Nullable PublicKey payloadSenderSignaturePubKey,
-                                                   @Nullable PublicKey expectedSenderSignaturePubKey) {
-        return payloadSenderSignaturePubKey != null &&
+                                                   @Nullable PublicKey expectedSenderSignaturePubKey,
+                                                   boolean senderSignaturePubKeyRequired) {
+        if (payloadSenderSignaturePubKey == null) {
+            return !senderSignaturePubKeyRequired;
+        }
+
+        return expectedSenderSignaturePubKey != null &&
                 payloadSenderSignaturePubKey.equals(expectedSenderSignaturePubKey);
     }
 }

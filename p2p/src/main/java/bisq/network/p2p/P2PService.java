@@ -416,7 +416,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
         PublicKey signaturePubKey = decryptedMsg.getSignaturePubKey();
         if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
-                signaturePubKey)) {
+                signaturePubKey,
+                signaturePubKeyProvidingPayload.isSenderSignaturePubKeyRequired())) {
             log.error("Sender signature pubkey of decrypted payload {} does not match signature pubkey " +
                             "of sealed payload {}",
                     payloadSenderSignaturePubKey, signaturePubKey);
@@ -519,7 +520,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
             PublicKey senderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
             if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
-                    mySignaturePubKey)) {
+                    mySignaturePubKey,
+                    signaturePubKeyProvidingPayload.isSenderSignaturePubKeyRequired())) {
                 log.error("Sender signature pubkey {} does not match my signature pubkey {}",
                         senderSignaturePubKey, mySignaturePubKey);
                 sendDirectMessageListener.onFault("Sender signature pubkey of payload is not matching our signature " +

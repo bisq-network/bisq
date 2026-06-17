@@ -28,6 +28,8 @@ import java.security.PublicKey;
 
 import org.junit.jupiter.api.Test;
 
+import javax.annotation.Nullable;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,7 +50,8 @@ public class SendersSignaturePubKeyProvidingPayloadTest {
         assertTrue(payload instanceof SendersSignaturePubKeyProvidingPayload);
         assertEquals(expectedSenderSignaturePubKey, payload.getSenderSignaturePubKey());
         assertTrue(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payload.getSenderSignaturePubKey(),
-                expectedSenderSignaturePubKey));
+                expectedSenderSignaturePubKey,
+                payload.isSenderSignaturePubKeyRequired()));
     }
 
     @Test
@@ -57,7 +60,8 @@ public class SendersSignaturePubKeyProvidingPayloadTest {
         PublicKey expectedSenderSignaturePubKey = TestUtils.generateKeyPair().getPublic();
 
         assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payload.getSenderSignaturePubKey(),
-                expectedSenderSignaturePubKey));
+                expectedSenderSignaturePubKey,
+                payload.isSenderSignaturePubKeyRequired()));
     }
 
     @Test
@@ -65,21 +69,54 @@ public class SendersSignaturePubKeyProvidingPayloadTest {
         SignaturePubKeyProvidingPayload payload = new SignaturePubKeyProvidingPayload(TestUtils.generateKeyPair().getPublic());
 
         assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payload.getSenderSignaturePubKey(),
-                null));
+                null,
+                payload.isSenderSignaturePubKeyRequired()));
+    }
+
+    @Test
+    public void senderProvidingPayloadRejectsMissingRequiredSenderSignaturePubKey() throws NoSuchAlgorithmException {
+        SignaturePubKeyProvidingPayload payload = new SignaturePubKeyProvidingPayload(null);
+
+        assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payload.getSenderSignaturePubKey(),
+                TestUtils.generateKeyPair().getPublic(),
+                payload.isSenderSignaturePubKeyRequired()));
+    }
+
+    @Test
+    public void senderProvidingPayloadAcceptsMissingSenderSignaturePubKeyWhenNotRequired() throws NoSuchAlgorithmException {
+        SignaturePubKeyProvidingPayload payload = new SignaturePubKeyProvidingPayload(null, false);
+
+        assertTrue(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payload.getSenderSignaturePubKey(),
+                TestUtils.generateKeyPair().getPublic(),
+                payload.isSenderSignaturePubKeyRequired()));
     }
 
     private static class SignaturePubKeyProvidingPayload extends NetworkEnvelope
             implements SendersSignaturePubKeyProvidingPayload {
+        @Nullable
         private final PublicKey senderSignaturePubKey;
+        private final boolean senderSignaturePubKeyRequired;
 
-        private SignaturePubKeyProvidingPayload(PublicKey senderSignaturePubKey) {
+        private SignaturePubKeyProvidingPayload(@Nullable PublicKey senderSignaturePubKey) {
+            this(senderSignaturePubKey, true);
+        }
+
+        private SignaturePubKeyProvidingPayload(@Nullable PublicKey senderSignaturePubKey,
+                                                boolean senderSignaturePubKeyRequired) {
             super(0);
             this.senderSignaturePubKey = senderSignaturePubKey;
+            this.senderSignaturePubKeyRequired = senderSignaturePubKeyRequired;
         }
 
         @Override
+        @Nullable
         public PublicKey getSenderSignaturePubKey() {
             return senderSignaturePubKey;
+        }
+
+        @Override
+        public boolean isSenderSignaturePubKeyRequired() {
+            return senderSignaturePubKeyRequired;
         }
 
         @Override

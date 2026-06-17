@@ -92,7 +92,8 @@ class MediationManagerAuthTest {
         DisputeResultMessage message = new DisputeResultMessage(disputeResult,
                 PEER_NODE_ADDRESS,
                 "dispute-result-uid",
-                SupportType.MEDIATION);
+                SupportType.MEDIATION,
+                null);
 
         manager.onDisputeResultMessage(message, nonAgentPubKeyRing.getSignaturePubKey());
 

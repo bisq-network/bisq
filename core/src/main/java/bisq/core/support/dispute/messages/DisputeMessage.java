@@ -20,10 +20,26 @@ package bisq.core.support.dispute.messages;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.SupportMessage;
 
+import bisq.common.crypto.Sig;
+import bisq.common.proto.ProtoUtil;
+import bisq.common.util.Utilities;
+
+import com.google.protobuf.ByteString;
+
+import java.security.PublicKey;
+
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 public abstract class DisputeMessage extends SupportMessage {
     public static final long TTL = TimeUnit.DAYS.toMillis(15);
+    // Compatibility window for dispute messages sent by clients before sender_signature_pub_key existed.
+    // TODO: Once no old dispute messages are expected, remove the null handling/nullability annotations and enforce unconditionally.
+    public static final Date SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE =
+            Utilities.getUTCDate(2026, GregorianCalendar.SEPTEMBER, 1);
 
     public DisputeMessage(int messageVersion, String uid, SupportType supportType) {
         super(messageVersion, uid, supportType);
@@ -34,4 +50,30 @@ public abstract class DisputeMessage extends SupportMessage {
         return TTL;
     }
 
+    protected static boolean isSenderSignaturePubKeyValidationRequired(@Nullable Date tradeDate) {
+        return isSenderSignaturePubKeyValidationRequired(new Date(), tradeDate);
+    }
+
+    static boolean isSenderSignaturePubKeyValidationRequired(Date now, @Nullable Date tradeDate) {
+        if (!now.after(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE)) {
+            return false;
+        }
+
+        // Proto3 uses 0 as the default for unset int64 fields, so treat epoch/non-positive dates as missing.
+        if (tradeDate == null || tradeDate.getTime() <= 0L) {
+            return true;
+        }
+
+        return !tradeDate.before(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE);
+    }
+
+    @Nullable
+    protected static PublicKey senderSignaturePubKeyFromProto(ByteString proto) {
+        byte[] publicKeyBytes = ProtoUtil.byteArrayOrNullFromProto(proto);
+        return publicKeyBytes == null ? null : Sig.getPublicKeyFromBytes(publicKeyBytes);
+    }
+
+    protected static ByteString senderSignaturePubKeyToProto(PublicKey senderSignaturePubKey) {
+        return ByteString.copyFrom(Sig.getPublicKeyBytes(senderSignaturePubKey));
+    }
 }

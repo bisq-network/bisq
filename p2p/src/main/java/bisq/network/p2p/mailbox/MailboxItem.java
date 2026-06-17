@@ -117,7 +117,8 @@ public class MailboxItem implements PersistablePayload {
             PublicKey payloadSenderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(payloadSenderSignaturePubKey,
-                    signaturePubKey)) {
+                    signaturePubKey,
+                    signaturePubKeyProvidingPayload.isSenderSignaturePubKeyRequired())) {
                 log.error("Decrypted mailbox item sender signature pubkey mismatch. " +
                                 "payloadSenderSignaturePubKey={}, sealedPayloadSignaturePubKey={}",
                         payloadSenderSignaturePubKey, signaturePubKey);
