@@ -25,6 +25,8 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
+    private static final String LEGACY_ARBITRATOR_REGISTRATION_DISABLED =
+            "Legacy arbitrator registration is no longer supported";
 
     @Inject
     public ArbitratorManager(KeyRing keyRing,
@@ -46,6 +50,28 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
                              FilterManager filterManager,
                              @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(keyRing, arbitratorService, user, filterManager, useDevPrivilegeKeys);
+    }
+
+    @Override
+    public void addDisputeAgent(Arbitrator disputeAgent,
+                                ResultHandler resultHandler,
+                                ErrorMessageHandler errorMessageHandler) {
+        log.warn("{}: not publishing arbitrator {}", LEGACY_ARBITRATOR_REGISTRATION_DISABLED, disputeAgent.getNodeAddress());
+        errorMessageHandler.handleErrorMessage(LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
+    }
+
+    @Override
+    protected void startRepublishDisputeAgent() {
+        // TODO: Delete with ArbitratorManager once trade setup no longer needs legacy arbitrator lookup data.
+        log.warn("{}: not republishing persisted legacy arbitrator registration",
+                LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
+    }
+
+    @Override
+    protected void republish() {
+        // TODO: Delete with ArbitratorManager once trade setup no longer needs legacy arbitrator lookup data.
+        log.warn("{}: ignoring legacy arbitrator republish request",
+                LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
     }
 
     @Override

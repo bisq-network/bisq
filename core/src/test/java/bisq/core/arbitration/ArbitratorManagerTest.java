@@ -25,12 +25,10 @@ import bisq.core.user.User;
 import bisq.network.p2p.NodeAddress;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -40,7 +38,7 @@ public class ArbitratorManagerTest {
 
 
     @Test
-    public void testIsArbitratorAvailableForLanguage() {
+    public void testAddArbitratorIsDisabled() {
         User user = mock(User.class);
         ArbitratorService arbitratorService = mock(ArbitratorService.class);
 
@@ -59,22 +57,21 @@ public class ArbitratorManagerTest {
         Arbitrator one = new Arbitrator(new NodeAddress("arbitrator:1"), null, null, null,
                 languagesOne, 0L, null, "", null, null);
 
-        Arbitrator two = new Arbitrator(new NodeAddress("arbitrator:2"), null, null, null,
-                languagesTwo, 0L, null, "", null, null);
-
+        AtomicBoolean resultCalled = new AtomicBoolean();
+        AtomicBoolean errorCalled = new AtomicBoolean();
         manager.addDisputeAgent(one, () -> {
+            resultCalled.set(true);
         }, errorMessage -> {
-        });
-        manager.addDisputeAgent(two, () -> {
-        }, errorMessage -> {
+            errorCalled.set(true);
         });
 
-        assertTrue(manager.isAgentAvailableForLanguage("en"));
-        assertFalse(manager.isAgentAvailableForLanguage("th"));
+        assertFalse(resultCalled.get());
+        assertTrue(errorCalled.get());
+        assertFalse(manager.isAgentAvailableForLanguage("en"));
     }
 
     @Test
-    public void testGetArbitratorLanguages() {
+    public void testDisabledAddDoesNotPopulateLanguages() {
         User user = mock(User.class);
         ArbitratorService arbitratorService = mock(ArbitratorService.class);
 
@@ -89,9 +86,6 @@ public class ArbitratorManagerTest {
             add("en");
             add("es");
         }};
-
-        Arbitrator one = new Arbitrator(new NodeAddress("arbitrator:1"), null, null, null,
-                languagesOne, 0L, null, "", null, null);
 
         Arbitrator two = new Arbitrator(new NodeAddress("arbitrator:2"), null, null, null,
                 languagesTwo, 0L, null, "", null, null);
@@ -100,15 +94,11 @@ public class ArbitratorManagerTest {
             add(two.getNodeAddress());
         }};
 
-        manager.addDisputeAgent(one, () -> {
-        }, errorMessage -> {
-        });
         manager.addDisputeAgent(two, () -> {
         }, errorMessage -> {
         });
 
-        assertThat(manager.getDisputeAgentLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
-        assertThat(manager.getDisputeAgentLanguages(nodeAddresses), not(containsInAnyOrder("de")));
+        assertTrue(manager.getDisputeAgentLanguages(nodeAddresses).isEmpty());
     }
 
 }
