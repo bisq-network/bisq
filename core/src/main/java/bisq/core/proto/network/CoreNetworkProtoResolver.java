@@ -45,7 +45,6 @@ import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -200,8 +199,6 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return ChatMessage.fromProto(proto.getChatMessage(), messageVersion);
                 case DISPUTE_RESULT_MESSAGE:
                     return DisputeResultMessage.fromProto(proto.getDisputeResultMessage(), messageVersion);
-                case PEER_PUBLISHED_DISPUTE_PAYOUT_TX_MESSAGE:
-                    return PeerPublishedDisputePayoutTxMessage.fromProto(proto.getPeerPublishedDisputePayoutTxMessage(), messageVersion);
 
                 case PRIVATE_NOTIFICATION_MESSAGE:
                     return PrivateNotificationMessage.fromProto(proto.getPrivateNotificationMessage(), messageVersion);
