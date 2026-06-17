@@ -45,17 +45,6 @@ public final class DisputeResultMessage extends DisputeMessage implements Sender
     public DisputeResultMessage(DisputeResult disputeResult,
                                 NodeAddress senderNodeAddress,
                                 String uid,
-                                SupportType supportType) {
-        this(disputeResult,
-                senderNodeAddress,
-                uid,
-                supportType,
-                null);
-    }
-
-    public DisputeResultMessage(DisputeResult disputeResult,
-                                NodeAddress senderNodeAddress,
-                                String uid,
                                 SupportType supportType,
                                 @Nullable PublicKey senderSignaturePubKey) {
         this(disputeResult,
@@ -121,7 +110,9 @@ public final class DisputeResultMessage extends DisputeMessage implements Sender
 
     @Override
     public boolean isSenderSignaturePubKeyRequired() {
-        return isSenderSignaturePubKeyValidationRequired();
+        // DisputeResultMessage has no reliable trade date before domain handling.
+        // The domain handlers authenticate the sender against the expected dispute agent key.
+        return false;
     }
 
     @Override

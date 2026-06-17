@@ -113,7 +113,7 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
 
     @Override
     public boolean isSenderSignaturePubKeyRequired() {
-        return isSenderSignaturePubKeyValidationRequired(getTradeDate(dispute));
+        return DisputeMessage.isSenderSignaturePubKeyValidationRequired(getTradeDate(dispute));
     }
 
     @Nullable

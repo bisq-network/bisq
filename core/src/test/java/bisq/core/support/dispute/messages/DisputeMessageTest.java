@@ -49,6 +49,21 @@ public class DisputeMessageTest {
     }
 
     @Test
+    public void senderSignaturePubKeyValidationIsRequiredAfterActivationWhenTradeDateIsUnsetProtoDefault() {
+        Date afterActivation = new Date(DisputeMessage.SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE.getTime() + 1);
+
+        assertTrue(DisputeMessage.isSenderSignaturePubKeyValidationRequired(afterActivation, new Date(0)));
+    }
+
+    @Test
+    public void senderSignaturePubKeyValidationIsNotRequiredAtActivationInstant() {
+        Date activation = DisputeMessage.SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE;
+
+        assertFalse(DisputeMessage.isSenderSignaturePubKeyValidationRequired(activation, null));
+        assertFalse(DisputeMessage.isSenderSignaturePubKeyValidationRequired(activation, activation));
+    }
+
+    @Test
     public void senderSignaturePubKeyValidationIsRequiredAfterActivationForActivationOrLaterTrade() {
         Date activation = DisputeMessage.SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE;
         Date afterActivation = new Date(activation.getTime() + 1);

@@ -112,7 +112,7 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
 
     @Override
     public boolean isSenderSignaturePubKeyRequired() {
-        return isSenderSignaturePubKeyValidationRequired(getTradeDate(dispute));
+        return DisputeMessage.isSenderSignaturePubKeyValidationRequired(getTradeDate(dispute));
     }
 
     @Nullable

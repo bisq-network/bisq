@@ -72,6 +72,17 @@ public class DisputeResultMessageTest {
         assertNull(fromProto.getSenderSignaturePubKey());
     }
 
+    @Test
+    public void senderSignaturePubKeyIsAdvisoryForDisputeResultMessage() {
+        DisputeResultMessage message = new DisputeResultMessage(disputeResult(),
+                SENDER_NODE_ADDRESS,
+                "uid",
+                SupportType.MEDIATION,
+                null);
+
+        assertFalse(message.isSenderSignaturePubKeyRequired());
+    }
+
     private static DisputeResult disputeResult() {
         ChatMessage chatMessage = new ChatMessage(SupportType.MEDIATION,
                 TRADE_ID,

@@ -50,11 +50,7 @@ public abstract class DisputeMessage extends SupportMessage {
         return TTL;
     }
 
-    protected boolean isSenderSignaturePubKeyValidationRequired() {
-        return isSenderSignaturePubKeyValidationRequired(null);
-    }
-
-    protected boolean isSenderSignaturePubKeyValidationRequired(@Nullable Date tradeDate) {
+    protected static boolean isSenderSignaturePubKeyValidationRequired(@Nullable Date tradeDate) {
         return isSenderSignaturePubKeyValidationRequired(new Date(), tradeDate);
     }
 
@@ -63,7 +59,12 @@ public abstract class DisputeMessage extends SupportMessage {
             return false;
         }
 
-        return tradeDate == null || !tradeDate.before(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE);
+        // Proto3 uses 0 as the default for unset int64 fields, so treat epoch/non-positive dates as missing.
+        if (tradeDate == null || tradeDate.getTime() <= 0L) {
+            return true;
+        }
+
+        return !tradeDate.before(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE);
     }
 
     @Nullable
