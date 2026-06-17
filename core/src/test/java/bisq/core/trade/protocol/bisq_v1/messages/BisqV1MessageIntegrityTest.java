@@ -349,6 +349,22 @@ public class BisqV1MessageIntegrityTest {
     }
 
     @Test
+    void inputsForDepositTxRequestRejectsOnlyMediatorPubKeyRing() {
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> {
+            args.mediatorPubKeyRing = pubKeyRing();
+            args.refundAgentPubKeyRing = null;
+        }));
+    }
+
+    @Test
+    void inputsForDepositTxRequestRejectsOnlyRefundAgentPubKeyRing() {
+        assertThrows(IllegalArgumentException.class, () -> newRequest(args -> {
+            args.mediatorPubKeyRing = null;
+            args.refundAgentPubKeyRing = pubKeyRing();
+        }));
+    }
+
+    @Test
     void inputsForDepositTxResponseRejectsInvalidBurningManAddressListVersions() {
         assertThrows(IllegalArgumentException.class, () -> newResponse(args ->
                 args.supportedBurningManAddressListVersions = List.of()));

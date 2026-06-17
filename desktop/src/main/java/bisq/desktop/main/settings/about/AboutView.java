@@ -115,7 +115,7 @@ public class AboutView extends ActivatableView<GridPane, Void> {
                         Version.LOCAL_DB_VERSION,
                         Version.TRADE_PROTOCOL_VERSION));
 
-        addTitledGroupBg(root, ++gridRow, 18, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 19, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
 
         // basics
         addCompactTopLabelTextField(root, gridRow, Res.get("setting.about.shortcuts.menuNav"),
@@ -161,6 +161,10 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.registerMediator"),
                 Res.get("setting.about.shortcuts.registerMediator.value",
                         Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "d")));
+
+        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.registerRefundAgent"),
+                Res.get("setting.about.shortcuts.registerRefundAgent.value",
+                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "n")));
 
         // only for maintainers
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.sendAlertMsg"),
