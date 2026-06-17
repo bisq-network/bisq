@@ -51,6 +51,7 @@ import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -113,9 +114,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
             if (message instanceof OpenNewDisputeMessage openNewDisputeMessage) {
-                onOpenNewDisputeMessage(openNewDisputeMessage);
+                onOpenNewDisputeMessage(openNewDisputeMessage, senderSignaturePubKey);
             } else if (message instanceof PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage);
+                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage, senderSignaturePubKey);
             } else if (message instanceof ChatMessage chatMessage) {
                 onChatMessage(chatMessage, senderSignaturePubKey);
             } else if (message instanceof DisputeResultMessage disputeResultMessage) {
@@ -196,6 +197,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
 
         Dispute dispute = disputeOptional.get();
+        if (!isDisputeAgentSignaturePubKeyValid(dispute,
+                senderSignaturePubKey,
+                disputeResultMessage.getClass().getSimpleName())) {
+            return;
+        }
+
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
             dispute.addAndPersistChatMessage(chatMessage);
@@ -238,6 +245,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getMediatorNodeAddress();
+    }
+
+    @Nullable
+    @Override
+    protected PubKeyRing getExpectedAgentPubKeyRing(Trade trade) {
+        return trade.getMediatorPubKeyRing();
     }
 
     public void onAcceptMediationResult(Trade trade,

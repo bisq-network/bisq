@@ -116,15 +116,15 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
             if (message instanceof OpenNewDisputeMessage openNewDisputeMessage) {
-                onOpenNewDisputeMessage(openNewDisputeMessage);
+                onOpenNewDisputeMessage(openNewDisputeMessage, senderSignaturePubKey);
             } else if (message instanceof PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage);
+                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage, senderSignaturePubKey);
             } else if (message instanceof ChatMessage chatMessage) {
                 onChatMessage(chatMessage, senderSignaturePubKey);
             } else if (message instanceof DisputeResultMessage disputeResultMessage) {
                 onDisputeResultMessage(disputeResultMessage, senderSignaturePubKey);
             } else if (message instanceof PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
-                onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage);
+                onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage, senderSignaturePubKey);
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
@@ -135,6 +135,12 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return null;
+    }
+
+    @Nullable
+    @Override
+    protected PubKeyRing getExpectedAgentPubKeyRing(Trade trade) {
+        return trade.getArbitratorPubKeyRing();
     }
 
     @Override
@@ -209,6 +215,12 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         }
 
         Dispute dispute = disputeOptional.get();
+        if (!isDisputeAgentSignaturePubKeyValid(dispute,
+                senderSignaturePubKey,
+                disputeResultMessage.getClass().getSimpleName())) {
+            return;
+        }
+
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
             dispute.addAndPersistChatMessage(chatMessage);
@@ -299,7 +311,8 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     }
 
     // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    private void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
+    private void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage,
+                                           PublicKey senderSignaturePubKey) {
         String uid = peerPublishedDisputePayoutTxMessage.getUid();
         String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
@@ -307,7 +320,8 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
                 // We delay 3 sec. to be sure the close msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage), 3);
+                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage,
+                        senderSignaturePubKey), 3);
                 delayMsgMap.put(uid, timer);
             } else {
                 log.warn("We got a peerPublishedPayoutTxMessage after we already repeated to apply the message after a delay. " +
@@ -320,6 +334,12 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         Contract contract = dispute.getContract();
         boolean isBuyer = pubKeyRing.equals(contract.getBuyerPubKeyRing());
         PubKeyRing peersPubKeyRing = isBuyer ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
+        if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                peersPubKeyRing,
+                peerPublishedDisputePayoutTxMessage.getClass().getSimpleName(),
+                tradeId)) {
+            return;
+        }
 
         cleanupRetryMap(uid);
 

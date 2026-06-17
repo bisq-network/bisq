@@ -40,6 +40,7 @@ import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import lombok.extern.slf4j.Slf4j;
@@ -152,18 +153,37 @@ public abstract class SupportManager {
         }
 
         cleanupRetryMap(uid);
-        PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(chatMessage);
+        PubKeyRing senderPubKeyRing = getPeerPubKeyRing(chatMessage);
+        if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                senderPubKeyRing,
+                chatMessage.getClass().getSimpleName(),
+                tradeId)) {
+            return;
+        }
 
         addAndPersistChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
-        if (receiverPubKeyRing != null)
-            sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
+        sendAckMessage(chatMessage, senderPubKeyRing, true, null);
     }
 
     private void onAckMessage(AckMessage ackMessage, PublicKey senderSignaturePubKey) {
         if (ackMessage.getSourceType() == getAckMessageSourceType()) {
+            List<ChatMessage> allChatMessages = getAllChatMessages(ackMessage.getSourceId());
+            Optional<ChatMessage> sourceMessage = allChatMessages.stream()
+                    .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
+                    .findFirst();
+            if (sourceMessage.isPresent()) {
+                PubKeyRing expectedSenderPubKeyRing = getPeerPubKeyRing(sourceMessage.get());
+                if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                        expectedSenderPubKeyRing,
+                        ackMessage.getClass().getSimpleName(),
+                        ackMessage.getSourceId())) {
+                    return;
+                }
+            }
+
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
@@ -172,7 +192,7 @@ public abstract class SupportManager {
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
             }
 
-            getAllChatMessages(ackMessage.getSourceId()).stream()
+            allChatMessages.stream()
                     .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
                     .forEach(msg -> {
                         if (ackMessage.isSuccess())
@@ -282,6 +302,26 @@ public abstract class SupportManager {
 
     protected boolean canProcessMessage(SupportMessage message) {
         return message.getSupportType() == getSupportType();
+    }
+
+    protected boolean isSenderSignaturePubKeyExpected(PublicKey senderSignaturePubKey,
+                                                      @Nullable PubKeyRing expectedSenderPubKeyRing,
+                                                      String messageClassName,
+                                                      String tradeId) {
+        if (expectedSenderPubKeyRing == null) {
+            log.warn("Ignoring {} for trade {} because expected sender pubKeyRing is unknown",
+                    messageClassName, tradeId);
+            return false;
+        }
+
+        PublicKey expectedSenderSignaturePubKey = expectedSenderPubKeyRing.getSignaturePubKey();
+        if (!senderSignaturePubKey.equals(expectedSenderSignaturePubKey)) {
+            log.warn("Ignoring {} for trade {} because sender signature pubKey does not match the expected peer",
+                    messageClassName, tradeId);
+            return false;
+        }
+
+        return true;
     }
 
     protected void cleanupRetryMap(String uid) {

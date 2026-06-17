@@ -213,6 +213,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     @Nullable
     public abstract NodeAddress getAgentNodeAddress(Dispute dispute);
 
+    @Nullable
+    protected abstract PubKeyRing getExpectedAgentPubKeyRing(Trade trade);
+
     protected abstract Trade.DisputeState getDisputeStateStartedByPeer();
 
     public abstract void cleanupDisputes();
@@ -387,7 +390,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
     // dispute agent receives that from trader who opens dispute
-    protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+    protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage, PublicKey senderSignaturePubKey) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
@@ -402,6 +405,13 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         dispute.setState(Dispute.State.NEW);    // this can be removed a few months after 1.6.0 release
 
         Contract contract = dispute.getContract();
+
+        if (!isDisputeOpenerSignaturePubKeyValid(dispute,
+                senderSignaturePubKey,
+                openNewDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+
         addPriceInfoMessage(dispute, 0);
 
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
@@ -451,35 +461,66 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
     // Not-dispute-requester receives that msg from dispute agent
-    protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage, PublicKey senderSignaturePubKey) {
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
-            trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade),
+            trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, false),
             () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
-                closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade)closedTradable),
+                closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade)closedTradable, senderSignaturePubKey),
                 () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresent(
-                    trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade))));
+                    trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey))));
     }
 
-    private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+    private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                              Dispute dispute,
+                                              Trade trade,
+                                              PublicKey senderSignaturePubKey) {
+        if (!isDisputeAgentSignaturePubKeyValid(dispute,
+                trade,
+                senderSignaturePubKey,
+                peerOpenedDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+
         log.info("Peer dispute ticket received, reverting failed trade {} to pending", trade.getShortId());
         failedTradesManager.removeTrade(trade);
         tradeManager.addTradeToPendingTrades(trade);
-        peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade);
+        peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, true);
     }
 
-    private void newDisputeRevertsClosedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+    private void newDisputeRevertsClosedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                              Dispute dispute,
+                                              Trade trade,
+                                              PublicKey senderSignaturePubKey) {
+        if (!isDisputeAgentSignaturePubKeyValid(dispute,
+                trade,
+                senderSignaturePubKey,
+                peerOpenedDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+
         log.info("Peer dispute ticket received, reverting closed trade {} to pending", trade.getShortId());
         closedTradableManager.remove(trade);
         tradeManager.addTradeToPendingTrades(trade);
-        peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade);
+        peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, true);
     }
 
-    private void peerOpenedDisputeForTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+    private void peerOpenedDisputeForTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                           Dispute dispute,
+                                           Trade trade,
+                                           PublicKey senderSignaturePubKey,
+                                           boolean agentSignatureAlreadyChecked) {
         String errorMessage = null;
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
+            return;
+        }
+
+        if (!agentSignatureAlreadyChecked && !isDisputeAgentSignaturePubKeyValid(dispute,
+                trade,
+                senderSignaturePubKey,
+                peerOpenedDisputeMessage.getClass().getSimpleName())) {
             return;
         }
 
@@ -927,6 +968,70 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
     public boolean isAgent(Dispute dispute) {
         return pubKeyRing.equals(dispute.getAgentPubKeyRing());
+    }
+
+    protected boolean isDisputeAgentSignaturePubKeyValid(Dispute dispute,
+                                                         PublicKey senderSignaturePubKey,
+                                                         String messageClassName) {
+        Optional<Trade> tradeOptional = findTrade(dispute);
+        if (tradeOptional.isPresent()) {
+            return isDisputeAgentSignaturePubKeyValid(dispute,
+                    tradeOptional.get(),
+                    senderSignaturePubKey,
+                    messageClassName);
+        }
+
+        log.warn("Cannot pin dispute agent for {} because trade {} was not found. Falling back to stored dispute agent key.",
+                messageClassName, dispute.getTradeId());
+        return isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                dispute.getAgentPubKeyRing(),
+                messageClassName,
+                dispute.getTradeId());
+    }
+
+    private boolean isDisputeAgentSignaturePubKeyValid(Dispute dispute,
+                                                       Trade trade,
+                                                       PublicKey senderSignaturePubKey,
+                                                       String messageClassName) {
+        PubKeyRing expectedAgentPubKeyRing = getExpectedAgentPubKeyRing(trade);
+        if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                expectedAgentPubKeyRing,
+                messageClassName,
+                dispute.getTradeId())) {
+            return false;
+        }
+
+        if (!expectedAgentPubKeyRing.equals(dispute.getAgentPubKeyRing())) {
+            log.warn("Ignoring {} for trade {} because dispute agent pubKeyRing does not match the trade's expected agent",
+                    messageClassName, dispute.getTradeId());
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isDisputeOpenerSignaturePubKeyValid(Dispute dispute,
+                                                        PublicKey senderSignaturePubKey,
+                                                        String messageClassName) {
+        Contract contract = dispute.getContract();
+        PubKeyRing expectedOpenerPubKeyRing = dispute.isDisputeOpenerIsBuyer() ?
+                contract.getBuyerPubKeyRing() :
+                contract.getSellerPubKeyRing();
+
+        if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                expectedOpenerPubKeyRing,
+                messageClassName,
+                dispute.getTradeId())) {
+            return false;
+        }
+
+        if (!expectedOpenerPubKeyRing.equals(dispute.getTraderPubKeyRing())) {
+            log.warn("Ignoring {} for trade {} because dispute trader pubKeyRing does not match the declared opener",
+                    messageClassName, dispute.getTradeId());
+            return false;
+        }
+
+        return true;
     }
 
     private Optional<Dispute> findDispute(Dispute dispute) {

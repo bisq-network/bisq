@@ -51,6 +51,7 @@ import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
@@ -129,9 +130,9 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
             if (message instanceof OpenNewDisputeMessage openNewDisputeMessage) {
-                onOpenNewDisputeMessage(openNewDisputeMessage);
+                onOpenNewDisputeMessage(openNewDisputeMessage, senderSignaturePubKey);
             } else if (message instanceof PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage);
+                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage, senderSignaturePubKey);
             } else if (message instanceof ChatMessage chatMessage) {
                 onChatMessage(chatMessage, senderSignaturePubKey);
             } else if (message instanceof DisputeResultMessage disputeResultMessage) {
@@ -213,6 +214,12 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         }
 
         Dispute dispute = disputeOptional.get();
+        if (!isDisputeAgentSignaturePubKeyValid(dispute,
+                senderSignaturePubKey,
+                disputeResultMessage.getClass().getSimpleName())) {
+            return;
+        }
+
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
             dispute.addAndPersistChatMessage(chatMessage);
@@ -263,6 +270,12 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getRefundAgentNodeAddress();
+    }
+
+    @Nullable
+    @Override
+    protected PubKeyRing getExpectedAgentPubKeyRing(Trade trade) {
+        return trade.getRefundAgentPubKeyRing();
     }
 
     public CompletableFuture<List<Transaction>> requestBlockchainTransactions(String makerFeeTxId,
