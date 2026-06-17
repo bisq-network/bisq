@@ -316,6 +316,20 @@ public class WalletConfig extends AbstractIdleService {
             }
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
+            if (params.getId().equals(NetworkParameters.ID_REGTEST)) {
+                // Regtest e2e tests mine blocks far faster than any real network, which
+                // exposes a bloom-filter race in bitcoinj's SPV sync: when a wallet broadcasts
+                // a tx (e.g. its trade deposit/payout) bitcoinj sends an updated filterload to
+                // bitcoind, but if the confirming block is mined before bitcoind applies that
+                // filter, the block's merkleblock omits the tx and the wallet never marks its
+                // own deposit/payout confirmed (verified: deposit buried N-deep on bitcoind,
+                // unconfirmed in the wallet — and gating mining on the tx reaching bitcoind's
+                // mempool does NOT close the race, since bitcoind can accept the tx before
+                // applying the filter). Forcing the false-positive rate to 1.0 makes the filter
+                // match every tx, so every block is delivered in full and no tx is ever missed.
+                // Regtest only: no effect on testnet/mainnet privacy or bandwidth.
+                vPeerGroup.setBloomFilterFalsePositiveRate(1.0);
+            }
             if (minBroadcastConnections > 0)
                 vPeerGroup.setMinBroadcastConnections(minBroadcastConnections);
             if (this.userAgent != null)

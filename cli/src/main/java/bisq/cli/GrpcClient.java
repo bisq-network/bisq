@@ -84,6 +84,17 @@ public final class GrpcClient {
         return walletsServiceRequest.getDaoStatus();
     }
 
+    /** True if the bitcoinj wallet's best-chain height is within tolerance of its peers —
+     *  the same guard a maker applies before answering an offer-availability request. */
+    public boolean isWalletChainHeightSyncedWithinTolerance() {
+        return walletsServiceRequest.getWalletSyncStatus().getIsChainHeightSyncedWithinTolerance();
+    }
+
+    /** The bitcoinj wallet's best-chain height (0 if the wallet is not ready). */
+    public int getWalletBestChainHeight() {
+        return walletsServiceRequest.getWalletSyncStatus().getBestChainHeight();
+    }
+
     public BalancesInfo getBalances() {
         return walletsServiceRequest.getBalances();
     }

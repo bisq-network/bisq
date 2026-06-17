@@ -614,6 +614,14 @@ message GetDaoStatusReply {
     bool is_dao_state_ready_and_in_sync = 1;
 }
 
+message GetWalletSyncStatusRequest {
+}
+
+message GetWalletSyncStatusReply {
+    bool is_chain_height_synced_within_tolerance = 1;   // Whether the bitcoinj wallet's best-chain height is within tolerance of its peers.
+    int32 best_chain_height = 2;                        // The bitcoinj wallet's best-chain height (0 if the wallet is not ready).
+}
+
 message GetBalancesRequest {
     string currency_code = 1;   // The Bisq wallet currency (BSQ or BTC) for the balances request.
 }
