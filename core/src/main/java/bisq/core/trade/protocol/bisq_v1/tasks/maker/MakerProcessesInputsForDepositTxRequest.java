@@ -23,6 +23,7 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -54,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignature;
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
+import static bisq.core.trade.validation.TradeValidation.getCheckedRefundAgentPubKeyRing;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -144,6 +146,27 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
             trade.setMediatorPubKeyRing(mediatorPubKeyRing);
+
+            boolean contractDisputeAgentPubKeysSupported = request.hasDisputeAgentPubKeyRings();
+            boolean contractDisputeAgentPubKeyVersionRequired =
+                    Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate());
+            if (contractDisputeAgentPubKeysSupported) {
+                checkArgument(mediatorPubKeyRing.equals(request.getMediatorPubKeyRing()),
+                        "Mediator pubKeyRing from request must match local mediator pubKeyRing");
+
+                PubKeyRing refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
+                        processModel.getRefundAgentManager());
+                trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
+                checkArgument(refundAgentPubKeyRing.equals(request.getRefundAgentPubKeyRing()),
+                        "Refund agent pubKeyRing from request must match local refund agent pubKeyRing");
+            } else if (contractDisputeAgentPubKeyVersionRequired) {
+                throw new IllegalArgumentException("InputsForDepositTxRequest must include dispute agent pubKeyRings");
+            } else {
+                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
+                log.info("Processing legacy contract request without dispute agent pubKeyRings for trade {}",
+                        trade.getId());
+            }
+            tradingPeer.setContractDisputeAgentPubKeysSupported(contractDisputeAgentPubKeysSupported);
 
             long takersTradePrice = TradePriceValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);

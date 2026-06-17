@@ -32,6 +32,7 @@ import bisq.core.util.JsonUtil;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.Hash;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
@@ -41,6 +42,8 @@ import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
+import static bisq.core.trade.validation.TradeValidation.getCheckedRefundAgentPubKeyRing;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -88,6 +91,30 @@ public class TakerVerifyAndSignContract extends TradeTask {
 
             Coin tradeAmount = checkNotNull(trade.getAmount());
             OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
+            String makersContractAsJson = checkNotNull(maker.getContractAsJson(), "maker contractAsJson must not be null");
+            boolean makerUsesContractDisputeAgentPubKeys = Contract.hasDisputeAgentPubKeyFields(makersContractAsJson);
+            if (!makerUsesContractDisputeAgentPubKeys &&
+                    Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
+                failed("Maker contract must include dispute agent pubKeyRings");
+                return;
+            }
+
+            PubKeyRing mediatorPubKeyRing = null;
+            PubKeyRing refundAgentPubKeyRing = null;
+            if (makerUsesContractDisputeAgentPubKeys) {
+                // New-version contracts fail closed if the local dispute-agent registry cannot resolve the keys.
+                mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(),
+                        processModel.getUser());
+                refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
+                        processModel.getRefundAgentManager());
+                trade.setMediatorPubKeyRing(mediatorPubKeyRing);
+                trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
+            } else {
+                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
+                log.info("Verifying legacy contract without dispute agent pubKeyRings for trade {}",
+                        trade.getId());
+            }
+
             Contract contract = new Contract(
                     offerPayload,
                     tradeAmount.value,
@@ -113,12 +140,14 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     hashOfTakersPaymentAccountPayload,
                     makersPaymentMethodId,
                     takersPaymentMethodId,
-                    processModel.getBurningManAddressListVersion()
+                    processModel.getBurningManAddressListVersion(),
+                    mediatorPubKeyRing,
+                    refundAgentPubKeyRing
             );
             String contractAsJson = JsonUtil.objectToJson(contract);
 
-            if (!contractAsJson.equals(processModel.getTradePeer().getContractAsJson())) {
-                contract.printDiff(processModel.getTradePeer().getContractAsJson());
+            if (!contractAsJson.equals(makersContractAsJson)) {
+                contract.printDiff(makersContractAsJson);
                 failed("Contracts are not matching");
                 return;
             }

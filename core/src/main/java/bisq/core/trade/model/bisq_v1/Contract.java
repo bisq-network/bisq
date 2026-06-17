@@ -41,6 +41,11 @@ import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -57,6 +62,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @EqualsAndHashCode
 public final class Contract implements NetworkPayload {
+    public static final int VERSION_WITH_DISPUTE_AGENT_PUB_KEYS = 2;
+    // GregorianCalendar months are zero-based.
+    public static final Date DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE =
+            Utilities.getUTCDate(2026, GregorianCalendar.SEPTEMBER, 1);
+
     private final OfferPayload offerPayload;
     private final long tradeAmount;
     private final long tradePrice;
@@ -104,6 +114,14 @@ public final class Contract implements NetworkPayload {
 
     private final int burningManAddressListVersion;
 
+    // Added for the dispute-agent pub key contract version. Null preserves legacy signed JSON.
+    @Nullable
+    private final Integer contractVersion;
+    @Nullable
+    private final PubKeyRing mediatorPubKeyRing;
+    @Nullable
+    private final PubKeyRing refundAgentPubKeyRing;
+
     public Contract(OfferPayload offerPayload,
                     long tradeAmount,
                     long tradePrice,
@@ -129,6 +147,121 @@ public final class Contract implements NetworkPayload {
                     @Nullable String makerPaymentMethodId,
                     @Nullable String takerPaymentMethodId,
                     int burningManAddressListVersion) {
+        this(offerPayload,
+                tradeAmount,
+                tradePrice,
+                takerFeeTxID,
+                buyerNodeAddress,
+                sellerNodeAddress,
+                mediatorNodeAddress,
+                isBuyerMakerAndSellerTaker,
+                makerAccountId,
+                takerAccountId,
+                makerPaymentAccountPayload,
+                takerPaymentAccountPayload,
+                makerPubKeyRing,
+                takerPubKeyRing,
+                makerPayoutAddressString,
+                takerPayoutAddressString,
+                makerMultiSigPubKey,
+                takerMultiSigPubKey,
+                lockTime,
+                refundAgentNodeAddress,
+                hashOfMakersPaymentAccountPayload,
+                hashOfTakersPaymentAccountPayload,
+                makerPaymentMethodId,
+                takerPaymentMethodId,
+                burningManAddressListVersion,
+                null,
+                null,
+                null);
+    }
+
+    public Contract(OfferPayload offerPayload,
+                    long tradeAmount,
+                    long tradePrice,
+                    String takerFeeTxID,
+                    NodeAddress buyerNodeAddress,
+                    NodeAddress sellerNodeAddress,
+                    NodeAddress mediatorNodeAddress,
+                    boolean isBuyerMakerAndSellerTaker,
+                    String makerAccountId,
+                    String takerAccountId,
+                    @Nullable PaymentAccountPayload makerPaymentAccountPayload,
+                    @Nullable PaymentAccountPayload takerPaymentAccountPayload,
+                    PubKeyRing makerPubKeyRing,
+                    PubKeyRing takerPubKeyRing,
+                    String makerPayoutAddressString,
+                    String takerPayoutAddressString,
+                    byte[] makerMultiSigPubKey,
+                    byte[] takerMultiSigPubKey,
+                    long lockTime,
+                    NodeAddress refundAgentNodeAddress,
+                    @Nullable byte[] hashOfMakersPaymentAccountPayload,
+                    @Nullable byte[] hashOfTakersPaymentAccountPayload,
+                    @Nullable String makerPaymentMethodId,
+                    @Nullable String takerPaymentMethodId,
+                    int burningManAddressListVersion,
+                    @Nullable PubKeyRing mediatorPubKeyRing,
+                    @Nullable PubKeyRing refundAgentPubKeyRing) {
+        this(offerPayload,
+                tradeAmount,
+                tradePrice,
+                takerFeeTxID,
+                buyerNodeAddress,
+                sellerNodeAddress,
+                mediatorNodeAddress,
+                isBuyerMakerAndSellerTaker,
+                makerAccountId,
+                takerAccountId,
+                makerPaymentAccountPayload,
+                takerPaymentAccountPayload,
+                makerPubKeyRing,
+                takerPubKeyRing,
+                makerPayoutAddressString,
+                takerPayoutAddressString,
+                makerMultiSigPubKey,
+                takerMultiSigPubKey,
+                lockTime,
+                refundAgentNodeAddress,
+                hashOfMakersPaymentAccountPayload,
+                hashOfTakersPaymentAccountPayload,
+                makerPaymentMethodId,
+                takerPaymentMethodId,
+                burningManAddressListVersion,
+                getContractVersion(mediatorPubKeyRing, refundAgentPubKeyRing),
+                mediatorPubKeyRing,
+                refundAgentPubKeyRing);
+    }
+
+    private Contract(OfferPayload offerPayload,
+                     long tradeAmount,
+                     long tradePrice,
+                     String takerFeeTxID,
+                     NodeAddress buyerNodeAddress,
+                     NodeAddress sellerNodeAddress,
+                     NodeAddress mediatorNodeAddress,
+                     boolean isBuyerMakerAndSellerTaker,
+                     String makerAccountId,
+                     String takerAccountId,
+                     @Nullable PaymentAccountPayload makerPaymentAccountPayload,
+                     @Nullable PaymentAccountPayload takerPaymentAccountPayload,
+                     PubKeyRing makerPubKeyRing,
+                     PubKeyRing takerPubKeyRing,
+                     String makerPayoutAddressString,
+                     String takerPayoutAddressString,
+                     byte[] makerMultiSigPubKey,
+                     byte[] takerMultiSigPubKey,
+                     long lockTime,
+                     NodeAddress refundAgentNodeAddress,
+                     @Nullable byte[] hashOfMakersPaymentAccountPayload,
+                     @Nullable byte[] hashOfTakersPaymentAccountPayload,
+                     @Nullable String makerPaymentMethodId,
+                     @Nullable String takerPaymentMethodId,
+                     int burningManAddressListVersion,
+                     @Nullable Integer contractVersion,
+                     @Nullable PubKeyRing mediatorPubKeyRing,
+                     @Nullable PubKeyRing refundAgentPubKeyRing) {
         this.offerPayload = offerPayload;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
@@ -154,9 +287,13 @@ public final class Contract implements NetworkPayload {
         this.makerPaymentMethodId = makerPaymentMethodId;
         this.takerPaymentMethodId = takerPaymentMethodId;
         this.burningManAddressListVersion = burningManAddressListVersion;
+        this.contractVersion = contractVersion;
+        this.mediatorPubKeyRing = mediatorPubKeyRing;
+        this.refundAgentPubKeyRing = refundAgentPubKeyRing;
 
         checkArgument(burningManAddressListVersion >= 0,
                 "burningManAddressListVersion must not be negative");
+        validateContractVersion(contractVersion, mediatorPubKeyRing, refundAgentPubKeyRing);
 
         // Either makerPaymentMethodId is set, or obtained from offerPayload.
         if (makerPaymentMethodId == null) {
@@ -187,6 +324,10 @@ public final class Contract implements NetworkPayload {
                 coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()) : null;
         PaymentAccountPayload takerPaymentAccountPayload = proto.hasTakerPaymentAccountPayload() ?
                 coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()) : null;
+        PubKeyRing mediatorPubKeyRing = proto.hasMediatorPubKeyRing() ?
+                PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null;
+        PubKeyRing refundAgentPubKeyRing = proto.hasRefundAgentPubKeyRing() ?
+                PubKeyRing.fromProto(proto.getRefundAgentPubKeyRing()) : null;
         return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
                 proto.getTradeAmount(),
                 proto.getTradePrice(),
@@ -211,7 +352,10 @@ public final class Contract implements NetworkPayload {
                 ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfTakersPaymentAccountPayload()),
                 ProtoUtil.stringOrNullFromProto(proto.getMakerPaymentMethodId()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentMethodId()),
-                proto.getBurningManAddressListVersion()
+                proto.getBurningManAddressListVersion(),
+                getContractVersion(proto.getContractVersion(), mediatorPubKeyRing, refundAgentPubKeyRing),
+                mediatorPubKeyRing,
+                refundAgentPubKeyRing
         );
     }
 
@@ -251,6 +395,9 @@ public final class Contract implements NetworkPayload {
         if (burningManAddressListVersion > 0) {
             builder.setBurningManAddressListVersion(burningManAddressListVersion);
         }
+        Optional.ofNullable(contractVersion).ifPresent(builder::setContractVersion);
+        Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(e.toProtoMessage()));
+        Optional.ofNullable(refundAgentPubKeyRing).ifPresent(e -> builder.setRefundAgentPubKeyRing(e.toProtoMessage()));
         return builder.build();
     }
 
@@ -327,6 +474,38 @@ public final class Contract implements NetworkPayload {
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
 
         return volumeByAmount;
+    }
+
+    public boolean hasDisputeAgentPubKeyVersion() {
+        return contractVersion != null &&
+                contractVersion >= VERSION_WITH_DISPUTE_AGENT_PUB_KEYS &&
+                mediatorPubKeyRing != null &&
+                refundAgentPubKeyRing != null;
+    }
+
+    public static boolean hasDisputeAgentPubKeyFields(String contractAsJson) {
+        // Throws on malformed or non-object JSON. Callers use this while processing peer input and fail the task closed.
+        JsonObject object = JsonParser.parseString(contractAsJson).getAsJsonObject();
+        // Any new field marks the maker JSON as new-version; exact JSON equality later rejects partial/inconsistent data.
+        return object.has("mediatorPubKeyRing") ||
+                object.has("refundAgentPubKeyRing") ||
+                object.has("contractVersion");
+    }
+
+    public static boolean requiresDisputeAgentPubKeyVersion(long tradeDate) {
+        return requiresDisputeAgentPubKeyVersion(new Date(), tradeDate);
+    }
+
+    public static boolean requiresDisputeAgentPubKeyVersion(Date now, @Nullable Date tradeDate) {
+        return requiresDisputeAgentPubKeyVersion(now, tradeDate == null ? 0 : tradeDate.getTime());
+    }
+
+    public static boolean requiresDisputeAgentPubKeyVersion(Date now, long tradeDate) {
+        if (!now.after(DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE)) {
+            return false;
+        }
+
+        return tradeDate <= 0 || !new Date(tradeDate).before(DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE);
     }
 
     public Price getTradePrice() {
@@ -432,6 +611,43 @@ public final class Contract implements NetworkPayload {
                 ",\n     hashOfTakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfTakersPaymentAccountPayload) +
                 ",\n     makerPaymentMethodId=" + makerPaymentMethodId +
                 ",\n     takerPaymentMethodId=" + takerPaymentMethodId +
+                ",\n     contractVersion=" + contractVersion +
+                ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
+                ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 "\n}";
+    }
+
+    @Nullable
+    private static Integer getContractVersion(@Nullable PubKeyRing mediatorPubKeyRing,
+                                              @Nullable PubKeyRing refundAgentPubKeyRing) {
+        return mediatorPubKeyRing != null || refundAgentPubKeyRing != null ?
+                VERSION_WITH_DISPUTE_AGENT_PUB_KEYS :
+                null;
+    }
+
+    @Nullable
+    private static Integer getContractVersion(int protoContractVersion,
+                                              @Nullable PubKeyRing mediatorPubKeyRing,
+                                              @Nullable PubKeyRing refundAgentPubKeyRing) {
+        if (protoContractVersion > 0) {
+            return protoContractVersion;
+        }
+
+        return getContractVersion(mediatorPubKeyRing, refundAgentPubKeyRing);
+    }
+
+    private static void validateContractVersion(@Nullable Integer contractVersion,
+                                                @Nullable PubKeyRing mediatorPubKeyRing,
+                                                @Nullable PubKeyRing refundAgentPubKeyRing) {
+        if (contractVersion == null) {
+            checkArgument(mediatorPubKeyRing == null && refundAgentPubKeyRing == null,
+                    "dispute agent pubKeyRings require contractVersion");
+            return;
+        }
+
+        checkArgument(contractVersion >= VERSION_WITH_DISPUTE_AGENT_PUB_KEYS,
+                "contractVersion must support dispute agent pubKeyRings");
+        checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null for contractVersion");
+        checkNotNull(refundAgentPubKeyRing, "refundAgentPubKeyRing must not be null for contractVersion");
     }
 }

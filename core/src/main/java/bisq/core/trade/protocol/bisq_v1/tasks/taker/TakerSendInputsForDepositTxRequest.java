@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -29,6 +30,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.app.Version;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
@@ -44,6 +46,8 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.TradeValidation.getCheckedMediatorPubKeyRing;
+import static bisq.core.trade.validation.TradeValidation.getCheckedRefundAgentPubKeyRing;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -111,6 +115,26 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
 
 
             String takersPaymentMethodId = takersPaymentAccountPayload.getPaymentMethodId();
+            PubKeyRing mediatorPubKeyRing = null;
+            PubKeyRing refundAgentPubKeyRing = null;
+            try {
+                mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(), user);
+                refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
+                        processModel.getRefundAgentManager());
+                // Set both only after both lookups pass so legacy fallback cannot leave partial trade state.
+                trade.setMediatorPubKeyRing(mediatorPubKeyRing);
+                trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
+            } catch (NullPointerException | IllegalArgumentException e) {
+                if (Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
+                    throw e;
+                }
+                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
+                log.warn("Sending legacy contract request without dispute agent pubKeyRings for trade {}. Error={}",
+                        trade.getId(), e.toString());
+                mediatorPubKeyRing = null;
+                refundAgentPubKeyRing = null;
+            }
+
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
@@ -138,7 +162,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     hashOfTakersPaymentAccountPayload,
                     takersPaymentMethodId,
                     burningManSelectionHeight,
-                    supportedBurningManAddressListVersions);
+                    supportedBurningManAddressListVersions,
+                    mediatorPubKeyRing,
+                    refundAgentPubKeyRing);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
                     request.getUid(), trade.getTradingPeerNodeAddress());

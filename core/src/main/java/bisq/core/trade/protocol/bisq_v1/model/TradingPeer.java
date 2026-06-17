@@ -92,6 +92,7 @@ public final class TradingPeer implements TradePeer {
     private String paymentMethodId;
     @Nullable
     private List<Integer> supportedBurningManAddressListVersions;
+    private boolean contractDisputeAgentPubKeysSupported;
 
     public TradingPeer() {
     }
@@ -116,6 +117,7 @@ public final class TradingPeer implements TradePeer {
         Optional.ofNullable(supportedBurningManAddressListVersions)
                 .ifPresent(builder::addAllSupportedBurningManAddressListVersions);
         builder.setCurrentDate(currentDate);
+        builder.setContractDisputeAgentPubKeysSupported(contractDisputeAgentPubKeysSupported);
         return builder.build();
     }
 
@@ -146,6 +148,7 @@ public final class TradingPeer implements TradePeer {
             tradingPeer.setSupportedBurningManAddressListVersions(proto.getSupportedBurningManAddressListVersionsList().isEmpty() ?
                     null :
                     proto.getSupportedBurningManAddressListVersionsList());
+            tradingPeer.setContractDisputeAgentPubKeysSupported(proto.getContractDisputeAgentPubKeysSupported());
             return tradingPeer;
         }
     }

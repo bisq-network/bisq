@@ -88,6 +88,11 @@ public final class InputsForDepositTxRequest extends TradeMessage
     private final int burningManSelectionHeight;
     private final List<Integer> supportedBurningManAddressListVersions;
 
+    @Nullable
+    private final PubKeyRing mediatorPubKeyRing;
+    @Nullable
+    private final PubKeyRing refundAgentPubKeyRing;
+
     public InputsForDepositTxRequest(String tradeId,
                                      NodeAddress senderNodeAddress,
                                      long tradeAmount,
@@ -115,6 +120,66 @@ public final class InputsForDepositTxRequest extends TradeMessage
                                      String takersPaymentMethodId,
                                      int burningManSelectionHeight,
                                      List<Integer> supportedBurningManAddressListVersions) {
+        this(tradeId,
+                senderNodeAddress,
+                tradeAmount,
+                tradePrice,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                rawTransactionInputs,
+                takerMultiSigPubKey,
+                takerPayoutAddressString,
+                takerPubKeyRing,
+                takerAccountId,
+                takerFeeTxId,
+                acceptedArbitratorNodeAddresses,
+                acceptedMediatorNodeAddresses,
+                acceptedRefundAgentNodeAddresses,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                uid,
+                messageVersion,
+                accountAgeWitnessSignatureOfOfferId,
+                currentDate,
+                hashOfTakersPaymentAccountPayload,
+                takersPaymentMethodId,
+                burningManSelectionHeight,
+                supportedBurningManAddressListVersions,
+                null,
+                null);
+    }
+
+    public InputsForDepositTxRequest(String tradeId,
+                                     NodeAddress senderNodeAddress,
+                                     long tradeAmount,
+                                     long tradePrice,
+                                     long txFee,
+                                     long takerFee,
+                                     boolean isCurrencyForTakerFeeBtc,
+                                     List<RawTransactionInput> rawTransactionInputs,
+                                     byte[] takerMultiSigPubKey,
+                                     String takerPayoutAddressString,
+                                     PubKeyRing takerPubKeyRing,
+                                     String takerAccountId,
+                                     String takerFeeTxId,
+                                     List<NodeAddress> acceptedArbitratorNodeAddresses,
+                                     List<NodeAddress> acceptedMediatorNodeAddresses,
+                                     List<NodeAddress> acceptedRefundAgentNodeAddresses,
+                                     @Nullable NodeAddress arbitratorNodeAddress,
+                                     NodeAddress mediatorNodeAddress,
+                                     NodeAddress refundAgentNodeAddress,
+                                     String uid,
+                                     int messageVersion,
+                                     byte[] accountAgeWitnessSignatureOfOfferId,
+                                     long currentDate,
+                                     byte[] hashOfTakersPaymentAccountPayload,
+                                     String takersPaymentMethodId,
+                                     int burningManSelectionHeight,
+                                     List<Integer> supportedBurningManAddressListVersions,
+                                     @Nullable PubKeyRing mediatorPubKeyRing,
+                                     @Nullable PubKeyRing refundAgentPubKeyRing) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -140,6 +205,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
         this.takersPaymentMethodId = takersPaymentMethodId;
         this.burningManSelectionHeight = burningManSelectionHeight;
         this.supportedBurningManAddressListVersions = supportedBurningManAddressListVersions;
+        this.mediatorPubKeyRing = mediatorPubKeyRing;
+        this.refundAgentPubKeyRing = refundAgentPubKeyRing;
 
         validate();
     }
@@ -168,6 +235,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
         checkNonBlankString(takersPaymentMethodId, "takersPaymentMethodId");
         checkArgument(burningManSelectionHeight > 0, "burningManSelectionHeight must be positive");
         BurningManAddressListService.getValidatedSupportedVersions(supportedBurningManAddressListVersions);
+        checkArgument((mediatorPubKeyRing == null) == (refundAgentPubKeyRing == null),
+                "mediatorPubKeyRing and refundAgentPubKeyRing must both be set or both be null");
     }
 
     @Override
@@ -215,6 +284,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 .setTakersPayoutMethodId(takersPaymentMethodId);
 
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
+        Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(e.toProtoMessage()));
+        Optional.ofNullable(refundAgentPubKeyRing).ifPresent(e -> builder.setRefundAgentPubKeyRing(e.toProtoMessage()));
 
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
@@ -257,7 +328,13 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 proto.getHashOfTakersPaymentAccountPayload().toByteArray(),
                 proto.getTakersPayoutMethodId(),
                 proto.getBurningManSelectionHeight(),
-                proto.getSupportedBurningManAddressListVersionsList());
+                proto.getSupportedBurningManAddressListVersionsList(),
+                proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null,
+                proto.hasRefundAgentPubKeyRing() ? PubKeyRing.fromProto(proto.getRefundAgentPubKeyRing()) : null);
+    }
+
+    public boolean hasDisputeAgentPubKeyRings() {
+        return mediatorPubKeyRing != null && refundAgentPubKeyRing != null;
     }
 
     @Override
@@ -287,6 +364,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
                 ",\n     burningManSelectionHeight=" + burningManSelectionHeight +
                 ",\n     supportedBurningManAddressListVersions=" + supportedBurningManAddressListVersions +
+                ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
+                ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 "\n} " + super.toString();
     }
 

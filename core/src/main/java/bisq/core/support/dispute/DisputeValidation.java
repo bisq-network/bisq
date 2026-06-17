@@ -30,6 +30,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Tuple3;
 
@@ -39,6 +40,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +53,8 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -58,12 +62,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DisputeValidation {
     public static void validateDisputeData(Dispute dispute,
                                            BtcWalletService btcWalletService) throws ValidationException {
+        validateDisputeData(dispute, btcWalletService, new Date());
+    }
+
+    static void validateDisputeData(Dispute dispute,
+                                    BtcWalletService btcWalletService,
+                                    Date now) throws ValidationException {
         try {
             Contract contract = dispute.getContract();
             checkArgument(contract.getOfferPayload().getId().equals(dispute.getTradeId()), "Invalid tradeId");
             checkArgument(dispute.getContractAsJson().equals(JsonUtil.objectToJson(contract)), "Invalid contractAsJson");
             checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
                     "Invalid contractHash");
+            validateContractDisputeAgentPubKeys(dispute, contract, now);
 
             Optional<Transaction> depositTx = dispute.findDepositTx(btcWalletService);
             if (depositTx.isPresent()) {
@@ -91,6 +102,41 @@ public class DisputeValidation {
         } catch (Throwable t) {
             throw new ValidationException(dispute, t.getMessage());
         }
+    }
+
+    private static void validateContractDisputeAgentPubKeys(Dispute dispute, Contract contract, Date now) {
+        if (!contract.hasDisputeAgentPubKeyVersion()) {
+            // Compatibility/advisory gate only: dispute.getTradeDate() is sender-supplied payload data.
+            // Do not treat this as an auth boundary; callers must keep authenticating senders against local trade state.
+            if (Contract.requiresDisputeAgentPubKeyVersion(now, dispute.getTradeDate())) {
+                throw new IllegalArgumentException("Contract must include dispute agent pubKeyRings");
+            }
+
+            // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
+            return;
+        }
+
+        PubKeyRing expectedAgentPubKeyRing = getExpectedContractAgentPubKeyRing(dispute, contract);
+        if (expectedAgentPubKeyRing == null) {
+            return;
+        }
+
+        checkArgument(expectedAgentPubKeyRing.equals(dispute.getAgentPubKeyRing()),
+                "dispute agent pubKeyRing must match contract dispute agent pubKeyRing");
+    }
+
+    @Nullable
+    private static PubKeyRing getExpectedContractAgentPubKeyRing(Dispute dispute, Contract contract) {
+        SupportType supportType = dispute.getSupportType();
+        if (supportType == SupportType.MEDIATION) {
+            return contract.getMediatorPubKeyRing();
+        }
+        if (supportType == SupportType.REFUND) {
+            return contract.getRefundAgentPubKeyRing();
+        }
+
+        // Legacy arbitration has no contract-bound dispute-agent pubKeyRing.
+        return null;
     }
 
     public static void validateTradeAndDispute(Dispute dispute, Trade trade)

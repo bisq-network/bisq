@@ -32,6 +32,7 @@ import bisq.core.util.JsonUtil;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.Hash;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
@@ -73,6 +74,19 @@ public class MakerCreateAndSignContract extends TradeTask {
             String makersPaymentMethodId = makersPaymentAccountPayload.getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
             OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
+            PubKeyRing mediatorPubKeyRing = null;
+            PubKeyRing refundAgentPubKeyRing = null;
+            if (taker.isContractDisputeAgentPubKeysSupported() ||
+                    Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
+                mediatorPubKeyRing = checkNotNull(trade.getMediatorPubKeyRing(),
+                        "trade.getMediatorPubKeyRing() must not be null");
+                refundAgentPubKeyRing = checkNotNull(trade.getRefundAgentPubKeyRing(),
+                        "trade.getRefundAgentPubKeyRing() must not be null");
+            } else {
+                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
+                log.info("Creating legacy contract without dispute agent pubKeyRings for trade {}",
+                        trade.getId());
+            }
 
             Contract contract = new Contract(
                     offerPayload,
@@ -99,7 +113,9 @@ public class MakerCreateAndSignContract extends TradeTask {
                     hashOfTakersPaymentAccountPayload,
                     makersPaymentMethodId,
                     takersPaymentMethodId,
-                    processModel.getBurningManAddressListVersion()
+                    processModel.getBurningManAddressListVersion(),
+                    mediatorPubKeyRing,
+                    refundAgentPubKeyRing
             );
             String contractAsJson = JsonUtil.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
