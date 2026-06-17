@@ -28,7 +28,6 @@ import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.BsqSwapAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
@@ -308,11 +307,6 @@ public class User implements PersistedDataHost {
         requestPersistence();
     }
 
-    public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
-        userPayload.setRegisteredArbitrator(arbitrator);
-        requestPersistence();
-    }
-
     public void setRegisteredMediator(@Nullable Mediator mediator) {
         userPayload.setRegisteredMediator(mediator);
         requestPersistence();
@@ -404,16 +398,6 @@ public class User implements PersistedDataHost {
 
     public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {
         return paymentAccountsAsObservable;
-    }
-
-    /**
-     * If this user is an arbitrator it returns the registered arbitrator.
-     *
-     * @return The arbitrator registered for this user
-     */
-    @Nullable
-    public Arbitrator getRegisteredArbitrator() {
-        return userPayload.getRegisteredArbitrator();
     }
 
     @Nullable

@@ -24,7 +24,6 @@ import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
@@ -64,8 +63,6 @@ public class UserPayload implements PersistableEnvelope {
     @Nullable
     private Filter developersFilter;
     @Nullable
-    private Arbitrator registeredArbitrator;
-    @Nullable
     private Mediator registeredMediator;
     @Nullable
     private List<Mediator> acceptedMediators = new ArrayList<>();
@@ -104,7 +101,6 @@ public class UserPayload implements PersistableEnvelope {
                        Alert developersAlert,
                        Alert displayedAlert,
                        Filter developersFilter,
-                       Arbitrator registeredArbitrator,
                        Mediator registeredMediator,
                        List<Mediator> acceptedMediators,
                        PriceAlertFilter priceAlertFilter,
@@ -120,7 +116,6 @@ public class UserPayload implements PersistableEnvelope {
                 developersAlert,
                 displayedAlert,
                 developersFilter,
-                registeredArbitrator,
                 registeredMediator,
                 acceptedMediators,
                 priceAlertFilter,
@@ -140,7 +135,6 @@ public class UserPayload implements PersistableEnvelope {
                        Alert developersAlert,
                        Alert displayedAlert,
                        Filter developersFilter,
-                       Arbitrator registeredArbitrator,
                        Mediator registeredMediator,
                        List<Mediator> acceptedMediators,
                        PriceAlertFilter priceAlertFilter,
@@ -158,7 +152,6 @@ public class UserPayload implements PersistableEnvelope {
         this.developersAlert = developersAlert;
         this.displayedAlert = displayedAlert;
         this.developersFilter = developersFilter;
-        this.registeredArbitrator = registeredArbitrator;
         this.registeredMediator = registeredMediator;
         this.acceptedMediators = acceptedMediators;
         this.priceAlertFilter = priceAlertFilter;
@@ -195,8 +188,6 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(e -> builder.addAllDevelopersFilterDelayedPayoutPaymentAccountPreimages(e.stream()
                         .map(PaymentAccountFilter::toProtoMessage)
                         .collect(Collectors.toList())));
-        Optional.ofNullable(registeredArbitrator)
-                .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
                 .ifPresent(registeredMediator -> builder.setRegisteredMediator(registeredMediator.toProtoMessage().getMediator()));
         Optional.ofNullable(acceptedMediators)
@@ -244,7 +235,6 @@ public class UserPayload implements PersistableEnvelope {
                 proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
                 proto.hasDisplayedAlert() ? Alert.fromProto(proto.getDisplayedAlert()) : null,
                 proto.hasDevelopersFilter() ? Filter.fromProto(proto.getDevelopersFilter()) : null,
-                proto.hasRegisteredArbitrator() ? Arbitrator.fromProto(proto.getRegisteredArbitrator()) : null,
                 proto.hasRegisteredMediator() ? Mediator.fromProto(proto.getRegisteredMediator()) : null,
                 proto.getAcceptedMediatorsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedMediatorsList().stream()
                         .map(Mediator::fromProto)

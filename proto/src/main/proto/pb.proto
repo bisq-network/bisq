@@ -2027,7 +2027,7 @@ message UserPayload {
     Filter developers_filter = 7;
     repeated Arbitrator accepted_arbitrators = 8 [deprecated = true]; // Legacy arbitration accepted agents are ignored.
     repeated Mediator accepted_mediators = 9;
-    Arbitrator registered_arbitrator = 10;
+    Arbitrator registered_arbitrator = 10 [deprecated = true]; // Legacy registered arbitrator is ignored.
     Mediator registered_mediator = 11;
     PriceAlertFilter price_alert_filter = 12;
     repeated MarketAlertFilter market_alert_filters = 13;

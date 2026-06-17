@@ -110,7 +110,7 @@ public class AccountAgeWitnessServiceTest {
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         filterPolicyService = mock(FilterPolicyService.class);
-        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterPolicyService);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, filterPolicyService);
         service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, null, null, filterPolicyService);
     }
 

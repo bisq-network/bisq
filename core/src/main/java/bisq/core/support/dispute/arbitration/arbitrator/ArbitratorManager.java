@@ -120,11 +120,11 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Override
     protected Arbitrator getRegisteredDisputeAgentFromUser() {
-        return user.getRegisteredArbitrator();
+        return null;
     }
 
     @Override
     protected void setRegisteredDisputeAgentAtUser(Arbitrator disputeAgent) {
-        user.setRegisteredArbitrator(disputeAgent);
+        // Legacy arbitrator registration is disabled; do not persist registered arbitrators anymore.
     }
 }
