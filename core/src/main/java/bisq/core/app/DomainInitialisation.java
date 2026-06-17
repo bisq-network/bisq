@@ -44,7 +44,6 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundManager;
@@ -93,7 +92,6 @@ public class DomainInitialisation {
     private final OpenOfferManager openOfferManager;
     private final Balances balances;
     private final WalletAppSetup walletAppSetup;
-    private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final PrivateNotificationManager privateNotificationManager;
@@ -135,7 +133,6 @@ public class DomainInitialisation {
                                 OpenOfferManager openOfferManager,
                                 Balances balances,
                                 WalletAppSetup walletAppSetup,
-                                ArbitratorManager arbitratorManager,
                                 MediatorManager mediatorManager,
                                 RefundAgentManager refundAgentManager,
                                 PrivateNotificationManager privateNotificationManager,
@@ -175,7 +172,6 @@ public class DomainInitialisation {
         this.openOfferManager = openOfferManager;
         this.balances = balances;
         this.walletAppSetup = walletAppSetup;
-        this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.privateNotificationManager = privateNotificationManager;
@@ -239,7 +235,6 @@ public class DomainInitialisation {
 
         walletAppSetup.setRejectedTxErrorMessageHandler(rejectedTxErrorMessageHandler, openOfferManager, tradeManager);
 
-        arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
         refundAgentManager.onAllServicesInitialized();
 
