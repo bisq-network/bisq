@@ -23,7 +23,9 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
 
 import com.google.protobuf.ByteString;
 
@@ -34,7 +36,9 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class BisqV1MessageIntegrityTest {
@@ -326,6 +330,25 @@ public class BisqV1MessageIntegrityTest {
     }
 
     @Test
+    void inputsForDepositTxRequestRoundTripPreservesDisputeAgentPubKeyRings() {
+        PubKeyRing mediatorPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        InputsForDepositTxRequest request = newRequest(args -> {
+            args.takerPubKeyRing = pubKeyRing();
+            args.mediatorPubKeyRing = mediatorPubKeyRing;
+            args.refundAgentPubKeyRing = refundAgentPubKeyRing;
+        });
+
+        InputsForDepositTxRequest fromProto = InputsForDepositTxRequest.fromProto(
+                request.toProtoNetworkEnvelope().getInputsForDepositTxRequest(),
+                request.getMessageVersion());
+
+        assertTrue(fromProto.hasDisputeAgentPubKeyRings());
+        assertEquals(mediatorPubKeyRing, fromProto.getMediatorPubKeyRing());
+        assertEquals(refundAgentPubKeyRing, fromProto.getRefundAgentPubKeyRing());
+    }
+
+    @Test
     void inputsForDepositTxResponseRejectsInvalidBurningManAddressListVersions() {
         assertThrows(IllegalArgumentException.class, () -> newResponse(args ->
                 args.supportedBurningManAddressListVersions = List.of()));
@@ -389,7 +412,9 @@ public class BisqV1MessageIntegrityTest {
                 args.hashOfTakersPaymentAccountPayload,
                 args.takersPaymentMethodId,
                 args.burningManSelectionHeight,
-                args.supportedBurningManAddressListVersions);
+                args.supportedBurningManAddressListVersions,
+                args.mediatorPubKeyRing,
+                args.refundAgentPubKeyRing);
     }
 
     private static SignedWitness signedWitness() {
@@ -424,6 +449,11 @@ public class BisqV1MessageIntegrityTest {
 
     private static byte[] bytes(int value) {
         return new byte[]{(byte) value};
+    }
+
+    private static PubKeyRing pubKeyRing() {
+        return new PubKeyRing(Sig.generateKeyPair().getPublic(),
+                Encryption.generateKeyPair().getPublic());
     }
 
     private static class ResponseArgs {
@@ -474,5 +504,7 @@ public class BisqV1MessageIntegrityTest {
         private String takersPaymentMethodId = "SEPA";
         private int burningManSelectionHeight = 1;
         private List<Integer> supportedBurningManAddressListVersions = List.of(1);
+        private PubKeyRing mediatorPubKeyRing;
+        private PubKeyRing refundAgentPubKeyRing;
     }
 }

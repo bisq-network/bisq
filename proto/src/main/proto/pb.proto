@@ -266,6 +266,8 @@ message InputsForDepositTxRequest {
     string takers_payout_method_id = 27;
     int32 burning_man_selection_height = 28;  // Added in v 1.9.7
     repeated int32 supported_burning_man_address_list_versions = 29;
+    PubKeyRing mediator_pub_key_ring = 30;
+    PubKeyRing refund_agent_pub_key_ring = 31;
 }
 
 message InputsForDepositTxResponse {
@@ -1039,6 +1041,9 @@ message Contract {
     string maker_payment_method_id = 24;
     string taker_payment_method_id = 25;
     int32 burning_man_address_list_version = 26;
+    int32 contract_version = 27;
+    PubKeyRing mediator_pub_key_ring = 28;
+    PubKeyRing refund_agent_pub_key_ring = 29;
 }
 
 message RawTransactionInput {
@@ -1866,6 +1871,7 @@ message TradingPeer {
     bytes mediated_payout_tx_signature = 15;
     bytes hash_of_payment_account_payload = 16;
     repeated int32 supported_burning_man_address_list_versions = 17;
+    bool contract_dispute_agent_pub_keys_supported = 18;
 }
 
 message BsqSwapProtocolModel {

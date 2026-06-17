@@ -18,6 +18,8 @@
 package bisq.core.trade.validation;
 
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.refund.refundagent.RefundAgent;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.user.User;
 
@@ -110,6 +112,17 @@ public final class TradeValidation {
                 "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
         return checkNotNull(mediator.getPubKeyRing(),
                 "mediator.getPubKeyRing() must not be null");
+    }
+
+    public static PubKeyRing getCheckedRefundAgentPubKeyRing(NodeAddress refundAgentNodeAddress,
+                                                             RefundAgentManager refundAgentManager) {
+        checkNotNull(refundAgentNodeAddress, "refundAgentNodeAddress must not be null");
+        checkNotNull(refundAgentManager, "refundAgentManager must not be null");
+        RefundAgent refundAgent = checkNotNull(refundAgentManager.getDisputeAgentByNodeAddress(refundAgentNodeAddress)
+                        .orElse(null),
+                "refundAgentManager.getDisputeAgentByNodeAddress(refundAgentNodeAddress) must not be null");
+        return checkNotNull(refundAgent.getPubKeyRing(),
+                "refundAgent.getPubKeyRing() must not be null");
     }
 
 
