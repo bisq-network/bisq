@@ -22,15 +22,18 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.app.Version;
+
+import java.security.PublicKey;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class OpenNewDisputeMessage extends DisputeMessage {
+public final class OpenNewDisputeMessage extends DisputeMessage implements SendersSignaturePubKeyProvidingPayload {
     private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 
@@ -84,6 +87,13 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     @Override
     public String getTradeId() {
         return dispute.getTradeId();
+    }
+
+    @Override
+    public PublicKey getSenderSignaturePubKey() {
+        return (dispute.isDisputeOpenerIsBuyer() ?
+                dispute.getContract().getBuyerPubKeyRing() :
+                dispute.getContract().getSellerPubKeyRing()).getSignaturePubKey();
     }
 
     @Override
