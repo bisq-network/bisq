@@ -158,18 +158,9 @@ public class AboutView extends ActivatableView<GridPane, Void> {
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.reRepublishAllGovernanceData"),
                 Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "h"));
 
-        // for arbitrators
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.registerArbitrator"),
-                Res.get("setting.about.shortcuts.registerArbitrator.value",
-                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "n")));
-
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.registerMediator"),
                 Res.get("setting.about.shortcuts.registerMediator.value",
                         Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "d")));
-
-        addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.openSignPaymentAccountsWindow"),
-                Res.get("setting.about.shortcuts.openSignPaymentAccountsWindow.value",
-                        Res.get("setting.about.shortcuts.ctrlOrAltOrCmd", "s")));
 
         // only for maintainers
         addCompactTopLabelTextField(root, ++gridRow, Res.get("setting.about.shortcuts.sendAlertMsg"),
@@ -197,4 +188,3 @@ public class AboutView extends ActivatableView<GridPane, Void> {
     }
 
 }
-

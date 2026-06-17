@@ -31,7 +31,6 @@ import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.main.account.content.walletinfo.WalletInfoView;
-import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
 import bisq.desktop.main.account.register.mediator.MediatorRegistrationView;
 import bisq.desktop.main.account.register.refundagent.RefundAgentRegistrationView;
 import bisq.desktop.main.account.register.signing.SigningView;
@@ -76,11 +75,9 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Tab selectedTab;
-    private Tab arbitratorRegistrationTab;
     private Tab mediatorRegistrationTab;
     private Tab refundAgentRegistrationTab;
     private Tab signingTab;
-    private ArbitratorRegistrationView arbitratorRegistrationView;
     private MediatorRegistrationView mediatorRegistrationView;
     private RefundAgentRegistrationView refundAgentRegistrationView;
     private Scene scene;
@@ -108,9 +105,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
         navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(AccountView.class) == 1) {
-                if (arbitratorRegistrationTab == null && viewPath.get(2).equals(ArbitratorRegistrationView.class)) {
-                    navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
-                } else if (mediatorRegistrationTab == null && viewPath.get(2).equals(MediatorRegistrationView.class)) {
+                if (mediatorRegistrationTab == null && viewPath.get(2).equals(MediatorRegistrationView.class)) {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                 } else if (refundAgentRegistrationTab == null && viewPath.get(2).equals(RefundAgentRegistrationView.class)) {
                     navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
@@ -147,9 +142,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (arbitratorRegistrationTab != null && selectedTab != arbitratorRegistrationTab) {
-                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            } else if (mediatorRegistrationTab != null && selectedTab != mediatorRegistrationTab) {
+            if (mediatorRegistrationTab != null && selectedTab != mediatorRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             } else if (refundAgentRegistrationTab != null && selectedTab != refundAgentRegistrationTab) {
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
@@ -175,9 +168,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         tabListChangeListener = change -> {
             change.next();
             List<? extends Tab> removedTabs = change.getRemoved();
-            if (removedTabs.size() == 1 && removedTabs.get(0).equals(arbitratorRegistrationTab))
-                onArbitratorRegistrationTabRemoved();
-
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(mediatorRegistrationTab))
                 onMediatorRegistrationTabRemoved();
 
@@ -190,9 +180,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
     }
 
     private void closeOtherExtraTabs(Tab newTab) {
-        if (arbitratorRegistrationTab != null && !arbitratorRegistrationTab.equals(newTab)) {
-            root.getTabs().remove(arbitratorRegistrationTab);
-        }
         if (mediatorRegistrationTab != null && !mediatorRegistrationTab.equals(newTab)) {
             root.getTabs().remove(mediatorRegistrationTab);
         }
@@ -202,11 +189,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         if (signingTab != null && !signingTab.equals(newTab)) {
             root.getTabs().remove(signingTab);
         }
-    }
-
-    private void onArbitratorRegistrationTabRemoved() {
-        arbitratorRegistrationTab = null;
-        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
     }
 
     private void onMediatorRegistrationTabRemoved() {
@@ -239,9 +221,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == AccountView.class) {
-            if (arbitratorRegistrationTab != null)
-                navigation.navigateTo(MainView.class, AccountView.class, ArbitratorRegistrationView.class);
-            else if (mediatorRegistrationTab != null)
+            if (mediatorRegistrationTab != null)
                 navigation.navigateTo(MainView.class, AccountView.class, MediatorRegistrationView.class);
             else if (refundAgentRegistrationTab != null)
                 navigation.navigateTo(MainView.class, AccountView.class, RefundAgentRegistrationView.class);
@@ -293,13 +273,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
         resetSelectedTab();
 
-        if (view instanceof ArbitratorRegistrationView) {
-            if (arbitratorRegistrationTab != null) {
-                selectedTab = arbitratorRegistrationTab;
-                arbitratorRegistrationView = (ArbitratorRegistrationView) view;
-                arbitratorRegistrationView.onTabSelection(true);
-            }
-        } else if (view instanceof MediatorRegistrationView) {
+        if (view instanceof MediatorRegistrationView) {
             if (mediatorRegistrationTab != null) {
                 selectedTab = mediatorRegistrationTab;
                 mediatorRegistrationView = (MediatorRegistrationView) view;
