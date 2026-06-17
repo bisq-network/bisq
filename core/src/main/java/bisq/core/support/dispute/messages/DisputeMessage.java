@@ -51,7 +51,19 @@ public abstract class DisputeMessage extends SupportMessage {
     }
 
     protected boolean isSenderSignaturePubKeyValidationRequired() {
-        return new Date().after(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE);
+        return isSenderSignaturePubKeyValidationRequired(null);
+    }
+
+    protected boolean isSenderSignaturePubKeyValidationRequired(@Nullable Date tradeDate) {
+        return isSenderSignaturePubKeyValidationRequired(new Date(), tradeDate);
+    }
+
+    static boolean isSenderSignaturePubKeyValidationRequired(Date now, @Nullable Date tradeDate) {
+        if (!now.after(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE)) {
+            return false;
+        }
+
+        return tradeDate == null || !tradeDate.before(SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE);
     }
 
     @Nullable
