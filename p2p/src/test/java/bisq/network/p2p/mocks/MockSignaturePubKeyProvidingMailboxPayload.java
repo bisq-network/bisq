@@ -30,6 +30,8 @@ import java.security.PublicKey;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import lombok.Getter;
 
 @Getter
@@ -37,17 +39,27 @@ public final class MockSignaturePubKeyProvidingMailboxPayload extends NetworkEnv
         implements MailboxMessage, ExpirablePayload, SendersSignaturePubKeyProvidingPayload {
     private final String msg;
     private final NodeAddress senderNodeAddress;
+    @Nullable
     private final PublicKey senderSignaturePubKey;
+    private final boolean senderSignaturePubKeyRequired;
     private final String uid;
     public long ttl = 0;
 
     public MockSignaturePubKeyProvidingMailboxPayload(String msg,
                                                       NodeAddress senderNodeAddress,
-                                                      PublicKey senderSignaturePubKey) {
+                                                      @Nullable PublicKey senderSignaturePubKey) {
+        this(msg, senderNodeAddress, senderSignaturePubKey, true);
+    }
+
+    public MockSignaturePubKeyProvidingMailboxPayload(String msg,
+                                                      NodeAddress senderNodeAddress,
+                                                      @Nullable PublicKey senderSignaturePubKey,
+                                                      boolean senderSignaturePubKeyRequired) {
         super(0);
         this.msg = msg;
         this.senderNodeAddress = senderNodeAddress;
         this.senderSignaturePubKey = senderSignaturePubKey;
+        this.senderSignaturePubKeyRequired = senderSignaturePubKeyRequired;
         uid = UUID.randomUUID().toString();
     }
 
@@ -59,5 +71,10 @@ public final class MockSignaturePubKeyProvidingMailboxPayload extends NetworkEnv
     @Override
     public long getTTL() {
         return ttl;
+    }
+
+    @Override
+    public boolean isSenderSignaturePubKeyRequired() {
+        return senderSignaturePubKeyRequired;
     }
 }

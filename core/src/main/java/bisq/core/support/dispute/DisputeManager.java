@@ -891,7 +891,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         DisputeResultMessage disputeResultMessage = new DisputeResultMessage(disputeResult,
                 p2PService.getAddress(),
                 UUID.randomUUID().toString(),
-                getSupportType());
+                getSupportType(),
+                pubKeyRing.getSignaturePubKey());
         log.info("Send {} to peer {}. tradeId={}, disputeResultMessage.uid={}, chatMessage.uid={}",
                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress, disputeResultMessage.getTradeId(),
                 disputeResultMessage.getUid(), chatMessage.getUid());

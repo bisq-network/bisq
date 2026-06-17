@@ -21,19 +21,26 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.DisputeResult;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.app.Version;
 
+import java.security.PublicKey;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class DisputeResultMessage extends DisputeMessage {
+public final class DisputeResultMessage extends DisputeMessage implements SendersSignaturePubKeyProvidingPayload {
     private final DisputeResult disputeResult;
     private final NodeAddress senderNodeAddress;
+    @Nullable
+    private final PublicKey senderSignaturePubKey;
 
     public DisputeResultMessage(DisputeResult disputeResult,
                                 NodeAddress senderNodeAddress,
@@ -42,8 +49,21 @@ public final class DisputeResultMessage extends DisputeMessage {
         this(disputeResult,
                 senderNodeAddress,
                 uid,
+                supportType,
+                null);
+    }
+
+    public DisputeResultMessage(DisputeResult disputeResult,
+                                NodeAddress senderNodeAddress,
+                                String uid,
+                                SupportType supportType,
+                                @Nullable PublicKey senderSignaturePubKey) {
+        this(disputeResult,
+                senderNodeAddress,
+                uid,
                 Version.getP2PMessageVersion(),
-                supportType);
+                supportType,
+                senderSignaturePubKey);
     }
 
 
@@ -55,20 +75,26 @@ public final class DisputeResultMessage extends DisputeMessage {
                                  NodeAddress senderNodeAddress,
                                  String uid,
                                  int messageVersion,
-                                 SupportType supportType) {
+                                 SupportType supportType,
+                                 @Nullable PublicKey senderSignaturePubKey) {
         super(messageVersion, uid, supportType);
         this.disputeResult = disputeResult;
         this.senderNodeAddress = senderNodeAddress;
+        this.senderSignaturePubKey = senderSignaturePubKey;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.DisputeResultMessage.Builder builder = protobuf.DisputeResultMessage.newBuilder()
+                .setDisputeResult(disputeResult.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setUid(uid)
+                .setType(SupportType.toProtoMessage(supportType));
+        if (senderSignaturePubKey != null) {
+            builder.setSenderSignaturePubKey(senderSignaturePubKeyToProto(senderSignaturePubKey));
+        }
         return getNetworkEnvelopeBuilder()
-                .setDisputeResultMessage(protobuf.DisputeResultMessage.newBuilder()
-                        .setDisputeResult(disputeResult.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid)
-                        .setType(SupportType.toProtoMessage(supportType)))
+                .setDisputeResultMessage(builder)
                 .build();
     }
 
@@ -78,7 +104,8 @@ public final class DisputeResultMessage extends DisputeMessage {
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion,
-                SupportType.fromProto(proto.getType()));
+                SupportType.fromProto(proto.getType()),
+                senderSignaturePubKeyFromProto(proto.getSenderSignaturePubKey()));
     }
 
     @Override
@@ -87,10 +114,22 @@ public final class DisputeResultMessage extends DisputeMessage {
     }
 
     @Override
+    @Nullable
+    public PublicKey getSenderSignaturePubKey() {
+        return senderSignaturePubKey;
+    }
+
+    @Override
+    public boolean isSenderSignaturePubKeyRequired() {
+        return isSenderSignaturePubKeyValidationRequired();
+    }
+
+    @Override
     public String toString() {
         return "DisputeResultMessage{" +
                 "\n     disputeResult=" + disputeResult +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     senderSignaturePubKey=" + senderSignaturePubKey +
                 ",\n     DisputeResultMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 ",\n     supportType=" + supportType +

@@ -136,6 +136,23 @@ public class P2PServiceTest {
     }
 
     @Test
+    public void onMessageDispatchesDirectMessageWhenPayloadSenderSignaturePubKeyIsMissingButNotRequired()
+            throws Exception {
+        DirectReceiveFixture fixture = new DirectReceiveFixture(
+                new MockSignaturePubKeyProvidingMailboxPayload("msg", ENVELOPE_SENDER, null, false),
+                ENVELOPE_SENDER,
+                ENVELOPE_SENDER);
+        AtomicReference<NetworkEnvelope> receivedMessage = new AtomicReference<>();
+        fixture.p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderNodeAddress) ->
+                receivedMessage.set(decryptedMessageWithPubKey.getNetworkEnvelope()));
+
+        fixture.p2PService.onMessage(fixture.sealedMessage, fixture.connection);
+
+        assertSame(fixture.payload, receivedMessage.get());
+        verify(fixture.connection).maybeHandleSupportedCapabilitiesMessage(same(fixture.payload));
+    }
+
+    @Test
     public void onMessageDispatchesDirectMessageWithoutPayloadSenderWhenOuterEnvelopeAndConnectionMatch()
             throws Exception {
         DirectReceiveFixture fixture = new DirectReceiveFixture(

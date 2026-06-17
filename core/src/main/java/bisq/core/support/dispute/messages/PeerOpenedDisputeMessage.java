@@ -39,6 +39,8 @@ import javax.annotation.Nullable;
 public final class PeerOpenedDisputeMessage extends DisputeMessage implements SendersSignaturePubKeyProvidingPayload {
     private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
+    @Nullable
+    private final PublicKey senderSignaturePubKey;
 
     public PeerOpenedDisputeMessage(Dispute dispute,
                                     NodeAddress senderNodeAddress,
@@ -48,7 +50,8 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion(),
-                supportType);
+                supportType,
+                getDisputeAgentSignaturePubKey(dispute));
     }
 
 
@@ -60,20 +63,26 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
                                      NodeAddress senderNodeAddress,
                                      String uid,
                                      int messageVersion,
-                                     SupportType supportType) {
+                                     SupportType supportType,
+                                     @Nullable PublicKey senderSignaturePubKey) {
         super(messageVersion, uid, supportType);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
+        this.senderSignaturePubKey = senderSignaturePubKey;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.PeerOpenedDisputeMessage.Builder builder = protobuf.PeerOpenedDisputeMessage.newBuilder()
+                .setUid(uid)
+                .setDispute(dispute.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setType(SupportType.toProtoMessage(supportType));
+        if (senderSignaturePubKey != null) {
+            builder.setSenderSignaturePubKey(senderSignaturePubKeyToProto(senderSignaturePubKey));
+        }
         return getNetworkEnvelopeBuilder()
-                .setPeerOpenedDisputeMessage(protobuf.PeerOpenedDisputeMessage.newBuilder()
-                        .setUid(uid)
-                        .setDispute(dispute.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setType(SupportType.toProtoMessage(supportType)))
+                .setPeerOpenedDisputeMessage(builder)
                 .build();
     }
 
@@ -84,7 +93,8 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion,
-                SupportType.fromProto(proto.getType()));
+                SupportType.fromProto(proto.getType()),
+                senderSignaturePubKeyFromProto(proto.getSenderSignaturePubKey()));
     }
 
     @Override
@@ -95,6 +105,16 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
     @Override
     @Nullable
     public PublicKey getSenderSignaturePubKey() {
+        return senderSignaturePubKey;
+    }
+
+    @Override
+    public boolean isSenderSignaturePubKeyRequired() {
+        return isSenderSignaturePubKeyValidationRequired();
+    }
+
+    @Nullable
+    private static PublicKey getDisputeAgentSignaturePubKey(@Nullable Dispute dispute) {
         PubKeyRing agentPubKeyRing = dispute == null ? null : dispute.getAgentPubKeyRing();
         return agentPubKeyRing == null ? null : agentPubKeyRing.getSignaturePubKey();
     }
@@ -104,6 +124,7 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
         return "PeerOpenedDisputeMessage{" +
                 "\n     dispute=" + dispute +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     senderSignaturePubKey=" + senderSignaturePubKey +
                 ",\n     PeerOpenedDisputeMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 ",\n     supportType=" + supportType +

@@ -457,6 +457,7 @@ message OpenNewDisputeMessage {
     NodeAddress sender_node_address = 2;
     string uid = 3;
     SupportType type = 4;
+    bytes sender_signature_pub_key = 5;
 }
 
 message PeerOpenedDisputeMessage {
@@ -464,6 +465,7 @@ message PeerOpenedDisputeMessage {
     NodeAddress sender_node_address = 2;
     string uid = 3;
     SupportType type = 4;
+    bytes sender_signature_pub_key = 5;
 }
 
 message ChatMessage {
@@ -490,6 +492,7 @@ message DisputeResultMessage {
     DisputeResult dispute_result = 2;
     NodeAddress sender_node_address = 3;
     SupportType type = 4;
+    bytes sender_signature_pub_key = 5;
 }
 
 message PeerPublishedDisputePayoutTxMessage {

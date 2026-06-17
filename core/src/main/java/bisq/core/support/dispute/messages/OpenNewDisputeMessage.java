@@ -40,6 +40,8 @@ import javax.annotation.Nullable;
 public final class OpenNewDisputeMessage extends DisputeMessage implements SendersSignaturePubKeyProvidingPayload {
     private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
+    @Nullable
+    private final PublicKey senderSignaturePubKey;
 
     public OpenNewDisputeMessage(Dispute dispute,
                                  NodeAddress senderNodeAddress,
@@ -49,7 +51,8 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion(),
-                supportType);
+                supportType,
+                getDisputeOpenerSignaturePubKey(dispute));
     }
 
 
@@ -61,20 +64,26 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
                                   NodeAddress senderNodeAddress,
                                   String uid,
                                   int messageVersion,
-                                  SupportType supportType) {
+                                  SupportType supportType,
+                                  @Nullable PublicKey senderSignaturePubKey) {
         super(messageVersion, uid, supportType);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
+        this.senderSignaturePubKey = senderSignaturePubKey;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.OpenNewDisputeMessage.Builder builder = protobuf.OpenNewDisputeMessage.newBuilder()
+                .setUid(uid)
+                .setDispute(dispute.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setType(SupportType.toProtoMessage(supportType));
+        if (senderSignaturePubKey != null) {
+            builder.setSenderSignaturePubKey(senderSignaturePubKeyToProto(senderSignaturePubKey));
+        }
         return getNetworkEnvelopeBuilder()
-                .setOpenNewDisputeMessage(protobuf.OpenNewDisputeMessage.newBuilder()
-                        .setUid(uid)
-                        .setDispute(dispute.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setType(SupportType.toProtoMessage(supportType)))
+                .setOpenNewDisputeMessage(builder)
                 .build();
     }
 
@@ -85,7 +94,8 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion,
-                SupportType.fromProto(proto.getType()));
+                SupportType.fromProto(proto.getType()),
+                senderSignaturePubKeyFromProto(proto.getSenderSignaturePubKey()));
     }
 
     @Override
@@ -96,6 +106,16 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
     @Override
     @Nullable
     public PublicKey getSenderSignaturePubKey() {
+        return senderSignaturePubKey;
+    }
+
+    @Override
+    public boolean isSenderSignaturePubKeyRequired() {
+        return isSenderSignaturePubKeyValidationRequired();
+    }
+
+    @Nullable
+    private static PublicKey getDisputeOpenerSignaturePubKey(@Nullable Dispute dispute) {
         Contract contract = dispute == null ? null : dispute.getContract();
         if (contract == null) {
             return null;
@@ -112,6 +132,7 @@ public final class OpenNewDisputeMessage extends DisputeMessage implements Sende
         return "OpenNewDisputeMessage{" +
                 "\n     dispute=" + dispute +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     senderSignaturePubKey=" + senderSignaturePubKey +
                 ",\n     OpenNewDisputeMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 ",\n     supportType=" + supportType +

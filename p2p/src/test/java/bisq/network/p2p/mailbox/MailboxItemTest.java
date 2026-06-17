@@ -98,6 +98,20 @@ public class MailboxItemTest {
     }
 
     @Test
+    public void constructorKeepsDecryptedMessageWhenSenderSignaturePubKeyIsMissingButNotRequired()
+            throws NoSuchAlgorithmException {
+        DecryptedMessageWithPubKey decryptedMessageWithPubKey = decryptedMessageWithPubKey(
+                new MockSignaturePubKeyProvidingMailboxPayload("msg", ENVELOPE_SENDER, null, false));
+
+        MailboxItem mailboxItem = new MailboxItem(protectedMailboxStorageEntry(ENVELOPE_SENDER),
+                decryptedMessageWithPubKey);
+
+        assertTrue(mailboxItem.isMine());
+        assertFalse(mailboxItem.isInvalidDecryptedMessage());
+        assertSame(decryptedMessageWithPubKey, mailboxItem.getDecryptedMessageWithPubKey());
+    }
+
+    @Test
     public void constructorDropsDecryptedMessageWhenSenderSignaturePubKeysMismatch() throws NoSuchAlgorithmException {
         DecryptedMessageWithPubKey decryptedMessageWithPubKey = decryptedMessageWithPubKey(
                 new MockSignaturePubKeyProvidingMailboxPayload("msg",

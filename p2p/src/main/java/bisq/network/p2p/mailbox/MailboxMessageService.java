@@ -323,7 +323,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             PublicKey mySignaturePubKey = keyRing.getSignatureKeyPair().getPublic();
             PublicKey senderSignaturePubKey = signaturePubKeyProvidingPayload.getSenderSignaturePubKey();
             if (!SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(senderSignaturePubKey,
-                    mySignaturePubKey)) {
+                    mySignaturePubKey,
+                    signaturePubKeyProvidingPayload.isSenderSignaturePubKeyRequired())) {
                 log.error("Sender signature pubkey {} does not match my signature pubkey {}",
                         senderSignaturePubKey, mySignaturePubKey);
                 sendMailboxMessageListener.onFault("Sender signature pubkey of payload is not matching our signature " +
