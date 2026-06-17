@@ -96,7 +96,7 @@ class CoreDisputeAgentsService {
             String signature;
             switch (supportType.get()) {
                 case ARBITRATION:
-                    throw new UnsupportedOperationException("arbitrators must be registered in a Bisq UI");
+                    throw new UnsupportedOperationException("legacy arbitrator registration is no longer supported");
                 case MEDIATION:
                     ecKey = mediatorManager.getRegistrationKey(registrationKey);
                     signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));

@@ -46,7 +46,7 @@ public class RegisterDisputeAgentsTest extends DockerMethodTest {
     public void testRegisterArbitratorShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 arbClient.registerDisputeAgent(ARBITRATOR, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
-        assertEquals("UNIMPLEMENTED: arbitrators must be registered in a Bisq UI",
+        assertEquals("UNIMPLEMENTED: legacy arbitrator registration is no longer supported",
                 exception.getMessage());
     }
 

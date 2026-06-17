@@ -20,64 +20,48 @@ package bisq.core.support.dispute.arbitration;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.locale.Res;
-import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
-import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
-import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
-import bisq.core.trade.model.Tradable;
-import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
+import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
-import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
-
-import org.bitcoinj.core.Transaction;
+import bisq.common.handlers.FaultHandler;
+import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import java.security.PublicKey;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Deprecated
 @Slf4j
 @Singleton
-// TODO: Remove active legacy arbitration handling in a dedicated cleanup PR.
-// Keep read-only access to persisted user arbitration cases until the UI has a replacement display path.
+// TODO: Remove this compatibility manager after historical arbitration cases have a dedicated read-only service.
 public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
+    private static final String LEGACY_ARBITRATION_READ_ONLY_MESSAGE =
+            "Legacy arbitration is read-only and no longer supports network messages";
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -103,7 +87,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Implement template methods
+    // Read-only historical dispute access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -111,313 +95,143 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         return SupportType.ARBITRATION;
     }
 
-    @Override
-    public void onSupportMessage(SupportMessage message, PublicKey senderSignaturePubKey) {
-        // TODO: Ignore or remove inbound ARBITRATION support messages; old arbitration messages are no longer supported.
-        if (canProcessMessage(message)) {
-            log.info("Received {} with tradeId {} and uid {}",
-                    message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-
-            if (message instanceof OpenNewDisputeMessage openNewDisputeMessage) {
-                onOpenNewDisputeMessage(openNewDisputeMessage, senderSignaturePubKey);
-            } else if (message instanceof PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-                onPeerOpenedDisputeMessage(peerOpenedDisputeMessage, senderSignaturePubKey);
-            } else if (message instanceof ChatMessage chatMessage) {
-                onChatMessage(chatMessage, senderSignaturePubKey);
-            } else if (message instanceof DisputeResultMessage disputeResultMessage) {
-                onDisputeResultMessage(disputeResultMessage, senderSignaturePubKey);
-            } else if (message instanceof PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
-                onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage, senderSignaturePubKey);
-            } else {
-                log.warn("Unsupported message at dispatchMessage. message={}", message);
-            }
-        }
-    }
-
     @Nullable
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
-        // TODO: Remove active arbitrator-agent routing; persisted user cases should not need an agent address.
+        // TODO: Delete with ArbitrationManager once persisted legacy cases use a read-only historical service.
         return null;
     }
 
     @Nullable
     @Override
     protected PubKeyRing getExpectedAgentPubKeyRing(Trade trade) {
-        // TODO: Remove with inbound arbitration message authentication.
-        return trade.getArbitratorPubKeyRing();
+        // TODO: Delete with ArbitrationManager; legacy arbitration no longer authenticates inbound agent messages.
+        return null;
     }
 
     @Override
     protected Trade.DisputeState getDisputeStateStartedByPeer() {
-        // TODO: Remove active ARBITRATION dispute-state transitions; preserve persisted states for display only.
+        // TODO: Delete with ArbitrationManager; no active legacy arbitration state transitions remain.
         return Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
     }
 
     @Override
     protected AckMessageSourceType getAckMessageSourceType() {
-        // TODO: Remove ARBITRATION_MESSAGE ACK handling with inbound arbitration support.
+        // TODO: Delete with ArbitrationManager; canProcessAckMessage disables active ACK handling.
         return AckMessageSourceType.ARBITRATION_MESSAGE;
     }
 
     @Override
     public void cleanupDisputes() {
-        // TODO: Do not drop persisted arbitration cases; replace active cleanup with read-only historical display support.
-        disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED));
+        // TODO: Delete with ArbitrationManager; persisted legacy arbitration cases are display-only.
     }
 
     @Override
     protected String getDisputeInfo(Dispute dispute) {
-        // TODO: Remove dispute-opening UI text; keep separate labels for persisted user arbitration case display.
-        String role = Res.get("shared.arbitrator").toLowerCase();
-        String link = "https://bisq.wiki/Arbitrator#Arbitrator_versus_Legacy_Arbitrator";
-        return Res.get("support.initialInfo", role, "", role, link);        // Arbitration is not used anymore
+        // TODO: Delete with ArbitrationManager; dispute opening is disabled for legacy arbitration.
+        return LEGACY_ARBITRATION_READ_ONLY_MESSAGE;
     }
 
     @Override
     protected String getDisputeIntroForPeer(String disputeInfo) {
-        // TODO: Remove dispute-opening UI text; keep separate labels for persisted user arbitration case display.
-        return Res.get("support.peerOpenedDispute", disputeInfo, Version.VERSION);
+        // TODO: Delete with ArbitrationManager; dispute opening is disabled for legacy arbitration.
+        return LEGACY_ARBITRATION_READ_ONLY_MESSAGE;
     }
 
     @Override
     protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
-        // TODO: Remove dispute-opening UI text; keep separate labels for persisted user arbitration case display.
-        return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
+        // TODO: Delete with ArbitrationManager; dispute opening is disabled for legacy arbitration.
+        return LEGACY_ARBITRATION_READ_ONLY_MESSAGE;
     }
 
     @Override
     protected void addPriceInfoMessage(Dispute dispute, int counter) {
-        // TODO: Remove this no-op override with ArbitrationManager.
-        // Arbitrator is not used anymore.
+        // TODO: Delete with ArbitrationManager; no active legacy arbitration messages are created.
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Message handler
+    // Disabled active message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    // We get that message at both peers. The dispute object is in context of the trader
+    public void onSupportMessage(SupportMessage message, PublicKey senderSignaturePubKey) {
+        if (canProcessMessage(message)) {
+            log.warn("Ignoring legacy arbitration support message {} for tradeId {} and uid {}. {}.",
+                    message.getClass().getSimpleName(),
+                    message.getTradeId(),
+                    message.getUid(),
+                    LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+        }
+    }
+
+    @Override
+    protected boolean canProcessAckMessage(AckMessage ackMessage) {
+        if (ackMessage.getSourceType() == AckMessageSourceType.ARBITRATION_MESSAGE) {
+            log.warn("Ignoring legacy arbitration AckMessage for tradeId {} and uid {}. {}.",
+                    ackMessage.getSourceId(),
+                    ackMessage.getSourceUid(),
+                    LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+        }
+        return false;
+    }
+
+    @Override
     public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage, PublicKey senderSignaturePubKey) {
-        // TODO: Remove legacy arbitration result processing; persisted results should be displayed, not updated by messages.
-        DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
-        ChatMessage chatMessage = disputeResult.getChatMessage();
-        checkNotNull(chatMessage, "chatMessage must not be null");
-        if (Arrays.equals(disputeResult.getArbitratorPubKey(),
-                btcWalletService.getArbitratorAddressEntry().getPubKey())) {
-            log.error("Arbitrator received disputeResultMessage. That must never happen.");
-            return;
-        }
-
-        String tradeId = disputeResult.getTradeId();
-        Optional<Dispute> disputeOptional = findDispute(disputeResult);
-        String uid = disputeResultMessage.getUid();
-        if (!disputeOptional.isPresent()) {
-            log.warn("We got a dispute result msg but we don't have a matching dispute. " +
-                    "That might happen when we get the disputeResultMessage before the dispute was created. " +
-                    "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
-            if (!delayMsgMap.containsKey(uid)) {
-                // We delay 2 sec. to be sure the comm. msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage, senderSignaturePubKey), 2);
-                delayMsgMap.put(uid, timer);
-            } else {
-                log.warn("We got a dispute result msg after we already repeated to apply the message after a delay. " +
-                        "That should never happen. TradeId = " + tradeId);
-            }
-            return;
-        }
-
-        Dispute dispute = disputeOptional.get();
-        if (!isDisputeAgentSignaturePubKeyValid(dispute,
-                senderSignaturePubKey,
-                disputeResultMessage.getClass().getSimpleName())) {
-            return;
-        }
-
-        cleanupRetryMap(uid);
-        if (!dispute.getChatMessages().contains(chatMessage)) {
-            dispute.addAndPersistChatMessage(chatMessage);
-        } else {
-            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
-        }
-        dispute.setIsClosed();
-
-        if (dispute.disputeResultProperty().get() != null) {
-            log.warn("We already got a dispute result. That should only happen if a dispute needs to be closed " +
-                    "again because the first close did not succeed. TradeId = " + tradeId);
-        }
-
-        dispute.setDisputeResult(disputeResult);
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
-        String errorMessage = null;
-        boolean success = false;
-        try {
-            // We need to avoid publishing the tx from both traders as it would create problems with zero confirmation withdrawals
-            // There would be different transactions if both sign and publish (signers: once buyer+arb, once seller+arb)
-            // The tx publisher is the winner or in case both get 50% the buyer, as the buyer has more inventive to publish the tx as he receives
-            // more BTC as he has deposited
-            Contract contract = dispute.getContract();
-
-            boolean isBuyer = pubKeyRing.equals(contract.getBuyerPubKeyRing());
-            DisputeResult.Winner publisher = disputeResult.getWinner();
-
-            // Sometimes the user who receives the trade amount is never online, so we might want to
-            // let the loser publish the tx. When the winner comes online he gets his funds as it was published by the other peer.
-            // Default isLoserPublisher is set to false
-            if (disputeResult.isLoserPublisher()) {
-                // we invert the logic
-                if (publisher == DisputeResult.Winner.BUYER)
-                    publisher = DisputeResult.Winner.SELLER;
-                else if (publisher == DisputeResult.Winner.SELLER)
-                    publisher = DisputeResult.Winner.BUYER;
-            }
-
-            if ((isBuyer && publisher == DisputeResult.Winner.BUYER)
-                    || (!isBuyer && publisher == DisputeResult.Winner.SELLER)) {
-
-                Transaction payoutTx = null;
-                if (tradeOptional.isPresent()) {
-                    payoutTx = tradeOptional.get().getPayoutTx();
-                } else {
-                    Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(tradeId);
-                    if (tradableOptional.isPresent() && tradableOptional.get() instanceof Trade) {
-                        payoutTx = ((Trade) tradableOptional.get()).getPayoutTx();
-                    }
-                }
-
-                if (payoutTx == null) {
-                    // Legacy arbitrator publishing path was removed: it relied on
-                    // traderSignAndFinalizeDisputedPayoutTx, which has been broken since
-                    // the P2WSH switch in 1.5.0 (inverted isP2SH polarity made every
-                    // produced tx fail input.verify) and corresponded to the legacy
-                    // arbitrator role that has been deprecated for years. Close the
-                    // dispute locally and ack; no tx broadcast.
-                    errorMessage = "Legacy arbitrator dispute payout publishing is no longer supported. TradeId = " + tradeId;
-                    log.warn(errorMessage);
-                    updateTradeOrOpenOfferManager(tradeId);
-                    success = false;
-                } else {
-                    log.warn("We already got a payout tx. That might be the case if the other peer did not get the " +
-                            "payout tx and opened a dispute. TradeId = " + tradeId);
-                    dispute.setDisputePayoutTxId(payoutTx.getTxId().toString());
-                    sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
-
-                    success = true;
-                }
-            } else {
-                log.trace("We don't publish the tx as we are not the winning party.");
-                // Clean up tangling trades
-                if (dispute.disputeResultProperty().get() != null && dispute.isClosed()) {
-                    updateTradeOrOpenOfferManager(tradeId);
-                }
-
-                success = true;
-            }
-        } finally {
-            // We use the chatMessage as we only persist those not the disputeResultMessage.
-            // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-            sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), success, errorMessage);
-        }
-
-        maybeClearSensitiveData();
-        requestPersistence();
+        log.warn("Ignoring legacy arbitration DisputeResultMessage for tradeId {} and uid {}. {}.",
+                disputeResultMessage.getTradeId(),
+                disputeResultMessage.getUid(),
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
     }
 
-    // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    private void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage,
-                                           PublicKey senderSignaturePubKey) {
-        // TODO: Remove legacy peer-published arbitration payout transaction handling; old messages are not supported.
-        String uid = peerPublishedDisputePayoutTxMessage.getUid();
-        String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
-        Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
-        if (!disputeOptional.isPresent()) {
-            log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);
-            if (!delayMsgMap.containsKey(uid)) {
-                // We delay 3 sec. to be sure the close msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage,
-                        senderSignaturePubKey), 3);
-                delayMsgMap.put(uid, timer);
-            } else {
-                log.warn("We got a peerPublishedPayoutTxMessage after we already repeated to apply the message after a delay. " +
-                        "That should never happen. TradeId = " + tradeId);
-            }
-            return;
-        }
-
-        Dispute dispute = disputeOptional.get();
-        Contract contract = dispute.getContract();
-        boolean isBuyer = pubKeyRing.equals(contract.getBuyerPubKeyRing());
-        PubKeyRing peersPubKeyRing = isBuyer ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
-        if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
-                peersPubKeyRing,
-                peerPublishedDisputePayoutTxMessage.getClass().getSimpleName(),
-                tradeId)) {
-            return;
-        }
-
-        cleanupRetryMap(uid);
-
-        Transaction committedDisputePayoutTx = WalletService.maybeAddNetworkTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction(), btcWalletService.getWallet());
-
-        dispute.setDisputePayoutTxId(committedDisputePayoutTx.getTxId().toString());
-        BtcWalletService.printTx("Disputed payoutTx received from peer", committedDisputePayoutTx);
-
-        // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute
-        sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
-        requestPersistence();
+    @Override
+    public ChatMessage sendChatMessage(ChatMessage message) {
+        log.warn("Not sending legacy arbitration ChatMessage for tradeId {} and uid {}. {}.",
+                message.getTradeId(),
+                message.getUid(),
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+        message.setSendMessageError(LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+        return message;
     }
 
+    @Override
+    public void addAndPersistChatMessage(ChatMessage message) {
+        log.warn("Ignoring legacy arbitration ChatMessage persistence for tradeId {} and uid {}. {}.",
+                message.getTradeId(),
+                message.getUid(),
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Send messages
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // winner (or buyer in case of 50/50) sends tx to other peer
-    private void sendPeerPublishedPayoutTxMessage(Transaction transaction, Dispute dispute, Contract contract) {
-        // TODO: Remove legacy arbitration payout transaction relay; no active arbitrator role remains.
-        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
-        NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
-        log.trace("sendPeerPublishedPayoutTxMessage to peerAddress {}", peersNodeAddress);
-        PeerPublishedDisputePayoutTxMessage message = new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
+    @Override
+    public void sendOpenNewDisputeMessage(Dispute dispute,
+                                          boolean reOpen,
+                                          ResultHandler resultHandler,
+                                          FaultHandler faultHandler) {
+        log.warn("Not opening legacy arbitration dispute for tradeId {}. {}.",
                 dispute.getTradeId(),
-                p2PService.getAddress(),
-                UUID.randomUUID().toString(),
-                getSupportType());
-        log.info("Send {} to peer {}. tradeId={}, uid={}",
-                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-        mailboxMessageService.sendEncryptedMailboxMessage(peersNodeAddress,
-                peersPubKeyRing,
-                message,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                    }
-                }
-        );
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+        faultHandler.handleFault(LEGACY_ARBITRATION_READ_ONLY_MESSAGE,
+                new UnsupportedOperationException(LEGACY_ARBITRATION_READ_ONLY_MESSAGE));
     }
 
-    private void updateTradeOrOpenOfferManager(String tradeId) {
-        // TODO: Remove active arbitration close helper; persisted closed cases should remain visible from storage.
-        // set state after payout as we call swapTradeEntryToAvailableEntry
-        if (tradeManager.getTradeById(tradeId).isPresent()) {
-            tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED);
-        } else {
-            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
-            openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
-        }
+    @Override
+    public void sendDisputeOpeningMsg(Dispute dispute) {
+        log.warn("Not sending legacy arbitration PeerOpenedDisputeMessage for tradeId {}. {}.",
+                dispute.getTradeId(),
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+    }
+
+    @Override
+    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String summaryText) {
+        log.warn("Not sending legacy arbitration DisputeResultMessage for tradeId {}. {}.",
+                dispute.getTradeId(),
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
+    }
+
+    @Override
+    public void disputedTradeUpdate(String message, Dispute dispute, boolean close) {
+        log.warn("Ignoring legacy arbitration disputed trade update for tradeId {}. {}.",
+                dispute.getTradeId(),
+                LEGACY_ARBITRATION_READ_ONLY_MESSAGE);
     }
 }

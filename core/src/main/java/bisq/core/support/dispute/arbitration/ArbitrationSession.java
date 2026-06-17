@@ -30,4 +30,10 @@ public class ArbitrationSession extends DisputeSession {
     public ArbitrationSession(@Nullable Dispute dispute, boolean isTrader) {
         super(dispute, isTrader);
     }
+
+    @Override
+    public boolean chatIsOpen() {
+        // TODO: Delete with the legacy arbitration UI once historical cases move to a dedicated read-only view.
+        return false;
+    }
 }
