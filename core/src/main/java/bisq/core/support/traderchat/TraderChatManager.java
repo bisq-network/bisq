@@ -39,6 +39,8 @@ import javax.inject.Singleton;
 
 import javafx.collections.FXCollections;
 
+import java.security.PublicKey;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -151,12 +153,12 @@ public class TraderChatManager extends SupportManager {
         tryApplyMessages();
     }
 
-    public void onSupportMessage(SupportMessage message) {
+    public void onSupportMessage(SupportMessage message, PublicKey senderSignaturePubKey) {
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-            if (message instanceof ChatMessage) {
-                onChatMessage((ChatMessage) message);
+            if (message instanceof ChatMessage chatMessage) {
+                onChatMessage(chatMessage, senderSignaturePubKey);
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
