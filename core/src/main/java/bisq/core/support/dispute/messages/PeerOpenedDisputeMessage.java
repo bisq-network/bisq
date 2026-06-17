@@ -25,11 +25,14 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.app.Version;
+import bisq.common.crypto.PubKeyRing;
 
 import java.security.PublicKey;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+
+import javax.annotation.Nullable;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -90,8 +93,10 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage implements Se
     }
 
     @Override
+    @Nullable
     public PublicKey getSenderSignaturePubKey() {
-        return dispute.getAgentPubKeyRing().getSignaturePubKey();
+        PubKeyRing agentPubKeyRing = dispute == null ? null : dispute.getAgentPubKeyRing();
+        return agentPubKeyRing == null ? null : agentPubKeyRing.getSignaturePubKey();
     }
 
     @Override
