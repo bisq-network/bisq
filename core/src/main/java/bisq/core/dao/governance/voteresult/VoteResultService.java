@@ -41,6 +41,7 @@ import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
 import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DaoArithmetics;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
@@ -59,6 +60,8 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.common.util.MathUtils;
 import bisq.common.util.PermutationUtil;
 import bisq.common.util.Utilities;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
 
@@ -184,11 +187,11 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 // A node which has a local blindVote list which does not match the winner data view will try
                 // permutations of his local list and if that does not succeed he need to recover it's
                 // local blindVote list by requesting the correct list from other peers.
-                Map<P2PDataStorage.ByteArray, Long> stakeByHashOfBlindVoteListMap = getStakeByHashOfBlindVoteListMap(decryptedBallotsWithMeritsSet);
-
                 try {
+                    Map<P2PDataStorage.ByteArray, Long> stakeByHashOfBlindVoteListMap = getStakeByHashOfBlindVoteListMap(decryptedBallotsWithMeritsSet, chainHeight);
+
                     // Get majority hash
-                    byte[] majorityBlindVoteListHash = calculateMajorityBlindVoteListHash(stakeByHashOfBlindVoteListMap);
+                    byte[] majorityBlindVoteListHash = calculateMajorityBlindVoteListHash(stakeByHashOfBlindVoteListMap, chainHeight);
 
                     // Is our local list matching the majority data view?
                     Optional<List<BlindVote>> optionalBlindVoteListMatchingMajorityHash = findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash);
@@ -428,7 +431,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return new BallotList(ballots);
     }
 
-    private Map<P2PDataStorage.ByteArray, Long> getStakeByHashOfBlindVoteListMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+    private Map<P2PDataStorage.ByteArray, Long> getStakeByHashOfBlindVoteListMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet, long chainHeight) {
         // Don't use byte[] as key as byte[] uses object identity for equals and hashCode
         Map<P2PDataStorage.ByteArray, Long> map = new HashMap<>();
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
@@ -438,7 +441,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             // have received it. We must rely only on blockchain data. The stake is from the vote reveal tx input.
             long aggregatedStake = map.get(hash);
             long stake = decryptedBallotsWithMerits.getStake();
-            aggregatedStake += stake;
+            aggregatedStake = addBlindVoteListStake(aggregatedStake, stake, chainHeight);
             map.put(hash, aggregatedStake);
 
             log.debug("blindVoteTxId={}, stake={}",
@@ -447,12 +450,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return map;
     }
 
-    private byte[] calculateMajorityBlindVoteListHash(Map<P2PDataStorage.ByteArray, Long> stakes)
+    private byte[] calculateMajorityBlindVoteListHash(Map<P2PDataStorage.ByteArray, Long> stakes, long chainHeight)
             throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
         List<HashWithStake> stakeList = stakes.entrySet().stream()
                 .map(entry -> new HashWithStake(entry.getKey().bytes, entry.getValue()))
                 .collect(Collectors.toList());
-        return VoteResultConsensus.getMajorityHash(stakeList);
+        return VoteResultConsensus.getMajorityHash(stakeList, chainHeight);
     }
 
     // Deal with eventually consistency of P2P network
@@ -517,7 +520,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private Set<EvaluatedProposal> getEvaluatedProposals(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
                                                          int chainHeight) {
         // We reorganize the data structure to have a map of proposals with a list of VoteWithStake objects
-        Map<Proposal, List<VoteWithStake>> resultListByProposalMap = getVoteWithStakeListByProposalMap(decryptedBallotsWithMeritsSet);
+        Map<Proposal, List<VoteWithStake>> resultListByProposalMap = getVoteWithStakeListByProposalMap(decryptedBallotsWithMeritsSet,
+                chainHeight);
 
         Set<EvaluatedProposal> evaluatedProposals = new HashSet<>();
         resultListByProposalMap.forEach((proposal, voteWithStakeList) -> {
@@ -527,16 +531,16 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     "requiredVoteThreshold must be not be less then 50% otherwise we could have conflicting results.");
 
             // move to consensus class
-            ProposalVoteResult proposalVoteResult = getResultPerProposal(voteWithStakeList, proposal);
+            ProposalVoteResult proposalVoteResult = getResultPerProposal(voteWithStakeList, proposal, chainHeight);
             // Quorum is min. required BSQ stake to be considered valid
-            long reachedQuorum = proposalVoteResult.getQuorum();
+            long reachedQuorum = proposalVoteResult.getQuorum(chainHeight);
             log.debug("proposalTxId: {}, required requiredQuorum: {}, requiredVoteThreshold: {}",
                     proposal.getTxId(), requiredVoteThreshold / 100D, requiredQuorum);
             if (reachedQuorum >= requiredQuorum) {
                 // We multiply by 10000 as we use a long for reachedThreshold and we want precision of 2 with
                 // a % value. E.g. 50% is 5000.
                 // Threshold is percentage of accepted to total stake
-                long reachedThreshold = proposalVoteResult.getThreshold();
+                long reachedThreshold = proposalVoteResult.getThreshold(chainHeight);
 
                 log.debug("reached threshold: {} %, required threshold: {} %",
                         reachedThreshold / 100D,
@@ -574,13 +578,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 });
 
         // Check if our issuance sum is not exceeding the limit
-        long sumIssuance = evaluatedProposals.stream()
-                .filter(EvaluatedProposal::isAccepted)
-                .map(EvaluatedProposal::getProposal)
-                .filter(proposal -> proposal instanceof IssuanceProposal)
-                .map(proposal -> (IssuanceProposal) proposal)
-                .mapToLong(proposal -> proposal.getRequestedBsq().value)
-                .sum();
+        long sumIssuance = getSumIssuance(evaluatedProposals, chainHeight);
         long limit = daoStateService.getParamValueAsCoin(Param.ISSUANCE_LIMIT, chainHeight).value;
         if (sumIssuance > limit) {
             Set<EvaluatedProposal> evaluatedProposals2 = new HashSet<>();
@@ -605,7 +603,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return MathUtils.roundDoubleToLong(paramValueAsPercentDouble * 10000);
     }
 
-    private Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+    private Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
+                                                                                 int chainHeight) {
         Map<Proposal, List<VoteWithStake>> voteWithStakeByProposalMap = new HashMap<>();
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> decryptedBallotsWithMerits.getBallotList()
                 .forEach(ballot -> {
@@ -613,7 +612,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     voteWithStakeByProposalMap.putIfAbsent(proposal, new ArrayList<>());
                     List<VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
                     long sumOfAllMerits = MeritConsensus.getMeritStake(decryptedBallotsWithMerits.getBlindVoteTxId(),
-                            decryptedBallotsWithMerits.getMeritList(), daoStateService);
+                            decryptedBallotsWithMerits.getMeritList(), daoStateService, chainHeight);
                     VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
                     voteWithStakeList.add(voteWithStake);
                     log.debug("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
@@ -622,7 +621,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
 
-    private ProposalVoteResult getResultPerProposal(List<VoteWithStake> voteWithStakeList, Proposal proposal) {
+    private ProposalVoteResult getResultPerProposal(List<VoteWithStake> voteWithStakeList, Proposal proposal, int chainHeight) {
         int numAcceptedVotes = 0;
         int numRejectedVotes = 0;
         int numIgnoredVotes = 0;
@@ -632,16 +631,16 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         for (VoteWithStake voteWithStake : voteWithStakeList) {
             long sumOfAllMerits = voteWithStake.getSumOfAllMerits();
             long stake = voteWithStake.getStake();
-            long combinedStake = stake + sumOfAllMerits;
+            long combinedStake = getCombinedStake(stake, sumOfAllMerits, chainHeight);
             log.debug("proposalTxId={}, stake={}, sumOfAllMerits={}, combinedStake={}",
                     proposal.getTxId(), stake, sumOfAllMerits, combinedStake);
             Vote vote = voteWithStake.getVote();
             if (vote != null) {
                 if (vote.isAccepted()) {
-                    stakeOfAcceptedVotes += combinedStake;
+                    stakeOfAcceptedVotes = addVoteStake(stakeOfAcceptedVotes, combinedStake, chainHeight);
                     numAcceptedVotes++;
                 } else {
-                    stakeOfRejectedVotes += combinedStake;
+                    stakeOfRejectedVotes = addVoteStake(stakeOfRejectedVotes, combinedStake, chainHeight);
                     numRejectedVotes++;
                 }
             } else {
@@ -650,6 +649,32 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             }
         }
         return new ProposalVoteResult(proposal, stakeOfAcceptedVotes, stakeOfRejectedVotes, numAcceptedVotes, numRejectedVotes, numIgnoredVotes);
+    }
+
+    @VisibleForTesting
+    static long addBlindVoteListStake(long aggregatedStake, long stake, long chainHeight) {
+        return DaoArithmetics.addLong(aggregatedStake, stake, chainHeight);
+    }
+
+    @VisibleForTesting
+    static long getCombinedStake(long stake, long sumOfAllMerits, long chainHeight) {
+        return DaoArithmetics.addLong(stake, sumOfAllMerits, chainHeight);
+    }
+
+    @VisibleForTesting
+    static long addVoteStake(long currentStake, long combinedStake, long chainHeight) {
+        return DaoArithmetics.addLong(currentStake, combinedStake, chainHeight);
+    }
+
+    @VisibleForTesting
+    static long getSumIssuance(Set<EvaluatedProposal> evaluatedProposals, long chainHeight) {
+        long sumIssuance = 0;
+        for (EvaluatedProposal evaluatedProposal : evaluatedProposals) {
+            if (evaluatedProposal.isAccepted() && evaluatedProposal.getProposal() instanceof IssuanceProposal issuanceProposal) {
+                sumIssuance = DaoArithmetics.addLong(sumIssuance, issuanceProposal.getRequestedBsq().value, chainHeight);
+            }
+        }
+        return sumIssuance;
     }
 
     private void applyAcceptedProposals(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
