@@ -85,6 +85,10 @@ public class VoteResultConsensus {
         if (hashWithStakeList.size() > 1) {
             long stakeOfAll = getStakeOfAll(hashWithStakeList, chainHeight);
             long stakeOfFirst = hashWithStakeList.get(0).getStake();
+            if (stakeOfAll == 0) {
+                log.warn("stakeOfAll must not be 0");
+                throw new VoteResultException.ConsensusException("stakeOfAll is 0.");
+            }
             if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
                 log.warn("The winning data view has less then 80% of the " +
                         "total stake of all data views. We consider the voting cycle as invalid if the " +
