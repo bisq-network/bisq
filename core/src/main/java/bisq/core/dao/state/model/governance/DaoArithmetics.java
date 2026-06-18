@@ -21,7 +21,7 @@ package bisq.core.dao.state.model.governance;
 public class DaoArithmetics {
     // Consensus activation height for DAO related arithmetic hardening. Historical heights must keep
     // legacy primitive overflow behavior so replayed DAO state hashes remain deterministic.
-    private static final int USE_V2_ACTIVATION_HEIGHT = 954_200;
+    public static final int DAO_CONSENSUS_V2_ACTIVATION_HEIGHT = 954_200;
 
     public static int addInteger(int a, int b, long chainHeight) {
         if (isV2Activated(chainHeight)) {
@@ -64,6 +64,6 @@ public class DaoArithmetics {
     }
 
     private static boolean isV2Activated(long chainHeight) {
-        return chainHeight >= USE_V2_ACTIVATION_HEIGHT;
+        return chainHeight >= DAO_CONSENSUS_V2_ACTIVATION_HEIGHT;
     }
 }

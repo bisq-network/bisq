@@ -42,8 +42,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -71,7 +69,6 @@ public class VoteResultConsensus {
     // hex encoded hashOfProposalList for comparison
     // Arithmetic overflow from DaoArithmetics is intentionally not converted here; vote-result processing records
     // it as a failed cycle through the surrounding VoteResultException boundary.
-    @Nullable
     public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList, long chainHeight)
             throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
         try {

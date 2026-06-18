@@ -76,7 +76,7 @@ public class MeritConsensusV2 {
                 }
                 Issuance issuance = optionalIssuance.get();
                 if (!issuance.isValueEqual(untrustedIssuance)) {
-                    log.warn("DAO state compensation issuance is not the same as the one from the unrusted merit. " +
+                    log.warn("DAO state compensation issuance is not the same as the one from the untrusted merit. " +
                             "DAO state compensation issuance={}, untrustedMerit={}", issuance, untrustedMerit);
                     continue;
                 }
@@ -107,6 +107,7 @@ public class MeritConsensusV2 {
             }
             return totalMeritAmount;
         } catch (ArithmeticException e) {
+            // Overflow in consensus merit arithmetic must fail the vote result instead of being treated as zero merit.
             throw e;
         } catch (RuntimeException e) {
             log.error("Error at getMeritStake. merit={}", untrustedMeritList, e);

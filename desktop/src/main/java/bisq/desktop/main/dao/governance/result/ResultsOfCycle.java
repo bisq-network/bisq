@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -63,7 +64,7 @@ class ResultsOfCycle {
         this.evaluatedProposals = evaluatedProposals;
         this.decryptedVotesForCycle = decryptedVotesForCycle;
 
-        long chainHeight = cycle.getHeightOfFirstBlock();
+        long chainHeight = cycle.getFirstBlockOfPhase(DaoPhase.Phase.RESULT);
 
         numVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes(chainHeight))
