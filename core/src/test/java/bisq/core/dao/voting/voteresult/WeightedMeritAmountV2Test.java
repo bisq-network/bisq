@@ -22,12 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static bisq.core.dao.governance.merit.MeritConsensus.getWeightedMeritAmount;
+import static bisq.core.dao.governance.merit.MeritConsensusV2.getWeightedMeritAmount;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Slf4j
-public class VoteResultConsensusTest {
+public class WeightedMeritAmountV2Test {
     @BeforeEach
     public void setup() {
     }
@@ -72,26 +72,26 @@ public class VoteResultConsensusTest {
 
     @Test
     public void testInvalidChainHeight() {
-        assertThrows(IllegalArgumentException.class, () -> getWeightedMeritAmount(100_000, 2_000_000, 1_000_000, 1_000_000));
+        assertEquals(0, getWeightedMeritAmount(100_000, 2_000_000, 1_000_000, 1_000_000));
     }
 
     @Test
     public void testInvalidIssuanceHeight() {
-        assertThrows(IllegalArgumentException.class, () -> getWeightedMeritAmount(100_000, -1, 1_000_000, 1_000_000));
+        assertEquals(0, getWeightedMeritAmount(100_000, -1, 1_000_000, 1_000_000));
     }
 
     @Test
     public void testInvalidAmount() {
-        assertThrows(IllegalArgumentException.class, () -> getWeightedMeritAmount(-100_000, 1, 1_000_000, 1_000_000));
+        assertEquals(0, getWeightedMeritAmount(-100_000, 1, 1_000_000, 1_000_000));
     }
 
     @Test
     public void testInvalidCurrentChainHeight() {
-        assertThrows(IllegalArgumentException.class, () -> getWeightedMeritAmount(100_000, 1, -1, 1_000_000));
+        assertEquals(0, getWeightedMeritAmount(100_000, 1, -1, 1_000_000));
     }
 
     @Test
     public void testInvalidBlockPerYear() {
-        assertThrows(IllegalArgumentException.class, () -> getWeightedMeritAmount(100_000, 1, 11, -1));
+        assertEquals(0, getWeightedMeritAmount(100_000, 1, 11, -1));
     }
 }
