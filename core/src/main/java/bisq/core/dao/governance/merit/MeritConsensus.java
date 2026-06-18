@@ -19,6 +19,7 @@ package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.DaoArithmetics;
 import bisq.core.dao.state.model.governance.MeritList;
 
 import bisq.common.crypto.Encryption;
