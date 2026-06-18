@@ -19,6 +19,7 @@ package bisq.core.dao.governance.merit;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.DaoArithmeticsV2;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Merit;
@@ -165,7 +166,7 @@ public class MeritConsensusV2 {
             // division is not using rounding. Sticking with long values makes that operation safer against consensus
             // failures causes by rounding differences with double.
 
-            long maxAge = 2 * blocksPerYear; // maxAge=100 000 (MeritConsensus.BLOCKS_PER_YEAR is 50_000)
+            long maxAge = DaoArithmeticsV2.multiplyLong(2, blocksPerYear); // maxAge=100 000 (MeritConsensus.BLOCKS_PER_YEAR is 50_000)
             //noinspection ConstantValue
             checkArgument(maxAge > 0, "maxAge must be positive. maxAge=" + maxAge);
             long age = Math.min(maxAge, blockHeight - issuanceHeight);
@@ -173,7 +174,7 @@ public class MeritConsensusV2 {
 
             // We want a resolution of 1 block so we use the inverseAge and divide by maxAge afterwards to get the
             // weighted amount
-            long weightedAmount = (amount * inverseAge) / maxAge;
+            long weightedAmount = DaoArithmeticsV2.multiplyAndDivide(amount, inverseAge, maxAge);
             checkArgument(weightedAmount >= 0, "weightedAmount must not be negative. " +
                     "weightedAmount=" + weightedAmount);
 
