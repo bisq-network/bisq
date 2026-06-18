@@ -25,10 +25,13 @@ import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.DaoArithmetics;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.common.crypto.Encryption;
 import bisq.common.util.Utilities;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import javax.crypto.SecretKey;
 
@@ -66,8 +69,10 @@ public class VoteResultConsensus {
 
     // We compare first by stake and in case we have multiple entries with same stake we use the
     // hex encoded hashOfProposalList for comparison
+    // Arithmetic overflow from DaoArithmetics is intentionally not converted here; vote-result processing records
+    // it as a failed cycle through the surrounding VoteResultException boundary.
     @Nullable
-    public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList)
+    public static byte[] getMajorityHash(List<VoteResultService.HashWithStake> hashWithStakeList, long chainHeight)
             throws VoteResultException.ValidationException, VoteResultException.ConsensusException {
         try {
             checkArgument(!hashWithStakeList.isEmpty(), "hashWithStakeList must not be empty");
@@ -81,7 +86,7 @@ public class VoteResultConsensus {
         // If there are conflicting data views (multiple hashes) we only consider the voting round as valid if
         // the majority is a super majority with > 80%.
         if (hashWithStakeList.size() > 1) {
-            long stakeOfAll = hashWithStakeList.stream().mapToLong(VoteResultService.HashWithStake::getStake).sum();
+            long stakeOfAll = getStakeOfAll(hashWithStakeList, chainHeight);
             long stakeOfFirst = hashWithStakeList.get(0).getStake();
             if ((double) stakeOfFirst / (double) stakeOfAll < 0.8) {
                 log.warn("The winning data view has less then 80% of the " +
@@ -93,6 +98,16 @@ public class VoteResultConsensus {
             }
         }
         return hashWithStakeList.get(0).getHash();
+    }
+
+    // chainHeight selects legacy primitive arithmetic before activation and exact arithmetic at/after activation.
+    @VisibleForTesting
+    static long getStakeOfAll(List<VoteResultService.HashWithStake> hashWithStakeList, long chainHeight) {
+        long stakeOfAll = 0;
+        for (VoteResultService.HashWithStake hashWithStake : hashWithStakeList) {
+            stakeOfAll = DaoArithmetics.addLong(stakeOfAll, hashWithStake.getStake(), chainHeight);
+        }
+        return stakeOfAll;
     }
 
     // Key is stored after version and type bytes and list of Blind votes. It has 16 bytes
