@@ -70,7 +70,7 @@ class ResultsOfCycle {
                 .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes(chainHeight))
                 .sum();
         numAcceptedVotes = evaluatedProposals.stream()
-                .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes(chainHeight))
+                .mapToInt(e -> e.getProposalVoteResult().getNumAcceptedVotes())
                 .sum();
         numRejectedVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumRejectedVotes())
