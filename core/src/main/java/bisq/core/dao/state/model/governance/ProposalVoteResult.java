@@ -112,7 +112,7 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
     public long getThreshold(long chainHeight) {
         checkArgument(stakeOfAcceptedVotes >= 0, "stakeOfAcceptedVotes must not be negative");
         checkArgument(stakeOfRejectedVotes >= 0, "stakeOfRejectedVotes must not be negative");
-        if (stakeOfAcceptedVotes == 0) {
+        if (stakeOfAcceptedVotes <= 0) {
             return 0;
         }
 
