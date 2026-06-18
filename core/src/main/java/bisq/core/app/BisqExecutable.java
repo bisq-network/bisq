@@ -29,6 +29,7 @@ import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.locale.Res;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 
 import bisq.network.p2p.P2PService;
@@ -36,6 +37,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
+import bisq.common.app.InstanceLock;
 import bisq.common.config.BisqHelpFormatter;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigException;
@@ -49,6 +51,8 @@ import bisq.common.util.Utilities;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+
+import java.io.IOException;
 
 import java.util.List;
 import java.util.Timer;
@@ -74,6 +78,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected Injector injector;
     protected AppModule module;
     protected Config config;
+    protected InstanceLock instanceLock;
     protected volatile boolean isShutdownInProgress;
     private boolean hasDowngraded;
 
@@ -109,6 +114,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doExecute() {
+        if (!acquireInstanceLock()) {
+            // Another instance is already running against this data directory. The handler
+            // has already informed the user and terminated the process; we stop here defensively.
+            return;
+        }
+
         CommonSetup.setup(config, this);
         CoreSetup.setup(config);
 
@@ -116,6 +127,44 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         // If application is JavaFX application we need to wait until it is initialized
         launchApplication();
+    }
+
+    /**
+     * Acquires the single-instance lock on the application data directory.
+     *
+     * @return true if startup may proceed, false if another instance already runs (in which
+     *         case {@link #handleAnotherInstanceRunning} has terminated the process).
+     */
+    private boolean acquireInstanceLock() {
+        instanceLock = new InstanceLock(config.appDataDir.toPath());
+        try {
+            if (instanceLock.tryLock()) {
+                return true;
+            }
+        } catch (IOException e) {
+            // The lock mechanism itself is unusable (e.g. data dir not writable). We fail open
+            // rather than bricking startup: an unusable lock file must not prevent the app from
+            // running, and an unwritable data dir will surface its own error downstream.
+            log.warn("Could not acquire single-instance lock, continuing without it", e);
+            return true;
+        }
+        // Res is used by the conflict handlers but its currency substitution is only safe after
+        // setup(). This runs before CoreSetup, so initialize it here. Config is already built.
+        Res.setup();
+        handleAnotherInstanceRunning();
+        return false;
+    }
+
+    /**
+     * Called when another instance already holds the lock. Default implementation logs the
+     * reason and exits. Desktop overrides this to additionally show a user-facing dialog.
+     */
+    protected void handleAnotherInstanceRunning() {
+        String pidInfo = instanceLock.readOwnerPid().map(pid -> " (PID " + pid + ")").orElse("");
+        log.error("Another instance of {} is already running{} using data directory {}",
+                appName, pidInfo, config.appDataDir);
+        System.err.println("error: " + Res.get("popup.alreadyRunning.msg", appName, config.appDataDir));
+        System.exit(EXIT_FAILURE);
     }
 
     protected abstract void configUserThread();
@@ -283,6 +332,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     }
 
     protected void flushAndExit(ResultHandler resultHandler, int status) {
+        // The OS releases the lock on process exit; we release explicitly for a clean handover
+        // to a restarting instance.
+        if (instanceLock != null) {
+            instanceLock.close();
+        }
         if (!hasDowngraded) {
             // If user tried to downgrade we do not write the persistable data to avoid data corruption
             log.info("PersistenceManager flushAllDataToDiskAtShutdown started");

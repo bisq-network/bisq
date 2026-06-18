@@ -26,6 +26,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.TorSetup;
+import bisq.core.locale.Res;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Cookie;
@@ -38,6 +39,10 @@ import bisq.common.app.Version;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+
+import java.awt.GraphicsEnvironment;
+
+import javax.swing.JOptionPane;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,6 +70,26 @@ public class BisqAppMain extends BisqExecutable {
     @Override
     public void onSetupComplete() {
         log.debug("onSetupComplete");
+    }
+
+    @Override
+    protected void handleAnotherInstanceRunning() {
+        // Runs before JavaFX is launched, so we cannot use the JavaFX Popup here. Show a
+        // lightweight AWT dialog when a display is available, then fall back to stderr + exit.
+        String pidInfo = instanceLock.readOwnerPid().map(pid -> " (PID " + pid + ")").orElse("");
+        log.error("Another instance of {} is already running{} using data directory {}",
+                DEFAULT_APP_NAME, pidInfo, config.appDataDir);
+        String headline = Res.get("popup.alreadyRunning.headline", DEFAULT_APP_NAME);
+        String message = Res.get("popup.alreadyRunning.msg", DEFAULT_APP_NAME, config.appDataDir);
+        if (!GraphicsEnvironment.isHeadless()) {
+            try {
+                JOptionPane.showMessageDialog(null, message, headline, JOptionPane.WARNING_MESSAGE);
+            } catch (Throwable t) {
+                log.warn("Could not show already-running dialog", t);
+            }
+        }
+        System.err.println("error: " + message);
+        System.exit(BisqExecutable.EXIT_FAILURE);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
