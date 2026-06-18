@@ -63,11 +63,13 @@ class ResultsOfCycle {
         this.evaluatedProposals = evaluatedProposals;
         this.decryptedVotesForCycle = decryptedVotesForCycle;
 
+        long chainHeight = cycle.getHeightOfFirstBlock();
+
         numVotes = evaluatedProposals.stream()
-                .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes())
+                .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes(chainHeight))
                 .sum();
         numAcceptedVotes = evaluatedProposals.stream()
-                .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes())
+                .mapToInt(e -> e.getProposalVoteResult().getNumActiveVotes(chainHeight))
                 .sum();
         numRejectedVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumRejectedVotes())
