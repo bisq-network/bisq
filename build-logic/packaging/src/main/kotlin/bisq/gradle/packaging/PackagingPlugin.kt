@@ -22,7 +22,7 @@ import javax.inject.Inject
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
-        const val APP_VERSION = "1.10.1"
+        const val APP_VERSION = "1.10.2"
         const val OUTPUT_DIR_PATH = "packaging/jpackage/packages"
     }
 
