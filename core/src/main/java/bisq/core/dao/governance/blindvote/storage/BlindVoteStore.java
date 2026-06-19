@@ -17,11 +17,13 @@
 
 package bisq.core.dao.governance.blindvote.storage;
 
+import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadException;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +64,18 @@ public class BlindVoteStore extends PersistableNetworkPayloadStore<BlindVotePayl
 
     public static BlindVoteStore fromProto(protobuf.BlindVoteStore proto) {
         List<BlindVotePayload> list = proto.getItemsList().stream()
-                .map(BlindVotePayload::fromProto).collect(Collectors.toList());
+                .map(BlindVoteStore::getBlindVotePayloadOrNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         return new BlindVoteStore(list);
+    }
+
+    private static BlindVotePayload getBlindVotePayloadOrNull(protobuf.BlindVotePayload proto) {
+        try {
+            return BlindVotePayload.fromProto(proto);
+        } catch (InvalidPersistableNetworkPayloadException e) {
+            log.warn("Ignoring invalid BlindVotePayload from BlindVoteStore. {}", e.getMessage());
+            return null;
+        }
     }
 }

@@ -20,12 +20,15 @@ package bisq.core.dao.governance.blindvote.storage;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.blindvote.BlindVote;
 
+import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadException;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.crypto.Hash;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+
+import java.util.Arrays;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,17 +51,13 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Consen
     protected final byte[] hash;        // 20 byte
 
     public BlindVotePayload(BlindVote blindVote) {
-        this(blindVote, Hash.getRipemd160hash(blindVote.encodeCanonical()));
+        this.blindVote = blindVote;
+        this.hash = Hash.getRipemd160hash(blindVote.encodeCanonical());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private BlindVotePayload(BlindVote blindVote, byte[] hash) {
-        this.blindVote = blindVote;
-        this.hash = hash;
-    }
 
     private protobuf.BlindVotePayload.Builder getBlindVoteBuilder() {
         return protobuf.BlindVotePayload.newBuilder()
@@ -77,8 +76,18 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Consen
 
 
     public static BlindVotePayload fromProto(protobuf.BlindVotePayload proto) {
-        return new BlindVotePayload(BlindVote.fromProto(proto.getBlindVote()),
-                proto.getHash().toByteArray());
+        BlindVote blindVote = BlindVote.fromProto(proto.getBlindVote());
+        BlindVotePayload blindVotePayload = new BlindVotePayload(blindVote);
+
+        byte[] hashFromProto = proto.getHash().toByteArray();
+        if (!Arrays.equals(hashFromProto, blindVotePayload.getHash())) {
+            throw new InvalidPersistableNetworkPayloadException("BlindVotePayload hash field does not match blind vote data. " +
+                    "blindVoteTxId=" + blindVote.getTxId() +
+                    ", hashFromProto=" + Utilities.bytesAsHexString(hashFromProto) +
+                    ", computedHash=" + Utilities.bytesAsHexString(blindVotePayload.getHash()));
+        }
+
+        return blindVotePayload;
     }
 
 
