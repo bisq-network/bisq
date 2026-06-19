@@ -212,7 +212,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public abstract Proposal cloneProposal(String txId);
+    public abstract Proposal cloneProposal(@Nullable String txId);
 
     public abstract ProposalType getType();
 

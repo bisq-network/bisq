@@ -80,7 +80,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                  long requestedBsq,
                                  byte version,
                                  long creationDate,
-                                 String txId,
+                                 @Nullable String txId,
                                  @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
@@ -183,7 +183,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     }
 
     @Override
-    public Proposal cloneProposal(String txId) {
+    public Proposal cloneProposal(@Nullable String txId) {
         return new CompensationProposal(getName(),
                 getLink(),
                 getBsqAddress(),
