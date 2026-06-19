@@ -365,7 +365,7 @@ public class BurningManServiceTest {
         TreeMap<String, String> extraDataMap = new TreeMap<>();
         extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, receiverAddress);
         var proposal = new CompensationProposal(name, "link", Coin.valueOf(amount), "bsqAddress", extraDataMap);
-        return new Tuple2<>(issuance, new ProposalPayload(proposal.cloneProposalAndAddTxId(txId)));
+        return new Tuple2<>(issuance, new ProposalPayload(proposal.cloneProposal(txId)));
     }
 
     // Returns a cut-down proof-of-burn tx for mocking. FIXME: Going via a protobuf object is a bit of a hack.

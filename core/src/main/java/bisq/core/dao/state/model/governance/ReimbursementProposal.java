@@ -166,7 +166,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new ReimbursementProposal(getName(),
                 getLink(),
                 getBsqAddress(),

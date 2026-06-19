@@ -139,7 +139,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new GenericProposal(getName(),
                 getLink(),
                 getVersion(),

@@ -150,7 +150,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new RemoveAssetProposal(getName(),
                 getLink(),
                 getTickerSymbol(),

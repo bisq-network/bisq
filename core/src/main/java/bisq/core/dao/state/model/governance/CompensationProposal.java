@@ -183,7 +183,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new CompensationProposal(getName(),
                 getLink(),
                 getBsqAddress(),

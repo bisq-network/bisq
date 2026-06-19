@@ -149,7 +149,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new ConfiscateBondProposal(getName(),
                 getLink(),
                 getLockupTxId(),

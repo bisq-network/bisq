@@ -161,7 +161,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new RoleProposal(name,
                 link,
                 role,

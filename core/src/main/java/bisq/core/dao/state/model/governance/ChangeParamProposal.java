@@ -157,7 +157,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(String txId) {
         return new ChangeParamProposal(getName(),
                 getLink(),
                 getParam(),
