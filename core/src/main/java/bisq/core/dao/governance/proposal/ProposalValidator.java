@@ -89,10 +89,14 @@ public abstract class ProposalValidator implements ConsensusCritical {
             log.warn("txId must be set. proposal.getTxId()={}", proposal.getTxId());
             return false;
         }
-        Optional<TxType> optionalTxType = daoStateService.getOptionalTxType(txId);
-        boolean present = optionalTxType.filter(txType -> txType == proposal.getTxType()).isPresent();
-        if (!present)
+        Optional<Tx> optionalTx = daoStateService.getTx(txId);
+        boolean present = optionalTx
+                .map(Tx::getTxType)
+                .filter(txType -> txType == proposal.getTxType())
+                .isPresent();
+        if (!present) {
             log.debug("optionalTxType not present for proposal {}" + proposal);
+        }
         return present;
     }
 
@@ -112,7 +116,8 @@ public abstract class ProposalValidator implements ConsensusCritical {
         int chainHeight = daoStateService.getChainHeight();
 
         if (isTxConfirmed) {
-            int txHeight = optionalTx.get().getBlockHeight();
+            Tx tx = optionalTx.get();
+            int txHeight = tx.getBlockHeight();
             if (!periodService.isTxInCorrectCycle(txHeight, chainHeight)) {
                 log.trace("Tx is not in current cycle. proposal.getTxId()={}", proposal.getTxId());
                 return false;
@@ -122,17 +127,17 @@ public abstract class ProposalValidator implements ConsensusCritical {
                 return false;
             }
             if (proposal instanceof CompensationProposal) {
-                if (optionalTx.get().getTxType() != TxType.COMPENSATION_REQUEST) {
+                if (tx.getTxType() != TxType.COMPENSATION_REQUEST) {
                     log.error("TxType is not a COMPENSATION_REQUEST. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             } else if (proposal instanceof ReimbursementProposal) {
-                if (optionalTx.get().getTxType() != TxType.REIMBURSEMENT_REQUEST) {
+                if (tx.getTxType() != TxType.REIMBURSEMENT_REQUEST) {
                     log.error("TxType is not a REIMBURSEMENT_REQUEST. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             } else {
-                if (optionalTx.get().getTxType() != TxType.PROPOSAL) {
+                if (tx.getTxType() != TxType.PROPOSAL) {
                     log.error("TxType is not PROPOSAL. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
