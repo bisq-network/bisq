@@ -30,6 +30,7 @@ import bisq.core.util.VolumeUtil;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateSortedTruncatablePayload;
+import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadException;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 
@@ -333,7 +334,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public static TradeStatistics3 fromProto(protobuf.TradeStatistics3 proto) {
-        return new TradeStatistics3(
+        TradeStatistics3 tradeStatistics = new TradeStatistics3(
                 proto.getCurrency(),
                 proto.getPrice(),
                 proto.getAmount(),
@@ -342,7 +343,16 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 ProtoUtil.stringOrNullFromProto(proto.getMediator()),
                 ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()),
-                proto.getHash().toByteArray());
+                null);
+
+        byte[] hashFromProto = proto.getHash().toByteArray();
+        if (!Arrays.equals(hashFromProto, tradeStatistics.getHash())) {
+            throw new InvalidPersistableNetworkPayloadException("TradeStatistics3 hash field does not match trade statistics data. " +
+                    "hashFromProto=" + Utilities.bytesAsHexString(hashFromProto) +
+                    ", computedHash=" + Utilities.bytesAsHexString(tradeStatistics.getHash()));
+        }
+
+        return tradeStatistics;
     }
 
 
