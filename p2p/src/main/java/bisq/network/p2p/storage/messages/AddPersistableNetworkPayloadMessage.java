@@ -17,9 +17,11 @@
 
 package bisq.network.p2p.storage.messages;
 
+import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadException;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Version;
+import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import lombok.EqualsAndHashCode;
@@ -54,8 +56,12 @@ public final class AddPersistableNetworkPayloadMessage extends BroadcastMessage 
 
     public static AddPersistableNetworkPayloadMessage fromProto(protobuf.AddPersistableNetworkPayloadMessage proto,
                                                                 NetworkProtoResolver resolver,
-                                                                int messageVersion) {
-        return new AddPersistableNetworkPayloadMessage((PersistableNetworkPayload) resolver.fromProto(proto.getPayload()),
-                messageVersion);
+                                                                int messageVersion) throws ProtobufferException {
+        try {
+            return new AddPersistableNetworkPayloadMessage((PersistableNetworkPayload) resolver.fromProto(proto.getPayload()),
+                    messageVersion);
+        } catch (InvalidPersistableNetworkPayloadException e) {
+            throw new ProtobufferException("Invalid PersistableNetworkPayload in AddPersistableNetworkPayloadMessage", e);
+        }
     }
 }

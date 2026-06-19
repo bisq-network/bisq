@@ -17,11 +17,13 @@
 
 package bisq.core.dao.governance.proposal.storage.appendonly;
 
+import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadException;
 import bisq.network.p2p.storage.persistence.PersistableNetworkPayloadStore;
 
 import com.google.protobuf.Message;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +65,18 @@ public class ProposalStore extends PersistableNetworkPayloadStore<ProposalPayloa
 
     public static ProposalStore fromProto(protobuf.ProposalStore proto) {
         List<ProposalPayload> list = proto.getItemsList().stream()
-                .map(ProposalPayload::fromProto).collect(Collectors.toList());
+                .map(ProposalStore::getProposalPayloadOrNull)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
         return new ProposalStore(list);
+    }
+
+    private static ProposalPayload getProposalPayloadOrNull(protobuf.ProposalPayload proto) {
+        try {
+            return ProposalPayload.fromProto(proto);
+        } catch (InvalidPersistableNetworkPayloadException e) {
+            log.warn("Ignoring invalid ProposalPayload from ProposalStore. {}", e.getMessage());
+            return null;
+        }
     }
 }

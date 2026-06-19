@@ -20,12 +20,15 @@ package bisq.core.dao.governance.proposal.storage.appendonly;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.governance.Proposal;
 
+import bisq.network.p2p.storage.payload.InvalidPersistableNetworkPayloadException;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.crypto.Hash;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+
+import java.util.Arrays;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -44,18 +47,14 @@ public class ProposalPayload implements PersistableNetworkPayload, ConsensusCrit
     protected final byte[] hash;        // 20 byte
 
     public ProposalPayload(Proposal proposal) {
-        this(proposal, Hash.getRipemd160hash(proposal.encodeCanonical()));
+        this.proposal = proposal;
+        this.hash = Hash.getRipemd160hash(proposal.encodeCanonical());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private ProposalPayload(Proposal proposal, byte[] hash) {
-        this.proposal = proposal;
-        this.hash = hash;
-    }
 
     private protobuf.ProposalPayload.Builder getProposalBuilder() {
         return protobuf.ProposalPayload.newBuilder()
@@ -76,8 +75,19 @@ public class ProposalPayload implements PersistableNetworkPayload, ConsensusCrit
 
 
     public static ProposalPayload fromProto(protobuf.ProposalPayload proto) {
-        return new ProposalPayload(Proposal.fromProto(proto.getProposal()),
-                proto.getHash().toByteArray());
+        Proposal proposal = Proposal.fromProto(proto.getProposal());
+        ProposalPayload proposalPayload = new ProposalPayload(proposal);
+
+        // Verify that provided hash matches the hash created from the proposal data
+        byte[] hashFromProto = proto.getHash().toByteArray();
+        if (!Arrays.equals(hashFromProto, proposalPayload.getHash())) {
+            throw new InvalidPersistableNetworkPayloadException("ProposalPayload hash field does not match proposal data. " +
+                    "proposalTxId=" + proposal.getTxId() +
+                    ", hashFromProto=" + Utilities.bytesAsHexString(hashFromProto) +
+                    ", computedHash=" + Utilities.bytesAsHexString(proposalPayload.getHash()));
+        }
+
+        return proposalPayload;
     }
 
 
