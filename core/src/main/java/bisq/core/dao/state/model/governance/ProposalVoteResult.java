@@ -104,23 +104,48 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public int getNumActiveVotes() {
-        return numAcceptedVotes + numRejectedVotes;
+        // For cases where we are not evaluating consensus relevant historical data we
+        // use the new version and set chainHeight to Long.MAX_VALUE.
+        return getNumActiveVotes(Long.MAX_VALUE);
+    }
+
+    public int getNumActiveVotes(long chainHeight) {
+        return DaoArithmetics.addInteger(numAcceptedVotes, numRejectedVotes, chainHeight);
     }
 
     public long getQuorum() {
+        // For cases where we are not evaluating consensus relevant historical data we
+        // use the new version and set chainHeight to Long.MAX_VALUE.
+        return getQuorum(Long.MAX_VALUE);
+    }
+
+    public long getQuorum(long chainHeight) {
         // Quorum is sum of all votes independent if accepted or rejected.
+        long totalStake = getTotalStake(chainHeight);
         log.debug("Quorum: proposalTxId: {}, totalStake: {}, stakeOfAcceptedVotes: {}, stakeOfRejectedVotes: {}",
-                proposal.getTxId(), getTotalStake(), stakeOfAcceptedVotes, stakeOfRejectedVotes);
-        return getTotalStake();
+                proposal.getTxId(), totalStake, stakeOfAcceptedVotes, stakeOfRejectedVotes);
+        return totalStake;
     }
 
     public long getThreshold() {
+        // For cases where we are not evaluating consensus relevant historical data we
+        // use the new version and set chainHeight to Long.MAX_VALUE.
+        return getThreshold(Long.MAX_VALUE);
+    }
+
+    public long getThreshold(long chainHeight) {
         checkArgument(stakeOfAcceptedVotes >= 0, "stakeOfAcceptedVotes must not be negative");
         checkArgument(stakeOfRejectedVotes >= 0, "stakeOfRejectedVotes must not be negative");
-        if (stakeOfAcceptedVotes == 0) {
+        if (stakeOfAcceptedVotes <= 0) {
             return 0;
         }
-        return stakeOfAcceptedVotes * 10_000 / getTotalStake();
+
+        long totalStake = getTotalStake(chainHeight);
+        if (totalStake <= 0) {
+            log.warn("totalStake must be positive. totalStake={}", totalStake);
+            return 0;
+        }
+        return DaoArithmetics.multiplyAndDivide(stakeOfAcceptedVotes, 10_000, totalStake, chainHeight);
     }
 
     @Override
@@ -140,7 +165,7 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private long getTotalStake() {
-        return stakeOfAcceptedVotes + stakeOfRejectedVotes;
+    private long getTotalStake(long chainHeight) {
+        return DaoArithmetics.addLong(stakeOfAcceptedVotes, stakeOfRejectedVotes, chainHeight);
     }
 }
