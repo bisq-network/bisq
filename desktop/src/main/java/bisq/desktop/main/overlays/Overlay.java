@@ -218,6 +218,15 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public void show(boolean showAgainChecked) {
+        // Idempotency guard: showing an already-displayed overlay again would create a second
+        // Stage and apply the background dim a second time. The first Stage is then leaked
+        // (still shown + modal), so dismissing the visible dialog leaves an invisible modal
+        // overlay that blocks all mouse input app-wide. Never show the same overlay twice.
+        if (isDisplayed) {
+            log.warn("Overlay {} is already displayed - ignoring duplicate show() call",
+                    this.getClass().getSimpleName());
+            return;
+        }
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
             if (LanguageUtil.isDefaultLanguageRTL())
@@ -248,7 +257,20 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public void hide() {
         if (gridPane != null) {
+            // animateHide() defers teardown to the close animation's onFinished, which also
+            // clears isDisplayed/isHiddenProperty. Returning here keeps isDisplayed true for the
+            // whole animation, so the show() guard rejects a re-show during that window (a
+            // racing show() would otherwise swap stage/gridPane and let this animation's teardown
+            // hide the wrong stage, stranding a modal overlay).
             animateHide();
+            return;
+        } else if (stage != null) {
+            // Defensive: a stage with no gridPane would otherwise stay shown (modal) with the
+            // background dim left applied, blocking all mouse input. Tear it down directly.
+            removeEffectFromBackground();
+            stage.hide();
+            cleanup();
+            onHidden();
         }
         isDisplayed = false;
         isHiddenProperty.set(true);
@@ -265,6 +287,12 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             cleanup();
             onHidden();
+
+            // Clear lifecycle state only once teardown has actually completed, not when hide()
+            // was called. Keeping isDisplayed true during the animation makes the show() guard
+            // reject a re-show in that window.
+            isDisplayed = false;
+            isHiddenProperty.set(true);
         });
     }
 
@@ -673,65 +701,75 @@ public abstract class Overlay<T extends Overlay<T>> {
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         Region rootContainer = getRootContainer();
-        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
-            double endY = -rootContainer.getHeight();
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
-                    new KeyValue(rootContainer.translateYProperty(), -10, interpolator)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
-                    new KeyValue(rootContainer.translateYProperty(), endY, interpolator)
-            ));
+        // A failure while building/playing the close animation must never prevent teardown:
+        // otherwise the modal stage stays shown and the background dim stays applied, which
+        // blocks all mouse input app-wide while keyboard still works (an "invisible blanket").
+        try {
+            if (type.animationType == AnimationType.SlideDownFromCenterTop) {
+                double endY = -rootContainer.getHeight();
+                keyFrames.add(new KeyFrame(Duration.millis(0),
+                        new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                        new KeyValue(rootContainer.translateYProperty(), -10, interpolator)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                        new KeyValue(rootContainer.translateYProperty(), endY, interpolator)
+                ));
+
+                timeline.setOnFinished(e -> onFinishedHandler.run());
+                timeline.play();
+            } else if (type.animationType == AnimationType.ScaleFromCenter) {
+                double endScale = 0.25;
+                keyFrames.add(new KeyFrame(Duration.millis(0),
+                        new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                        new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
+                        new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                        new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
+                        new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
+                ));
+            } else if (type.animationType == AnimationType.ScaleYFromCenter) {
+                rootContainer.setRotationAxis(Rotate.X_AXIS);
+                Scene rootContainerScene = rootContainer.getScene();
+                if (rootContainerScene != null)
+                    rootContainerScene.setCamera(new PerspectiveCamera());
+                keyFrames.add(new KeyFrame(Duration.millis(0),
+                        new KeyValue(rootContainer.rotateProperty(), 0, interpolator),
+                        new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(rootContainer.rotateProperty(), -90, interpolator),
+                        new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
+                ));
+            } else if (type.animationType == AnimationType.ScaleDownToCenter) {
+                double endScale = 0.1;
+                keyFrames.add(new KeyFrame(Duration.millis(0),
+                        new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                        new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
+                        new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                        new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
+                        new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
+                ));
+            } else if (type.animationType == AnimationType.FadeInAtCenter) {
+                keyFrames.add(new KeyFrame(Duration.millis(0),
+                        new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
+                ));
+                keyFrames.add(new KeyFrame(Duration.millis(duration),
+                        new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
+                ));
+            }
 
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
-        } else if (type.animationType == AnimationType.ScaleFromCenter) {
-            double endScale = 0.25;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
-                    new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
-                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
-                    new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
-                    new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
-            ));
-        } else if (type.animationType == AnimationType.ScaleYFromCenter) {
-            rootContainer.setRotationAxis(Rotate.X_AXIS);
-            rootContainer.getScene().setCamera(new PerspectiveCamera());
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(rootContainer.rotateProperty(), 0, interpolator),
-                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(rootContainer.rotateProperty(), -90, interpolator),
-                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
-            ));
-        } else if (type.animationType == AnimationType.ScaleDownToCenter) {
-            double endScale = 0.1;
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
-                    new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
-                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
-                    new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
-                    new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
-            ));
-        } else if (type.animationType == AnimationType.FadeInAtCenter) {
-            keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
-            ));
-            keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
-            ));
+        } catch (RuntimeException e) {
+            log.warn("animateHide failed, running teardown directly to avoid stranding the overlay", e);
+            onFinishedHandler.run();
         }
-
-        timeline.setOnFinished(e -> onFinishedHandler.run());
-        timeline.play();
     }
 
     protected void layout() {
