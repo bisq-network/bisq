@@ -28,6 +28,7 @@ import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -46,6 +47,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,6 +59,7 @@ class RequestDataHandler implements MessageListener {
     private static final long TIMEOUT = 240;
 
     private NodeAddress peersNodeAddress;
+    private boolean isSeedNode;
     private String getDataRequestType;
     /*
      */
@@ -116,8 +119,9 @@ class RequestDataHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
+    void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest, boolean isSeedNode) {
         peersNodeAddress = nodeAddress;
+        this.isSeedNode = isSeedNode;
         if (!stopped) {
             GetDataRequest getDataRequest;
 
@@ -183,11 +187,16 @@ class RequestDataHandler implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
-        if (networkEnvelope instanceof GetDataResponse) {
-            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
+        if (networkEnvelope instanceof GetDataResponse getDataResponse) {
+            if (connection.getPeersNodeAddressOptional().isPresent() &&
+                    connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
                     long ts1 = System.currentTimeMillis();
-                    GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
+
+                    if (!isSeedNode) {
+                        getDataResponse = filterSeedNodeOnlyInitialDataResponsePayloads(getDataResponse);
+                    }
+
                     logContents(getDataResponse);
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
@@ -198,7 +207,8 @@ class RequestDataHandler implements MessageListener {
                         }
 
                         dataStorage.processGetDataResponse(getDataResponse,
-                                connection.getPeersNodeAddressOptional().get());
+                                connection.getPeersNodeAddressOptional().get(),
+                                isSeedNode);
 
                         cleanup();
                         listener.onComplete(getDataResponse.isWasTruncated());
@@ -226,6 +236,17 @@ class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private GetDataResponse filterSeedNodeOnlyInitialDataResponsePayloads(GetDataResponse getDataResponse) {
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet().stream()
+                .filter(payload -> !(payload instanceof SeedNodeOnlyInitialDataResponsePayload))
+                .collect(Collectors.toSet());
+        return new GetDataResponse(getDataResponse.getDataSet(),
+                persistableNetworkPayloadSet,
+                getDataResponse.getRequestNonce(),
+                getDataResponse.isGetUpdatedDataResponse(),
+                getDataResponse.isWasTruncated());
+    }
 
     private void logContents(GetDataResponse getDataResponse) {
         Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();

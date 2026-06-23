@@ -431,7 +431,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                         });
                 handlerMap.put(nodeAddress, requestDataHandler);
                 numRepeatedRequests++;
-                requestDataHandler.requestData(nodeAddress, isPreliminaryDataRequest);
+                boolean isSeedNode = peerManager.isSeedNode(nodeAddress);
+                requestDataHandler.requestData(nodeAddress, isPreliminaryDataRequest, isSeedNode);
             } else {
                 log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress + "\n" +
                         "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");
