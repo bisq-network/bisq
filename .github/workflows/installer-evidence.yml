@@ -15,7 +15,7 @@ jobs:
     name: Linux installer evidence, Java 21.0.6
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
           submodules: 'true'
           persist-credentials: false
@@ -76,7 +76,7 @@ jobs:
     name: macOS installer evidence, Java 21.0.6
     runs-on: macos-15
     steps:
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
           submodules: 'true'
           persist-credentials: false
@@ -120,7 +120,7 @@ jobs:
     name: Windows installer evidence, Java 21.0.6
     runs-on: windows-2025
     steps:
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
           submodules: 'true'
           persist-credentials: false
