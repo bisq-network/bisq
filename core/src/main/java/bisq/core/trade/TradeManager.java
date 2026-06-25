@@ -32,7 +32,6 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
@@ -154,8 +153,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final TradeUtil tradeUtil;
-    @Getter
-    private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final Provider provider;
     private final ClockWatcher clockWatcher;
@@ -207,7 +204,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                         TradeStatisticsManager tradeStatisticsManager,
                         TradeUtil tradeUtil,
-                        ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         Provider provider,
                         ClockWatcher clockWatcher,
@@ -229,7 +225,6 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.tradeUtil = tradeUtil;
-        this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.provider = provider;
         this.clockWatcher = clockWatcher;
@@ -344,7 +339,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     txFee,
                     takeOfferFee,
                     currencyForTakerFeeBtc,
-                    openOffer.getArbitratorNodeAddress(),
+                    null,
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
@@ -355,7 +350,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     txFee,
                     takeOfferFee,
                     currencyForTakerFeeBtc,
-                    openOffer.getArbitratorNodeAddress(),
+                    null,
                     openOffer.getMediatorNodeAddress(),
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,

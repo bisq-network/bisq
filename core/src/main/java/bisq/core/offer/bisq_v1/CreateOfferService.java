@@ -138,10 +138,7 @@ public class CreateOfferService {
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
         String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
-        List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
-        ArrayList<NodeAddress> arbitratorNodeAddresses = acceptedArbitratorAddresses != null ?
-                Lists.newArrayList(acceptedArbitratorAddresses) :
-                new ArrayList<>();
+        ArrayList<NodeAddress> arbitratorNodeAddresses = new ArrayList<>();
         List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
         ArrayList<NodeAddress> mediatorNodeAddresses = acceptedMediatorAddresses != null ?
                 Lists.newArrayList(acceptedMediatorAddresses) :

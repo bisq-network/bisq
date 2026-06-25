@@ -35,7 +35,6 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
@@ -407,10 +406,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public TradeStatisticsManager getTradeStatisticsManager() {
         return provider.getTradeStatisticsManager();
-    }
-
-    public ArbitratorManager getArbitratorManager() {
-        return provider.getArbitratorManager();
     }
 
     public MediatorManager getMediatorManager() {

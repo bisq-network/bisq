@@ -18,7 +18,6 @@
 package bisq.core.user;
 
 import bisq.core.alert.Alert;
-import bisq.core.arbitration.ArbitratorTest;
 import bisq.core.arbitration.MediatorTest;
 import bisq.core.filter.Filter;
 import bisq.core.filter.PaymentAccountFilter;
@@ -102,9 +101,7 @@ public class UserPayloadModelVOTest {
                 UUID.randomUUID().toString(),
                 false));
 
-        vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
-        vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));
         vo.setAcceptedMediators(Lists.newArrayList(MediatorTest.getMediatorMock()));
         UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
     }

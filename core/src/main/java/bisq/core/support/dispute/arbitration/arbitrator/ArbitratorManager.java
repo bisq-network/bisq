@@ -62,14 +62,14 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Override
     protected void startRepublishDisputeAgent() {
-        // TODO: Delete with ArbitratorManager once trade setup no longer needs legacy arbitrator lookup data.
+        // TODO Delete with ArbitratorManager once signed-witness verification no longer needs legacy arbitrator keys.
         log.info("{}: not republishing persisted legacy arbitrator registration",
                 LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
     }
 
     @Override
     protected void republish() {
-        // TODO: Delete with ArbitratorManager once trade setup no longer needs legacy arbitrator lookup data.
+        // TODO Delete with ArbitratorManager once signed-witness verification no longer needs legacy arbitrator keys.
         log.info("{}: ignoring legacy arbitrator republish request",
                 LEGACY_ARBITRATOR_REGISTRATION_DISABLED);
     }
@@ -100,31 +100,31 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Override
     protected void addAcceptedDisputeAgentToUser(Arbitrator disputeAgent) {
-        user.addAcceptedArbitrator(disputeAgent);
+        // Legacy arbitrator lookup remains in observableMap only; do not persist accepted arbitrators anymore.
     }
 
     @Override
     protected void removeAcceptedDisputeAgentFromUser(ProtectedStorageEntry data) {
-        user.removeAcceptedArbitrator((Arbitrator) data.getProtectedStoragePayload());
+        // Legacy arbitrator lookup remains in observableMap only; do not persist accepted arbitrators anymore.
     }
 
     @Override
     protected List<Arbitrator> getAcceptedDisputeAgentsFromUser() {
-        return user.getAcceptedArbitrators();
+        return List.of();
     }
 
     @Override
     protected void clearAcceptedDisputeAgentsAtUser() {
-        user.clearAcceptedArbitrators();
+        // Legacy arbitrator lookup remains in observableMap only; do not persist accepted arbitrators anymore.
     }
 
     @Override
     protected Arbitrator getRegisteredDisputeAgentFromUser() {
-        return user.getRegisteredArbitrator();
+        return null;
     }
 
     @Override
     protected void setRegisteredDisputeAgentAtUser(Arbitrator disputeAgent) {
-        user.setRegisteredArbitrator(disputeAgent);
+        // Legacy arbitrator registration is disabled; do not persist registered arbitrators anymore.
     }
 }

@@ -64,14 +64,10 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             Coin tradeAmount = checkNotNull(trade.getAmount(), "TradeAmount must not be null");
             String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
             User user = checkNotNull(processModel.getUser(), "User must not be null");
-            List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses() == null ?
-                    new ArrayList<>() :
-                    user.getAcceptedArbitratorAddresses();
             List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
             List<NodeAddress> acceptedRefundAgentAddresses = user.getAcceptedRefundAgentAddresses() == null ?
                     new ArrayList<>() :
                     user.getAcceptedRefundAgentAddresses();
-            // We don't check for arbitrators as they should vanish soon
             checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
             // We also don't check for refund agents yet as we don't want to restrict us too much. They are not mandatory.
 
@@ -149,10 +145,8 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     processModel.getPubKeyRing(),
                     processModel.getAccountId(),
                     takerFeeTxId,
-                    acceptedArbitratorAddresses,
                     acceptedMediatorAddresses,
                     acceptedRefundAgentAddresses,
-                    trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     trade.getRefundAgentNodeAddress(),
                     UUID.randomUUID().toString(),

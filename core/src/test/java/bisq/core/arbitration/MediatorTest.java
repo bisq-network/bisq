@@ -29,8 +29,6 @@ import java.util.Date;
 
 import org.junit.jupiter.api.Disabled;
 
-import static bisq.core.arbitration.ArbitratorTest.getBytes;
-
 public class MediatorTest {
 
     @Disabled("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
@@ -51,5 +49,9 @@ public class MediatorTest {
                 "registrationSignature",
                 "email",
                 "info");
+    }
+
+    private static byte[] getBytes(int length) {
+        return new byte[length];
     }
 }

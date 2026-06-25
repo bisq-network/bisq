@@ -253,9 +253,9 @@ message InputsForDepositTxRequest {
     PaymentAccountPayload taker_payment_account_payload = 14 [deprecated = true]; // Deprecated since v1.9.24
     string taker_account_id = 15;
     string taker_fee_tx_id = 16;
-    repeated NodeAddress accepted_arbitrator_node_addresses = 17;
+    repeated NodeAddress accepted_arbitrator_node_addresses = 17 [deprecated = true]; // Legacy arbitration address list is ignored.
     repeated NodeAddress accepted_mediator_node_addresses = 18;
-    NodeAddress arbitrator_node_address = 19;
+    NodeAddress arbitrator_node_address = 19 [deprecated = true]; // Legacy arbitration address is ignored.
     NodeAddress mediator_node_address = 20;
     string uid = 21;
     bytes account_age_witness_signature_of_offer_id = 22;
@@ -1640,7 +1640,7 @@ message OpenOffer {
 
     Offer offer = 1;
     State state = 2;
-    NodeAddress arbitrator_node_address = 3;
+    NodeAddress arbitrator_node_address = 3 [deprecated = true]; // Legacy OpenOffer arbitrator address is ignored.
     NodeAddress mediator_node_address = 4;
     NodeAddress refund_agent_node_address = 5;
     int64 trigger_price = 6;
@@ -1753,10 +1753,10 @@ message Trade {
     string maker_contract_signature = 20;
     NodeAddress arbitrator_node_address = 21;
     NodeAddress mediator_node_address = 22;
-    bytes arbitrator_btc_pub_key = 23;
+    bytes arbitrator_btc_pub_key = 23 [deprecated = true]; // Legacy arbitration BTC pub key is ignored.
     string taker_payment_account_id = 24;
     string error_message = 25;
-    PubKeyRing arbitrator_pub_key_ring = 26;
+    PubKeyRing arbitrator_pub_key_ring = 26 [deprecated = true]; // Legacy arbitration pub key ring is ignored.
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
     repeated ChatMessage chat_message = 29;
@@ -2025,9 +2025,9 @@ message UserPayload {
     Alert developers_alert = 5;
     Alert displayed_alert = 6;
     Filter developers_filter = 7;
-    repeated Arbitrator accepted_arbitrators = 8;
+    repeated Arbitrator accepted_arbitrators = 8 [deprecated = true]; // Legacy arbitration accepted agents are ignored.
     repeated Mediator accepted_mediators = 9;
-    Arbitrator registered_arbitrator = 10;
+    Arbitrator registered_arbitrator = 10 [deprecated = true]; // Legacy registered arbitrator is ignored.
     Mediator registered_mediator = 11;
     PriceAlertFilter price_alert_filter = 12;
     repeated MarketAlertFilter market_alert_filters = 13;

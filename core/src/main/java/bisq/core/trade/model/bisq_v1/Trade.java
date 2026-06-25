@@ -23,7 +23,6 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
@@ -340,13 +339,6 @@ public abstract class Trade extends TradeModel {
     @Setter
     private NodeAddress arbitratorNodeAddress;
     @Nullable
-    @Setter
-    private byte[] arbitratorBtcPubKey;
-    @Nullable
-    @Getter
-    @Setter
-    private PubKeyRing arbitratorPubKeyRing;
-    @Nullable
     @Getter
     @Setter
     private NodeAddress mediatorNodeAddress;
@@ -548,10 +540,8 @@ public abstract class Trade extends TradeModel {
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatorNodeAddress).ifPresent(e -> builder.setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage()));
         Optional.ofNullable(refundAgentNodeAddress).ifPresent(e -> builder.setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage()));
-        Optional.ofNullable(arbitratorBtcPubKey).ifPresent(e -> builder.setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey)));
         Optional.ofNullable(takerPaymentAccountId).ifPresent(builder::setTakerPaymentAccountId);
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);
-        Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(refundAgentPubKeyRing).ifPresent(e -> builder.setRefundAgentPubKeyRing(refundAgentPubKeyRing.toProtoMessage()));
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
@@ -580,10 +570,8 @@ public abstract class Trade extends TradeModel {
         trade.setArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
         trade.setMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
         trade.setRefundAgentNodeAddress(proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null);
-        trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
         trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
-        trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setRefundAgentPubKeyRing(proto.hasRefundAgentPubKeyRing() ? PubKeyRing.fromProto(proto.getRefundAgentPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
@@ -615,11 +603,6 @@ public abstract class Trade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initialize(Provider serviceProvider) {
-        serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-        });
-
         serviceProvider.getMediatorManager().getDisputeAgentByNodeAddress(mediatorNodeAddress)
                 .ifPresent(mediator -> mediatorPubKeyRing = mediator.getPubKeyRing());
 
@@ -1063,19 +1046,6 @@ public abstract class Trade extends TradeModel {
                 getDelayedPayoutTxBytes() == null;
     }
 
-    public byte[] getArbitratorBtcPubKey() {
-        // In case we are already in a trade the arbitrator can have been revoked and we still can complete the trade
-        // Only new trades cannot start without any arbitrator
-        if (arbitratorBtcPubKey == null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-        }
-
-        checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
-        return arbitratorBtcPubKey;
-    }
-
     public boolean isBsqSwap() {
         return offer != null && offer.isBsqSwapOffer();
     }
@@ -1166,8 +1136,6 @@ public abstract class Trade extends TradeModel {
                 ",\n     takerContractSignature='" + takerContractSignature + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
-                ",\n     arbitratorBtcPubKey=" + Utilities.bytesAsHexString(arbitratorBtcPubKey) +
-                ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +

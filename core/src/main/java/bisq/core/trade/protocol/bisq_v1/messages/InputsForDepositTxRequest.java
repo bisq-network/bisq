@@ -46,7 +46,6 @@ import javax.annotation.Nullable;
 
 import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddress;
 import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNodeAddressList;
-import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkNullableNodeAddress;
 import static bisq.core.trade.protocol.bisq_v1.messages.TradeMessageValidator.checkRawTransactionInputList;
 import static bisq.core.util.Validator.checkNonBlankString;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
@@ -69,11 +68,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
     private final PubKeyRing takerPubKeyRing;
     private final String takerAccountId;
     private final String takerFeeTxId;
-    private final List<NodeAddress> acceptedArbitratorNodeAddresses;
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
     private final List<NodeAddress> acceptedRefundAgentNodeAddresses;
-    @Nullable
-    private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final NodeAddress refundAgentNodeAddress;
 
@@ -106,10 +102,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                                      PubKeyRing takerPubKeyRing,
                                      String takerAccountId,
                                      String takerFeeTxId,
-                                     List<NodeAddress> acceptedArbitratorNodeAddresses,
                                      List<NodeAddress> acceptedMediatorNodeAddresses,
                                      List<NodeAddress> acceptedRefundAgentNodeAddresses,
-                                     @Nullable NodeAddress arbitratorNodeAddress,
                                      NodeAddress mediatorNodeAddress,
                                      NodeAddress refundAgentNodeAddress,
                                      String uid,
@@ -133,10 +127,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 takerPubKeyRing,
                 takerAccountId,
                 takerFeeTxId,
-                acceptedArbitratorNodeAddresses,
                 acceptedMediatorNodeAddresses,
                 acceptedRefundAgentNodeAddresses,
-                arbitratorNodeAddress,
                 mediatorNodeAddress,
                 refundAgentNodeAddress,
                 uid,
@@ -164,10 +156,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                                      PubKeyRing takerPubKeyRing,
                                      String takerAccountId,
                                      String takerFeeTxId,
-                                     List<NodeAddress> acceptedArbitratorNodeAddresses,
                                      List<NodeAddress> acceptedMediatorNodeAddresses,
                                      List<NodeAddress> acceptedRefundAgentNodeAddresses,
-                                     @Nullable NodeAddress arbitratorNodeAddress,
                                      NodeAddress mediatorNodeAddress,
                                      NodeAddress refundAgentNodeAddress,
                                      String uid,
@@ -193,10 +183,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
         this.takerPubKeyRing = takerPubKeyRing;
         this.takerAccountId = takerAccountId;
         this.takerFeeTxId = takerFeeTxId;
-        this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
         this.acceptedMediatorNodeAddresses = acceptedMediatorNodeAddresses;
         this.acceptedRefundAgentNodeAddresses = acceptedRefundAgentNodeAddresses;
-        this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.refundAgentNodeAddress = refundAgentNodeAddress;
         this.accountAgeWitnessSignatureOfOfferId = accountAgeWitnessSignatureOfOfferId;
@@ -223,10 +211,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
         checkNotNull(takerPubKeyRing, "takerPubKeyRing must not be null");
         checkNonBlankString(takerAccountId, "takerAccountId");
         checkNonBlankString(takerFeeTxId, "takerFeeTxId");
-        checkNodeAddressList(acceptedArbitratorNodeAddresses, false, "acceptedArbitratorNodeAddresses");
         checkNodeAddressList(acceptedMediatorNodeAddresses, false, "acceptedMediatorNodeAddresses");
         checkNodeAddressList(acceptedRefundAgentNodeAddresses, false, "acceptedRefundAgentNodeAddresses");
-        checkNullableNodeAddress(arbitratorNodeAddress, "arbitratorNodeAddress");
         checkNodeAddress(mediatorNodeAddress, "mediatorNodeAddress");
         checkNodeAddress(refundAgentNodeAddress, "refundAgentNodeAddress");
         checkNonEmptyBytes(accountAgeWitnessSignatureOfOfferId, "accountAgeWitnessSignatureOfOfferId");
@@ -267,8 +253,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
                 .setTakerAccountId(takerAccountId)
                 .setTakerFeeTxId(takerFeeTxId)
-                .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
-                        .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .addAllAcceptedRefundAgentNodeAddresses(acceptedRefundAgentNodeAddresses.stream()
@@ -283,7 +267,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 .setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload))
                 .setTakersPayoutMethodId(takersPaymentMethodId);
 
-        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(e.toProtoMessage()));
         Optional.ofNullable(refundAgentPubKeyRing).ifPresent(e -> builder.setRefundAgentPubKeyRing(e.toProtoMessage()));
 
@@ -295,8 +278,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());
-        List<NodeAddress> acceptedArbitratorNodeAddresses = proto.getAcceptedArbitratorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
         List<NodeAddress> acceptedMediatorNodeAddresses = proto.getAcceptedMediatorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
         List<NodeAddress> acceptedRefundAgentNodeAddresses = proto.getAcceptedRefundAgentNodeAddressesList().stream()
@@ -315,10 +296,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
                 proto.getTakerAccountId(),
                 proto.getTakerFeeTxId(),
-                acceptedArbitratorNodeAddresses,
                 acceptedMediatorNodeAddresses,
                 acceptedRefundAgentNodeAddresses,
-                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 NodeAddress.fromProto(proto.getRefundAgentNodeAddress()),
                 proto.getUid(),
@@ -352,10 +331,8 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +
                 ",\n     takerAccountId='" + takerAccountId + '\'' +
                 ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
-                ",\n     acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
                 ",\n     acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
                 ",\n     acceptedRefundAgentNodeAddresses=" + acceptedRefundAgentNodeAddresses +
-                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
