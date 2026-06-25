@@ -298,24 +298,40 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     public void revertToLastSnapshot(Runnable completeHandler) {
         daoStateStorageService.loadPersistedDaoData((persistedDaoState, persistedDaoStateHashChain) -> {
             log.info("revertToLastSnapshot. DaoState with chainHeight={} and {} blocks", persistedDaoState.getChainHeight(), persistedDaoState.getBlocks().size());
-            boolean success = applySnapshot(false, persistedDaoState, persistedDaoStateHashChain);
-            if (success) {
+            boolean callerShouldProceed = applySnapshot(false, persistedDaoState, persistedDaoStateHashChain);
+            if (callerShouldProceed) {
                 completeHandler.run();
             } else {
-                log.warn("applySnapshot was not successful.");
+                log.warn("applySnapshot was not successful — resync-from-resources will handle recovery.");
             }
         });
     }
 
+    /**
+     * @return {@code true} if the caller should proceed with its completion handler
+     * (snapshot applied successfully, or benign no-op where retry is safe).
+     * {@code false} only when {@link #resyncDaoStateFromResources()} has been triggered
+     * and the app is about to shut down — caller's handler would race with shutdown.
+     *
+     * Pre-v1.9.23 (synchronous {@code revertToLastSnapshot}) always re-ran {@code startParseBlocks}
+     * regardless of snapshot outcome. The v1.9.23 async refactor began gating the callback on
+     * success, which silently swallowed legitimate retry paths and stalled DAO sync indefinitely
+     * ({@code isParseBlockChainComplete} never flipping). We restore the old semantics by
+     * letting the handler run for every non-resync exit.
+     */
     private synchronized boolean applySnapshot(boolean fromInitialize,
                                                DaoState persistedDaoState,
                                                LinkedList<DaoStateHash> persistedDaoStateHashChain) {
-        if (persistedDaoState == null) {
-            log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
-            return false;
-        }
-
+        // DaoStateStorageService synthesizes a fresh `new DaoState()` (chainHeight=0, empty blocks)
+        // when no snapshot proto exists, so `persistedDaoState` is never null here. Inconsistent
+        // empty-blocks states (chainHeight != 0 with no blocks) fall through to the
+        // isChainHeightMatchingLastBlockHeight check below, which triggers resync.
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+
+        // The 3rd-time guard must run before the synthetic-empty early-return below so a
+        // non-resolving genesis-era reorg (repeated empty reverts at the same height) still
+        // escalates to resyncDaoStateFromResources instead of re-parsing forever — this restores
+        // the pre-async (v1.9.22) backstop, where the guard preceded the empty-blocks handling.
         int numSameAppliedSnapshots = (int) heightsOfLastAppliedSnapshots.stream()
                 .filter(height -> height == chainHeightOfPersistedDaoState)
                 .count();
@@ -327,17 +343,14 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
         heightsOfLastAppliedSnapshots.add(chainHeightOfPersistedDaoState);
 
-        if (persistedDaoState.getBlocks().isEmpty()) {
-            if (fromInitialize) {
-                log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
-            } else {
-                log.info("We got a reorg or error and we want to apply the snapshot but it is empty. " +
-                        "That is expected in the first blocks until the first snapshot has been created. " +
-                        "We remove all dao store files and shutdown. " +
-                        "After a restart resource files will be applied if available.");
-                resyncDaoStateFromResources();
-            }
-            return false;
+        // Synthetic "no snapshot" state: treat as a benign retry — same semantics as the pre-async
+        // code path that returned early when nothing was persisted yet. revertToLastSnapshot is only
+        // reached on a reorg/error, so the caller re-runs startParseBlocks; if the same empty revert
+        // keeps recurring the guard above eventually resyncs from resources.
+        if (persistedDaoState.getBlocks().isEmpty() && chainHeightOfPersistedDaoState == 0) {
+            log.info("No stored snapshot available (synthetic empty DaoState). Expected at first blocks " +
+                    "or when no resource/persisted data is provided yet.");
+            return true;
         }
 
         if (!daoStateStorageService.isChainHeightMatchingLastBlockHeight(persistedDaoState)) {
@@ -348,7 +361,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
         if (isHeightBelowGenesisHeight(chainHeightOfPersistedDaoState)) {
             log.warn("chainHeight of persistedDaoState is below genesis height. This must never happen.");
-            return false;
+            return true;
         }
 
         if (chainHeightOfLastResyncSnapshot == chainHeightOfPersistedDaoState) {
