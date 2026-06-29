@@ -52,7 +52,7 @@ jobs:
 
       # Cache Gradle deps + wrapper. Single biggest speedup per re-run (~2 min).
       - name: Gradle cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
@@ -80,7 +80,7 @@ jobs:
       # dists are COPYed in late layers; they invalidate on every source change
       # but the heavy bottom layers survive → ~1 min saved per run.
       - name: Cache Docker image layers
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ hashFiles('apitest/docker/Dockerfile.*', 'apitest/docker/*entrypoint.sh') }}
