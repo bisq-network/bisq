@@ -259,16 +259,21 @@ public class MempoolService {
     private List<String> getAllBtcFeeReceivers() {
         List<String> btcFeeReceivers = new ArrayList<>();
         // fee receivers from filter ref: bisq-network/bisq/pull/4294
-        List<String> feeReceivers = Optional.ofNullable(filterManager.getFilter())
+
+        // We deactivate the fee receivers from filter temporarily as not used currently.
+
+        /* List<String> feeReceivers = Optional.ofNullable(filterManager.getFilter())
                 .flatMap(f -> Optional.ofNullable(f.getBtcFeeReceiverAddresses()))
                 .orElse(List.of());
+
         feeReceivers.forEach(e -> {
             try {
                 btcFeeReceivers.add(e.split("#")[0]); // victim's receiver address
             } catch (RuntimeException ignore) {
                 // If input format is not as expected we ignore entry
             }
-        });
+        });*/
+
         btcFeeReceivers.addAll(daoFacade.getAllDonationAddresses());
 
         // We use all BM who had ever had burned BSQ to avoid if a BM just got "deactivated" due decayed burn amounts
