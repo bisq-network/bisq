@@ -591,8 +591,13 @@ public class FilterManager {
         // We persist it to the property file which is read before any other initialisation.
         saveBannedNodes(BANNED_SEED_NODES, filterFromNetwork.getSeedNodes());
         saveBannedNodes(BANNED_BTC_NODES, filterFromNetwork.getBtcNodes());
-        saveBannedNodes(FILTER_PROVIDED_BTC_NODES, filterFromNetwork.getAddedBtcNodes());
-        saveBannedNodes(FILTER_PROVIDED_SEED_NODES, filterFromNetwork.getAddedSeedNodes());
+
+        // We deactivate the data from fields which are not included in the signature.
+        // The new filter implementation in master will fix that.
+        saveBannedNodes(FILTER_PROVIDED_BTC_NODES, null);
+        //saveBannedNodes(FILTER_PROVIDED_BTC_NODES, filterFromNetwork.getAddedBtcNodes());
+        saveBannedNodes(FILTER_PROVIDED_SEED_NODES, null);
+        //saveBannedNodes(FILTER_PROVIDED_SEED_NODES, filterFromNetwork.getAddedSeedNodes());
 
         // Banned price relay nodes we can apply at runtime
         List<String> priceRelayNodes = filterFromNetwork.getPriceRelayNodes();
