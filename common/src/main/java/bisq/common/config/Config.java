@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import ch.qos.logback.classic.Level;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -55,6 +57,8 @@ import static java.util.stream.Collectors.toList;
  * @see #Config(String...)
  * @see #Config(String, File, String...)
  */
+
+@Slf4j
 public class Config {
 
     // Option name constants
@@ -900,10 +904,18 @@ public class Config {
             this.maxMemory = options.valueOf(maxMemoryOpt);
             this.logLevel = options.valueOf(logLevelOpt);
             this.bannedBtcNodes = options.valuesOf(bannedBtcNodesOpt);
-            this.filterProvidedBtcNodes = options.valuesOf(filterProvidedBtcNodesOpt);
+
+            // this.filterProvidedBtcNodes = options.valuesOf(filterProvidedBtcNodesOpt);
+            // filterProvidedBtcNodes from filter is currently unsafe and therefore ignored.
+            filterProvidedBtcNodes = new ArrayList<>();
+
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
-            this.filterProvidedSeedNodes = options.valuesOf(filterProvidedSeedNodesOpt);
+
+            // this.filterProvidedSeedNodes = options.valuesOf(filterProvidedSeedNodesOpt);
+            // filterProvidedSeedNodes from filter is currently unsafe and therefore ignored.
+            filterProvidedSeedNodes = new ArrayList<>();
+
             this.baseCurrencyNetwork = (BaseCurrencyNetwork) options.valueOf(baseCurrencyNetworkOpt);
             this.networkParameters = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);
