@@ -1109,20 +1109,23 @@ public abstract class Trade extends TradeModel {
     private void setupConfidenceListener() {
         if (getDepositTx() != null) {
             TransactionConfidence transactionConfidence = getDepositTx().getConfidence();
+            // Bind the confirmation to the txid this listener was registered for. The deposit tx can be
+            // overwritten (e.g. a network-observed tx replaced by the final deposit/DPT message), and a stale
+            // confidence callback from a no-longer-current tx must not mark the trade as deposit-confirmed.
+            String confidenceTxId = getDepositTx().getTxId().toString();
             if (transactionConfidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
-                setConfirmedState();
+                setConfirmedState(confidenceTxId);
             } else {
                 ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
                 Futures.addCallback(future, new FutureCallback<>() {
                     @Override
                     public void onSuccess(TransactionConfidence result) {
-                        setConfirmedState();
+                        setConfirmedState(confidenceTxId);
                     }
 
                     @Override
                     public void onFailure(@NotNull Throwable t) {
-                        t.printStackTrace();
-                        log.error(t.getMessage());
+                        log.error(t.getMessage(), t);
                         throw new RuntimeException(t);
                     }
                 }, MoreExecutors.directExecutor());
@@ -1132,7 +1135,12 @@ public abstract class Trade extends TradeModel {
         }
     }
 
-    private void setConfirmedState() {
+    private void setConfirmedState(String confidenceTxId) {
+        if (!confidenceTxId.equals(depositTxId)) {
+            log.warn("Ignoring stale deposit-tx confirmation. The tx that confirmed ({}) is no longer the " +
+                    "current deposit tx ({}).", confidenceTxId, depositTxId);
+            return;
+        }
         // we only apply the state if we are not already further in the process
         if (!isDepositConfirmed()) {
             // As setState is called here from the trade itself we cannot trigger a requestPersistence call.

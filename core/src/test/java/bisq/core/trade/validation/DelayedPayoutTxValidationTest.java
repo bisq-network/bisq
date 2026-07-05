@@ -213,6 +213,27 @@ class DelayedPayoutTxValidationTest {
                 () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, null));
     }
 
+    @Test
+    void checkDelayedPayoutTxInputRejectsInputSpendingDifferentDepositTx() {
+        Transaction depositTx = depositTx();
+        Transaction otherDepositTx = depositTx(1);
+        Transaction delayedPayoutTx = delayedPayoutTx(otherDepositTx, 144);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, depositTx));
+    }
+
+    @Test
+    void checkDelayedPayoutTxInputRejectsInputSpendingNonZeroDepositTxOutput() {
+        Transaction depositTx = depositTx();
+        depositTx.addOutput(Coin.valueOf(500), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 1, 144);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> DelayedPayoutTxValidation.checkDelayedPayoutTxInput(delayedPayoutTx, depositTx));
+    }
+
+
     /* --------------------------------------------------------------------- */
     // Burning Man selection height
     /* --------------------------------------------------------------------- */
@@ -474,8 +495,26 @@ class DelayedPayoutTxValidationTest {
                                                long lockTime,
                                                Coin outputAmount,
                                                String outputAddress) {
+        return delayedPayoutTx(depositTx, 0, lockTime, outputAmount, outputAddress);
+    }
+
+    private static Transaction delayedPayoutTx(Transaction depositTx,
+                                               int outputIndex,
+                                               long lockTime) {
+        return delayedPayoutTx(depositTx,
+                outputIndex,
+                lockTime,
+                Coin.valueOf(500),
+                SegwitAddress.fromKey(ValidationTestUtils.PARAMS, new ECKey()).toString());
+    }
+
+    private static Transaction delayedPayoutTx(Transaction depositTx,
+                                               int outputIndex,
+                                               long lockTime,
+                                               Coin outputAmount,
+                                               String outputAddress) {
         Transaction transaction = new Transaction(ValidationTestUtils.PARAMS);
-        transaction.addInput(depositTx.getOutput(0));
+        transaction.addInput(depositTx.getOutput(outputIndex));
         transaction.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
         transaction.setLockTime(lockTime);
         transaction.addOutput(outputAmount, Address.fromString(ValidationTestUtils.PARAMS, outputAddress));

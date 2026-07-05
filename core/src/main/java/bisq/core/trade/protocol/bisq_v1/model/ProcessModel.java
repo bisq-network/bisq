@@ -107,6 +107,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     // It is used only in a task which would not be executed after restart, so no need to persist it.
     @Setter
     transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+
+    // depositTx is not set for maker as buyer
+    @Nullable
     @Setter
     @Getter
     transient private Transaction depositTx;

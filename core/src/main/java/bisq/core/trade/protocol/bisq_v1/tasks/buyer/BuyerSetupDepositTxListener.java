@@ -38,8 +38,6 @@ import org.bitcoinj.core.TransactionOutPoint;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Objects;
-
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -135,25 +133,38 @@ public class BuyerSetupDepositTxListener extends TradeTask {
             return false;
         }
 
-        long numInputMatches = walletTx.getInputs().stream()
-                .map(TransactionInput::getOutpoint)
-                .filter(Objects::nonNull)
-                .map(TransactionOutPoint::getHash)
-                .map(Sha256Hash::toString)
-                .filter(txId -> txId.equals(takerFeeTxId) || txId.equals(makerFeeTxId))
-                .count();
-        if (takerFeeTxId == null && numInputMatches != 1) {
+        // We must require one distinct maker-fee input AND one distinct taker-fee input, not just a
+        // count of inputs whose parent txid is one of the two fee txids. Otherwise, a malicious seller-as-maker
+        // could satisfy a count==2 check using two different outputs of his own maker fee tx (the maker fee tx
+        // can have fee, reserved-for-trade and change outputs), and get us to accept a fake deposit tx that was
+        // never co-funded by the taker.
+        boolean hasMakerFeeInput = false;
+        boolean hasTakerFeeInput = false;
+        for (TransactionInput input : walletTx.getInputs()) {
+            TransactionOutPoint outpoint = input.getOutpoint();
+            if (outpoint == null) {
+                continue;
+            }
+            String parentTxId = outpoint.getHash().toString();
+            if (parentTxId.equals(makerFeeTxId)) {
+                hasMakerFeeInput = true;
+            } else if (parentTxId.equals(takerFeeTxId)) {
+                hasTakerFeeInput = true;
+            }
+        }
+        if (takerFeeTxId == null) {
+            // Buyer as maker: we only know our own maker-fee txid, so we can only require a maker-fee input.
+            if (!hasMakerFeeInput) {
+                log.warn("We got a transactionConfidenceTx which does not match our inputs. " +
+                        "takerFeeTxId is null (valid if role is buyer as maker) but no input spends " +
+                        "the makerFeeTxId. transactionConfidenceTx={}", walletTx);
+                return false;
+            }
+        } else if (!hasMakerFeeInput || !hasTakerFeeInput) {
             log.warn("We got a transactionConfidenceTx which does not match our inputs. " +
-                            "takerFeeTxId is null (valid if role is buyer as maker) and numInputMatches " +
-                            "is not 1 as expected (for makerFeeTxId). " +
-                            "numInputMatches={}, transactionConfidenceTx={}",
-                    numInputMatches, walletTx);
-            return false;
-        } else if (takerFeeTxId != null && numInputMatches != 2) {
-            log.warn("We got a transactionConfidenceTx which does not match our inputs. " +
-                            "numInputMatches is not 2 as expected (for makerFeeTxId and takerFeeTxId). " +
-                            "numInputMatches={}, transactionConfidenceTx={}",
-                    numInputMatches, walletTx);
+                            "We require one distinct maker-fee input and one distinct taker-fee input. " +
+                            "hasMakerFeeInput={}, hasTakerFeeInput={}, transactionConfidenceTx={}",
+                    hasMakerFeeInput, hasTakerFeeInput, walletTx);
             return false;
         }
 

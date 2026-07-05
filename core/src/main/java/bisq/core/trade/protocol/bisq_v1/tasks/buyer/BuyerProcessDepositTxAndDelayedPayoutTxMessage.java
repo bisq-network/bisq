@@ -21,11 +21,14 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.DepositTxValidation;
 import bisq.core.util.JsonUtil;
 
 import bisq.common.crypto.Hash;
@@ -70,8 +73,33 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             TradingPeer tradePeer = processModel.getTradePeer();
             PubKeyRing pubKeyRing = processModel.getPubKeyRing();
 
+            Transaction myDepositTx;
+            if (trade instanceof BuyerAsMakerTrade) {
+                // Maker has no depositTx set
+                byte[] myPreparedDepositTx = checkNotNull(processModel.getPreparedDepositTx(),
+                        "My prepared deposit tx must not be null");
+                myDepositTx = toVerifiedTransaction(myPreparedDepositTx, btcWalletService);
+            } else {
+                // As Taker the depositTx has been already set
+                myDepositTx = checkNotNull(processModel.getDepositTx(), "My deposit tx must not be null");
+            }
+
+            byte[] rawDelayedPayoutTx = message.getDelayedPayoutTx();
+            byte[] peersDelayedPayoutTxBytes = checkSerializedTransaction(rawDelayedPayoutTx, btcWalletService);
+            byte[] myDelayedPayoutTxBytes = checkNotNull(trade.getDelayedPayoutTxBytes(),
+                    "trade.getDelayedPayoutTxBytes() must not be null");
+            checkArgument(Arrays.equals(peersDelayedPayoutTxBytes, myDelayedPayoutTxBytes),
+                    "peersDelayedPayoutTx and myDelayedPayoutTx must be the same" +
+                            "\n myDelayedPayoutTx: " + Utilities.bytesAsHexString(myDelayedPayoutTxBytes) +
+                            "\n peersDelayedPayoutTx: " + Utilities.bytesAsHexString(peersDelayedPayoutTxBytes));
+
             Transaction peersDepositTx = checkCanonicalDepositTxFields(toVerifiedTransaction(message.getDepositTx(),
                     btcWalletService));
+
+            Transaction peersDelayedPayoutTx = toVerifiedTransaction(rawDelayedPayoutTx, btcWalletService);
+            DelayedPayoutTxValidation.checkDelayedPayoutTxInput(peersDelayedPayoutTx, peersDepositTx);
+
+            DepositTxValidation.checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(peersDepositTx, myDepositTx, btcWalletService);
 
             // To access tx confidence we need to add that tx into our wallet.
             Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(peersDepositTx, wallet);
@@ -79,14 +107,6 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             // update with full tx
             trade.applyDepositTx(committedDepositTx);
-
-            byte[] peersDelayedPayoutTxBytes = checkSerializedTransaction(message.getDelayedPayoutTx(), btcWalletService);
-            byte[] myDelayedPayoutTxBytes = checkNotNull(trade.getDelayedPayoutTxBytes(),
-                    "trade.getDelayedPayoutTxBytes() must not be null");
-            checkArgument(Arrays.equals(peersDelayedPayoutTxBytes, myDelayedPayoutTxBytes),
-                    "peersDelayedPayoutTx and myDelayedPayoutTx must be the same" +
-                            "\n myDelayedPayoutTx: " + Utilities.bytesAsHexString(myDelayedPayoutTxBytes) +
-                            "\n peersDelayedPayoutTx: " + Utilities.bytesAsHexString(peersDelayedPayoutTxBytes));
             trade.applyDelayedPayoutTxBytes(peersDelayedPayoutTxBytes);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
