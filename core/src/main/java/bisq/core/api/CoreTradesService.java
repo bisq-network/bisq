@@ -191,6 +191,10 @@ class CoreTradesService {
     void confirmPaymentStarted(String tradeId, @Nullable String txId, @Nullable String txKey) {
         var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
+            if (trade.hasFailed()) {
+                throw new FailedPreconditionException("Cannot confirm payment started for a failed trade.");
+            }
+
             if (!trade.isDepositConfirmed()) {
                 throw new FailedPreconditionException(
                         format("cannot send a payment started message for trade '%s'%n"
