@@ -35,9 +35,12 @@ import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import java.security.PublicKey;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +88,7 @@ public abstract class SupportManager {
     // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void onSupportMessage(SupportMessage networkEnvelope);
+    protected abstract void onSupportMessage(SupportMessage networkEnvelope, PublicKey senderSignaturePubKey);
 
     public abstract NodeAddress getPeerNodeAddress(ChatMessage message);
 
@@ -133,14 +136,14 @@ public abstract class SupportManager {
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void onChatMessage(ChatMessage chatMessage) {
+    protected void onChatMessage(ChatMessage chatMessage, PublicKey senderSignaturePubKey) {
         final String tradeId = chatMessage.getTradeId();
         final String uid = chatMessage.getUid();
         boolean channelOpen = channelOpen(chatMessage);
         if (!channelOpen) {
             log.debug("We got a chatMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
-                Timer timer = UserThread.runAfter(() -> onChatMessage(chatMessage), 1);
+                Timer timer = UserThread.runAfter(() -> onChatMessage(chatMessage, senderSignaturePubKey), 1);
                 delayMsgMap.put(uid, timer);
             } else {
                 String msg = "We got a chatMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
@@ -150,18 +153,41 @@ public abstract class SupportManager {
         }
 
         cleanupRetryMap(uid);
-        PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(chatMessage);
+        PubKeyRing senderPubKeyRing = getPeerPubKeyRing(chatMessage);
+        if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                senderPubKeyRing,
+                chatMessage.getClass().getSimpleName(),
+                tradeId)) {
+            return;
+        }
 
         addAndPersistChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
-        if (receiverPubKeyRing != null)
-            sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
+        sendAckMessage(chatMessage, senderPubKeyRing, true, null);
     }
 
-    private void onAckMessage(AckMessage ackMessage) {
+    private void onAckMessage(AckMessage ackMessage, PublicKey senderSignaturePubKey) {
         if (ackMessage.getSourceType() == getAckMessageSourceType()) {
+            List<ChatMessage> allChatMessages = getAllChatMessages(ackMessage.getSourceId());
+            Optional<ChatMessage> sourceMessage = allChatMessages.stream()
+                    .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
+                    .findFirst();
+            if (sourceMessage.isEmpty()) {
+                log.warn("Ignoring AckMessage for {} with tradeId {} and uid {} because the source message was not found",
+                        ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
+                return;
+            }
+
+            PubKeyRing expectedSenderPubKeyRing = getPeerPubKeyRing(sourceMessage.get());
+            if (!isSenderSignaturePubKeyExpected(senderSignaturePubKey,
+                    expectedSenderPubKeyRing,
+                    ackMessage.getClass().getSimpleName(),
+                    ackMessage.getSourceId())) {
+                return;
+            }
+
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
@@ -170,7 +196,7 @@ public abstract class SupportManager {
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
             }
 
-            getAllChatMessages(ackMessage.getSourceId()).stream()
+            allChatMessages.stream()
                     .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
                     .forEach(msg -> {
                         if (ackMessage.isSuccess())
@@ -282,6 +308,26 @@ public abstract class SupportManager {
         return message.getSupportType() == getSupportType();
     }
 
+    protected boolean isSenderSignaturePubKeyExpected(PublicKey senderSignaturePubKey,
+                                                      @Nullable PubKeyRing expectedSenderPubKeyRing,
+                                                      String messageClassName,
+                                                      String tradeId) {
+        if (expectedSenderPubKeyRing == null) {
+            log.warn("Ignoring {} for trade {} because expected sender pubKeyRing is unknown",
+                    messageClassName, tradeId);
+            return false;
+        }
+
+        PublicKey expectedSenderSignaturePubKey = expectedSenderPubKeyRing.getSignaturePubKey();
+        if (!senderSignaturePubKey.equals(expectedSenderSignaturePubKey)) {
+            log.warn("Ignoring {} for trade {} because sender signature pubKey does not match the expected peer",
+                    messageClassName, tradeId);
+            return false;
+        }
+
+        return true;
+    }
+
     protected void cleanupRetryMap(String uid) {
         if (delayMsgMap.containsKey(uid)) {
             Timer timer = delayMsgMap.remove(uid);
@@ -305,10 +351,10 @@ public abstract class SupportManager {
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof SupportMessage) {
-                onSupportMessage((SupportMessage) networkEnvelope);
-            } else if (networkEnvelope instanceof AckMessage) {
-                onAckMessage((AckMessage) networkEnvelope);
+            if (networkEnvelope instanceof SupportMessage supportMessage) {
+                onSupportMessage(supportMessage, decryptedMessageWithPubKey.getSignaturePubKey());
+            } else if (networkEnvelope instanceof AckMessage ackMessage) {
+                onAckMessage(ackMessage, decryptedMessageWithPubKey.getSignaturePubKey());
             }
         });
         decryptedDirectMessageWithPubKeys.clear();
@@ -316,13 +362,11 @@ public abstract class SupportManager {
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             log.trace("## decryptedMessageWithPubKey message={}", networkEnvelope.getClass().getSimpleName());
-            if (networkEnvelope instanceof SupportMessage) {
-                SupportMessage supportMessage = (SupportMessage) networkEnvelope;
-                onSupportMessage(supportMessage);
+            if (networkEnvelope instanceof SupportMessage supportMessage) {
+                onSupportMessage(supportMessage, decryptedMessageWithPubKey.getSignaturePubKey());
                 mailboxMessageService.removeMailboxMsg(supportMessage);
-            } else if (networkEnvelope instanceof AckMessage) {
-                AckMessage ackMessage = (AckMessage) networkEnvelope;
-                onAckMessage(ackMessage);
+            } else if (networkEnvelope instanceof AckMessage ackMessage) {
+                onAckMessage(ackMessage, decryptedMessageWithPubKey.getSignaturePubKey());
                 mailboxMessageService.removeMailboxMsg(ackMessage);
             }
         });
