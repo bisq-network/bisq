@@ -418,7 +418,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         try {
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
-            DisputeValidation.validateSenderNodeAddress(dispute, openNewDisputeMessage.getSenderNodeAddress());
+            DisputeValidation.validateDisputeOpenerIsTrader(dispute, openNewDisputeMessage.getSenderNodeAddress());
             DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
             if (dispute.isUsingLegacyBurningMan()) {
                 DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);

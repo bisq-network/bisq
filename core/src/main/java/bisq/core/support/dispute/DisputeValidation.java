@@ -116,8 +116,8 @@ public class DisputeValidation {
     }
 
 
-    public static void validateSenderNodeAddress(Dispute dispute,
-                                                 NodeAddress senderNodeAddress) throws NodeAddressException {
+    public static void validateDisputeOpenerIsTrader(Dispute dispute,
+                                                     NodeAddress senderNodeAddress) throws NodeAddressException {
         if (!senderNodeAddress.equals(dispute.getContract().getBuyerNodeAddress())
                 && !senderNodeAddress.equals(dispute.getContract().getSellerNodeAddress())) {
             throw new NodeAddressException(dispute, "senderNodeAddress not matching any of the traders node addresses");
