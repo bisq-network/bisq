@@ -420,11 +420,14 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateDisputeOpenerIsTrader(dispute, openNewDisputeMessage.getSenderNodeAddress());
             DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+
+            // Normally we do not expect legacy burning man as fee receiver anymore, but in some edge cases we can stil
+            // fall back to that, thus we keep that check.
             if (dispute.isUsingLegacyBurningMan()) {
                 DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             }
         } catch (DisputeValidation.ValidationException e) {
-            log.error(e.toString());
+            log.error("Validating dispute failed", e);
             validationExceptions.add(e);
             return;
         }
