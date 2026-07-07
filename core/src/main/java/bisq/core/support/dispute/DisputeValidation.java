@@ -196,6 +196,7 @@ public class DisputeValidation {
         });
     }
 
+    // disputeList does not contain new dispute
     public static void testIfDisputeTriesReplay(Dispute dispute,
                                                 List<Dispute> disputeList) throws DisputeReplayException {
         var tuple = getTestReplayHashMaps(disputeList);
@@ -265,20 +266,31 @@ public class DisputeValidation {
                     "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
 
             Set<String> disputesPerTradeIdItems = disputesPerTradeId.get(disputeToTestTradeId);
-            checkArgument(disputesPerTradeIdItems != null && disputesPerTradeIdItems.size() <= 2,
-                    "We found more then 2 disputes with the same trade ID. " +
-                            "Trade ID: " + disputeToTestTradeId);
+
+            // At opening a dispute, disputesPerTradeIdItems is expected to be null if there was no replay.
+            if (disputesPerTradeIdItems != null) {
+                checkArgument(disputesPerTradeIdItems.size() <= 2,
+                        "We found more then 2 disputes with the same trade ID. " +
+                                "Trade ID: " + disputeToTestTradeId);
+            }
+
             if (!disputesPerDelayedPayoutTxId.isEmpty()) {
                 Set<String> disputesPerDelayedPayoutTxIdItems = disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId);
-                checkArgument(disputesPerDelayedPayoutTxIdItems != null && disputesPerDelayedPayoutTxIdItems.size() <= 2,
-                        "We found more then 2 disputes with the same delayedPayoutTxId. " +
-                                "Trade ID: " + disputeToTestTradeId);
+                // At opening a dispute, disputesPerDelayedPayoutTxIdItems is expected to be null if there was no replay.
+                if (disputesPerDelayedPayoutTxIdItems != null) {
+                    checkArgument(disputesPerDelayedPayoutTxIdItems.size() <= 2,
+                            "We found more then 2 disputes with the same delayedPayoutTxId. " +
+                                    "Trade ID: " + disputeToTestTradeId);
+                }
             }
             if (!disputesPerDepositTxId.isEmpty()) {
                 Set<String> disputesPerDepositTxIdItems = disputesPerDepositTxId.get(disputeToTestDepositTxId);
-                checkArgument(disputesPerDepositTxIdItems != null && disputesPerDepositTxIdItems.size() <= 2,
-                        "We found more then 2 disputes with the same depositTxId. " +
-                                "Trade ID: " + disputeToTestTradeId);
+                // At opening a dispute, disputesPerDepositTxIdItems is expected to be null if there was no replay.
+                if (disputesPerDepositTxIdItems != null) {
+                    checkArgument(disputesPerDepositTxIdItems.size() <= 2,
+                            "We found more then 2 disputes with the same depositTxId. " +
+                                    "Trade ID: " + disputeToTestTradeId);
+                }
             }
         } catch (IllegalArgumentException e) {
             throw new DisputeReplayException(disputeToTest, e.getMessage());
