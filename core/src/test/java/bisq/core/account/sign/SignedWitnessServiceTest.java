@@ -139,6 +139,23 @@ public class SignedWitnessServiceTest {
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignedByArbitrator(aew1));
+    }
+
+    @Test
+    public void testInvalidArbitratorSignatureDoesNotCountAsSignedByArbitrator() {
+        SignedWitness sw1 = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                "invalid-arbitrator-signature".getBytes(Charsets.UTF_8),
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+
+        signedWitnessService.addToMap(sw1);
+
+        assertFalse(signedWitnessService.verifySignature(sw1));
+        assertFalse(signedWitnessService.isSignedByArbitrator(aew1));
     }
 
     @Test

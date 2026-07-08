@@ -173,9 +173,8 @@ public class SignedWitnessService {
 
     public boolean isSignedByArbitrator(AccountAgeWitness accountAgeWitness) {
         return getSignedWitnessSet(accountAgeWitness).stream()
-                .map(SignedWitness::isSignedByArbitrator)
-                .findAny()
-                .orElse(false);
+                .filter(SignedWitness::isSignedByArbitrator)
+                .anyMatch(this::verifySignature);
     }
 
     public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
