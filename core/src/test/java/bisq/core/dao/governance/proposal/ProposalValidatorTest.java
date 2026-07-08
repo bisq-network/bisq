@@ -18,15 +18,20 @@
 package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.GenericProposal;
 import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
+
+import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
 
@@ -81,12 +86,40 @@ public class ProposalValidatorTest {
         assertTrue(proposalValidator.isTxTypeValid(proposal));
     }
 
+    @Test
+    public void isTxTypeValidUsesCompensationRequestOpReturnType() {
+        Proposal proposal = new CompensationProposal("name",
+                "https://bisq.network",
+                Coin.valueOf(10000),
+                "B123",
+                null)
+                .cloneProposal(TX_ID);
+        ProposalValidator proposalValidator = new CompensationValidator(mockDaoStateService(proposal),
+                mock(PeriodService.class));
+
+        assertTrue(proposalValidator.isTxTypeValid(proposal));
+    }
+
+    @Test
+    public void isTxTypeValidUsesReimbursementRequestOpReturnType() {
+        Proposal proposal = new ReimbursementProposal("name",
+                "https://bisq.network",
+                Coin.valueOf(10000),
+                "B123",
+                null)
+                .cloneProposal(TX_ID);
+        ProposalValidator proposalValidator = new ReimbursementValidator(mockDaoStateService(proposal),
+                mock(PeriodService.class));
+
+        assertTrue(proposalValidator.isTxTypeValid(proposal));
+    }
+
     private DaoStateService mockDaoStateService(Proposal proposal) {
         TxOutput txOutput = mock(TxOutput.class);
         when(txOutput.getOpReturnData()).thenReturn(getOpReturnData(proposal));
 
         Tx tx = mock(Tx.class);
-        when(tx.getTxType()).thenReturn(TxType.PROPOSAL);
+        when(tx.getTxType()).thenReturn(proposal.getTxType());
         when(tx.getBlockHeight()).thenReturn(TX_HEIGHT);
         when(tx.getLastTxOutput()).thenReturn(txOutput);
 
@@ -105,7 +138,17 @@ public class ProposalValidatorTest {
 
     private byte[] getOpReturnData(Proposal proposal) {
         byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal.cloneProposal(null));
-        return ProposalConsensus.getOpReturnData(hashOfPayload, OpReturnType.PROPOSAL.getType(), proposal.getVersion());
+        return ProposalConsensus.getOpReturnData(hashOfPayload, getOpReturnType(proposal).getType(), proposal.getVersion());
+    }
+
+    private OpReturnType getOpReturnType(Proposal proposal) {
+        if (proposal instanceof CompensationProposal) {
+            return OpReturnType.COMPENSATION_REQUEST;
+        } else if (proposal instanceof ReimbursementProposal) {
+            return OpReturnType.REIMBURSEMENT_REQUEST;
+        } else {
+            return OpReturnType.PROPOSAL;
+        }
     }
 
     private Proposal withVersion(Proposal proposal, byte version) {
