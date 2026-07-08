@@ -38,9 +38,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.Test;
-
 import org.mockito.ArgumentCaptor;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -73,7 +73,7 @@ public class RequestDataHandlerTest {
 
         SettableFuture<Connection> sendFuture = SettableFuture.create();
         sendFuture.set(mock(Connection.class));
-        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class))).thenReturn(sendFuture);
+        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class), eq(false))).thenReturn(sendFuture);
 
         RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager, listener);
         requestDataHandler.requestData(PEER_NODE_ADDRESS, true, false);
@@ -117,7 +117,7 @@ public class RequestDataHandlerTest {
 
         SettableFuture<Connection> sendFuture = SettableFuture.create();
         sendFuture.set(mock(Connection.class));
-        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class))).thenReturn(sendFuture);
+        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class), eq(false))).thenReturn(sendFuture);
 
         RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager, listener);
         requestDataHandler.requestData(PEER_NODE_ADDRESS, true, true);
@@ -159,7 +159,7 @@ public class RequestDataHandlerTest {
 
         SettableFuture<Connection> sendFuture = SettableFuture.create();
         sendFuture.set(mock(Connection.class));
-        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class))).thenReturn(sendFuture);
+        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class), eq(false))).thenReturn(sendFuture);
 
         RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager, listener);
         requestDataHandler.requestData(PEER_NODE_ADDRESS, true, true);
