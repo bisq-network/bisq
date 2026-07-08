@@ -20,6 +20,7 @@ package bisq.network.p2p.peers.getdata;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -45,9 +46,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -95,6 +98,92 @@ public class RequestDataHandlerTest {
         assertEquals(1, filteredGetDataResponse.getPersistableNetworkPayloadSet().size());
         assertTrue(filteredGetDataResponse.getPersistableNetworkPayloadSet().contains(normalPayload));
         assertFalse(filteredGetDataResponse.getPersistableNetworkPayloadSet().contains(seedNodeOnlyPayload));
+        verify(listener).onComplete(true);
+    }
+
+    @Test
+    public void onMessage_seedResponseFromInboundConnectionFailsRequest() {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        P2PDataStorage dataStorage = mock(P2PDataStorage.class);
+        PeerManager peerManager = mock(PeerManager.class);
+        RequestDataHandler.Listener listener = mock(RequestDataHandler.Listener.class);
+
+        AtomicInteger requestNonce = new AtomicInteger();
+        when(dataStorage.buildPreliminaryGetDataRequest(anyInt())).thenAnswer(invocation -> {
+            int nonce = invocation.getArgument(0);
+            requestNonce.set(nonce);
+            return new PreliminaryGetDataRequest(nonce, Collections.emptySet());
+        });
+
+        SettableFuture<Connection> sendFuture = SettableFuture.create();
+        sendFuture.set(mock(Connection.class));
+        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class))).thenReturn(sendFuture);
+
+        RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager, listener);
+        requestDataHandler.requestData(PEER_NODE_ADDRESS, true, true);
+
+        PersistableNetworkPayload normalPayload = new PersistableNetworkPayloadStub(new byte[]{1});
+        PersistableNetworkPayload seedNodeOnlyPayload = new SeedNodeOnlyPersistableNetworkPayloadStub(new byte[]{2});
+        GetDataResponse getDataResponse = new GetDataResponse(
+                Collections.emptySet(),
+                Set.of(normalPayload, seedNodeOnlyPayload),
+                requestNonce.get(),
+                false,
+                true);
+        Connection connection = mock(Connection.class);
+        when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.of(PEER_NODE_ADDRESS));
+
+        requestDataHandler.onMessage(getDataResponse, connection);
+
+        verify(dataStorage, never()).processGetDataResponse(
+                any(GetDataResponse.class),
+                any(NodeAddress.class),
+                anyBoolean());
+        verify(peerManager).handleConnectionFault(PEER_NODE_ADDRESS);
+        verify(listener).onFault(any(String.class), eq(null));
+    }
+
+    @Test
+    public void onMessage_seedResponseFromOutboundConnectionKeepsSeedNodeOnlyPayloadsBeforeStorage() {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        P2PDataStorage dataStorage = mock(P2PDataStorage.class);
+        PeerManager peerManager = mock(PeerManager.class);
+        RequestDataHandler.Listener listener = mock(RequestDataHandler.Listener.class);
+
+        AtomicInteger requestNonce = new AtomicInteger();
+        when(dataStorage.buildPreliminaryGetDataRequest(anyInt())).thenAnswer(invocation -> {
+            int nonce = invocation.getArgument(0);
+            requestNonce.set(nonce);
+            return new PreliminaryGetDataRequest(nonce, Collections.emptySet());
+        });
+
+        SettableFuture<Connection> sendFuture = SettableFuture.create();
+        sendFuture.set(mock(Connection.class));
+        when(networkNode.sendMessage(eq(PEER_NODE_ADDRESS), any(NetworkEnvelope.class))).thenReturn(sendFuture);
+
+        RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager, listener);
+        requestDataHandler.requestData(PEER_NODE_ADDRESS, true, true);
+
+        PersistableNetworkPayload normalPayload = new PersistableNetworkPayloadStub(new byte[]{1});
+        PersistableNetworkPayload seedNodeOnlyPayload = new SeedNodeOnlyPersistableNetworkPayloadStub(new byte[]{2});
+        GetDataResponse getDataResponse = new GetDataResponse(
+                Collections.emptySet(),
+                Set.of(normalPayload, seedNodeOnlyPayload),
+                requestNonce.get(),
+                false,
+                true);
+        Connection connection = mock(OutboundConnection.class);
+        when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.of(PEER_NODE_ADDRESS));
+
+        requestDataHandler.onMessage(getDataResponse, connection);
+
+        ArgumentCaptor<GetDataResponse> getDataResponseCaptor = ArgumentCaptor.forClass(GetDataResponse.class);
+        verify(dataStorage).processGetDataResponse(getDataResponseCaptor.capture(), eq(PEER_NODE_ADDRESS), eq(true));
+        GetDataResponse filteredGetDataResponse = getDataResponseCaptor.getValue();
+
+        assertEquals(2, filteredGetDataResponse.getPersistableNetworkPayloadSet().size());
+        assertTrue(filteredGetDataResponse.getPersistableNetworkPayloadSet().contains(normalPayload));
+        assertTrue(filteredGetDataResponse.getPersistableNetworkPayloadSet().contains(seedNodeOnlyPayload));
         verify(listener).onComplete(true);
     }
 

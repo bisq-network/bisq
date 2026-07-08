@@ -22,6 +22,7 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
@@ -192,6 +193,15 @@ class RequestDataHandler implements MessageListener {
                     connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
                     long ts1 = System.currentTimeMillis();
+                    boolean isTrustedSeedNodeResponse = isTrustedSeedNodeResponse(connection);
+
+                    if (isSeedNode && !isTrustedSeedNodeResponse) {
+                        handleFault("We received a GetDataResponse for seed node " + peersNodeAddress +
+                                        " from a non-outbound connection. We ignore it.",
+                                peersNodeAddress,
+                                CloseConnectionReason.RULE_VIOLATION);
+                        return;
+                    }
 
                     if (!isSeedNode) {
                         getDataResponse = filterSeedNodeOnlyInitialDataResponsePayloads(getDataResponse);
@@ -208,7 +218,7 @@ class RequestDataHandler implements MessageListener {
 
                         dataStorage.processGetDataResponse(getDataResponse,
                                 connection.getPeersNodeAddressOptional().get(),
-                                isSeedNode);
+                                isTrustedSeedNodeResponse);
 
                         cleanup();
                         listener.onComplete(getDataResponse.isWasTruncated());
@@ -236,6 +246,13 @@ class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isTrustedSeedNodeResponse(Connection connection) {
+        return isSeedNode &&
+                connection instanceof OutboundConnection &&
+                connection.getPeersNodeAddressOptional().isPresent() &&
+                connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress);
+    }
 
     private GetDataResponse filterSeedNodeOnlyInitialDataResponsePayloads(GetDataResponse getDataResponse) {
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet().stream()
