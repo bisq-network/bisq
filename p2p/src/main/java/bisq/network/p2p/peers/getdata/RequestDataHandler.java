@@ -149,7 +149,7 @@ class RequestDataHandler implements MessageListener {
             getDataRequestType = getDataRequest.getClass().getSimpleName();
             log.info("\n\n>> We send a {} to peer {}\n", getDataRequestType, nodeAddress);
             networkNode.addMessageListener(this);
-            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
+            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest, false);
             //noinspection UnstableApiUsage
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
