@@ -404,9 +404,6 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             return;
         }
 
-        // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
-        dispute.setSupportType(openNewDisputeMessage.getSupportType());
-
         if (!isDisputeOpenerSignaturePubKeyValid(dispute,
                 senderSignaturePubKey,
                 openNewDisputeMessage.getClass().getSimpleName())) {
