@@ -346,9 +346,12 @@ public class SignedWitnessService {
         }
         try {
             PublicKey signaturePubKey = Sig.getPublicKeyFromBytes(signedWitness.getSignerPubKey());
-            Sig.verify(signaturePubKey, signedWitness.getAccountAgeWitnessHash(), signedWitness.getSignature());
-            verifySignatureWithDSAKeyResultCache.put(hash, true);
-            return true;
+            boolean isValid = Sig.verify(signaturePubKey, signedWitness.getAccountAgeWitnessHash(), signedWitness.getSignature());
+            if (!isValid) {
+                log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
+            }
+            verifySignatureWithDSAKeyResultCache.put(hash, isValid);
+            return isValid;
         } catch (CryptoException e) {
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
