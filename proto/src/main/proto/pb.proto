@@ -531,6 +531,16 @@ message NewBlockBroadcastMessage {
     BaseBlock raw_block = 1;
 }
 
+message SignedRawBlock {
+    BaseBlock raw_block = 1;
+    DaoBlockSignature signature = 2;
+}
+
+message DaoBlockSignature {
+    NodeAddress signer_node_address = 1;
+    bytes signature = 2;
+}
+
 message RepublishGovernanceDataRequest {
 }
 
