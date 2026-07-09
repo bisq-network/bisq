@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
@@ -97,6 +98,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             List<TransactionInput> myInputs = transaction.getInputs().stream()
                     .filter(input -> input.getIndex() >= buyersInputSize)
                     .collect(Collectors.toList());
+            checkArgument(protocolModel.getDaoFacade().isDaoStateReadyAndInSync(), "DAO state is not ready and in sync");
             tradeWalletService.signBsqSwapTransaction(transaction, myInputs);
 
             log.info("Sellers signed his inputs of transaction {}", transaction);
