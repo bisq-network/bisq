@@ -17,8 +17,11 @@
 
 package bisq.core.dao.node.lite.network;
 
+import bisq.core.dao.node.full.DaoBlockSignatureHash;
+import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
+import bisq.core.dao.node.messages.SignedRawBlock;
 import bisq.core.dao.state.model.blockchain.BaseTx;
 
 import bisq.network.p2p.NodeAddress;
@@ -36,6 +39,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
@@ -76,9 +80,12 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public interface Listener {
         void onNoSeedNodeAvailable();
 
-        void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse, Runnable onParsingComplete);
+        void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse,
+                                       NodeAddress senderNodeAddress,
+                                       Runnable onParsingComplete);
 
-        void onNewBlockReceived(NewBlockBroadcastMessage newBlockBroadcastMessage);
+        void onNewBlockReceived(NewBlockBroadcastMessage newBlockBroadcastMessage,
+                                @Nullable NodeAddress senderNodeAddress);
 
         void onFault(String errorMessage, @Nullable Connection connection);
     }
@@ -226,23 +233,38 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
-        if (networkEnvelope instanceof NewBlockBroadcastMessage) {
-            NewBlockBroadcastMessage newBlockBroadcastMessage = (NewBlockBroadcastMessage) networkEnvelope;
-            // We combine blockHash and txId list in case we receive blocks with different transactions.
-            List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream()
-                    .map(BaseTx::getId)
-                    .collect(Collectors.toList());
-            String blockUid = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
+        if (networkEnvelope instanceof NewBlockBroadcastMessage newBlockBroadcastMessage) {
+            RawBlock unSignedRawBlock = newBlockBroadcastMessage.getBlock();
+            SignedRawBlock signedRawBlock = newBlockBroadcastMessage.getSignedRawBlock();
+            String hashUnsignedBlock = unSignedRawBlock.getHash();
+            String contentHashUnsignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(unSignedRawBlock));
+            String blockUid = "unsigned:" + contentHashUnsignedBlock;
+            NodeAddress senderNodeAddress = connection.getPeersNodeAddressOptional().orElse(null);
+            if (signedRawBlock != null) {
+                String contentHashSignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(signedRawBlock.getBlock()));
+                if (!signedRawBlock.getBlock().getHash().equals(hashUnsignedBlock) ||
+                        !contentHashSignedBlock.equals(contentHashUnsignedBlock)) {
+                    log.warn("We received a newBlockBroadcastMessage with a different hashes for the unsigned and the " +
+                            "signed block. We ignore that as invalid. newBlockBroadcastMessage={}", newBlockBroadcastMessage);
+                    return;
+                }
+
+                blockUid = "signed:" + contentHashSignedBlock;
+            } else{
+                // We still broadcast unsigned blocks, but we do not process them further.
+                broadcaster.broadcast(newBlockBroadcastMessage, senderNodeAddress);
+                return;
+            }
+
             if (receivedBlocks.contains(blockUid)) {
                 log.debug("We had that message already and do not further broadcast it. blockUid={}", blockUid);
                 return;
             }
 
-            log.info("We received a NewBlockBroadcastMessage from peer {} and broadcast it to our peers. blockUid={}",
-                    connection.getPeersNodeAddressOptional().orElse(null), blockUid);
+            log.info("We received a NewBlockBroadcastMessage from peer {}. blockUid={}", senderNodeAddress, blockUid);
             receivedBlocks.add(blockUid);
-            broadcaster.broadcast(newBlockBroadcastMessage, connection.getPeersNodeAddressOptional().orElse(null));
-            listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
+            broadcaster.broadcast(newBlockBroadcastMessage, senderNodeAddress);
+            listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage, senderNodeAddress));
         }
     }
 
@@ -298,6 +320,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                             lastReceivedBlockHeight = startBlockHeight;
 
                             listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
+                                    peersNodeAddress,
                                     () -> {
                                     }));
                         } else {
