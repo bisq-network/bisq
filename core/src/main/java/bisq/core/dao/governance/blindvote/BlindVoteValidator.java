@@ -22,11 +22,16 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.DaoPhase;
+
 import bisq.common.util.ExtraDataMapValidator;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Arrays;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -88,17 +93,24 @@ public class BlindVoteValidator {
 
         // Check if tx is already confirmed and in DaoState
         Optional<Tx> optionalTx = daoStateService.getTx(blindVote.getTxId());
-        boolean isConfirmed = optionalTx.isPresent();
-        if (daoStateService.isParseBlockChainComplete() && !isConfirmed)
+        if (daoStateService.isParseBlockChainComplete() && optionalTx.isEmpty())
             log.warn("blindVoteTx is not confirmed. blindVoteTxId={}", blindVote.getTxId());
 
-        return isConfirmed;
+        return optionalTx
+                .filter(tx -> isBlindVoteTxType(blindVote, tx))
+                .filter(tx -> isOpReturnDataMatchingPayload(blindVote, tx))
+                .isPresent();
     }
 
     public boolean isTxInPhaseAndCycle(BlindVote blindVote) {
+        if (!areDataFieldsValid(blindVote)) {
+            log.warn("blindVote is invalid. blindVote={}", blindVote);
+            return false;
+        }
+
         String txId = blindVote.getTxId();
         Optional<Tx> optionalTx = daoStateService.getTx(txId);
-        if (!optionalTx.isPresent()) {
+        if (optionalTx.isEmpty()) {
             log.debug("Tx is not in daoStateService. blindVoteTxId={}", txId);
             return false;
         }
@@ -113,6 +125,36 @@ public class BlindVoteValidator {
             log.debug("Tx is not in BLIND_VOTE phase. blindVote={}", blindVote);
             return false;
         }
-        return true;
+        return isBlindVoteTxType(blindVote, tx) && isOpReturnDataMatchingPayload(blindVote, tx);
+    }
+
+    private boolean isBlindVoteTxType(BlindVote blindVote, Tx tx) {
+        boolean txTypeMatches = tx.getTxType() == TxType.BLIND_VOTE;
+        if (!txTypeMatches) {
+            log.warn("blindVoteTx must have type BLIND_VOTE but is {}. blindVoteTxId={}",
+                    tx.getTxType(),
+                    blindVote.getTxId());
+        }
+        return txTypeMatches;
+    }
+
+    @VisibleForTesting
+    boolean isOpReturnDataMatchingPayload(BlindVote blindVote, Tx tx) {
+        try {
+            byte[] opReturnData = tx.getLastTxOutput().getOpReturnData();
+            byte[] hashOfEncryptedVotes = BlindVoteConsensus.getHashOfEncryptedVotes(blindVote.getEncryptedVotes());
+            byte[] expectedOpReturnData = BlindVoteConsensus.getOpReturnData(hashOfEncryptedVotes);
+            boolean opReturnMatchesPayload = Arrays.equals(expectedOpReturnData, opReturnData);
+            if (!opReturnMatchesPayload) {
+                log.warn("Blind vote payload does not match the OP_RETURN commitment. blindVoteTxId={}",
+                        blindVote.getTxId());
+            }
+            return opReturnMatchesPayload;
+        } catch (Exception e) {
+            log.warn("Could not validate blind vote OP_RETURN commitment. blindVoteTxId={}. error={}",
+                    blindVote.getTxId(),
+                    e.toString());
+            return false;
+        }
     }
 }
