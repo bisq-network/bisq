@@ -207,6 +207,30 @@ public class SignedWitnessServiceTest {
     }
 
     @Test
+    public void testPeerSignatureCacheKeepsValidAndInvalidResultsSeparate() throws Exception {
+        SignedWitness validSignedWitness = new SignedWitness(TRADE,
+                account2DataHash,
+                signature2,
+                signer2PubKey,
+                witnessOwner2PubKey,
+                date2,
+                tradeAmount2);
+        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(Charsets.UTF_8));
+        SignedWitness invalidSignedWitness = new SignedWitness(TRADE,
+                account2DataHash,
+                invalidSignature,
+                signer2PubKey,
+                witnessOwner2PubKey,
+                date2,
+                tradeAmount2);
+
+        assertTrue(signedWitnessService.verifySignature(validSignedWitness));
+        assertTrue(signedWitnessService.verifySignature(validSignedWitness));
+        assertFalse(signedWitnessService.verifySignature(invalidSignedWitness));
+        assertFalse(signedWitnessService.verifySignature(invalidSignedWitness));
+    }
+
+    @Test
     public void testIsValidSelfSignatureOk() throws Exception {
         KeyPair peer1KeyPair = Sig.generateKeyPair();
         signer2PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());

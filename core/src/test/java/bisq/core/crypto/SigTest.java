@@ -26,6 +26,10 @@ import bisq.common.file.FileUtil;
 import java.io.File;
 import java.io.IOException;
 
+import java.nio.charset.StandardCharsets;
+
+import java.security.KeyPair;
+
 import java.util.Random;
 
 import org.slf4j.Logger;
@@ -35,6 +39,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SigTest {
@@ -84,6 +89,24 @@ public class SigTest {
         }
         log.trace("took {} ms.", System.currentTimeMillis() - ts);
     }
-}
 
+    @Test
+    public void testVerifyReturnsFalseForDifferentData() throws CryptoException {
+        KeyPair keyPair = Sig.generateKeyPair();
+        byte[] data = "data".getBytes(StandardCharsets.UTF_8);
+        byte[] signature = Sig.sign(keyPair.getPrivate(), data);
+
+        assertFalse(Sig.verify(keyPair.getPublic(), "other-data".getBytes(StandardCharsets.UTF_8), signature));
+    }
+
+    @Test
+    public void testVerifyReturnsFalseForDifferentPublicKey() throws CryptoException {
+        KeyPair signingKeyPair = Sig.generateKeyPair();
+        KeyPair verificationKeyPair = Sig.generateKeyPair();
+        byte[] data = "data".getBytes(StandardCharsets.UTF_8);
+        byte[] signature = Sig.sign(signingKeyPair.getPrivate(), data);
+
+        assertFalse(Sig.verify(verificationKeyPair.getPublic(), data, signature));
+    }
+}
 
