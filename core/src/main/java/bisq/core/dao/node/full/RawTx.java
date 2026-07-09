@@ -22,6 +22,9 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxInput;
 
 import bisq.common.app.Version;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 
 import com.google.common.collect.ImmutableList;
@@ -44,7 +47,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class RawTx extends BaseTx implements NetworkPayload {
+public final class RawTx extends BaseTx implements NetworkPayload, Canonical {
     // Used when a full node sends a block over the P2P network
     public static RawTx fromTx(Tx tx) {
         ImmutableList<RawTxOutput> rawTxOutputs = ImmutableList.copyOf(tx.getTxOutputs().stream()
@@ -127,6 +130,23 @@ public final class RawTx extends BaseTx implements NetworkPayload {
                 protoBaseTx.getTime(),
                 txInputs,
                 outputs);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<RawTx> SCHEMA = RawTx.<RawTx>getBaseTxSchemaBuilder()
+            .extend(7,
+                    rawTx -> rawTx,
+                    CanonicalSchema.<RawTx>newBuilder()
+                            .repeatedCompose(1, RawTx::getRawTxOutputs, RawTxOutput.SCHEMA))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
     @Override
