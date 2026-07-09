@@ -19,6 +19,8 @@ package bisq.core.provider.mempool;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BtcFeeReceiverService;
+import bisq.core.dao.burningman.BurningManAddressList;
+import bisq.core.dao.burningman.BurningManAddressListService;
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterPolicyService;
@@ -37,6 +39,7 @@ import com.google.inject.Inject;
 
 import javax.inject.Singleton;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -63,6 +66,7 @@ public class MempoolService {
     private final FilterPolicyService filterPolicyService;
     private final DaoFacade daoFacade;
     private final DaoStateService daoStateService;
+    private final BurningManAddressListService burningManAddressListService;
     private final BurningManPresentationService burningManPresentationService;
     @Getter
     private int outstandingRequests = 0;
@@ -74,6 +78,7 @@ public class MempoolService {
                           FilterPolicyService filterPolicyService,
                           DaoFacade daoFacade,
                           DaoStateService daoStateService,
+                          BurningManAddressListService burningManAddressListService,
                           BurningManPresentationService burningManPresentationService) {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.config = config;
@@ -81,6 +86,7 @@ public class MempoolService {
         this.filterPolicyService = filterPolicyService;
         this.daoFacade = daoFacade;
         this.daoStateService = daoStateService;
+        this.burningManAddressListService = burningManAddressListService;
         this.burningManPresentationService = burningManPresentationService;
     }
 
@@ -256,9 +262,11 @@ public class MempoolService {
 
     // /////////////////////////////
 
-    private List<String> getAllBtcFeeReceivers() {
+    @VisibleForTesting
+    List<String> getAllBtcFeeReceivers() {
         List<String> btcFeeReceivers = new ArrayList<>();
         btcFeeReceivers.addAll(daoFacade.getAllDonationAddresses());
+        addBurningManAddressListLegacyAddress(btcFeeReceivers);
         btcFeeReceivers.addAll(BtcFeeReceiverService.getConfiguredReceiverAddresses(
                 filterPolicyService.getBtcFeeReceiverAddresses()));
 
@@ -274,6 +282,14 @@ public class MempoolService {
         btcFeeReceivers.addAll(distributedBMAddresses);
 
         return btcFeeReceivers;
+    }
+
+    private void addBurningManAddressListLegacyAddress(List<String> btcFeeReceivers) {
+        int latestVersion = burningManAddressListService.getLatestVersion();
+        BurningManAddressList addressList = burningManAddressListService.getAddressList(latestVersion);
+        if (addressList.isForCurrentNetwork()) {
+            btcFeeReceivers.add(addressList.getLegacyBurningManAddress());
+        }
     }
 
     private boolean isServiceSupported() {
