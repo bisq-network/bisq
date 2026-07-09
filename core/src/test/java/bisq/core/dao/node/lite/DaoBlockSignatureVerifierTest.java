@@ -50,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DaoBlockSignatureVerifierTest {
     private static final String MAINNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_mainnet");
+    private static final String REGTEST = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
     private static final NodeAddress SIGNER_NODE_ADDRESS = new NodeAddress("trusted.onion:8000");
     private static final NodeAddress SECOND_SIGNER_NODE_ADDRESS = new NodeAddress("trusted2.onion:8000");
     private static final NodeAddress UNTRUSTED_NODE_ADDRESS = new NodeAddress("untrusted.onion:8000");
@@ -60,7 +61,8 @@ public class DaoBlockSignatureVerifierTest {
         RawBlock rawBlock = createRawBlock("block-hash");
         SignedRawBlock signedRawBlock = createSignedRawBlock(rawBlock, SIGNER_NODE_ADDRESS, keyPair);
         DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
-                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(keyPair.getPublic()))));
+                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(keyPair.getPublic()))),
+                new Config(MAINNET));
 
         assertTrue(verifier.isValid(signedRawBlock));
     }
@@ -71,7 +73,8 @@ public class DaoBlockSignatureVerifierTest {
         RawBlock rawBlock = createRawBlock("block-hash");
         SignedRawBlock signedRawBlock = createSignedRawBlock(rawBlock, UNTRUSTED_NODE_ADDRESS, keyPair);
         DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
-                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(keyPair.getPublic()))));
+                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(keyPair.getPublic()))),
+                new Config(MAINNET));
 
         assertFalse(verifier.isValid(signedRawBlock));
     }
@@ -84,9 +87,22 @@ public class DaoBlockSignatureVerifierTest {
         SignedRawBlock tamperedSignedRawBlock = new SignedRawBlock(createRawBlock("tampered-block-hash"),
                 signedRawBlock.getSignature());
         DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
-                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(keyPair.getPublic()))));
+                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(keyPair.getPublic()))),
+                new Config(MAINNET));
 
         assertFalse(verifier.isValid(tamperedSignedRawBlock));
+    }
+
+    @Test
+    public void acceptsAnySignatureOnRegtest() {
+        RawBlock rawBlock = createRawBlock("block-hash");
+        SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
+                new DaoBlockSignature(UNTRUSTED_NODE_ADDRESS, new byte[]{0x01}));
+        DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
+                Map.of()),
+                new Config(REGTEST));
+
+        assertTrue(verifier.isValid(signedRawBlock));
     }
 
     @Test
@@ -166,7 +182,7 @@ public class DaoBlockSignatureVerifierTest {
         private TestTrustedBsqBlockProviderRepository(Map<NodeAddress, byte[]> signaturePubKeyBytesByNodeAddress) {
             super(new Config(MAINNET));
             this.trustedBsqBlockProviders = signaturePubKeyBytesByNodeAddress.entrySet().stream()
-                    .map(entry -> TrustedBsqBlockProvider.fromConfig(format("%s|%s",
+                    .map(entry -> TrustedBsqBlockProvider.fromConfig(format("%s@%s",
                             entry.getKey().getFullAddress(),
                             Utilities.bytesAsHexString(entry.getValue()))))
                     .collect(Collectors.toSet());

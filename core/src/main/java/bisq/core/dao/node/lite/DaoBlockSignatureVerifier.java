@@ -25,6 +25,7 @@ import bisq.core.dao.node.messages.SignedRawBlock;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Sig;
 
@@ -40,13 +41,20 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class DaoBlockSignatureVerifier {
     private final TrustedBsqBlockProviderRepository trustedBsqBlockProviderRepository;
+    private final boolean skipSignatureVerification;
 
     @Inject
-    public DaoBlockSignatureVerifier(TrustedBsqBlockProviderRepository trustedBsqBlockProviderRepository) {
+    public DaoBlockSignatureVerifier(TrustedBsqBlockProviderRepository trustedBsqBlockProviderRepository,
+                                     Config config) {
         this.trustedBsqBlockProviderRepository = trustedBsqBlockProviderRepository;
+        skipSignatureVerification = config.getBaseCurrencyNetwork().isRegtest();
     }
 
     public boolean isValid(SignedRawBlock signedRawBlock) {
+        if (skipSignatureVerification) {
+            return true;
+        }
+
         DaoBlockSignature signature = signedRawBlock.getSignature();
         NodeAddress signerNodeAddress = signature.getSignerNodeAddress();
         Optional<byte[]> signaturePubKeyBytes = getSignaturePubKeyBytes(signerNodeAddress);

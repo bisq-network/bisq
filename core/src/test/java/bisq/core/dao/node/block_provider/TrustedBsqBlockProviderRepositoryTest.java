@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TrustedBsqBlockProviderRepositoryTest {
     private static final String MAINNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_mainnet");
+    private static final String REGTEST = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
     private static final String TESTNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_testnet");
 
     @Test
@@ -101,6 +102,13 @@ public class TrustedBsqBlockProviderRepositoryTest {
     @Test
     public void missingNetworkResourceReturnsEmptyProviders() {
         TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(TESTNET));
+
+        assertTrue(trustedFullDaoNodes.getTrustedBsqBlockProviders().isEmpty());
+    }
+
+    @Test
+    public void regtestDoesNotLoadBundledProviders() {
+        TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(REGTEST));
 
         assertTrue(trustedFullDaoNodes.getTrustedBsqBlockProviders().isEmpty());
     }
