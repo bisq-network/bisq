@@ -35,12 +35,14 @@ import javax.inject.Singleton;
 import java.security.PublicKey;
 import java.util.Optional;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class DaoBlockSignatureVerifier {
     private final TrustedBsqBlockProviderRepository trustedBsqBlockProviderRepository;
+    @Getter
     private final boolean skipSignatureVerification;
 
     @Inject

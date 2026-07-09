@@ -133,6 +133,55 @@ public class LiteNodeNetworkServiceTest {
     }
 
     @Test
+    void relaysUnsignedNewBlockBroadcastMessageWithoutNotifyingListener(
+            @Mock NetworkNode networkNode,
+            @Mock PeerManager peerManager,
+            @Mock Broadcaster broadcaster,
+            @Mock SeedNodeRepository seedNodeRepository,
+            @Mock Connection connection) {
+        doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
+        NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
+        doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
+
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        CountingListener listener = new CountingListener();
+        service.addListener(listener);
+
+        RawBlock rawBlock = createRawBlock(100, "block-hash");
+        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock);
+
+        service.onMessage(message, connection);
+
+        assertEquals(0, listener.newBlockCount.get());
+        verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
+    }
+
+    @Test
+    void deduplicatesRepeatedUnsignedNewBlockBroadcastMessage(
+            @Mock NetworkNode networkNode,
+            @Mock PeerManager peerManager,
+            @Mock Broadcaster broadcaster,
+            @Mock SeedNodeRepository seedNodeRepository,
+            @Mock Connection connection) {
+        doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
+        NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
+        doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
+
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        CountingListener listener = new CountingListener();
+        service.addListener(listener);
+
+        RawBlock rawBlock = createRawBlock(100, "block-hash");
+        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock);
+
+        service.onMessage(message, connection);
+        service.onMessage(message, connection);
+
+        assertEquals(0, listener.newBlockCount.get());
+        verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
+    }
+
+    @Test
     void deduplicatesRepeatedNewBlockBroadcastMessage(
             @Mock NetworkNode networkNode,
             @Mock PeerManager peerManager,

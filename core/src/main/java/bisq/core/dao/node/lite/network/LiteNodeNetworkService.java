@@ -250,8 +250,14 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 }
 
                 blockUid = "signed:" + contentHashSignedBlock;
-            } else{
+            } else {
+                if (receivedBlocks.contains(blockUid)) {
+                    log.debug("We had that unsigned message already and do not further broadcast it. blockUid={}", blockUid);
+                    return;
+                }
+
                 // We still broadcast unsigned blocks, but we do not process them further.
+                receivedBlocks.add(blockUid);
                 broadcaster.broadcast(newBlockBroadcastMessage, senderNodeAddress);
                 return;
             }

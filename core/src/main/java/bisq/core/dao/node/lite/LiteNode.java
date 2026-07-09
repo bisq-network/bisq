@@ -228,28 +228,52 @@ public class LiteNode extends BsqNode {
     void processGetBlocksResponse(GetBlocksResponse getBlocksResponse,
                                   NodeAddress senderNodeAddress,
                                   Runnable onParsingComplete) {
-        if (getBlocksResponse.getSignedRawBlocks().isEmpty() && !getBlocksResponse.getBlocks().isEmpty()) {
+        boolean skipSignatureVerification = daoBlockSignatureVerifier.isSkipSignatureVerification();
+        List<RawBlock> blocks = getBlocksResponse.getBlocks();
+        List<SignedRawBlock> signedRawBlocks = getBlocksResponse.getSignedRawBlocks();
+        if (!skipSignatureVerification &&
+                signedRawBlocks.isEmpty() &&
+                !blocks.isEmpty()) {
             log.warn("Ignoring unsigned GetBlocksResponse from {}. unsignedBlocks={}",
                     senderNodeAddress,
-                    getBlocksResponse.getBlocks().size());
+                    blocks.size());
             return;
         }
 
-        boolean hadInvalidBlock = getBlocksResponse.getSignedRawBlocks().stream()
+        boolean hadInvalidBlock = signedRawBlocks.stream()
                 .anyMatch(this::isSignedRawBlockInvalid);
         if (hadInvalidBlock) {
             log.warn("We receives a GetBlocksResponse with an invalid DAO block signature from {}. unsignedBlocks={}, signedBlocks={}. " +
                             "We ignore the response.",
                     senderNodeAddress,
-                    getBlocksResponse.getBlocks().size(),
-                    getBlocksResponse.getSignedRawBlocks().size());
+                    blocks.size(),
+                    signedRawBlocks.size());
             return;
         }
 
-        List<RawBlock> rawBlocks = getBlocksResponse.getSignedRawBlocks().stream()
+        if (skipSignatureVerification) {
+            log.warn("isSkipSignatureVerification is set thus we accept GetBlocksResponse without enforcing DAO block signatures. " +
+                            "senderNodeAddress={}, unsignedBlocks={}, signedBlocks={}",
+                    senderNodeAddress,
+                    blocks.size(),
+                    signedRawBlocks.size());
+            onRequestedBlocksReceived(getBlocksForParsing(getBlocksResponse, true), onParsingComplete);
+        } else {
+            onRequestedBlocksReceived(getBlocksForParsing(getBlocksResponse, false), onParsingComplete);
+        }
+    }
+
+    @VisibleForTesting
+    static List<RawBlock> getBlocksForParsing(GetBlocksResponse getBlocksResponse,
+                                              boolean skipSignatureVerification) {
+        List<RawBlock> blocks = getBlocksResponse.getBlocks();
+        if (skipSignatureVerification && !blocks.isEmpty()) {
+            return blocks;
+        }
+
+        return getBlocksResponse.getSignedRawBlocks().stream()
                 .map(SignedRawBlock::getBlock)
                 .toList();
-        onRequestedBlocksReceived(rawBlocks, onParsingComplete);
     }
 
     // We received the missing blocks
@@ -339,6 +363,12 @@ public class LiteNode extends BsqNode {
             } else {
                 onNewBlockReceived(signedRawBlock.getBlock());
             }
+        } else if (daoBlockSignatureVerifier.isSkipSignatureVerification()) {
+            log.warn("isSkipSignatureVerification is set thus we accept unsigned blocks from NewBlockBroadcastMessage. senderNodeAddress={}, blockHeight={}, blockHash={}",
+                    senderNodeAddress,
+                    newBlockBroadcastMessage.getBlock().getHeight(),
+                    newBlockBroadcastMessage.getBlock().getHash());
+            onNewBlockReceived(newBlockBroadcastMessage.getBlock());
         } else {
             log.warn("Ignoring unsigned NewBlockBroadcastMessage. senderNodeAddress={}, blockHeight={}, blockHash={}",
                     senderNodeAddress,
