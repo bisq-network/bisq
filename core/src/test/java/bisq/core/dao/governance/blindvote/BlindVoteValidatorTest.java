@@ -73,6 +73,15 @@ class BlindVoteValidatorTest {
         assertFalse(blindVoteValidator.isTxInPhaseAndCycle(blindVote));
     }
 
+    @Test
+    void areDataFieldsValidAndTxConfirmedRejectsNonBlindVoteTxType() throws Exception {
+        BlindVote blindVote = blindVote(new byte[]{0x01, 0x02, 0x03});
+        BlindVoteValidator blindVoteValidator = new BlindVoteValidator(mockDaoStateService(blindVote, TxType.PROPOSAL),
+                mock(PeriodService.class));
+
+        assertFalse(blindVoteValidator.areDataFieldsValidAndTxConfirmed(blindVote));
+    }
+
     private DaoStateService mockDaoStateService(BlindVote committedBlindVote, TxType txType) throws Exception {
         TxOutput txOutput = mock(TxOutput.class);
         when(txOutput.getOpReturnData()).thenReturn(getOpReturnData(committedBlindVote));

@@ -127,7 +127,7 @@ class VoteResultServiceTest {
     void getDecryptedBallotsWithMeritsMatchingBlindVoteListDecryptsExactMajorityPayload() throws Exception {
         SecretKey secretKey = BlindVoteConsensus.createSecretKey();
         Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
-                .cloneProposalAndAddTxId(PROPOSAL_TX_ID);
+                .cloneProposal(PROPOSAL_TX_ID);
         BlindVote honestBlindVote = blindVote(secretKey, true);
         DecryptedBallotsWithMerits forgedFirstDecryptedBallotsWithMerits =
                 decryptedBallotsWithMerits(proposal, false);
@@ -143,6 +143,43 @@ class VoteResultServiceTest {
         assertTrue(vote.isAccepted());
     }
 
+    @Test
+    void getDecryptedBallotsWithMeritsMatchingBlindVoteListDropsOrphanDecryptedBallots() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        DecryptedBallotsWithMerits orphanDecryptedBallotsWithMerits = decryptedBallotsWithMerits(proposal, true);
+        VoteResultService voteResultService = voteResultService(secretKey, proposal);
+
+        Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+                Set.of(orphanDecryptedBallotsWithMerits),
+                List.of(),
+                mock(Cycle.class));
+
+        assertTrue(result.isEmpty());
+        assertTrue(voteResultService.getInvalidDecryptedBallotsWithMeritItems()
+                .contains(orphanDecryptedBallotsWithMerits));
+    }
+
+    @Test
+    void getDecryptedBallotsWithMeritsMatchingBlindVoteListDropsMissingVoteRevealData() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BlindVote blindVote = blindVote(secretKey, true);
+        DecryptedBallotsWithMerits decryptedBallotsWithMerits = decryptedBallotsWithMerits(proposal, true);
+        VoteResultService voteResultService = voteResultService(Set.of(), proposal);
+
+        Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+                Set.of(decryptedBallotsWithMerits),
+                List.of(blindVote),
+                mock(Cycle.class));
+
+        assertTrue(result.isEmpty());
+        assertTrue(voteResultService.getInvalidDecryptedBallotsWithMeritItems()
+                .contains(decryptedBallotsWithMerits));
+    }
+
     private static EvaluatedProposal acceptedIssuanceProposal(long requestedBsq) {
         Proposal proposal = mock(Proposal.class, withSettings().extraInterfaces(IssuanceProposal.class));
         when(((IssuanceProposal) proposal).getRequestedBsq()).thenReturn(Coin.valueOf(requestedBsq));
@@ -150,9 +187,12 @@ class VoteResultServiceTest {
     }
 
     private static VoteResultService voteResultService(SecretKey secretKey, Proposal proposal) throws Exception {
-        TxOutput voteRevealTxOutput = voteRevealTxOutput(secretKey);
+        return voteResultService(Set.of(voteRevealTxOutput(secretKey)), proposal);
+    }
+
+    private static VoteResultService voteResultService(Set<TxOutput> voteRevealTxOutputs, Proposal proposal) {
         DaoStateService daoStateService = mock(DaoStateService.class);
-        when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of(voteRevealTxOutput));
+        when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(voteRevealTxOutputs);
 
         BallotListService ballotListService = mock(BallotListService.class);
         when(ballotListService.getValidBallotsOfCycle()).thenReturn(List.of(new Ballot(proposal)));
