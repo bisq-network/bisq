@@ -159,6 +159,61 @@ public class SignedWitnessServiceTest {
     }
 
     @Test
+    public void testArbitratorSignatureBySignerNotInArbitratorListDoesNotCountAsSignedByArbitrator() {
+        // A cryptographically valid signature is present, but the signer key is NOT in the
+        // arbitrator manager's accepted list. The account must not be treated as arbitrator-signed.
+        AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
+        ArbitratorManager strictArbitratorManager = mock(ArbitratorManager.class);
+        when(strictArbitratorManager.isPublicKeyInList(any())).thenReturn(false);
+        SignedWitnessService strictService = new SignedWitnessService(keyRing, p2pService,
+                strictArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService);
+
+        SignedWitness sw1 = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                signature1,
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+
+        strictService.addToMap(sw1);
+
+        assertFalse(strictService.verifySignature(sw1));
+        assertFalse(strictService.isSignedByArbitrator(aew1));
+    }
+
+    @Test
+    public void testValidArbitratorWitnessAlongsideForgedOneStillCountsAsSignedByArbitrator() {
+        // A forged arbitrator witness (bad signature) coexists with a valid arbitrator witness
+        // for the same account. The valid one must still lift the account to arbitrator-signed.
+        ECKey secondArbitratorKey = LowRSigningKey.from(new ECKey());
+        byte[] validSignature = secondArbitratorKey.signMessage(Utilities.encodeToHex(account1DataHash))
+                .getBytes(Charsets.UTF_8);
+
+        SignedWitness forged = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                "invalid-arbitrator-signature".getBytes(Charsets.UTF_8),
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+        SignedWitness valid = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                validSignature,
+                secondArbitratorKey.getPubKey(),
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+
+        signedWitnessService.addToMap(forged);
+        signedWitnessService.addToMap(valid);
+
+        assertFalse(signedWitnessService.verifySignature(forged));
+        assertTrue(signedWitnessService.verifySignature(valid));
+        assertTrue(signedWitnessService.isSignedByArbitrator(aew1));
+    }
+
+    @Test
     public void testIsValidAccountAgeWitnessArbitratorSignatureProblem() {
         signature1 = new byte[]{1, 2, 3};
 
