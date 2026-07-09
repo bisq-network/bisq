@@ -72,7 +72,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.REFERRAL_ID;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -87,6 +87,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
     @JsonExclude
     private static final long STRICT_FILTER_DATE = new GregorianCalendar(2021, Calendar.NOVEMBER, 1).getTime().getTime();
+    @JsonExclude
+    private static final long STRICT_HASH_CHECK_DATE = new GregorianCalendar(2021, Calendar.NOVEMBER, 1).getTime().getTime();
     @JsonExclude
     @VisibleForTesting
     static final long HISTORICAL_MAX_TRADE_AMOUNT = Coin.COIN.multiply(2).value;
@@ -334,24 +336,26 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public static TradeStatistics3 fromProto(protobuf.TradeStatistics3 proto) {
+        long date = proto.getDate();
         TradeStatistics3 tradeStatistics = new TradeStatistics3(
                 proto.getCurrency(),
                 proto.getPrice(),
                 proto.getAmount(),
                 proto.getPaymentMethod(),
-                proto.getDate(),
+                date,
                 ProtoUtil.stringOrNullFromProto(proto.getMediator()),
                 ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : new TreeMap<>(proto.getExtraDataMap()),
                 null);
 
-        byte[] hashFromProto = proto.getHash().toByteArray();
-        if (!Arrays.equals(hashFromProto, tradeStatistics.getHash())) {
-            throw new InvalidPersistableNetworkPayloadException("TradeStatistics3 hash field does not match trade statistics data. " +
-                    "hashFromProto=" + Utilities.bytesAsHexString(hashFromProto) +
-                    ", computedHash=" + Utilities.bytesAsHexString(tradeStatistics.getHash()));
+        if (date > STRICT_HASH_CHECK_DATE) {
+            byte[] hashFromProto = proto.getHash().toByteArray();
+            if (!Arrays.equals(hashFromProto, tradeStatistics.getHash())) {
+                throw new InvalidPersistableNetworkPayloadException("TradeStatistics3 hash field does not match trade statistics data. " +
+                        "hashFromProto=" + Utilities.bytesAsHexString(hashFromProto) +
+                        ", computedHash=" + Utilities.bytesAsHexString(tradeStatistics.getHash()));
+            }
         }
-
         return tradeStatistics;
     }
 
