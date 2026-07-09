@@ -77,6 +77,7 @@ import bisq.core.dao.node.full.DaoBlockSigningService;
 import bisq.core.dao.node.full.FullNode;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.dao.node.full.network.FullNodeNetworkService;
+import bisq.core.dao.node.lite.DaoBlockSignatureVerifier;
 import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
@@ -114,6 +115,7 @@ public class DaoModule extends AppModule {
         bind(RpcService.class).in(Singleton.class);
         bind(BlockParser.class).in(Singleton.class);
         bind(DaoBlockSigningService.class).in(Singleton.class);
+        bind(DaoBlockSignatureVerifier.class).in(Singleton.class);
         bind(FullNodeNetworkService.class).in(Singleton.class);
         bind(LiteNodeNetworkService.class).in(Singleton.class);
 

@@ -25,11 +25,13 @@ import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
+import bisq.core.dao.node.messages.SignedRawBlock;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.RequiredReorgFromSnapshotException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionState;
@@ -48,6 +50,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 /**
  * Main class for lite nodes which receive the BSQ transactions from a full node (e.g. seed nodes).
@@ -58,6 +61,7 @@ public class LiteNode extends BsqNode {
     private static final int CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC = 10;
 
     private final LiteNodeNetworkService liteNodeNetworkService;
+    private final DaoBlockSignatureVerifier daoBlockSignatureVerifier;
     private final BsqWalletService bsqWalletService;
     private final WalletsSetup walletsSetup;
     private Timer checkForBlockReceivedTimer;
@@ -75,12 +79,14 @@ public class LiteNode extends BsqNode {
                     DaoStateSnapshotService daoStateSnapshotService,
                     P2PService p2PService,
                     LiteNodeNetworkService liteNodeNetworkService,
+                    DaoBlockSignatureVerifier daoBlockSignatureVerifier,
                     BsqWalletService bsqWalletService,
                     WalletsSetup walletsSetup,
                     ExportJsonFilesService exportJsonFilesService) {
         super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
 
         this.liteNodeNetworkService = liteNodeNetworkService;
+        this.daoBlockSignatureVerifier = daoBlockSignatureVerifier;
         this.bsqWalletService = bsqWalletService;
         this.walletsSetup = walletsSetup;
 
@@ -158,14 +164,18 @@ public class LiteNode extends BsqNode {
 
         liteNodeNetworkService.addListener(new LiteNodeNetworkService.Listener() {
             @Override
-            public void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse, Runnable onParsingComplete) {
-                LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBlocksResponse.getBlocks()),
+            public void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse,
+                                                  NodeAddress senderNodeAddress,
+                                                  Runnable onParsingComplete) {
+                LiteNode.this.processGetBlocksResponse(getBlocksResponse,
+                        senderNodeAddress,
                         onParsingComplete);
             }
 
             @Override
-            public void onNewBlockReceived(NewBlockBroadcastMessage newBlockBroadcastMessage) {
-                LiteNode.this.onNewBlockReceived(newBlockBroadcastMessage.getBlock());
+            public void onNewBlockReceived(NewBlockBroadcastMessage newBlockBroadcastMessage,
+                                           @Nullable NodeAddress senderNodeAddress) {
+                LiteNode.this.processNewBlockBroadcastMessage(newBlockBroadcastMessage, senderNodeAddress);
             }
 
             @Override
@@ -213,6 +223,34 @@ public class LiteNode extends BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @VisibleForTesting
+    void processGetBlocksResponse(GetBlocksResponse getBlocksResponse,
+                                  NodeAddress senderNodeAddress,
+                                  Runnable onParsingComplete) {
+        if (getBlocksResponse.getSignedRawBlocks().isEmpty() && !getBlocksResponse.getBlocks().isEmpty()) {
+            log.warn("Ignoring unsigned GetBlocksResponse from {}. unsignedBlocks={}",
+                    senderNodeAddress,
+                    getBlocksResponse.getBlocks().size());
+            return;
+        }
+
+        boolean hadInvalidBlock = getBlocksResponse.getSignedRawBlocks().stream()
+                .anyMatch(this::isSignedRawBlockInvalid);
+        if (hadInvalidBlock) {
+            log.warn("We receives a GetBlocksResponse with an invalid DAO block signature from {}. unsignedBlocks={}, signedBlocks={}. " +
+                            "We ignore the response.",
+                    senderNodeAddress,
+                    getBlocksResponse.getBlocks().size(),
+                    getBlocksResponse.getSignedRawBlocks().size());
+            return;
+        }
+
+        List<RawBlock> rawBlocks = getBlocksResponse.getSignedRawBlocks().stream()
+                .map(SignedRawBlock::getBlock)
+                .toList();
+        onRequestedBlocksReceived(rawBlocks, onParsingComplete);
+    }
 
     // We received the missing blocks
     private void onRequestedBlocksReceived(List<RawBlock> blockList, Runnable onParsingComplete) {
@@ -283,8 +321,35 @@ public class LiteNode extends BsqNode {
         });
     }
 
+
+    private boolean isSignedRawBlockInvalid(SignedRawBlock signedRawBlock) {
+        return !daoBlockSignatureVerifier.isValid(signedRawBlock);
+    }
+
+    @VisibleForTesting
+    void processNewBlockBroadcastMessage(NewBlockBroadcastMessage newBlockBroadcastMessage,
+                                         @Nullable NodeAddress senderNodeAddress) {
+        SignedRawBlock signedRawBlock = newBlockBroadcastMessage.getSignedRawBlock();
+        if (signedRawBlock != null) {
+            if (isSignedRawBlockInvalid(signedRawBlock)) {
+                log.warn("Ignoring NewBlockBroadcastMessage with invalid DAO block signature. senderNodeAddress={}, blockHeight={}, blockHash={}",
+                        senderNodeAddress,
+                        signedRawBlock.getBlock().getHeight(),
+                        signedRawBlock.getBlock().getHash());
+            } else {
+                onNewBlockReceived(signedRawBlock.getBlock());
+            }
+        } else {
+            log.warn("Ignoring unsigned NewBlockBroadcastMessage. senderNodeAddress={}, blockHeight={}, blockHash={}",
+                    senderNodeAddress,
+                    newBlockBroadcastMessage.getBlock().getHeight(),
+                    newBlockBroadcastMessage.getBlock().getHash());
+        }
+    }
+
     // We received a new block
-    private void onNewBlockReceived(RawBlock block) {
+    @VisibleForTesting
+    void onNewBlockReceived(RawBlock block) {
         int blockHeight = block.getHeight();
         log.info("onNewBlockReceived: block at height {}, hash={}. Our DAO chainHeight={}",
                 blockHeight, block.getHash(), chainTipHeight);
