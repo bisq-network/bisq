@@ -87,7 +87,8 @@ public class BlindVoteValidator {
         }
 
         // Check if tx is already confirmed and in DaoState
-        boolean isConfirmed = daoStateService.getTx(blindVote.getTxId()).isPresent();
+        Optional<Tx> optionalTx = daoStateService.getTx(blindVote.getTxId());
+        boolean isConfirmed = optionalTx.isPresent();
         if (daoStateService.isParseBlockChainComplete() && !isConfirmed)
             log.warn("blindVoteTx is not confirmed. blindVoteTxId={}", blindVote.getTxId());
 
@@ -102,7 +103,8 @@ public class BlindVoteValidator {
             return false;
         }
 
-        int txHeight = optionalTx.get().getBlockHeight();
+        Tx tx = optionalTx.get();
+        int txHeight = tx.getBlockHeight();
         if (!periodService.isTxInCorrectCycle(txHeight, daoStateService.getChainHeight())) {
             log.debug("Tx is not in current cycle. blindVote={}", blindVote);
             return false;
