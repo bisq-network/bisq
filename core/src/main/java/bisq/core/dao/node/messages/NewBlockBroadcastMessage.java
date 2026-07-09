@@ -24,8 +24,12 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
+import java.util.Optional;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import org.jetbrains.annotations.Nullable;
 
 // We remove the CapabilityRequiringPayload interface to avoid risks that new BSQ blocks are not well distributed in
 // case the capability is not exchanged at the time when the message is sent. We need to improve the capability handling
@@ -36,9 +40,15 @@ import lombok.Getter;
 @Getter
 public final class NewBlockBroadcastMessage extends BroadcastMessage /*implements CapabilityRequiringPayload*/ {
     private final RawBlock block;
+    @Nullable
+    private final SignedRawBlock signedRawBlock;
 
     public NewBlockBroadcastMessage(RawBlock block) {
-        this(block, Version.getP2PMessageVersion());
+        this(block, null);
+    }
+
+    public NewBlockBroadcastMessage(RawBlock block, @Nullable SignedRawBlock signedRawBlock) {
+        this(block, signedRawBlock, Version.getP2PMessageVersion());
     }
 
 
@@ -46,21 +56,26 @@ public final class NewBlockBroadcastMessage extends BroadcastMessage /*implement
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private NewBlockBroadcastMessage(RawBlock block, int messageVersion) {
+    private NewBlockBroadcastMessage(RawBlock block, @Nullable SignedRawBlock signedRawBlock, int messageVersion) {
         super(messageVersion);
         this.block = block;
+        this.signedRawBlock = signedRawBlock;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.NewBlockBroadcastMessage.Builder builder = protobuf.NewBlockBroadcastMessage.newBuilder()
+                .setRawBlock(block.toProtoMessage());
+        Optional.ofNullable(signedRawBlock).ifPresent(signedRawBlock ->
+                builder.setSignedRawBlock(signedRawBlock.toProtoMessage()));
         return getNetworkEnvelopeBuilder()
-                .setNewBlockBroadcastMessage(protobuf.NewBlockBroadcastMessage.newBuilder()
-                        .setRawBlock(block.toProtoMessage()))
+                .setNewBlockBroadcastMessage(builder)
                 .build();
     }
 
     public static NetworkEnvelope fromProto(protobuf.NewBlockBroadcastMessage proto, int messageVersion) {
         return new NewBlockBroadcastMessage(RawBlock.fromProto(proto.getRawBlock()),
+                proto.hasSignedRawBlock() ? SignedRawBlock.fromProto(proto.getSignedRawBlock()) : null,
                 messageVersion);
     }
 

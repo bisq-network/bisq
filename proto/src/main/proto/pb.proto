@@ -524,11 +524,13 @@ message GetBlocksResponse {
     // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseBlock raw_blocks = 1;
     int32 request_nonce = 2;
+    repeated SignedRawBlock signed_raw_blocks = 3;
 }
 
 message NewBlockBroadcastMessage {
     // Because of the way how PB implements inheritance we need to use the super class as type.
     BaseBlock raw_block = 1;
+    SignedRawBlock signed_raw_block = 2;
 }
 
 message SignedRawBlock {

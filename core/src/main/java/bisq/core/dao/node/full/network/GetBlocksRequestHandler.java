@@ -17,11 +17,12 @@
 
 package bisq.core.dao.node.full.network;
 
+import bisq.core.dao.node.full.DaoBlockSigningService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
+import bisq.core.dao.node.messages.SignedRawBlock;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
@@ -29,6 +30,7 @@ import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capability;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -69,6 +71,7 @@ class GetBlocksRequestHandler {
 
     private final NetworkNode networkNode;
     private final DaoStateService daoStateService;
+    private final DaoBlockSigningService daoBlockSigningService;
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;
@@ -78,9 +81,13 @@ class GetBlocksRequestHandler {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public GetBlocksRequestHandler(NetworkNode networkNode, DaoStateService daoStateService, Listener listener) {
+    public GetBlocksRequestHandler(NetworkNode networkNode,
+                                   DaoStateService daoStateService,
+                                   DaoBlockSigningService daoBlockSigningService,
+                                   Listener listener) {
         this.networkNode = networkNode;
         this.daoStateService = daoStateService;
+        this.daoBlockSigningService = daoBlockSigningService;
         this.listener = listener;
     }
 
@@ -95,12 +102,24 @@ class GetBlocksRequestHandler {
         List<RawBlock> rawBlocks = daoStateService.getBlocksFromBlockHeightStream(getBlocksRequest.getFromBlockHeight(), 3000)
                 .map(RawBlock::fromBlock)
                 .collect(Collectors.toCollection(LinkedList::new));
+        boolean supportsSignedDaoBlocks = supportsSignedDaoBlocks(getBlocksRequest);
+        GetBlocksResponse getBlocksResponse;
+        if (supportsSignedDaoBlocks) {
+            List<SignedRawBlock> signedRawBlocks = rawBlocks.stream()
+                    .map(rawBlock -> daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress()))
+                    .collect(Collectors.toCollection(LinkedList::new));
+            getBlocksResponse = GetBlocksResponse.forSignedBlocks(signedRawBlocks, getBlocksRequest.getNonce());
+        } else {
+            getBlocksResponse = GetBlocksResponse.forUnsignedBlocks(rawBlocks, getBlocksRequest.getNonce());
+        }
 
-        GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
         log.info("Received GetBlocksRequest from {} for blocks from height {}. " +
-                        "Building GetBlocksResponse with {} blocks took {} ms.",
-                connection.getPeersNodeAddressOptional(), getBlocksRequest.getFromBlockHeight(),
-                rawBlocks.size(), System.currentTimeMillis() - ts);
+                        "Building {} GetBlocksResponse with {} blocks took {} ms.",
+                connection.getPeersNodeAddressOptional(),
+                getBlocksRequest.getFromBlockHeight(),
+                supportsSignedDaoBlocks ? "signed" : "unsigned",
+                rawBlocks.size(),
+                System.currentTimeMillis() - ts);
 
         if (timeoutTimer != null) {
             timeoutTimer.stop();
@@ -119,8 +138,10 @@ class GetBlocksRequestHandler {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
-                    log.info("Send DataResponse to {} succeeded. getBlocksResponse.getBlocks().size()={}",
-                            connection.getPeersNodeAddressOptional(), getBlocksResponse.getBlocks().size());
+                    log.info("Send DataResponse to {} succeeded. rawBlocks={}, signedBlocks={}",
+                            connection.getPeersNodeAddressOptional(),
+                            getBlocksResponse.getBlocks().size(),
+                            getBlocksResponse.getSignedRawBlocks().size());
                     cleanup();
                     listener.onComplete(getBlocksResponse.toProtoNetworkEnvelope().getSerializedSize());
                 } else {
@@ -150,6 +171,11 @@ class GetBlocksRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static boolean supportsSignedDaoBlocks(GetBlocksRequest getBlocksRequest) {
+        return getBlocksRequest.getSupportedCapabilities() != null &&
+                getBlocksRequest.getSupportedCapabilities().contains(Capability.SIGNED_DAO_BLOCK);
+    }
 
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         if (!stopped) {
