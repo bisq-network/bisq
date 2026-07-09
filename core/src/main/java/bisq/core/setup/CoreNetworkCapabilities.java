@@ -60,7 +60,7 @@ public class CoreNetworkCapabilities {
         } else {
             // A lite node has the capability to receive bsq blocks. We do not want to send BSQ blocks to full nodes
             // as they ignore them anyway.
-            Capabilities.app.addAll(Capability.RECEIVE_BSQ_BLOCK);
+            Capabilities.app.addAll(Capability.RECEIVE_BSQ_BLOCK, Capability.SIGNED_DAO_BLOCK);
         }
     }
 }
