@@ -10,6 +10,8 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import static bisq.common.config.Config.*;
@@ -196,6 +198,16 @@ public class ConfigTests {
     public void whenBannedBtcNodesOptionIsSet_thenBannedBtcNodesPropertyReturnsItsValue() {
         Config config = configWithOpts(opt(BANNED_BTC_NODES, "foo.onion:8333,bar.onion:8333"));
         assertThat(config.bannedBtcNodes, contains("foo.onion:8333", "bar.onion:8333"));
+    }
+
+    @Test
+    public void whenTrustedFullDaoNodesOptionIsSet_thenTrustedFullDaoNodesPropertyReturnsItsValue() {
+        String node1 = "trusted1.onion:8000@abc123";
+        String node2 = "trusted2.onion:8000@def456";
+        Config config = configWithOpts(opt(BSQ_BLOCK_PROVIDERS, node1 + "," + node2));
+
+        assertThat(new Config().bsqBlockProviders, is(List.of()));
+        assertThat(config.bsqBlockProviders, contains(node1, node2));
     }
 
     @Test

@@ -1,0 +1,5 @@
+# nodeaddress.onion:port@pubKeyAsHex@Role@operator
+
+# We use DevEnv.DEV_PRIVILEGE_PUB_KEY for regtest
+localhost:2002@027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee@SEED@devtest1
+localhost:3002@027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee@SEED@devtest2

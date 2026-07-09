@@ -20,6 +20,7 @@ package bisq.core.app;
 import bisq.core.alert.AlertModule;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
+import bisq.core.dao.node.block_provider.TrustedBsqBlockProviderRepository;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.CoreBanFilter;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
@@ -66,6 +67,7 @@ public class CoreModule extends AppModule {
         bind(BridgeAddressProvider.class).to(Preferences.class);
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
+        bind(TrustedBsqBlockProviderRepository.class).in(Singleton.class);
         bind(BanFilter.class).to(CoreBanFilter.class).in(Singleton.class);
 
         bind(File.class).annotatedWith(named(APP_DATA_DIR)).toInstance(config.appDataDir);
