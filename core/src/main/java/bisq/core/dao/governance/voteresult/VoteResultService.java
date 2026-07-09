@@ -61,9 +61,9 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.PermutationUtil;
 import bisq.common.util.Utilities;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -202,17 +202,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                                         .map(e -> "blindVoteTxId=" + e.getTxId() + ", Stake=" + e.getStake())
                                         .collect(Collectors.toList()));
 
-                        Set<String> blindVoteTxIdSet = blindVoteList.stream().map(BlindVote::getTxId).collect(Collectors.toSet());
-                        // We need to filter out result list according to the majority hash list
-                        Set<DecryptedBallotsWithMerits> filteredDecryptedBallotsWithMeritsSet = decryptedBallotsWithMeritsSet.stream()
-                                .filter(decryptedBallotsWithMerits -> {
-                                    boolean contains = blindVoteTxIdSet.contains(decryptedBallotsWithMerits.getBlindVoteTxId());
-                                    if (!contains) {
-                                        invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
-                                    }
-                                    return contains;
-                                })
-                                .collect(Collectors.toSet());
+                        // We need to filter and decrypt the result list according to the exact blind vote payloads
+                        // from the majority hash list. A txid-only match can keep a forged duplicate payload.
+                        Set<DecryptedBallotsWithMerits> filteredDecryptedBallotsWithMeritsSet =
+                                getDecryptedBallotsWithMeritsMatchingBlindVoteList(decryptedBallotsWithMeritsSet,
+                                        blindVoteList,
+                                        currentCycle);
 
                         // Only if we have all blind vote payloads and know the right list matching the majority we add
                         // it to our state. Otherwise we are not in consensus with the network.
@@ -332,6 +327,65 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 blindVoteTxId, voteRevealTxId, blindVoteStake, emptyBallotList);
         return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId,
                 blindVoteStake, emptyBallotList, emptyMeritList);
+    }
+
+    @VisibleForTesting
+    Set<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+            Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
+            List<BlindVote> blindVoteList,
+            Cycle currentCycle) {
+        Map<String, BlindVote> blindVoteByTxIdMap = blindVoteList.stream()
+                .collect(Collectors.toMap(BlindVote::getTxId, Function.identity(), (first, second) -> first));
+        Map<String, byte[]> voteRevealOpReturnDataByTxIdMap = daoStateService.getVoteRevealOpReturnTxOutputs().stream()
+                .filter(txOutput -> txOutput.getOpReturnData() != null)
+                .collect(Collectors.toMap(TxOutput::getTxId, TxOutput::getOpReturnData, (first, second) -> first));
+
+        return decryptedBallotsWithMeritsSet.stream()
+                .map(decryptedBallotsWithMerits -> getDecryptedBallotsWithMeritsMatchingBlindVoteListItem(
+                        decryptedBallotsWithMerits,
+                        blindVoteByTxIdMap,
+                        voteRevealOpReturnDataByTxIdMap,
+                        currentCycle))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    @Nullable
+    private DecryptedBallotsWithMerits getDecryptedBallotsWithMeritsMatchingBlindVoteListItem(
+            DecryptedBallotsWithMerits decryptedBallotsWithMerits,
+            Map<String, BlindVote> blindVoteByTxIdMap,
+            Map<String, byte[]> voteRevealOpReturnDataByTxIdMap,
+            Cycle currentCycle) {
+        String blindVoteTxId = decryptedBallotsWithMerits.getBlindVoteTxId();
+        BlindVote blindVote = blindVoteByTxIdMap.get(blindVoteTxId);
+        if (blindVote == null) {
+            invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
+            return null;
+        }
+
+        String voteRevealTxId = decryptedBallotsWithMerits.getVoteRevealTxId();
+        byte[] voteRevealOpReturnData = voteRevealOpReturnDataByTxIdMap.get(voteRevealTxId);
+        if (voteRevealOpReturnData == null) {
+            log.warn("We could not find vote reveal OP_RETURN data for voteRevealTxId={}", voteRevealTxId);
+            invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
+            return null;
+        }
+
+        try {
+            return getDecryptedBallotsWithMerits(voteRevealTxId,
+                    currentCycle,
+                    voteRevealOpReturnData,
+                    blindVoteTxId,
+                    decryptedBallotsWithMerits.getHashOfBlindVoteList(),
+                    decryptedBallotsWithMerits.getStake(),
+                    blindVote);
+        } catch (VoteResultException.MissingBallotException missingBallotException) {
+            log.error("Could not create DecryptedBallotsWithMerits from voteRevealTxId {} because of exception: {}",
+                    voteRevealTxId,
+                    missingBallotException.toString());
+            voteResultExceptions.add(new VoteResultException(currentCycle, missingBallotException));
+            return null;
+        }
     }
 
     @Nullable
