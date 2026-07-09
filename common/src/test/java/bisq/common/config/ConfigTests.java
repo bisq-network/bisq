@@ -211,6 +211,20 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenSkipBsqBlockProvidersSignatureVerificationOptionIsSet_thenPropertyReturnsItsValue() {
+        Config defaultConfig = new Config();
+        Config enabledConfig = configWithOpts(opt(SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION, true));
+        Config disabledConfig = configWithOpts(opt(SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION, false));
+
+        assertFalse(defaultConfig.skipBsqBlockProvidersSignatureVerification);
+        assertFalse(defaultConfig.skipBsqBlockProvidersSignatureVerificationOptionSetExplicitly);
+        assertTrue(enabledConfig.skipBsqBlockProvidersSignatureVerification);
+        assertTrue(enabledConfig.skipBsqBlockProvidersSignatureVerificationOptionSetExplicitly);
+        assertFalse(disabledConfig.skipBsqBlockProvidersSignatureVerification);
+        assertTrue(disabledConfig.skipBsqBlockProvidersSignatureVerificationOptionSetExplicitly);
+    }
+
+    @Test
     public void whenHelpOptionIsSet_thenIsHelpRequestedIsTrue() {
         assertFalse(new Config().helpRequested);
         assertTrue(configWithOpts(opt(HELP)).helpRequested);

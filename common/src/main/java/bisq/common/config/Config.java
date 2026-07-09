@@ -89,6 +89,7 @@ public class Config {
     public static final String PROVIDERS = "providers";
     public static final String SEED_NODES = "seedNodes";
     public static final String BSQ_BLOCK_PROVIDERS = "bsqBlockProviders";
+    public static final String SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION = "skipBsqBlockProvidersSignatureVerification";
     public static final String BAN_LIST = "banList";
     public static final String NODE_PORT = "nodePort";
     public static final String USE_LOCALHOST_FOR_P2P = "useLocalhostForP2P";
@@ -216,6 +217,8 @@ public class Config {
     public final List<String> providers;
     public final List<String> seedNodes;
     public final List<String> bsqBlockProviders;
+    public final boolean skipBsqBlockProvidersSignatureVerification;
+    public final boolean skipBsqBlockProvidersSignatureVerificationOptionSetExplicitly;
     public final List<String> banList;
     public final boolean useLocalhostForP2P;
     public final int maxConnections;
@@ -527,6 +530,13 @@ public class Config {
                         .ofType(String.class)
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port@signaturePubKeyAsHex[,...]");
+
+        ArgumentAcceptingOptionSpec<Boolean> skipBsqBlockProvidersSignatureVerificationOpt =
+                parser.accepts(SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION,
+                                "Override BSQ block provider signature verification. If true, any signed DAO block is trusted.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<String> banListOpt =
                 parser.accepts(BAN_LIST, "Nodes to exclude from network connections.")
@@ -1007,6 +1017,10 @@ public class Config {
             this.providers = options.valuesOf(providersOpt);
             this.seedNodes = options.valuesOf(seedNodesOpt);
             this.bsqBlockProviders = options.valuesOf(bsqBlockProvidersOpt);
+            this.skipBsqBlockProvidersSignatureVerification =
+                    options.valueOf(skipBsqBlockProvidersSignatureVerificationOpt);
+            this.skipBsqBlockProvidersSignatureVerificationOptionSetExplicitly =
+                    options.has(skipBsqBlockProvidersSignatureVerificationOpt);
             this.banList = options.valuesOf(banListOpt);
             this.useLocalhostForP2P = !this.baseCurrencyNetwork.isMainnet() && options.valueOf(useLocalhostForP2POpt);
             this.maxConnections = options.valueOf(maxConnectionsOpt);

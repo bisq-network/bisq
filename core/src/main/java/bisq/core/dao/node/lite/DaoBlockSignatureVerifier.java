@@ -47,7 +47,9 @@ public class DaoBlockSignatureVerifier {
     public DaoBlockSignatureVerifier(TrustedBsqBlockProviderRepository trustedBsqBlockProviderRepository,
                                      Config config) {
         this.trustedBsqBlockProviderRepository = trustedBsqBlockProviderRepository;
-        skipSignatureVerification = config.getBaseCurrencyNetwork().isRegtest();
+        skipSignatureVerification = config.skipBsqBlockProvidersSignatureVerificationOptionSetExplicitly ?
+                config.skipBsqBlockProvidersSignatureVerification :
+                config.getBaseCurrencyNetwork().isRegtest();
     }
 
     public boolean isValid(SignedRawBlock signedRawBlock) {

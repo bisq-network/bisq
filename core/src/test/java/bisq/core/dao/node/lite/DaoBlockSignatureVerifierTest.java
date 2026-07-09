@@ -51,6 +51,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DaoBlockSignatureVerifierTest {
     private static final String MAINNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_mainnet");
     private static final String REGTEST = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
+    private static final String SKIP_SIGNATURE_VERIFICATION = format("--%s=%s",
+            Config.SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION, true);
+    private static final String VERIFY_SIGNATURES = format("--%s=%s",
+            Config.SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION, false);
     private static final NodeAddress SIGNER_NODE_ADDRESS = new NodeAddress("trusted.onion:8000");
     private static final NodeAddress SECOND_SIGNER_NODE_ADDRESS = new NodeAddress("trusted2.onion:8000");
     private static final NodeAddress UNTRUSTED_NODE_ADDRESS = new NodeAddress("untrusted.onion:8000");
@@ -103,6 +107,30 @@ public class DaoBlockSignatureVerifierTest {
                 new Config(REGTEST));
 
         assertTrue(verifier.isValid(signedRawBlock));
+    }
+
+    @Test
+    public void acceptsAnySignatureWhenSkipSignatureVerificationIsEnabled() {
+        RawBlock rawBlock = createRawBlock("block-hash");
+        SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
+                new DaoBlockSignature(UNTRUSTED_NODE_ADDRESS, new byte[]{0x01}));
+        DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
+                Map.of()),
+                new Config(MAINNET, SKIP_SIGNATURE_VERIFICATION));
+
+        assertTrue(verifier.isValid(signedRawBlock));
+    }
+
+    @Test
+    public void verifiesSignaturesOnRegtestWhenSkipSignatureVerificationIsDisabled() {
+        RawBlock rawBlock = createRawBlock("block-hash");
+        SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
+                new DaoBlockSignature(UNTRUSTED_NODE_ADDRESS, new byte[]{0x01}));
+        DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
+                Map.of()),
+                new Config(REGTEST, VERIFY_SIGNATURES));
+
+        assertFalse(verifier.isValid(signedRawBlock));
     }
 
     @Test
