@@ -146,7 +146,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(mediatorNodeAddress, user);
             trade.setMediatorPubKeyRing(mediatorPubKeyRing);
 
-            boolean contractDisputeAgentPubKeysSupported = request.hasDisputeAgentPubKeyRings();
             checkArgument(mediatorPubKeyRing.equals(request.getMediatorPubKeyRing()),
                     "Mediator pubKeyRing from request must match local mediator pubKeyRing");
 
@@ -155,7 +154,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
             checkArgument(refundAgentPubKeyRing.equals(request.getRefundAgentPubKeyRing()),
                     "Refund agent pubKeyRing from request must match local refund agent pubKeyRing");
-            tradingPeer.setContractDisputeAgentPubKeysSupported(contractDisputeAgentPubKeysSupported);
 
             long takersTradePrice = TradePriceValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
