@@ -23,6 +23,6 @@ import bisq.asset.RegexAddressValidator;
 public class WrkzCoin extends Coin {
 
     public WrkzCoin() {
-        super("WrkzCoin", "WRKZ", new RegexAddressValidator("^Wrkz[1-9A-Za-z^OIl]{94}"));
+        super("WrkzCoin", "WRKZ", 2, new RegexAddressValidator("^Wrkz[1-9A-Za-z^OIl]{94}"));
     }
 }

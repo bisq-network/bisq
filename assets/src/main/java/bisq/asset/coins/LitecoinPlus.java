@@ -24,7 +24,7 @@ import bisq.asset.NetworkParametersAdapter;
 public class LitecoinPlus extends Coin {
 
     public LitecoinPlus() {
-        super("LitecoinPlus", "LCP", new Base58AddressValidator(new LitecoinPlusMainNetParams()));
+        super("LitecoinPlus", "LCP", 6, new Base58AddressValidator(new LitecoinPlusMainNetParams()));
     }
 
     public static class LitecoinPlusMainNetParams extends NetworkParametersAdapter {

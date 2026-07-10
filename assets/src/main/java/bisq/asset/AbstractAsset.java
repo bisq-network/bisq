@@ -33,11 +33,20 @@ public abstract class AbstractAsset implements Asset {
 
     private final String name;
     private final String tickerSymbol;
+    private final int precision;
     private final AddressValidator addressValidator;
 
     public AbstractAsset(String name, String tickerSymbol, AddressValidator addressValidator) {
+        this(name, tickerSymbol, DEFAULT_PRECISION, addressValidator);
+    }
+
+    public AbstractAsset(String name, String tickerSymbol, int precision, AddressValidator addressValidator) {
         this.name = notBlank(name);
         this.tickerSymbol = notBlank(tickerSymbol);
+        if (precision < 0) {
+            throw new IllegalArgumentException("precision must be non-negative: " + precision);
+        }
+        this.precision = precision;
         this.addressValidator = Objects.requireNonNull(addressValidator);
     }
 
@@ -49,6 +58,11 @@ public abstract class AbstractAsset implements Asset {
     @Override
     public final String getTickerSymbol() {
         return tickerSymbol;
+    }
+
+    @Override
+    public final int getPrecision() {
+        return precision;
     }
 
     @Override

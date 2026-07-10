@@ -25,6 +25,6 @@ import bisq.asset.RegexAddressValidator;
 public class Dragonglass extends Coin {
 
     public Dragonglass() {
-        super("Dragonglass", "DRGL", new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
+        super("Dragonglass", "DRGL", 7, new RegexAddressValidator("^(dRGL)[1-9A-HJ-NP-Za-km-z]{94}$"));
     }
 }
