@@ -77,7 +77,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             AddressEntry takerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(takerMultiSigPubKey,
-                    takerMultiSigAddressEntry.getPubKey()),
+                            takerMultiSigAddressEntry.getPubKey()),
                     "takerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             byte[] hashOfMakersPaymentAccountPayload = maker.getHashOfPaymentAccountPayload();
@@ -92,28 +92,13 @@ public class TakerVerifyAndSignContract extends TradeTask {
             Coin tradeAmount = checkNotNull(trade.getAmount());
             OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
             String makersContractAsJson = checkNotNull(maker.getContractAsJson(), "maker contractAsJson must not be null");
-            boolean makerUsesContractDisputeAgentPubKeys = Contract.hasDisputeAgentPubKeyFields(makersContractAsJson);
-            if (!makerUsesContractDisputeAgentPubKeys &&
-                    Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
-                failed("Maker contract must include dispute agent pubKeyRings");
-                return;
-            }
-
-            PubKeyRing mediatorPubKeyRing = null;
-            PubKeyRing refundAgentPubKeyRing = null;
-            if (makerUsesContractDisputeAgentPubKeys) {
-                // New-version contracts fail closed if the local dispute-agent registry cannot resolve the keys.
-                mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(),
-                        processModel.getUser());
-                refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
-                        processModel.getRefundAgentManager());
-                trade.setMediatorPubKeyRing(mediatorPubKeyRing);
-                trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
-            } else {
-                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
-                log.info("Verifying legacy contract without dispute agent pubKeyRings for trade {}",
-                        trade.getId());
-            }
+            checkArgument(Contract.hasDisputeAgentPubKeyFields(makersContractAsJson), "Maker contract must include dispute agent pubKeyRings");
+            PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(),
+                    processModel.getUser());
+            PubKeyRing refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
+                    processModel.getRefundAgentManager());
+            trade.setMediatorPubKeyRing(mediatorPubKeyRing);
+            trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
 
             Contract contract = new Contract(
                     offerPayload,
