@@ -58,6 +58,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TradeStatistics3Test {
+    private static final long POST_STRICT_HASH_CHECK_DATE = 1_700_000_000_000L;
+
     @Test
     public void isValidAcceptsHistoricalTradeAboveCurrentTradeLimit() {
         TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
@@ -258,7 +260,7 @@ public class TradeStatistics3Test {
                 50_000_000,
                 Coin.parseCoin("0.25").value,
                 "SEPA",
-                1,
+                POST_STRICT_HASH_CHECK_DATE,
                 "mediator",
                 "refundAgent",
                 extraDataMap);
