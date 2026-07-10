@@ -133,7 +133,7 @@ public class LiteNodeNetworkServiceTest {
     }
 
     @Test
-    void relaysUnsignedNewBlockBroadcastMessageWithoutNotifyingListener(
+    void relaysUnsignedNewBlockBroadcastMessageAndNotifiesListener(
             @Mock NetworkNode networkNode,
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
@@ -152,7 +152,9 @@ public class LiteNodeNetworkServiceTest {
 
         service.onMessage(message, connection);
 
-        assertEquals(0, listener.newBlockCount.get());
+        assertEquals(1, listener.newBlockCount.get());
+        assertEquals(peerAddress, listener.lastSenderNodeAddress.get());
+        assertEquals(message, listener.lastNewBlockMessage.get());
         verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
     }
 
@@ -177,7 +179,7 @@ public class LiteNodeNetworkServiceTest {
         service.onMessage(message, connection);
         service.onMessage(message, connection);
 
-        assertEquals(0, listener.newBlockCount.get());
+        assertEquals(1, listener.newBlockCount.get());
         verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
     }
 

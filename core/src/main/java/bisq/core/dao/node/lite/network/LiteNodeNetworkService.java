@@ -22,7 +22,6 @@ import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.node.messages.SignedRawBlock;
-import bisq.core.dao.state.model.blockchain.BaseTx;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -250,16 +249,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 }
 
                 blockUid = "signed:" + contentHashSignedBlock;
-            } else {
-                if (receivedBlocks.contains(blockUid)) {
-                    log.debug("We had that unsigned message already and do not further broadcast it. blockUid={}", blockUid);
-                    return;
-                }
-
-                // We still broadcast unsigned blocks, but we do not process them further.
-                receivedBlocks.add(blockUid);
-                broadcaster.broadcast(newBlockBroadcastMessage, senderNodeAddress);
-                return;
             }
 
             if (receivedBlocks.contains(blockUid)) {
