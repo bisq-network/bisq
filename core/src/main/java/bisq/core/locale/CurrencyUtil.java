@@ -429,6 +429,12 @@ public class CurrencyUtil {
                 .findAny();
     }
 
+    // Number of decimal places the given altcoin supports on its own chain. Falls back to
+    // the default precision for BTC, fiat or any unknown/removed asset (none in registry).
+    public static int getCryptoPrecision(String currencyCode) {
+        return findAsset(currencyCode).map(Asset::getPrecision).orElse(Asset.DEFAULT_PRECISION);
+    }
+
     public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
         return assetRegistry.stream()
                 .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))

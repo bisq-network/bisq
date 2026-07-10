@@ -23,6 +23,6 @@ import bisq.asset.RegexAddressValidator;
 public class CloakCoin extends Coin {
 
     public CloakCoin() {
-        super("CloakCoin", "CLOAK", new RegexAddressValidator("^[B|C][a-km-zA-HJ-NP-Z1-9]{33}|^smY[a-km-zA-HJ-NP-Z1-9]{99}$"));
+        super("CloakCoin", "CLOAK", 6, new RegexAddressValidator("^[B|C][a-km-zA-HJ-NP-Z1-9]{33}|^smY[a-km-zA-HJ-NP-Z1-9]{99}$"));
     }
 }

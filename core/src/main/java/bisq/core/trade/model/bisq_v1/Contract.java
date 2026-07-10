@@ -472,6 +472,9 @@ public final class Contract implements NetworkPayload {
             volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
         else if (CurrencyUtil.isFiatCurrency(getOfferPayload().getCurrencyCode()))
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+        else if (CurrencyUtil.isCryptoCurrency(getOfferPayload().getCurrencyCode()))
+            volumeByAmount = VolumeUtil.getAdjustedAltcoinVolume(volumeByAmount,
+                    CurrencyUtil.getCryptoPrecision(getOfferPayload().getCurrencyCode()));
 
         return volumeByAmount;
     }

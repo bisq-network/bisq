@@ -273,6 +273,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
             volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
         else if (isFiatOffer())
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+        else if (CurrencyUtil.isCryptoCurrency(getCurrencyCode()))
+            // Round to the coin's own precision so the stated amount can actually be sent
+            // (coins with fewer than 8 decimals cannot receive Bisq's 8-decimal volume).
+            volumeByAmount = VolumeUtil.getAdjustedAltcoinVolume(volumeByAmount,
+                    CurrencyUtil.getCryptoPrecision(getCurrencyCode()));
 
         return volumeByAmount;
     }

@@ -31,7 +31,7 @@ import java.util.zip.Checksum;
 public class Mile extends Coin {
 
     public Mile() {
-        super("Mile", "MILE", new MileAddressValidator());
+        super("Mile", "MILE", 5, new MileAddressValidator());
     }
 
 
