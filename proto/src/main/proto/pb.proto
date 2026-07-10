@@ -1883,7 +1883,6 @@ message TradingPeer {
     bytes mediated_payout_tx_signature = 15;
     bytes hash_of_payment_account_payload = 16;
     repeated int32 supported_burning_man_address_list_versions = 17;
-    bool contract_dispute_agent_pub_keys_supported = 18;
 }
 
 message BsqSwapProtocolModel {
