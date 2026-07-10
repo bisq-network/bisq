@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -109,27 +108,12 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             List<Integer> supportedBurningManAddressListVersions =
                     processModel.getDelayedPayoutTxReceiverService().getSupportedBurningManAddressListVersions();
 
-
             String takersPaymentMethodId = takersPaymentAccountPayload.getPaymentMethodId();
-            PubKeyRing mediatorPubKeyRing = null;
-            PubKeyRing refundAgentPubKeyRing = null;
-            try {
-                mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(), user);
-                refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
-                        processModel.getRefundAgentManager());
-                // Set both only after both lookups pass so legacy fallback cannot leave partial trade state.
-                trade.setMediatorPubKeyRing(mediatorPubKeyRing);
-                trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
-            } catch (NullPointerException | IllegalArgumentException e) {
-                if (Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
-                    throw e;
-                }
-                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
-                log.warn("Sending legacy contract request without dispute agent pubKeyRings for trade {}. Error={}",
-                        trade.getId(), e.toString());
-                mediatorPubKeyRing = null;
-                refundAgentPubKeyRing = null;
-            }
+            PubKeyRing mediatorPubKeyRing = getCheckedMediatorPubKeyRing(trade.getMediatorNodeAddress(), user);
+            PubKeyRing refundAgentPubKeyRing = getCheckedRefundAgentPubKeyRing(trade.getRefundAgentNodeAddress(),
+                    processModel.getRefundAgentManager());
+            trade.setMediatorPubKeyRing(mediatorPubKeyRing);
+            trade.setRefundAgentPubKeyRing(refundAgentPubKeyRing);
 
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
