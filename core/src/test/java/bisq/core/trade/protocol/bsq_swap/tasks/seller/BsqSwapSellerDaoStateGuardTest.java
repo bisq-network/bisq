@@ -22,8 +22,13 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.offer.Offer;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.filter.FilterManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.Provider;
@@ -74,6 +79,7 @@ class BsqSwapSellerDaoStateGuardTest {
     private static final long MAKER_FEE = 10;
     private static final long TAKER_FEE = 10;
     private static final long TX_FEE_PER_VBYTE = 1;
+    private static final int CHAIN_HEIGHT = 1;
 
     @Test
     void sellerAsMakerRejectsBuyerBsqInputsWhenDaoStateIsNotInSync() {
@@ -168,6 +174,8 @@ class BsqSwapSellerDaoStateGuardTest {
     }
 
     private static Fixture fixture() {
+        configureFeeService();
+
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         BsqWalletService bsqWalletService = mock(BsqWalletService.class);
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
@@ -200,11 +208,29 @@ class BsqSwapSellerDaoStateGuardTest {
                 daoFacade);
     }
 
+    private static void configureFeeService() {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        FilterManager filterManager = mock(FilterManager.class);
+        when(periodService.getChainHeight()).thenReturn(CHAIN_HEIGHT);
+        when(filterManager.getFilter()).thenReturn(null);
+        when(daoStateService.getParamValueAsCoin(Param.DEFAULT_MAKER_FEE_BSQ, CHAIN_HEIGHT))
+                .thenReturn(Coin.valueOf(MAKER_FEE));
+        when(daoStateService.getParamValueAsCoin(Param.MIN_MAKER_FEE_BSQ, CHAIN_HEIGHT))
+                .thenReturn(Coin.valueOf(MAKER_FEE));
+        when(daoStateService.getParamValueAsCoin(Param.DEFAULT_TAKER_FEE_BSQ, CHAIN_HEIGHT))
+                .thenReturn(Coin.valueOf(TAKER_FEE));
+        when(daoStateService.getParamValueAsCoin(Param.MIN_TAKER_FEE_BSQ, CHAIN_HEIGHT))
+                .thenReturn(Coin.valueOf(TAKER_FEE));
+
+        new FeeService(daoStateService, periodService).onAllServicesInitialized(filterManager);
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static TaskResult runTask(BsqSwapTrade trade,
                                       Class<? extends bisq.common.taskrunner.Task> taskClass) {
         AtomicBoolean completed = new AtomicBoolean();
-        AtomicReference<String> errorMessage = new AtomicReference<>();
+        AtomicReference<String> errorMessage = new AtomicReference<>("");
         TaskRunner taskRunner = new TaskRunner(trade,
                 BsqSwapTrade.class,
                 () -> completed.set(true),

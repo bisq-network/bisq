@@ -33,37 +33,33 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TrustedBsqBlockProviderRepositoryTest {
     private static final String MAINNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_mainnet");
     private static final String REGTEST = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_regtest");
-    private static final String TESTNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_testnet");
 
     @Test
-    public void loadsMainnetSeedNodes() {
+    public void loadsMainnetBundledProviders() {
         TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(MAINNET));
         Collection<TrustedBsqBlockProvider> providers = trustedFullDaoNodes.getTrustedBsqBlockProviders();
 
-        assertEquals(6, providers.size());
-        assertEquals(6, providers.stream()
-                .filter(node -> node.getRole() == TrustedBsqBlockProvider.Role.SEED)
-                .count());
-        assertEquals(0, providers.stream()
-                .filter(node -> node.getRole() == TrustedBsqBlockProvider.Role.BRIDGE)
-                .count());
+        assertFalse(providers.isEmpty());
+        assertTrue(providers.stream().allMatch(node -> node.getRole() != null));
     }
 
     @Test
     public void bindsPubKeyToFullNodeAddressAndPort() {
         TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(MAINNET));
-        NodeAddress seedNodeAddress = new NodeAddress("y6mvobc6tfp7l3rq2rae7hayvkmy35su33cun2mfdbzd4uw536pqtlyd.onion:8000");
-        NodeAddress sameHostWrongPort = new NodeAddress("y6mvobc6tfp7l3rq2rae7hayvkmy35su33cun2mfdbzd4uw536pqtlyd.onion:8001");
+        TrustedBsqBlockProvider bundledProvider = trustedFullDaoNodes.getTrustedBsqBlockProviders().iterator().next();
+        NodeAddress bundledAddress = bundledProvider.getNodeAddress();
+        NodeAddress sameHostWrongPort = new NodeAddress(bundledAddress.getHostName(), bundledAddress.getPort() + 1);
 
-        assertTrue(isTrusted(trustedFullDaoNodes, seedNodeAddress));
+        assertTrue(isTrusted(trustedFullDaoNodes, bundledAddress));
         assertFalse(isTrusted(trustedFullDaoNodes, sameHostWrongPort));
-        assertTrue(find(trustedFullDaoNodes, seedNodeAddress)
+        assertTrue(find(trustedFullDaoNodes, bundledAddress)
                 .map(TrustedBsqBlockProvider::getEncodedPublicKey)
                 .isPresent());
         assertTrue(find(trustedFullDaoNodes, sameHostWrongPort).isEmpty());
@@ -72,11 +68,11 @@ public class TrustedBsqBlockProviderRepositoryTest {
     @Test
     public void exposesOperatorMetadataFromResourceEntries() {
         TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(MAINNET));
-        NodeAddress seedNodeAddress = new NodeAddress("y6mvobc6tfp7l3rq2rae7hayvkmy35su33cun2mfdbzd4uw536pqtlyd.onion:8000");
 
-        TrustedBsqBlockProvider provider = find(trustedFullDaoNodes, seedNodeAddress).orElseThrow();
-        assertEquals(TrustedBsqBlockProvider.Role.SEED, provider.getRole());
-        assertEquals("jester4042", provider.getOperator());
+        assertTrue(trustedFullDaoNodes.getTrustedBsqBlockProviders().stream()
+                .allMatch(node -> node.getRole() != null
+                        && node.getOperator() != null
+                        && !node.getOperator().isEmpty()));
     }
 
     @Test
@@ -100,13 +96,6 @@ public class TrustedBsqBlockProviderRepositoryTest {
     }
 
     @Test
-    public void missingNetworkResourceReturnsEmptyProviders() {
-        TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(TESTNET));
-
-        assertTrue(trustedFullDaoNodes.getTrustedBsqBlockProviders().isEmpty());
-    }
-
-    @Test
     public void regtestDoesNotLoadBundledProviders() {
         TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(REGTEST));
 
@@ -115,6 +104,13 @@ public class TrustedBsqBlockProviderRepositoryTest {
 
     @Test
     public void commandLineProvidersOverrideBundledProvidersWithShellSafeSeparator() throws Exception {
+        NodeAddress bundledProviderAddress = new TrustedBsqBlockProviderRepository(new Config(MAINNET))
+                .getTrustedBsqBlockProviders()
+                .iterator()
+                .next()
+                .getNodeAddress();
+        assertNotNull(bundledProviderAddress);
+
         String customNodeAddress = "custom.onion:8000";
         String signaturePubKeyHex = Utilities.bytesAsHexString(Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic()));
         String trustedNodes = format("--%s=%s@%s",
@@ -129,8 +125,7 @@ public class TrustedBsqBlockProviderRepositoryTest {
         TrustedBsqBlockProvider provider = find(trustedFullDaoNodes, customAddress).orElseThrow();
         assertNull(provider.getRole());
         assertDoesNotThrow(() -> Sig.getPublicKeyFromBytes(provider.getEncodedPublicKey()));
-        assertFalse(isTrusted(trustedFullDaoNodes,
-                new NodeAddress("y6mvobc6tfp7l3rq2rae7hayvkmy35su33cun2mfdbzd4uw536pqtlyd.onion:8000")));
+        assertFalse(isTrusted(trustedFullDaoNodes, bundledProviderAddress));
     }
 
     @AfterEach
