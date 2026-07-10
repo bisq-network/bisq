@@ -312,10 +312,6 @@ public final class InputsForDepositTxRequest extends TradeMessage
                 proto.hasRefundAgentPubKeyRing() ? PubKeyRing.fromProto(proto.getRefundAgentPubKeyRing()) : null);
     }
 
-    public boolean hasDisputeAgentPubKeyRings() {
-        return mediatorPubKeyRing != null && refundAgentPubKeyRing != null;
-    }
-
     @Override
     public String toString() {
         return "InputsForDepositTxRequest{" +
