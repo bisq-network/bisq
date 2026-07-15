@@ -66,16 +66,32 @@ public class DisputeValidation {
         validateDisputeData(dispute, btcWalletService, new Date());
     }
 
+    public static void validateDisputeData(Dispute dispute,
+                                           BtcWalletService btcWalletService,
+                                           Trade trade) throws ValidationException {
+        validateDisputeData(dispute,
+                btcWalletService,
+                new Date(),
+                checkNotNull(trade).getDate());
+    }
+
     static void validateDisputeData(Dispute dispute,
                                     BtcWalletService btcWalletService,
                                     Date now) throws ValidationException {
+        validateDisputeData(dispute, btcWalletService, now, null);
+    }
+
+    static void validateDisputeData(Dispute dispute,
+                                    BtcWalletService btcWalletService,
+                                    Date now,
+                                    @Nullable Date trustedTradeDate) throws ValidationException {
         try {
             Contract contract = dispute.getContract();
             checkArgument(contract.getOfferPayload().getId().equals(dispute.getTradeId()), "Invalid tradeId");
             checkArgument(dispute.getContractAsJson().equals(JsonUtil.objectToJson(contract)), "Invalid contractAsJson");
             checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
                     "Invalid contractHash");
-            validateContractDisputeAgentPubKeys(dispute, contract, now);
+            validateContractDisputeAgentPubKeys(dispute, contract, now, trustedTradeDate);
 
             Optional<Transaction> depositTx = dispute.findDepositTx(btcWalletService);
             if (depositTx.isPresent()) {
@@ -105,11 +121,14 @@ public class DisputeValidation {
         }
     }
 
-    private static void validateContractDisputeAgentPubKeys(Dispute dispute, Contract contract, Date now) {
+    private static void validateContractDisputeAgentPubKeys(Dispute dispute,
+                                                            Contract contract,
+                                                            Date now,
+                                                            @Nullable Date trustedTradeDate) {
         if (!contract.hasDisputeAgentPubKeyVersion()) {
-            // Compatibility/advisory gate only: dispute.getTradeDate() is sender-supplied payload data.
-            // Do not treat this as an auth boundary; callers must keep authenticating senders against local trade state.
-            if (Contract.requiresDisputeAgentPubKeyVersion(now, dispute.getTradeDate())) {
+            // The dispute date is sender-supplied and must not be used for this compatibility decision. The dispute
+            // agent has no local trade state, so legacy contracts can only be rejected by a peer with a local trade.
+            if (trustedTradeDate != null && Contract.requiresDisputeAgentPubKeyVersion(now, trustedTradeDate)) {
                 throw new IllegalArgumentException("Contract must include dispute agent pubKeyRings");
             }
 
