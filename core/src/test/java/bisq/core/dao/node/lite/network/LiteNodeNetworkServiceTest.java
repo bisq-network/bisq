@@ -18,6 +18,7 @@
 package bisq.core.dao.node.lite.network;
 
 import bisq.core.dao.node.full.RawBlock;
+import bisq.core.dao.node.lite.DaoBlockSignatureVerifier;
 import bisq.core.dao.node.messages.DaoBlockSignature;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
@@ -61,10 +62,12 @@ public class LiteNodeNetworkServiceTest {
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
             @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
             @Mock Connection connection) {
         doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
 
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
         CountingListener listener = new CountingListener();
         service.addListener(listener);
 
@@ -85,10 +88,12 @@ public class LiteNodeNetworkServiceTest {
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
             @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
             @Mock Connection connection) {
         doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
 
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
         CountingListener listener = new CountingListener();
         service.addListener(listener);
 
@@ -110,12 +115,14 @@ public class LiteNodeNetworkServiceTest {
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
             @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
             @Mock Connection connection) {
         doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
         NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
         doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
 
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
         CountingListener listener = new CountingListener();
         service.addListener(listener);
 
@@ -123,6 +130,7 @@ public class LiteNodeNetworkServiceTest {
         SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
                 new DaoBlockSignature(new NodeAddress("signer.onion:8000"), new byte[]{0x01}));
         NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock, signedRawBlock);
+        doReturn(true).when(daoBlockSignatureVerifier).isValid(signedRawBlock);
 
         service.onMessage(message, connection);
 
@@ -130,6 +138,34 @@ public class LiteNodeNetworkServiceTest {
         assertEquals(peerAddress, listener.lastSenderNodeAddress.get());
         assertNotNull(listener.lastNewBlockMessage.get());
         verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
+        verify(daoBlockSignatureVerifier, times(1)).isValid(signedRawBlock);
+    }
+
+    @Test
+    void ignoresNewBlockBroadcastMessageWhenSignatureIsInvalid(
+            @Mock NetworkNode networkNode,
+            @Mock PeerManager peerManager,
+            @Mock Broadcaster broadcaster,
+            @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
+            @Mock Connection connection) {
+        doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
+        RawBlock rawBlock = createRawBlock(100, "block-hash");
+        SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
+                new DaoBlockSignature(new NodeAddress("signer.onion:8000"), new byte[]{0x01}));
+        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock, signedRawBlock);
+        doReturn(false).when(daoBlockSignatureVerifier).isValid(signedRawBlock);
+
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
+        CountingListener listener = new CountingListener();
+        service.addListener(listener);
+
+        service.onMessage(message, connection);
+
+        assertEquals(0, listener.newBlockCount.get());
+        verify(broadcaster, never()).broadcast(any(NewBlockBroadcastMessage.class), any());
+        verify(daoBlockSignatureVerifier, times(1)).isValid(signedRawBlock);
     }
 
     @Test
@@ -138,12 +174,14 @@ public class LiteNodeNetworkServiceTest {
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
             @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
             @Mock Connection connection) {
         doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
         NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
         doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
 
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
         CountingListener listener = new CountingListener();
         service.addListener(listener);
 
@@ -164,12 +202,14 @@ public class LiteNodeNetworkServiceTest {
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
             @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
             @Mock Connection connection) {
         doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
         NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
         doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
 
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
         CountingListener listener = new CountingListener();
         service.addListener(listener);
 
@@ -189,12 +229,14 @@ public class LiteNodeNetworkServiceTest {
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
             @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
             @Mock Connection connection) {
         doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
         NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
         doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
 
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository);
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
         CountingListener listener = new CountingListener();
         service.addListener(listener);
 
@@ -202,6 +244,7 @@ public class LiteNodeNetworkServiceTest {
         SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
                 new DaoBlockSignature(new NodeAddress("signer.onion:8000"), new byte[]{0x01}));
         NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock, signedRawBlock);
+        doReturn(true).when(daoBlockSignatureVerifier).isValid(signedRawBlock);
 
         service.onMessage(message, connection);
         service.onMessage(message, connection);
@@ -209,6 +252,38 @@ public class LiteNodeNetworkServiceTest {
         // Second delivery must be dropped as duplicate before triggering listeners or rebroadcast.
         assertEquals(1, listener.newBlockCount.get());
         verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
+        verify(daoBlockSignatureVerifier, times(1)).isValid(signedRawBlock);
+    }
+
+    @Test
+    void doesNotRememberNewBlockBroadcastMessageWhenSignatureIsInvalid(
+            @Mock NetworkNode networkNode,
+            @Mock PeerManager peerManager,
+            @Mock Broadcaster broadcaster,
+            @Mock SeedNodeRepository seedNodeRepository,
+            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
+            @Mock Connection connection) {
+        doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
+        NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
+        doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
+
+        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
+                daoBlockSignatureVerifier);
+        CountingListener listener = new CountingListener();
+        service.addListener(listener);
+
+        RawBlock rawBlock = createRawBlock(100, "block-hash");
+        SignedRawBlock signedRawBlock = new SignedRawBlock(rawBlock,
+                new DaoBlockSignature(new NodeAddress("signer.onion:8000"), new byte[]{0x01}));
+        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock, signedRawBlock);
+        doReturn(false, true).when(daoBlockSignatureVerifier).isValid(signedRawBlock);
+
+        service.onMessage(message, connection);
+        service.onMessage(message, connection);
+
+        assertEquals(1, listener.newBlockCount.get());
+        verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
+        verify(daoBlockSignatureVerifier, times(2)).isValid(signedRawBlock);
     }
 
     private static RawBlock createRawBlock(int height, String hash) {

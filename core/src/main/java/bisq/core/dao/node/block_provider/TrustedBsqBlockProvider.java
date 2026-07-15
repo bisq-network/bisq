@@ -59,7 +59,7 @@ public final class TrustedBsqBlockProvider {
     }
 
     public static TrustedBsqBlockProvider fromResources(String entry) {
-        String[] tokens = entry.split(CONFIG_SEPARATOR, -1);
+        String[] tokens = entry.split(CONFIG_SEPARATOR);
         checkArgument(tokens.length == 4, "Invalid entry in properties entry: " + entry);
         Role role = Role.valueOf(tokens[2]);
         NodeAddress address = toNodeAddress(tokens[0]);

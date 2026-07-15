@@ -19,6 +19,7 @@ package bisq.core.dao.node.lite.network;
 
 import bisq.core.dao.node.full.DaoBlockSignatureHash;
 import bisq.core.dao.node.full.RawBlock;
+import bisq.core.dao.node.lite.DaoBlockSignatureVerifier;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.dao.node.messages.SignedRawBlock;
@@ -98,6 +99,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private final PeerManager peerManager;
     private final Broadcaster broadcaster;
     private final Collection<NodeAddress> seedNodeAddresses;
+    private final DaoBlockSignatureVerifier daoBlockSignatureVerifier;
 
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
@@ -116,12 +118,14 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public LiteNodeNetworkService(NetworkNode networkNode,
                                   PeerManager peerManager,
                                   Broadcaster broadcaster,
-                                  SeedNodeRepository seedNodesRepository) {
+                                  SeedNodeRepository seedNodesRepository,
+                                  DaoBlockSignatureVerifier daoBlockSignatureVerifier) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
+        this.daoBlockSignatureVerifier = daoBlockSignatureVerifier;
     }
 
 
@@ -254,6 +258,15 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             if (receivedBlocks.contains(blockUid)) {
                 log.debug("We had that message already and do not further broadcast it. blockUid={}", blockUid);
                 return;
+            }
+
+            if (signedRawBlock != null) {
+                // Skipping signature verification is handled by daoBlockSignatureVerifier.isValid.
+                if (!daoBlockSignatureVerifier.isValid(signedRawBlock)) {
+                    log.warn("We received a newBlockBroadcastMessage with an invalid signature. " +
+                            "newBlockBroadcastMessage={}", newBlockBroadcastMessage);
+                    return;
+                }
             }
 
             log.info("We received a NewBlockBroadcastMessage from peer {}. blockUid={}", senderNodeAddress, blockUid);
