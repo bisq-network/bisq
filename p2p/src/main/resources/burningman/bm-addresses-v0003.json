@@ -97,6 +97,33 @@
     {
       "receiverAddress": "bc1qzd32m5f3q8rnf03jg9hasg0fg2rxsjhh0569vx",
       "cappedBurnAmountShare": 0.10737112476977304
-    }
+    },
+      {
+          "receiverAddress": "bc1q2dgz3rw9xn2h3retkxup5cy9w0qlf78fsddhly",
+          "cappedBurnAmountShare": 0
+      },
+      {
+          "receiverAddress": "bc1qednn4ngkj5ft0grlxun8zvp64fp5tsrd4l577t",
+          "cappedBurnAmountShare": 0
+      },
+      {
+          "receiverAddress": "bc1qeps4z32wtv7qu5x5a4u2ypd4rpgjckq7qvahzq",
+          "cappedBurnAmountShare": 0
+      },
+      {
+          "receiverAddress": "bc1q3twxd5hl3xekwr2d7vea5rvcja44ht0qadhrkd",
+          "cappedBurnAmountShare": 0
+      },
+      {
+          "receiverAddress": "bc1qps3r5vcsm6yl48rh5pzlvv38mg9pcu3ug3amy7",
+          "cappedBurnAmountShare": 0
+      }
   ]
 }
+
+
+
+
+
+
+
