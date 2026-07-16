@@ -15,6 +15,14 @@
       "cappedBurnAmountShare": 0.031514658447296874
     },
     {
+      "receiverAddress": "bc1q2dgz3rw9xn2h3retkxup5cy9w0qlf78fsddhly",
+      "cappedBurnAmountShare": 0
+    },
+    {
+      "receiverAddress": "bc1q3twxd5hl3xekwr2d7vea5rvcja44ht0qadhrkd",
+      "cappedBurnAmountShare": 0
+    },
+    {
       "receiverAddress": "bc1q4u5hcp3h9shh6samvyhqkvvvenw8935lkgg5d9",
       "cappedBurnAmountShare": 0.043701425464010984
     },
@@ -45,6 +53,14 @@
     {
       "receiverAddress": "bc1qdar9x3ppnycxqc8mjfgdm7tdm9fxglvalpxq4u",
       "cappedBurnAmountShare": 0.07019576192004091
+    },
+    {
+      "receiverAddress": "bc1qednn4ngkj5ft0grlxun8zvp64fp5tsrd4l577t",
+      "cappedBurnAmountShare": 0
+    },
+    {
+      "receiverAddress": "bc1qeps4z32wtv7qu5x5a4u2ypd4rpgjckq7qvahzq",
+      "cappedBurnAmountShare": 0
     },
     {
       "receiverAddress": "bc1qg5yf89a75g94yqya9z5fmzn3c75v9dgtsu4mnj",
@@ -79,6 +95,10 @@
       "cappedBurnAmountShare": 0.0077654415470305785
     },
     {
+      "receiverAddress": "bc1qps3r5vcsm6yl48rh5pzlvv38mg9pcu3ug3amy7",
+      "cappedBurnAmountShare": 0
+    },
+    {
       "receiverAddress": "bc1qrvwaas072xtgkag6ujjsxeyadvtvryeuq20qkl",
       "cappedBurnAmountShare": 0.052650466308017695
     },
@@ -97,33 +117,6 @@
     {
       "receiverAddress": "bc1qzd32m5f3q8rnf03jg9hasg0fg2rxsjhh0569vx",
       "cappedBurnAmountShare": 0.10737112476977304
-    },
-      {
-          "receiverAddress": "bc1q2dgz3rw9xn2h3retkxup5cy9w0qlf78fsddhly",
-          "cappedBurnAmountShare": 0
-      },
-      {
-          "receiverAddress": "bc1qednn4ngkj5ft0grlxun8zvp64fp5tsrd4l577t",
-          "cappedBurnAmountShare": 0
-      },
-      {
-          "receiverAddress": "bc1qeps4z32wtv7qu5x5a4u2ypd4rpgjckq7qvahzq",
-          "cappedBurnAmountShare": 0
-      },
-      {
-          "receiverAddress": "bc1q3twxd5hl3xekwr2d7vea5rvcja44ht0qadhrkd",
-          "cappedBurnAmountShare": 0
-      },
-      {
-          "receiverAddress": "bc1qps3r5vcsm6yl48rh5pzlvv38mg9pcu3ug3amy7",
-          "cappedBurnAmountShare": 0
-      }
+    }
   ]
 }
-
-
-
-
-
-
-
