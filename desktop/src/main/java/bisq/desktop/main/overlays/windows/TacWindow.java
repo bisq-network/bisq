@@ -30,6 +30,7 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -497,11 +498,15 @@ public class TacWindow extends Overlay<TacWindow> {
         titleLabel.setMinWidth(0);
         titleLabel.setMaxWidth(Double.MAX_VALUE);
 
-        Label bodyLabel = new Label(body);
-        bodyLabel.getStyleClass().add("tac-agreement-legal-section-body");
+        TextArea bodyLabel = new TextArea(body);
+        bodyLabel.setEditable(false);
         bodyLabel.setWrapText(true);
+        bodyLabel.setFocusTraversable(false);
+        bodyLabel.getStyleClass().add("tac-agreement-legal-section-body");
         bodyLabel.setMinWidth(0);
         bodyLabel.setMaxWidth(Double.MAX_VALUE);
+        bodyLabel.setMinHeight(Region.USE_PREF_SIZE);
+        bodyLabel.setPrefRowCount(6);
 
         textBox.getChildren().addAll(titleLabel, bodyLabel);
         section.getChildren().addAll(numberLabel, textBox);
