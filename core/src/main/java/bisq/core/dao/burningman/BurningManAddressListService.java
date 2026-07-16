@@ -264,8 +264,6 @@ public class BurningManAddressListService {
                 "receiverAddress must not be blank in %s", fileName);
         checkArgument(new TreeSet<>(receiverAddresses).size() == receiverAddresses.size(),
                 "receiverAddress values must be unique in %s", fileName);
-        checkArgument(new ArrayList<>(new TreeSet<>(receiverAddresses)).equals(receiverAddresses),
-                "entries must be sorted by receiverAddress in %s", fileName);
         checkArgument(addressList.getEntries().stream()
                         .allMatch(entry -> Double.isFinite(entry.getCappedBurnAmountShare()) &&
                                 entry.getCappedBurnAmountShare() >= 0),
