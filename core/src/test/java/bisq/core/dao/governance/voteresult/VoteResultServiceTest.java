@@ -53,6 +53,7 @@ import javax.crypto.SecretKey;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -62,6 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -237,6 +239,120 @@ class VoteResultServiceTest {
         assertFalse(vote.isAccepted());
         assertEquals(123_456, decryptedBallotsWithMerits.getStake());
         assertTrue(decryptedBallotsWithMerits.getMeritList().getList().isEmpty());
+    }
+
+    @Test
+    void getMeritDecryptableBlindVoteListDropsPayloadWithMalformedMerit() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BlindVote malformedBlindVote = blindVoteWithMalformedMerit(secretKey, true);
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        BlindVoteListService blindVoteListService = mock(BlindVoteListService.class);
+        when(blindVoteListService.getBlindVotesInPhaseAndCycle()).thenReturn(List.of(malformedBlindVote));
+        VoteResultService voteResultService = voteResultService(daoStateService,
+                periodService,
+                blindVoteListService,
+                proposal);
+
+        Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId = Map.of(
+                BLIND_VOTE_TX_ID,
+                VoteRevealConsensus.getOpReturnData(new byte[20], secretKey));
+
+        List<BlindVote> result =
+                voteResultService.getMeritDecryptableBlindVoteList(voteRevealOpReturnDataByBlindVoteTxId);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getMeritDecryptableBlindVoteListKeepsHonestPayload() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BlindVote honestBlindVote = blindVote(secretKey, true);
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        BlindVoteListService blindVoteListService = mock(BlindVoteListService.class);
+        when(blindVoteListService.getBlindVotesInPhaseAndCycle()).thenReturn(List.of(honestBlindVote));
+        VoteResultService voteResultService = voteResultService(daoStateService,
+                periodService,
+                blindVoteListService,
+                proposal);
+
+        Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId = Map.of(
+                BLIND_VOTE_TX_ID,
+                VoteRevealConsensus.getOpReturnData(new byte[20], secretKey));
+
+        List<BlindVote> result =
+                voteResultService.getMeritDecryptableBlindVoteList(voteRevealOpReturnDataByBlindVoteTxId);
+
+        assertEquals(List.of(honestBlindVote), result);
+    }
+
+    @Test
+    void getMeritDecryptableBlindVoteListKeepsPayloadWithoutObservedVoteReveal() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        // The payload has malformed merit, but since no vote reveal is on-chain we cannot yet judge it.
+        // It must be kept because it may still be needed to reconstruct the majority hash.
+        BlindVote malformedBlindVote = blindVoteWithMalformedMerit(secretKey, true);
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        BlindVoteListService blindVoteListService = mock(BlindVoteListService.class);
+        when(blindVoteListService.getBlindVotesInPhaseAndCycle()).thenReturn(List.of(malformedBlindVote));
+        VoteResultService voteResultService = voteResultService(daoStateService,
+                periodService,
+                blindVoteListService,
+                proposal);
+
+        List<BlindVote> result = voteResultService.getMeritDecryptableBlindVoteList(Map.of());
+
+        assertEquals(List.of(malformedBlindVote), result);
+    }
+
+    @Test
+    void malformedMeritDuplicateDoesNotPreventVoteResultCalculation() throws Exception {
+        // Regression test for report19: attacker delivers a same-txid forged blind vote payload with a
+        // malformed encryptedMeritList alongside the honest payload. The pre-filter must drop the forged
+        // payload so the honest one is picked for majority hash matching and vote result calculation.
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BlindVote honestBlindVote = blindVote(secretKey, false);
+        BlindVote forgedBlindVote = blindVoteWithMalformedMerit(secretKey, false);
+        byte[] majorityBlindVoteListHash = VoteRevealConsensus.getHashOfBlindVoteList(List.of(honestBlindVote));
+
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        BlindVoteListService blindVoteListService = mock(BlindVoteListService.class);
+        MissingDataRequestService missingDataRequestService = mock(MissingDataRequestService.class);
+        when(blindVoteListService.getBlindVotesInPhaseAndCycle())
+                .thenReturn(List.of(forgedBlindVote, honestBlindVote));
+        configureVoteRevealBlockchainData(daoStateService,
+                periodService,
+                secretKey,
+                majorityBlindVoteListHash);
+        when(periodService.getFirstBlockOfPhase(ACTIVATION_HEIGHT, DaoPhase.Phase.RESULT))
+                .thenReturn(ACTIVATION_HEIGHT);
+        VoteResultService voteResultService = voteResultService(daoStateService,
+                periodService,
+                blindVoteListService,
+                missingDataRequestService,
+                proposal);
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(ACTIVATION_HEIGHT);
+
+        voteResultService.onParseBlockComplete(block);
+
+        // The forged payload was filtered out, majority hash matched, and the honest payload was decrypted
+        // into a valid DecryptedBallotsWithMerits set. No republish request was needed. We do not verify
+        // downstream steps (addEvaluatedProposalSet, proposal evaluation) because they require more mocking
+        // of param values unrelated to the reported issue.
+        verify(daoStateService).addDecryptedBallotsWithMeritsSet(anySet());
+        verifyNoInteractions(missingDataRequestService);
     }
 
     @Test
