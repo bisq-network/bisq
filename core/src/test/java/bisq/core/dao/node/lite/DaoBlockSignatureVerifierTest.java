@@ -72,6 +72,20 @@ public class DaoBlockSignatureVerifierTest {
     }
 
     @Test
+    public void acceptsSignatureFromSecondTrustedNode() throws Exception {
+        KeyPair firstKeyPair = Sig.generateKeyPair();
+        KeyPair secondKeyPair = Sig.generateKeyPair();
+        RawBlock rawBlock = createRawBlock("block-hash");
+        SignedRawBlock signedRawBlock = createSignedRawBlock(rawBlock, SECOND_SIGNER_NODE_ADDRESS, secondKeyPair);
+        DaoBlockSignatureVerifier verifier = new DaoBlockSignatureVerifier(new TestTrustedBsqBlockProviderRepository(
+                Map.of(SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(firstKeyPair.getPublic()),
+                        SECOND_SIGNER_NODE_ADDRESS, Sig.getPublicKeyBytes(secondKeyPair.getPublic()))),
+                new Config(MAINNET));
+
+        assertTrue(verifier.isValid(signedRawBlock));
+    }
+
+    @Test
     public void rejectsSignatureFromUntrustedNode() throws Exception {
         KeyPair keyPair = Sig.generateKeyPair();
         RawBlock rawBlock = createRawBlock("block-hash");
