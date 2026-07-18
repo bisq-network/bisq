@@ -104,11 +104,13 @@ class GetBlocksRequestHandler {
                 .collect(Collectors.toCollection(LinkedList::new));
         boolean supportsSignedDaoBlocks = supportsSignedDaoBlocks(getBlocksRequest);
         GetBlocksResponse getBlocksResponse;
+        long ts1 = System.currentTimeMillis();
         if (supportsSignedDaoBlocks) {
             List<SignedRawBlock> signedRawBlocks = rawBlocks.stream()
                     .map(rawBlock -> daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress()))
                     .collect(Collectors.toCollection(LinkedList::new));
             getBlocksResponse = GetBlocksResponse.forSignedBlocks(signedRawBlocks, getBlocksRequest.getNonce());
+            log.info("Signing {} blocks took {} ms", signedRawBlocks.size(), System.currentTimeMillis() - ts1);
         } else {
             getBlocksResponse = GetBlocksResponse.forUnsignedBlocks(rawBlocks, getBlocksRequest.getNonce());
         }
