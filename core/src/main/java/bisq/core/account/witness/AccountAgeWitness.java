@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload;
 
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.Utilities;
@@ -40,7 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
-public class AccountAgeWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload, DateTolerantPayload {
+public class AccountAgeWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
+        DateTolerantPayload, SeedNodeOnlyInitialDataResponsePayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes

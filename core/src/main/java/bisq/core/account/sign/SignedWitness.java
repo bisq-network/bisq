@@ -22,6 +22,7 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -46,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 public class SignedWitness implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
-        DateTolerantPayload, CapabilityRequiringPayload {
+        DateTolerantPayload, CapabilityRequiringPayload, SeedNodeOnlyInitialDataResponsePayload {
 
     public enum VerificationMethod {
         ARBITRATOR,

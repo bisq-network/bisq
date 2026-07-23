@@ -73,7 +73,9 @@ remainingBurningManWeight = 10000 - sum(filterWeights)
 ```
 
 The configured filter receivers are added first with their explicit weights. The remaining weight is then delegated to
-Burning Man receiver selection.
+Burning Man receiver selection. The Burning Man remainder uses the latest enforceable local Burning Man address list:
+candidates whose receiver address is outside the list are skipped, and the address list's legacy Burning Man address gets
+the fallback weight for filtered, rounded, capped, or missing Burning Man receiver share.
 
 For the Burning Man remainder:
 
@@ -81,9 +83,9 @@ For the Burning Man remainder:
 candidateWeight = floor(cappedBurnAmountShare * remainingBurningManWeight)
 ```
 
-If active Burning Man candidates do not fill the whole remainder because of rounding, caps, or missing receiver
-addresses, the gap is assigned to the legacy Burning Man address. If there are no active Burning Man candidates, the
-whole remainder is assigned to the legacy Burning Man address.
+If active Burning Man candidates do not fill the whole remainder because of address-list filtering, rounding, caps, or
+missing receiver addresses, the gap is assigned to the legacy Burning Man address. If there are no active Burning Man
+candidates after filtering, the whole remainder is assigned to the legacy Burning Man address.
 
 The final receiver is selected with the existing weighted random selector over the combined filter-receiver and Burning
 Man receiver weights.
@@ -139,8 +141,10 @@ normally be rejected before they reach the network.
 
 ## Mempool Validation
 
-BTC fee transaction mempool validation must accept any configured filter receiver address. `MempoolService` extracts the
-configured addresses from the active filter and adds them to the known BTC fee receiver list.
+BTC fee transaction mempool validation must accept any configured filter receiver address and any address-list legacy
+fallback that `BtcFeeReceiverService` can select. `MempoolService` extracts the configured addresses from the active
+filter and adds them to the known BTC fee receiver list, and also adds the latest current-network Burning Man address
+list's legacy address.
 
 If the filter receiver configuration is invalid, the extracted address list is empty and mempool validation continues to
 use the existing DAO donation and Burning Man receiver addresses.

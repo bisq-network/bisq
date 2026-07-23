@@ -64,7 +64,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                             String link,
                             byte version,
                             long creationDate,
-                            String txId,
+                            @Nullable String txId,
                             @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
@@ -139,7 +139,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(@Nullable String txId) {
         return new GenericProposal(getName(),
                 getLink(),
                 getVersion(),

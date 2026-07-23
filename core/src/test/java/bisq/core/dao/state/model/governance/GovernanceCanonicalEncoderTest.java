@@ -234,7 +234,7 @@ public class GovernanceCanonicalEncoderTest {
                 Coin.valueOf(100_000),
                 "B1111111111111111111111111111111111",
                 extraDataMap)
-                .cloneProposalAndAddTxId("proposal-tx");
+                .cloneProposal("proposal-tx");
 
         assertArrayEquals(proposal.toProtoMessage().toByteArray(),
                 proposal.encodeCanonical(CanonicalEncoder.DEFAULT));

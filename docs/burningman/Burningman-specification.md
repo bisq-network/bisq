@@ -251,6 +251,8 @@ The legacy Burning Man is a fallback, not a normal candidate in the main candida
 
 - DPT legacy address comes from DAO param `RECIPIENT_BTC_ADDRESS` at the relevant chain height, unless an enforceable
   Burning Man address list supplies its own `legacyBurningManAddress`.
+- BTC-fee selection uses the latest enforceable local Burning Man address list's `legacyBurningManAddress` for Burning
+  Man fallback weight, and otherwise falls back to the DAO param address at the current chain height.
 - BTC-fee legacy address for historical accounting is fixed:
   `38bZBj5peYS3Husdz7AH3gEUiUbYRD951t`.
 - `LegacyBurningMan` does not apply compensation-share caps.
@@ -278,8 +280,10 @@ the remaining probability is delegated to the Burning Man selection below. See
 `docs/burningman/filter-controlled-btc-fee-receiver-routing.md` for that filter-controlled routing spec.
 
 1. Get active candidates at the current DAO chain height.
-2. If none exist, return the legacy Burning Man address.
-3. Convert each candidate share to integer weight:
+2. Load the latest local Burning Man address list. If it is for the current network, skip candidates whose receiver
+   address is not in the list's allowed address set.
+3. If no candidates remain, return the legacy Burning Man address.
+4. Convert each candidate share to integer weight:
 
 ```text
 weight = floor(cappedBurnAmountShare * 10000)
@@ -287,11 +291,13 @@ weight = floor(cappedBurnAmountShare * 10000)
 
 This gives 0.01% granularity. Zero-weight entries are effectively ignored.
 
-4. Sum weights. If the sum is below `10000`, append a legacy Burning Man weight for the missing remainder.
-5. Draw a random target from `[1, sum]` and return the cumulative-weight winner.
-6. If the winner is the appended legacy entry, return the legacy Burning Man address.
+5. Sum weights. If the sum is below `10000`, append a legacy Burning Man weight for the missing remainder.
+6. Draw a random target from `[1, sum]` and return the cumulative-weight winner.
+7. If the winner is the appended legacy entry, return the legacy Burning Man address.
 
 This selection is weighted random and not deterministic across peers. It is not used for DPT verification.
+Unlike DPT receiver filtering, BTC-fee receiver filtering only checks whether the candidate address is allowed; it does
+not enforce address-list capped share ranges.
 
 ## Delayed Payout Transaction Receiver Selection
 

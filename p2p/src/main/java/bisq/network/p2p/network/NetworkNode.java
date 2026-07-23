@@ -121,13 +121,19 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress,
                                                   NetworkEnvelope networkEnvelope) {
+        return sendMessage(peersNodeAddress, networkEnvelope, true);
+    }
+
+    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress,
+                                                  NetworkEnvelope networkEnvelope,
+                                                  boolean allowInboundConnection) {
         log.debug("Send {} to {}. Message details: {}",
                 networkEnvelope.getClass().getSimpleName(), peersNodeAddress, Utilities.toTruncatedString(networkEnvelope));
 
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Connection connection = getOutboundConnection(peersNodeAddress);
-        if (connection == null)
+        if (connection == null && allowInboundConnection)
             connection = getInboundConnection(peersNodeAddress);
 
         if (connection != null) {
@@ -159,7 +165,11 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
 
                 // Tor needs sometimes quite long to create a connection. To avoid that we get too many
                 // connections with the same peer we check again if we still don't have any connection for that node address.
-                Connection existingConnection = getInboundConnection(peersNodeAddress);
+                Connection existingConnection = null;
+                if (allowInboundConnection) {
+                    existingConnection = getInboundConnection(peersNodeAddress);
+                }
+
                 if (existingConnection == null)
                     existingConnection = getOutboundConnection(peersNodeAddress);
 

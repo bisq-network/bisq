@@ -41,10 +41,15 @@ import lombok.extern.slf4j.Slf4j;
 public final class GetBlocksResponse extends NetworkEnvelope implements DirectMessage,
         ExtendedDataSizePermission, InitialDataResponse {
     private final List<RawBlock> blocks;
+    private final List<SignedRawBlock> signedRawBlocks;
     private final int requestNonce;
 
-    public GetBlocksResponse(List<RawBlock> blocks, int requestNonce) {
-        this(blocks, requestNonce, Version.getP2PMessageVersion());
+    public static GetBlocksResponse forUnsignedBlocks(List<RawBlock> blocks, int requestNonce) {
+        return new GetBlocksResponse(blocks, List.of(), requestNonce, Version.getP2PMessageVersion());
+    }
+
+    public static GetBlocksResponse forSignedBlocks(List<SignedRawBlock> signedRawBlocks, int requestNonce) {
+        return new GetBlocksResponse(List.of(), signedRawBlocks, requestNonce, Version.getP2PMessageVersion());
     }
 
 
@@ -52,9 +57,13 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetBlocksResponse(List<RawBlock> blocks, int requestNonce, int messageVersion) {
+    private GetBlocksResponse(List<RawBlock> blocks,
+                              List<SignedRawBlock> signedRawBlocks,
+                              int requestNonce,
+                              int messageVersion) {
         super(messageVersion);
         this.blocks = blocks;
+        this.signedRawBlocks = signedRawBlocks;
         this.requestNonce = requestNonce;
     }
 
@@ -64,6 +73,9 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
                 .setGetBlocksResponse(protobuf.GetBlocksResponse.newBuilder()
                         .addAllRawBlocks(blocks.stream()
                                 .map(RawBlock::toProtoMessage)
+                                .collect(Collectors.toList()))
+                        .addAllSignedRawBlocks(signedRawBlocks.stream()
+                                .map(SignedRawBlock::toProtoMessage)
                                 .collect(Collectors.toList()))
                         .setRequestNonce(requestNonce))
                 .build();
@@ -75,10 +87,15 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
         List<RawBlock> list = proto.getRawBlocksList().stream()
                 .map(RawBlock::fromProto)
                 .collect(Collectors.toList());
-        log.info("\n\n<< Received a GetBlocksResponse with {} blocks and {} kB size\n", list.size(), proto.getSerializedSize() / 1000d);
+        List<SignedRawBlock> signedRawBlocks = proto.getSignedRawBlocksList().stream()
+                .map(SignedRawBlock::fromProto)
+                .collect(Collectors.toList());
+        log.info("\n\n<< Received a GetBlocksResponse with {} raw blocks, {} signed blocks and {} kB size\n",
+                list.size(), signedRawBlocks.size(), proto.getSerializedSize() / 1000d);
         return new GetBlocksResponse(proto.getRawBlocksList().isEmpty() ?
                 new ArrayList<>() :
                 list,
+                signedRawBlocks,
                 proto.getRequestNonce(),
                 messageVersion);
     }
@@ -88,6 +105,7 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
     public String toString() {
         return "GetBlocksResponse{" +
                 "\n     blocks=" + blocks +
+                ",\n     signedRawBlocks=" + signedRawBlocks +
                 ",\n     requestNonce=" + requestNonce +
                 "\n} " + super.toString();
     }

@@ -39,10 +39,10 @@ import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -63,9 +63,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 public final class Contract implements NetworkPayload {
     public static final int VERSION_WITH_DISPUTE_AGENT_PUB_KEYS = 2;
-    // GregorianCalendar months are zero-based.
+
+    // We enforce the version when released, thus in new trades we do require the new pub keys.
+    // Only for persisted trades we use the trade date, and if after DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE we also require the new pub keys.
     public static final Date DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE =
-            Utilities.getUTCDate(2026, GregorianCalendar.SEPTEMBER, 1);
+            Utilities.getUTCDate(2026, GregorianCalendar.AUGUST, 1);
 
     private final OfferPayload offerPayload;
     private final long tradeAmount;
@@ -492,9 +494,6 @@ public final class Contract implements NetworkPayload {
                 object.has("contractVersion");
     }
 
-    public static boolean requiresDisputeAgentPubKeyVersion(long tradeDate) {
-        return requiresDisputeAgentPubKeyVersion(new Date(), tradeDate);
-    }
 
     public static boolean requiresDisputeAgentPubKeyVersion(Date now, @Nullable Date tradeDate) {
         return requiresDisputeAgentPubKeyVersion(now, tradeDate == null ? 0 : tradeDate.getTime());

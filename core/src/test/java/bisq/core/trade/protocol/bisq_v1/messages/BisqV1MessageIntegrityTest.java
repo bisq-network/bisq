@@ -38,7 +38,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class BisqV1MessageIntegrityTest {
@@ -341,7 +340,6 @@ public class BisqV1MessageIntegrityTest {
                 request.toProtoNetworkEnvelope().getInputsForDepositTxRequest(),
                 request.getMessageVersion());
 
-        assertTrue(fromProto.hasDisputeAgentPubKeyRings());
         assertEquals(mediatorPubKeyRing, fromProto.getMediatorPubKeyRing());
         assertEquals(refundAgentPubKeyRing, fromProto.getRefundAgentPubKeyRing());
     }

@@ -85,7 +85,7 @@ public class P2PDataStorageGetDataIntegrationTest {
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
 
         TestState.SavedTestState beforeState = clientNodeTestState.saveTestState(onSeedNode);
-        clientNode.processGetDataResponse(getDataResponse, null);
+        clientNode.processGetDataResponse(getDataResponse, null, true);
 
         clientNodeTestState.verifyProtectedStorageAdd(
                 beforeState, onSeedNode, true, true, false, true);
@@ -115,7 +115,7 @@ public class P2PDataStorageGetDataIntegrationTest {
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
 
         TestState.SavedTestState beforeState = clientNodeTestState.saveTestState(transientEntry);
-        clientNode.processGetDataResponse(getDataResponse, null);
+        clientNode.processGetDataResponse(getDataResponse, null, true);
 
         clientNodeTestState.verifyProtectedStorageAdd(
                 beforeState, transientEntry, true, true, false, true);
@@ -148,7 +148,7 @@ public class P2PDataStorageGetDataIntegrationTest {
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
 
         TestState.SavedTestState beforeState = clientNodeTestState.saveTestState(persistentEntry);
-        clientNode.processGetDataResponse(getDataResponse, null);
+        clientNode.processGetDataResponse(getDataResponse, null, true);
 
         clientNodeTestState.verifyProtectedStorageAdd(
                 beforeState, persistentEntry, false, false, false, false);
@@ -184,7 +184,7 @@ public class P2PDataStorageGetDataIntegrationTest {
                 getDataRequest, 1, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
 
         TestState.SavedTestState beforeState = clientNodeTestState.saveTestState(onSeedNodeAndClientNode);
-        clientNode.processGetDataResponse(getDataResponse, null);
+        clientNode.processGetDataResponse(getDataResponse, null, true);
 
         // Should succeed
         clientNodeTestState.verifyProtectedStorageRemove(
