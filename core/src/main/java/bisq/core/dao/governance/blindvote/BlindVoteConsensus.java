@@ -23,7 +23,6 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
-import bisq.core.dao.state.model.governance.MeritList;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.CryptoException;
@@ -103,8 +102,8 @@ public class BlindVoteConsensus {
             outputStream.write(OpReturnType.BLIND_VOTE.getType());
             outputStream.write(Version.BLIND_VOTE);
             outputStream.write(hash);
-            final byte[] bytes = outputStream.toByteArray();
-            log.info("OpReturnData: " + Utilities.bytesAsHexString(bytes));
+            byte[] bytes = outputStream.toByteArray();
+            log.debug("OpReturnData: " + Utilities.bytesAsHexString(bytes));
             return bytes;
         } catch (IOException e) {
             // Not expected to happen ever

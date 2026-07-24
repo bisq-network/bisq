@@ -21,12 +21,16 @@ import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterPolicyService;
 
+import bisq.common.config.Config;
+
 import com.google.common.primitives.Longs;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.random.RandomGenerator;
+
+import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +40,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class BtcFeeReceiverServiceTest {
+    private static final int LIST_VERSION = 1;
+    private static final int SELECTION_HEIGHT = 767950;
+    private static final String LEGACY_ADDRESS = "legacyAddress";
+    private static final String LIST_LEGACY_ADDRESS = "listLegacyAddress";
+    private static final String ALLOWED_ADDRESS = "allowedAddress";
+    private static final String UNLISTED_ADDRESS = "unlistedAddress";
     private static final String ADDRESS_1 = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT";
     private static final String ADDRESS_2 = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
 
@@ -170,25 +180,183 @@ public class BtcFeeReceiverServiceTest {
         assertEquals(BtcFeeReceiverService.RECEIVER_SELECTION_CEILING, random.getLastBound());
     }
 
+    @Test
+    public void getAddressFiltersCandidatesNotInLatestAddressList() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(1))),
+                List.of(candidate(ALLOWED_ADDRESS, 1),
+                        candidate(UNLISTED_ADDRESS, 1)));
+
+        assertEquals(ALLOWED_ADDRESS, service.getAddress());
+    }
+
+    @Test
+    public void getAddressUsesAddressListLegacyAddressForRemainder() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(0))),
+                List.of(candidate(ALLOWED_ADDRESS, 0)));
+
+        assertEquals(LIST_LEGACY_ADDRESS, service.getAddress());
+    }
+
+    @Test
+    public void getAddressReturnsAddressListLegacyAddressWhenAllCandidatesAreFiltered() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(1))),
+                List.of(candidate(UNLISTED_ADDRESS, 1)));
+
+        assertEquals(LIST_LEGACY_ADDRESS, service.getAddress());
+    }
+
+    @Test
+    public void getAddressKeepsAllowedCandidateWhenShareDiffersFromAddressList() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(0.05))),
+                List.of(candidate(ALLOWED_ADDRESS, 1)));
+
+        assertEquals(ALLOWED_ADDRESS, service.getAddress(new RecordingRandomGenerator(500)));
+    }
+
+    @Test
+    public void getAddressKeepsAllowedDuplicateCandidatesForSameAddress() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(0.05))),
+                List.of(candidate(ALLOWED_ADDRESS, 0.05),
+                        candidate(ALLOWED_ADDRESS, 0.05)));
+
+        assertEquals(ALLOWED_ADDRESS, service.getAddress(new RecordingRandomGenerator(500)));
+    }
+
+    @Test
+    public void getAddressIgnoresNetworkMismatchedAddressList() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList("OTHER_NETWORK", List.of(entry(1))),
+                List.of(candidate(UNLISTED_ADDRESS, 1)));
+
+        assertEquals(UNLISTED_ADDRESS, service.getAddress());
+    }
+
+    @Test
+    public void getAddressRedirectsAttackerShareToAddressListLegacyAddress() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(0.05))),
+                List.of(candidate("attacker1", 0.4),
+                        candidate("attacker2", 0.4),
+                        candidate(ALLOWED_ADDRESS, 0.05)));
+
+        // After filtering, weights are [500, 9500] (allowed candidate + legacy gap fill).
+        // Target=101 lands in the allowed range [1, 500].
+        assertEquals(ALLOWED_ADDRESS, service.getAddress(new RecordingRandomGenerator(100)));
+        // Target=5001 lands in the legacy remainder range [501, 10000].
+        assertEquals(LIST_LEGACY_ADDRESS, service.getAddress(new RecordingRandomGenerator(5000)));
+    }
+
+    @Test
+    public void getAddressFiltersCandidateWithMissingReceiverAddress() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(1))),
+                List.of(candidate(null, 1)));
+
+        assertEquals(LIST_LEGACY_ADDRESS, service.getAddress());
+    }
+
+    @Test
+    public void getAddressAllowsCandidateMatchingAddressListLegacyAddress() {
+        BtcFeeReceiverService service = newService(
+                List.of(),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(1))),
+                List.of(candidate(LIST_LEGACY_ADDRESS, 1)));
+
+        assertEquals(LIST_LEGACY_ADDRESS, service.getAddress());
+    }
+
+    @Test
+    public void weightedFilterRemainderUsesAddressListLegacyWhenBurningManCandidatesAreFiltered() {
+        BtcFeeReceiverService service = newService(
+                List.of(ADDRESS_1 + "#0.5"),
+                addressList(Config.baseCurrencyNetwork().name(), List.of(entry(1))),
+                List.of(candidate(UNLISTED_ADDRESS, 1)));
+        RecordingRandomGenerator random = new RecordingRandomGenerator(6000);
+
+        assertEquals(LIST_LEGACY_ADDRESS, service.getAddress(random));
+        assertEquals(BtcFeeReceiverService.RECEIVER_SELECTION_CEILING, random.getLastBound());
+    }
+
     private static BtcFeeReceiverService newService(List<String> filterReceivers,
+                                                    List<BurningManCandidate> candidates) {
+        return newService(filterReceivers,
+                addressList(Config.baseCurrencyNetwork().name(), LEGACY_ADDRESS, entriesForCandidates(candidates)),
+                candidates);
+    }
+
+    private static BtcFeeReceiverService newService(List<String> filterReceivers,
+                                                    BurningManAddressList addressList,
                                                     List<BurningManCandidate> candidates) {
         DaoStateService daoStateService = mock(DaoStateService.class);
         when(daoStateService.getLastBlock()).thenReturn(Optional.empty());
         BurningManService burningManService = mock(BurningManService.class);
         when(burningManService.getActiveBurningManCandidates(0)).thenReturn(candidates);
-        when(burningManService.getLegacyBurningManAddress(0)).thenReturn("legacyAddress");
+        when(burningManService.getLegacyBurningManAddress(0)).thenReturn(LEGACY_ADDRESS);
+        BurningManAddressListService burningManAddressListService = mock(BurningManAddressListService.class);
+        when(burningManAddressListService.getLatestVersion()).thenReturn(LIST_VERSION);
+        when(burningManAddressListService.getAddressList(LIST_VERSION)).thenReturn(addressList);
         FilterPolicyService filterPolicyService = mock(FilterPolicyService.class);
         when(filterPolicyService.getBtcFeeReceiverAddresses()).thenReturn(filterReceivers);
-        return new BtcFeeReceiverService(daoStateService, burningManService, filterPolicyService);
+        return new BtcFeeReceiverService(daoStateService,
+                burningManService,
+                burningManAddressListService,
+                filterPolicyService);
     }
 
-    private static BurningManCandidate candidate(String receiverAddress, double cappedBurnAmountShare) {
+    private static BurningManAddressList addressList(String network,
+                                                     List<BurningManAddressList.Entry> entries) {
+        return addressList(network, LIST_LEGACY_ADDRESS, entries);
+    }
+
+    private static BurningManAddressList addressList(String network,
+                                                     String legacyBurningManAddress,
+                                                     List<BurningManAddressList.Entry> entries) {
+        return new BurningManAddressList(BurningManAddressList.SCHEMA_VERSION,
+                LIST_VERSION,
+                network,
+                SELECTION_HEIGHT,
+                SELECTION_HEIGHT,
+                legacyBurningManAddress,
+                entries);
+    }
+
+    private static List<BurningManAddressList.Entry> entriesForCandidates(List<BurningManCandidate> candidates) {
+        return candidates.stream()
+                .map(BurningManCandidate::getReceiverAddress)
+                .flatMap(Optional::stream)
+                .distinct()
+                .map(receiverAddress -> entry(receiverAddress, 1))
+                .toList();
+    }
+
+    private static BurningManAddressList.Entry entry(double cappedBurnAmountShare) {
+        return entry(ALLOWED_ADDRESS, cappedBurnAmountShare);
+    }
+
+    private static BurningManAddressList.Entry entry(String receiverAddress, double cappedBurnAmountShare) {
+        return new BurningManAddressList.Entry(receiverAddress, cappedBurnAmountShare);
+    }
+
+    private static BurningManCandidate candidate(@Nullable String receiverAddress, double cappedBurnAmountShare) {
         return new TestBurningManCandidate(receiverAddress, cappedBurnAmountShare);
     }
 
     private static class TestBurningManCandidate extends BurningManCandidate {
-        private TestBurningManCandidate(String receiverAddress, double cappedBurnAmountShare) {
-            this.receiverAddress = Optional.of(receiverAddress);
+        private TestBurningManCandidate(@Nullable String receiverAddress, double cappedBurnAmountShare) {
+            this.receiverAddress = Optional.ofNullable(receiverAddress);
             this.cappedBurnAmountShare = cappedBurnAmountShare;
         }
     }

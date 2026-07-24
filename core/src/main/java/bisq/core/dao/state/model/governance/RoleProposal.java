@@ -71,7 +71,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                          int unlockTime,
                          byte version,
                          long creationDate,
-                         String txId,
+                         @Nullable String txId,
                          @Nullable TreeMap<String, String> extraDataMap) {
         super(name,
                 link,
@@ -161,7 +161,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     }
 
     @Override
-    public Proposal cloneProposalAndAddTxId(String txId) {
+    public Proposal cloneProposal(@Nullable String txId) {
         return new RoleProposal(name,
                 link,
                 role,

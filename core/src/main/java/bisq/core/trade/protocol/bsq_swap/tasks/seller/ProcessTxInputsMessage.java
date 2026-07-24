@@ -76,6 +76,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                     "Buyers BSQ input amount do not match our calculated required BSQ input amount");
 
             DaoFacade daoFacade = protocolModel.getDaoFacade();
+            checkArgument(daoFacade.isDaoStateReadyAndInSync(), "DAO state is not ready and in sync");
 
             Coin sumValidBsqInputValue = inputs.stream()
                     .map(input -> Coin.valueOf(daoFacade.getUnspentTxOutputValue(

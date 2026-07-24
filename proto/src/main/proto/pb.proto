@@ -524,11 +524,23 @@ message GetBlocksResponse {
     // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseBlock raw_blocks = 1;
     int32 request_nonce = 2;
+    repeated SignedRawBlock signed_raw_blocks = 3;
 }
 
 message NewBlockBroadcastMessage {
     // Because of the way how PB implements inheritance we need to use the super class as type.
     BaseBlock raw_block = 1;
+    SignedRawBlock signed_raw_block = 2;
+}
+
+message SignedRawBlock {
+    BaseBlock raw_block = 1;
+    DaoBlockSignature signature = 2;
+}
+
+message DaoBlockSignature {
+    NodeAddress signer_node_address = 1;
+    bytes signature = 2;
 }
 
 message RepublishGovernanceDataRequest {
@@ -1871,7 +1883,6 @@ message TradingPeer {
     bytes mediated_payout_tx_signature = 15;
     bytes hash_of_payment_account_payload = 16;
     repeated int32 supported_burning_man_address_list_versions = 17;
-    bool contract_dispute_agent_pub_keys_supported = 18;
 }
 
 message BsqSwapProtocolModel {

@@ -191,9 +191,11 @@ public class RequestBlocksHandler implements MessageListener {
 
             terminate();
             log.info("\n#################################################################\n" +
-                            "We received from peer {} a BlocksResponse with {} blocks" +
+                            "We received from peer {} a BlocksResponse with {} raw blocks and {} signed blocks" +
                             "\n#################################################################\n",
-                    nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
+                    nodeAddress.getFullAddress(),
+                    getBlocksResponse.getBlocks().size(),
+                    getBlocksResponse.getSignedRawBlocks().size());
             listener.onComplete(getBlocksResponse);
         }
     }

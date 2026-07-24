@@ -74,7 +74,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
         R proposal = createProposalWithoutTxId();
         proposalValidator.validateDataFields(proposal);
         Transaction transaction = createTransaction(proposal);
-        Proposal proposalWithTxId = proposal.cloneProposalAndAddTxId(transaction.getTxId().toString());
+        Proposal proposalWithTxId = proposal.cloneProposal(transaction.getTxId().toString());
         return new ProposalWithTransaction(proposalWithTxId, transaction);
     }
 

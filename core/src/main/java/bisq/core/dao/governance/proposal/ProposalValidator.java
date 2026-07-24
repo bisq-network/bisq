@@ -21,6 +21,7 @@ import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
+import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -30,6 +31,7 @@ import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.common.util.ExtraDataMapValidator;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -89,11 +91,17 @@ public abstract class ProposalValidator implements ConsensusCritical {
             log.warn("txId must be set. proposal.getTxId()={}", proposal.getTxId());
             return false;
         }
-        Optional<TxType> optionalTxType = daoStateService.getOptionalTxType(txId);
-        boolean present = optionalTxType.filter(txType -> txType == proposal.getTxType()).isPresent();
-        if (!present)
+        Optional<Tx> optionalTx = daoStateService.getTx(txId);
+        boolean present = optionalTx
+                .map(Tx::getTxType)
+                .filter(txType -> txType == proposal.getTxType())
+                .isPresent();
+        if (!present) {
             log.debug("optionalTxType not present for proposal {}" + proposal);
-        return present;
+            return false;
+        }
+
+        return isOpReturnDataMatchingPayload(proposal, optionalTx.get());
     }
 
     private boolean isValid(Proposal proposal, boolean allowUnconfirmed) {
@@ -112,7 +120,8 @@ public abstract class ProposalValidator implements ConsensusCritical {
         int chainHeight = daoStateService.getChainHeight();
 
         if (isTxConfirmed) {
-            int txHeight = optionalTx.get().getBlockHeight();
+            Tx tx = optionalTx.get();
+            int txHeight = tx.getBlockHeight();
             if (!periodService.isTxInCorrectCycle(txHeight, chainHeight)) {
                 log.trace("Tx is not in current cycle. proposal.getTxId()={}", proposal.getTxId());
                 return false;
@@ -122,23 +131,23 @@ public abstract class ProposalValidator implements ConsensusCritical {
                 return false;
             }
             if (proposal instanceof CompensationProposal) {
-                if (optionalTx.get().getTxType() != TxType.COMPENSATION_REQUEST) {
+                if (tx.getTxType() != TxType.COMPENSATION_REQUEST) {
                     log.error("TxType is not a COMPENSATION_REQUEST. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             } else if (proposal instanceof ReimbursementProposal) {
-                if (optionalTx.get().getTxType() != TxType.REIMBURSEMENT_REQUEST) {
+                if (tx.getTxType() != TxType.REIMBURSEMENT_REQUEST) {
                     log.error("TxType is not a REIMBURSEMENT_REQUEST. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             } else {
-                if (optionalTx.get().getTxType() != TxType.PROPOSAL) {
+                if (tx.getTxType() != TxType.PROPOSAL) {
                     log.error("TxType is not PROPOSAL. proposal.getTxId()={}", proposal.getTxId());
                     return false;
                 }
             }
 
-            return true;
+            return isOpReturnDataMatchingPayload(proposal, tx);
         } else if (allowUnconfirmed) {
             // We want to show own unconfirmed proposals in the active proposals list.
             boolean inPhase = periodService.isInPhase(chainHeight, DaoPhase.Phase.PROPOSAL);
@@ -156,5 +165,35 @@ public abstract class ProposalValidator implements ConsensusCritical {
         return daoStateService.getTx(proposal.getTxId())
                 .map(BaseTx::getBlockHeight)
                 .orElseGet(daoStateService::getChainHeight);
+    }
+
+    private boolean isOpReturnDataMatchingPayload(Proposal proposal, Tx tx) {
+        byte[] opReturnData = tx.getLastTxOutput().getOpReturnData();
+        byte[] expectedOpReturnData = getExpectedOpReturnData(proposal);
+        boolean opReturnMatchesPayload = Arrays.equals(expectedOpReturnData, opReturnData);
+        if (!opReturnMatchesPayload) {
+            log.warn("Proposal payload does not match the OP_RETURN commitment. proposal.getTxId()={}",
+                    proposal.getTxId());
+        }
+        return opReturnMatchesPayload;
+    }
+
+    private byte[] getExpectedOpReturnData(Proposal proposal) {
+        Proposal clonedProposalWithoutTxId = proposal.cloneProposal(null);
+        byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(clonedProposalWithoutTxId);
+        byte version = clonedProposalWithoutTxId.getVersion();
+        if (proposal instanceof CompensationProposal) {
+            return ProposalConsensus.getOpReturnData(hashOfPayload,
+                    OpReturnType.COMPENSATION_REQUEST.getType(),
+                    version);
+        } else if (proposal instanceof ReimbursementProposal) {
+            return ProposalConsensus.getOpReturnData(hashOfPayload,
+                    OpReturnType.REIMBURSEMENT_REQUEST.getType(),
+                    version);
+        } else {
+            return ProposalConsensus.getOpReturnData(hashOfPayload,
+                    OpReturnType.PROPOSAL.getType(),
+                    version);
+        }
     }
 }

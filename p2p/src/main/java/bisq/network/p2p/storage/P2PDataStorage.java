@@ -46,6 +46,7 @@ import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
+import bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.HistoricalDataStoreService;
@@ -142,6 +143,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     private boolean initialRequestApplied = false;
+    private boolean seedNodeOnlyInitialRequestApplied = false;
 
     private final Broadcaster broadcaster;
     @VisibleForTesting
@@ -589,7 +591,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * Processes a GetDataResponse message and updates internal state. Does not broadcast updates to the P2P network
      * or domain listeners.
      */
-    public void processGetDataResponse(GetDataResponse getDataResponse, NodeAddress sender) {
+    public void processGetDataResponse(GetDataResponse getDataResponse,
+                                       NodeAddress sender,
+                                       boolean isSeedNodeResponse) {
         Set<ProtectedStorageEntry> protectedStorageEntries = getDataResponse.getDataSet();
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
         long ts = System.currentTimeMillis();
@@ -617,8 +621,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
                 // trade stats and all account age witness data.
 
-                // We only apply it once from first response
-                if (!initialRequestApplied || getDataResponse.isWasTruncated()) {
+                boolean seedNodeOnlyPayload = e instanceof SeedNodeOnlyInitialDataResponsePayload;
+
+                // Seed-node-only payloads contain historical trust data and must not be provided by non-seed peers.
+                boolean payloadCanBeProvidedByResponse = !seedNodeOnlyPayload || isSeedNodeResponse;
+
+                // Keep seed-node-only payloads on a separate guard so a non-seed response cannot block
+                // a later seed response from providing AccountAgeWitness and SignedWitness data.
+                boolean payloadTypeAlreadyApplied = seedNodeOnlyPayload ?
+                        seedNodeOnlyInitialRequestApplied :
+                        initialRequestApplied;
+
+                // We only apply process-once data once, except when the response was truncated and repeated.
+                boolean shouldApplyPayload = payloadCanBeProvidedByResponse &&
+                        (!payloadTypeAlreadyApplied || getDataResponse.isWasTruncated());
+                if (shouldApplyPayload) {
                     addPersistableNetworkPayloadFromInitialRequest(e);
                 }
             } else {
@@ -632,6 +649,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // We only process PersistableNetworkPayloads implementing ProcessOncePersistableNetworkPayload once. It can cause performance
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
         // startup.
+
+        if (isSeedNodeResponse) {
+            seedNodeOnlyInitialRequestApplied = true;
+        }
+
         initialRequestApplied = true;
     }
 

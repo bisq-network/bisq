@@ -19,9 +19,11 @@ package bisq.core.dao.node.full.network;
 
 import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDataRequest;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
+import bisq.core.dao.node.full.DaoBlockSigningService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
+import bisq.core.dao.node.messages.SignedRawBlock;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
@@ -69,6 +71,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     private final Broadcaster broadcaster;
     private final MissingDataRequestService missingDataRequestService;
     private final DaoStateService daoStateService;
+    private final DaoBlockSigningService daoBlockSigningService;
 
     // Key is connection UID
     private final Map<String, GetBlocksRequestHandler> getBlocksRequestHandlers = new HashMap<>();
@@ -85,12 +88,14 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                                   PeerManager peerManager,
                                   Broadcaster broadcaster,
                                   MissingDataRequestService missingDataRequestService,
-                                  DaoStateService daoStateService) {
+                                  DaoStateService daoStateService,
+                                  DaoBlockSigningService daoBlockSigningService) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
         this.missingDataRequestService = missingDataRequestService;
         this.daoStateService = daoStateService;
+        this.daoBlockSigningService = daoBlockSigningService;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +117,8 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     public void publishNewBlock(Block block) {
         log.info("Publish new block at height={} and block hash={}", block.getHeight(), block.getHash());
         RawBlock rawBlock = RawBlock.fromBlock(block);
-        NewBlockBroadcastMessage newBlockBroadcastMessage = new NewBlockBroadcastMessage(rawBlock);
+        SignedRawBlock signedRawBlock = daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress());
+        NewBlockBroadcastMessage newBlockBroadcastMessage = new NewBlockBroadcastMessage(rawBlock, signedRawBlock);
         broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress());
     }
 
@@ -177,6 +183,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
 
         GetBlocksRequestHandler requestHandler = new GetBlocksRequestHandler(networkNode,
                 daoStateService,
+                daoBlockSigningService,
                 new GetBlocksRequestHandler.Listener() {
                     @Override
                     public void onComplete(int serializedSize) {
