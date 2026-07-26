@@ -74,7 +74,7 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.util.Comparator;
+//import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -177,7 +177,6 @@ public class ChatView extends AnchorPane {
 
         chatMessages = supportSession.getObservableChatMessageList();
         SortedList<ChatMessage> sortedList = new SortedList<>(chatMessages);
-        sortedList.setComparator(Comparator.comparingLong(ChatMessage::getDate));
         messageListView = new ListView<>(sortedList);
         messageListView.setId("message-list-view");
 
