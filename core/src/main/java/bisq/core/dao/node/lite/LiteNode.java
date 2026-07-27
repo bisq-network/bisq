@@ -243,7 +243,7 @@ public class LiteNode extends BsqNode {
         boolean hadInvalidBlock = signedRawBlocks.stream()
                 .anyMatch(this::isSignedRawBlockInvalid);
         if (hadInvalidBlock) {
-            log.warn("We receives a GetBlocksResponse with an invalid DAO block signature from {}. unsignedBlocks={}, signedBlocks={}. " +
+            log.warn("We received a GetBlocksResponse with an invalid DAO block signature from {}. unsignedBlocks={}, signedBlocks={}. " +
                             "We ignore the response.",
                     senderNodeAddress,
                     blocks.size(),
