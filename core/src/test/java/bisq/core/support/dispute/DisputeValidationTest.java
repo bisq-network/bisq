@@ -39,26 +39,43 @@ class DisputeValidationTest {
             new Date(Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() + 1);
 
     @Test
-    void validateDisputeDataRejectsLegacyContractAfterActivationForPostActivationTrade() {
+    void validateDisputeDataDoesNotUseSenderSuppliedTradeDateWithoutLocalTrade() {
         PubKeyRing buyerPubKeyRing = pubKeyRing();
         PubKeyRing sellerPubKeyRing = pubKeyRing();
         PubKeyRing mediatorPubKeyRing = pubKeyRing();
         Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
         Dispute dispute = dispute(buyerPubKeyRing, mediatorPubKeyRing, contract, SupportType.MEDIATION);
 
-        assertThrows(DisputeValidation.ValidationException.class,
+        assertDoesNotThrow(
                 () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
     }
 
     @Test
-    void validateDisputeDataAcceptsLegacyContractAfterActivationForPreActivationTrade() {
+    void validateDisputeDataRejectsLegacyContractAfterActivationForPostActivationLocalTrade() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
+        Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION, PRE_ACTIVATION_TRADE_DATE);
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute,
+                        mock(BtcWalletService.class),
+                        POST_ACTIVATION_NOW,
+                        new Date(POST_ACTIVATION_TRADE_DATE)));
+    }
+
+    @Test
+    void validateDisputeDataAcceptsLegacyContractForPreActivationLocalTrade() {
         PubKeyRing buyerPubKeyRing = pubKeyRing();
         PubKeyRing sellerPubKeyRing = pubKeyRing();
         Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
         Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION, PRE_ACTIVATION_TRADE_DATE);
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute,
+                        mock(BtcWalletService.class),
+                        POST_ACTIVATION_NOW,
+                        new Date(PRE_ACTIVATION_TRADE_DATE)));
     }
 
     @Test

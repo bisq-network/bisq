@@ -20,6 +20,9 @@ package bisq.core.dao.node.full;
 import bisq.core.dao.state.model.blockchain.BaseBlock;
 import bisq.core.dao.state.model.blockchain.Block;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.network.NetworkPayload;
 
 import com.google.common.collect.ImmutableList;
@@ -42,7 +45,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class RawBlock extends BaseBlock implements NetworkPayload {
+public final class RawBlock extends BaseBlock implements NetworkPayload, Canonical {
     // Used when a full node sends a block over the P2P network
     public static RawBlock fromBlock(Block block) {
         ImmutableList<RawTx> txs = ImmutableList.copyOf(block.getTxs().stream().map(RawTx::fromTx).collect(Collectors.toList()));
@@ -93,6 +96,23 @@ public final class RawBlock extends BaseBlock implements NetworkPayload {
                 proto.getHash(),
                 proto.getPreviousBlockHash(),
                 rawTxs);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<RawBlock> SCHEMA = RawBlock.<RawBlock>getBaseBlockSchemaBuilder()
+            .extend(5,
+                    rawBlock -> rawBlock,
+                    CanonicalSchema.<RawBlock>newBuilder()
+                            .repeatedCompose(1, RawBlock::getRawTxs, RawTx.SCHEMA))
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
     }
 
 

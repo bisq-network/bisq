@@ -17,29 +17,31 @@
 
 package bisq.core.dao.burningman;
 
-import bisq.common.config.Config;
-
 import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.filter.FilterPolicyService;
 
+import bisq.common.config.Config;
+
+import org.bitcoinj.core.Address;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import com.google.common.base.Splitter;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
-
-import org.bitcoinj.core.Address;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +56,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
     private static final BigDecimal RECEIVER_SELECTION_CEILING_AS_DECIMAL = BigDecimal.valueOf(RECEIVER_SELECTION_CEILING);
 
     private final BurningManService burningManService;
+    private final BurningManAddressListService burningManAddressListService;
     private final FilterPolicyService filterPolicyService;
 
     private volatile int currentChainHeight;
@@ -61,8 +64,10 @@ public class BtcFeeReceiverService implements DaoStateListener {
     @Inject
     public BtcFeeReceiverService(DaoStateService daoStateService,
                                  BurningManService burningManService,
+                                 BurningManAddressListService burningManAddressListService,
                                  FilterPolicyService filterPolicyService) {
         this.burningManService = burningManService;
+        this.burningManAddressListService = burningManAddressListService;
         this.filterPolicyService = filterPolicyService;
 
         daoStateService.addDaoStateListener(this);
@@ -142,9 +147,14 @@ public class BtcFeeReceiverService implements DaoStateListener {
         }
 
         List<BurningManCandidate> activeBurningManCandidates = burningManService.getActiveBurningManCandidates(chainHeight);
-        if (activeBurningManCandidates.isEmpty()) {
+        Optional<BurningManAddressList> optionalAddressList = getLatestEnforceableAddressList();
+        String legacyBurningManAddress = optionalAddressList
+                .map(BurningManAddressList::getLegacyBurningManAddress)
+                .orElseGet(() -> burningManService.getLegacyBurningManAddress(chainHeight));
+        List<BurningManCandidate> burningManCandidates = filterCandidates(activeBurningManCandidates, optionalAddressList);
+        if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
-            receiverAddresses.add(burningManService.getLegacyBurningManAddress(chainHeight));
+            receiverAddresses.add(legacyBurningManAddress);
             receiverWeights.add(ceiling);
             return;
         }
@@ -154,14 +164,13 @@ public class BtcFeeReceiverService implements DaoStateListener {
         // cappedBurnAmountShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
         // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
         // Entries with 0 will be ignored in the selection method, so we do not need to filter them out.
-        String legacyBurningManAddress = burningManService.getLegacyBurningManAddress(chainHeight);
         long assignedBurningManWeight = 0;
 
-        for (int i = 0; i < activeBurningManCandidates.size(); i++) {
-            long calculatedWeight = getSelectionWeight(activeBurningManCandidates.get(i).getCappedBurnAmountShare(), ceiling);
+        for (BurningManCandidate candidate : burningManCandidates) {
+            long calculatedWeight = getSelectionWeight(candidate.getCappedBurnAmountShare(), ceiling);
             long remainingBurningManWeight = ceiling - assignedBurningManWeight;
             long receiverWeight = Math.min(calculatedWeight, remainingBurningManWeight);
-            receiverAddresses.add(activeBurningManCandidates.get(i).getReceiverAddress().orElse(legacyBurningManAddress));
+            receiverAddresses.add(candidate.getReceiverAddress().orElse(legacyBurningManAddress));
             receiverWeights.add(receiverWeight);
             assignedBurningManWeight += receiverWeight;
         }
@@ -171,6 +180,43 @@ public class BtcFeeReceiverService implements DaoStateListener {
             receiverAddresses.add(legacyBurningManAddress);
             receiverWeights.add(ceiling - assignedBurningManWeight);
         }
+    }
+
+    private Optional<BurningManAddressList> getLatestEnforceableAddressList() {
+        int latestVersion = burningManAddressListService.getLatestVersion();
+        BurningManAddressList addressList = burningManAddressListService.getAddressList(latestVersion);
+        if (!addressList.isForCurrentNetwork()) {
+            log.warn("Burning Man address list version {} is for network {}, but current network is {}. " +
+                            "Skipping Burning Man address list filtering for BTC fee receiver selection.",
+                    latestVersion,
+                    addressList.getNetwork(),
+                    Config.baseCurrencyNetwork().name());
+            return Optional.empty();
+        }
+        return Optional.of(addressList);
+    }
+
+    private List<BurningManCandidate> filterCandidates(List<BurningManCandidate> candidates,
+                                                       Optional<BurningManAddressList> optionalAddressList) {
+        if (optionalAddressList.isEmpty()) {
+            return candidates;
+        }
+
+        BurningManAddressList addressList = optionalAddressList.get();
+        Set<String> allowedAddresses = addressList.getAllowedAddresses();
+        return candidates.stream()
+                .filter(candidate -> candidate.getReceiverAddress()
+                        .map(receiverAddress -> {
+                            boolean allowed = allowedAddresses.contains(receiverAddress);
+                            if (!allowed) {
+                                log.warn("Skipping BTC fee receiver {} because it is not in Burning Man address list version {}",
+                                        receiverAddress,
+                                        addressList.getListVersion());
+                            }
+                            return allowed;
+                        })
+                        .orElse(false))
+                .toList();
     }
 
     private static long getSelectionWeight(double share, long ceiling) {

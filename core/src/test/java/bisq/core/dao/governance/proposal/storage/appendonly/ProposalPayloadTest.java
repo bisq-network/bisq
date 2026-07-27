@@ -126,7 +126,7 @@ public class ProposalPayloadTest {
 
     private static Proposal proposal(String txId) {
         return new GenericProposal("name-" + txId, "https://bisq.network/" + txId, new TreeMap<>())
-                .cloneProposalAndAddTxId(txId);
+                .cloneProposal(txId);
     }
 
     private static protobuf.ProposalPayload withWrongHash(ProposalPayload payload) {

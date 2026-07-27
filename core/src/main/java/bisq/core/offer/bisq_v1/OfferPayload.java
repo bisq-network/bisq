@@ -268,6 +268,8 @@ public final class OfferPayload extends OfferPayloadBase {
     @SuppressWarnings("deprecation")
     public static OfferPayload fromProto(protobuf.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
+        checkArgument(proto.getUseMarketBasedPrice() || proto.getPrice() > 0,
+                "A fixed-price offer must have a positive price. price=%s", proto.getPrice());
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
                 null : new ArrayList<>(proto.getAcceptedBankIdsList());
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?

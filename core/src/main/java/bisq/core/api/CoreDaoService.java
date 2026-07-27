@@ -17,7 +17,6 @@
 
 package bisq.core.api;
 
-import bisq.asset.Asset;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
@@ -364,7 +363,7 @@ public class CoreDaoService {
                     Proposal published = ((List<Proposal>) myProposalListService.getList()).stream()
                             .filter(p -> txId.equals(p.getTxId()))
                             .findFirst()
-                            .orElseGet(() -> pwt.getProposal().cloneProposalAndAddTxId(txId));
+                            .orElseGet(() -> pwt.getProposal().cloneProposal(txId));
                     resultHandler.accept(published);
                 },
                 errorMessageHandler);

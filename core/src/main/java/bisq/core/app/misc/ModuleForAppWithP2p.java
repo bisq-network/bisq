@@ -21,6 +21,7 @@ import bisq.core.alert.AlertModule;
 import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
+import bisq.core.dao.node.block_provider.TrustedBsqBlockProviderRepository;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.CoreBanFilter;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
@@ -78,6 +79,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(TorSetup.class).in(Singleton.class);
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
+        bind(TrustedBsqBlockProviderRepository.class).in(Singleton.class);
         bind(BanFilter.class).to(CoreBanFilter.class).in(Singleton.class);
 
         CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.networkParameters.getMonetaryFormat());

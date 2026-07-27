@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+import bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload;
 
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -104,6 +105,14 @@ public class P2PDataStorageProcessGetDataResponse {
         }
     }
 
+    static class SeedNodeOnlyLazyPersistableNetworkPayloadStub extends LazyPersistableNetworkPayloadStub
+            implements SeedNodeOnlyInitialDataResponsePayload {
+
+        SeedNodeOnlyLazyPersistableNetworkPayloadStub(byte[] hash) {
+            super(hash);
+        }
+    }
+
     // TESTCASE: GetDataResponse w/ missing PNP is added with no broadcast or listener signal
     // XXXBUGXXX: We signal listeners w/ non ProcessOncePersistableNetworkPayloads
     @Test
@@ -113,7 +122,7 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, persistableNetworkPayload, true, true, false);
     }
@@ -126,7 +135,7 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, persistableNetworkPayload, false, false, false);
     }
@@ -141,7 +150,7 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, persistableNetworkPayload, false, false, false);
     }
@@ -154,7 +163,7 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, persistableNetworkPayload, true, false, false);
     }
@@ -169,7 +178,7 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, persistableNetworkPayload, false, false, false);
     }
@@ -181,14 +190,14 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(addFromFirstProcess);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstProcess);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, addFromFirstProcess, true, true, false);
 
         PersistableNetworkPayload addFromSecondProcess = new PersistableNetworkPayloadStub(new byte[]{2});
         getDataResponse = buildGetDataResponse(addFromSecondProcess);
         beforeState = this.testState.saveTestState(addFromSecondProcess);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, addFromSecondProcess, true, true, false);
     }
@@ -200,16 +209,78 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(addFromFirstProcess);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstProcess);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, addFromFirstProcess, true, false, false);
 
         PersistableNetworkPayload addFromSecondProcess = new LazyPersistableNetworkPayloadStub(new byte[]{2});
         getDataResponse = buildGetDataResponse(addFromSecondProcess);
         beforeState = this.testState.saveTestState(addFromSecondProcess);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyPersistableAdd(
                 beforeState, addFromSecondProcess, false, false, false);
+    }
+
+    @Test
+    public void processGetDataResponse_nonSeedResponseDoesNotAddSeedNodeOnlyPNP() {
+        PersistableNetworkPayload persistableNetworkPayload = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{1});
+
+        GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, false);
+        this.testState.verifyPersistableAdd(
+                beforeState, persistableNetworkPayload, false, false, false);
+    }
+
+    @Test
+    public void processGetDataResponse_seedResponseAddsSeedNodeOnlyPNP() {
+        PersistableNetworkPayload persistableNetworkPayload = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{1});
+
+        GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, persistableNetworkPayload, true, false, false);
+    }
+
+    @Test
+    public void processGetDataResponse_nonSeedResponseDoesNotBlockLaterSeedNodeOnlyPNP() {
+        PersistableNetworkPayload nonSeedPayload = new LazyPersistableNetworkPayloadStub(new byte[]{1});
+        GetDataResponse getDataResponse = buildGetDataResponse(nonSeedPayload);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(nonSeedPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, false);
+        this.testState.verifyPersistableAdd(
+                beforeState, nonSeedPayload, true, false, false);
+
+        PersistableNetworkPayload seedOnlyPayload = new SeedNodeOnlyLazyPersistableNetworkPayloadStub(new byte[]{2});
+        getDataResponse = buildGetDataResponse(seedOnlyPayload);
+
+        beforeState = this.testState.saveTestState(seedOnlyPayload);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, seedOnlyPayload, true, false, false);
+    }
+
+    @Test
+    public void processGetDataResponse_seedResponseMarksNormalProcessOncePNPApplied() {
+        PersistableNetworkPayload addFromSeedResponse = new LazyPersistableNetworkPayloadStub(new byte[]{1});
+        GetDataResponse getDataResponse = buildGetDataResponse(addFromSeedResponse);
+
+        TestState.SavedTestState beforeState = this.testState.saveTestState(addFromSeedResponse);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
+        this.testState.verifyPersistableAdd(
+                beforeState, addFromSeedResponse, true, false, false);
+
+        PersistableNetworkPayload addFromSecondResponse = new LazyPersistableNetworkPayloadStub(new byte[]{2});
+        getDataResponse = buildGetDataResponse(addFromSecondResponse);
+
+        beforeState = this.testState.saveTestState(addFromSecondResponse);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, false);
+        this.testState.verifyPersistableAdd(
+                beforeState, addFromSecondResponse, false, false, false);
     }
 
     // TESTCASE: GetDataResponse w/ missing PSE is added with no broadcast or listener signal
@@ -220,7 +291,7 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(protectedStorageEntry);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyProtectedStorageAdd(
                 beforeState, protectedStorageEntry, true, true, false, true);
     }
@@ -233,7 +304,7 @@ public class P2PDataStorageProcessGetDataResponse {
 
         GetDataResponse getDataResponse = buildGetDataResponse(protectedStorageEntry);
 
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         TestState.SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.verifyProtectedStorageAdd(
                 beforeState, protectedStorageEntry, false, false, false, false);
@@ -247,14 +318,14 @@ public class P2PDataStorageProcessGetDataResponse {
         GetDataResponse getDataResponse = buildGetDataResponse(protectedStorageEntry);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyProtectedStorageAdd(
                 beforeState, protectedStorageEntry, true, true, false, true);
 
         protectedStorageEntry = getProtectedStorageEntryForAdd();
         getDataResponse = buildGetDataResponse(protectedStorageEntry);
         beforeState = this.testState.saveTestState(protectedStorageEntry);
-        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
+        this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress, true);
         this.testState.verifyProtectedStorageAdd(
                 beforeState, protectedStorageEntry, true, true, false, true);
     }

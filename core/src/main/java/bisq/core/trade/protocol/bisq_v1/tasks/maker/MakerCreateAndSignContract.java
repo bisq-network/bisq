@@ -74,19 +74,10 @@ public class MakerCreateAndSignContract extends TradeTask {
             String makersPaymentMethodId = makersPaymentAccountPayload.getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
             OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
-            PubKeyRing mediatorPubKeyRing = null;
-            PubKeyRing refundAgentPubKeyRing = null;
-            if (taker.isContractDisputeAgentPubKeysSupported() ||
-                    Contract.requiresDisputeAgentPubKeyVersion(trade.getTakeOfferDate())) {
-                mediatorPubKeyRing = checkNotNull(trade.getMediatorPubKeyRing(),
-                        "trade.getMediatorPubKeyRing() must not be null");
-                refundAgentPubKeyRing = checkNotNull(trade.getRefundAgentPubKeyRing(),
-                        "trade.getRefundAgentPubKeyRing() must not be null");
-            } else {
-                // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
-                log.info("Creating legacy contract without dispute agent pubKeyRings for trade {}",
-                        trade.getId());
-            }
+            PubKeyRing mediatorPubKeyRing = checkNotNull(trade.getMediatorPubKeyRing(),
+                    "trade.getMediatorPubKeyRing() must not be null");
+            PubKeyRing refundAgentPubKeyRing = checkNotNull(trade.getRefundAgentPubKeyRing(),
+                    "trade.getRefundAgentPubKeyRing() must not be null");
 
             Contract contract = new Contract(
                     offerPayload,
