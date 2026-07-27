@@ -97,7 +97,7 @@ public abstract class ProposalValidator implements ConsensusCritical {
                 .filter(txType -> txType == proposal.getTxType())
                 .isPresent();
         if (!present) {
-            log.debug("optionalTxType not present for proposal {}" + proposal);
+            log.debug("optionalTxType not present for proposal {}", proposal);
             return false;
         }
 
