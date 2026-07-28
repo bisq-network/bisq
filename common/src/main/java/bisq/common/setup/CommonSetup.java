@@ -35,16 +35,13 @@ import java.net.URISyntaxException;
 
 import java.nio.file.Paths;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import ch.qos.logback.classic.Level;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import sun.misc.Signal;
 
 @Slf4j
 public class CommonSetup {
@@ -64,7 +61,7 @@ public class CommonSetup {
         GcUtil.setDISABLE_GC_CALLS(config.fullDaoNode);
 
         setSystemProperties();
-        setupSigIntHandlers(gracefulShutDownHandler);
+        setupShutdownHandler(gracefulShutDownHandler);
 
         DevEnv.setup(config);
     }
@@ -116,18 +113,19 @@ public class CommonSetup {
     protected static void setSystemProperties() {
     }
 
-    protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {
-        Signal.handle(new Signal("INT"), signal -> {
-            log.info("Received {}", signal);
-            UserThread.execute(() -> gracefulShutDownHandler.gracefulShutDown(() -> {
-            }));
-        });
+    protected static void setupShutdownHandler(GracefulShutDownHandler gracefulShutDownHandler) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                var countDownLatch = new CountDownLatch(1);
+                UserThread.execute(() ->
+                        gracefulShutDownHandler.gracefulShutDown(countDownLatch::countDown));
+                //noinspection ResultOfMethodCallIgnored
+                countDownLatch.await(2, TimeUnit.MINUTES);
 
-        Signal.handle(new Signal("TERM"), signal -> {
-            log.info("Received {}", signal);
-            UserThread.execute(() -> gracefulShutDownHandler.gracefulShutDown(() -> {
-            }));
-        });
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }));
     }
 
     protected static void maybePrintPathOfCodeSource() {
