@@ -144,7 +144,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             case COMPENSATION_REQUEST_MAX_AMOUNT:
             case REIMBURSEMENT_MAX_AMOUNT:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                        Res.get("validation.amountBelowDust", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
                 checkArgument(inputValueAsCoin.value <= 200000000,
                         Res.get("validation.inputTooLarge", "200 000 BSQ"));
                 break;
@@ -176,7 +176,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             case MIN_MAKER_FEE_BTC:
             case MIN_TAKER_FEE_BTC:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                        Res.get("validation.amountBelowDust", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
                 break;
             case ASSET_MIN_VOLUME:
             case MAX_TRADE_LIMIT:
