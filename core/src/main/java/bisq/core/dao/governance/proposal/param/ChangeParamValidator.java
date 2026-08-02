@@ -176,7 +176,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             case MIN_MAKER_FEE_BTC:
             case MIN_TAKER_FEE_BTC:
                 checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", bsqFormatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
+                        Res.get("validation.amountBelowDust", bsqFormatter.formatBTCWithCode(Restrictions.getMinNonDustOutput())));
                 break;
             case ASSET_MIN_VOLUME:
             case MAX_TRADE_LIMIT:
