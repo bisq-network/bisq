@@ -618,6 +618,12 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             return false;
         }
 
+        if (!Restrictions.isAboveDust(sendersAmount)) {
+            new Popup().warning(Res.get("validation.amountBelowDust",
+                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
+            return false;
+        }
+
         if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
             new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
             return false;
