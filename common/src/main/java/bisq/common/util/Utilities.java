@@ -455,14 +455,14 @@ public class Utilities {
         String result;
         switch (new Random().nextInt(3)) {
             case 0:
-                result = RandomStringUtils.randomAlphabetic(length);
+                result = RandomStringUtils.secure().nextAlphabetic(length);
                 break;
             case 1:
-                result = RandomStringUtils.randomNumeric(length);
+                result = RandomStringUtils.secure().nextNumeric(length);
                 break;
             case 2:
             default:
-                result = RandomStringUtils.randomAlphanumeric(length);
+                result = RandomStringUtils.secure().nextAlphabetic(length);
         }
 
         switch (new Random().nextInt(3)) {
