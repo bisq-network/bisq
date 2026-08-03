@@ -55,8 +55,4 @@ class PasswordCallCredentials extends CallCredentials {
             }
         });
     }
-
-    @Override
-    public void thisUsesUnstableApi() {
-    }
 }
