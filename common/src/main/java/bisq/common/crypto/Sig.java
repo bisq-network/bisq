@@ -20,8 +20,6 @@ package bisq.common.crypto;
 import bisq.common.util.Base64;
 import bisq.common.util.Utilities;
 
-import com.google.common.base.Charsets;
-
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -33,6 +31,8 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+
+import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +90,7 @@ public class Sig {
      * @return Base64 encoded signature
      */
     public static String sign(PrivateKey privateKey, String message) throws CryptoException {
-        byte[] sigAsBytes = sign(privateKey, message.getBytes(Charsets.UTF_8));
+        byte[] sigAsBytes = sign(privateKey, message.getBytes(StandardCharsets.UTF_8));
         return Base64.encode(sigAsBytes);
     }
 
@@ -118,7 +118,7 @@ public class Sig {
      * @return
      */
     public static boolean verify(PublicKey publicKey, String message, String signature) throws CryptoException {
-        return verify(publicKey, message.getBytes(Charsets.UTF_8), Base64.decode(signature));
+        return verify(publicKey, message.getBytes(StandardCharsets.UTF_8), Base64.decode(signature));
     }
 
     /**
