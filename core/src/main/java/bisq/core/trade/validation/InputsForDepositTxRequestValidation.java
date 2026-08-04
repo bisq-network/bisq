@@ -35,6 +35,8 @@ import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 
+import java.nio.charset.StandardCharsets;
+
 import static bisq.core.trade.validation.DsaSignatureValidation.checkDSASignature;
 import static bisq.core.trade.validation.TradeValidation.checkPeersDate;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -77,7 +79,7 @@ public final class InputsForDepositTxRequestValidation {
         DelayedPayoutTxValidation.checkBurningManSelectionHeight(request.getBurningManSelectionHeight(), delayedPayoutTxReceiverService);
         delayedPayoutTxReceiverService.selectBurningManAddressListVersion(request.getSupportedBurningManAddressListVersions());
         TransactionValidation.checkTransactionId(request.getTakerFeeTxId());
-        byte[] accountAgeWitnessNonce = checkedOfferId.getBytes(Charsets.UTF_8);
+        byte[] accountAgeWitnessNonce = checkedOfferId.getBytes(StandardCharsets.UTF_8);
         PublicKey takerSignatureKey = checkNotNull(takerPubKeyRing.getSignaturePubKey(),
                 "takerSignatureKey must not be null");
         checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),

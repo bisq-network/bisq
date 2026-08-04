@@ -43,6 +43,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -324,7 +326,7 @@ public class BurningManService {
 
     private static Set<TxOutput> getProofOfBurnOpReturnTxOutputSetForName(Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash,
                                                                           String name) {
-        byte[] preImage = name.getBytes(Charsets.UTF_8);
+        byte[] preImage = name.getBytes(StandardCharsets.UTF_8);
         byte[] hash = ProofOfBurnConsensus.getHash(preImage);
         P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(hash);
         if (proofOfBurnOpReturnTxOutputByHash.containsKey(key)) {

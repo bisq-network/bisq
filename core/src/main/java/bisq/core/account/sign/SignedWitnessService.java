@@ -48,6 +48,8 @@ import java.security.SignatureException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -262,7 +264,7 @@ public class SignedWitnessService {
         String signatureBase64 = LowRSigningKey.from(key).signMessage(accountAgeWitnessHashAsHex);
         SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.ARBITRATOR,
                 accountAgeWitness.getHash(),
-                signatureBase64.getBytes(Charsets.UTF_8),
+                signatureBase64.getBytes(StandardCharsets.UTF_8),
                 key.getPubKey(),
                 peersPubKey,
                 time,
@@ -320,7 +322,7 @@ public class SignedWitnessService {
         }
         try {
             String message = Utilities.encodeToHex(signedWitness.getAccountAgeWitnessHash());
-            String signatureBase64 = new String(signedWitness.getSignature(), Charsets.UTF_8);
+            String signatureBase64 = new String(signedWitness.getSignature(), StandardCharsets.UTF_8);
             ECKey key = ECKey.fromPublicOnly(signedWitness.getSignerPubKey());
             if (arbitratorManager.isPublicKeyInList(Utilities.encodeToHex(key.getPubKey()))) {
                 key.verifyMessage(message, signatureBase64);
