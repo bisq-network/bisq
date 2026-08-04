@@ -37,8 +37,34 @@ import lombok.extern.slf4j.Slf4j;
 public class CountryUtil {
     public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
-        String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
-                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA"};
+        String[] codes = {
+                "AD", // Andorra
+                "AT", // Austria
+                "BE", // Belgium
+                "CY", // Cyprus
+                "DE", // Germany
+                "EE", // Estonia
+                "ES", // Spain
+                "FI", // Finland
+                "FR", // France
+                "GR", // Greece
+                "HR", // Croatia
+                "IE", // Ireland
+                "IT", // Italy
+                "LT", // Lithuania
+                "LU", // Luxembourg
+                "LV", // Latvia
+                "MC", // Monaco
+                "ME", // Montenegro
+                "MT", // Malta
+                "NL", // Netherlands
+                "PT", // Portugal
+                "SI", // Slovenia
+                "SK", // Slovakia
+                "SM", // San Marino
+                "VA", // Vatican City
+                "XK"  // Kosovo
+        };
         populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
 
