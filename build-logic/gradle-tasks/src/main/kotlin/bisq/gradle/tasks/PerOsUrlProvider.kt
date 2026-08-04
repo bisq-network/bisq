@@ -1,5 +1,6 @@
 package bisq.gradle.tasks
 
+import java.net.URI
 import java.net.URL
 
 interface PerOsUrlProvider {
@@ -10,7 +11,7 @@ interface PerOsUrlProvider {
     val windowsUrl: String
 
     val url: URL
-        get() = URL(urlPrefix + getUrlSuffix())
+        get() = URI(urlPrefix + getUrlSuffix()).toURL()
 
     private fun getUrlSuffix() =
         when (getOS()) {

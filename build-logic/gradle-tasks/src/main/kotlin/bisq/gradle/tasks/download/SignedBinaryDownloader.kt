@@ -7,6 +7,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
+import java.net.URI
 import java.net.URL
 
 class SignedBinaryDownloader(
@@ -27,7 +28,7 @@ class SignedBinaryDownloader(
         val binaryDownloadTask =
             downloadTaskFactory.registerDownloadTask("download${binaryName}Binary", binaryDownloadUrl)
 
-        val signatureDownloadUrl: Provider<URL> = binaryDownloadUrl.map { URL("$it.asc") }
+        val signatureDownloadUrl: Provider<URL> = binaryDownloadUrl.map { URI("$it.asc").toURL() }
         val signatureDownloadTask =
             downloadTaskFactory.registerDownloadTask("download${binaryName}Signature", signatureDownloadUrl)
 

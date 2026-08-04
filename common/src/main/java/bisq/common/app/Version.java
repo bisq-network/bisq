@@ -17,7 +17,7 @@
 
 package bisq.common.app;
 
-import java.net.URL;
+import java.net.URI;
 
 import java.util.Arrays;
 import java.util.List;
@@ -147,7 +147,7 @@ public class Version {
         try {
             String pth = Objects.requireNonNull(Version.class.getResource(Version.class.getSimpleName() + ".class")).toString();
             String mnf = pth.substring(0, pth.lastIndexOf("!") + 1) + "/META-INF/MANIFEST.MF";
-            Attributes attr = new Manifest(new URL(mnf).openStream()).getMainAttributes();
+            Attributes attr = new Manifest(new URI(mnf).toURL().openStream()).getMainAttributes();
             return Optional.of(attr.getValue("Implementation-Version"));
         } catch (Exception ignored) {
             return Optional.empty();
