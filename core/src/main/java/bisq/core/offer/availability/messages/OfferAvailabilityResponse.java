@@ -91,6 +91,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
         this.refundAgent = refundAgent;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         final protobuf.OfferAvailabilityResponse.Builder builder = protobuf.OfferAvailabilityResponse.newBuilder()
@@ -108,6 +109,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     public static OfferAvailabilityResponse fromProto(protobuf.OfferAvailabilityResponse proto, int messageVersion) {
         return new OfferAvailabilityResponse(proto.getOfferId(),
                 ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()),

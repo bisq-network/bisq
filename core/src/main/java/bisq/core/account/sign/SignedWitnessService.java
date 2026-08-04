@@ -73,6 +73,7 @@ public class SignedWitnessService {
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
+    @SuppressWarnings("deprecation")
     private final ArbitratorManager arbitratorManager;
     private final SignedWitnessStorageService signedWitnessStorageService;
     private final FilterPolicyService filterPolicyService;
@@ -102,7 +103,7 @@ public class SignedWitnessService {
     @Inject
     public SignedWitnessService(KeyRing keyRing,
                                 P2PService p2PService,
-                                ArbitratorManager arbitratorManager,
+                                @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
                                 FilterPolicyService filterPolicyService) {
