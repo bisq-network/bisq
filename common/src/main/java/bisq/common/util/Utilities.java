@@ -462,7 +462,7 @@ public class Utilities {
                 break;
             case 2:
             default:
-                result = RandomStringUtils.secure().nextAlphabetic(length);
+                result = RandomStringUtils.secure().nextAlphanumeric(length);
         }
 
         switch (new Random().nextInt(3)) {
