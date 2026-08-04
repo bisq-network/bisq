@@ -19,14 +19,13 @@ package bisq.common.crypto;
 
 import org.bitcoinj.core.Utils;
 
-import com.google.common.base.Charsets;
-
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +52,7 @@ public class Hash {
      * @return Hash of data
      */
     public static byte[] getSha256Hash(String message) {
-        return getSha256Hash(message.getBytes(Charsets.UTF_8));
+        return getSha256Hash(message.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
