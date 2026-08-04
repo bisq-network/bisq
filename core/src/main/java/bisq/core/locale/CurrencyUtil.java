@@ -316,7 +316,7 @@ public class CurrencyUtil {
         if (countryCode.equals("XK"))
             return new FiatCurrency("EUR");
 
-        Currency currency = Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode));
+        Currency currency = Currency.getInstance(Locale.of(LanguageUtil.getDefaultLanguage(), countryCode));
         return new FiatCurrency(currency.getCurrencyCode());
     }
 
