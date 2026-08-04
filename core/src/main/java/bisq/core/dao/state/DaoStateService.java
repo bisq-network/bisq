@@ -363,7 +363,7 @@ public class DaoStateService implements DaoSetupService {
         byte[] canonicalDaoStateBytes = daoState.getSerializedStateForHashChain();
         long timeForCanonical = System.currentTimeMillis() - ts;
         ts = System.currentTimeMillis();
-        byte[] legacyDaoStateBytes = daoState.getSerializedStateForHashChainLegacy();
+        @SuppressWarnings("deprecation") byte[] legacyDaoStateBytes = daoState.getSerializedStateForHashChainLegacy();
         long timeForLegacy = System.currentTimeMillis() - ts;
         if (timeForLegacy > 0 || timeForCanonical > 0) {
             log.info("DaoStateHashChainSerialization verification for height {} took \n" +
