@@ -130,6 +130,7 @@ public class Config {
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
     public static final String VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION = "verifyDaoStateHashChainSerialization";
     public static final String DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION = "dumpDaoStateHashChainSerialization";
+    public static final String DUMP_DAO_STATE_HASH_CHECKPOINTS = "dumpDaoStateHashCheckpoints";
     public static final String VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION = "verifyBlindVoteEncryptedVotesSerialization";
     public static final String VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION = "verifyBlindVoteEncryptedMeritListSerialization";
     public static final String FULL_DAO_NODE = "fullDaoNode";
@@ -258,6 +259,7 @@ public class Config {
     public final boolean dumpBlockchainData;
     public final boolean verifyDaoStateHashChainSerialization;
     public final boolean dumpDaoStateHashChainSerialization;
+    public final boolean dumpDaoStateHashCheckpoints;
     public final boolean verifyBlindVoteEncryptedVotesSerialization;
     public final boolean verifyBlindVoteEncryptedMeritListSerialization;
     public final boolean fullDaoNode;
@@ -786,6 +788,14 @@ public class Config {
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
+        ArgumentAcceptingOptionSpec<Boolean> dumpDaoStateHashCheckpointsOpt =
+                parser.accepts(DUMP_DAO_STATE_HASH_CHECKPOINTS,
+                                "If set to true the DAO state hash is written as a checkpoint entry to a text file " +
+                                        "in the data dir at each block height divisible by 1000.")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
         ArgumentAcceptingOptionSpec<Boolean> verifyBlindVoteEncryptedVotesSerializationOpt =
                 parser.accepts(VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION,
                                 "If set to true the canonical blind vote encrypted votes plaintext serialization is " +
@@ -1052,6 +1062,7 @@ public class Config {
             this.dumpBlockchainData = options.valueOf(dumpBlockchainDataOpt);
             this.verifyDaoStateHashChainSerialization = options.valueOf(verifyDaoStateHashChainSerializationOpt);
             this.dumpDaoStateHashChainSerialization = options.valueOf(dumpDaoStateHashChainSerializationOpt);
+            this.dumpDaoStateHashCheckpoints = options.valueOf(dumpDaoStateHashCheckpointsOpt);
             this.verifyBlindVoteEncryptedVotesSerialization =
                     options.valueOf(verifyBlindVoteEncryptedVotesSerializationOpt);
             this.verifyBlindVoteEncryptedMeritListSerialization =

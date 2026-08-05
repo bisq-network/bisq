@@ -233,6 +233,8 @@ public class DaoModule extends AppModule {
                 .to(config.verifyDaoStateHashChainSerialization);
         bindConstant().annotatedWith(named(Config.DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION))
                 .to(config.dumpDaoStateHashChainSerialization);
+        bindConstant().annotatedWith(named(Config.DUMP_DAO_STATE_HASH_CHECKPOINTS))
+                .to(config.dumpDaoStateHashCheckpoints);
         bindConstant().annotatedWith(named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION))
                 .to(config.verifyBlindVoteEncryptedVotesSerialization);
         bindConstant().annotatedWith(named(Config.VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION))
