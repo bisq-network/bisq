@@ -275,19 +275,19 @@ public class FormattingUtils {
 
         String duration = durationMillis > 0 ? DurationFormatUtils.formatDuration(durationMillis, format) : "";
 
-        duration = RegExUtils.replacePattern(duration, "^1 " + seconds + "|\\b1 " + seconds, "1 " + second);
-        duration = RegExUtils.replacePattern(duration, "^1 " + minutes + "|\\b1 " + minutes, "1 " + minute);
-        duration = RegExUtils.replacePattern(duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
-        duration = RegExUtils.replacePattern(duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
+        duration = RegExUtils.replacePattern((CharSequence) duration, "^1 " + seconds + "|\\b1 " + seconds, "1 " + second);
+        duration = RegExUtils.replacePattern((CharSequence) duration, "^1 " + minutes + "|\\b1 " + minutes, "1 " + minute);
+        duration = RegExUtils.replacePattern((CharSequence) duration, "^1 " + hours + "|\\b1 " + hours, "1 " + hour);
+        duration = RegExUtils.replacePattern((CharSequence) duration, "^1 " + days + "|\\b1 " + days, "1 " + day);
 
         if (!showZeroValues) {
             duration = duration.replace(", 0 seconds", "");
             duration = duration.replace(", 0 minutes", "");
             duration = duration.replace(", 0 hours", "");
-            duration = RegExUtils.replacePattern(duration, "^0 days, ", "");
-            duration = RegExUtils.replacePattern(duration, "^0 hours, ", "");
-            duration = RegExUtils.replacePattern(duration, "^0 minutes, ", "");
-            duration = RegExUtils.replacePattern(duration, "^0 seconds, ", "");
+            duration = RegExUtils.replacePattern((CharSequence) duration, "^0 days, ", "");
+            duration = RegExUtils.replacePattern((CharSequence) duration, "^0 hours, ", "");
+            duration = RegExUtils.replacePattern((CharSequence) duration, "^0 minutes, ", "");
+            duration = RegExUtils.replacePattern((CharSequence) duration, "^0 seconds, ", "");
         }
         return duration.trim();
     }
