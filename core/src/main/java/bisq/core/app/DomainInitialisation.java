@@ -81,6 +81,7 @@ import java.util.stream.Collectors;
 public class DomainInitialisation {
     private final ClockWatcher clockWatcher;
     private final TradeLimits tradeLimits;
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
@@ -123,7 +124,7 @@ public class DomainInitialisation {
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
                                 TradeLimits tradeLimits,
-                                ArbitrationManager arbitrationManager,
+                                @SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                                 MediationManager mediationManager,
                                 RefundManager refundManager,
                                 TraderChatManager traderChatManager,
