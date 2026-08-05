@@ -24,6 +24,8 @@ import bisq.common.util.Utilities;
 
 import com.google.common.base.Charsets;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.Objects;
 
 import lombok.Value;
@@ -45,7 +47,7 @@ public final class MyProofOfBurn implements PersistablePayload, NetworkPayload {
     public MyProofOfBurn(String txId, String preImage) {
         this.txId = txId;
         this.preImage = preImage;
-        this.hash = Hash.getSha256Ripemd160hash(preImage.getBytes(Charsets.UTF_8));
+        this.hash = Hash.getSha256Ripemd160hash(preImage.getBytes(StandardCharsets.UTF_8));
     }
 
 

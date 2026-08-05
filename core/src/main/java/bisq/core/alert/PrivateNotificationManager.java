@@ -54,6 +54,8 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import java.security.SignatureException;
 
+import java.nio.charset.StandardCharsets;
+
 import java.math.BigInteger;
 
 import java.util.Random;
@@ -176,13 +178,13 @@ public class PrivateNotificationManager implements MessageListener {
     }
 
     private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotificationPayload privateNotification) {
-        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(Charsets.UTF_8));
+        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(StandardCharsets.UTF_8));
         String signatureAsBase64 = LowRSigningKey.from(privateNotificationSigningKey).signMessage(privateNotificationMessageAsHex);
         privateNotification.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(PrivateNotificationPayload privateNotification) {
-        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(Charsets.UTF_8));
+        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(StandardCharsets.UTF_8));
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(privateNotificationMessageAsHex, privateNotification.getSignatureAsBase64());
             return true;
