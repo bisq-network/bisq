@@ -380,6 +380,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .oneof(19, countryBasedPaymentAccountPayload -> as(countryBasedPaymentAccountPayload, MercadoPagoAccountPayload.class), MERCADO_PAGO_ACCOUNT_SCHEMA)
                     .build();
 
+    @SuppressWarnings("deprecation")
     static final CanonicalSchema<PaymentAccountPayload> SCHEMA =
             CanonicalSchema.<PaymentAccountPayload>newBuilder()
                     .string(1, paymentAccountPayload -> paymentAccountPayload.id)
