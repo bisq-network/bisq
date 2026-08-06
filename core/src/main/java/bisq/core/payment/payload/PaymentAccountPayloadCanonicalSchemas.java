@@ -206,6 +206,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(1, MoneseAccountPayload::getMobileNr)
                     .string(2, MoneseAccountPayload::getHolderName)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<VerseAccountPayload> VERSE_ACCOUNT_SCHEMA =
             CanonicalSchema.<VerseAccountPayload>newBuilder()
                     .string(1, VerseAccountPayload::getHolderName)
