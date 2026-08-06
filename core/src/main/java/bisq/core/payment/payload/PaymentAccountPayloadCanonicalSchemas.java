@@ -84,6 +84,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(1, UpholdAccountPayload::getAccountId)
                     .string(2, UpholdAccountPayload::getAccountOwner)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<CashAppAccountPayload> CASH_APP_ACCOUNT_SCHEMA =
             CanonicalSchema.<CashAppAccountPayload>newBuilder()
                     .string(1, CashAppAccountPayload::getCashTag)
