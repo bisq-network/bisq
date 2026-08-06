@@ -93,6 +93,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
             CanonicalSchema.<MoneyBeamAccountPayload>newBuilder()
                     .string(1, MoneyBeamAccountPayload::getAccountId)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<VenmoAccountPayload> VENMO_ACCOUNT_SCHEMA =
             CanonicalSchema.<VenmoAccountPayload>newBuilder()
                     .string(1, VenmoAccountPayload::getVenmoUserName)
