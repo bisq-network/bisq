@@ -60,6 +60,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(3, InteracETransferAccountPayload::getQuestion)
                     .string(4, InteracETransferAccountPayload::getAnswer)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<OKPayAccountPayload> OK_PAY_ACCOUNT_SCHEMA =
             CanonicalSchema.<OKPayAccountPayload>newBuilder()
                     .string(1, OKPayAccountPayload::getAccountNr)
