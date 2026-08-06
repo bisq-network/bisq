@@ -32,6 +32,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
             CanonicalSchema.<AliPayAccountPayload>newBuilder()
                     .string(1, AliPayAccountPayload::getAccountNr)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<ChaseQuickPayAccountPayload> CHASE_QUICK_PAY_ACCOUNT_SCHEMA =
             CanonicalSchema.<ChaseQuickPayAccountPayload>newBuilder()
                     .string(1, ChaseQuickPayAccountPayload::getEmail)
