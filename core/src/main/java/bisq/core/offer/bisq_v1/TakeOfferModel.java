@@ -20,6 +20,7 @@ package bisq.core.offer.bisq_v1;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -46,6 +47,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.btc.model.AddressEntry.Context.OFFER_FUNDING;
 import static bisq.core.offer.OfferDirection.SELL;
+import static bisq.core.util.VolumeUtil.getAdjustedAltcoinVolume;
 import static bisq.core.util.VolumeUtil.getAdjustedVolumeForHalCash;
 import static bisq.core.util.VolumeUtil.getRoundedFiatVolume;
 import static bisq.core.util.coin.CoinUtil.minCoin;
@@ -192,6 +194,9 @@ public class TakeOfferModel implements Model {
             volumeByAmount = getAdjustedVolumeForHalCash(volumeByAmount);
         else if (offer.isFiatOffer())
             volumeByAmount = getRoundedFiatVolume(volumeByAmount);
+        else if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode()))
+            volumeByAmount = getAdjustedAltcoinVolume(volumeByAmount,
+                    CurrencyUtil.getCryptoPrecision(offer.getCurrencyCode()));
 
         volume = volumeByAmount;
 

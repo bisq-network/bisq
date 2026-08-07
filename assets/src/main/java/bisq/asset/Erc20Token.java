@@ -30,4 +30,8 @@ public abstract class Erc20Token extends Token {
     public Erc20Token(String name, String tickerSymbol) {
         super(name, tickerSymbol, new EtherAddressValidator());
     }
+
+    public Erc20Token(String name, String tickerSymbol, int precision) {
+        super(name, tickerSymbol, precision, new EtherAddressValidator());
+    }
 }

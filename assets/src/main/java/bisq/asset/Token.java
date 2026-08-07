@@ -34,4 +34,8 @@ public abstract class Token extends AbstractAsset {
     public Token(String name, String tickerSymbol, AddressValidator addressValidator) {
         super(name, tickerSymbol, addressValidator);
     }
+
+    public Token(String name, String tickerSymbol, int precision, AddressValidator addressValidator) {
+        super(name, tickerSymbol, precision, addressValidator);
+    }
 }

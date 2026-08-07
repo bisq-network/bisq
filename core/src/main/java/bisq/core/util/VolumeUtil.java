@@ -26,6 +26,8 @@ import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 
+import com.google.common.math.LongMath;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -60,6 +62,31 @@ public class VolumeUtil {
         // Smallest allowed volume is factor (e.g. 10 EUR or 1 EUR,...)
         roundedVolume = Math.max(factor, roundedVolume);
         return Volume.parse(String.valueOf(roundedVolume), volumeByAmount.getCurrencyCode());
+    }
+
+    /**
+     * Round an altcoin volume to the coin's own precision so the resulting amount can
+     * actually be transferred on that coin's chain. Altcoin volumes are stored at
+     * 10^-8 precision, but the coin may support fewer decimals; one on-chain unit is
+     * 10^(8 - precision) internal units. Unlike {@link #getAdjustedFiatVolume} this does
+     * NOT coarsen to whole coins - it rounds to the finest unit the coin can represent.
+     *
+     * @param volumeByAmount    The volume generated from an amount.
+     * @param precision         The number of decimals the coin supports on its chain.
+     * @return The adjusted altcoin volume.
+     */
+    public static Volume getAdjustedAltcoinVolume(Volume volumeByAmount, int precision) {
+        int cappedPrecision = Math.min(precision, Altcoin.SMALLEST_UNIT_EXPONENT);
+        long step = LongMath.pow(10, Altcoin.SMALLEST_UNIT_EXPONENT - cappedPrecision);
+        long value = volumeByAmount.getValue();
+        // Round to the nearest multiple of step (half up) using exact integer arithmetic. We
+        // avoid floating point so large volumes stay bit-exact and precision 8 is a true no-op
+        // (a long -> double cast would lose precision above 2^53).
+        long roundedVolume = ((value + step / 2) / step) * step;
+        // Never round down to zero: a volume below one on-chain unit (e.g. a fraction of a
+        // whole coin on a 0-decimal coin) is raised to exactly one unit, so it stays sendable.
+        roundedVolume = Math.max(step, roundedVolume);
+        return new Volume(Altcoin.valueOf(volumeByAmount.getCurrencyCode(), roundedVolume));
     }
 
 

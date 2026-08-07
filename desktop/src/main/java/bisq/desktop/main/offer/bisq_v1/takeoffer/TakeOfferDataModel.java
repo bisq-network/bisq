@@ -485,6 +485,9 @@ class TakeOfferDataModel extends OfferDataModel {
                 volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
             else if (offer.isFiatOffer())
                 volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+            else if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode()))
+                volumeByAmount = VolumeUtil.getAdjustedAltcoinVolume(volumeByAmount,
+                        CurrencyUtil.getCryptoPrecision(offer.getCurrencyCode()));
 
             volume.set(volumeByAmount);
 

@@ -38,9 +38,28 @@ package bisq.asset;
  */
 public interface Asset {
 
+    /**
+     * Default number of decimal places for an asset. This is also Bisq's internal
+     * maximum precision for altcoin amounts, so assets whose chain supports more
+     * decimals are still handled at this precision, while assets supporting fewer
+     * should report their real value (see {@link #getPrecision()}).
+     */
+    int DEFAULT_PRECISION = 8;
+
     String getName();
 
     String getTickerSymbol();
+
+    /**
+     * The number of decimal places this asset supports on its own chain, i.e. the
+     * number of digits after the decimal point in its smallest transferable unit.
+     * Defaults to {@value #DEFAULT_PRECISION}. Assets whose chain supports fewer
+     * decimals (e.g. USD Coin with 6) should report their real value so that trade
+     * amounts are rounded to a figure the sender can actually transfer.
+     */
+    default int getPrecision() {
+        return DEFAULT_PRECISION;
+    }
 
     AddressValidationResult validateAddress(String address);
 }

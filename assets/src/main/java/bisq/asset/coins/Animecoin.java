@@ -23,7 +23,7 @@ import bisq.asset.NetworkParametersAdapter;
 
 public class Animecoin extends Coin {
     public Animecoin() {
-        super("Animecoin", "ANI", new Base58AddressValidator(new AnimecoinMainNetParams()));
+        super("Animecoin", "ANI", 5, new Base58AddressValidator(new AnimecoinMainNetParams()));
     }
 
     public static class AnimecoinMainNetParams extends NetworkParametersAdapter {
