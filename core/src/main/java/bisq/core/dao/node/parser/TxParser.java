@@ -30,6 +30,8 @@ import bisq.core.dao.state.model.blockchain.TxOutputType;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
+import bisq.common.config.Config;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -46,6 +48,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TxParser {
+    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET = 961_400;
+    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET = 1;
+    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_REGTEST = 1;
+
     private final PeriodService periodService;
     private final DaoStateService daoStateService;
     private TxOutputParser txOutputParser;
@@ -103,9 +109,13 @@ public class TxParser {
 
         boolean hasBsqInputs = accumulatedInputValue > 0;
         boolean hasBurntBond = burntBondValue > 0;
+        boolean spendsLockupOutput = optionalSpentLockupTxOutput.isPresent();
+        boolean hardFork3Activated = isHardFork3Activated(blockHeight);
 
         // If we don't have any BSQ in our input and we don't have burnt bonds we do not consider the tx as a BSQ tx.
-        if (!hasBsqInputs && !hasBurntBond)
+        // After hard fork 3, a zero-valued LOCKUP_OUTPUT spend must still reach the invalidity check. Otherwise the
+        // input would be removed from the UTXO set without recording the transaction which ended the bond.
+        if (!hasBsqInputs && !hasBurntBond && !(spendsLockupOutput && hardFork3Activated))
             return Optional.empty();
 
 
@@ -158,12 +168,16 @@ public class TxParser {
             txType = tempTx.getTxType();
         }
 
-        if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
+        if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond, spendsLockupOutput)) {
             tempTx.setTxType(TxType.INVALID);
             // We consider all BSQ inputs as burned if the tx is invalid.
-            tempTx.setBurntBsq(accumulatedInputValue);
+            // Before hard fork 3, preserve the historical accounting bug which omitted prematurely spent unlock
+            // inputs. From the fork onward burntBondValue must be included because it is part of the destroyed BSQ
+            // input value even though TxInputParser removes it from accumulatedInputValue.
+            long invalidBurntBsq = accumulatedInputValue + (hardFork3Activated ? burntBondValue : 0);
+            tempTx.setBurntBsq(invalidBurntBsq);
             txOutputParser.invalidateUTXOCandidates();
-            log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}", accumulatedInputValue / 100D, tempTx);
+            log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}", invalidBurntBsq / 100D, tempTx);
         } else if (txType == TxType.IRREGULAR) {
             log.warn("We have an irregular tx {}", tempTx);
             txOutputParser.commitUTXOCandidates();
@@ -331,10 +345,27 @@ public class TxParser {
 
     @VisibleForTesting
     // Performs various checks for an invalid tx
-    static boolean isTxInvalid(TempTx tempTx, boolean bsqOutputFound, boolean burntBondValue) {
+    static boolean isTxInvalid(TempTx tempTx,
+                               boolean bsqOutputFound,
+                               boolean burntBondValue,
+                               boolean spendsLockupOutput) {
         if (tempTx.getTxType() == TxType.INVALID) {
             // We got already set the invalid type in earlier checks and return early.
             return true;
+        }
+
+        // A lockup output is only spendable by a canonical unlock tx, which is the only spend that applies the lock
+        // time and keeps the bond confiscatable.
+        if (spendsLockupOutput && tempTx.getTxType() != TxType.UNLOCK) {
+            int blockHeight = tempTx.getBlockHeight();
+            if (isHardFork3Activated(blockHeight)){
+                log.warn("Invalid Tx: A lockup output was spent by a tx which is not an unlock tx. tx={}", tempTx);
+                return true;
+            } else {
+                log.warn("A lockup output was spent by a tx which is not an unlock tx at block height {}. " +
+                                "ActivateHardFork3Height={}, tx={}",
+                        blockHeight, getActivateHardFork3Height(), tempTx);
+            }
         }
 
         // We don't allow multiple opReturn outputs (they are non-standard but to be safe lets check it)
@@ -367,6 +398,7 @@ public class TxParser {
 
         return false;
     }
+
 
     /**
      * Retrieve the type of the transaction, assuming it is relevant to bisq.
@@ -447,5 +479,18 @@ public class TxParser {
                 // opReturn types in future.
                 return TxType.IRREGULAR;
         }
+    }
+
+    private static boolean isHardFork3Activated(int blockHeight) {
+        return blockHeight >= getActivateHardFork3Height();
+    }
+
+    private static int getActivateHardFork3Height() {
+        return switch (Config.baseCurrencyNetwork()) {
+            case BTC_MAINNET -> ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET;
+            case BTC_TESTNET -> ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET;
+            case BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET, BTC_DAO_REGTEST ->
+                    ACTIVATE_HARD_FORK_3_HEIGHT_REGTEST;
+        };
     }
 }

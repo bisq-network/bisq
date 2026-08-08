@@ -20,6 +20,7 @@ package bisq.core.dao.node.parser;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
 import bisq.core.dao.node.parser.exceptions.BlockHeightNotConnectingException;
+import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
@@ -30,6 +31,7 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 
 import java.util.List;
+import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,6 +83,7 @@ public class BlockParser {
         log.trace("Parse block at height={} ", blockHeight);
 
         validateIfBlockIsConnecting(rawBlock);
+        validateTxBlockMetadata(rawBlock);
 
         daoStateService.onNewBlockHeight(blockHeight);
 
@@ -132,6 +135,36 @@ public class BlockParser {
 
         if (!daoStateService.getBlockHashOfLastBlock().equals(rawBlock.getPreviousBlockHash()))
             throw new BlockHashNotConnectingException(rawBlock);
+    }
+
+    private void validateTxBlockMetadata(RawBlock rawBlock) {
+        rawBlock.getRawTxs().forEach(rawTx -> {
+            if (rawTx.getBlockHeight() != rawBlock.getHeight() ||
+                    !Objects.equals(rawTx.getBlockHash(), rawBlock.getHash())) {
+                throw new InvalidParsingConditionException("Raw transaction block metadata does not match its containing block. " +
+                        "txId=" + rawTx.getId() +
+                        ", txHeight=" + rawTx.getBlockHeight() +
+                        ", blockHeight=" + rawBlock.getHeight() +
+                        ", txBlockHash=" + rawTx.getBlockHash() +
+                        ", blockHash=" + rawBlock.getHash());
+            }
+
+            // The outputs carry their own txId and block height as well. The tx output key which addresses the
+            // UTXO set is derived from the output's own txId, and the height gated rules in TxOutputParser read
+            // the output's own height, so both must match the containing tx and block too.
+            rawTx.getRawTxOutputs().stream()
+                    .filter(rawTxOutput -> rawTxOutput.getBlockHeight() != rawBlock.getHeight() ||
+                            !Objects.equals(rawTxOutput.getTxId(), rawTx.getId()))
+                    .findFirst()
+                    .ifPresent(rawTxOutput -> {
+                        throw new InvalidParsingConditionException("Raw transaction output metadata does not match its containing transaction and block. " +
+                                "txId=" + rawTx.getId() +
+                                ", outputTxId=" + rawTxOutput.getTxId() +
+                                ", outputIndex=" + rawTxOutput.getIndex() +
+                                ", outputHeight=" + rawTxOutput.getBlockHeight() +
+                                ", blockHeight=" + rawBlock.getHeight());
+                    });
+        });
     }
 
     private boolean isBlockAlreadyAdded(RawBlock rawBlock) {
