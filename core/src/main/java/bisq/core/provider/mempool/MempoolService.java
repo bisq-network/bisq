@@ -267,6 +267,9 @@ public class MempoolService {
         List<String> btcFeeReceivers = new ArrayList<>();
         btcFeeReceivers.addAll(daoFacade.getAllDonationAddresses());
         addBurningManAddressListLegacyAddress(btcFeeReceivers);
+        // Keep the historical BTC fees address recognised so that fee txs which paid it
+        // while it was the network-designated receiver do not get invalidated later.
+        btcFeeReceivers.add(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_ADDRESS);
         btcFeeReceivers.addAll(BtcFeeReceiverService.getConfiguredReceiverAddresses(
                 filterPolicyService.getBtcFeeReceiverAddresses()));
 

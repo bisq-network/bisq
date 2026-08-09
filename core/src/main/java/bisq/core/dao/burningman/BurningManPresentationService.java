@@ -67,7 +67,7 @@ public class BurningManPresentationService implements DaoStateListener {
     private static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
     public static final String LEGACY_BURNING_MAN_DPT_NAME = "Legacy Burningman (DPT)";
     public static final String LEGACY_BURNING_MAN_BTC_FEES_NAME = "Legacy Burningman (BTC fees)";
-    static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
+    public static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
     // Those are the opReturn data used by legacy BM for burning BTC received from DPT.
     // For regtest testing burn bsq and use the pre-image `dpt` which has the hash 14af04ea7e34bd7378b034ddf90da53b7c27a277.
     // The opReturn data gets additionally prefixed with 1701

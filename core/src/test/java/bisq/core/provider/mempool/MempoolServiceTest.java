@@ -66,6 +66,15 @@ class MempoolServiceTest {
         assertFalse(receivers.contains(LIST_LEGACY_ADDRESS));
     }
 
+    @Test
+    void getAllBtcFeeReceiversIncludesHistoricalBtcFeesLegacyAddress() {
+        MempoolService service = newService(addressList("OTHER_NETWORK"));
+
+        List<String> receivers = service.getAllBtcFeeReceivers();
+
+        assertTrue(receivers.contains(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_ADDRESS));
+    }
+
     private static MempoolService newService(BurningManAddressList addressList) {
         FilterPolicyService filterPolicyService = mock(FilterPolicyService.class);
         when(filterPolicyService.getBtcFeeReceiverAddresses()).thenReturn(List.of());
