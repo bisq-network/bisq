@@ -29,6 +29,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.http.HttpException;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -49,6 +50,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -60,6 +62,9 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class MempoolService {
+    // Upper bound for the cause chain walk in isTxUnknownResponse.
+    private static final int MAX_CAUSE_CHAIN_DEPTH = 20;
+
     private final Socks5ProxyProvider socks5ProxyProvider;
     private final Config config;
     private final Preferences preferences;
@@ -137,9 +142,7 @@ public class MempoolService {
             return;
         }
         MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider, config.allowLanForHttpRequests, config.allowClearnetHttpRequests);
-        SettableFuture<String> future = SettableFuture.create();
-        Futures.addCallback(future, callbackForTxRequest(mempoolRequest, txValidator, resultHandler), MoreExecutors.directExecutor());
-        mempoolRequest.getTxStatus(future, txId);
+        checkTxIsConfirmed(mempoolRequest, txValidator, new AtomicBoolean(true), resultHandler);
     }
 
     public CompletableFuture<String> requestTxAsHex(String txId) {
@@ -163,6 +166,22 @@ public class MempoolService {
         SettableFuture<String> future = SettableFuture.create();
         Futures.addCallback(future, callbackForTakerTxValidation(mempoolRequest, txValidator, resultHandler), MoreExecutors.directExecutor());
         mempoolRequest.getTxStatus(future, txValidator.getTxId());
+    }
+
+    private void checkTxIsConfirmed(MempoolRequest mempoolRequest,
+                                    TxValidator txValidator,
+                                    AtomicBoolean everyProviderAnswered404,
+                                    Consumer<TxValidator> resultHandler) {
+        SettableFuture<String> future = SettableFuture.create();
+        Futures.addCallback(future, callbackForTxRequest(mempoolRequest, txValidator, everyProviderAnswered404, resultHandler),
+                MoreExecutors.directExecutor());
+        try {
+            mempoolRequest.getTxStatus(future, txValidator.getTxId());
+        } catch (RuntimeException e) {
+            // The request could not even be dispatched. Feed that through the callback so the
+            // outstanding request accounting stays balanced and the caller still gets a result.
+            future.setException(e);
+        }
     }
 
     private FutureCallback<String> callbackForMakerTxValidation(MempoolRequest theRequest,
@@ -235,6 +254,7 @@ public class MempoolService {
 
     private FutureCallback<String> callbackForTxRequest(MempoolRequest theRequest,
                                                         TxValidator txValidator,
+                                                        AtomicBoolean everyProviderAnswered404,
                                                         Consumer<TxValidator> resultHandler) {
         outstandingRequests++;
         FutureCallback<String> myCallback = new FutureCallback<>() {
@@ -252,12 +272,39 @@ public class MempoolService {
                 log.warn("onFailure - {}", throwable.toString());
                 UserThread.execute(() -> {
                     outstandingRequests--;
-                    resultHandler.accept(txValidator.endResult(FeeValidationStatus.NACK_BTC_TX_NOT_FOUND));
+                    // Only a definitive "tx unknown" (HTTP 404) answer tells us anything about the tx. Any
+                    // other failure is a transport problem, so we must not conclude the tx does not exist.
+                    if (!isTxUnknownResponse(throwable)) {
+                        everyProviderAnswered404.set(false);
+                    }
+                    if (theRequest.switchToAnotherProvider()) {
+                        checkTxIsConfirmed(theRequest, txValidator, everyProviderAnswered404, resultHandler);
+                    } else {
+                        // exhausted all providers, let user know of failure
+                        resultHandler.accept(txValidator.endResult(everyProviderAnswered404.get() ?
+                                FeeValidationStatus.NACK_BTC_TX_NOT_FOUND :
+                                FeeValidationStatus.NACK_TX_LOOKUP_UNREACHABLE));
+                    }
                 });
 
             }
         };
         return myCallback;
+    }
+
+    // The block explorers answer with HTTP 404 if they do not know the tx. The HttpException carrying that
+    // response code is wrapped into an IOException by the http client, so we walk the cause chain. The
+    // depth is bounded so that a self referencing cause cannot spin the calling thread. Giving up early
+    // reports the failure as a transport problem, which is the safe direction.
+    @VisibleForTesting
+    static boolean isTxUnknownResponse(Throwable throwable) {
+        Throwable candidate = throwable;
+        for (int depth = 0; candidate != null && depth < MAX_CAUSE_CHAIN_DEPTH; candidate = candidate.getCause(), depth++) {
+            if (candidate instanceof HttpException && ((HttpException) candidate).getResponseCode() == 404) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // /////////////////////////////
