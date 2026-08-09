@@ -102,6 +102,7 @@ import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -143,6 +144,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedItemSubscription;
     private Stage chatPopupStage;
     private ListChangeListener<PendingTradesListItem> tradesListChangeListener;
+    private SetChangeListener<String> deadDepositTradesListener;
     private final Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
     private String tradeIdOfOpenChat;
     private double chatPopupStageXPosition = -1;
@@ -273,6 +275,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         tradesListChangeListener = c -> onListChanged();
+
+        deadDepositTradesListener = c -> {
+            updateMoveTradeToFailedColumnState();
+            // The cells only redraw on a trade state change, which does not happen here, so the
+            // icons of an already visible column would otherwise stay empty until the view is reopened.
+            tableView.refresh();
+        };
     }
 
     @Override
@@ -287,6 +296,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         filterBox.activate();
 
         updateMoveTradeToFailedColumnState();
+        model.getDeadDepositTradeIds().addListener(deadDepositTradesListener);
 
         scene = root.getScene();
         if (scene != null) {
@@ -348,6 +358,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         removeSelectedSubView();
 
         model.dataModel.list.removeListener(tradesListChangeListener);
+        model.getDeadDepositTradeIds().removeListener(deadDepositTradesListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -369,7 +380,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private boolean isMaybeInvalidTrade(Trade trade) {
         return trade.hasErrorMessage() ||
-                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getTradePhase().ordinal() && trade.isTxChainInvalid());
+                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getTradePhase().ordinal() && trade.isTxChainInvalid()) ||
+                model.isDepositTxProvenDead(trade);
     }
 
     private void onMoveInvalidTradeToFailedTrades(Trade trade) {
@@ -412,6 +424,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (trade.getDepositTx() == null) {
             return Res.get("portfolio.pending.failedTrade.missingDepositTx");
+        }
+
+        if (model.isDepositTxProvenDead(trade)) {
+            return Res.get("portfolio.pending.failedTrade.depositTxDead");
         }
 
         if (trade.getDelayedPayoutTx() == null) {

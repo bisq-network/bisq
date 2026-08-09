@@ -31,6 +31,7 @@ import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.TradeUtil;
@@ -63,10 +64,15 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
+
 import java.time.Duration;
 import java.time.Instant;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -123,6 +129,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final ObjectProperty<MessageState> messageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     private Subscription tradeStateSubscription;
     private Subscription messageStateSubscription;
+    // Transient, UI-local marker: trades whose deposit tx every block explorer reported as unknown.
+    // Not persisted, so a restart re-evaluates the situation from scratch. Observable so the view can
+    // reveal the "move to failed trades" column as soon as the (asynchronous) lookup comes back.
+    private final ObservableSet<String> deadDepositTradeIds = FXCollections.observableSet(new HashSet<>());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +220,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public void checkForTimeoutAtTradeStep1() {
+        // Pin the trade we are checking. The lookup is asynchronous and can take minutes, while the
+        // field follows the user's selection, so the result must not be applied to another trade.
+        Trade trade = this.trade;
         if (trade == null) {
+            return;
+        }
+        if (trade.getDepositTxId() == null) {
             return;
         }
         // Trade is waiting confirmation.  If it has been unconfirmed for too long, prompt the user.
@@ -218,20 +234,45 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if (unconfirmedHours >= 24 && !trade.hasFailed()) {
             // PR #6994 - only show a warning popup if a block explorer says it has confirmed
             mempoolService.checkTxIsConfirmed(trade.getDepositTxId(), (validator -> {
-                long confirms = validator.parseJsonValidateTx();
-                log.info("Mempool lookup of deposit tx returned {} confirms for trade {}", confirms, trade.getShortId());
-                if (confirms < 1) {
+                if (validator.getStatus() == FeeValidationStatus.NACK_TX_LOOKUP_UNREACHABLE) {
+                    // We could not get an answer from any block explorer, so we know nothing.
+                    log.info("Mempool lookup of deposit tx for trade {} could not reach any block explorer",
+                            trade.getShortId());
                     return;
                 }
-                String key = "tradeUnconfirmedTooLong_" + trade.getShortId();
-                if (DontShowAgainLookup.showAgain(key)) {
-                    new Popup().warning(Res.get("portfolio.pending.unconfirmedTooLong", trade.getShortId(), unconfirmedHours))
-                            .dontShowAgainId(key)
-                            .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
-                            .closeButtonText(Res.get("shared.ok"))
-                            .onAction(GUIUtil::reSyncSPVChain)
-                            .show();
+                long confirms = validator.parseJsonValidateTx();
+                log.info("Mempool lookup of deposit tx returned {} confirms for trade {}", confirms, trade.getShortId());
+                if (confirms >= 0) {
+                    // A provider returned a status for the tx, so it is not gone from the network,
+                    // whatever its confirmation count. Drop an earlier unknown-to-all verdict.
+                    deadDepositTradeIds.remove(trade.getId());
                 }
+                if (confirms >= 1) {
+                    String key = "tradeUnconfirmedTooLong_" + trade.getShortId();
+                    if (DontShowAgainLookup.showAgain(key)) {
+                        new Popup().warning(Res.get("portfolio.pending.unconfirmedTooLong", trade.getShortId(), unconfirmedHours))
+                                .dontShowAgainId(key)
+                                .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
+                                .closeButtonText(Res.get("shared.ok"))
+                                .onAction(GUIUtil::reSyncSPVChain)
+                                .show();
+                    }
+                } else if (validator.getStatus() == FeeValidationStatus.NACK_BTC_TX_NOT_FOUND) {
+                    // Every block explorer positively reported the deposit tx as unknown, which is what
+                    // it looks like when one of its inputs has since been spent by another transaction.
+                    // Nodes will then neither relay nor mine it.
+                    deadDepositTradeIds.add(trade.getId());
+                    String key = "tradeDepositTxDead_" + trade.getShortId();
+                    if (DontShowAgainLookup.showAgain(key)) {
+                        new Popup().warning(Res.get("portfolio.pending.depositTxDead", trade.getShortId(), unconfirmedHours))
+                                .dontShowAgainId(key)
+                                .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
+                                .closeButtonText(Res.get("shared.ok"))
+                                .onAction(GUIUtil::reSyncSPVChain)
+                                .show();
+                    }
+                }
+                // confirms == 0 means the tx is sitting in a mempool: valid, just slow. Stay silent.
             }));
         }
     }
@@ -296,6 +337,16 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public boolean showDispute() {
         return getMaxTradePeriodDate() != null && new Date().after(getMaxTradePeriodDate());
+    }
+
+    public boolean isDepositTxProvenDead(Trade trade) {
+        // A tx which was only dropped from the mempools looks the same to us but can still confirm
+        // later, so the marker never outlives an actual confirmation.
+        return trade != null && deadDepositTradeIds.contains(trade.getId()) && !trade.isDepositConfirmed();
+    }
+
+    ObservableSet<String> getDeadDepositTradeIds() {
+        return deadDepositTradeIds;
     }
 
     //
