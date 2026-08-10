@@ -66,17 +66,7 @@ public class BondedRoleGrpcService extends BondedRoleGrpcServiceGrpc.BondedRoleG
                     .getRegistration();
             log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
                     registration.bondUserName(), registration.roleType(), registration.profileId());
-            Optional<String> errorMessage = Optional.empty();
-            try {
-                bondedRolesRepository.verifyBondedRole(registration);
-            } catch (IllegalArgumentException e) {
-                errorMessage = Optional.of("Bonded role invalid. " + e.getMessage());
-            }
-
-            BondedRoleVerificationResponse.Builder builder = BondedRoleVerificationResponse.newBuilder();
-            errorMessage.ifPresent(builder::setErrorMessage);
-            BondedRoleVerificationResponse response = builder.build();
-            responseObserver.onNext(response);
+            responseObserver.onNext(verifyBondedRole(registration));
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("requestBondedRoleVerification failed", e);
@@ -85,5 +75,18 @@ public class BondedRoleGrpcService extends BondedRoleGrpcServiceGrpc.BondedRoleG
                     .withCause(e)
                     .asRuntimeException());
         }
+    }
+
+    private BondedRoleVerificationResponse verifyBondedRole(BondedRoleRegistration registration) {
+        Optional<String> errorMessage = Optional.empty();
+        try {
+            bondedRolesRepository.verifyBondedRole(registration);
+        } catch (IllegalArgumentException e) {
+            errorMessage = Optional.of("Bonded role invalid. " + e.getMessage());
+        }
+
+        BondedRoleVerificationResponse.Builder builder = BondedRoleVerificationResponse.newBuilder();
+        errorMessage.ifPresent(builder::setErrorMessage);
+        return builder.build();
     }
 }
