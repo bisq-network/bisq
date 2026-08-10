@@ -85,6 +85,28 @@ public abstract class ProposalValidator implements ConsensusCritical {
         return isValid(proposal, false);
     }
 
+    /**
+     * Validates a proposal for consensus-critical consumers such as ballot creation and proposal-state hashing.
+     * Subclasses can add activated data-field rules without changing the historical validation of other proposal
+     * types.
+     */
+    public boolean isValidForConsensus(Proposal proposal) {
+        if (!isTxTypeValid(proposal)) {
+            return false;
+        }
+
+        try {
+            validateConsensusDataFields(proposal);
+            return true;
+        } catch (ProposalValidationException e) {
+            log.warn("Proposal consensus data fields are invalid. proposal={}, error={}", proposal, e.toString());
+            return false;
+        }
+    }
+
+    protected void validateConsensusDataFields(Proposal proposal) throws ProposalValidationException {
+    }
+
     public boolean isTxTypeValid(Proposal proposal) {
         String txId = proposal.getTxId();
         if (txId == null || txId.equals("")) {

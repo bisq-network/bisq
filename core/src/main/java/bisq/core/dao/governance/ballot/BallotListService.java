@@ -153,13 +153,13 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     public List<Ballot> getValidatedBallotList() {
         return ballotList.stream()
-                .filter(ballot -> validatorProvider.getValidator(ballot.getProposal()).isTxTypeValid(ballot.getProposal()))
+                .filter(ballot -> validatorProvider.getValidator(ballot.getProposal()).isValidForConsensus(ballot.getProposal()))
                 .collect(Collectors.toList());
     }
 
     public List<Ballot> getValidBallotsOfCycle() {
         return ballotList.stream()
-                .filter(ballot -> validatorProvider.getValidator(ballot.getProposal()).isTxTypeValid(ballot.getProposal()))
+                .filter(ballot -> validatorProvider.getValidator(ballot.getProposal()).isValidForConsensus(ballot.getProposal()))
                 .filter(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), periodService.getChainHeight()))
                 .collect(Collectors.toList());
     }

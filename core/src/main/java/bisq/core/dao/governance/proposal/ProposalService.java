@@ -184,7 +184,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     public List<Proposal> getValidatedProposals() {
         return proposalPayloads.stream()
                 .map(ProposalPayload::getProposal)
-                .filter(proposal -> validatorProvider.getValidator(proposal).isTxTypeValid(proposal))
+                .filter(proposal -> validatorProvider.getValidator(proposal).isValidForConsensus(proposal))
                 .collect(Collectors.toList());
     }
 
