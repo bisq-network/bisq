@@ -259,13 +259,18 @@ class GrpcDaoService extends DaoImplBase {
             GetBondedRolesReply.Builder b = GetBondedRolesReply.newBuilder();
             for (BondedRole br : coreApi.getDaoBondedRoles()) {
                 BondedRoleType type = br.getBondedAsset().getBondedRoleType();
-                b.addRoles(BondedRoleInfo.newBuilder()
+                BondedRoleInfo.Builder roleBuilder = BondedRoleInfo.newBuilder()
                         .setBondedRoleType(type.name())
                         .setName(br.getBondedAsset().getName())
                         .setLink(br.getBondedAsset().getLink())
                         .setIsAccepted(br.isActive())
                         .setRequiredBond(coreApi.getDaoRequiredBond(type))
-                        .build());
+                        .setRoleUid(br.getBondedAsset().getUid())
+                        .setBondState(br.getBondState().name());
+                if (br.getLockupTxId() != null) {
+                    roleBuilder.setLockupTxId(br.getLockupTxId());
+                }
+                b.addRoles(roleBuilder.build());
             }
             obs.onNext(b.build());
             obs.onCompleted();
