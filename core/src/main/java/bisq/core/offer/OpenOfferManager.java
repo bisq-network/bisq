@@ -547,7 +547,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     "We still try to remove it from the offerbook.");
             offerBookService.removeOffer(offer.getOfferPayloadBase(),
                     () -> offer.setState(Offer.State.REMOVED),
-                    null);
+                    errorMessage -> log.warn("Remove offer from offer book failed, offerId={}, {}",
+                            offer.getId(), errorMessage));
         }
     }
 
@@ -601,8 +602,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     public void removeOpenOffer(OpenOffer openOffer) {
         removeOpenOffer(openOffer, () -> {
-        }, error -> {
-        });
+        }, errorMessage -> log.warn("Remove open offer failed, offerId={}, {}", openOffer.getId(), errorMessage));
     }
 
     public void removeOpenOffer(OpenOffer openOffer,
