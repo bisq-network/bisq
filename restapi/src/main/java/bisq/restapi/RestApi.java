@@ -21,7 +21,6 @@ package bisq.restapi;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.period.CycleService;
@@ -55,8 +54,6 @@ public class RestApi extends ExecutableForAppWithP2p {
     private AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private BondedRolesRepository bondedRolesRepository;
-    @Getter
-    private SignVerifyService signVerifyService;
     private DaoStateSnapshotService daoStateSnapshotService;
     private Preferences preferences;
     @Getter
@@ -97,7 +94,6 @@ public class RestApi extends ExecutableForAppWithP2p {
         accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
         bondedReputationRepository = injector.getInstance(BondedReputationRepository.class);
         bondedRolesRepository = injector.getInstance(BondedRolesRepository.class);
-        signVerifyService = injector.getInstance(SignVerifyService.class);
         daoStateSnapshotService = injector.getInstance(DaoStateSnapshotService.class);
         daoFacade = injector.getInstance(DaoFacade.class);
         proposalService = injector.getInstance(ProposalService.class);
