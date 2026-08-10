@@ -601,13 +601,15 @@ public class DaoFacade implements DaoSetupService {
 
     public List<Bond<?>> getAllBonds() {
         List<Bond<?>> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
-        bonds.addAll(bondedRolesRepository.getBonds());
+        bonds.addAll(bondedRolesRepository.getAllRoleBonds());
         return bonds;
     }
 
     public List<Bond<?>> getAllActiveBonds() {
         List<Bond<?>> bonds = new ArrayList<>(bondedReputationRepository.getActiveBonds());
-        bonds.addAll(bondedRolesRepository.getActiveBonds());
+        bonds.addAll(bondedRolesRepository.getAllRoleBonds().stream()
+                .filter(Bond::isActive)
+                .toList());
         return bonds;
     }
 
