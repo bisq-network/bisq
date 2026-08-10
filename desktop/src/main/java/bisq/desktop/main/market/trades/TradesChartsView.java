@@ -103,6 +103,7 @@ import javafx.util.StringConverter;
 
 import java.text.DecimalFormat;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -166,6 +167,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem> priceColumn, volumeColumn, marketColumn;
     private SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
+    private Label noDataPlaceholder, processingDataPlaceholder;
+    private boolean activated;
+    private int fillListGeneration;
 
     private ChangeListener<Toggle> timeUnitChangeListener;
     private ChangeListener<Number> priceAxisYWidthListener;
@@ -174,7 +178,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private ChangeListener<Number> parentHeightListener;
     private ChangeListener<String> priceColumnLabelListener;
     private ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
-    private ListChangeListener<TradeStatistics3> tradeStatisticsByCurrencyListener;
+    private ChangeListener<Number> tradeStatisticsRevisionListener;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Void> currencySelectionBinding;
@@ -244,7 +248,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
-        tradeStatisticsByCurrencyListener = c -> {
+        tradeStatisticsRevisionListener = (observable, oldValue, newValue) -> {
             nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
             fillList();
         };
@@ -289,6 +293,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void activate() {
+        activated = true;
         tabPaneSelectionModel = GUIUtil.getParentOfType(root, BisqJfxTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
@@ -326,7 +331,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
-        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsRevision.addListener(tradeStatisticsRevisionListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumnLabel.addListener(priceColumnLabelListener);
@@ -339,6 +344,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeInUsdChart.setAnimated(useAnimations);
 
         nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
+
+        // The table was released at deactivate and gets rebuilt once the model
+        // has refiltered the data, so we show the processing state meanwhile
+        // and there is nothing to export yet.
+        tableView.setPlaceholder(processingDataPlaceholder);
+        exportLink.setDisable(true);
 
         exportLink.setOnAction(e -> exportToCsv());
 
@@ -363,12 +374,13 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void deactivate() {
+        activated = false;
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.priceItems.removeListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
-        model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsRevision.removeListener(tradeStatisticsRevisionListener);
 
         priceAxisY.labelProperty().unbind();
         priceColumnLabel.removeListener(priceColumnLabelListener);
@@ -376,6 +388,16 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         currencySelectionSubscriber.unsubscribe();
 
         sortedList.comparatorProperty().unbind();
+
+        // The view instance is cached by the CachingViewLoader, so we release the
+        // table and volume chart data when leaving the screen. The next activate
+        // rebuilds them and shows the processing placeholder meanwhile. Bumping
+        // the generation discards list builds which are still in flight.
+        fillListGeneration++;
+        tableView.setItems(FXCollections.emptyObservableList());
+        sortedList = new SortedList<>(FXCollections.observableArrayList());
+        volumeSeries.getData().clear();
+        volumeInUsdSeries.getData().clear();
 
         priceSeries.getData().clear();
         priceChart.getData().clear();
@@ -397,26 +419,61 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void fillList() {
         long ts = System.currentTimeMillis();
+        int generation = ++fillListGeneration;
         boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-        // Collect the list items in reverse chronological order, as this is the likely
-        // order 'sortedList' will place them in - this skips most of its (slow) sorting.
-        CompletableFuture.supplyAsync(() -> Lists.reverse(model.tradeStatisticsByCurrency).stream()
-                .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
-                        coinFormatter,
-                        showAllTradeCurrencies))
-                .collect(Collectors.toCollection(FXCollections::observableArrayList))
-        ).whenComplete((listItems, throwable) -> {
-            log.debug("Creating listItems took {} ms", System.currentTimeMillis() - ts);
-
-            long ts2 = System.currentTimeMillis();
-            sortedList.comparatorProperty().unbind();
-            // Sorting is slow as we have > 100k items. So we prefer to do it on the non UI thread.
-            sortedList = new SortedList<>(listItems);
-            sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-            log.debug("Created sorted list took {} ms", System.currentTimeMillis() - ts2);
+        // Snapshot the observable list and the current sort comparator on the user
+        // thread. The background build must not traverse the observable list or read
+        // the table while the user thread can mutate them via setAll or a re-sort.
+        List<TradeStatistics3> snapshot = new ArrayList<>(model.tradeStatisticsByCurrency);
+        Comparator<TradeStatistics3ListItem> comparator = tableView.getComparator();
+        CompletableFuture.supplyAsync(() -> {
+            // Collect the list items in reverse chronological order, as this is the
+            // likely order 'sortedList' will place them in - this skips most of its
+            // (slow) sorting. Sorting is slow as we have > 100k items, so we build
+            // and sort off the UI thread.
+            ObservableList<TradeStatistics3ListItem> listItems = Lists.reverse(snapshot).stream()
+                    .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
+                            coinFormatter,
+                            showAllTradeCurrencies))
+                    .collect(Collectors.toCollection(FXCollections::observableArrayList));
+            SortedList<TradeStatistics3ListItem> sorted = new SortedList<>(listItems);
+            if (comparator != null) {
+                sorted.setComparator(comparator);
+            }
+            return sorted;
+        }).whenComplete((newSortedList, throwable) -> {
+            if (throwable != null) {
+                log.error("Error at fillList/creating the list items.", throwable);
+                UserThread.execute(() -> {
+                    if (generation != fillListGeneration) {
+                        return;
+                    }
+                    // Release the previous rows so the failed build does not keep
+                    // stale data attached and exportable behind the placeholder.
+                    sortedList.comparatorProperty().unbind();
+                    sortedList = new SortedList<>(FXCollections.observableArrayList());
+                    tableView.setItems(sortedList);
+                    tableView.setPlaceholder(noDataPlaceholder);
+                    exportLink.setDisable(true);
+                });
+                return;
+            }
+            log.debug("Creating and sorting listItems took {} ms", System.currentTimeMillis() - ts);
             UserThread.execute(() -> {
+                // Discard builds which got overtaken by a deactivate or by a
+                // newer build, so the released table does not get repopulated
+                // on the cached view and a stale list never replaces a fresh one.
+                if (generation != fillListGeneration) {
+                    return;
+                }
+                sortedList.comparatorProperty().unbind();
+                sortedList = newSortedList;
                 // When we attach the list to the table we need to be on the UI thread.
+                // Bind so later header clicks keep re-sorting the list.
+                sortedList.comparatorProperty().bind(tableView.comparatorProperty());
                 tableView.setItems(sortedList);
+                tableView.setPlaceholder(noDataPlaceholder);
+                exportLink.setDisable(false);
             });
         });
     }
@@ -616,6 +673,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     }
 
     private void updateChartData() {
+        // A queued update can arrive after deactivate released the series data.
+        if (!activated) {
+            return;
+        }
         volumeSeries.getData().setAll(model.volumeItems);
         volumeInUsdSeries.getData().setAll(model.volumeInUsdItems);
 
@@ -913,9 +974,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         tableView.getColumns().add(paymentMethodColumn);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noData"));
-        placeholder.setWrapText(true);
-        tableView.setPlaceholder(placeholder);
+        noDataPlaceholder = new AutoTooltipLabel(Res.get("table.placeholder.noData"));
+        noDataPlaceholder.setWrapText(true);
+        processingDataPlaceholder = new AutoTooltipLabel(Res.get("table.placeholder.processingData"));
+        processingDataPlaceholder.setWrapText(true);
+        tableView.setPlaceholder(processingDataPlaceholder);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
     }

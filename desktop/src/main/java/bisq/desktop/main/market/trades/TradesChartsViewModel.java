@@ -35,6 +35,7 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
+import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.util.CompletableFutureUtils;
 
@@ -43,8 +44,10 @@ import com.google.inject.Inject;
 import javafx.scene.chart.XYChart;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.FXCollections;
@@ -68,6 +71,7 @@ import javax.annotation.Nullable;
 class TradesChartsViewModel extends ActivatableViewModel {
     static final int MAX_TICKS = 90;
     private static final int TAB_INDEX = 2;
+    private static final int CHART_DATA_UPDATE_DELAY_SEC = 10;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -94,6 +98,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""), -1);
     final ObservableList<TradeStatistics3> tradeStatisticsByCurrency = FXCollections.observableArrayList();
+    // Bumped on the UserThread whenever a refilter result got applied to
+    // tradeStatisticsByCurrency, also when the result was empty or the refilter
+    // failed. setAll does not fire a change event for an empty to empty
+    // transition, so the view listens on this property instead of the list.
+    final IntegerProperty tradeStatisticsRevision = new SimpleIntegerProperty();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeInUsdItems = FXCollections.observableArrayList();
@@ -104,6 +113,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
     private boolean fillTradeCurrenciesOnActivateCalled;
     private volatile boolean deactivateCalled;
+    @Nullable
+    private Timer chartDataUpdateTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,20 +129,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
 
-        setChangeListener = change -> {
-            applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
-                    .whenComplete((result, throwable) -> {
-                        if (deactivateCalled) {
-                            return;
-                        }
-                        if (throwable != null) {
-                            log.error("Error at setChangeListener/applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
-                            return;
-                        }
-                        applyAsyncChartData();
-                    });
-            fillTradeCurrencies();
-        };
+        setChangeListener = change -> scheduleChartDataUpdate();
 
         String tradeChartsScreenCurrencyCode = preferences.getTradeChartsScreenCurrencyCode();
         showAllTradeCurrenciesProperty.set(isShowAllEntry(tradeChartsScreenCurrencyCode));
@@ -188,6 +186,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
     @Override
     protected void deactivate() {
         deactivateCalled = true;
+        if (chartDataUpdateTimer != null) {
+            chartDataUpdateTimer.stop();
+            chartDataUpdateTimer = null;
+        }
         tradeStatisticsManager.getObservableTradeStatisticsSet().removeListener(setChangeListener);
 
         // We want to avoid to trigger listeners in the view so we delay a bit. Deactivate on model is called before
@@ -245,6 +247,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
                     }
                     if (throwable != null) {
                         log.error("Error at applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
+                        UserThread.execute(() ->
+                                tradeStatisticsRevision.set(tradeStatisticsRevision.get() + 1));
+                        future.completeExceptionally(throwable);
                         if (completeFuture != null) {
                             completeFuture.completeExceptionally(throwable);
                         }
@@ -253,6 +258,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                     UserThread.execute(() -> {
                         tradeStatisticsByCurrency.setAll(list);
+                        tradeStatisticsRevision.set(tradeStatisticsRevision.get() + 1);
                         log.debug("applyAsyncTradeStatisticsForCurrency took {}", System.currentTimeMillis() - ts);
                         if (completeFuture != null) {
                             completeFuture.complete(true);
@@ -365,6 +371,35 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // The observable set fires one change event per arriving trade statistic and
+    // every event re-ran the full chart pipeline including a scan of the whole
+    // data set. Bursts of arriving trade statistics piled up those expensive
+    // rebuilds, so we coalesce the events and rebuild once.
+    private void scheduleChartDataUpdate() {
+        if (chartDataUpdateTimer != null) {
+            return;
+        }
+        chartDataUpdateTimer = UserThread.runAfter(() -> {
+            chartDataUpdateTimer = null;
+            if (deactivateCalled) {
+                return;
+            }
+            applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
+                    .whenComplete((result, throwable) -> {
+                        if (deactivateCalled) {
+                            return;
+                        }
+                        if (throwable != null) {
+                            log.error("Error at scheduleChartDataUpdate/applyAsyncTradeStatisticsForCurrency. {}",
+                                    throwable.toString());
+                            return;
+                        }
+                        applyAsyncChartData();
+                    });
+            fillTradeCurrencies();
+        }, CHART_DATA_UPDATE_DELAY_SEC);
+    }
 
     private void fillTradeCurrencies() {
         // Don't use a set as we need all entries
