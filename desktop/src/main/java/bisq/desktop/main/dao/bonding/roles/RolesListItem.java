@@ -30,10 +30,12 @@ import lombok.extern.slf4j.Slf4j;
 class RolesListItem {
     private final DaoFacade daoFacade;
     private final BondedRole bondedRole;
+    private final boolean lockupActionRow;
 
-    RolesListItem(BondedRole bondedRole, DaoFacade daoFacade) {
+    RolesListItem(BondedRole bondedRole, DaoFacade daoFacade, boolean lockupActionRow) {
         this.daoFacade = daoFacade;
         this.bondedRole = bondedRole;
+        this.lockupActionRow = lockupActionRow;
     }
 
     public String getLockupTxId() {
@@ -73,7 +75,7 @@ class RolesListItem {
     }
 
     public boolean isLockupButtonVisible() {
-        return iAmOwner() && (this.bondedRole.getBondState() == BondState.READY_FOR_LOCKUP);
+        return iAmOwner() && lockupActionRow;
     }
 
     public boolean isRevokeButtonVisible() {

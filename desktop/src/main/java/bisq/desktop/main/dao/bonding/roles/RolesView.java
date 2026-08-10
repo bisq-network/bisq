@@ -57,6 +57,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -120,9 +122,14 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
+        Set<String> rolesWithLockupAction = new HashSet<>();
         observableList.setAll(daoFacade.getAcceptedBondedRoles().stream()
-                .map(bond -> new RolesListItem(bond, daoFacade))
-                .sorted(Comparator.comparing(RolesListItem::getLockupDate).reversed())
+                .sorted(Comparator.comparing(BondedRole::getLockupDate).reversed())
+                .map(bond -> new RolesListItem(
+                        bond,
+                        daoFacade,
+                        rolesWithLockupAction.add(bond.getBondedAsset().getUid()) &&
+                                daoFacade.canCreateNewBondedRoleLockup(bond.getBondedAsset())))
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
@@ -346,4 +353,3 @@ public class RolesView extends ActivatableView<GridPane, Void> {
         tableView.getColumns().add(actionColumn);
     }
 }
-

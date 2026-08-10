@@ -316,6 +316,10 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.getAcceptedBonds();
     }
 
+    public boolean canCreateNewBondedRoleLockup(Role role) {
+        return bondedRolesRepository.canCreateNewLockup(role);
+    }
+
     // Show fee
     public Coin getProposalFee(int chainHeight) {
         return ProposalConsensus.getFee(daoStateService, chainHeight);
