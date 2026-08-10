@@ -69,8 +69,7 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
                                       Bond<?> bond,
                                       Tx lockupTx,
                                       TxOutput lockupTxOutput) {
-        if (bond.getBondState() != BondState.LOCKUP_TX_PENDING || bond.getBondState() != BondState.UNLOCK_TX_PENDING)
-            bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
+        bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
 
         bond.setLockupTxId(lockupTx.getId());
         // We use the tx time as we want to have a unique time for all users
