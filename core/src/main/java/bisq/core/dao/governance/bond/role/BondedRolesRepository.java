@@ -8,8 +8,8 @@
  *
  * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
@@ -20,7 +20,11 @@ package bisq.core.dao.governance.bond.role;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
+import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -34,60 +38,164 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Collect bonded roles from the evaluatedProposals from the daoState and provides access to the collection.
+ * Collects the independent lockup lifecycles associated with bonded-role proposals.
  */
 @Slf4j
 public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
+    private record RoleLockup(ByteString roleHash, Tx tx, TxOutput txOutput) {
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private record RoleProposalAtHeight(RoleProposal roleProposal, int blockHeight) {
+    }
+
+    // Includes every known BONDED_ROLE lockup whose hash matches an evaluated role proposal. Invalid candidates and
+    // rejected proposals remain here for bond management and confiscation, but never grant Bisq 2 authority.
+    @Getter
+    private final ObservableList<BondedRole> allRoleBonds = FXCollections.observableArrayList();
 
     @Inject
-    public BondedRolesRepository(DaoStateService daoStateService, BsqWalletService bsqWalletService) {
+    public BondedRolesRepository(DaoStateService daoStateService,
+                                 BsqWalletService bsqWalletService) {
         super(daoStateService, bsqWalletService);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public boolean isMyRole(Role role) {
-        Set<String> myWalletTransactionIds = bsqWalletService.getClonedWalletTransactions().stream()
-                .map(Transaction::getTxId)
-                .map(Sha256Hash::toString)
-                .collect(Collectors.toSet());
-        return getAcceptedBondedRoleProposalStream()
-                .filter(roleProposal -> roleProposal.getRole().equals(role))
+        Set<String> myWalletTransactionIds = getMyWalletTransactionIds();
+        return getAcceptedBondedRoleProposal(role).stream()
                 .map(Proposal::getTxId)
                 .anyMatch(myWalletTransactionIds::contains);
     }
 
-    public Optional<RoleProposal> getAcceptedBondedRoleProposal(Role role) {
-        return getAcceptedBondedRoleProposalStream().filter(e -> e.getRole().getUid().equals(role.getUid())).findAny();
+    public boolean isMyLockupTx(String lockupTxId) {
+        return getMyWalletTransactionIds().contains(lockupTxId);
     }
 
+    private Set<String> getMyWalletTransactionIds() {
+        return bsqWalletService.getClonedWalletTransactions().stream()
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
+                .collect(Collectors.toSet());
+    }
 
-    public List<BondedRole> getAcceptedBonds() {
+    // A Role uid is client generated and is also the historical key used by BondRepository. Keep the uniquely oldest
+    // accepted proposal authoritative so a later accepted copy cannot replace the proposal-key identity.
+    public Optional<RoleProposal> getAcceptedBondedRoleProposal(Role role) {
+        List<RoleProposal> candidates = getAcceptedBondedRoleProposalStream()
+                .filter(roleProposal -> roleProposal.getRole().getUid().equals(role.getUid()))
+                .toList();
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<RoleProposalAtHeight> candidatesAtHeight = candidates.stream()
+                .map(this::findRoleProposalAtHeight)
+                .flatMap(Optional::stream)
+                .toList();
+        if (candidatesAtHeight.size() != candidates.size()) {
+            log.error("Could not resolve the block height of every accepted role proposal for role uid {}.",
+                    role.getUid());
+            return Optional.empty();
+        }
+
+        int oldestBlockHeight = candidatesAtHeight.stream()
+                .mapToInt(RoleProposalAtHeight::blockHeight)
+                .min()
+                .orElseThrow();
+        List<RoleProposalAtHeight> oldestCandidates = candidatesAtHeight.stream()
+                .filter(candidate -> candidate.blockHeight() == oldestBlockHeight)
+                .toList();
+        if (oldestCandidates.size() != 1) {
+            log.error("Found {} accepted role proposals for role uid {} at oldest block height {}. " +
+                            "The role identity is ambiguous.",
+                    oldestCandidates.size(), role.getUid(), oldestBlockHeight);
+            return Optional.empty();
+        }
+
+        RoleProposal candidate = oldestCandidates.getFirst().roleProposal();
+        return candidate.getRole().equals(role) ? Optional.of(candidate) : Optional.empty();
+    }
+
+    private Optional<RoleProposalAtHeight> findRoleProposalAtHeight(RoleProposal roleProposal) {
+        return Optional.ofNullable(roleProposal.getTxId())
+                .flatMap(daoStateService::getTx)
+                .map(tx -> new RoleProposalAtHeight(roleProposal, tx.getBlockHeight()));
+    }
+
+    public synchronized List<BondedRole> getAcceptedBonds() {
         return bonds.stream()
                 .filter(bondedRole -> getAcceptedBondedRoleProposal(bondedRole.getBondedAsset()).isPresent())
-                .collect(Collectors.toList());
+                .toList();
     }
 
+    public boolean canCreateNewLockup(Role role) {
+        return getAcceptedBondedRoleProposal(role).isPresent() &&
+                !isLockupTxUnconfirmed(bsqWalletService, role);
+    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private Optional<RoleLockup> findValidRoleLockup(TxOutput lockupTxOutput,
+                                                     Map<ByteString, Role> acceptedRoleByHash) {
+        return daoStateService.getTx(lockupTxOutput.getTxId())
+                .flatMap(lockupTx -> findRoleHash(lockupTx)
+                        .map(roleHash -> new RoleLockup(roleHash, lockupTx, lockupTxOutput)))
+                .filter(roleLockup -> Optional.ofNullable(acceptedRoleByHash.get(roleLockup.roleHash()))
+                        .flatMap(this::getAcceptedBondedRoleProposal)
+                        .filter(roleProposal -> isValidLockupForRole(roleLockup.tx(), roleProposal))
+                        .isPresent());
+    }
+
+    private boolean isValidLockupForRole(Tx lockupTx, RoleProposal roleProposal) {
+        Optional<RoleProposalAtHeight> roleProposalAtHeight = findRoleProposalAtHeight(roleProposal);
+        if (roleProposalAtHeight.isEmpty() ||
+                lockupTx.getBlockHeight() <= roleProposalAtHeight.get().blockHeight() ||
+                lockupTx.getLockTime() < roleProposal.getUnlockTime()) {
+            return false;
+        }
+        return getRequiredBond(roleProposal, roleProposalAtHeight.get().blockHeight()).stream()
+                .anyMatch(requiredBond -> lockupTx.getLockedAmount() >= requiredBond);
+    }
+
+    private OptionalLong getRequiredBond(RoleProposal roleProposal, int proposalBlockHeight) {
+        if (roleProposal.getRequiredBondUnit() <= 0 || roleProposal.getUnlockTime() <= 0) {
+            return OptionalLong.empty();
+        }
+        long bondedRoleFactor = daoStateService.getParamValueAsCoin(
+                Param.BONDED_ROLE_FACTOR, proposalBlockHeight).value;
+        if (bondedRoleFactor <= 0) {
+            return OptionalLong.empty();
+        }
+        try {
+            return OptionalLong.of(Math.multiplyExact(roleProposal.getRequiredBondUnit(), bondedRoleFactor));
+        } catch (ArithmeticException e) {
+            log.error("Required bond overflows for role proposal {}.", roleProposal.getTxId());
+            return OptionalLong.empty();
+        }
+    }
+
+    private static Optional<ByteString> findRoleHash(Tx lockupTx) {
+        // A LOCKUP_OUTPUT is indexed only after the parser has validated the parent's 25-byte lockup OP_RETURN.
+        return Optional.ofNullable(lockupTx.getLastTxOutput().getOpReturnData())
+                .filter(opReturnData -> BondConsensus.getLockupReason(opReturnData)
+                        .filter(LockupReason.BONDED_ROLE::equals)
+                        .isPresent())
+                .map(opReturnData -> ByteString.copyFrom(BondConsensus.getHashFromOpReturnData(opReturnData)));
+    }
 
     @Override
     protected BondedRole createBond(Role role) {
@@ -96,34 +204,117 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
 
     @Override
     protected Stream<Role> getBondedAssetStream() {
-        return getBondedRoleProposalStream().map(RoleProposal::getRole);
+        return getAcceptedBondedRoleProposalStream()
+                .map(RoleProposal::getRole)
+                .map(this::getAcceptedBondedRoleProposal)
+                .flatMap(Optional::stream)
+                .map(RoleProposal::getRole)
+                .distinct();
+    }
+
+    @Override
+    protected synchronized void update() {
+        try {
+            bondByUidMap.clear();
+            List<Role> acceptedRoles = getBondedAssetStream().toList();
+            Map<ByteString, Role> acceptedRoleByHash = acceptedRoles.stream()
+                    .collect(Collectors.toMap(role -> ByteString.copyFrom(role.getHash()), role -> role));
+
+            List<RoleLockup> validRoleLockups = daoStateService.getLockupTxOutputs().stream()
+                    .map(lockupTxOutput -> findValidRoleLockup(lockupTxOutput, acceptedRoleByHash))
+                    .flatMap(Optional::stream)
+                    .toList();
+            List<BondedRole> acceptedBonds = validRoleLockups.stream()
+                    .map(roleLockup -> createRoleBond(
+                            acceptedRoleByHash.get(roleLockup.roleHash()), roleLockup.tx(), roleLockup.txOutput()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            Set<ByteString> rolesWithLockups = validRoleLockups.stream()
+                    .map(RoleLockup::roleHash)
+                    .collect(Collectors.toSet());
+            acceptedRoles.stream()
+                    .filter(role -> !rolesWithLockups.contains(ByteString.copyFrom(role.getHash())))
+                    .map(this::createBond)
+                    .forEach(acceptedBonds::add);
+
+            applyPendingWalletState(acceptedBonds);
+            acceptedBonds.sort(getBondComparator());
+            bonds.setAll(acceptedBonds);
+            allRoleBonds.setAll(findAllRoleBonds());
+        } catch (RuntimeException e) {
+            bondByUidMap.clear();
+            bonds.clear();
+            allRoleBonds.clear();
+            throw e;
+        }
+    }
+
+    private void applyPendingWalletState(List<BondedRole> acceptedBonds) {
+        acceptedBonds.stream()
+                .filter(bond -> bond.getBondState() == BondState.READY_FOR_LOCKUP)
+                .filter(bond -> isLockupTxUnconfirmed(bsqWalletService, bond.getBondedAsset()))
+                .forEach(bond -> bond.setBondState(BondState.LOCKUP_TX_PENDING));
+        acceptedBonds.stream()
+                .filter(bond -> bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
+                .filter(bond -> isUnlockTxUnconfirmed(bsqWalletService, bond.getLockupTxId()))
+                .forEach(bond -> bond.setBondState(BondState.UNLOCK_TX_PENDING));
+    }
+
+    private List<BondedRole> findAllRoleBonds() {
+        Map<String, BondedRole> acceptedBondByLockupTxId = bonds.stream()
+                .filter(bond -> bond.getLockupTxId() != null)
+                .collect(Collectors.toMap(BondedRole::getLockupTxId, bond -> bond));
+        Map<ByteString, Role> roleByHash = getBondedRoleProposalStream()
+                .map(RoleProposal::getRole)
+                .distinct()
+                .collect(Collectors.toMap(role -> ByteString.copyFrom(role.getHash()), role -> role));
+
+        List<BondedRole> result = daoStateService.getLockupTxOutputs().stream()
+                .map(lockupTxOutput -> findRoleBond(lockupTxOutput, roleByHash, acceptedBondByLockupTxId))
+                .flatMap(Optional::stream)
+                .sorted(getBondComparator())
+                .collect(Collectors.toCollection(ArrayList::new));
+        bonds.stream()
+                .filter(bond -> bond.getLockupTxId() == null)
+                .forEach(result::add);
+        return List.copyOf(result);
+    }
+
+    private Optional<BondedRole> findRoleBond(TxOutput lockupTxOutput,
+                                              Map<ByteString, Role> roleByHash,
+                                              Map<String, BondedRole> acceptedBondByLockupTxId) {
+        return daoStateService.getTx(lockupTxOutput.getTxId())
+                .flatMap(lockupTx -> findRoleHash(lockupTx)
+                        .map(roleByHash::get)
+                        .map(role -> Optional.ofNullable(acceptedBondByLockupTxId.get(lockupTx.getId()))
+                                .orElseGet(() -> createRoleBond(role, lockupTx, lockupTxOutput))));
+    }
+
+    private BondedRole createRoleBond(Role role, Tx lockupTx, TxOutput lockupTxOutput) {
+        BondedRole bond = createBond(role);
+        applyBondState(daoStateService, bond, lockupTx, lockupTxOutput);
+        return bond;
+    }
+
+    private static Comparator<BondedRole> getBondComparator() {
+        return Comparator.comparing(BondedRole::getLockupDate)
+                .thenComparing(BondedRole::getLockupTxId, Comparator.nullsFirst(Comparator.naturalOrder()));
     }
 
     @Override
     protected void updateBond(BondedRole bond, Role bondedAsset, TxOutput lockupTxOutput) {
-        // Lets see if we have a lock up tx.
-        String lockupTxId = lockupTxOutput.getTxId();
-        daoStateService.getTx(lockupTxId).ifPresent(lockupTx -> {
-            byte[] opReturnData = lockupTx.getLastTxOutput().getOpReturnData();
-            // We used the hash of the bonded bondedAsset object as our hash in OpReturn of the lock up tx to have a
-            // unique binding of the tx to the data object.
-            byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
-            Role candidateOrNull = getBondedAssetByHashMap().get(ByteString.copyFrom(hash));
-            if (bondedAsset.equals(candidateOrNull))
-                applyBondState(daoStateService, bond, lockupTx, lockupTxOutput);
-        });
-    }
-
-    private Stream<RoleProposal> getBondedRoleProposalStream() {
-        return daoStateService.getEvaluatedProposalList().stream()
-                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
-                .map(e -> ((RoleProposal) e.getProposal()));
+        // update() builds one BondedRole per lockup directly; the base-class single-bond hook is intentionally unused.
     }
 
     private Stream<RoleProposal> getAcceptedBondedRoleProposalStream() {
         return daoStateService.getEvaluatedProposalList().stream()
                 .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
                 .filter(EvaluatedProposal::isAccepted)
-                .map(e -> ((RoleProposal) e.getProposal()));
+                .map(e -> (RoleProposal) e.getProposal());
+    }
+
+    private Stream<RoleProposal> getBondedRoleProposalStream() {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
+                .map(e -> (RoleProposal) e.getProposal());
     }
 }
