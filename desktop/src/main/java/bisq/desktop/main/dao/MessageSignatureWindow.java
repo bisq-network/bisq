@@ -19,6 +19,7 @@ package bisq.desktop.main.dao;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.SignVerifyService;
@@ -44,14 +45,22 @@ public class MessageSignatureWindow extends Overlay<MessageSignatureWindow> {
     private final SignVerifyService signVerifyService;
     private final String txId;
     private final String pubKey;
+    private final MessageInputTransformer messageTransformer;
 
     private TextField sigTextField;
     private VBox sigTextFieldBox;
 
     public MessageSignatureWindow(SignVerifyService signVerifyService, String txId) {
+        this(signVerifyService, txId, Optional::of);
+    }
+
+    public MessageSignatureWindow(SignVerifyService signVerifyService,
+                                  String txId,
+                                  MessageInputTransformer messageTransformer) {
         this.signVerifyService = signVerifyService;
         this.txId = txId;
         this.pubKey = signVerifyService.getPubKeyAsHex(txId);
+        this.messageTransformer = messageTransformer;
         type = Type.Attention;
     }
 
@@ -88,12 +97,11 @@ public class MessageSignatureWindow extends Overlay<MessageSignatureWindow> {
         InputTextField messageInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.message"));
 
         Button signButton = FormBuilder.addButton(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.sign"), 10);
-        signButton.setOnAction(e -> {
-            signVerifyService.sign(txId, messageInputTextField.getText()).ifPresent(sig -> {
-                sigTextFieldBox.setVisible(true);
-                sigTextField.setText(sig);
-            });
-        });
+        signButton.setOnAction(e -> messageTransformer.transform(messageInputTextField.getText())
+                .ifPresentOrElse(message -> signVerifyService.sign(txId, message).ifPresent(sig -> {
+                    sigTextFieldBox.setVisible(true);
+                    sigTextField.setText(sig);
+                }), () -> new Popup().warning(Res.get("dao.bond.registration.notAvailable")).show()));
         Tuple3<Label, TextField, VBox> tuple = FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.sig"));
         sigTextFieldBox = tuple.third;
         sigTextField = tuple.second;
