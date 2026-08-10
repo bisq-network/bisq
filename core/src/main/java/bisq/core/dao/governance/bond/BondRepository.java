@@ -140,6 +140,19 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
     }
 
+    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService, String lockupTxId) {
+        return bsqWalletService.getPendingWalletTransactionsStream()
+                .flatMap(transaction -> transaction.getInputs().stream())
+                .map(TransactionInput::getConnectedOutput)
+                .filter(Objects::nonNull)
+                .filter(transactionOutput -> transactionOutput.getIndex() == 0)
+                .map(TransactionOutput::getParentTransaction)
+                .filter(Objects::nonNull)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
+                .anyMatch(lockupTxId::equals);
+    }
+
     public static boolean isConfiscated(Bond<?> bond, DaoStateService daoStateService) {
         return (bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
                 (bond.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(bond.getUnlockTxId()));
