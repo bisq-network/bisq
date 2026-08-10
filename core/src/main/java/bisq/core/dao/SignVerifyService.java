@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.crypto.LowRSigningKey;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
 
 import bisq.common.util.Utilities;
 
@@ -66,8 +67,12 @@ public class SignVerifyService {
     // Proofs ownership of the proof of burn tx.
     public byte[] getPubKey(String txId) {
         return daoStateService.getTx(txId)
-                .map(tx -> tx.getTxInputs().get(0))
-                .map(e -> Utilities.decodeFromHex(e.getPubKey()))
+                .filter(tx -> !tx.getTxInputs().isEmpty())
+                .map(tx -> tx.getTxInputs().getFirst())
+                .map(TxInput::getPubKey)
+                // Not set for input types from which we cannot extract the pub key. decodeFromHex would throw on null.
+                .filter(pubKey -> pubKey != null && !pubKey.isEmpty())
+                .map(Utilities::decodeFromHex)
                 .orElse(new byte[0]);
     }
 
