@@ -2,6 +2,7 @@
 
  - [CONTRIBUTING.md](../CONTRIBUTING.md): Understand Bisq's contribution and compensation guidelines
  - [build.md](build.md): Build and run Bisq at the command line
+ - [specifications](specifications/README.md): Authoritative domain behaviour and invariants
  - [dependency-signature-report.md](dependency-signature-report.md): Dependency PGP signature verification status
  - [reproducible-builds](reproducible-builds/): Reproducible release-build goals, usage, technical details, and platform notes
  - [idea-import.md](idea-import.md): Import Bisq sources into IntelliJ IDEA

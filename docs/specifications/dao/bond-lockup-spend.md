@@ -20,6 +20,8 @@ consensus rule. The security of every bond therefore rests on the parser's spend
 
 - A lockup transaction declares the lock time and lockup reason in its OP_RETURN. Its first output is the bond
   collateral (the lockup output).
+- The parser-recognized `UNDEFINED` reason is retained for consensus compatibility. It receives the same generic
+  lockup-spend protection but is not consumed as a bonded role or bonded reputation.
 - A lockup output is not spendable by ordinary wallet coin selection.
 - While the lockup output is unspent, an accepted confiscation proposal confiscates the bond.
 
