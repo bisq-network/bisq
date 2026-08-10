@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.node.full.RawTx;
@@ -29,8 +30,6 @@ import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.DaoPhase;
-
-import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
@@ -48,10 +47,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class TxParser {
-    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET = 961_400;
-    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET = 1;
-    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_REGTEST = 1;
-
     private final PeriodService periodService;
     private final DaoStateService daoStateService;
     private TxOutputParser txOutputParser;
@@ -364,7 +359,7 @@ public class TxParser {
             } else {
                 log.warn("A lockup output was spent by a tx which is not an unlock tx at block height {}. " +
                                 "ActivateHardFork3Height={}, tx={}",
-                        blockHeight, getActivateHardFork3Height(), tempTx);
+                        blockHeight, DaoHardFork.getHardFork3ActivationHeight(), tempTx);
             }
         }
 
@@ -482,15 +477,6 @@ public class TxParser {
     }
 
     private static boolean isHardFork3Activated(int blockHeight) {
-        return blockHeight >= getActivateHardFork3Height();
-    }
-
-    private static int getActivateHardFork3Height() {
-        return switch (Config.baseCurrencyNetwork()) {
-            case BTC_MAINNET -> ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET;
-            case BTC_TESTNET -> ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET;
-            case BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET, BTC_DAO_REGTEST ->
-                    ACTIVATE_HARD_FORK_3_HEIGHT_REGTEST;
-        };
+        return DaoHardFork.isHardFork3Activated(blockHeight);
     }
 }
