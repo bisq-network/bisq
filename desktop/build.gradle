@@ -7,8 +7,8 @@ plugins {
 
 application {
     mainClass = 'bisq.desktop.app.BisqAppMain'
-    applicationDefaultJvmArgs = ['-XX:MaxRAM=8g', '-Xss1280k', '-XX:+UseG1GC', '-XX:MaxHeapFreeRatio=10',
-                                 '-XX:MinHeapFreeRatio=5', '-XX:+UseStringDeduplication',
+    applicationDefaultJvmArgs = ['-XX:MaxRAMPercentage=50', '-XX:+UseCompressedOops', '-Xss1280k', '-XX:+UseG1GC',
+                                 '-XX:MaxHeapFreeRatio=10', '-XX:MinHeapFreeRatio=5', '-XX:+UseStringDeduplication',
                                  '-Djava.net.preferIPv4Stack=true',
                                  '--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED']
 }
