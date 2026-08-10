@@ -31,11 +31,10 @@ import lombok.Getter;
  *
  * Add entry to translation file "dao.bond.bondedRoleType...."
  *
- * Name of the BondedRoleType must not change as that is used for serialisation in Protobuffer. The data fields are not part of
- * the PB serialisation so changes for those would not change the hash for the dao state hash chain.
- * As the data is not used in consensus critical code yet changing fields can be tolerated.
- * For mediators and arbitrators we will use automated verification of the bond so there might be issues when we change
- * the values. So let's avoid changing anything here beside adding new entries.
+ * Name of the BondedRoleType must not change as that is used for serialisation in Protobuffer. From the hard-fork-3
+ * activation height, requiredBondUnit and unlockTimeInBlocks are consensus-critical proposal-validation constants.
+ * They must not be changed for an existing role type even though they are not serialized as part of this enum.
+ * Adding a new role type requires a separately coordinated compatibility decision.
  *
  */
 public enum BondedRoleType {

@@ -15,12 +15,20 @@ A `RoleProposal` carries a `Role` plus `requiredBondUnit` and `unlockTime`. The 
 `requiredBondUnit × BONDED_ROLE_FACTOR`, with the factor read at the proposal transaction height.
 Every proposal field is untrusted until the DAO accepts the proposal.
 
-### 1.1 Open: proposal-carried bond terms vs. role-type constants
+### 1.1 Proposal bond-term validation
 
-`BondedRoleType` also defines a required bond unit and unlock time. The normal client derives proposal
-terms from those constants, but proposal validation does not reconcile arbitrary wire values with
-them. The implementation treats the accepted proposal terms as authoritative. Changing proposal
-validation is consensus-critical and requires its own activation decision.
+`BondedRoleType` defines the required bond unit and unlock time for each role type. From the
+hard-fork-3 activation height, a role proposal is valid only when both proposal-carried values exactly
+equal the constants of its declared role type. A mismatch excludes the proposal from consensus
+ballot selection and proposal-state hashing even when its transaction and payload commitment are
+otherwise valid. The proposal transaction block height determines activation; an unconfirmed
+proposal is checked at the current chain height and checked again at its eventual transaction height.
+
+Below the activation height, historical validation is preserved: proposal-carried terms remain valid
+without comparison to the role-type constants, and accepted historical proposals continue to use
+their carried terms. From activation onward, `requiredBondUnit` and `unlockTimeInBlocks` in an
+existing `BondedRoleType` are consensus constants and must not be changed. Changing a constant or
+adding a role type requires its own compatibility and activation decision.
 
 ## 2. Canonical accepted proposal
 
@@ -81,8 +89,9 @@ confiscation.
 That exposure depends on the lock time outlasting a confiscation vote. `BondedRoleType` declares 110
 days for every current role type, while a mainnet DAO cycle is about 32.5 days, so unlocking in
 response to a published confiscation proposal does not free the collateral before the vote completes.
-A role proposal carrying a much shorter `unlockTime` would remove that property, because proposal
-terms are authoritative and are not reconciled against the role-type constants (§1.1).
+From hard-fork-3 activation, a proposal cannot shorten that period because its carried bond terms must
+match the role-type constants (§1.1). A historical pre-activation proposal retains its accepted
+carried terms.
 
 ### 4.1 Scenario matrix
 
