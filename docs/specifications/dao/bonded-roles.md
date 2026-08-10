@@ -30,6 +30,45 @@ their carried terms. From activation onward, `requiredBondUnit` and `unlockTimeI
 existing `BondedRoleType` are consensus constants and must not be changed. Changing a constant or
 adding a role type requires its own compatibility and activation decision.
 
+### 1.2 Bond-term lifecycle and audited history
+
+The three inputs to a role bond have different sources and mutability:
+
+| Value | Source | Selection time | Effect of a later change |
+|---|---|---|---|
+| `requiredBondUnit` | Code-defined `BondedRoleType`, copied into the proposal | Proposal creation and, from hard-fork-3, validated at its transaction height | None. The proposal-carried value remains fixed. |
+| `unlockTime` | Code-defined `BondedRoleType`, converted to network-specific blocks and copied into the proposal | Proposal creation and, from hard-fork-3, validated at its transaction height | None. The proposal-carried value remains fixed. |
+| `BONDED_ROLE_FACTOR` | DAO parameter history; the enum contains only its default and validation metadata | Value effective at the proposal transaction height | A DAO parameter change affects only proposals mined from its activation height. Existing proposals and bonds retain their earlier factor. |
+
+Thus `BONDED_ROLE_FACTOR` provides prospective global adjustment of the absolute collateral for new
+role proposals. It does not resize collateral requirements for an already accepted proposal. Such a
+retroactive change would need an explicit migration or replacement mechanism; evaluating the current
+factor against old lockups could invalidate collateral immediately and is not the specified model.
+There is no DAO parameter for role-specific units or unlock time.
+
+Repository history and the bundled mainnet data were audited when the hard-fork-3 validation was
+introduced:
+
+- The `BONDED_ROLE_FACTOR` code default was introduced as `1000` on March 21, 2019 and has not changed
+  in source history. Mainnet governance changed it once to `500.00`, effective at height `679387`.
+  One proposal for that value was accepted and another was rejected.
+- Numeric terms for every current role type were finalized before mainnet DAO genesis at height
+  `571747` on April 15, 2019: the last unit change was March 24 and the common unlock time changed from
+  75 to 110 days on April 7. No current role type's numeric terms changed after genesis.
+- A temporary `ANALYTICS_OPERATOR` type was added with unit 1, changed to 2 and removed in September
+  2019. It is absent from the bundled role-proposal data and does not alter any current role type.
+- At bundled DAO-state height `961400`, all 60 evaluated role proposals (59 accepted and one rejected),
+  all 60 append-only proposal payloads and the one temporary role proposal exactly match the current
+  mainnet role-type units and 15840-block unlock time. Of the evaluated proposals, 38 were mined before
+  the factor change and 22 from its activation height onward.
+
+This audit establishes compatibility only through the bundled height. Source-defined enum constants
+remain a consensus risk: changing an existing unit or unlock time after hard-fork-3 would make nodes
+running different versions disagree about proposal validity. Changing the factor's enum default would
+also rewrite historical parameter lookup before its first on-chain change. Existing constants and
+defaults must therefore remain immutable. New role terms require a versioned role type and coordinated
+activation; they must not be introduced by editing an existing enum entry.
+
 ## 2. Canonical accepted proposal
 
 A role uid is client-generated and can be copied into another proposal.

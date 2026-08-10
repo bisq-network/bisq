@@ -69,9 +69,8 @@ public enum BondedRoleType {
     BTC_DONATION_ADDRESS_OWNER(50, 110, "https://bisq.network/roles/80", true);
 
 
-    // Will be multiplied with PARAM.BONDED_ROLE_FACTOR to get BSQ amount.
-    // As BSQ is volatile we need to adjust the bonds over time.
-    // To avoid changing the Enum we use the BONDED_ROLE_FACTOR param to react on BSQ price changes.
+    // Relative role weight. The absolute amount is calculated with the BONDED_ROLE_FACTOR effective at the role
+    // proposal's block height. A later factor change affects new role proposals, not existing proposals or bonds.
     // Required bond = requiredBondUnit * PARAM.BONDED_ROLE_FACTOR.value
     @Getter
     private final long requiredBondUnit;
