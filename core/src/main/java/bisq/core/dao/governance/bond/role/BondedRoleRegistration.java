@@ -18,7 +18,8 @@
 package bisq.core.dao.governance.bond.role;
 
 /**
- * The fields required to verify one Bisq 2 bonded-role registration.
+ * The fields required to verify one Bisq 2 bonded-role registration. Version 0 is the historical unbound format;
+ * version 1 binds the proposal, lockup, and profile to a proposal-key signature.
  */
 public record BondedRoleRegistration(int protocolVersion,
                                      String bondUserName,
@@ -27,7 +28,22 @@ public record BondedRoleRegistration(int protocolVersion,
                                      String lockupTxId,
                                      String profileId,
                                      String signatureBase64) {
+    public static final int LEGACY_PROTOCOL_VERSION = 0;
     public static final int CURRENT_PROTOCOL_VERSION = 1;
+
+    public static BondedRoleRegistration legacy(String bondUserName,
+                                                String roleType,
+                                                String profileId,
+                                                String signatureBase64) {
+        return new BondedRoleRegistration(
+                LEGACY_PROTOCOL_VERSION,
+                bondUserName,
+                roleType,
+                "",
+                "",
+                profileId,
+                signatureBase64);
+    }
 
     public static BondedRoleRegistration current(String bondUserName,
                                                  String roleType,

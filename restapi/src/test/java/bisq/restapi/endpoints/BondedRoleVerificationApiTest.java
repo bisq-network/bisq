@@ -120,13 +120,21 @@ public class BondedRoleVerificationApiTest {
     }
 
     @Test
-    public void legacyRequestReturnsStructuredUpgradeRequiredResponse() {
-        Response response = api.rejectLegacyBondedRoleVerification();
+    public void legacyRequestIsVerifiedUsingTheUnboundFormat() {
+        BondedRoleVerificationDto result = api.getLegacyBondedRoleVerification(
+                BOND_USER_NAME, ROLE_TYPE, PROFILE_ID, "00");
 
-        assertEquals(426, response.getStatus());
-        BondedRoleVerificationDto body = (BondedRoleVerificationDto) response.getEntity();
-        assertEquals("Bonded role invalid. The unbound registration protocol is no longer supported.",
-                body.getErrorMessage());
+        assertNull(result.getErrorMessage());
+        verify(bondedRolesRepository).verifyBondedRole(BondedRoleRegistration.legacy(
+                BOND_USER_NAME, ROLE_TYPE, PROFILE_ID, "AA=="));
+    }
+
+    @Test
+    public void malformedLegacySignatureReturnsVerificationFailure() {
+        BondedRoleVerificationDto result = api.getLegacyBondedRoleVerification(
+                BOND_USER_NAME, ROLE_TYPE, PROFILE_ID, "not-hex");
+
+        assertEquals("Bonded role invalid. Invalid signature encoding.", result.getErrorMessage());
         verifyNoInteractions(bondedRolesRepository);
     }
 }

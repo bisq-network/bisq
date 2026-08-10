@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondState;
@@ -145,9 +146,59 @@ public class BondedRolesRepositoryTest {
 
     @Test
     public void unsupportedRegistrationProtocolVersionIsRejected() {
-        assertRejectedWith("Unsupported bonded-role registration protocol version: 0",
+        assertRejectedWith("Unsupported bonded-role registration protocol version: 2",
                 () -> repository.verifyBondedRole(new BondedRoleRegistration(
-                        0, NAME, ROLE_TYPE.name(), PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID, "signature")));
+                        2, NAME, ROLE_TYPE.name(), PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID, "signature")));
+    }
+
+    @Test
+    public void legacyRegistrationUsesThePreCutoffLockupKey() throws IOException {
+        addConfirmedBond(role, LOCKUP_TX_ID, LOCKUP_HEIGHT, lockupKey);
+
+        repository.verifyBondedRole(BondedRoleRegistration.legacy(
+                NAME, ROLE_TYPE.name(), PROFILE_ID, lockupKey.signMessage(PROFILE_ID)));
+        assertRejectedWith("No confirmed pre-cutoff role lockup with a valid legacy signature",
+                () -> repository.verifyBondedRole(BondedRoleRegistration.legacy(
+                        NAME, ROLE_TYPE.name(), PROFILE_ID, proposalKey.signMessage(PROFILE_ID))));
+    }
+
+    @Test
+    public void legacyRegistrationIsRejectedFromTheCutoffHeight() throws IOException {
+        int cutoffHeight = DaoHardFork.getHardFork3ActivationHeight();
+        addConfirmedBond(role, LOCKUP_TX_ID, cutoffHeight, lockupKey);
+
+        assertRejectedWith("No confirmed pre-cutoff role lockup with a valid legacy signature",
+                () -> repository.verifyBondedRole(BondedRoleRegistration.legacy(
+                        NAME, ROLE_TYPE.name(), PROFILE_ID, lockupKey.signMessage(PROFILE_ID))));
+        verify(PROPOSAL_TX_ID, LOCKUP_TX_ID,
+                signatureFrom(proposalKey, PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID));
+    }
+
+    @Test
+    public void legacyRegistrationRejectsTransactionBindings() {
+        assertRejectedWith("must not contain transaction bindings",
+                () -> repository.verifyBondedRole(new BondedRoleRegistration(
+                        BondedRoleRegistration.LEGACY_PROTOCOL_VERSION,
+                        NAME,
+                        ROLE_TYPE.name(),
+                        PROPOSAL_TX_ID,
+                        LOCKUP_TX_ID,
+                        PROFILE_ID,
+                        "signature")));
+    }
+
+    @Test
+    public void confiscatedPreCutoffLockupCannotAuthorizeALegacyRegistration() throws IOException {
+        addConfirmedBond(role, LOCKUP_TX_ID, LOCKUP_HEIGHT, lockupKey);
+        BondedRoleRegistration registration = BondedRoleRegistration.legacy(
+                NAME, ROLE_TYPE.name(), PROFILE_ID, lockupKey.signMessage(PROFILE_ID));
+        repository.verifyBondedRole(registration);
+
+        when(daoStateService.isConfiscatedLockupTxOutput(LOCKUP_TX_ID)).thenReturn(true);
+        repository.doUpdate();
+
+        assertRejectedWith("No confirmed pre-cutoff role lockup with a valid legacy signature",
+                () -> repository.verifyBondedRole(registration));
     }
 
     @Test

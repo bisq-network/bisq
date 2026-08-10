@@ -93,6 +93,39 @@ public class BondedRoleVerificationApi {
             return new BondedRoleVerificationDto("Bonded role invalid. Invalid protocol version.");
         }
 
+        return verifyRegistration(version, bondUserName, roleType, proposalTxId, lockupTxId, profileId, signature);
+    }
+
+    @Operation(description = "Request legacy verification for a role lockup mined before the cutoff")
+    @ApiResponse(responseCode = "200", description = "A BondedRoleVerification result object",
+            content = {@Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(allOf = BondedRoleVerificationDto.class))}
+    )
+    @ApiResponse(responseCode = "503", description = "DAO state is not ready and in sync",
+            content = {@Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(allOf = BondedRoleVerificationDto.class))}
+    )
+    @GET
+    @Path("get-bonded-role-verification/{bond-user-name}/{role-type}/{profile-id}/{signature}")
+    public BondedRoleVerificationDto getLegacyBondedRoleVerification(
+            @PathParam("bond-user-name") String bondUserName,
+            @PathParam("role-type") String roleType,
+            @PathParam("profile-id") String profileId,
+            @PathParam("signature") String signature) {
+        checkDaoReadyAndInSync();
+        log.info("Received legacy request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
+                bondUserName, roleType, profileId);
+        return verifyRegistration(BondedRoleRegistration.LEGACY_PROTOCOL_VERSION,
+                bondUserName, roleType, "", "", profileId, signature);
+    }
+
+    private BondedRoleVerificationDto verifyRegistration(int protocolVersion,
+                                                         String bondUserName,
+                                                         String roleType,
+                                                         String proposalTxId,
+                                                         String lockupTxId,
+                                                         String profileId,
+                                                         String signature) {
         String signatureBase64;
         try {
             signatureBase64 = Base64.encode(Hex.decode(signature));
@@ -102,7 +135,7 @@ public class BondedRoleVerificationApi {
 
         try {
             bondedRolesRepository.verifyBondedRole(new BondedRoleRegistration(
-                    version,
+                    protocolVersion,
                     bondUserName,
                     roleType,
                     proposalTxId,
@@ -113,16 +146,6 @@ public class BondedRoleVerificationApi {
         } catch (IllegalArgumentException e) {
             return new BondedRoleVerificationDto("Bonded role invalid. " + e.getMessage());
         }
-    }
-
-    @GET
-    @Path("get-bonded-role-verification/{bond-user-name}/{role-type}/{profile-id}/{signature}")
-    public Response rejectLegacyBondedRoleVerification() {
-        return Response.status(426)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(new BondedRoleVerificationDto(
-                        "Bonded role invalid. The unbound registration protocol is no longer supported."))
-                .build();
     }
 
     private void checkDaoReadyAndInSync() {

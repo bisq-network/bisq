@@ -98,14 +98,13 @@ public class BondedRoleGrpcServiceTest {
     }
 
     @Test
-    public void missingProtocolVersionIsRejectedExplicitly() {
-        BondedRoleVerificationRequest request = request().toBuilder()
-                .clearProtocolVersion()
+    public void missingProtocolVersionUsesTheLegacyRegistrationFormat() {
+        BondedRoleVerificationRequest request = BondedRoleVerificationRequest.newBuilder()
+                .setBondUserName(BOND_USER_NAME)
+                .setRoleType(ROLE_TYPE)
+                .setProfileId(PROFILE_ID)
+                .setSignatureBase64(SIGNATURE)
                 .build();
-        doThrow(new IllegalArgumentException("Unsupported bonded-role registration protocol version: 0"))
-                .when(bondedRolesRepository)
-                .verifyBondedRole(new BondedRoleRegistration(
-                        0, BOND_USER_NAME, ROLE_TYPE, PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID, SIGNATURE));
         @SuppressWarnings("unchecked")
         StreamObserver<BondedRoleVerificationResponse> responseObserver = mock(StreamObserver.class);
 
@@ -114,7 +113,30 @@ public class BondedRoleGrpcServiceTest {
         ArgumentCaptor<BondedRoleVerificationResponse> responseCaptor =
                 ArgumentCaptor.forClass(BondedRoleVerificationResponse.class);
         verify(responseObserver).onNext(responseCaptor.capture());
-        assertEquals("Bonded role invalid. Unsupported bonded-role registration protocol version: 0",
+        assertFalse(responseCaptor.getValue().hasErrorMessage());
+        verify(bondedRolesRepository).verifyBondedRole(BondedRoleRegistration.legacy(
+                BOND_USER_NAME, ROLE_TYPE, PROFILE_ID, SIGNATURE));
+    }
+
+    @Test
+    public void unsupportedProtocolVersionIsRejectedExplicitly() {
+        BondedRoleVerificationRequest request = request().toBuilder()
+                .setProtocolVersion(2)
+                .build();
+        BondedRoleRegistration unsupportedRegistration = new BondedRoleRegistration(
+                2, BOND_USER_NAME, ROLE_TYPE, PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID, SIGNATURE);
+        doThrow(new IllegalArgumentException("Unsupported bonded-role registration protocol version: 2"))
+                .when(bondedRolesRepository)
+                .verifyBondedRole(unsupportedRegistration);
+        @SuppressWarnings("unchecked")
+        StreamObserver<BondedRoleVerificationResponse> responseObserver = mock(StreamObserver.class);
+
+        service.requestBondedRoleVerification(request, responseObserver);
+
+        ArgumentCaptor<BondedRoleVerificationResponse> responseCaptor =
+                ArgumentCaptor.forClass(BondedRoleVerificationResponse.class);
+        verify(responseObserver).onNext(responseCaptor.capture());
+        assertEquals("Bonded role invalid. Unsupported bonded-role registration protocol version: 2",
                 responseCaptor.getValue().getErrorMessage());
     }
 

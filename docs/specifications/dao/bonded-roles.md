@@ -2,8 +2,9 @@
 
 A **bonded role** is a DAO-accepted role proposal associated with one or more independent
 [bond](bonds.md) lockups. Bisq 1 role bonds are voluntary economic collateral. Bisq 2 role authority
-is granted only by a registration signed with the accepted proposal key and bound to one exact
-confirmed lockup.
+is normally granted by a registration signed with the accepted proposal key and bound to one exact
+confirmed lockup. A height-bounded compatibility rule preserves the previous lockup-key registration
+format for lockups mined before the hard-fork-3 activation height (§5.1).
 
 ## 1. Role and role proposal
 
@@ -88,9 +89,13 @@ terms are authoritative and are not reconciled against the role-type constants (
 The following rules apply independently to each lockup. "Other lockups" means other lockups carrying
 the same role hash; it does not imply that any of them is selected or canonical.
 
+The registration consequences below describe protocol version `1`. A version `0` legacy registration
+instead remains valid while at least one confirmed, valid pre-cutoff lockup for the claimed role has
+a first-input key that verifies its `profileId` signature (§5.1).
+
 | Situation | Subject lockup | Other lockups for the role | Bisq 2 registration consequence |
 |---|---|---|---|
-| First or additional valid lockup confirms | Its own row is `LOCKUP_TX_CONFIRMED`. | Unchanged. Several confirmed lockups, including several mined in the same block, coexist without precedence or conflict. | It can back a registration only when the proposal owner signs a message naming this exact lockup. An existing registration bound to another lockup is unchanged. |
+| First or additional valid lockup confirms | Its own row is `LOCKUP_TX_CONFIRMED`. | Unchanged. Several confirmed lockups, including several mined in the same block, coexist without precedence or conflict. | It can back a version `1` registration only when the proposal owner signs a message naming this exact lockup. An existing registration bound to another lockup is unchanged. |
 | Lockup is mined in or before the proposal block, has insufficient amount or lock time, or otherwise fails §3 | It is not a valid authorization bond; when its hash matches an evaluated proposal it remains visible in the management inventory with its actual lifecycle state. | Unchanged. | It cannot back a registration. |
 | Local wallet publishes an unlock which is not yet confirmed | That node reports only this row as `UNLOCK_TX_PENDING`. The chain still contains an unspent lockup output. | Unchanged. | That node rejects a new verification because the row is no longer `LOCKUP_TX_CONFIRMED`; other nodes cannot observe the pending transaction and may continue accepting it until confirmation. |
 | Canonical unlock confirms and its lock time has not expired | Only this row becomes `UNLOCKING`; its unlock output remains confiscatable. | Unchanged, including any confirmed row. | A registration bound to this lockup fails subsequent verification. Registrations bound to other confirmed lockups are unchanged. |
@@ -98,7 +103,7 @@ the same role hash; it does not imply that any of them is selected or canonical.
 | Non-canonical spend, or a spent output whose spender cannot be resolved | Only this row becomes `ILLEGALLY_SPENT`. From hard-fork-3 activation a non-canonical spender is invalid and the collateral is burnt; historical parsing is covered by [bond-lockup-spend.md](bond-lockup-spend.md). | Unchanged. | A registration bound to this lockup fails; another confirmed lockup can be registered with its own signature. |
 | DAO confiscates the unspent lockup or its still-locked unlock output | Only this row becomes `CONFISCATED`. | Unchanged; confiscation is not role-level revocation. | A registration bound to the confiscated lockup fails. Registrations bound to other confirmed lockups are unchanged. |
 | DAO attempts confiscation after unlock expiry or after a post-activation illegal-spend burn | No spendable collateral remains, so confiscation is a no-op; the row remains `UNLOCKED` or `ILLEGALLY_SPENT`. | Unchanged. | No registration becomes valid or invalid beyond the subject lockup's already terminal state. |
-| Third party funds a valid lockup | The lockup follows the same independent lifecycle and the funder controls whether to unlock it. | Unchanged. | The funder gains no authority. The proposal owner may intentionally bind a registration to it by signing the exact lockup id; that sponsored-collateral relationship is outside the protocol. |
+| Third party funds a valid lockup | The lockup follows the same independent lifecycle and the funder controls whether to unlock it. | Unchanged. | For a lockup at or above the cutoff, the funder gains no authority. The proposal owner may intentionally bind a version `1` registration to it by signing the exact lockup id. A pre-cutoff funder retains the legacy lockup-key authority described in §5.1. |
 | Lockup hash matches only a rejected role proposal | It appears only in the management inventory. | Accepted-role lockups are unchanged. | It cannot back a registration. |
 | `BONDED_ROLE` hash matches no evaluated role proposal | It has no `Role` object and is absent from the current management inventory; this is the known §7 gap. | Unchanged. | It cannot back a registration. |
 
@@ -112,8 +117,9 @@ separate DAO-authorized role-revocation mechanism; no such mechanism is defined 
 
 ## 5. Bisq 2 registration authority
 
-The public key of the first input of the canonical accepted proposal transaction is the sole Bisq 2
-role identity. There is no fallback to a lockup-input key.
+For protocol version `1`, the public key of the first input of the canonical accepted proposal
+transaction is the sole Bisq 2 role identity. A lockup-input key is accepted only by the explicitly
+bounded version `0` compatibility rule in §5.1.
 
 A registration request identifies:
 
@@ -137,10 +143,10 @@ resolved against the verifier's own DAO state, so a signature produced against a
 another DAO instance cannot verify: its transaction ids do not resolve there. The domain tag
 separates this message from any other message signed with the same key.
 
-The verifier must:
+For a version `1` request, the verifier must:
 
-1. Require protocol version `1`; a missing protobuf scalar has version `0` and must be rejected
-   explicitly rather than inferred from empty binding fields.
+1. Require protocol version `1`; unsupported versions must be rejected explicitly rather than
+   inferred from their transaction-binding fields. Version `0` is handled only by §5.1.
 2. Resolve `proposalTxId` to the canonical accepted proposal.
 3. Check that its role matches `bondUserName` and `roleType`.
 4. Resolve `lockupTxId` to a valid lockup for that exact role.
@@ -148,9 +154,9 @@ The verifier must:
 6. Resolve the proposal transaction's first-input public key.
 7. Verify the signature over the canonical message.
 
-An unrelated lockup cannot activate, deactivate or impersonate this registration. The proposal owner
-may explicitly register against collateral funded by a third party; that sponsorship relationship is
-outside the protocol.
+An unrelated post-cutoff lockup cannot activate, deactivate or impersonate this registration. The
+proposal owner may explicitly register against collateral funded by a third party; that sponsorship
+relationship is outside the protocol.
 
 Once the bound lockup starts a confirmed unlock, is confiscated or is otherwise spent, subsequent
 verification must fail even if another lockup for the same role remains confirmed. The proposal owner
@@ -160,30 +166,46 @@ Consumers must persist the proposal/lockup binding with the Bisq 2 registration 
 registration renewal or when consuming relevant DAO state changes. A bridge-local in-memory map is
 not authoritative and must not be the only copy of the binding.
 
-The previous request format signed only `profileId` and cannot be safely inferred as a binding to one
-of several lockups. Consumers must migrate to the bound registration format; the verifier provides no
-unbound fallback. The former REST route must return a structured upgrade-required response rather
-than silently invoking the new verifier or returning an unexplained not-found response.
+New registrations should use version `1`. The previous request format remains available only through
+the bounded compatibility rule below; it must never authorize a lockup mined at or above the cutoff.
 
-This is a coordinated migration requirement, not a wire-compatible continuation of existing
-registrations. Before a bound-only verifier becomes authority-critical, Bisq 2 must send protocol
-version `1` and both transaction ids, and existing role holders must create signatures over the bound
-message. A deployment may provide a separately isolated legacy service during rollout, but this
-verifier must not add an unbounded dual-accept fallback because doing so would restore unbound
-authorization indefinitely.
+### 5.1 Legacy compatibility cutoff
 
-### 5.1 Open: cutoff for the previous unbound format
+Protocol version `0` is the previous unbound format. It carries `bondUserName`, `roleType`,
+`profileId`, and a lockup-input-key signature over `profileId`; it carries no proposal or lockup
+transaction binding. A missing protobuf version scalar is interpreted as version `0`. The legacy REST
+route maps to the same version rather than requiring existing callers to change their URL.
 
-A cutoff is intended, below which the previous unbound request format stays acceptable so that
-existing Bisq 2 registrations keep working until their holders re-sign. It is not implemented; the
-verifier currently accepts protocol version `1` only. Two points must be settled before that code
-lands:
+The verifier accepts a version `0` request only if it can find at least one bond which:
 
-- The cutoff must be expressible in on-chain terms. This model has no registration timestamp, so the
-  only well-defined anchor is the **block height of the bound lockup transaction**: below the cutoff
-  height the previous unbound format is accepted, at or above it protocol version `1` is required.
-- The no-fallback rule above then becomes bounded rather than absolute, and this section must state
-  that bound explicitly instead of leaving the two statements in conflict.
+1. belongs to the canonical accepted role matching `bondUserName` and `roleType`;
+2. is a valid role lockup under §3;
+3. is currently `LOCKUP_TX_CONFIRMED`;
+4. was mined strictly below the active network's hard-fork-3 activation height; and
+5. has a first-input public key which verifies the signature over `profileId`.
+
+The cutoff is shared with the parser's hard-fork-3 activation so the two rules cannot drift. The
+current configured heights are mainnet `975000`, testnet `3000000`, and block `1` for regtest and DAO
+test networks. The mainnet and testnet values remain release placeholders and require explicit
+approval and coordinated deployment before release.
+
+A lockup at the cutoff height or later requires protocol version `1`. Because §3 requires every valid
+lockup to be mined strictly after its canonical proposal transaction, a pre-cutoff legacy lockup also
+implies a pre-cutoff proposal; a second proposal-height gate would be redundant.
+
+The cutoff preserves compatibility, but it cannot prove that a registration itself predates the
+cutoff because registration time is not recorded on-chain. Therefore any party controlling the input
+key of a valid pre-cutoff lockup can create a version `0` registration for any `profileId` even after
+the cutoff. If several pre-cutoff lockups exist for the same public role, any matching lockup key can
+authorize the legacy request. This is the historical trust model, restricted to an immutable set of
+pre-cutoff lockups; it is not equivalent to grandfathering only registrations already observed by
+Bisq 2.
+
+Before activation, the pre-cutoff lockup set must be audited for unexpected or duplicate role
+lockups. Scheduling a future cutoff exposes a window in which an attacker can deliberately create a
+legacy-eligible lockup. Eliminating that risk requires either a cutoff at an already-audited height or
+a Bisq 2 registry of registrations known to exist before activation. New post-cutoff collateral alone
+cannot extend legacy authority.
 
 ## 6. Client lifecycle and actions
 
@@ -192,7 +214,8 @@ lands:
   and invalid candidates, so collateral remains discoverable and confiscatable.
 - Sign and verify actions are offered only for a confirmed valid lockup and always use the proposal
   transaction key. The entered profile id is transformed into the canonical bound message before
-  signing or verification.
+  signing or verification. The desktop creates version `1` registrations even for pre-cutoff
+  lockups; version `0` exists only to keep already deployed callers operational.
 - Proposal ownership, not the absence of an existing lockup, controls whether the client offers the
   role-level action to create collateral. The action remains available when another party funded a
   lockup and after an earlier lockup starts unlocking, unlocks, is illegally spent or is confiscated.
@@ -223,5 +246,6 @@ contents if a rebuild fails. Bridge and REST verification must reject requests u
 complete and monitoring reports the local DAO state ready and in sync.
 
 Bisq 2 retention, renewal and removal of an already accepted registration are outside this repository.
-They must not assume that one successful Bisq 1 verification remains valid after the bound lockup
-changes state.
+They must not assume that one successful Bisq 1 verification remains valid after the relevant
+lockup state changes. Version `1` names that lockup directly; version `0` must be re-evaluated against
+the remaining eligible pre-cutoff lockups and its legacy signature.

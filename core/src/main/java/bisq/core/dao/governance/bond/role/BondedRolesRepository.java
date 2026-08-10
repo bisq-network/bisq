@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
@@ -166,6 +167,10 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
     }
 
     public synchronized void verifyBondedRole(BondedRoleRegistration registration) {
+        if (registration.protocolVersion() == BondedRoleRegistration.LEGACY_PROTOCOL_VERSION) {
+            verifyLegacyBondedRole(registration);
+            return;
+        }
         checkArgument(registration.protocolVersion() == BondedRoleRegistration.CURRENT_PROTOCOL_VERSION,
                 "Unsupported bonded-role registration protocol version: %s", registration.protocolVersion());
 
@@ -196,6 +201,25 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
         checkArgument(signVerifyService.isValidSignature(message, pubKey, registration.signatureBase64()),
                 "Invalid signature for proposalTxId=%s and lockupTxId=%s",
                 registration.proposalTxId(), registration.lockupTxId());
+    }
+
+    private void verifyLegacyBondedRole(BondedRoleRegistration registration) {
+        checkArgument(registration.proposalTxId().isEmpty() && registration.lockupTxId().isEmpty(),
+                "Legacy bonded-role registration must not contain transaction bindings");
+
+        boolean valid = getAcceptedBonds().stream()
+                .filter(bond -> bond.getBondedAsset().getName().equals(registration.bondUserName()))
+                .filter(bond -> bond.getBondedAsset().getBondedRoleType().name().equals(registration.roleType()))
+                .filter(bond -> bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
+                .map(BondedRole::getLockupTxId)
+                .flatMap(lockupTxId -> daoStateService.getTx(lockupTxId).stream())
+                .filter(lockupTx -> !DaoHardFork.isHardFork3Activated(lockupTx.getBlockHeight()))
+                .flatMap(lockupTx -> findPubKeyOfFirstInput(lockupTx).stream())
+                .anyMatch(pubKey -> signVerifyService.isValidSignature(
+                        registration.profileId(), pubKey, registration.signatureBase64()));
+        checkArgument(valid,
+                "No confirmed pre-cutoff role lockup with a valid legacy signature found for bondUserName=%s and roleType=%s",
+                registration.bondUserName(), registration.roleType());
     }
 
     public synchronized Optional<String> findVerificationTxId(Role role, String lockupTxId) {
