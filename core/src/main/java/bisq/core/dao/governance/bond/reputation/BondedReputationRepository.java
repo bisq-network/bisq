@@ -21,60 +21,35 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
-import bisq.core.dao.governance.bond.role.BondedRole;
-import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import javax.inject.Inject;
 
-import javafx.collections.ListChangeListener;
-
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Collect bonded reputations from the daoState blockchain data excluding bonded roles
- * and provides access to the collection.
+ * Collect bonded reputations from the daoState blockchain data and provides access to the collection.
+ * Only lockups carrying the {@link LockupReason#REPUTATION} reason are bonded reputations, so the collection is
+ * independent of the bonded roles.
  * Gets updated after a new block is parsed or at bsqWallet transaction change to detect also state changes by
  * unconfirmed txs.
  */
 @Slf4j
 public class BondedReputationRepository extends BondRepository<BondedReputation, Reputation> {
-    private final BondedRolesRepository bondedRolesRepository;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BondedReputationRepository(DaoStateService daoStateService, BsqWalletService bsqWalletService,
-                                      BondedRolesRepository bondedRolesRepository) {
+    public BondedReputationRepository(DaoStateService daoStateService, BsqWalletService bsqWalletService) {
         super(daoStateService, bsqWalletService);
-
-        this.bondedRolesRepository = bondedRolesRepository;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoSetupService
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void addListeners() {
-        super.addListeners();
-
-        // As event listeners do not have a deterministic ordering of callback we need to ensure
-        // that we get updated our data after the bondedRolesRepository was updated.
-        // The update gets triggered by daoState or wallet changes. It could be that we get triggered first the
-        // listeners and update our data with stale data from bondedRolesRepository. After that the bondedRolesRepository
-        // gets triggered the listeners and we would miss the current state if we would not listen here as well on the
-        // bond list.
-        bondedRolesRepository.getBonds().addListener((ListChangeListener<BondedRole>) c -> update());
     }
 
 
@@ -120,10 +95,12 @@ public class BondedReputationRepository extends BondRepository<BondedReputation,
     }
 
     private Stream<TxOutput> getLockupTxOutputsForBondedReputation() {
-        // We exclude bonded roles, so we store those in a lookup set.
-        Set<String> bondedRolesLockupTxIdSet = bondedRolesRepository.getBonds().stream().map(Bond::getLockupTxId).collect(Collectors.toSet());
         return daoStateService.getLockupTxOutputs().stream()
-                .filter(e -> !bondedRolesLockupTxIdSet.contains(e.getTxId()));
+                .filter(lockupTxOutput -> daoStateService.getLockupOpReturnTxOutput(lockupTxOutput.getTxId())
+                        .map(TxOutput::getOpReturnData)
+                        .flatMap(BondConsensus::getLockupReason)
+                        .filter(LockupReason.REPUTATION::equals)
+                        .isPresent());
     }
 
     @Override
