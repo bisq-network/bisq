@@ -4,7 +4,7 @@ A **bonded role** is a DAO-accepted role proposal associated with one or more in
 [bond](bonds.md) lockups. Bisq 1 role bonds are voluntary economic collateral. Bisq 2 role authority
 is normally granted by a registration signed with the accepted proposal key and bound to one exact
 confirmed lockup. A height-bounded compatibility rule preserves the previous lockup-key registration
-format for lockups mined before the hard-fork-3 activation height (§5.1).
+format for mainnet lockups mined before height `941000` (§5.1).
 
 ## 1. Role and role proposal
 
@@ -103,7 +103,7 @@ a first-input key that verifies its `profileId` signature (§5.1).
 | Non-canonical spend, or a spent output whose spender cannot be resolved | Only this row becomes `ILLEGALLY_SPENT`. From hard-fork-3 activation a non-canonical spender is invalid and the collateral is burnt; historical parsing is covered by [bond-lockup-spend.md](bond-lockup-spend.md). | Unchanged. | A registration bound to this lockup fails; another confirmed lockup can be registered with its own signature. |
 | DAO confiscates the unspent lockup or its still-locked unlock output | Only this row becomes `CONFISCATED`. | Unchanged; confiscation is not role-level revocation. | A registration bound to the confiscated lockup fails. Registrations bound to other confirmed lockups are unchanged. |
 | DAO attempts confiscation after unlock expiry or after a post-activation illegal-spend burn | No spendable collateral remains, so confiscation is a no-op; the row remains `UNLOCKED` or `ILLEGALLY_SPENT`. | Unchanged. | No registration becomes valid or invalid beyond the subject lockup's already terminal state. |
-| Third party funds a valid lockup | The lockup follows the same independent lifecycle and the funder controls whether to unlock it. | Unchanged. | For a lockup at or above the cutoff, the funder gains no authority. The proposal owner may intentionally bind a version `1` registration to it by signing the exact lockup id. A pre-cutoff funder retains the legacy lockup-key authority described in §5.1. |
+| Third party funds a valid lockup | The lockup follows the same independent lifecycle and the funder controls whether to unlock it. | Unchanged. | For a lockup at or above the cutoff, the funder gains no authority. The proposal owner may intentionally bind a version `1` registration to it by signing the exact lockup id. A pre-cutoff funder's key can verify only a legacy registration which the Bisq 2 oracle nodes already accepted before rollout (§5.1). |
 | Lockup hash matches only a rejected role proposal | It appears only in the management inventory. | Accepted-role lockups are unchanged. | It cannot back a registration. |
 | `BONDED_ROLE` hash matches no evaluated role proposal | It has no `Role` object and is absent from the current management inventory; this is the known §7 gap. | Unchanged. | It cannot back a registration. |
 
@@ -166,8 +166,9 @@ Consumers must persist the proposal/lockup binding with the Bisq 2 registration 
 registration renewal or when consuming relevant DAO state changes. A bridge-local in-memory map is
 not authoritative and must not be the only copy of the binding.
 
-New registrations should use version `1`. The previous request format remains available only through
-the bounded compatibility rule below; it must never authorize a lockup mined at or above the cutoff.
+After rollout, Bisq 2 oracle nodes must use version `1` for every new registration. The previous
+request format remains available only to revalidate registrations which those oracle nodes had
+already accepted; it must never authorize a lockup mined at or above the cutoff.
 
 ### 5.1 Legacy compatibility cutoff
 
@@ -181,31 +182,25 @@ The verifier accepts a version `0` request only if it can find at least one bond
 1. belongs to the canonical accepted role matching `bondUserName` and `roleType`;
 2. is a valid role lockup under §3;
 3. is currently `LOCKUP_TX_CONFIRMED`;
-4. was mined strictly below the active network's hard-fork-3 activation height; and
+4. was mined on mainnet strictly below height `941000`; and
 5. has a first-input public key which verifies the signature over `profileId`.
 
-The cutoff is shared with the parser's hard-fork-3 activation so the two rules cannot drift. The
-current configured heights are mainnet `975000`, testnet `3000000`, and block `1` for regtest and DAO
-test networks. The mainnet and testnet values remain release placeholders and require explicit
-approval and coordinated deployment before release.
+Legacy verification is disabled on testnet, regtest, and DAO test networks because the historical
+no-conflict assertion applies only to the audited mainnet lockup set.
 
 A lockup at the cutoff height or later requires protocol version `1`. Because §3 requires every valid
 lockup to be mined strictly after its canonical proposal transaction, a pre-cutoff legacy lockup also
 implies a pre-cutoff proposal; a second proposal-height gate would be redundant.
 
-The cutoff preserves compatibility, but it cannot prove that a registration itself predates the
-cutoff because registration time is not recorded on-chain. Therefore any party controlling the input
-key of a valid pre-cutoff lockup can create a version `0` registration for any `profileId` even after
-the cutoff. If several pre-cutoff lockups exist for the same public role, any matching lockup key can
-authorize the legacy request. This is the historical trust model, restricted to an immutable set of
-pre-cutoff lockups; it is not equivalent to grandfathering only registrations already observed by
-Bisq 2.
+The Bisq 2 oracle nodes, not this stateless verifier, control creation of bonded-role registrations.
+They retain whether a registration existed before rollout and use version `0` only when revalidating
+one of those existing registrations. They use version `1` for every newly submitted registration.
+Consequently, a successful version `0` verification cannot create a new registration unless the
+trusted oracle nodes violate this protocol rule.
 
-Before activation, the pre-cutoff lockup set must be audited for unexpected or duplicate role
-lockups. Scheduling a future cutoff exposes a window in which an attacker can deliberately create a
-legacy-eligible lockup. Eliminating that risk requires either a cutoff at an already-audited height or
-a Bisq 2 registry of registrations known to exist before activation. New post-cutoff collateral alone
-cannot extend legacy authority.
+Height `941000` is deliberately historical: the role lockups below it have been checked to contain no
+conflicting lockups. The cutoff must not be advanced with the release height. Advancing it would add
+lockup keys to the legacy authority set and requires a new audit and an explicit protocol decision.
 
 ## 6. Client lifecycle and actions
 

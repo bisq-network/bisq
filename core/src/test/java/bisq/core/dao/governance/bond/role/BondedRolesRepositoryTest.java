@@ -18,7 +18,6 @@
 package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondState;
@@ -164,7 +163,7 @@ public class BondedRolesRepositoryTest {
 
     @Test
     public void legacyRegistrationIsRejectedFromTheCutoffHeight() throws IOException {
-        int cutoffHeight = DaoHardFork.getHardFork3ActivationHeight();
+        int cutoffHeight = BondedRolesRepository.LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET;
         addConfirmedBond(role, LOCKUP_TX_ID, cutoffHeight, lockupKey);
 
         assertRejectedWith("No confirmed pre-cutoff role lockup with a valid legacy signature",

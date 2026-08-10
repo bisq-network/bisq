@@ -18,7 +18,6 @@
 package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
@@ -33,6 +32,8 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
+
+import bisq.common.config.Config;
 
 import com.google.protobuf.ByteString;
 
@@ -64,6 +65,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
+    static final int LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET = 941_000;
+
     private record RoleLockup(ByteString roleHash, Tx tx, TxOutput txOutput) {
     }
 
@@ -213,13 +216,18 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
                 .filter(bond -> bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
                 .map(BondedRole::getLockupTxId)
                 .flatMap(lockupTxId -> daoStateService.getTx(lockupTxId).stream())
-                .filter(lockupTx -> !DaoHardFork.isHardFork3Activated(lockupTx.getBlockHeight()))
+                .filter(BondedRolesRepository::isLegacyRegistrationLockup)
                 .flatMap(lockupTx -> findPubKeyOfFirstInput(lockupTx).stream())
                 .anyMatch(pubKey -> signVerifyService.isValidSignature(
                         registration.profileId(), pubKey, registration.signatureBase64()));
         checkArgument(valid,
                 "No confirmed pre-cutoff role lockup with a valid legacy signature found for bondUserName=%s and roleType=%s",
                 registration.bondUserName(), registration.roleType());
+    }
+
+    private static boolean isLegacyRegistrationLockup(Tx lockupTx) {
+        return Config.baseCurrencyNetwork().isMainnet() &&
+                lockupTx.getBlockHeight() < LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET;
     }
 
     public synchronized Optional<String> findVerificationTxId(Role role, String lockupTxId) {
