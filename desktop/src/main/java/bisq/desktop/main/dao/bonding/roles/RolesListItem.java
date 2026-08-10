@@ -79,7 +79,9 @@ class RolesListItem {
     }
 
     public boolean isRevokeButtonVisible() {
-        return iAmOwner() && (this.bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED);
+        return getLockupTxId() != null &&
+                daoFacade.isMyBondedRoleLockupTx(getLockupTxId()) &&
+                bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED;
     }
 
     public boolean isSignButtonVisible() {

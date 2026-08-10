@@ -316,6 +316,10 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.getAcceptedBonds();
     }
 
+    public boolean isMyBondedRoleLockupTx(String lockupTxId) {
+        return bondedRolesRepository.isMyLockupTx(lockupTxId);
+    }
+
     public boolean canCreateNewBondedRoleLockup(Role role) {
         return bondedRolesRepository.canCreateNewLockup(role);
     }
