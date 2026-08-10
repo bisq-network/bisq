@@ -304,13 +304,32 @@ therefore visible and confiscatable. That rule was wrong for the reasons in
 Closing it needs a generic bond representation which can display and confiscate such collateral
 without treating it as an authorized role or as reputation.
 
-## 8. Freshness
+## 8. Bisq 2 revalidation and block synchronization
 
 Repositories must rebuild independent lockup objects from current DAO state and clear their previous
 contents if a rebuild fails. Bridge and REST verification must reject requests until DAO parsing is
 complete and monitoring reports the local DAO state ready and in sync.
 
-Bisq 2 retention, renewal and removal of an already accepted registration are outside this repository.
-They must not assume that one successful Bisq 1 verification remains valid after the relevant
-lockup state changes. Version `1` names that lockup directly; version `0` must be re-evaluated against
-the remaining eligible pre-cutoff lockups and its legacy signature.
+The Bisq 2 oracle must persist the complete request for every accepted registration. It must submit
+all registrations which it still considers active to the bridge batch-verification endpoint at
+startup and after every completed DAO block. The bridge evaluates one batch against one repository
+snapshot and returns its DAO block height plus one result for every request in the same order. A
+result without an error remains active; the oracle must deactivate a registration for every other
+result. Version `1` is therefore compared by its exact `(proposalTxId, lockupTxId)` binding rather
+than by role name or type. Version `0` is re-evaluated against the remaining eligible pre-cutoff
+lockups and its legacy signature.
+
+The live BSQ-block subscription must publish every completed DAO block, including a block which has
+no proof-of-burn or bonded-reputation transaction. This provides the revalidation trigger without a
+second block-height subscription. Historical block requests may remain sparse because startup batch
+verification supplies the authoritative current registration state; replaying empty historical
+blocks provides no additional authorization information.
+
+The bridge rejects an entire batch when its DAO state is not ready and in sync or the request exceeds
+the limit of 1,000 registrations. An invalid individual registration produces an error only in its
+own result so that other registrations in the same snapshot can still be retained. Connectivity
+policy while no completed-block notification can be received is outside this protocol; absence of a
+bridge connection does not itself require automatic deactivation here.
+
+The independent Bisq 2 security-manager ban remains authoritative in addition to bridge verification.
+A successful Bisq 1 result must not reactivate a role which Bisq 2 has banned.

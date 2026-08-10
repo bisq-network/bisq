@@ -117,3 +117,13 @@ message BondedRoleVerificationRequest {
 message BondedRoleVerificationResponse {
     optional string errorMessage = 1;
 }
+
+// Revalidates a consumer's complete set of active registrations against one DAO-state snapshot.
+message BondedRolesVerificationRequest {
+    repeated BondedRoleVerificationRequest registrations = 1;
+}
+message BondedRolesVerificationResponse {
+    sint32 daoStateBlockHeight = 1;
+    // Results have the same order and cardinality as registrations in the request.
+    repeated BondedRoleVerificationResponse verifications = 2;
+}

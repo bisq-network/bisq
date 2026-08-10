@@ -38,6 +38,8 @@ import static org.mockito.Mockito.*;
 
 import bisq.bridge.protobuf.BondedRoleVerificationRequest;
 import bisq.bridge.protobuf.BondedRoleVerificationResponse;
+import bisq.bridge.protobuf.BondedRolesVerificationRequest;
+import bisq.bridge.protobuf.BondedRolesVerificationResponse;
 
 public class BondedRoleGrpcServiceTest {
     private static final String BOND_USER_NAME = "alice";
@@ -138,6 +140,79 @@ public class BondedRoleGrpcServiceTest {
         verify(responseObserver).onNext(responseCaptor.capture());
         assertEquals("Bonded role invalid. Unsupported bonded-role registration protocol version: 2",
                 responseCaptor.getValue().getErrorMessage());
+    }
+
+    @Test
+    public void batchVerificationReturnsEveryResultAtOneDaoHeight() {
+        when(daoFacade.getChainHeight()).thenReturn(941_123);
+        BondedRoleVerificationRequest secondRequest = request().toBuilder()
+                .setLockupTxId("secondLockupTxId")
+                .build();
+        BondedRoleRegistration secondRegistration = BondedRoleRegistration.current(
+                BOND_USER_NAME, ROLE_TYPE, PROPOSAL_TX_ID, "secondLockupTxId", PROFILE_ID, SIGNATURE);
+        doThrow(new IllegalArgumentException("Role lockup is not confirmed and unspent"))
+                .when(bondedRolesRepository)
+                .verifyBondedRole(secondRegistration);
+        BondedRolesVerificationRequest request = BondedRolesVerificationRequest.newBuilder()
+                .addRegistrations(request())
+                .addRegistrations(secondRequest)
+                .build();
+        @SuppressWarnings("unchecked")
+        StreamObserver<BondedRolesVerificationResponse> responseObserver = mock(StreamObserver.class);
+
+        service.requestBondedRolesVerification(request, responseObserver);
+
+        ArgumentCaptor<BondedRolesVerificationResponse> responseCaptor =
+                ArgumentCaptor.forClass(BondedRolesVerificationResponse.class);
+        verify(responseObserver).onNext(responseCaptor.capture());
+        verify(responseObserver).onCompleted();
+        verify(responseObserver, never()).onError(any());
+        BondedRolesVerificationResponse response = responseCaptor.getValue();
+        assertEquals(941_123, response.getDaoStateBlockHeight());
+        assertEquals(2, response.getVerificationsCount());
+        assertFalse(response.getVerifications(0).hasErrorMessage());
+        assertEquals("Bonded role invalid. Role lockup is not confirmed and unspent",
+                response.getVerifications(1).getErrorMessage());
+        verify(bondedRolesRepository).verifyBondedRole(REGISTRATION);
+        verify(bondedRolesRepository).verifyBondedRole(secondRegistration);
+    }
+
+    @Test
+    public void oversizedBatchIsRejectedBeforeVerification() {
+        BondedRolesVerificationRequest.Builder requestBuilder = BondedRolesVerificationRequest.newBuilder();
+        for (int i = 0; i <= BondedRoleGrpcService.MAX_BATCH_SIZE; i++) {
+            requestBuilder.addRegistrations(request());
+        }
+        @SuppressWarnings("unchecked")
+        StreamObserver<BondedRolesVerificationResponse> responseObserver = mock(StreamObserver.class);
+
+        service.requestBondedRolesVerification(requestBuilder.build(), responseObserver);
+
+        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+        verify(responseObserver).onError(errorCaptor.capture());
+        assertEquals(Status.Code.INVALID_ARGUMENT, Status.fromThrowable(errorCaptor.getValue()).getCode());
+        verify(responseObserver, never()).onNext(any());
+        verify(responseObserver, never()).onCompleted();
+        verifyNoInteractions(bondedRolesRepository);
+    }
+
+    @Test
+    public void batchVerificationRequiresReadyAndSynchronizedDaoState() {
+        when(daoFacade.isDaoStateReadyAndInSync()).thenReturn(false);
+        BondedRolesVerificationRequest request = BondedRolesVerificationRequest.newBuilder()
+                .addRegistrations(request())
+                .build();
+        @SuppressWarnings("unchecked")
+        StreamObserver<BondedRolesVerificationResponse> responseObserver = mock(StreamObserver.class);
+
+        service.requestBondedRolesVerification(request, responseObserver);
+
+        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+        verify(responseObserver).onError(errorCaptor.capture());
+        assertEquals(Status.Code.FAILED_PRECONDITION, Status.fromThrowable(errorCaptor.getValue()).getCode());
+        verify(responseObserver, never()).onNext(any());
+        verify(responseObserver, never()).onCompleted();
+        verifyNoInteractions(bondedRolesRepository);
     }
 
     private BondedRoleVerificationResponse requestVerification() {

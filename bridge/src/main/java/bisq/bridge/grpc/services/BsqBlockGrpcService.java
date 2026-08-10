@@ -92,11 +92,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                 Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
                 Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
                 BsqBlockDto bsqBlockDto = toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId);
-                if (bsqBlockDto.getTxDtoList().isEmpty()) {
-                    log.info("No relevant BSQ transactions in that block, therefor we skip publishing. bsqBlockDto={}", bsqBlockDto);
-                    return;
-                }
-
+                // Empty live blocks provide the clock for bonded-role revalidation. Historical requests stay sparse.
                 log.info("Notify observers of new bsqBlockDto: {}", bsqBlockDto);
                 var responseProto = bsqBlockDto.toProtoMessage();
                 streamObservers.forEach(observer -> {
