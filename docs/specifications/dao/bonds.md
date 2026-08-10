@@ -40,6 +40,14 @@ but it is neither a bonded role nor bonded reputation and grants no consumer-dom
 Changing parser acceptance of `UNDEFINED` would be a consensus change and requires a separate
 activation decision.
 
+No Bisq client can create such a lockup, because the lockup transaction is always built with
+`BONDED_ROLE` or `REPUTATION`; producing one requires a hand-built transaction. It is nevertheless
+reachable, because the reason byte is only checked for mapping to a known enum value. The consequence
+is a visibility gap: since neither consumer domain selects it, an `UNDEFINED` lockup appears in no
+bond inventory, so its owner cannot see the locked BSQ and the DAO cannot name it in a confiscation
+proposal. This is the same gap as [bonded-roles.md](bonded-roles.md) §7 and is recorded there. Whether
+any such output exists in mainnet history is unverified.
+
 **A lockup transaction is permissionless.** Anyone can publish one carrying any hash and any reason.
 Binding a lockup to something that grants authority is therefore *never* the lockup's own claim to
 make; it is a rule of the consuming domain. See [bonded-roles.md](bonded-roles.md) §3.

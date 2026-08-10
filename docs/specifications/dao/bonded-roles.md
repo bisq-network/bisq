@@ -231,8 +231,14 @@ rejected-proposal lockups, invalid candidates and multiple lockups for one role.
 entries never grant authority by themselves.
 
 **Known gap:** a BONDED_ROLE lockup whose hash matches no evaluated role proposal has no `Role` domain
-object and remains absent from the management inventory. A generic bond representation would be
-needed to display and confiscate it without treating it as an authorized role.
+object and remains absent from the management inventory. The same applies to a lockup carrying the
+`UNDEFINED` reason ([bonds.md](bonds.md) §1), which no consumer domain selects.
+
+Before reason-based classification, both kinds of output were collected as bonded reputation and were
+therefore visible and confiscatable. That rule was wrong for the reasons in
+[bonded-reputation.md](bonded-reputation.md) §1, so the gap is the accepted cost of removing it.
+Closing it needs a generic bond representation which can display and confiscate such collateral
+without treating it as an authorized role or as reputation.
 
 ## 8. Freshness
 
