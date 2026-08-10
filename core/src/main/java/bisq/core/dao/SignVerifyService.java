@@ -103,4 +103,16 @@ public class SignVerifyService {
         checkNotNull(key, "ECKey must not be null");
         key.verifyMessage(message, signatureBase64);
     }
+
+    // Beside a failed signature verification a malformed pubKey or signature would throw as well, so we
+    // catch any exception here to let callers check multiple candidate keys without special casing those.
+    public boolean isValidSignature(String message, String pubKey, String signatureBase64) {
+        try {
+            verify(message, pubKey, signatureBase64);
+            return true;
+        } catch (Exception e) {
+            log.debug("Signature verification failed. error={}", e.toString());
+            return false;
+        }
+    }
 }
