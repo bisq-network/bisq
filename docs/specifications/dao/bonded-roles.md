@@ -158,10 +158,26 @@ a first-input key that verifies its `profileId` signature (§5.1).
 Bisq 1 has no code-enforced authorization consequence in any row. Its UI displays the independent
 collateral lifecycles and permits actions only on the exact lockup to which the action applies.
 
+### 4.2 Role-level revocation boundary
+
 Confiscation is an economic penalty against named collateral, not a permanent revocation of the
-accepted proposal identity. The proposal owner may fund a new lockup and create a new bound Bisq 2
-registration after confiscation. Permanently removing a sanctioned role holder would require a
-separate DAO-authorized role-revocation mechanism; no such mechanism is defined here.
+accepted proposal identity. The proposal remains accepted after every lockup associated with it is
+confiscated. The proposal owner may fund a new valid lockup and create a new bound Bisq 2 registration;
+that registration grants authority again while its exact lockup remains confirmed and unspent.
+
+Bisq 2 has an independent mechanism by which its security manager can ban a role without changing the
+Bisq 1 proposal or bond registration. That consumer-level ban is sufficient to disable a sanctioned
+role in the deployed Bisq 2 authority model, so the absence of DAO-level role revocation does not
+currently require a Bisq 1 consensus change. The governance difference is explicit: a Bisq 2 ban is
+controlled by the security manager, whereas a Bisq 1 role revocation would be controlled by DAO vote.
+
+If DAO-controlled permanent revocation becomes a requirement, it should be introduced as a separate
+proposal type targeting the exact canonical role `proposalTxId`. Acceptance should add that identity
+to an append-only revoked set and make every existing and future registration for it invalid,
+independently of its lockups. Existing collateral should retain its normal lifecycle and require a
+separate confiscation decision. A replacement holder should require a new accepted role proposal
+with a new uid and proposal identity. Confiscation itself must not imply role revocation because
+anyone may fund a role lockup.
 
 ## 5. Bisq 2 registration authority
 
