@@ -134,4 +134,9 @@ public class RestApi extends ExecutableForAppWithP2p {
     public void checkDaoReady() {
         checkArgument(parseBlockCompleteAfterBatchProcessing.get(), "DAO not ready yet");
     }
+
+    public void checkDaoReadyAndInSync() {
+        checkDaoReady();
+        checkArgument(daoFacade.isDaoStateReadyAndInSync(), "DAO not ready and in sync yet");
+    }
 }
