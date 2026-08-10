@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,23 +80,29 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
 
         if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
             // Lockup is already spent (in unlock tx)
-            daoStateService.getSpentInfo(lockupTxOutput)
+            Optional<Tx> spendingTx = daoStateService.getSpentInfo(lockupTxOutput)
                     .map(SpentInfo::getTxId)
-                    .flatMap(daoStateService::getTx)
-                    .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
-                    .ifPresent(unlockTx -> {
-                        // cross check if it is in daoStateService.getUnlockTxOutputs() ?
-                        String unlockTxId = unlockTx.getId();
-                        bond.setUnlockTxId(unlockTxId);
-                        bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
-                        bond.setUnlockDate(unlockTx.getTime());
-                        boolean unlocking = daoStateService.isUnlockingAndUnspent(unlockTxId);
-                        if (unlocking) {
-                            bond.setBondState(BondState.UNLOCKING);
-                        } else {
-                            bond.setBondState(BondState.UNLOCKED);
-                        }
-                    });
+                    .flatMap(daoStateService::getTx);
+            if (spendingTx.isEmpty()) {
+                // The output is known to be spent but daoStateService.getSpentInfo cannot resolve it. Do not leave the bond confirmed.
+                bond.setBondState(BondState.ILLEGALLY_SPENT);
+            } else if (spendingTx.get().getTxType() == TxType.UNLOCK) {
+                Tx unlockTx = spendingTx.get();
+                // cross check if it is in daoStateService.getUnlockTxOutputs() ?
+                String unlockTxId = unlockTx.getId();
+                bond.setUnlockTxId(unlockTxId);
+                bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
+                bond.setUnlockDate(unlockTx.getTime());
+                boolean unlocking = daoStateService.isUnlockingAndUnspent(unlockTxId);
+                if (unlocking) {
+                    bond.setBondState(BondState.UNLOCKING);
+                } else {
+                    bond.setBondState(BondState.UNLOCKED);
+                }
+            } else {
+                // The collateral is gone even though it was not spent by a normal unlock transaction.
+                bond.setBondState(BondState.ILLEGALLY_SPENT);
+            }
         }
 
         if ((bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
