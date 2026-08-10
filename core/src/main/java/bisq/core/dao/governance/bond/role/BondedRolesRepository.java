@@ -18,6 +18,7 @@
 package bisq.core.dao.governance.bond.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
 import bisq.core.dao.governance.bond.BondState;
@@ -25,6 +26,7 @@ import bisq.core.dao.governance.bond.lockup.LockupReason;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -54,6 +56,8 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Collects the independent lockup lifecycles associated with bonded-role proposals.
  */
@@ -65,6 +69,7 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
     private record RoleProposalAtHeight(RoleProposal roleProposal, int blockHeight) {
     }
 
+    private final SignVerifyService signVerifyService;
     // Includes every known BONDED_ROLE lockup whose hash matches an evaluated role proposal. Invalid candidates and
     // rejected proposals remain here for bond management and confiscation, but never grant Bisq 2 authority.
     @Getter
@@ -72,8 +77,10 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
 
     @Inject
     public BondedRolesRepository(DaoStateService daoStateService,
-                                 BsqWalletService bsqWalletService) {
+                                 BsqWalletService bsqWalletService,
+                                 SignVerifyService signVerifyService) {
         super(daoStateService, bsqWalletService);
+        this.signVerifyService = signVerifyService;
     }
 
     public boolean isMyRole(Role role) {
@@ -132,6 +139,15 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
         return candidate.getRole().equals(role) ? Optional.of(candidate) : Optional.empty();
     }
 
+    private Optional<RoleProposal> getAcceptedBondedRoleProposal(String proposalTxId) {
+        return getAcceptedBondedRoleProposalStream()
+                .filter(proposal -> proposalTxId.equals(proposal.getTxId()))
+                .filter(proposal -> getAcceptedBondedRoleProposal(proposal.getRole())
+                        .filter(canonical -> proposalTxId.equals(canonical.getTxId()))
+                        .isPresent())
+                .findFirst();
+    }
+
     private Optional<RoleProposalAtHeight> findRoleProposalAtHeight(RoleProposal roleProposal) {
         return Optional.ofNullable(roleProposal.getTxId())
                 .flatMap(daoStateService::getTx)
@@ -147,6 +163,58 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
     public boolean canCreateNewLockup(Role role) {
         return getAcceptedBondedRoleProposal(role).isPresent() &&
                 !isLockupTxUnconfirmed(bsqWalletService, role);
+    }
+
+    public synchronized void verifyBondedRole(BondedRoleRegistration registration) {
+        checkArgument(registration.protocolVersion() == BondedRoleRegistration.CURRENT_PROTOCOL_VERSION,
+                "Unsupported bonded-role registration protocol version: %s", registration.protocolVersion());
+
+        RoleProposal proposal = getAcceptedBondedRoleProposal(registration.proposalTxId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No canonical accepted role proposal found for proposalTxId=" + registration.proposalTxId()));
+        Role role = proposal.getRole();
+        checkArgument(role.getName().equals(registration.bondUserName()) &&
+                        role.getBondedRoleType().name().equals(registration.roleType()),
+                "Role proposal does not match bondUserName=%s and roleType=%s",
+                registration.bondUserName(), registration.roleType());
+
+        BondedRole bond = getAcceptedBonds().stream()
+                .filter(candidate -> candidate.getBondedAsset().equals(role))
+                .filter(candidate -> registration.lockupTxId().equals(candidate.getLockupTxId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No valid role lockup found for lockupTxId=" + registration.lockupTxId()));
+        checkArgument(bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED,
+                "Role lockup is not confirmed and unspent. lockupTxId=%s", registration.lockupTxId());
+
+        String pubKey = daoStateService.getTx(registration.proposalTxId())
+                .flatMap(BondedRolesRepository::findPubKeyOfFirstInput)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No proposal verification pub key found for proposalTxId=" + registration.proposalTxId()));
+        String message = getRegistrationSignatureMessage(
+                registration.proposalTxId(), registration.lockupTxId(), registration.profileId());
+        checkArgument(signVerifyService.isValidSignature(message, pubKey, registration.signatureBase64()),
+                "Invalid signature for proposalTxId=%s and lockupTxId=%s",
+                registration.proposalTxId(), registration.lockupTxId());
+    }
+
+    public synchronized Optional<String> findVerificationTxId(Role role, String lockupTxId) {
+        boolean hasConfirmedLockup = bonds.stream()
+                .filter(bond -> bond.getBondedAsset().equals(role))
+                .filter(bond -> lockupTxId.equals(bond.getLockupTxId()))
+                .anyMatch(bond -> bond.getBondState() == BondState.LOCKUP_TX_CONFIRMED);
+        if (!hasConfirmedLockup) {
+            return Optional.empty();
+        }
+        return getAcceptedBondedRoleProposal(role)
+                .map(Proposal::getTxId)
+                .filter(txId -> daoStateService.getTx(txId)
+                        .flatMap(BondedRolesRepository::findPubKeyOfFirstInput)
+                        .isPresent());
+    }
+
+    public String getRegistrationSignatureMessage(String proposalTxId, String lockupTxId, String profileId) {
+        return BondedRoleRegistrationSignature.getMessage(proposalTxId, lockupTxId, profileId);
     }
 
     private Optional<RoleLockup> findValidRoleLockup(TxOutput lockupTxOutput,
@@ -195,6 +263,13 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
                         .filter(LockupReason.BONDED_ROLE::equals)
                         .isPresent())
                 .map(opReturnData -> ByteString.copyFrom(BondConsensus.getHashFromOpReturnData(opReturnData)));
+    }
+
+    private static Optional<String> findPubKeyOfFirstInput(Tx tx) {
+        return tx.getTxInputs().stream()
+                .findFirst()
+                .map(TxInput::getPubKey)
+                .filter(pubKey -> pubKey != null && !pubKey.isEmpty());
     }
 
     @Override
