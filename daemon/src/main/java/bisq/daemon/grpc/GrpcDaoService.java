@@ -86,17 +86,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
-import static bisq.proto.grpc.DaoGrpc.DaoImplBase;
-import static bisq.proto.grpc.DaoGrpc.getCreateBondedRoleProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateChangeParamProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateCompensationProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateConfiscateBondProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateGenericProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateReimbursementProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateRemoveAssetProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getGetRawTransactionMethod;
-import static bisq.proto.grpc.DaoGrpc.getPublishBlindVoteMethod;
-import static bisq.proto.grpc.DaoGrpc.getSetVoteMethod;
+import static bisq.proto.grpc.DaoGrpc.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
