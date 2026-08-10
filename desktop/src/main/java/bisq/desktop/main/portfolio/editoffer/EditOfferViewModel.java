@@ -83,6 +83,7 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
         super.activate();
 
         dataModel.populateData();
+        updateBuyerSecurityDeposit();
 
         long triggerPriceAsLong = dataModel.getTriggerPrice();
         dataModel.setTriggerPrice(triggerPriceAsLong);
@@ -121,7 +122,8 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     }
 
     public boolean isSecurityDepositValid() {
-        return securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid;
+        // in the locked state the field holds a fixed BTC amount, not a percentage
+        return isMinBuyerSecurityDeposit.get() || securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid;
     }
 
     @Override
