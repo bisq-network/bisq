@@ -110,6 +110,9 @@ message BondedRoleVerificationRequest {
     string roleType = 2;
     string profileId = 3;
     string signatureBase64 = 4;
+    string proposalTxId = 5;
+    string lockupTxId = 6;
+    uint32 protocolVersion = 7;
 }
 message BondedRoleVerificationResponse {
     optional string errorMessage = 1;

@@ -17,17 +17,14 @@
 
 package bisq.bridge.grpc.services;
 
-import bisq.core.dao.SignVerifyService;
-import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.bond.role.BondedRoleRegistration;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
-import bisq.core.dao.state.DaoStateService;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
-
-import java.security.SignatureException;
 
 import java.util.Optional;
 
@@ -41,52 +38,40 @@ import bisq.bridge.protobuf.BondedRoleVerificationResponse;
 
 @Slf4j
 public class BondedRoleGrpcService extends BondedRoleGrpcServiceGrpc.BondedRoleGrpcServiceImplBase {
-    private final DaoStateService daoStateService;
+    private final DaoFacade daoFacade;
     private final BondedRolesRepository bondedRolesRepository;
-    private final SignVerifyService signVerifyService;
 
     @Inject
-    public BondedRoleGrpcService(DaoStateService daoStateService,
-                                 BondedRolesRepository bondedRolesRepository,
-                                 SignVerifyService signVerifyService) {
-        this.daoStateService = daoStateService;
+    public BondedRoleGrpcService(DaoFacade daoFacade,
+                                 BondedRolesRepository bondedRolesRepository) {
+        this.daoFacade = daoFacade;
         this.bondedRolesRepository = bondedRolesRepository;
-        this.signVerifyService = signVerifyService;
     }
 
     @Override
     public void requestBondedRoleVerification(BondedRoleVerificationRequest request,
                                               StreamObserver<BondedRoleVerificationResponse> responseObserver) {
         try {
-            String bondUserName = request.getBondUserName();
-            String roleType = request.getRoleType();
-            String profileId = request.getProfileId();
-            String signatureBase64 = request.getSignatureBase64();
+            if (!daoFacade.isDaoStateReadyAndInSync()) {
+                log.warn("Bonded role verification rejected because the DAO state is not ready and in sync. " +
+                        "chainHeight={}", daoFacade.getChainHeight());
+                responseObserver.onError(Status.FAILED_PRECONDITION
+                        .withDescription("DAO state is not ready and in sync")
+                        .asRuntimeException());
+                return;
+            }
 
-            log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}, signatureBase64={}",
-                    bondUserName, roleType, profileId, signatureBase64);
-
-            Optional<String> errorMessage = bondedRolesRepository.getAcceptedBonds().stream()
-                    .filter(bondedRole -> bondedRole.getBondedAsset().getBondedRoleType().name().equals(roleType))
-                    .filter(bondedRole -> bondedRole.getBondedAsset().getName().equals(bondUserName))
-                    .filter(bondedRole -> bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
-                    .flatMap(bondedRole -> daoStateService.getTx(bondedRole.getLockupTxId()).stream())
-                    .flatMap(tx -> tx.getTxInputs().stream().findFirst().stream())
-                    .map(txInput -> {
-                        try {
-                            signVerifyService.verify(profileId, txInput.getPubKey(), signatureBase64);
-                            log.info("Successfully verified bonded role");
-                            return Optional.<String>empty();
-                        } catch (SignatureException e) {
-                            return Optional.of("Signature verification failed.");
-                        }
-                    })
-                    .findAny()
-                    .orElseGet(() -> {
-                        String message = "Did not find a bonded role matching the parameters";
-                        log.warn(message);
-                        return Optional.of(message);
-                    });
+            BondedRoleRegistration registration = bisq.bridge.grpc.messages.BondedRoleVerificationRequest
+                    .fromProto(request)
+                    .getRegistration();
+            log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
+                    registration.bondUserName(), registration.roleType(), registration.profileId());
+            Optional<String> errorMessage = Optional.empty();
+            try {
+                bondedRolesRepository.verifyBondedRole(registration);
+            } catch (IllegalArgumentException e) {
+                errorMessage = Optional.of("Bonded role invalid. " + e.getMessage());
+            }
 
             BondedRoleVerificationResponse.Builder builder = BondedRoleVerificationResponse.newBuilder();
             errorMessage.ifPresent(builder::setErrorMessage);
