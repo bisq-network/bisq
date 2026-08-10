@@ -312,13 +312,19 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                         if (item.isSignButtonVisible()) {
                                             AutoTooltipButton buttonSign = new AutoTooltipButton(Res.get("dao.proofOfBurn.sign"));
                                             buttonSign.setMinWidth(70);
-                                            buttonSign.setOnAction(e -> new MessageSignatureWindow(signVerifyService, item.getLockupTxId()).show());
+                                            buttonSign.setOnAction(e -> new MessageSignatureWindow(
+                                                    signVerifyService,
+                                                    item.getVerificationTxId(),
+                                                    item::getRegistrationSignatureMessage).show());
                                             hbox.getChildren().add(buttonSign);
                                         }
                                         if (item.isVerifyButtonVisible()) {
                                             AutoTooltipButton buttonVerify = new AutoTooltipButton(Res.get("dao.proofOfBurn.verify"));
                                             buttonVerify.setMinWidth(70);
-                                            buttonVerify.setOnAction(e -> new MessageVerificationWindow(signVerifyService, item.getLockupTxId()).show());
+                                            buttonVerify.setOnAction(e -> new MessageVerificationWindow(
+                                                    signVerifyService,
+                                                    item.getVerificationTxId(),
+                                                    item::getRegistrationSignatureMessage).show());
                                             hbox.getChildren().add(buttonVerify);
                                         }
                                         if (item.isLockupButtonVisible()) {

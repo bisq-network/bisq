@@ -316,6 +316,20 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.getAcceptedBonds();
     }
 
+    // The tx whose first input pub key proves ownership of the role. Used for signing and verifying bonded role
+    // messages, e.g. at a Bisq 2 bonded role registration, so that signing and verification cannot diverge.
+    public Optional<String> findBondedRoleVerificationTxId(Role role, String lockupTxId) {
+        return bondedRolesRepository.findVerificationTxId(role, lockupTxId);
+    }
+
+    public Optional<String> getBondedRoleRegistrationSignatureMessage(Role role,
+                                                                      String lockupTxId,
+                                                                      String profileId) {
+        return bondedRolesRepository.findVerificationTxId(role, lockupTxId)
+                .map(proposalTxId -> bondedRolesRepository.getRegistrationSignatureMessage(
+                        proposalTxId, lockupTxId, profileId));
+    }
+
     public boolean isMyBondedRoleLockupTx(String lockupTxId) {
         return bondedRolesRepository.isMyLockupTx(lockupTxId);
     }
