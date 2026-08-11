@@ -18,7 +18,7 @@ resync from the bundled DAO state resource.
 ## Checkpoint data
 
 Checkpoints are stored in the resource file
-`core/src/main/resources/dao/daoStateHash.checkpoints`. Each line contains one entry
+`../../../core/src/main/resources/dao/daoStateHash.checkpoints`. Each line contains one entry
 with the block height and the hex-encoded DAO state hash separated by a comma:
 
 ```
@@ -100,7 +100,7 @@ checkpoint heights; running with it enabled has no effect on verification behavi
 
 ## Related code
 
-- `core/src/main/java/bisq/core/dao/monitoring/DaoStateMonitoringService.java`
-- `core/src/main/java/bisq/core/dao/monitoring/model/DaoStateHash.java`
-- `core/src/main/java/bisq/core/dao/monitoring/model/DaoStateBlock.java`
-- `core/src/main/resources/dao/daoStateHash.checkpoints`
+- `../../../core/src/main/java/bisq/core/dao/monitoring/DaoStateMonitoringService.java`
+- `../../../core/src/main/java/bisq/core/dao/monitoring/model/DaoStateHash.java`
+- `../../../core/src/main/java/bisq/core/dao/monitoring/model/DaoStateBlock.java`
+- `../../../core/src/main/resources/dao/daoStateHash.checkpoints`
