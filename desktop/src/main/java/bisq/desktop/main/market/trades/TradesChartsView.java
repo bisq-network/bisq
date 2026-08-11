@@ -102,6 +102,7 @@ import javafx.util.StringConverter;
 
 import java.text.DecimalFormat;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -166,6 +167,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem> priceColumn, volumeColumn, marketColumn;
     private volatile SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
     private volatile boolean deactivateCalled;
+    // Bumped on the user thread at the start of each fillList so a build that
+    // finishes after a newer one started, or after the screen was left, is
+    // dropped instead of overwriting the published list.
+    private int fillListGeneration;
 
     private ChangeListener<Toggle> timeUnitChangeListener;
     private ChangeListener<Number> priceAxisYWidthListener;
@@ -365,6 +370,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void deactivate() {
         deactivateCalled = true;
+        // Supersede any build that is still in flight so it cannot publish after
+        // the screen is reopened.
+        ++fillListGeneration;
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.priceItems.removeListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
@@ -402,40 +410,69 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeInUsdChart.setManaged(showUsd);
     }
 
+    // Build a comparator from the current sort order on the user thread using the
+    // columns' value comparators (which compare plain domain getters). This is used
+    // by the background sort so it does not read any JavaFX state during comparisons.
+    private Comparator<TradeStatistics3ListItem> getSortComparator() {
+        Comparator<TradeStatistics3ListItem> result = null;
+        for (TableColumn<TradeStatistics3ListItem, ?> column : tableView.getSortOrder()) {
+            // The cast is safe: every sortable column is a
+            // TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem>
+            // whose comparator was set to a Comparator<TradeStatistics3ListItem>.
+            @SuppressWarnings("unchecked")
+            Comparator<TradeStatistics3ListItem> columnComparator =
+                    (Comparator<TradeStatistics3ListItem>) column.getComparator();
+            if (columnComparator == null) {
+                continue;
+            }
+            if (column.getSortType() == TableColumn.SortType.DESCENDING) {
+                columnComparator = columnComparator.reversed();
+            }
+            result = result == null ? columnComparator : result.thenComparing(columnComparator);
+        }
+        return result;
+    }
+
     private void fillList() {
         long ts = System.currentTimeMillis();
+        int generation = ++fillListGeneration;
         boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
-        // Collect the list items in reverse chronological order, as this is the likely
-        // order 'sortedList' will place them in - this skips most of its (slow) sorting.
-        CompletableFuture.supplyAsync(() -> Lists.reverse(model.tradeStatisticsByCurrency).stream()
-                .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
-                        coinFormatter,
-                        showAllTradeCurrencies))
-                .collect(Collectors.toCollection(FXCollections::observableArrayList))
-        ).whenComplete((listItems, throwable) -> {
-            // We might have left the screen while the list was being built; do not
-            // repopulate the released table on the cached view.
-            if (deactivateCalled) {
+        // Snapshot the observable list and the current sort comparator on the user
+        // thread. The background build must not read the observable list or the
+        // table while the user thread can mutate them via a refilter or a re-sort.
+        List<TradeStatistics3> snapshot = new ArrayList<>(model.tradeStatisticsByCurrency);
+        Comparator<TradeStatistics3ListItem> comparator = getSortComparator();
+        CompletableFuture.supplyAsync(() -> {
+            // Collect the list items in reverse chronological order, as this is the
+            // likely order the sorted list will place them in. Sorting is slow as we
+            // have > 100k items, so we build and sort off the UI thread.
+            ObservableList<TradeStatistics3ListItem> listItems = Lists.reverse(snapshot).stream()
+                    .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
+                            coinFormatter,
+                            showAllTradeCurrencies))
+                    .collect(Collectors.toCollection(FXCollections::observableArrayList));
+            SortedList<TradeStatistics3ListItem> sorted = new SortedList<>(listItems);
+            if (comparator != null) {
+                sorted.setComparator(comparator);
+            }
+            return sorted;
+        }).whenComplete((newSortedList, throwable) -> {
+            if (throwable != null) {
+                log.error("Error at fillList/creating the list items.", throwable);
                 return;
             }
-            log.debug("Creating listItems took {} ms", System.currentTimeMillis() - ts);
-
-            long ts2 = System.currentTimeMillis();
-            sortedList.comparatorProperty().unbind();
-            // Sorting is slow as we have > 100k items. So we prefer to do it on the non UI thread.
-            sortedList = new SortedList<>(listItems);
-            sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-            log.debug("Created sorted list took {} ms", System.currentTimeMillis() - ts2);
+            log.debug("Creating and sorting listItems took {} ms", System.currentTimeMillis() - ts);
             UserThread.execute(() -> {
-                if (deactivateCalled) {
-                    // deactivate ran after we bound the list on the background thread;
-                    // release it instead of attaching it to the cached view.
-                    sortedList.comparatorProperty().unbind();
-                    sortedList = new SortedList<>(FXCollections.observableArrayList());
-                    tableView.setItems(sortedList);
+                // Publish only if this build is still the current one and the screen
+                // was not left; otherwise drop it so a stale build cannot overwrite a
+                // newer list or repopulate the released table on the cached view.
+                if (deactivateCalled || generation != fillListGeneration) {
                     return;
                 }
-                // When we attach the list to the table we need to be on the UI thread.
+                sortedList.comparatorProperty().unbind();
+                sortedList = newSortedList;
+                // Bind so later header clicks keep re-sorting the list.
+                sortedList.comparatorProperty().bind(tableView.comparatorProperty());
                 tableView.setItems(sortedList);
             });
         });
