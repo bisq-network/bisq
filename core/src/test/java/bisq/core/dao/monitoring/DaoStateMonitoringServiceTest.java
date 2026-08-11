@@ -49,8 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class DaoStateMonitoringServiceTest {
-    private static final int CHECKPOINT_HEIGHT = 586920;
-    private static final String CHECKPOINT_HASH = "523aaad4e760f6ac6196fec1b3ec9a2f42e5b272";
+    private static final int CHECKPOINT_HEIGHT = 572000;
+    private static final String CHECKPOINT_HASH = "202b0cf57ae9fa3db3507f006617213358ebabe7";
     private static final String OTHER_HASH = "0000000000000000000000000000000000000000";
 
     private DaoStateMonitoringService service;
