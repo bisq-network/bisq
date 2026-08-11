@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Canonical message signed by a bonded-role proposal key when registering that role in Bisq 2.
  */
 public final class BondedRoleRegistrationSignature {
-    private static final String DOMAIN = "BISQ_BONDED_ROLE_REGISTRATION_V1";
+    private static final String DOMAIN = "BISQ_BONDED_ROLE_REGISTRATION_V2";
 
     private BondedRoleRegistrationSignature() {
     }

@@ -145,9 +145,9 @@ public class BondedRolesRepositoryTest {
 
     @Test
     public void unsupportedRegistrationProtocolVersionIsRejected() {
-        assertRejectedWith("Unsupported bonded-role registration protocol version: 2",
+        assertRejectedWith("Unsupported bonded-role registration protocol version: 3",
                 () -> repository.verifyBondedRole(new BondedRoleRegistration(
-                        2, NAME, ROLE_TYPE.name(), PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID, "signature")));
+                        3, NAME, ROLE_TYPE.name(), PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID, "signature")));
     }
 
     @Test

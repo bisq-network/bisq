@@ -51,5 +51,5 @@ service SignedWitnessGrpcService {
 service BondedRoleGrpcService {
     rpc RequestBondedRoleVerification (BondedRoleVerificationRequest) returns (BondedRoleVerificationResponse);
 
-    rpc RequestBondedRolesVerification (BondedRolesVerificationRequest) returns (BondedRolesVerificationResponse);
+    rpc RequestBondedRoleBatchVerification (BondedRolesVerificationRequest) returns (BondedRolesVerificationResponse);
 }

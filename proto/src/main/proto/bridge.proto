@@ -110,9 +110,9 @@ message BondedRoleVerificationRequest {
     string roleType = 2;
     string profileId = 3;
     string signatureBase64 = 4;
-    string proposalTxId = 5; // Empty for legacy version 0; required from version 1.
-    string lockupTxId = 6; // Empty for legacy version 0; required from version 1.
-    uint32 protocolVersion = 7; // Missing/0 selects the height-bounded legacy verification format.
+    string proposalTxId = 5; // Empty for legacy version 1; required from version 2.
+    string lockupTxId = 6; // Empty for legacy version 1; required from version 2.
+    optional uint32 protocolVersion = 7; // Missing is read as legacy version 1.
 }
 message BondedRoleVerificationResponse {
     optional string errorMessage = 1;

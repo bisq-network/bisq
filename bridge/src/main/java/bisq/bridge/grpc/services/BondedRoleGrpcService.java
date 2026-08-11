@@ -21,12 +21,15 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.role.BondedRoleRegistration;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 
+import bisq.common.UserThread;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
 import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,72 +58,100 @@ public class BondedRoleGrpcService extends BondedRoleGrpcServiceGrpc.BondedRoleG
     @Override
     public void requestBondedRoleVerification(BondedRoleVerificationRequest request,
                                               StreamObserver<BondedRoleVerificationResponse> responseObserver) {
-        try {
-            if (!daoFacade.isDaoStateReadyAndInSync()) {
-                log.warn("Bonded role verification rejected because the DAO state is not ready and in sync. " +
-                        "chainHeight={}", daoFacade.getChainHeight());
-                responseObserver.onError(Status.FAILED_PRECONDITION
-                        .withDescription("DAO state is not ready and in sync")
-                        .asRuntimeException());
-                return;
-            }
+        executeOnUserThread(
+                "requestBondedRoleVerification",
+                "Error at bonded role verification",
+                responseObserver,
+                () -> doRequestBondedRoleVerification(request, responseObserver));
+    }
 
-            BondedRoleRegistration registration = bisq.bridge.grpc.messages.BondedRoleVerificationRequest
-                    .fromProto(request)
-                    .getRegistration();
-            log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
-                    registration.bondUserName(), registration.roleType(), registration.profileId());
-            responseObserver.onNext(verifyBondedRole(registration));
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            log.error("requestBondedRoleVerification failed", e);
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Error at bonded role verification")
-                    .withCause(e)
+    private void doRequestBondedRoleVerification(BondedRoleVerificationRequest request,
+                                                 StreamObserver<BondedRoleVerificationResponse> responseObserver) {
+        if (!daoFacade.isDaoStateReadyAndInSync()) {
+            log.warn("Bonded role verification rejected because the DAO state is not ready and in sync. " +
+                    "chainHeight={}", daoFacade.getChainHeight());
+            responseObserver.onError(Status.FAILED_PRECONDITION
+                    .withDescription("DAO state is not ready and in sync")
                     .asRuntimeException());
+            return;
         }
+
+        BondedRoleRegistration registration = bisq.bridge.grpc.messages.BondedRoleVerificationRequest
+                .fromProto(request)
+                .getRegistration();
+        log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
+                registration.bondUserName(), registration.roleType(), registration.profileId());
+        responseObserver.onNext(verifyBondedRole(registration));
+        responseObserver.onCompleted();
     }
 
     @Override
-    public void requestBondedRolesVerification(BondedRolesVerificationRequest request,
+    public void requestBondedRoleBatchVerification(BondedRolesVerificationRequest request,
                                                StreamObserver<BondedRolesVerificationResponse> responseObserver) {
-        try {
-            if (!daoFacade.isDaoStateReadyAndInSync()) {
-                log.warn("Bonded role batch verification rejected because the DAO state is not ready and in sync. " +
-                        "chainHeight={}", daoFacade.getChainHeight());
-                responseObserver.onError(Status.FAILED_PRECONDITION
-                        .withDescription("DAO state is not ready and in sync")
-                        .asRuntimeException());
-                return;
-            }
-            if (request.getRegistrationsCount() > MAX_BATCH_SIZE) {
-                responseObserver.onError(Status.INVALID_ARGUMENT
-                        .withDescription("Bonded role verification batch exceeds " + MAX_BATCH_SIZE + " registrations")
-                        .asRuntimeException());
-                return;
-            }
+        executeOnUserThread(
+                "requestBondedRoleBatchVerification",
+                "Error at bonded roles verification",
+                responseObserver,
+                () -> doRequestBondedRoleBatchVerification(request, responseObserver));
+    }
 
-            log.info("Received request for verifying {} bonded roles", request.getRegistrationsCount());
-            BondedRolesVerificationResponse.Builder responseBuilder = BondedRolesVerificationResponse.newBuilder();
-            // BondedRolesRepository updates and individual verifications use the same monitor. Holding it across the
-            // batch prevents one completed block from splitting the results across two repository snapshots.
-            synchronized (bondedRolesRepository) {
-                responseBuilder.setDaoStateBlockHeight(daoFacade.getChainHeight());
-                request.getRegistrationsList().stream()
-                        .map(bisq.bridge.grpc.messages.BondedRoleVerificationRequest::fromProto)
-                        .map(bisq.bridge.grpc.messages.BondedRoleVerificationRequest::getRegistration)
-                        .map(this::verifyBondedRole)
-                        .forEach(responseBuilder::addVerifications);
-            }
-            responseObserver.onNext(responseBuilder.build());
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            log.error("requestBondedRolesVerification failed", e);
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Error at bonded roles verification")
-                    .withCause(e)
+    private void doRequestBondedRoleBatchVerification(BondedRolesVerificationRequest request,
+                                                  StreamObserver<BondedRolesVerificationResponse> responseObserver) {
+        if (!daoFacade.isDaoStateReadyAndInSync()) {
+            log.warn("Bonded role batch verification rejected because the DAO state is not ready and in sync. " +
+                    "chainHeight={}", daoFacade.getChainHeight());
+            responseObserver.onError(Status.FAILED_PRECONDITION
+                    .withDescription("DAO state is not ready and in sync")
                     .asRuntimeException());
+            return;
         }
+        if (request.getRegistrationsCount() > MAX_BATCH_SIZE) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Bonded role verification batch exceeds " + MAX_BATCH_SIZE + " registrations")
+                    .asRuntimeException());
+            return;
+        }
+
+        log.info("Received request for verifying {} bonded roles", request.getRegistrationsCount());
+        BondedRolesVerificationResponse.Builder responseBuilder = BondedRolesVerificationResponse.newBuilder();
+        responseBuilder.setDaoStateBlockHeight(daoFacade.getChainHeight());
+        request.getRegistrationsList().stream()
+                .map(bisq.bridge.grpc.messages.BondedRoleVerificationRequest::fromProto)
+                .map(bisq.bridge.grpc.messages.BondedRoleVerificationRequest::getRegistration)
+                .map(this::verifyBondedRole)
+                .forEach(responseBuilder::addVerifications);
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
+    }
+
+    // DAO block parsing and completed-block repository updates run on UserThread. Queuing the complete request there
+    // prevents a new block from interleaving the height read with proposal, transaction, or bond-state lookups.
+    private void executeOnUserThread(String operation,
+                                     String errorDescription,
+                                     StreamObserver<?> responseObserver,
+                                     Runnable request) {
+        try {
+            UserThread.execute(() -> {
+                try {
+                    request.run();
+                } catch (Exception e) {
+                    notifyInternalError(operation, errorDescription, responseObserver, e);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            notifyInternalError(operation, errorDescription, responseObserver, e);
+        }
+    }
+
+    private void notifyInternalError(String operation,
+                                     String errorDescription,
+                                     StreamObserver<?> responseObserver,
+                                     Exception exception) {
+        log.error("{} failed", operation, exception);
+        responseObserver.onError(Status.INTERNAL
+                .withDescription(errorDescription)
+                .withCause(exception)
+                .asRuntimeException());
     }
 
     private BondedRoleVerificationResponse verifyBondedRole(BondedRoleRegistration registration) {

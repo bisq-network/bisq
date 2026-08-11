@@ -28,7 +28,7 @@ public class BondedRoleRegistrationSignatureTest {
     // pinned here rather than recomputed from the implementation.
     @Test
     public void canonicalMessageMatchesProtocolTestVector() {
-        assertEquals("7f41ce23e74f13be752d8b8806cd4297fc71c7159576327004c166b0ceb19459",
+        assertEquals("f75ee61da5ea56f3dc1ae3f10397d276a6216b0e4b6adc9815b89062449a03d1",
                 BondedRoleRegistrationSignature.getMessage(
                         "proposalTx",
                         "1111111111111111111111111111111111111111111111111111111111111111",

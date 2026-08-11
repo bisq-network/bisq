@@ -137,13 +137,13 @@ carried terms.
 The following rules apply independently to each lockup. "Other lockups" means other lockups carrying
 the same role hash; it does not imply that any of them is selected or canonical.
 
-The registration consequences below describe protocol version `1`. A version `0` legacy registration
+The registration consequences below describe protocol version `2`. A version `1` legacy registration
 instead remains valid while at least one confirmed, valid pre-cutoff lockup for the claimed role has
 a first-input key that verifies its `profileId` signature (§5.1).
 
 | Situation | Subject lockup | Other lockups for the role | Bisq 2 registration consequence |
 |---|---|---|---|
-| First or additional valid lockup confirms | Its own row is `LOCKUP_TX_CONFIRMED`. | Unchanged. Several confirmed lockups, including several mined in the same block, coexist without precedence or conflict. | It can back a version `1` registration only when the proposal owner signs a message naming this exact lockup. An existing registration bound to another lockup is unchanged. |
+| First or additional valid lockup confirms | Its own row is `LOCKUP_TX_CONFIRMED`. | Unchanged. Several confirmed lockups, including several mined in the same block, coexist without precedence or conflict. | It can back a version `2` registration only when the proposal owner signs a message naming this exact lockup. An existing registration bound to another lockup is unchanged. |
 | Lockup is mined in or before the proposal block, has insufficient amount or lock time, or otherwise fails §3 | It is not a valid authorization bond; when its hash matches an evaluated proposal it remains visible in the management inventory with its actual lifecycle state. | Unchanged. | It cannot back a registration. |
 | Local wallet publishes an unlock which is not yet confirmed | That node reports only this row as `UNLOCK_TX_PENDING`. The chain still contains an unspent lockup output. | Unchanged. | That node rejects a new verification because the row is no longer `LOCKUP_TX_CONFIRMED`; other nodes cannot observe the pending transaction and may continue accepting it until confirmation. |
 | Canonical unlock confirms and its lock time has not expired | Only this row becomes `UNLOCKING`; its unlock output remains confiscatable. | Unchanged, including any confirmed row. | A registration bound to this lockup fails subsequent verification. Registrations bound to other confirmed lockups are unchanged. |
@@ -151,7 +151,7 @@ a first-input key that verifies its `profileId` signature (§5.1).
 | Non-canonical spend, or a spent output whose spender cannot be resolved | Only this row becomes `ILLEGALLY_SPENT`. From hard-fork-3 activation a non-canonical spender is invalid and the collateral is burnt; historical parsing is covered by [bond-lockup-spend.md](bond-lockup-spend.md). | Unchanged. | A registration bound to this lockup fails; another confirmed lockup can be registered with its own signature. |
 | DAO confiscates the unspent lockup or its still-locked unlock output | Only this row becomes `CONFISCATED`. | Unchanged; confiscation is not role-level revocation. | A registration bound to the confiscated lockup fails. Registrations bound to other confirmed lockups are unchanged. |
 | DAO attempts confiscation after unlock expiry or after a post-activation illegal-spend burn | No spendable collateral remains, so confiscation is a no-op; the row remains `UNLOCKED` or `ILLEGALLY_SPENT`. | Unchanged. | No registration becomes valid or invalid beyond the subject lockup's already terminal state. |
-| Third party funds a valid lockup | The lockup follows the same independent lifecycle and the funder controls whether to unlock it. | Unchanged. | For a lockup at or above the cutoff, the funder gains no authority. The proposal owner may intentionally bind a version `1` registration to it by signing the exact lockup id. A pre-cutoff funder's key can verify only a legacy registration which the Bisq 2 oracle nodes already accepted before rollout (§5.1). |
+| Third party funds a valid lockup | The lockup follows the same independent lifecycle and the funder controls whether to unlock it. | Unchanged. | For a lockup at or above the cutoff, the funder gains no authority. The proposal owner may intentionally bind a version `2` registration to it by signing the exact lockup id. A pre-cutoff funder's key can verify only a legacy registration which the Bisq 2 oracle nodes already accepted before rollout (§5.1). |
 | Lockup hash matches only a rejected role proposal | It appears only in the management inventory. | Accepted-role lockups are unchanged. | It cannot back a registration. |
 | `BONDED_ROLE` hash matches no evaluated role proposal | It has no `Role` object and is absent from the current management inventory; this is the known §7 gap. | Unchanged. | It cannot back a registration. |
 
@@ -181,13 +181,13 @@ anyone may fund a role lockup.
 
 ## 5. Bisq 2 registration authority
 
-For protocol version `1`, the public key of the first input of the canonical accepted proposal
+For protocol version `2`, the public key of the first input of the canonical accepted proposal
 transaction is the sole Bisq 2 role identity. A lockup-input key is accepted only by the explicitly
-bounded version `0` compatibility rule in §5.1.
+bounded version `1` compatibility rule in §5.1.
 
 A registration request identifies:
 
-- bonded-role registration protocol version `1`;
+- bonded-role registration protocol version `2`;
 - `bondUserName` and `roleType`, for the claimed public role;
 - the canonical `proposalTxId`;
 - the exact `lockupTxId` backing this registration;
@@ -197,7 +197,7 @@ A registration request identifies:
 The signed message is the lowercase hexadecimal SHA-256 digest of a canonical byte sequence. Each
 field is UTF-8 encoded and prefixed by its four-byte big-endian length, in this order:
 
-1. `BISQ_BONDED_ROLE_REGISTRATION_V1`;
+1. `BISQ_BONDED_ROLE_REGISTRATION_V2`;
 2. `proposalTxId`;
 3. `lockupTxId`;
 4. `profileId`.
@@ -207,10 +207,10 @@ resolved against the verifier's own DAO state, so a signature produced against a
 another DAO instance cannot verify: its transaction ids do not resolve there. The domain tag
 separates this message from any other message signed with the same key.
 
-For a version `1` request, the verifier must:
+For a version `2` request, the verifier must:
 
-1. Require protocol version `1`; unsupported versions must be rejected explicitly rather than
-   inferred from their transaction-binding fields. Version `0` is handled only by §5.1.
+1. Require protocol version `2`; unsupported versions must be rejected explicitly rather than
+   inferred from their transaction-binding fields. Version `1` is handled only by §5.1.
 2. Resolve `proposalTxId` to the canonical accepted proposal.
 3. Check that its role matches `bondUserName` and `roleType`.
 4. Resolve `lockupTxId` to a valid lockup for that exact role.
@@ -230,18 +230,19 @@ Consumers must persist the proposal/lockup binding with the Bisq 2 registration 
 registration renewal or when consuming relevant DAO state changes. A bridge-local in-memory map is
 not authoritative and must not be the only copy of the binding.
 
-After rollout, Bisq 2 oracle nodes must use version `1` for every new registration. The previous
+After rollout, Bisq 2 oracle nodes must use version `2` for every new registration. The previous
 request format remains available only to revalidate registrations which those oracle nodes had
 already accepted; it must never authorize a lockup mined at or above the cutoff.
 
 ### 5.1 Legacy compatibility cutoff
 
-Protocol version `0` is the previous unbound format. It carries `bondUserName`, `roleType`,
+Protocol version `1` is the previous unbound format. It carries `bondUserName`, `roleType`,
 `profileId`, and a lockup-input-key signature over `profileId`; it carries no proposal or lockup
-transaction binding. A missing protobuf version scalar is interpreted as version `0`. The legacy REST
+transaction binding. The protobuf scalar has explicit presence: a missing value is interpreted as
+version `1`, while an explicitly supplied `0` remains unsupported. The legacy REST
 route maps to the same version rather than requiring existing callers to change their URL.
 
-The verifier accepts a version `0` request only if it can find at least one bond which:
+The verifier accepts a version `1` request only if it can find at least one bond which:
 
 1. belongs to the canonical accepted role matching `bondUserName` and `roleType`;
 2. is a valid role lockup under §3;
@@ -252,14 +253,14 @@ The verifier accepts a version `0` request only if it can find at least one bond
 Legacy verification is disabled on testnet, regtest, and DAO test networks because the historical
 no-conflict assertion applies only to the audited mainnet lockup set.
 
-A lockup at the cutoff height or later requires protocol version `1`. Because §3 requires every valid
+A lockup at the cutoff height or later requires protocol version `2`. Because §3 requires every valid
 lockup to be mined strictly after its canonical proposal transaction, a pre-cutoff legacy lockup also
 implies a pre-cutoff proposal; a second proposal-height gate would be redundant.
 
 The Bisq 2 oracle nodes, not this stateless verifier, control creation of bonded-role registrations.
-They retain whether a registration existed before rollout and use version `0` only when revalidating
-one of those existing registrations. They use version `1` for every newly submitted registration.
-Consequently, a successful version `0` verification cannot create a new registration unless the
+They retain whether a registration existed before rollout and use version `1` only when revalidating
+one of those existing registrations. They use version `2` for every newly submitted registration.
+Consequently, a successful version `1` verification cannot create a new registration unless the
 trusted oracle nodes violate this protocol rule.
 
 Height `941000` is deliberately historical: the role lockups below it have been checked to contain no
@@ -273,8 +274,8 @@ lockup keys to the legacy authority set and requires a new audit and an explicit
   and invalid candidates, so collateral remains discoverable and confiscatable.
 - Sign and verify actions are offered only for a confirmed valid lockup and always use the proposal
   transaction key. The entered profile id is transformed into the canonical bound message before
-  signing or verification. The desktop creates version `1` registrations even for pre-cutoff
-  lockups; version `0` exists only to keep already deployed callers operational.
+  signing or verification. The desktop creates version `2` registrations even for pre-cutoff
+  lockups; version `1` exists only to keep already deployed callers operational.
 - Proposal ownership, not the absence of an existing lockup, controls whether the client offers the
   role-level action to create collateral. The action remains available when another party funded a
   lockup and after an earlier lockup starts unlocking, unlocks, is illegally spent or is confiscated.
@@ -312,12 +313,19 @@ complete and monitoring reports the local DAO state ready and in sync.
 
 The Bisq 2 oracle must persist the complete request for every accepted registration. It must submit
 all registrations which it still considers active to the bridge batch-verification endpoint at
-startup and after every completed DAO block. The bridge evaluates one batch against one repository
-snapshot and returns its DAO block height plus one result for every request in the same order. A
-result without an error remains active; the oracle must deactivate a registration for every other
-result. Version `1` is therefore compared by its exact `(proposalTxId, lockupTxId)` binding rather
-than by role name or type. Version `0` is re-evaluated against the remaining eligible pre-cutoff
-lockups and its legacy signature.
+startup and after every completed DAO block. The bridge must serialize single and batch verification
+with DAO block application and the resulting repository rebuild. A request received while a block is
+being applied waits until that block and its repository update are complete; a block received after
+verification starts waits until that verification completes. The returned height and every proposal,
+transaction and bond-state lookup therefore belong to the same completed DAO state. Checking a
+mutable parsing-phase flag before reading is insufficient because another block could start between
+the check and the reads.
+
+The bridge returns that completed DAO block height plus one result for every batch request in the same
+order. A result without an error remains active; the oracle must deactivate a registration for every
+other result. Version `2` is therefore compared by its exact `(proposalTxId, lockupTxId)` binding
+rather than by role name or type. Version `1` is re-evaluated against the remaining eligible
+pre-cutoff lockups and its legacy signature.
 
 The live BSQ-block subscription must publish every completed DAO block, including a block which has
 no proof-of-burn or bonded-reputation transaction. This provides the revalidation trigger without a

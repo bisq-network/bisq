@@ -50,7 +50,8 @@ public final class BondedRoleVerificationRequest implements Payload {
 
     public static BondedRoleVerificationRequest fromProto(bisq.bridge.protobuf.BondedRoleVerificationRequest proto) {
         return new BondedRoleVerificationRequest(new BondedRoleRegistration(
-                proto.getProtocolVersion(),
+                proto.hasProtocolVersion() ?
+                        proto.getProtocolVersion() : BondedRoleRegistration.LEGACY_PROTOCOL_VERSION,
                 proto.getBondUserName(),
                 proto.getRoleType(),
                 proto.getProposalTxId(),
