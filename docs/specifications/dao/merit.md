@@ -74,14 +74,33 @@ Without this rule a past contributor could restate the same issuance to obtain a
 weight, either by repeating it inside one merit list or by publishing several blind votes in the same
 cycle that each claim it.
 
-Duplication is detected on the claimed issuance `txId`. When an issuance is claimed more than once,
-the duplicate claims contribute nothing.
+Duplication is detected on the claimed issuance `txId`, in two scopes:
 
-**Known gap:** the implementation currently enforces uniqueness only *within a single merit list*, so
-one issuance cannot be counted twice by one blind vote. It does **not** enforce uniqueness *across the
-blind votes of a cycle*: merit is derived per blind vote, so a voter who publishes several blind votes
-in the same cycle has the same merit counted once per blind vote. The rule above is the intended
-behaviour; §7 states what closing the gap requires.
+- **within one merit list**, where a repeated claim is ignored and the issuance still counts once; and
+- **across the blind votes of the cycle**, where an issuance claimed by more than one blind vote counts
+  for **none** of them.
+
+The two scopes differ deliberately. Repeating a claim inside one list is a malformed list and is
+simply reduced to the claim it contains. Claiming the same issuance from several blind votes is an
+attempt to obtain the merit more than once, and there is no basis for deciding which blind vote should
+receive it: awarding it to one would let whoever holds a stolen issuance key take it, and any
+tie-break on transaction ids is grindable because an attacker can regrind their transaction. Dropping
+every copy leaves nothing to gain from duplicating.
+
+The accepted consequence is that a voter whose issuance key is compromised loses that piece of merit
+if the thief uses it, as does the thief. Their remaining merit, their stake, and their ballots are
+unaffected.
+
+**Only validated claims take part in the duplicate detection.** A claim enters the comparison only
+after it has passed every rule of §2. Comparing claimed issuance ids before validating them would let
+anyone publish one cheap blind vote naming other voters' issuances with invalid signatures, and
+thereby erase the merit of every honest voter in the cycle — a cheaper and broader attack than the
+duplication it would be trying to prevent. Making an issuance look duplicated must require the ability
+to sign for it.
+
+Merit reaches the result only through ballots, so the comparison covers the blind votes which cast at
+least one ballot. A blind vote without ballots contributes no vote weight, so a claim hidden in one
+could not add weight either.
 
 ## 5. Arithmetic safety
 
@@ -94,33 +113,42 @@ Rejecting an individual malformed claim is not a fault and must leave the remain
 
 ## 6. Activation and compatibility
 
-The validation rules in §2 and the intra-list part of §4 were not enforced originally. They are a DAO
-consensus change and activate at a fixed block height (`954 200` on mainnet, shared with the other
-DAO consensus v2 rules).
+None of these rules were enforced originally, and they were not all introduced at once. Each is a DAO
+consensus change and applies from its own activation height:
 
-Below the activation height the historical behaviour is preserved so that replaying old blocks
+| Rules | Activates at |
+|---|---|
+| Validation against DAO state (§2), uniqueness within one merit list (§4), checked arithmetic (§5) | `954 200` on mainnet, shared with the other DAO consensus v2 rules |
+| Uniqueness across the blind votes of a cycle (§4) | hard fork 3 |
+
+Below the first activation height the historical behaviour is preserved so that replaying old blocks
 reproduces the persisted DAO state: a claim was accepted on the strength of its own embedded
 `pubKey`, no DAO state lookup was made, and no uniqueness rule applied.
 
+The cycle-wide rule is separated from the earlier ones because the `954 200` height had already
+passed when it was written: cycles had been evaluated under the v2 rules, and tightening those rules
+in place would have changed results which were already derived and persisted.
+
 The rule version is selected by the **vote result evaluation height** of the cycle being evaluated,
-not by the current chain tip. Consequently a cycle evaluated before activation keeps its historical
-result forever, and any later change to the rules of §2–§4 must again be introduced at a new
-activation height rather than by editing the active rule set.
+not by the current chain tip. Consequently a cycle evaluated before an activation height keeps its
+historical result forever, and any later change to the rules of §2–§5 must again be introduced at a
+new activation height rather than by editing an active rule set.
 
-## 7. Closing the remaining uniqueness gap
+## 7. Deployment obligations for the cycle-wide rule
 
-Because the activation height in §6 is already in the past, cycles have been evaluated under the
-current rules. Extending uniqueness to the whole cycle therefore changes results that have already
-been derived, and must not be applied by amending the active rule set in place. It requires:
+The cycle-wide uniqueness rule activates with hard fork 3, whose heights are still placeholders
+awaiting an explicit rollout decision. Before release:
 
-- an audit of every cycle from the activation height onward for issuances claimed by more than one
-  blind vote, and
-- a new activation height, so that already evaluated cycles keep their result.
+- **Audit the cycles already evaluated under the v2 rules**, from height `954 200` to the activation
+  height, for any compensation issuance claimed by a validated merit claim in more than one blind
+  vote. This establishes both whether the weakness was exploited and that activating the rule cannot
+  change a result which has already been derived. An innocent occurrence is plausible: a voter who
+  published a second blind vote in a cycle would have had the same merit counted twice.
+- **Set the activation height from the release schedule** so that it lies safely after the release
+  which ships the rule, as for the other rules bundled into that fork.
 
-The check must be computed over **validated** claims only. Collecting claimed issuance ids before
-validating them would let anyone publish a blind vote naming other voters' issuances with invalid
-signatures and thereby suppress those voters' merit — turning a fix for vote inflation into a cheaper
-vote suppression attack.
+A monitoring check which reports, per cycle, any issuance claimed by more than one blind vote is
+cheap to compute from DAO state and would surface this class of attack directly.
 
 ## 8. Display values are not consensus values
 
