@@ -52,10 +52,10 @@ import static org.mockito.Mockito.when;
  * Audits the shipped mainnet DAO state for merit issuances which are claimed by more than one blind vote of the same
  * cycle, which is what {@link MeritConsensusV3} rejects from the hard fork 3 activation height on.
  * <p>
- * The audit has two purposes. It establishes whether the weakness was ever exploited, and it establishes that
- * activating the rule cannot change a vote result which has already been derived and persisted. It runs over the
- * bundled resource rather than over a synced node, so it covers history up to the height of that resource; the
- * remaining blocks up to the activation height still have to be checked against a synced node before release.
+ * The audit establishes whether the weakness was ever exploited. Replay compatibility follows from selecting the rule
+ * by the evaluation height of each cycle, not from this audit. It runs over the bundled resource rather than over a
+ * synced node, so it covers history up to the height of that resource; the already evaluated cycles after that height
+ * still have to be checked against a synced node before release, and new cycles have to be monitored until activation.
  * <p>
  * The claims are validated with the production rules, so the audit cannot disagree with the implementation about which
  * claim counts. Two relaxations make the result an upper bound on the real set of counted claims, which is what an

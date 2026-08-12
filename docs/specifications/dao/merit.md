@@ -174,8 +174,11 @@ says separately that no forged, mismatched or unknown-issuance claim exists in t
 ### 7.2 Remaining obligations
 
 - **The bundled resource ends at `949 481`**, below the merit consensus v2 activation height. Cycles
-  from there to the activation height are not covered and must be checked against a synced node
-  before release, by the same method.
+  evaluated after that height are not covered. Before release, run the same audit against a synced
+  node through the latest completed cycle.
+- **Continue the audit until activation.** An activation height which lies safely after release also
+  lies in the future at release time, so those cycles cannot be audited in advance. Monitor or repeat
+  the audit after each result phase between release and activation.
 - **Set the activation height from the release schedule** so that it lies safely after the release
   which ships the rule, as for the other rules bundled into that fork.
 
