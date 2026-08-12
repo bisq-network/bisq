@@ -50,7 +50,6 @@ import java.time.temporal.ChronoUnit;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -152,11 +151,24 @@ public class SignedWitnessService {
      * Witnesses that were added but are no longer considered signed won't be shown
      */
     public List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness) {
-        if (!isSignedAccountAgeWitness(accountAgeWitness)) {
-            return new ArrayList<>();
-        }
+        return getVerifiedWitnessDateList(accountAgeWitness, Optional.empty());
+    }
+
+    public List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness,
+                                                  byte[] expectedWitnessOwnerPubKey) {
+        return getVerifiedWitnessDateList(accountAgeWitness, Optional.of(expectedWitnessOwnerPubKey));
+    }
+
+    private List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness,
+                                                   Optional<byte[]> expectedWitnessOwnerPubKey) {
         return getSignedWitnessSet(accountAgeWitness).stream()
-                .filter(this::verifySignature)
+                .filter(signedWitness -> expectedWitnessOwnerPubKey
+                        .map(expected -> Arrays.equals(expected, signedWitness.getWitnessOwnerPubKey()))
+                        .orElse(true))
+                .filter(signedWitness -> isValidSignerWitnessInternal(
+                        signedWitness,
+                        new Date().getTime() + SIGNER_AGE,
+                        new Stack<>()))
                 .map(SignedWitness::getDate)
                 .sorted()
                 .collect(Collectors.toList());

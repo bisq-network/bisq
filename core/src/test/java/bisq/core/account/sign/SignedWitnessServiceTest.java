@@ -43,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,7 @@ import org.junit.jupiter.api.Test;
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR;
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -140,6 +142,50 @@ public class SignedWitnessServiceTest {
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
         assertTrue(signedWitnessService.isSignedByArbitrator(aew1));
+    }
+
+    @Test
+    public void verifiedDatesExcludeSignatureValidLeavesWithoutACompleteTrustChain() throws Exception {
+        SignedWitness trusted = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                signature1,
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+        KeyPair untrustedSigner = Sig.generateKeyPair();
+        byte[] untrustedSignature = Sig.sign(untrustedSigner.getPrivate(), account1DataHash);
+        SignedWitness untrusted = new SignedWitness(TRADE,
+                account1DataHash,
+                untrustedSignature,
+                Sig.getPublicKeyBytes(untrustedSigner.getPublic()),
+                witnessOwner1PubKey,
+                date1 - ChronoUnit.DAYS.getDuration().toMillis(),
+                tradeAmount1);
+
+        signedWitnessService.addToMap(trusted);
+        signedWitnessService.addToMap(untrusted);
+
+        assertTrue(signedWitnessService.verifySignature(untrusted));
+        assertEquals(List.of(date1), signedWitnessService.getVerifiedWitnessDateList(aew1));
+    }
+
+    @Test
+    public void verifiedDatesCanBeBoundToTheProvenWitnessOwner() {
+        SignedWitness trusted = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                signature1,
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+        signedWitnessService.addToMap(trusted);
+
+        assertEquals(List.of(date1),
+                signedWitnessService.getVerifiedWitnessDateList(aew1, witnessOwner1PubKey));
+        assertTrue(signedWitnessService
+                .getVerifiedWitnessDateList(aew1, witnessOwner2PubKey)
+                .isEmpty());
     }
 
     @Test

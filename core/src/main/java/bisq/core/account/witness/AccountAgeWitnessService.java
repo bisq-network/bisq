@@ -349,15 +349,27 @@ public class AccountAgeWitnessService {
     }
 
     public AccountAgeWitness verifyAccountAgeWitnessOwnership(AccountAgeWitnessOwnershipProof proof) {
-        proof.verify();
-        AccountAgeWitness witness = getWitnessByHash(proof.getWitnessHash())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No account age witness found for the ownership proof"));
+        AccountAgeWitness witness = verifyWitnessOwnership(proof);
         checkArgument(!filterPolicyService.isWitnessSignerPubKeyBanned(
                         Utils.HEX.encode(proof.getOwnerPublicKey())),
                 "Account age witness owner is banned");
         return witness;
     }
+
+    public long verifySignedWitnessOwnership(SignedWitnessOwnershipProof proof) {
+        AccountAgeWitness witness = verifyWitnessOwnership(proof);
+        long signDate = getWitnessSignDate(witness, proof.getOwnerPublicKey());
+        checkArgument(signDate > 0, "Account age witness has no qualifying signed-witness chain");
+        return signDate;
+    }
+
+    private AccountAgeWitness verifyWitnessOwnership(WitnessOwnershipProof proof) {
+        proof.verify();
+        return getWitnessByHash(proof.getWitnessHash())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No account age witness found for the ownership proof"));
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Witness age
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -402,6 +414,13 @@ public class AccountAgeWitnessService {
 
     public long getWitnessSignDate(AccountAgeWitness accountAgeWitness) {
         List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        return dates.isEmpty() ? -1L : dates.get(0);
+    }
+
+    public long getWitnessSignDate(AccountAgeWitness accountAgeWitness, byte[] expectedWitnessOwnerPubKey) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(
+                accountAgeWitness,
+                expectedWitnessOwnerPubKey);
         if (dates.isEmpty()) {
             return -1L;
         } else {
