@@ -119,7 +119,9 @@ public class ChartCalculations {
             // Generate date range and create sets for all ticks
             List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = getItemsPerInterval(tradeStatisticsByCurrency, tickUnit);
 
-            Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.get(tickUnit);
+            // getOrDefault: the map is empty when the chart runs before the USD-average maps are
+            // ready; a missing tick entry then falls back to the previous/zero average below.
+            Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.getOrDefault(tickUnit, Map.of());
             AtomicLong averageUsdPrice = new AtomicLong(0);
 
             // create CandleData for defined time interval

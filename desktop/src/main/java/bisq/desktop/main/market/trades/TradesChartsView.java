@@ -166,8 +166,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
     private TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem> priceColumn, volumeColumn, marketColumn;
-    private volatile SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
-    private volatile boolean deactivateCalled;
+    private SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
     // Bumped on the user thread at the start of each fillList so a build that
     // finishes after a newer one started, or after the screen was left, is
     // dropped instead of overwriting the published list.
@@ -295,7 +294,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void activate() {
-        deactivateCalled = false;
         tabPaneSelectionModel = GUIUtil.getParentOfType(root, BisqJfxTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
@@ -370,7 +368,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void deactivate() {
-        deactivateCalled = true;
         // Supersede any build that is still in flight so it cannot publish after
         // the screen is reopened.
         ++fillListGeneration;
@@ -411,15 +408,16 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeInUsdChart.setManaged(showUsd);
     }
 
-    // Build a comparator from the current sort order on the user thread using the
-    // columns' value comparators (which compare plain domain getters). This is used
-    // by the background sort so it does not read any JavaFX state during comparisons.
+    // Build a comparator from the current sort order on the user thread; the background sort uses
+    // it and so reads no JavaFX state during comparisons. Some getters it calls (e.g. getTradePrice)
+    // lazily cache on the shared statistics, which is safe off-thread because each cache just
+    // recomputes an immutable value, so a race only redoes the same work.
     private Comparator<TradeStatistics3ListItem> getSortComparator() {
         Comparator<TradeStatistics3ListItem> result = null;
         for (TableColumn<TradeStatistics3ListItem, ?> column : tableView.getSortOrder()) {
-            // The cast is safe: every sortable column is a
-            // TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem>
-            // whose comparator was set to a Comparator<TradeStatistics3ListItem>.
+            // Cast is safe only because every sortable column's cellValueFactory returns the row
+            // item itself; a non-identity cellValueFactory in the sort order would instead surface
+            // as a ClassCastException when the background sort invokes the comparator.
             @SuppressWarnings("unchecked")
             Comparator<TradeStatistics3ListItem> columnComparator =
                     (Comparator<TradeStatistics3ListItem>) column.getComparator();
@@ -464,15 +462,17 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
             log.debug("Creating and sorting listItems took {} ms", System.currentTimeMillis() - ts);
             UserThread.execute(() -> {
-                // Publish only if this build is still the current one and the screen
-                // was not left; otherwise drop it so a stale build cannot overwrite a
-                // newer list or repopulate the released table on the cached view.
-                if (deactivateCalled || generation != fillListGeneration) {
+                // Drop the build unless it is still the current one, so it cannot overwrite a newer
+                // list or repopulate the released table. deactivate() bumps fillListGeneration too,
+                // so leaving the screen also drops an in-flight build here.
+                if (generation != fillListGeneration) {
                     return;
                 }
                 sortedList.comparatorProperty().unbind();
                 sortedList = newSortedList;
-                // Bind so later header clicks keep re-sorting the list.
+                // Binding re-sorts once here on the FX thread (SortedList re-sorts on comparator
+                // invalidation); the equivalent-order background pre-sort keeps that pass linear.
+                // The binding also keeps later header clicks re-sorting.
                 sortedList.comparatorProperty().bind(tableView.comparatorProperty());
                 tableView.setItems(sortedList);
             });
