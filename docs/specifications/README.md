@@ -19,6 +19,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, controlled process exit, and the JVM shutdown-hook backstop. |
 
 
+### `account/`
+
+| Specification | Covers |
+|---|---|
+| [`account/account-age-reputation.md`](account/account-age-reputation.md) | Ownership proofs and bridge verification for importing a Bisq 1 account-age witness into Bisq 2 reputation. |
+
 ### `dao/`
 
 | Specification | Covers |
