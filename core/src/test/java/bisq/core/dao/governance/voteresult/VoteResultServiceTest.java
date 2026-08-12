@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.voteresult;
 
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
@@ -85,6 +86,9 @@ class VoteResultServiceTest {
     private static final String VOTE_REVEAL_TX_ID = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
     private static final String PROPOSAL_TX_ID = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
     private static final String COMPENSATION_TX_ID = "9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba";
+    private static final String SECOND_BLIND_VOTE_TX_ID = "1111111111111111111111111111111111111111111111111111111111111111";
+    private static final String SECOND_VOTE_REVEAL_TX_ID = "2222222222222222222222222222222222222222222222222222222222222222";
+    private static final long ISSUANCE_AMOUNT = 100_000;
     private static final byte[] HASH_OF_BLIND_VOTE_LIST = new byte[]{0x01, 0x02, 0x03};
 
     @Test
@@ -457,6 +461,88 @@ class VoteResultServiceTest {
         assertTrue(voteResultService.getVoteWithStakeListByProposalMap(Set.of(decryptedBallotsWithMerits),
                 ACTIVATION_HEIGHT).isEmpty());
         verifyNoInteractions(daoStateService);
+    }
+
+    @Test
+    void meritClaimedByTwoBlindVotesIsStillCountedTwiceBeforeHardFork3() {
+        Proposal proposal = mock(Proposal.class);
+        ECKey key = new ECKey();
+        Issuance issuance = compensationIssuance(key);
+        VoteResultService voteResultService = voteResultServiceWithTwoBlindVotes(issuance, proposal);
+
+        Map<Proposal, List<VoteResultService.VoteWithStake>> voteWithStakeByProposalMap =
+                voteResultService.getVoteWithStakeListByProposalMap(
+                        twoBlindVotesClaiming(issuance, key, proposal),
+                        DaoHardFork.getHardFork3ActivationHeight() - 1);
+
+        List<VoteResultService.VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
+        assertEquals(2, voteWithStakeList.size());
+        assertTrue(voteWithStakeList.stream()
+                .allMatch(voteWithStake -> voteWithStake.getSumOfAllMerits() == ISSUANCE_AMOUNT));
+    }
+
+    @Test
+    void meritClaimedByTwoBlindVotesIsDroppedFromHardFork3() {
+        Proposal proposal = mock(Proposal.class);
+        ECKey key = new ECKey();
+        Issuance issuance = compensationIssuance(key);
+        VoteResultService voteResultService = voteResultServiceWithTwoBlindVotes(issuance, proposal);
+
+        Map<Proposal, List<VoteResultService.VoteWithStake>> voteWithStakeByProposalMap =
+                voteResultService.getVoteWithStakeListByProposalMap(
+                        twoBlindVotesClaiming(issuance, key, proposal),
+                        DaoHardFork.getHardFork3ActivationHeight());
+
+        List<VoteResultService.VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
+        assertEquals(2, voteWithStakeList.size());
+        assertTrue(voteWithStakeList.stream()
+                .allMatch(voteWithStake -> voteWithStake.getSumOfAllMerits() == 0));
+        // The stake of both blind votes is unaffected; only the duplicated merit is dropped.
+        assertTrue(voteWithStakeList.stream().allMatch(voteWithStake -> voteWithStake.getStake() == 123_456));
+    }
+
+    private static Issuance compensationIssuance(ECKey key) {
+        return new Issuance(COMPENSATION_TX_ID,
+                DaoHardFork.getHardFork3ActivationHeight() - 10,
+                ISSUANCE_AMOUNT,
+                Utilities.encodeToHex(key.getPubKey()),
+                IssuanceType.COMPENSATION);
+    }
+
+    private static VoteResultService voteResultServiceWithTwoBlindVotes(Issuance issuance, Proposal proposal) {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        Tx blindVoteTx = mock(Tx.class);
+        when(blindVoteTx.getBlockHeight()).thenReturn(DaoHardFork.getHardFork3ActivationHeight() - 10);
+        when(daoStateService.getTx(BLIND_VOTE_TX_ID)).thenReturn(Optional.of(blindVoteTx));
+        when(daoStateService.getTx(SECOND_BLIND_VOTE_TX_ID)).thenReturn(Optional.of(blindVoteTx));
+        when(daoStateService.getIssuance(COMPENSATION_TX_ID, IssuanceType.COMPENSATION))
+                .thenReturn(Optional.of(issuance));
+
+        return voteResultService(daoStateService,
+                mock(PeriodService.class),
+                mock(BlindVoteListService.class),
+                proposal);
+    }
+
+    private static Set<DecryptedBallotsWithMerits> twoBlindVotesClaiming(Issuance issuance,
+                                                                        ECKey key,
+                                                                        Proposal proposal) {
+        return Set.of(decryptedBallotsWithMerits(BLIND_VOTE_TX_ID, VOTE_REVEAL_TX_ID, proposal, issuance, key),
+                decryptedBallotsWithMerits(SECOND_BLIND_VOTE_TX_ID, SECOND_VOTE_REVEAL_TX_ID, proposal, issuance, key));
+    }
+
+    private static DecryptedBallotsWithMerits decryptedBallotsWithMerits(String blindVoteTxId,
+                                                                        String voteRevealTxId,
+                                                                        Proposal proposal,
+                                                                        Issuance issuance,
+                                                                        ECKey key) {
+        Merit merit = new Merit(issuance, key.sign(Sha256Hash.wrap(blindVoteTxId)).encodeToDER());
+        return new DecryptedBallotsWithMerits(HASH_OF_BLIND_VOTE_LIST,
+                blindVoteTxId,
+                voteRevealTxId,
+                123_456,
+                new BallotList(List.of(new Ballot(proposal, new Vote(true)))),
+                new MeritList(List.of(merit)));
     }
 
     private static EvaluatedProposal acceptedIssuanceProposal(long requestedBsq) {

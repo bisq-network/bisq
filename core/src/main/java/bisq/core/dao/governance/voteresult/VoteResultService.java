@@ -711,16 +711,18 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     @VisibleForTesting
     Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
                                                                         int chainHeight) {
+        // The merit stake belongs to the blind vote, not to the individual ballot, so it is the same value for every
+        // ballot of that blind vote. From the activation of the cycle wide uniqueness rule it additionally depends on
+        // the merit lists of the other blind votes, so it is derived for the whole cycle at once.
+        Map<String, Long> meritStakeByBlindVoteTxId = getMeritStakeByBlindVoteTxId(decryptedBallotsWithMeritsSet,
+                chainHeight);
         Map<Proposal, List<VoteWithStake>> voteWithStakeByProposalMap = new HashMap<>();
         decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
             if (decryptedBallotsWithMerits.getBallotList().isEmpty()) {
                 return;
             }
-            // The merit stake belongs to the blind vote, not to the individual ballot, so it is the same value for
-            // every ballot of that blind vote. Deriving it once avoids repeating the signature verification of each
-            // merit entry per ballot, which is attacker controlled work in a consensus critical code path.
-            long sumOfAllMerits = MeritConsensus.getMeritStake(decryptedBallotsWithMerits.getBlindVoteTxId(),
-                    decryptedBallotsWithMerits.getMeritList(), daoStateService, chainHeight);
+            long sumOfAllMerits = meritStakeByBlindVoteTxId.getOrDefault(decryptedBallotsWithMerits.getBlindVoteTxId(),
+                    0L);
             decryptedBallotsWithMerits.getBallotList()
                     .forEach(ballot -> {
                         Proposal proposal = ballot.getProposal();
@@ -732,6 +734,18 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     });
         });
         return voteWithStakeByProposalMap;
+    }
+
+    private Map<String, Long> getMeritStakeByBlindVoteTxId(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
+                                                           int chainHeight) {
+        // Merit reaches the result only through ballots, so a blind vote which casts none is left out. That keeps the
+        // merit derivation of the rules before the cycle wide uniqueness rule unchanged, and a duplicate hidden in a
+        // blind vote without ballots could not add vote weight anyway.
+        Map<String, MeritList> meritListByBlindVoteTxId = decryptedBallotsWithMeritsSet.stream()
+                .filter(decryptedBallotsWithMerits -> !decryptedBallotsWithMerits.getBallotList().isEmpty())
+                .collect(Collectors.toMap(DecryptedBallotsWithMerits::getBlindVoteTxId,
+                        DecryptedBallotsWithMerits::getMeritList));
+        return MeritConsensus.getMeritStakeByBlindVoteTxId(meritListByBlindVoteTxId, daoStateService, chainHeight);
     }
 
 
@@ -936,7 +950,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
     @Value
-    private static class VoteWithStake {
+    @VisibleForTesting
+    static class VoteWithStake {
         @Nullable
         private final Vote vote;
         private final long stake;
