@@ -29,3 +29,9 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/bonded-reputation.md`](dao/bonded-reputation.md) | Reputation lockups, how they are collected, and what the Bisq 1 → Bisq 2 bridge exports. |
 | [`dao/merit.md`](dao/merit.md) | Merit as vote weight: what a merit claim must prove against DAO state, decay, uniqueness per cycle, and the activation boundary. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
+
+### `trade/`
+
+| Specification | Covers |
+|---|---|
+| [`trade/fiat-buyer-payment-account-validation.md`](trade/fiat-buyer-payment-account-validation.md) | Contract-bound buyer payment-account validation and the fiat deposit/settlement gates that depend on it. |
