@@ -131,7 +131,7 @@ public class MemPoolSpaceTxBroadcaster {
                                 txId, serviceAddress, rawTx);
                     } else {
                         log.error("The txId we got returned from the service does not match " +
-                                        "out tx of the sending tx. txId={}; txIdToSend={}",
+                                        "our tx of the sending tx. txId={}; txIdToSend={}",
                                 txId, txIdToSend);
                     }
                 }
