@@ -24,11 +24,14 @@ import bisq.common.crypto.Sig;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
+import java.security.PublicKey;
+
+import java.nio.charset.StandardCharsets;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.PublicKey;
+
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -71,7 +74,7 @@ public abstract class WitnessOwnershipProof {
         byte[] calculatedHash = Hash.getSha256Ripemd160hash(
                 Utilities.concatenateByteArrays(accountInputDataWithSalt, ownerPublicKey));
         checkArgument(Arrays.equals(witnessHash, calculatedHash),
-                "Account age witness hash does not match the ownership proof preimage");
+                "Witness hash does not match the ownership proof preimage");
 
         try {
             PublicKey publicKey = Sig.getPublicKeyFromBytes(ownerPublicKey);
