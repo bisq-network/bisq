@@ -32,6 +32,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerVerifyBuyerPaymentAccount;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -117,6 +118,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                             removeMailboxMessageAfterProcessing(message);
                         }))
                 .setup(tasks(
+                        SellerVerifyBuyerPaymentAccount.class,
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass()))
@@ -133,6 +135,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                 .with(event)
                 .preCondition(trade.confirmPermitted()))
                 .setup(tasks(
+                        SellerVerifyBuyerPaymentAccount.class,
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),
                         SellerSignAndFinalizePayoutTx.class,

@@ -546,6 +546,41 @@ public class AccountAgeWitnessService {
                                            byte[] nonce,
                                            byte[] signature,
                                            ErrorMessageHandler errorMessageHandler) {
+        return verifyAccountAgeWitness(trade,
+                peersPaymentAccountPayload,
+                peersCurrentDate,
+                peersPubKeyRing,
+                nonce,
+                signature,
+                true,
+                errorMessageHandler);
+    }
+
+    public boolean verifyAccountAgeWitnessAtTradeDate(Trade trade,
+                                                      PaymentAccountPayload peersPaymentAccountPayload,
+                                                      Date peersTradeDate,
+                                                      PubKeyRing peersPubKeyRing,
+                                                      byte[] nonce,
+                                                      byte[] signature,
+                                                      ErrorMessageHandler errorMessageHandler) {
+        return verifyAccountAgeWitness(trade,
+                peersPaymentAccountPayload,
+                peersTradeDate,
+                peersPubKeyRing,
+                nonce,
+                signature,
+                false,
+                errorMessageHandler);
+    }
+
+    private boolean verifyAccountAgeWitness(Trade trade,
+                                            PaymentAccountPayload peersPaymentAccountPayload,
+                                            Date peersCurrentDate,
+                                            PubKeyRing peersPubKeyRing,
+                                            byte[] nonce,
+                                            byte[] signature,
+                                            boolean verifyCurrentDate,
+                                            ErrorMessageHandler errorMessageHandler) {
         final Optional<AccountAgeWitness> accountAgeWitnessOptional =
                 findWitness(peersPaymentAccountPayload, peersPubKeyRing);
         // If we don't find a stored witness data we create a new dummy object which makes is easier to reuse the
@@ -565,7 +600,7 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if peer current date is in tolerance range
-        if (!verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
+        if (verifyCurrentDate && !verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
             return false;
 
         final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(
