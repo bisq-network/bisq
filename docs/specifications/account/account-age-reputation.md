@@ -7,6 +7,9 @@ witness when importing that reputation into a Bisq 2 profile. It covers proof co
 1 and authoritative verification by the Bisq 1 bridge. Bisq 2 profile binding, authorization and
 scoring rules are specified in the Bisq 2 repository.
 
+Signed-witness reputation uses the same ownership primitive plus the trust-chain requirements in
+[signed-witness-reputation.md](signed-witness-reputation.md).
+
 ## Security invariant
 
 An account-age witness may authorize reputation only for a requester who controls the DSA
