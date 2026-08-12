@@ -48,6 +48,8 @@ service AccountAgeWitnessGrpcService {
 
 service SignedWitnessGrpcService {
     rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);
+
+    rpc VerifySignedWitnessOwnership (SignedWitnessOwnershipRequest) returns (SignedWitnessOwnershipResponse);
 }
 
 service BondedRoleGrpcService {

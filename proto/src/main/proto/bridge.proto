@@ -116,6 +116,18 @@ message SignedWitnessDateResponse {
     sint64 date = 1;
 }
 
+message SignedWitnessOwnershipRequest {
+    uint32 protocolVersion = 1;
+    string profileId = 2;
+    bytes witnessHash = 3;
+    bytes accountInputDataWithSalt = 4;
+    bytes ownerPublicKey = 5;
+    bytes signature = 6;
+}
+message SignedWitnessOwnershipResponse {
+    sint64 date = 1;
+}
+
 
 message BondedRoleVerificationRequest {
     string bondUserName = 1;
