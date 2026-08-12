@@ -24,6 +24,7 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`account/account-age-reputation.md`](account/account-age-reputation.md) | Ownership proofs and bridge verification for importing a Bisq 1 account-age witness into Bisq 2 reputation. |
+| [`account/signed-witness-reputation.md`](account/signed-witness-reputation.md) | Ownership proofs and bridge verification for exporting Bisq 1 signed account-age witnesses as Bisq 2 signed-witness reputation. |
 
 ### `dao/`
 
