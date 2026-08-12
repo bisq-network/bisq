@@ -55,6 +55,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -109,12 +110,20 @@ public class TradesChartsViewModelTest {
             1
     );
 
+    private Locale previousLocale;
+
     @BeforeEach
     public void setup() throws IOException {
+        previousLocale = GlobalSettings.getLocale();
         GlobalSettings.setLocale(Locale.US);
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
         model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
                 mock(Navigation.class));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        GlobalSettings.setLocale(previousLocale);
     }
 
     @SuppressWarnings("ConstantConditions")
