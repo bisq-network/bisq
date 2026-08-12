@@ -40,12 +40,19 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.GenericProposal;
+import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.Merit;
 import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ProposalVoteResult;
 import bisq.core.dao.state.model.governance.Vote;
 
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
 
 import com.google.common.collect.ImmutableList;
 
@@ -65,6 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -76,6 +84,7 @@ class VoteResultServiceTest {
     private static final String BLIND_VOTE_TX_ID = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private static final String VOTE_REVEAL_TX_ID = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
     private static final String PROPOSAL_TX_ID = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
+    private static final String COMPENSATION_TX_ID = "9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba";
     private static final byte[] HASH_OF_BLIND_VOTE_LIST = new byte[]{0x01, 0x02, 0x03};
 
     @Test
@@ -384,6 +393,70 @@ class VoteResultServiceTest {
         voteResultService.onParseBlockComplete(block);
 
         verify(missingDataRequestService).sendRepublishRequest();
+    }
+
+    @Test
+    void getVoteWithStakeListByProposalMapDerivesMeritOncePerBlindVote() {
+        ECKey key = new ECKey();
+        int blindVoteHeight = ACTIVATION_HEIGHT - 10;
+        Issuance issuance = new Issuance(COMPENSATION_TX_ID,
+                blindVoteHeight,
+                100_000,
+                Utilities.encodeToHex(key.getPubKey()),
+                IssuanceType.COMPENSATION);
+
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        Tx blindVoteTx = mock(Tx.class);
+        when(blindVoteTx.getBlockHeight()).thenReturn(blindVoteHeight);
+        when(daoStateService.getTx(BLIND_VOTE_TX_ID)).thenReturn(Optional.of(blindVoteTx));
+        when(daoStateService.getIssuance(COMPENSATION_TX_ID, IssuanceType.COMPENSATION))
+                .thenReturn(Optional.of(issuance));
+
+        Proposal firstProposal = mock(Proposal.class);
+        Proposal secondProposal = mock(Proposal.class);
+        BallotList ballotList = new BallotList(List.of(new Ballot(firstProposal, new Vote(true)),
+                new Ballot(secondProposal, new Vote(true))));
+        Merit merit = new Merit(issuance, key.sign(Sha256Hash.wrap(BLIND_VOTE_TX_ID)).encodeToDER());
+        DecryptedBallotsWithMerits decryptedBallotsWithMerits = new DecryptedBallotsWithMerits(HASH_OF_BLIND_VOTE_LIST,
+                BLIND_VOTE_TX_ID,
+                VOTE_REVEAL_TX_ID,
+                123_456,
+                ballotList,
+                new MeritList(List.of(merit)));
+
+        VoteResultService voteResultService = voteResultService(daoStateService,
+                mock(PeriodService.class),
+                mock(BlindVoteListService.class),
+                firstProposal);
+
+        Map<Proposal, ?> voteWithStakeByProposalMap = voteResultService.getVoteWithStakeListByProposalMap(
+                Set.of(decryptedBallotsWithMerits), ACTIVATION_HEIGHT);
+
+        assertEquals(Set.of(firstProposal, secondProposal), voteWithStakeByProposalMap.keySet());
+        // The merit stake belongs to the blind vote, so the two ballots of that blind vote must not each repeat the
+        // merit signature verification.
+        verify(daoStateService, times(1)).getTx(BLIND_VOTE_TX_ID);
+        verify(daoStateService, times(1)).getIssuance(COMPENSATION_TX_ID, IssuanceType.COMPENSATION);
+    }
+
+    @Test
+    void getVoteWithStakeListByProposalMapDerivesNoMeritForBlindVoteWithoutBallots() {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        DecryptedBallotsWithMerits decryptedBallotsWithMerits = new DecryptedBallotsWithMerits(HASH_OF_BLIND_VOTE_LIST,
+                BLIND_VOTE_TX_ID,
+                VOTE_REVEAL_TX_ID,
+                123_456,
+                new BallotList(new ArrayList<>()),
+                new MeritList(new ArrayList<>()));
+
+        VoteResultService voteResultService = voteResultService(daoStateService,
+                mock(PeriodService.class),
+                mock(BlindVoteListService.class),
+                mock(Proposal.class));
+
+        assertTrue(voteResultService.getVoteWithStakeListByProposalMap(Set.of(decryptedBallotsWithMerits),
+                ACTIVATION_HEIGHT).isEmpty());
+        verifyNoInteractions(daoStateService);
     }
 
     private static EvaluatedProposal acceptedIssuanceProposal(long requestedBsq) {

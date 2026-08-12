@@ -708,20 +708,29 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return MathUtils.roundDoubleToLong(paramValueAsPercentDouble * 10000);
     }
 
-    private Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
-                                                                                 int chainHeight) {
+    @VisibleForTesting
+    Map<Proposal, List<VoteWithStake>> getVoteWithStakeListByProposalMap(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet,
+                                                                        int chainHeight) {
         Map<Proposal, List<VoteWithStake>> voteWithStakeByProposalMap = new HashMap<>();
-        decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> decryptedBallotsWithMerits.getBallotList()
-                .forEach(ballot -> {
-                    Proposal proposal = ballot.getProposal();
-                    voteWithStakeByProposalMap.putIfAbsent(proposal, new ArrayList<>());
-                    List<VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
-                    long sumOfAllMerits = MeritConsensus.getMeritStake(decryptedBallotsWithMerits.getBlindVoteTxId(),
-                            decryptedBallotsWithMerits.getMeritList(), daoStateService, chainHeight);
-                    VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
-                    voteWithStakeList.add(voteWithStake);
-                    log.debug("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
-                }));
+        decryptedBallotsWithMeritsSet.forEach(decryptedBallotsWithMerits -> {
+            if (decryptedBallotsWithMerits.getBallotList().isEmpty()) {
+                return;
+            }
+            // The merit stake belongs to the blind vote, not to the individual ballot, so it is the same value for
+            // every ballot of that blind vote. Deriving it once avoids repeating the signature verification of each
+            // merit entry per ballot, which is attacker controlled work in a consensus critical code path.
+            long sumOfAllMerits = MeritConsensus.getMeritStake(decryptedBallotsWithMerits.getBlindVoteTxId(),
+                    decryptedBallotsWithMerits.getMeritList(), daoStateService, chainHeight);
+            decryptedBallotsWithMerits.getBallotList()
+                    .forEach(ballot -> {
+                        Proposal proposal = ballot.getProposal();
+                        voteWithStakeByProposalMap.putIfAbsent(proposal, new ArrayList<>());
+                        List<VoteWithStake> voteWithStakeList = voteWithStakeByProposalMap.get(proposal);
+                        VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
+                        voteWithStakeList.add(voteWithStake);
+                        log.debug("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
+                    });
+        });
         return voteWithStakeByProposalMap;
     }
 
