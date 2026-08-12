@@ -137,13 +137,45 @@ new activation height rather than by editing an active rule set.
 ## 7. Deployment obligations for the cycle-wide rule
 
 The cycle-wide uniqueness rule activates with hard fork 3, whose heights are still placeholders
-awaiting an explicit rollout decision. Before release:
+awaiting an explicit rollout decision.
 
-- **Audit the cycles already evaluated under the v2 rules**, from height `954 200` to the activation
-  height, for any compensation issuance claimed by a validated merit claim in more than one blind
-  vote. This establishes both whether the weakness was exploited and that activating the rule cannot
-  change a result which has already been derived. An innocent occurrence is plausible: a voter who
-  published a second blind vote in a cycle would have had the same merit counted twice.
+Because the rule version is selected by the evaluation height of the cycle itself, activating it
+cannot change a result which has already been derived, including when a node rebuilds its DAO state
+from genesis. The audit below therefore does not establish compatibility — the height gate does. What
+it establishes is whether the weakness was exploited while it was open.
+
+### 7.1 Audit of the bundled mainnet DAO state
+
+Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `949 481`. Claims were
+validated with the rules of §2, with the blind vote height taken from the vote reveal transaction
+which spent the blind vote stake output, which is in the same cycle but slightly later and therefore
+applies the "not younger than the blind vote" rule slightly permissively. The result is thus an upper
+bound on the set of counted claims, which is what an audit for the *absence* of duplicates needs.
+
+| Measure | Value |
+|---|---|
+| Cycles, of which with votes | 81, 79 |
+| Decrypted blind votes | 852 |
+| Compensation issuances | 1 465 |
+| Merit claims | 7 535 |
+| Merit claims passing validation | 7 535 |
+| Most blind votes in one cycle | 14 |
+| Issuances claimed again in a later cycle | 687 |
+| **Issuances claimed by several blind votes of one cycle** | **0** |
+| Same, without validating the claims at all | 0 |
+
+No issuance was ever claimed by more than one blind vote of the same cycle, so the weakness was not
+exploited up to that height, and no honest voter happened to trigger it either. The last two rows
+matter together: 687 issuances *are* claimed again in later cycles, which is legitimate and is what
+the per-cycle grouping has to tolerate, so the zero is a real result rather than an artefact of a
+grouping which never compares anything. That every one of the 7 535 claims also passes validation
+says separately that no forged, mismatched or unknown-issuance claim exists in that history.
+
+### 7.2 Remaining obligations
+
+- **The bundled resource ends at `949 481`**, below the merit consensus v2 activation height. Cycles
+  from there to the activation height are not covered and must be checked against a synced node
+  before release, by the same method.
 - **Set the activation height from the release schedule** so that it lies safely after the release
   which ships the rule, as for the other rules bundled into that fork.
 
