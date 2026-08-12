@@ -174,6 +174,14 @@ public class MeritConsensusV2 {
         return result;
     }
 
+    /**
+     * Applies the decay of the merit consensus rules to one validated issuance. Rule versions which only differ in
+     * which claims they accept use this so that the weighting itself cannot drift between them.
+     */
+    static long getWeightedMeritAmount(Issuance issuance, int blindVoteTxHeight) {
+        return getWeightedMeritAmount(issuance.getAmount(), issuance.getChainHeight(), blindVoteTxHeight, BLOCKS_PER_YEAR);
+    }
+
     public static long getWeightedMeritAmount(long amount, int issuanceHeight, int blockHeight, int blocksPerYear) {
         try {
             if (issuanceHeight > blockHeight) {
