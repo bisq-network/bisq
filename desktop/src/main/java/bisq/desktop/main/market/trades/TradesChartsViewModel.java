@@ -111,6 +111,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // newer one. Both counters are read and written only on the user thread.
     private int refilterGeneration;
     private int chartGeneration;
+    private int usdGeneration;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -181,12 +182,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
                         log.error(throwable.toString());
                         return;
                     }
-                    //Once applyAsyncUsdAveragePriceMapsPerTickUnit and applyAsyncTradeStatisticsForCurrency are
-                    // both completed we call applyAsyncChartData, but only if the refilter was applied
-                    // and not dropped as superseded.
-                    if (task2Done.getNow(false)) {
-                        UserThread.execute(this::applyAsyncChartData);
-                    }
+                    // Both tasks completed: recompute the chart. Call it unconditionally - it reads
+                    // the latest tradeStatisticsByCurrency and chartGeneration drops superseded
+                    // results, so gating on task2 would only drop this corrective recompute.
+                    UserThread.execute(this::applyAsyncChartData);
                 });
 
         // We call applyAsyncUsdAveragePriceMapsPerTickUnit and applyAsyncTradeStatisticsForCurrency
@@ -200,6 +199,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
     @Override
     protected void deactivate() {
         deactivateCalled = true;
+        // Bump the generations so any in-flight refilter, chart, or USD-map result is dropped at
+        // publish time instead of repopulating the model after the cleanup below runs.
+        ++refilterGeneration;
+        ++chartGeneration;
+        ++usdGeneration;
         tradeStatisticsManager.getObservableTradeStatisticsSet().removeListener(setChangeListener);
 
         // We want to avoid to trigger listeners in the view so we delay a bit. Deactivate on model is called before
@@ -221,6 +225,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void applyAsyncUsdAveragePriceMapsPerTickUnit(CompletableFuture<Boolean> completeFuture) {
         long ts = System.currentTimeMillis();
+        int generation = ++usdGeneration;
         ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getNavigableTradeStatisticsSet())
                 .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
                     if (deactivateCalled) {
@@ -232,6 +237,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
                         return;
                     }
                     UserThread.execute(() -> {
+                        if (generation != usdGeneration) {
+                            // A later activation superseded this result; drop it instead of
+                            // repopulating the model.
+                            completeFuture.complete(false);
+                            return;
+                        }
                         this.usdAveragePriceMapsPerTickUnit.clear();
                         this.usdAveragePriceMapsPerTickUnit.putAll(usdAveragePriceMapsPerTickUnit);
                         log.debug("applyAsyncUsdAveragePriceMapsPerTickUnit took {}", System.currentTimeMillis() - ts);
