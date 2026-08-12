@@ -22,14 +22,11 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
-import com.google.common.base.Charsets;
-
 import java.nio.charset.StandardCharsets;
 
 import java.util.Objects;
 
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -38,7 +35,6 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-@Slf4j
 public final class MyProofOfBurn implements PersistablePayload, NetworkPayload {
     private final String txId;
     private final String preImage;
@@ -76,7 +72,6 @@ public final class MyProofOfBurn implements PersistablePayload, NetworkPayload {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MyProofOfBurn)) return false;
-        if (!super.equals(o)) return false;
         MyProofOfBurn that = (MyProofOfBurn) o;
         return Objects.equals(txId, that.txId) &&
                 Objects.equals(preImage, that.preImage);
@@ -84,7 +79,7 @@ public final class MyProofOfBurn implements PersistablePayload, NetworkPayload {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), txId, preImage);
+        return Objects.hash(txId, preImage);
     }
 
     @Override

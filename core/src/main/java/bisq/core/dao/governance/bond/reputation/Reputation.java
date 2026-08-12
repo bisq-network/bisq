@@ -24,7 +24,6 @@ import bisq.common.util.Utilities;
 import java.util.Arrays;
 
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -35,7 +34,6 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-@Slf4j
 public final class Reputation implements BondedAsset {
     private final byte[] hash;
 
@@ -67,16 +65,13 @@ public final class Reputation implements BondedAsset {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Reputation)) return false;
-        if (!super.equals(o)) return false;
         Reputation that = (Reputation) o;
         return Arrays.equals(hash, that.hash);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + Arrays.hashCode(hash);
-        return result;
+        return Arrays.hashCode(hash);
     }
 
     @Override

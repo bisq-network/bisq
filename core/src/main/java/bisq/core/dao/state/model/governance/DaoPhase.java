@@ -124,7 +124,6 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel, Can
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof DaoPhase)) return false;
-        if (!super.equals(o)) return false;
         DaoPhase daoPhase = (DaoPhase) o;
         return duration == daoPhase.duration &&
                 phase.name().equals(daoPhase.phase.name());
@@ -132,6 +131,6 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel, Can
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), phase.name(), duration);
+        return Objects.hash(phase.name(), duration);
     }
 }
