@@ -413,6 +413,19 @@ public class BondedRolesRepositoryTest {
     }
 
     @Test
+    public void shortTermLockupRemainsVisibleButCannotAuthorize() throws IOException {
+        addLockup(LOCKUP_TX_ID, role, LOCKUP_HEIGHT, lockupKey);
+        when(txById.get(LOCKUP_TX_ID).getLockTime())
+                .thenReturn(role.getBondedRoleType().getUnlockTimeInBlocks() - 1);
+        repository.doUpdate();
+
+        assertEquals(BondState.READY_FOR_LOCKUP, findReadyBond(role).getBondState());
+        assertEquals(BondState.LOCKUP_TX_CONFIRMED, findAllRoleBond(LOCKUP_TX_ID).getBondState());
+        assertRejectedWith("No valid role lockup", () -> verify(PROPOSAL_TX_ID, LOCKUP_TX_ID,
+                signatureFrom(proposalKey, PROPOSAL_TX_ID, LOCKUP_TX_ID, PROFILE_ID)));
+    }
+
+    @Test
     public void lockupBeforeOrInProposalBlockCannotAuthorize() throws IOException {
         addLockup(LOCKUP_TX_ID, role, PROPOSAL_HEIGHT, lockupKey);
         repository.doUpdate();
