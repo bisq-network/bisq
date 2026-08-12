@@ -18,6 +18,7 @@
 package bisq.bridge.grpc.services;
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
 import bisq.core.account.witness.AccountAgeWitnessService;
 
 import io.grpc.stub.StreamObserver;
@@ -25,15 +26,12 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 
 import java.util.Date;
-import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
-
-
-
 import bisq.bridge.protobuf.AccountAgeWitnessDateRequest;
 import bisq.bridge.protobuf.AccountAgeWitnessDateResponse;
 import bisq.bridge.protobuf.AccountAgeWitnessGrpcServiceGrpc;
+import bisq.bridge.protobuf.AccountAgeWitnessOwnershipRequest;
+import bisq.bridge.protobuf.AccountAgeWitnessOwnershipResponse;
 
 @Slf4j
 public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGrpc.AccountAgeWitnessGrpcServiceImplBase {
@@ -47,23 +45,36 @@ public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGr
     @Override
     public void requestAccountAgeWitnessDate(AccountAgeWitnessDateRequest request,
                                              StreamObserver<AccountAgeWitnessDateResponse> responseObserver) {
-        try {
-            String hashAsHex = request.getHashAsHex();
-            Optional<Long> date = accountAgeWitnessService.getWitnessByHashAsHex(hashAsHex)
-                    .map(AccountAgeWitness::getDate);
-            if (date.isEmpty()) {
-                responseObserver.onError(io.grpc.Status.NOT_FOUND
-                        .withDescription("No account age witness found for the provided hash " + hashAsHex)
-                        .asRuntimeException());
-                return;
-            }
+        responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                .withDescription("Account age authorization requires an ownership proof")
+                .asRuntimeException());
+    }
 
-            log.info("Account age for hash {}: {} ({})", hashAsHex, date.get(), new Date(date.get()));
-            var response = AccountAgeWitnessDateResponse.newBuilder().setDate(date.get()).build();
+    @Override
+    public void verifyAccountAgeWitnessOwnership(AccountAgeWitnessOwnershipRequest request,
+                                                 StreamObserver<AccountAgeWitnessOwnershipResponse> responseObserver) {
+        try {
+            AccountAgeWitnessOwnershipProof proof = new AccountAgeWitnessOwnershipProof(
+                    request.getProtocolVersion(),
+                    request.getProfileId(),
+                    request.getWitnessHash().toByteArray(),
+                    request.getAccountInputDataWithSalt().toByteArray(),
+                    request.getOwnerPublicKey().toByteArray(),
+                    request.getSignature().toByteArray());
+            AccountAgeWitness witness = accountAgeWitnessService.verifyAccountAgeWitnessOwnership(proof);
+            long date = witness.getDate();
+            log.info("Verified account age ownership for hash {}: {} ({})",
+                    bisq.common.util.Hex.encode(witness.getHash()), date, new Date(date));
+            var response = AccountAgeWitnessOwnershipResponse.newBuilder().setDate(date).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid account age witness ownership proof", e);
+            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
         } catch (Exception e) {
-            log.error("requestAccountAgeWitnessData failed", e);
+            log.error("verifyAccountAgeWitnessOwnership failed", e);
             responseObserver.onError(io.grpc.Status.INTERNAL
                     .withDescription("Internal server error")
                     .withCause(e)

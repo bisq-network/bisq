@@ -70,6 +70,7 @@ import static bisq.core.payment.payload.PaymentMethod.getPaymentMethod;
 import static bisq.core.support.dispute.DisputeResult.PayoutSuggestion.UNKNOWN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -119,6 +120,48 @@ public class AccountAgeWitnessServiceTest {
         dir.delete();
         dir.mkdir();
         return dir;
+    }
+
+    @Test
+    public void accountAgeOwnershipProofResolvesTheStoredWitness() throws Exception {
+        byte[] accountInput = new byte[]{1, 2, 3};
+        AccountAgeWitnessOwnershipProof proof = createAccountAgeOwnershipProof(accountInput);
+        AccountAgeWitness witness = new AccountAgeWitness(proof.getWitnessHash(), 1234L);
+        service.addToMap(witness);
+
+        assertEquals(witness, service.verifyAccountAgeWitnessOwnership(proof));
+    }
+
+    @Test
+    public void accountAgeOwnershipProofRejectsTheProvenOwnerKeyWhenBanned() throws Exception {
+        byte[] accountInput = new byte[]{1, 2, 3};
+        AccountAgeWitnessOwnershipProof proof = createAccountAgeOwnershipProof(accountInput);
+        service.addToMap(new AccountAgeWitness(proof.getWitnessHash(), 1234L));
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(
+                Utilities.bytesAsHexString(proof.getOwnerPublicKey()))).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.verifyAccountAgeWitnessOwnership(proof));
+    }
+
+    private AccountAgeWitnessOwnershipProof createAccountAgeOwnershipProof(byte[] accountInput) throws Exception {
+        byte[] ownerPublicKey = Sig.getPublicKeyBytes(publicKey);
+        byte[] witnessHash = Hash.getSha256Ripemd160hash(
+                Utilities.concatenateByteArrays(accountInput, ownerPublicKey));
+        byte[] signature = Sig.sign(keypair.getPrivate(),
+                AccountAgeWitnessOwnershipProof.getSignatureMessage(
+                        AccountAgeWitnessOwnershipProof.VERSION,
+                        "12".repeat(20),
+                        witnessHash,
+                        accountInput,
+                        ownerPublicKey));
+        return new AccountAgeWitnessOwnershipProof(
+                AccountAgeWitnessOwnershipProof.VERSION,
+                "12".repeat(20),
+                witnessHash,
+                accountInput,
+                ownerPublicKey,
+                signature);
     }
 
     @AfterEach

@@ -84,6 +84,7 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -345,6 +346,17 @@ public class AccountAgeWitnessService {
 
     public boolean isWitnessOwnerPubKeyBanned(byte[] ownerPublicKey) {
         return filterPolicyService.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPublicKey));
+    }
+
+    public AccountAgeWitness verifyAccountAgeWitnessOwnership(AccountAgeWitnessOwnershipProof proof) {
+        proof.verify();
+        AccountAgeWitness witness = getWitnessByHash(proof.getWitnessHash())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No account age witness found for the ownership proof"));
+        checkArgument(!filterPolicyService.isWitnessSignerPubKeyBanned(
+                        Utils.HEX.encode(proof.getOwnerPublicKey())),
+                "Account age witness owner is banned");
+        return witness;
     }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Witness age

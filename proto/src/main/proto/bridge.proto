@@ -96,6 +96,18 @@ message AccountAgeWitnessDateResponse {
     sint64 date = 1;
 }
 
+message AccountAgeWitnessOwnershipRequest {
+    uint32 protocolVersion = 1;
+    string profileId = 2;
+    bytes witnessHash = 3;
+    bytes accountInputDataWithSalt = 4;
+    bytes ownerPublicKey = 5;
+    bytes signature = 6;
+}
+message AccountAgeWitnessOwnershipResponse {
+    sint64 date = 1;
+}
+
 
 message SignedWitnessDateRequest {
     string hashAsHex = 1;

@@ -42,6 +42,8 @@ service AccountTimestampGrpcService {
 
 service AccountAgeWitnessGrpcService {
     rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
+
+    rpc VerifyAccountAgeWitnessOwnership (AccountAgeWitnessOwnershipRequest) returns (AccountAgeWitnessOwnershipResponse);
 }
 
 service SignedWitnessGrpcService {
