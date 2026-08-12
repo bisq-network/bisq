@@ -17,17 +17,16 @@
 
 package bisq.core.account.witness;
 
-public final class AccountAgeWitnessOwnershipProof extends WitnessOwnershipProof {
+public final class SignedWitnessOwnershipProof extends WitnessOwnershipProof {
     public static final int VERSION = 2;
-    public static final int MAX_ACCOUNT_INPUT_LENGTH = WitnessOwnershipProof.MAX_ACCOUNT_INPUT_LENGTH;
-    private static final String DOMAIN = "BISQ2_ACCOUNT_AGE_REPUTATION_V2";
+    private static final String DOMAIN = "BISQ2_SIGNED_WITNESS_REPUTATION_V2";
 
-    public AccountAgeWitnessOwnershipProof(int protocolVersion,
-                                           String profileId,
-                                           byte[] witnessHash,
-                                           byte[] accountInputDataWithSalt,
-                                           byte[] ownerPublicKey,
-                                           byte[] signature) {
+    public SignedWitnessOwnershipProof(int protocolVersion,
+                                       String profileId,
+                                       byte[] witnessHash,
+                                       byte[] accountInputDataWithSalt,
+                                       byte[] ownerPublicKey,
+                                       byte[] signature) {
         super(DOMAIN,
                 VERSION,
                 protocolVersion,

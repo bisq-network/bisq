@@ -76,6 +76,47 @@ class AccountAgeWitnessOwnershipProofTest {
         assertThrows(IllegalArgumentException.class, moved::verify);
     }
 
+    @Test
+    void accountAgeProofCannotBeReplayedAsSignedWitnessProof() throws Exception {
+        AccountAgeWitnessOwnershipProof accountAgeProof = createProof(
+                PROFILE_ID,
+                Sig.generateKeyPair(),
+                ACCOUNT_INPUT);
+        SignedWitnessOwnershipProof signedWitnessProof = new SignedWitnessOwnershipProof(
+                SignedWitnessOwnershipProof.VERSION,
+                accountAgeProof.getProfileId(),
+                accountAgeProof.getWitnessHash(),
+                accountAgeProof.getAccountInputDataWithSalt(),
+                accountAgeProof.getOwnerPublicKey(),
+                accountAgeProof.getSignature());
+
+        assertThrows(IllegalArgumentException.class, signedWitnessProof::verify);
+    }
+
+    @Test
+    void signedWitnessProofBindsTheAccountOwnerAndProfile() throws Exception {
+        KeyPair owner = Sig.generateKeyPair();
+        byte[] ownerPublicKey = Sig.getPublicKeyBytes(owner.getPublic());
+        byte[] witnessHash = Hash.getSha256Ripemd160hash(
+                Utilities.concatenateByteArrays(ACCOUNT_INPUT, ownerPublicKey));
+        byte[] signature = Sig.sign(owner.getPrivate(),
+                SignedWitnessOwnershipProof.getSignatureMessage(
+                        SignedWitnessOwnershipProof.VERSION,
+                        PROFILE_ID,
+                        witnessHash,
+                        ACCOUNT_INPUT,
+                        ownerPublicKey));
+        SignedWitnessOwnershipProof proof = new SignedWitnessOwnershipProof(
+                SignedWitnessOwnershipProof.VERSION,
+                PROFILE_ID,
+                witnessHash,
+                ACCOUNT_INPUT,
+                ownerPublicKey,
+                signature);
+
+        assertDoesNotThrow(proof::verify);
+    }
+
     private static AccountAgeWitnessOwnershipProof createProof(String profileId,
                                                                KeyPair keyPair,
                                                                byte[] accountInput) throws Exception {
