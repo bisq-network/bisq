@@ -177,6 +177,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     @Getter
     private int burningManAddressListVersion;
+    @Setter
+    @Getter
+    private boolean buyerPaymentAccountValidated;
 
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
         this(offerId, accountId, pubKeyRing, new TradingPeer());
@@ -220,7 +223,8 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 .setBuyerPayoutAmountFromMediation(buyerPayoutAmountFromMediation)
                 .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation)
                 .setBurningManSelectionHeight(burningManSelectionHeight)
-                .setBurningManAddressListVersion(burningManAddressListVersion);
+                .setBurningManAddressListVersion(burningManAddressListVersion)
+                .setBuyerPaymentAccountValidated(buyerPaymentAccountValidated);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -261,6 +265,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         processModel.setPaymentStartedMessageState(paymentStartedMessageState);
         processModel.setBurningManSelectionHeight(proto.getBurningManSelectionHeight());
         processModel.setBurningManAddressListVersion(proto.getBurningManAddressListVersion());
+        processModel.setBuyerPaymentAccountValidated(proto.getBuyerPaymentAccountValidated());
 
         if (proto.hasPaymentAccount()) {
             processModel.setPaymentAccount(PaymentAccount.fromProto(proto.getPaymentAccount(), coreProtoResolver));
@@ -350,6 +355,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         if (tradingPeer.getPaymentAccountPayload() != null || tradingPeer.getContractAsJson() != null) {
             // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
             this.tradingPeer = new TradingPeer();
+            buyerPaymentAccountValidated = false;
             changed = true;
         }
         return changed;
