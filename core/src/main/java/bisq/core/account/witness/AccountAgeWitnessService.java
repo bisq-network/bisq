@@ -343,6 +343,9 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
+    public boolean isWitnessOwnerPubKeyBanned(byte[] ownerPublicKey) {
+        return filterPolicyService.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPublicKey));
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Witness age
     ///////////////////////////////////////////////////////////////////////////////////////////

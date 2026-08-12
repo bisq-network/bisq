@@ -181,20 +181,23 @@ public class AccountAgeWitnessUtils {
     }
 
     static class AccountAgeWitnessDto {
+        private final int protocolVersion;
         private final String profileId;
         private final String hashAsHex;
-        private final long date;
+        private final String accountInputDataWithSaltBase64;
         private final String pubKeyBase64;
         private final String signatureBase64;
 
-        public AccountAgeWitnessDto(String profileId,
+        public AccountAgeWitnessDto(int protocolVersion,
+                                    String profileId,
                                     String hashAsHex,
-                                    long date,
+                                    String accountInputDataWithSaltBase64,
                                     String pubKeyBase64,
                                     String signatureBase64) {
+            this.protocolVersion = protocolVersion;
             this.profileId = profileId;
             this.hashAsHex = hashAsHex;
-            this.date = date;
+            this.accountInputDataWithSaltBase64 = accountInputDataWithSaltBase64;
             this.pubKeyBase64 = pubKeyBase64;
             this.signatureBase64 = signatureBase64;
         }
@@ -230,19 +233,40 @@ public class AccountAgeWitnessUtils {
         return accountAgeWitnessService.findWitness(account.getPaymentAccountPayload(), keyRing.getPubKeyRing())
                 .map(accountAgeWitness -> {
                     try {
-                        checkArgument(!accountAgeWitnessService.isFilteredWitness(accountAgeWitness), "Invalid account age witness");
-                        String hashAsHex = Hex.encode(accountAgeWitness.getHash());
-                        long date = accountAgeWitness.getDate();
-                        checkArgument(date > 0, "Date must be > 0");
-                        String message = profileId + hashAsHex + date;
+                        byte[] witnessHash = accountAgeWitness.getHash();
+                        String hashAsHex = Hex.encode(witnessHash);
                         KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
-                        String signatureBase64 = Sig.sign(signatureKeyPair.getPrivate(), message);
-                        String pubKeyBase64 = Base64.getEncoder().encodeToString(Sig.getPublicKeyBytes(signatureKeyPair.getPublic()));
-                        AccountAgeWitnessDto dto = new AccountAgeWitnessDto(profileId,
+                        byte[] ownerPublicKey = Sig.getPublicKeyBytes(signatureKeyPair.getPublic());
+                        checkArgument(!accountAgeWitnessService.isWitnessOwnerPubKeyBanned(ownerPublicKey),
+                                "Account age witness owner is banned");
+                        byte[] accountInputDataWithSalt = accountAgeWitnessService.getAccountInputDataWithSalt(
+                                account.getPaymentAccountPayload());
+                        byte[] calculatedHash = Hash.getSha256Ripemd160hash(
+                                Utilities.concatenateByteArrays(accountInputDataWithSalt, ownerPublicKey));
+                        checkArgument(Arrays.equals(witnessHash, calculatedHash),
+                                "Account age witness does not match the selected account and key");
+                        byte[] message = AccountAgeWitnessOwnershipProof.getSignatureMessage(
+                                AccountAgeWitnessOwnershipProof.VERSION,
+                                profileId,
+                                witnessHash,
+                                accountInputDataWithSalt,
+                                ownerPublicKey);
+                        byte[] signature = Sig.sign(signatureKeyPair.getPrivate(), message);
+                        AccountAgeWitnessOwnershipProof proof = new AccountAgeWitnessOwnershipProof(
+                                AccountAgeWitnessOwnershipProof.VERSION,
+                                profileId,
+                                witnessHash,
+                                accountInputDataWithSalt,
+                                ownerPublicKey,
+                                signature);
+                        proof.verify();
+                        AccountAgeWitnessDto dto = new AccountAgeWitnessDto(
+                                proof.getProtocolVersion(),
+                                proof.getProfileId(),
                                 hashAsHex,
-                                date,
-                                pubKeyBase64,
-                                signatureBase64);
+                                Base64.getEncoder().encodeToString(proof.getAccountInputDataWithSalt()),
+                                Base64.getEncoder().encodeToString(proof.getOwnerPublicKey()),
+                                Base64.getEncoder().encodeToString(proof.getSignature()));
                         return JsonUtil.objectToJson(dto);
                     } catch (CryptoException e) {
                         throw new RuntimeException(e);
