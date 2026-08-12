@@ -180,6 +180,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     @Getter
     private boolean buyerPaymentAccountValidated;
+    @Setter
+    @Getter
+    private boolean depositTxAndDelayedPayoutTxMessageDelivered;
 
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
         this(offerId, accountId, pubKeyRing, new TradingPeer());
@@ -224,7 +227,8 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation)
                 .setBurningManSelectionHeight(burningManSelectionHeight)
                 .setBurningManAddressListVersion(burningManAddressListVersion)
-                .setBuyerPaymentAccountValidated(buyerPaymentAccountValidated);
+                .setBuyerPaymentAccountValidated(buyerPaymentAccountValidated)
+                .setDepositTxAndDelayedPayoutTxMessageDelivered(depositTxAndDelayedPayoutTxMessageDelivered);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -266,6 +270,8 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         processModel.setBurningManSelectionHeight(proto.getBurningManSelectionHeight());
         processModel.setBurningManAddressListVersion(proto.getBurningManAddressListVersion());
         processModel.setBuyerPaymentAccountValidated(proto.getBuyerPaymentAccountValidated());
+        processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(
+                proto.getDepositTxAndDelayedPayoutTxMessageDelivered());
 
         if (proto.hasPaymentAccount()) {
             processModel.setPaymentAccount(PaymentAccount.fromProto(proto.getPaymentAccount(), coreProtoResolver));

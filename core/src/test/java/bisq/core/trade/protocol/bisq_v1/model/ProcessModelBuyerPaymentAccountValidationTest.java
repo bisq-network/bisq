@@ -33,14 +33,17 @@ class ProcessModelBuyerPaymentAccountValidationTest {
         when(pubKeyRing.toProtoMessage()).thenReturn(protobuf.PubKeyRing.newBuilder().build());
         ProcessModel processModel = new ProcessModel("offer-id", "account-id", pubKeyRing);
         processModel.setBuyerPaymentAccountValidated(true);
+        processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
 
         protobuf.ProcessModel proto = processModel.toProtoMessage();
 
         assertTrue(proto.getBuyerPaymentAccountValidated());
+        assertTrue(proto.getDepositTxAndDelayedPayoutTxMessageDelivered());
     }
 
     @Test
     void oldPersistenceWithoutValidationStateDefaultsToUnvalidated() {
         assertFalse(protobuf.ProcessModel.newBuilder().build().getBuyerPaymentAccountValidated());
+        assertFalse(protobuf.ProcessModel.newBuilder().build().getDepositTxAndDelayedPayoutTxMessageDelivered());
     }
 }

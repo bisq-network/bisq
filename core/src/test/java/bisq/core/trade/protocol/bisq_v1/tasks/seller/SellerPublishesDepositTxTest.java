@@ -1,0 +1,103 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.trade.protocol.bisq_v1.tasks.seller;
+
+import bisq.core.offer.Offer;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+
+import bisq.common.taskrunner.TaskRunner;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class SellerPublishesDepositTxTest {
+    @Test
+    void fiatDepositIsNotBroadcastBeforeBuyerAccountValidation() {
+        ProcessModel processModel = processModel(false, true);
+        TaskResult result = runTask(trade(processModel));
+
+        assertTrue(result.completed());
+        assertNull(result.errorMessage());
+        verify(processModel, never()).getTradeWalletService();
+    }
+
+    @Test
+    void fiatDepositIsNotBroadcastBeforeDepositMessageDelivery() {
+        ProcessModel processModel = processModel(true, false);
+        TaskResult result = runTask(trade(processModel));
+
+        assertTrue(result.completed());
+        assertNull(result.errorMessage());
+        verify(processModel, never()).getTradeWalletService();
+    }
+
+    @Test
+    void fiatDepositBroadcastPathRequiresBothGates() {
+        ProcessModel processModel = processModel(true, true);
+        TaskResult result = runTask(trade(processModel));
+
+        assertFalse(result.completed());
+        verify(processModel).getDepositTx();
+    }
+
+    private static ProcessModel processModel(boolean accountValidated, boolean messageDelivered) {
+        ProcessModel processModel = mock(ProcessModel.class);
+        when(processModel.isBuyerPaymentAccountValidated()).thenReturn(accountValidated);
+        when(processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()).thenReturn(messageDelivered);
+        when(processModel.getTradeManager()).thenReturn(mock(TradeManager.class));
+        return processModel;
+    }
+
+    private static Trade trade(ProcessModel processModel) {
+        Offer offer = mock(Offer.class);
+        when(offer.isFiatOffer()).thenReturn(true);
+        Trade trade = mock(Trade.class);
+        when(trade.getOffer()).thenReturn(offer);
+        when(trade.getProcessModel()).thenReturn(processModel);
+        return trade;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static TaskResult runTask(Trade trade) {
+        AtomicBoolean completed = new AtomicBoolean();
+        AtomicReference<String> errorMessage = new AtomicReference<>();
+        TaskRunner<TradeModel> taskRunner = new TaskRunner<>(trade,
+                (Class<TradeModel>) (Class<?>) Trade.class,
+                () -> completed.set(true),
+                errorMessage::set);
+        taskRunner.addTasks(SellerPublishesDepositTx.class);
+        taskRunner.run();
+        return new TaskResult(completed.get(), errorMessage.get());
+    }
+
+    private record TaskResult(boolean completed, String errorMessage) {
+    }
+}

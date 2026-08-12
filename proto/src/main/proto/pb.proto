@@ -1864,6 +1864,7 @@ message ProcessModel {
     int32 burning_man_selection_height = 22;  // Added in v 1.9.7
     int32 burning_man_address_list_version = 23;
     bool buyer_payment_account_validated = 24;
+    bool deposit_tx_and_delayed_payout_tx_message_delivered = 25;
 }
 
 message TradingPeer {

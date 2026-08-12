@@ -30,6 +30,7 @@ import org.bitcoinj.core.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxFields;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerPublishesDepositTx extends TradeTask {
@@ -41,6 +42,18 @@ public class SellerPublishesDepositTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
+            if (trade.isDepositPublished()) {
+                complete();
+                return;
+            }
+            if (checkNotNull(trade.getOffer()).isFiatOffer() &&
+                    (!processModel.isBuyerPaymentAccountValidated() ||
+                            !processModel.isDepositTxAndDelayedPayoutTxMessageDelivered())) {
+                log.info("Not publishing fiat deposit until the buyer account is validated and the deposit message is delivered");
+                complete();
+                return;
+            }
 
             Transaction depositTx = checkCanonicalDepositTxFields(processModel.getDepositTx());
             processModel.getTradeWalletService().broadcastTx(depositTx,

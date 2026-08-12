@@ -32,15 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class SellerProtocolTaskSetsTest {
     @Test
-    void unvalidatedFiatDepositIsNotPublishedAfterSendingTheDepositMessage() {
-                assertArrayEquals(new Class[]{SellerProcessDelayedPayoutTxSignatureResponse.class,
-                        SellerFinalizesDelayedPayoutTx.class,
-                        SellerSendsDepositTxAndDelayedPayoutTxMessage.class},
-                SellerProtocolTaskSets.afterDelayedPayoutSignature(false));
-    }
-
-    @Test
-    void pendingDepositIsPublishedOnlyAfterTheBuyerAccountIsValidated() {
+    void depositPublicationIsAttemptedAfterDeliveryAndAfterBuyerValidation() {
         assertArrayEquals(new Class[]{SellerProcessShareBuyerPaymentAccountMessage.class,
                         ApplyFilter.class,
                         VerifyPeersAccountAgeWitness.class,
@@ -50,12 +42,12 @@ class SellerProtocolTaskSetsTest {
     }
 
     @Test
-    void immediatelyPublishableDepositKeepsItsExistingSequence() {
+    void depositPublicationIsAttemptedAfterTheDepositMessageIsDelivered() {
         assertArrayEquals(new Class[]{SellerProcessDelayedPayoutTxSignatureResponse.class,
                         SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class},
-                SellerProtocolTaskSets.afterDelayedPayoutSignature(true));
+                SellerProtocolTaskSets.afterDelayedPayoutSignature());
     }
 }

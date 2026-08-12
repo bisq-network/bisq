@@ -72,11 +72,10 @@ public abstract class SellerProtocol extends DisputeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
-        boolean publishDeposit = !trade.getOffer().isFiatOffer() || processModel.isBuyerPaymentAccountValidated();
         expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(SellerProtocolTaskSets.afterDelayedPayoutSignature(publishDeposit)))
+                .setup(tasks(SellerProtocolTaskSets.afterDelayedPayoutSignature()))
                 .executeTasks();
     }
 

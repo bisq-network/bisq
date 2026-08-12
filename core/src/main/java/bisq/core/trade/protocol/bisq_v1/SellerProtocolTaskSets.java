@@ -34,16 +34,12 @@ final class SellerProtocolTaskSets {
     }
 
     @SuppressWarnings("unchecked")
-    static Class<? extends Task<TradeModel>>[] afterDelayedPayoutSignature(boolean publishDeposit) {
-        return publishDeposit
-                ? new Class[]{SellerProcessDelayedPayoutTxSignatureResponse.class,
+    static Class<? extends Task<TradeModel>>[] afterDelayedPayoutSignature() {
+        return new Class[]{SellerProcessDelayedPayoutTxSignatureResponse.class,
                 SellerFinalizesDelayedPayoutTx.class,
                 SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                 SellerPublishesDepositTx.class,
-                SellerPublishesTradeStatistics.class}
-                : new Class[]{SellerProcessDelayedPayoutTxSignatureResponse.class,
-                SellerFinalizesDelayedPayoutTx.class,
-                SellerSendsDepositTxAndDelayedPayoutTxMessage.class};
+                SellerPublishesTradeStatistics.class};
     }
 
     @SuppressWarnings("unchecked")

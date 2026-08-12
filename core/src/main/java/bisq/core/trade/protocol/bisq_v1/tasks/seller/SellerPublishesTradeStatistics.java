@@ -41,6 +41,10 @@ public class SellerPublishesTradeStatistics extends TradeTask {
         try {
             runInterceptHook();
 
+            if (!trade.isDepositPublished()) {
+                complete();
+                return;
+            }
             checkNotNull(trade.getDepositTx());
 
             processModel.getP2PService().findPeersCapabilities(trade.getTradingPeerNodeAddress())

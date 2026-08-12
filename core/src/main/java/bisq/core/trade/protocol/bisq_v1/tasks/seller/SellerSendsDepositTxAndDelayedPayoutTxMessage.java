@@ -85,6 +85,7 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
 
     @Override
     protected void setStateArrived() {
+        markMessageDelivered();
         // we no longer set deprecated state (Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
         // see https://github.com/bisq-network/bisq/pull/5746#issuecomment-939879623
 
@@ -185,8 +186,14 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
             // we no longer set deprecated state (Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
             // see https://github.com/bisq-network/bisq/pull/5746#issuecomment-939879623
 
+            markMessageDelivered();
             cleanup();
             complete();
         }
+    }
+
+    private void markMessageDelivered() {
+        processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
+        processModel.getTradeManager().requestPersistence();
     }
 }
