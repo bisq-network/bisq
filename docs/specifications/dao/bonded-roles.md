@@ -335,7 +335,9 @@ blocks provides no additional authorization information.
 
 The bridge rejects an entire batch when its DAO state is not ready and in sync or the request exceeds
 the limit of 1,000 registrations. An invalid individual registration produces an error only in its
-own result so that other registrations in the same snapshot can still be retained. Connectivity
+own result so that other registrations in the same snapshot can still be retained. An unexpected
+internal verification failure is not evidence that one registration is invalid and must reject the
+entire batch; consumers retain their current registrations and retry a later snapshot. Connectivity
 policy while no completed-block notification can be received is outside this protocol; absence of a
 bridge connection does not itself require automatic deactivation here.
 

@@ -228,6 +228,26 @@ public class BondedRoleGrpcServiceTest {
     }
 
     @Test
+    public void unexpectedRepositoryFailureRejectsTheWholeBatch() {
+        doThrow(new IllegalStateException("Repository state unavailable"))
+                .when(bondedRolesRepository)
+                .verifyBondedRole(REGISTRATION);
+        BondedRolesVerificationRequest request = BondedRolesVerificationRequest.newBuilder()
+                .addRegistrations(request())
+                .build();
+        @SuppressWarnings("unchecked")
+        StreamObserver<BondedRolesVerificationResponse> responseObserver = mock(StreamObserver.class);
+
+        service.requestBondedRoleBatchVerification(request, responseObserver);
+
+        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+        verify(responseObserver).onError(errorCaptor.capture());
+        assertEquals(Status.Code.INTERNAL, Status.fromThrowable(errorCaptor.getValue()).getCode());
+        verify(responseObserver, never()).onNext(any());
+        verify(responseObserver, never()).onCompleted();
+    }
+
+    @Test
     public void batchWaitsForBlockProcessingAndUsesTheCompletedConfiscationState() throws Exception {
         userThreadExecutor = Executors.newSingleThreadExecutor();
         UserThread.setExecutor(userThreadExecutor);
