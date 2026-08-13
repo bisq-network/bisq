@@ -193,7 +193,9 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     }
 
     private void markMessageDelivered() {
-        processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
-        processModel.getTradeManager().requestPersistence();
+        if (!processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()) {
+            processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
+            processModel.getTradeManager().requestPersistence();
+        }
     }
 }
