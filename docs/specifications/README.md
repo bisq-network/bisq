@@ -12,6 +12,13 @@ specification says so explicitly instead of describing the implementation as if 
 
 ## Index
 
+### `application/`
+
+| Specification | Covers |
+|---|---|
+| [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, controlled process exit, and the JVM shutdown-hook backstop. |
+
+
 ### `dao/`
 
 | Specification | Covers |

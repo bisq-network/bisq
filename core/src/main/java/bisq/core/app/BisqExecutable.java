@@ -22,13 +22,13 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.node.full.RpcService;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.trade.statistics.TradeStatisticsManager;
-import bisq.core.locale.Res;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 
 import bisq.network.p2p.P2PService;
@@ -281,8 +281,8 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         if (injector == null) {
             log.info("Shut down called before injector was created");
-            resultHandler.handleResult();
-            System.exit(EXIT_SUCCESS);
+            completeShutDown(resultHandler, EXIT_SUCCESS);
+            return;
         }
 
         // We do not use the UserThread to avoid that the timeout would not get triggered in case the UserThread
@@ -340,11 +340,25 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             log.info("PersistenceManager flushAllDataToDiskAtShutdown started");
             PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                 log.info("Graceful shutdown completed. Exiting now.");
-                resultHandler.handleResult();
-                UserThread.runAfter(() -> System.exit(status), 100, TimeUnit.MILLISECONDS);
+                completeShutDown(resultHandler, status);
             });
         } else {
-            UserThread.runAfter(() -> System.exit(status), 100, TimeUnit.MILLISECONDS);
+            completeShutDown(resultHandler, status);
+        }
+    }
+
+    protected void completeShutDown(ResultHandler resultHandler, int status) {
+        completeShutDown(resultHandler, status, 100, TimeUnit.MILLISECONDS);
+    }
+
+    protected void completeShutDown(ResultHandler resultHandler,
+                                    int status,
+                                    long delay,
+                                    TimeUnit timeUnit) {
+        try {
+            resultHandler.handleResult();
+        } finally {
+            CommonSetup.exitAfter(status, delay, timeUnit);
         }
     }
 
