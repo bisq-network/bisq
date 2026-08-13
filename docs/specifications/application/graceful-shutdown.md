@@ -15,6 +15,10 @@ flush before scheduling process termination. The supplied completion handler mus
 termination, including when shutdown happens before dependency injection is complete or when a
 downgrade deliberately suppresses persistence.
 
+A shutdown request received while graceful shutdown is already in progress must join the in-progress
+shutdown. Its completion handler must be notified when that shutdown completes; the repeated request
+must neither start shutdown work again nor report completion before the work has completed.
+
 Process termination must not run on the UserThread. `System.exit` waits for JVM shutdown hooks, and a
 hook may itself require the UserThread; initiating it there can create a circular wait. The process
 must retain the requested exit status, including the failure status used to trigger wrapper-script

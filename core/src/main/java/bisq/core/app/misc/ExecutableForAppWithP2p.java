@@ -193,10 +193,9 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
         log.info("gracefulShutDown");
-        if (isShutdownInProgress) {
+        if (!beginGracefulShutDown(resultHandler)) {
             return;
         }
-        isShutdownInProgress = true;
 
         if (checkConnectionLossTimer != null) {
             checkConnectionLossTimer.stop();
@@ -212,7 +211,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                         module.close(injector);
 
                         PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                            completeShutDown(resultHandler, exitStatus, 1, TimeUnit.SECONDS);
+                            completeShutDown(exitStatus, 1, TimeUnit.SECONDS);
                             log.info("Graceful shutdown completed. Exiting now.");
                         });
                     });
@@ -223,18 +222,18 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 // we wait max 5 sec.
                 UserThread.runAfter(() -> {
                     PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                        completeShutDown(resultHandler, exitStatus, 1, TimeUnit.SECONDS);
+                        completeShutDown(exitStatus, 1, TimeUnit.SECONDS);
                         log.info("Graceful shutdown caused a timeout. Exiting now.");
                     });
                 }, 5);
             } else {
-                completeShutDown(resultHandler, exitStatus, 1, TimeUnit.SECONDS);
+                completeShutDown(exitStatus, 1, TimeUnit.SECONDS);
             }
         } catch (Throwable t) {
             log.debug("App shutdown failed with exception");
             t.printStackTrace();
             PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                completeShutDown(resultHandler, BisqExecutable.EXIT_FAILURE, 1, TimeUnit.SECONDS);
+                completeShutDown(BisqExecutable.EXIT_FAILURE, 1, TimeUnit.SECONDS);
                 log.info("Graceful shutdown resulted in an error. Exiting now.");
             });
 

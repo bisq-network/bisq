@@ -53,6 +53,7 @@ import com.google.inject.Injector;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -79,6 +80,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected Config config;
     protected InstanceLock instanceLock;
     protected volatile boolean isShutdownInProgress;
+    private final Object shutdownLock = new Object();
+    private final List<ResultHandler> shutdownResultHandlers = new ArrayList<>();
+    private boolean isShutdownComplete;
     private boolean hasDowngraded;
 
     public BisqExecutable(String fullName, String scriptName, String appName, String version) {
@@ -273,15 +277,13 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
         log.info("Start graceful shutDown");
-        if (isShutdownInProgress) {
+        if (!beginGracefulShutDown(resultHandler)) {
             return;
         }
 
-        isShutdownInProgress = true;
-
         if (injector == null) {
             log.info("Shut down called before injector was created");
-            completeShutDown(resultHandler, EXIT_SUCCESS);
+            completeShutDown(EXIT_SUCCESS);
             return;
         }
 
@@ -291,7 +293,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             @Override
             public void run() {
                 log.warn("Graceful shutdown not completed in 10 sec. We trigger our timeout handler.");
-                flushAndExit(resultHandler, EXIT_SUCCESS);
+                flushAndExit(EXIT_SUCCESS);
             }
         }, 10000);
 
@@ -318,18 +320,58 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         log.info("P2PService shutdown completed");
                         module.close(injector);
-                        flushAndExit(resultHandler, EXIT_SUCCESS);
+                        flushAndExit(EXIT_SUCCESS);
                     });
                 });
                 walletsSetup.shutDown();
             });
         } catch (Throwable t) {
             log.error("App shutdown failed with an exception", t);
-            flushAndExit(resultHandler, EXIT_FAILURE);
+            flushAndExit(EXIT_FAILURE);
         }
     }
 
-    protected void flushAndExit(ResultHandler resultHandler, int status) {
+    protected boolean beginGracefulShutDown(ResultHandler resultHandler) {
+        synchronized (shutdownLock) {
+            if (!isShutdownComplete) {
+                shutdownResultHandlers.add(resultHandler);
+                if (isShutdownInProgress) {
+                    return false;
+                }
+
+                isShutdownInProgress = true;
+                return true;
+            }
+        }
+
+        notifyShutdownResultHandler(resultHandler);
+        return false;
+    }
+
+    protected void notifyGracefulShutDownComplete() {
+        List<ResultHandler> resultHandlers;
+        synchronized (shutdownLock) {
+            if (isShutdownComplete) {
+                return;
+            }
+
+            isShutdownComplete = true;
+            resultHandlers = List.copyOf(shutdownResultHandlers);
+            shutdownResultHandlers.clear();
+        }
+
+        resultHandlers.forEach(this::notifyShutdownResultHandler);
+    }
+
+    private void notifyShutdownResultHandler(ResultHandler resultHandler) {
+        try {
+            resultHandler.handleResult();
+        } catch (Throwable t) {
+            log.error("Shutdown completion handler failed", t);
+        }
+    }
+
+    protected void flushAndExit(int status) {
         // The OS releases the lock on process exit; we release explicitly for a clean handover
         // to a restarting instance.
         if (instanceLock != null) {
@@ -340,23 +382,22 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             log.info("PersistenceManager flushAllDataToDiskAtShutdown started");
             PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                 log.info("Graceful shutdown completed. Exiting now.");
-                completeShutDown(resultHandler, status);
+                completeShutDown(status);
             });
         } else {
-            completeShutDown(resultHandler, status);
+            completeShutDown(status);
         }
     }
 
-    protected void completeShutDown(ResultHandler resultHandler, int status) {
-        completeShutDown(resultHandler, status, 100, TimeUnit.MILLISECONDS);
+    protected void completeShutDown(int status) {
+        completeShutDown(status, 100, TimeUnit.MILLISECONDS);
     }
 
-    protected void completeShutDown(ResultHandler resultHandler,
-                                    int status,
+    protected void completeShutDown(int status,
                                     long delay,
                                     TimeUnit timeUnit) {
         try {
-            resultHandler.handleResult();
+            notifyGracefulShutDownComplete();
         } finally {
             CommonSetup.exitAfter(status, delay, timeUnit);
         }
