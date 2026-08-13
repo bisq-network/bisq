@@ -61,7 +61,9 @@ public abstract class SellerProtocol extends DisputeProtocol {
     public void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
         super.onMailboxMessage(message, peerNodeAddress);
 
-        if (message instanceof CounterCurrencyTransferStartedMessage) {
+        if (message instanceof ShareBuyerPaymentAccountMessage) {
+            handle((ShareBuyerPaymentAccountMessage) message, peerNodeAddress);
+        } else if (message instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) message, peerNodeAddress);
         }
     }
