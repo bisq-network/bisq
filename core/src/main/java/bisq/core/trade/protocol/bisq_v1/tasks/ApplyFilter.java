@@ -43,7 +43,9 @@ public class ApplyFilter extends TradeTask {
         try {
             runInterceptHook();
 
-            NodeAddress nodeAddress = checkNotNull(processModel.getTempTradingPeerNodeAddress());
+            NodeAddress nodeAddress = processModel.getTempTradingPeerNodeAddress() != null
+                    ? processModel.getTempTradingPeerNodeAddress()
+                    : checkNotNull(trade.getTradingPeerNodeAddress());
             @Nullable
             PaymentAccountPayload paymentAccountPayload = processModel.getTradePeer().getPaymentAccountPayload();
 

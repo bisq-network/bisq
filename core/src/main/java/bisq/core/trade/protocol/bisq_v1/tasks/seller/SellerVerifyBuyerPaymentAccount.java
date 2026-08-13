@@ -21,6 +21,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -31,6 +32,7 @@ import bisq.common.taskrunner.TaskRunner;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerVerifyBuyerPaymentAccount extends TradeTask {
@@ -53,6 +55,10 @@ public class SellerVerifyBuyerPaymentAccount extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradePeer();
             PaymentAccountPayload paymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),
                     "Buyer payment account was not revealed and validated");
+            Contract contract = checkNotNull(trade.getContract());
+            checkHashFromContract(paymentAccountPayload.getHashForContract(),
+                    contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()),
+                    "peersPaymentAccountPayloadHash");
             PubKeyRing pubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "Buyer pubKeyRing must not be null");
             byte[] nonce = checkNotNull(tradingPeer.getAccountAgeWitnessNonce(),
                     "Buyer account-age witness nonce must not be null");
