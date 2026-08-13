@@ -32,7 +32,7 @@ completed path.
 
 The common JVM shutdown hook is a backstop for termination initiated outside the controlled flow. It
 must request graceful shutdown on the configured UserThread and wait for completion for no longer
-than the configured timeout.
+than two minutes.
 
 Once a controlled graceful shutdown has completed, its own subsequent `System.exit` must unregister
 the common hook before initiating JVM shutdown. Re-entering the already completed graceful shutdown
