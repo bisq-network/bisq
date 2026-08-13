@@ -45,6 +45,13 @@ The prerequisites may complete in either order. Completing either one must re-ev
 publication, but publication must remain blocked until both are persisted as complete. Repeated
 messages and retries must not cause a second logical publication.
 
+The seller must persist the finalized deposit transaction before publication can be deferred. If the
+seller restarts while either prerequisite is still pending, it must restore the exact transaction,
+resume delivery of the deposit and delayed-payout transaction message when necessary, and
+idempotently re-evaluate publication. A stored buyer-account reveal must be processed through the
+same validation path as a directly delivered reveal. Restart recovery must not depend on the buyer
+resending a reveal that the seller already received.
+
 The buyer receives a fully signed deposit transaction as part of this exchange and can broadcast it
 with a modified client. The seller therefore must also enforce the validation state at settlement;
 delayed seller publication alone is defense in depth, not the complete authorization boundary.
@@ -60,7 +67,8 @@ these transitions:
 For a trade persisted by an older release without an explicit validation result, the seller may
 reconstruct the result from the persisted revealed payload and the original trade-time witness
 evidence. Reconstruction must perform the same payload-to-witness binding, signature, and trade-limit
-checks. A missing reveal or invalid evidence remains a hard failure.
+checks. The absence of the newly introduced marker alone must not block an in-progress trade after an
+upgrade. A missing reveal or invalid evidence remains a hard failure.
 
 Current filters are still applied independently at the later protocol boundary. This allows an
 account or peer banned after the initial reveal to be rejected without changing the historical
