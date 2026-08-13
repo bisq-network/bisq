@@ -17,6 +17,8 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.offer.Offer;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.TradeModel;
@@ -24,6 +26,9 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.common.taskrunner.TaskRunner;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.params.MainNetParams;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -33,6 +38,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -60,12 +67,18 @@ class SellerPublishesDepositTxTest {
     }
 
     @Test
-    void fiatDepositBroadcastPathRequiresBothGates() {
+    void fiatDepositIsBroadcastWhenBothGatesComplete() {
         ProcessModel processModel = processModel(true, true);
+        Transaction depositTx = new Transaction(MainNetParams.get());
+        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+        when(processModel.getDepositTx()).thenReturn(depositTx);
+        when(processModel.getTradeWalletService()).thenReturn(tradeWalletService);
+
         TaskResult result = runTask(trade(processModel));
 
         assertFalse(result.completed());
-        verify(processModel).getDepositTx();
+        assertNull(result.errorMessage());
+        verify(tradeWalletService).broadcastTx(same(depositTx), any(TxBroadcaster.Callback.class));
     }
 
     private static ProcessModel processModel(boolean accountValidated, boolean messageDelivered) {
