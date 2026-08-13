@@ -20,6 +20,7 @@ package bisq.bridge.grpc.services;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.WitnessOwnershipProof;
 
 import io.grpc.stub.StreamObserver;
 
@@ -54,6 +55,11 @@ public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGr
     public void verifyAccountAgeWitnessOwnership(AccountAgeWitnessOwnershipRequest request,
                                                  StreamObserver<AccountAgeWitnessOwnershipResponse> responseObserver) {
         try {
+            WitnessOwnershipProof.validateByteArrayLengths(
+                    request.getWitnessHash().size(),
+                    request.getAccountInputDataWithSalt().size(),
+                    request.getOwnerPublicKey().size(),
+                    request.getSignature().size());
             AccountAgeWitnessOwnershipProof proof = new AccountAgeWitnessOwnershipProof(
                     request.getProtocolVersion(),
                     request.getProfileId(),

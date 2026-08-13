@@ -19,15 +19,22 @@ package bisq.bridge.grpc.services;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.account.witness.SignedWitnessOwnershipProof;
+import bisq.core.account.witness.WitnessOwnershipProof;
+
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+
+import javax.inject.Inject;
+
+import lombok.extern.slf4j.Slf4j;
+
+
+
 import bisq.bridge.protobuf.SignedWitnessDateRequest;
 import bisq.bridge.protobuf.SignedWitnessDateResponse;
 import bisq.bridge.protobuf.SignedWitnessGrpcServiceGrpc;
 import bisq.bridge.protobuf.SignedWitnessOwnershipRequest;
 import bisq.bridge.protobuf.SignedWitnessOwnershipResponse;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
-import javax.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.SignedWitnessGrpcServiceImplBase {
@@ -50,6 +57,11 @@ public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.Signe
     public void verifySignedWitnessOwnership(SignedWitnessOwnershipRequest request,
                                              StreamObserver<SignedWitnessOwnershipResponse> responseObserver) {
         try {
+            WitnessOwnershipProof.validateByteArrayLengths(
+                    request.getWitnessHash().size(),
+                    request.getAccountInputDataWithSalt().size(),
+                    request.getOwnerPublicKey().size(),
+                    request.getSignature().size());
             SignedWitnessOwnershipProof proof = new SignedWitnessOwnershipProof(
                     request.getProtocolVersion(),
                     request.getProfileId(),

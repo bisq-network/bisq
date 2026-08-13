@@ -62,10 +62,18 @@ public abstract class WitnessOwnershipProof {
         this.supportedVersion = supportedVersion;
         this.protocolVersion = protocolVersion;
         this.profileId = checkNotNull(profileId).toLowerCase(Locale.ROOT);
-        this.witnessHash = checkNotNull(witnessHash).clone();
-        this.accountInputDataWithSalt = checkNotNull(accountInputDataWithSalt).clone();
-        this.ownerPublicKey = checkNotNull(ownerPublicKey).clone();
-        this.signature = checkNotNull(signature).clone();
+        checkNotNull(witnessHash);
+        checkNotNull(accountInputDataWithSalt);
+        checkNotNull(ownerPublicKey);
+        checkNotNull(signature);
+        validateByteArrayLengths(witnessHash.length,
+                accountInputDataWithSalt.length,
+                ownerPublicKey.length,
+                signature.length);
+        this.witnessHash = witnessHash.clone();
+        this.accountInputDataWithSalt = accountInputDataWithSalt.clone();
+        this.ownerPublicKey = ownerPublicKey.clone();
+        this.signature = signature.clone();
 
         verifyStructure();
     }
@@ -139,19 +147,25 @@ public abstract class WitnessOwnershipProof {
         return profileId;
     }
 
+    public static void validateByteArrayLengths(int witnessHashLength,
+                                                int accountInputDataWithSaltLength,
+                                                int ownerPublicKeyLength,
+                                                int signatureLength) {
+        checkArgument(witnessHashLength == 20, "Account age witness hash must be 20 bytes");
+        checkArgument(accountInputDataWithSaltLength > 0 &&
+                        accountInputDataWithSaltLength <= MAX_ACCOUNT_INPUT_LENGTH,
+                "Account input data must contain between 1 and %s bytes", MAX_ACCOUNT_INPUT_LENGTH);
+        checkArgument(ownerPublicKeyLength >= 300 && ownerPublicKeyLength <= 600,
+                "Account owner public key has an unexpected size");
+        checkArgument(signatureLength >= 30 && signatureLength <= 60,
+                "Account ownership signature has an unexpected size");
+    }
+
     private void verifyStructure() {
         checkArgument(protocolVersion == supportedVersion,
                 "Unsupported witness ownership protocol version: %s", protocolVersion);
         checkArgument(profileId.length() == 40, "Profile ID must be 40 hexadecimal characters");
         checkArgument(Hex.decode(profileId).length == 20, "Profile ID must decode to 20 bytes");
-        checkArgument(witnessHash.length == 20, "Account age witness hash must be 20 bytes");
-        checkArgument(accountInputDataWithSalt.length > 0 &&
-                        accountInputDataWithSalt.length <= MAX_ACCOUNT_INPUT_LENGTH,
-                "Account input data must contain between 1 and %s bytes", MAX_ACCOUNT_INPUT_LENGTH);
-        checkArgument(ownerPublicKey.length >= 300 && ownerPublicKey.length <= 600,
-                "Account owner public key has an unexpected size");
-        checkArgument(signature.length >= 30 && signature.length <= 60,
-                "Account ownership signature has an unexpected size");
     }
 
     private static void writeBytes(DataOutputStream outputStream, byte[] value) throws IOException {

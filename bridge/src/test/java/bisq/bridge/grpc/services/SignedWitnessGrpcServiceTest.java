@@ -17,24 +17,32 @@
 
 package bisq.bridge.grpc.services;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.SignedWitnessOwnershipProof;
+
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+
+import com.google.protobuf.ByteString;
+
+import java.util.stream.Stream;
+
+import org.mockito.ArgumentCaptor;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+
+
 import bisq.bridge.protobuf.SignedWitnessDateRequest;
 import bisq.bridge.protobuf.SignedWitnessDateResponse;
 import bisq.bridge.protobuf.SignedWitnessOwnershipRequest;
 import bisq.bridge.protobuf.SignedWitnessOwnershipResponse;
-import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.account.witness.SignedWitnessOwnershipProof;
-import com.google.protobuf.ByteString;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class SignedWitnessGrpcServiceTest {
     @Test
@@ -84,6 +92,39 @@ class SignedWitnessGrpcServiceTest {
         ArgumentCaptor<Throwable> error = ArgumentCaptor.forClass(Throwable.class);
         verify(observer).onError(error.capture());
         assertEquals(Status.Code.INVALID_ARGUMENT, Status.fromThrowable(error.getValue()).getCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("oversizedByteFields")
+    void oversizedByteFieldIsRejectedBeforeProofVerification(SignedWitnessOwnershipRequest request) {
+        AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
+        SignedWitnessGrpcService service = new SignedWitnessGrpcService(accountAgeWitnessService);
+        @SuppressWarnings("unchecked")
+        StreamObserver<SignedWitnessOwnershipResponse> observer = mock(StreamObserver.class);
+
+        service.verifySignedWitnessOwnership(request, observer);
+
+        ArgumentCaptor<Throwable> error = ArgumentCaptor.forClass(Throwable.class);
+        verify(observer).onError(error.capture());
+        assertEquals(Status.Code.INVALID_ARGUMENT, Status.fromThrowable(error.getValue()).getCode());
+        verifyNoInteractions(accountAgeWitnessService);
+    }
+
+    private static Stream<SignedWitnessOwnershipRequest> oversizedByteFields() {
+        return Stream.of(
+                validStructure().toBuilder()
+                        .setWitnessHash(ByteString.copyFrom(new byte[21]))
+                        .build(),
+                validStructure().toBuilder()
+                        .setAccountInputDataWithSalt(ByteString.copyFrom(
+                                new byte[SignedWitnessOwnershipProof.MAX_ACCOUNT_INPUT_LENGTH + 1]))
+                        .build(),
+                validStructure().toBuilder()
+                        .setOwnerPublicKey(ByteString.copyFrom(new byte[601]))
+                        .build(),
+                validStructure().toBuilder()
+                        .setSignature(ByteString.copyFrom(new byte[61]))
+                        .build());
     }
 
     private static SignedWitnessOwnershipRequest validStructure() {

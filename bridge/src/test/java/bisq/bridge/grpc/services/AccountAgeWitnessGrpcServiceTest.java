@@ -17,25 +17,33 @@
 
 package bisq.bridge.grpc.services;
 
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
+import bisq.core.account.witness.AccountAgeWitnessService;
+
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+
+import com.google.protobuf.ByteString;
+
+import java.util.stream.Stream;
+
+import org.mockito.ArgumentCaptor;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+
+
 import bisq.bridge.protobuf.AccountAgeWitnessDateRequest;
 import bisq.bridge.protobuf.AccountAgeWitnessDateResponse;
 import bisq.bridge.protobuf.AccountAgeWitnessOwnershipRequest;
 import bisq.bridge.protobuf.AccountAgeWitnessOwnershipResponse;
-import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
-import bisq.core.account.witness.AccountAgeWitnessService;
-import com.google.protobuf.ByteString;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class AccountAgeWitnessGrpcServiceTest {
     @Test
@@ -86,6 +94,39 @@ class AccountAgeWitnessGrpcServiceTest {
         ArgumentCaptor<Throwable> error = ArgumentCaptor.forClass(Throwable.class);
         verify(observer).onError(error.capture());
         assertEquals(Status.Code.INVALID_ARGUMENT, Status.fromThrowable(error.getValue()).getCode());
+    }
+
+    @ParameterizedTest
+    @MethodSource("oversizedByteFields")
+    void oversizedByteFieldIsRejectedBeforeProofVerification(AccountAgeWitnessOwnershipRequest request) {
+        AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
+        AccountAgeWitnessGrpcService service = new AccountAgeWitnessGrpcService(accountAgeWitnessService);
+        @SuppressWarnings("unchecked")
+        StreamObserver<AccountAgeWitnessOwnershipResponse> observer = mock(StreamObserver.class);
+
+        service.verifyAccountAgeWitnessOwnership(request, observer);
+
+        ArgumentCaptor<Throwable> error = ArgumentCaptor.forClass(Throwable.class);
+        verify(observer).onError(error.capture());
+        assertEquals(Status.Code.INVALID_ARGUMENT, Status.fromThrowable(error.getValue()).getCode());
+        verifyNoInteractions(accountAgeWitnessService);
+    }
+
+    private static Stream<AccountAgeWitnessOwnershipRequest> oversizedByteFields() {
+        return Stream.of(
+                validStructure().toBuilder()
+                        .setWitnessHash(ByteString.copyFrom(new byte[21]))
+                        .build(),
+                validStructure().toBuilder()
+                        .setAccountInputDataWithSalt(ByteString.copyFrom(
+                                new byte[AccountAgeWitnessOwnershipProof.MAX_ACCOUNT_INPUT_LENGTH + 1]))
+                        .build(),
+                validStructure().toBuilder()
+                        .setOwnerPublicKey(ByteString.copyFrom(new byte[601]))
+                        .build(),
+                validStructure().toBuilder()
+                        .setSignature(ByteString.copyFrom(new byte[61]))
+                        .build());
     }
 
     private static AccountAgeWitnessOwnershipRequest validStructure() {
