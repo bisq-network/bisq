@@ -50,4 +50,19 @@ class SellerProtocolTaskSetsTest {
                         SellerPublishesTradeStatistics.class},
                 SellerProtocolTaskSets.afterDelayedPayoutSignature());
     }
+
+    @Test
+    void startupResumesDepositDeliveryBeforePublication() {
+        assertArrayEquals(new Class[]{SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                        SellerPublishesDepositTx.class,
+                        SellerPublishesTradeStatistics.class},
+                SellerProtocolTaskSets.afterInitialization(false));
+    }
+
+    @Test
+    void startupDoesNotResendAnAlreadyDeliveredDepositMessage() {
+        assertArrayEquals(new Class[]{SellerPublishesDepositTx.class,
+                        SellerPublishesTradeStatistics.class},
+                SellerProtocolTaskSets.afterInitialization(true));
+    }
 }

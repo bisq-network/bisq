@@ -43,6 +43,17 @@ final class SellerProtocolTaskSets {
     }
 
     @SuppressWarnings("unchecked")
+    static Class<? extends Task<TradeModel>>[] afterInitialization(boolean messageDelivered) {
+        if (messageDelivered) {
+            return new Class[]{SellerPublishesDepositTx.class,
+                    SellerPublishesTradeStatistics.class};
+        }
+        return new Class[]{SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                SellerPublishesDepositTx.class,
+                SellerPublishesTradeStatistics.class};
+    }
+
+    @SuppressWarnings("unchecked")
     static Class<? extends Task<TradeModel>>[] afterBuyerPaymentAccountReveal(boolean publishDeposit) {
         return publishDeposit
                 ? new Class[]{SellerProcessShareBuyerPaymentAccountMessage.class,

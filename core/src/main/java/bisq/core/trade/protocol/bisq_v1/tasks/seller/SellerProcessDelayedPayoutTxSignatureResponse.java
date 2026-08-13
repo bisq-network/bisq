@@ -73,6 +73,9 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
                     buyersDepositTxWithWitnesses,
                     buyerRawTransactionInputs,
                     sellerRawTransactionInputs);
+            if (checkNotNull(trade.getOffer()).isFiatOffer()) {
+                processModel.setFinalizedDepositTx(myDepositTx);
+            }
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

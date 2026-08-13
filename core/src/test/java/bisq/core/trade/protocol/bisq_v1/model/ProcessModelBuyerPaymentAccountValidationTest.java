@@ -17,11 +17,22 @@
 
 package bisq.core.trade.protocol.bisq_v1.model;
 
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.protocol.Provider;
+
+import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+
+import org.bitcoinj.core.Transaction;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,21 +40,46 @@ import static org.mockito.Mockito.when;
 class ProcessModelBuyerPaymentAccountValidationTest {
     @Test
     void validationStateSurvivesPersistence() {
-        PubKeyRing pubKeyRing = mock(PubKeyRing.class);
-        when(pubKeyRing.toProtoMessage()).thenReturn(protobuf.PubKeyRing.newBuilder().build());
-        ProcessModel processModel = new ProcessModel("offer-id", "account-id", pubKeyRing);
+        ProcessModel processModel = new ProcessModel("offer-id", "account-id", pubKeyRing());
         processModel.setBuyerPaymentAccountValidated(true);
         processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
 
-        protobuf.ProcessModel proto = processModel.toProtoMessage();
+        ProcessModel restored = ProcessModel.fromProto(processModel.toProtoMessage(), mock(CoreProtoResolver.class));
 
-        assertTrue(proto.getBuyerPaymentAccountValidated());
-        assertTrue(proto.getDepositTxAndDelayedPayoutTxMessageDelivered());
+        assertTrue(restored.isBuyerPaymentAccountValidated());
+        assertTrue(restored.isDepositTxAndDelayedPayoutTxMessageDelivered());
+    }
+
+    @Test
+    void finalizedDepositTransactionIsRestoredForDeferredPublication() {
+        ProcessModel processModel = new ProcessModel("offer-id", "account-id", pubKeyRing());
+        Transaction finalizedDepositTx = mock(Transaction.class);
+        byte[] serializedTransaction = {1, 2, 3};
+        when(finalizedDepositTx.bitcoinSerialize()).thenReturn(serializedTransaction);
+        processModel.setFinalizedDepositTx(finalizedDepositTx);
+
+        protobuf.ProcessModel proto = processModel.toProtoMessage();
+        ProcessModel restored = ProcessModel.fromProto(proto, mock(CoreProtoResolver.class));
+        Provider provider = mock(Provider.class);
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
+        Transaction parsedTransaction = mock(Transaction.class);
+        when(provider.getBtcWalletService()).thenReturn(btcWalletService);
+        when(btcWalletService.getTxFromSerializedTx(serializedTransaction)).thenReturn(parsedTransaction);
+        restored.applyTransient(provider, mock(TradeManager.class), null);
+
+        assertArrayEquals(serializedTransaction, proto.getFinalizedDepositTx().toByteArray());
+        assertSame(parsedTransaction, restored.getDepositTx());
     }
 
     @Test
     void oldPersistenceWithoutValidationStateDefaultsToUnvalidated() {
         assertFalse(protobuf.ProcessModel.newBuilder().build().getBuyerPaymentAccountValidated());
         assertFalse(protobuf.ProcessModel.newBuilder().build().getDepositTxAndDelayedPayoutTxMessageDelivered());
+        assertTrue(protobuf.ProcessModel.newBuilder().build().getFinalizedDepositTx().isEmpty());
+    }
+
+    private static PubKeyRing pubKeyRing() {
+        return new PubKeyRing(Sig.generateKeyPair().getPublic(),
+                Encryption.generateKeyPair().getPublic());
     }
 }

@@ -1865,6 +1865,7 @@ message ProcessModel {
     int32 burning_man_address_list_version = 23;
     bool buyer_payment_account_validated = 24;
     bool deposit_tx_and_delayed_payout_tx_message_delivered = 25;
+    bytes finalized_deposit_tx = 26;
 }
 
 message TradingPeer {
