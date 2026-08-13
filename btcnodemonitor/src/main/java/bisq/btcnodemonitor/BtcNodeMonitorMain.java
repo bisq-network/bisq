@@ -26,6 +26,8 @@ import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
 
+import java.util.concurrent.TimeUnit;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,8 +55,11 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
     public void gracefulShutDown(ResultHandler resultHandler) {
         log.info("gracefulShutDown");
         btcNodeMonitor.shutdown().join();
-        System.exit(0);
-        resultHandler.handleResult();
+        try {
+            resultHandler.handleResult();
+        } finally {
+            CommonSetup.exitAfter(0, 0, TimeUnit.MILLISECONDS);
+        }
     }
 
     private void keepRunning() {
