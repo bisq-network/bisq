@@ -8,7 +8,11 @@ import org.bitcoinj.core.Utils;
 
 import com.google.common.base.Charsets;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
+
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +21,8 @@ import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SignedWitnessTest {
 
@@ -57,6 +63,44 @@ public class SignedWitnessTest {
         byte[] originalwitnessOwner1PubKey = signedWitness.getWitnessOwnerPubKey().clone();
         witnessOwner1PubKey[0] += 1;
         assertArrayEquals(originalwitnessOwner1PubKey, signedWitness.getWitnessOwnerPubKey());
+    }
+
+    @Test
+    public void isDateInToleranceAcceptsDatesUpToOneDayOff() {
+        long now = Instant.parse("2026-08-14T12:00:00Z").toEpochMilli();
+        Clock clock = Clock.fixed(Instant.ofEpochMilli(now), ZoneOffset.UTC);
+        long oneDay = TimeUnit.DAYS.toMillis(1);
+
+        assertTrue(signedWitnessWithDate(now).isDateInTolerance(clock));
+        assertTrue(signedWitnessWithDate(now - oneDay).isDateInTolerance(clock));
+        assertTrue(signedWitnessWithDate(now + oneDay).isDateInTolerance(clock));
+    }
+
+    @Test
+    public void isDateInToleranceRejectsDatesMoreThanOneDayOff() {
+        long now = Instant.parse("2026-08-14T12:00:00Z").toEpochMilli();
+        Clock clock = Clock.fixed(Instant.ofEpochMilli(now), ZoneOffset.UTC);
+        long oneDay = TimeUnit.DAYS.toMillis(1);
+
+        assertFalse(signedWitnessWithDate(now - oneDay - 1).isDateInTolerance(clock));
+        assertFalse(signedWitnessWithDate(now + oneDay + 1).isDateInTolerance(clock));
+    }
+
+    @Test
+    public void isDateInToleranceRejectsExtremeDates() {
+        long now = Instant.parse("2026-08-14T12:00:00Z").toEpochMilli();
+        Clock clock = Clock.fixed(Instant.ofEpochMilli(now), ZoneOffset.UTC);
+
+        assertFalse(signedWitnessWithDate(Long.MIN_VALUE).isDateInTolerance(clock));
+        assertFalse(signedWitnessWithDate(Long.MAX_VALUE).isDateInTolerance(clock));
+        // This date makes (now - date) overflow to Long.MIN_VALUE. The previous implementation
+        // used Math.abs(now - date), which stays negative in that case and accepted the payload.
+        assertFalse(signedWitnessWithDate(now + Long.MIN_VALUE).isDateInTolerance(clock));
+    }
+
+    private SignedWitness signedWitnessWithDate(long date) {
+        return new SignedWitness(TRADE, witnessHash, witnessHashSignature, arbitrator1Key.getPubKey(),
+                witnessOwner1PubKey, date, 100);
     }
 
 }
