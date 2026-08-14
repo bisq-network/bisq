@@ -40,11 +40,11 @@ import org.bitcoinj.core.Utils;
 import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 import java.security.SignatureException;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -69,6 +69,9 @@ public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
     private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
     public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.divide(4);
+    // Tolerance for clock differences between the peers when we check the date of a SignedWitness we received
+    // from the trading peer.
+    private static final long SIGN_DATE_TOLERANCE = ChronoUnit.DAYS.getDuration().toMillis();
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -76,6 +79,7 @@ public class SignedWitnessService {
     private final ArbitratorManager arbitratorManager;
     private final SignedWitnessStorageService signedWitnessStorageService;
     private final FilterPolicyService filterPolicyService;
+    private final Clock clock;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
@@ -105,12 +109,14 @@ public class SignedWitnessService {
                                 @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                FilterPolicyService filterPolicyService) {
+                                FilterPolicyService filterPolicyService,
+                                Clock clock) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
         this.signedWitnessStorageService = signedWitnessStorageService;
         this.filterPolicyService = filterPolicyService;
+        this.clock = clock;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -219,15 +225,66 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
-    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
-        if (!Arrays.equals(signedWitness.getWitnessOwnerPubKey(), keyRing.getPubKeyRing().getSignaturePubKeyBytes()) ||
-                !verifySigner(signedWitness)) {
+    // The signedWitness was created by the trading peer and received with a trade message, so all its fields
+    // are peer controlled. We publish it with the local publication API which does not apply the date tolerance
+    // check of the P2P layer, and we add it to our maps and to our persisted append-only store. We therefore
+    // build the witness the peer was supposed to create for that trade from our own validated trade data and
+    // accept the received one only if it is identical to it. Two fields cannot be derived from the trade data:
+    // - The signature. It is the reason why we cannot create the witness ourselves. We verify it below.
+    // - The date. The trade message can be delivered late over the mailbox, so the date can be legitimately
+    //   much older than the current time and a tolerance check against the current time is not applicable
+    //   here. The peer signs when the payout transaction gets published, thus we require instead that the date
+    //   is not before the start of the trade and not in the future.
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness,
+                                           Coin tradeAmount,
+                                           AccountAgeWitness myAccountAgeWitness,
+                                           byte[] signerPubKey,
+                                           byte[] witnessOwnerPubKey,
+                                           long tradeStartDate) {
+        SignedWitness expected = new SignedWitness(SignedWitness.VerificationMethod.TRADE,
+                myAccountAgeWitness.getHash(),
+                signedWitness.getSignature(),
+                signerPubKey,
+                witnessOwnerPubKey,
+                signedWitness.getDate(),
+                tradeAmount.value);
+        if (!expected.equals(signedWitness)) {
+            log.warn("Received signedWitness is not the one the peer was supposed to create for that trade. " +
+                    "signedWitness={}", signedWitness);
+            return false;
+        }
+        if (!isSufficientTradeAmountForSigning(tradeAmount)) {
+            log.warn("Received signedWitness is from a trade with a too low trade amount. signedWitness={}",
+                    signedWitness);
+            return false;
+        }
+        if (!isSignDateInTradeRange(signedWitness.getDate(), tradeStartDate)) {
+            log.warn("Received signedWitness has a date which is not inside the duration of the trade. " +
+                    "signedWitness={}", signedWitness);
+            return false;
+        }
+        if (!verifySignature(signedWitness)) {
+            log.warn("Received signedWitness has an invalid signature. signedWitness={}", signedWitness);
+            return false;
+        }
+
+        // Does the witness signer hold a witness that makes them a valid signer at the date of this signature?
+        long signedWitnessDate = signedWitness.getDate();
+        if (!verifySigner(signerPubKey, signedWitnessDate)) {
+            log.warn("The signer of the received signedWitness is not a valid signer. signedWitness={}",
+                    signedWitness);
             return false;
         }
 
         log.info("Publish own signedWitness {}", signedWitness);
         publishSignedWitness(signedWitness);
         return true;
+    }
+
+    // We compare the bounds directly instead of calculating a difference, so that a peer controlled extreme
+    // date value cannot cause a long overflow.
+    private boolean isSignDateInTradeRange(long date, long tradeStartDate) {
+        return date >= tradeStartDate - SIGN_DATE_TOLERANCE && date <= clock.millis() + SIGN_DATE_TOLERANCE;
     }
 
     // Arbitrators sign with EC key
@@ -439,9 +496,13 @@ public class SignedWitnessService {
         return !tradeAmount.isLessThan(MINIMUM_TRADE_AMOUNT_FOR_SIGNING);
     }
 
-    private boolean verifySigner(SignedWitness signedWitness) {
-        return getSignedWitnessSetByOwnerPubKey(signedWitness.getWitnessOwnerPubKey(), new Stack<>()).stream()
-                .anyMatch(w -> isValidSignerWitnessInternal(w, signedWitness.getDate(), new Stack<>()));
+    // We check if the signer was allowed to sign at the time they signed. We look up the witnesses owned by the
+    // signer, the same way isValidSignerWitnessInternal walks up the chain. Looking up the witnesses owned by
+    // the witness owner instead would ask if the receiver of the signature is a signer, which is not the
+    // question here and which would exclude the case that our first account gets signed.
+    private boolean verifySigner(byte[] signerPubKey, long signedWitnessDate) {
+        return getSignedWitnessSetByOwnerPubKey(signerPubKey, new Stack<>()).stream()
+                .anyMatch(w -> isValidSignerWitnessInternal(w, signedWitnessDate, new Stack<>()));
     }
 
     /**

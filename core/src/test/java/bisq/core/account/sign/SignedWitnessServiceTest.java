@@ -39,23 +39,29 @@ import com.google.common.base.Charsets;
 
 import java.security.KeyPair;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR;
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class SignedWitnessServiceTest {
+    private static final long NOW = Instant.parse("2026-08-14T12:00:00Z").toEpochMilli();
+
+    private final Clock clock = Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC);
     private SignedWitnessService signedWitnessService;
     private byte[] account1DataHash;
     private byte[] account2DataHash;
@@ -97,7 +103,8 @@ public class SignedWitnessServiceTest {
         keyRing = mock(KeyRing.class);
         p2pService = mock(P2PService.class);
         filterPolicyService = mock(FilterPolicyService.class);
-        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, filterPolicyService);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null,
+                appendOnlyDataStoreService, filterPolicyService, clock);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
@@ -212,7 +219,7 @@ public class SignedWitnessServiceTest {
         ArbitratorManager strictArbitratorManager = mock(ArbitratorManager.class);
         when(strictArbitratorManager.isPublicKeyInList(any())).thenReturn(false);
         SignedWitnessService strictService = new SignedWitnessService(keyRing, p2pService,
-                strictArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService);
+                strictArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, clock);
 
         SignedWitness sw1 = new SignedWitness(ARBITRATOR,
                 account1DataHash,
@@ -494,6 +501,127 @@ public class SignedWitnessServiceTest {
 
     private long getTodayMinusNDays(long days) {
         return Instant.ofEpochMilli(new Date().getTime()).minus(days, ChronoUnit.DAYS).toEpochMilli();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // publishOwnSignedWitness: the SignedWitness we received from the trading peer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // We are the buyer (peer3) and the seller (peer1) signed our account2. The seller is signed by an
+    // arbitrator, so the seller is a valid signer.
+    private final long tradeStartDate = NOW - TimeUnit.DAYS.toMillis(2);
+    private final Coin tradeAmount = SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING;
+
+    private void setupTrade() {
+        signedWitnessService.addToMap(new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, date1, tradeAmount1));
+    }
+
+    // The witness as the seller creates it in signAndPublishAccountAgeWitness, with a chosen date.
+    private SignedWitness peersSignedWitness(long date) {
+        return new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey, witnessOwner3PubKey,
+                date, tradeAmount.value);
+    }
+
+    private boolean publish(SignedWitness signedWitness) {
+        return signedWitnessService.publishOwnSignedWitness(signedWitness, tradeAmount, aew2,
+                signer2PubKey, witnessOwner3PubKey, tradeStartDate);
+    }
+
+    @Test
+    public void publishAcceptsTheWitnessThePeerWasSupposedToCreate() {
+        setupTrade();
+        SignedWitness signedWitness = peersSignedWitness(NOW - 1000);
+
+        assertTrue(publish(signedWitness));
+        assertTrue(signedWitnessService.getSignedWitnessMapValues().contains(signedWitness));
+        verify(p2pService, times(1)).addPersistableNetworkPayload(any(PersistableNetworkPayload.class), anyBoolean());
+    }
+
+    @Test
+    public void publishAcceptsAWitnessFromAMessageDeliveredLate() {
+        setupTrade();
+        // A message delivered over the mailbox can arrive much later than the seller signed. The date is then
+        // far outside the one day tolerance of the P2P layer, but it is inside the duration of the trade.
+        SignedWitness signedWitness = peersSignedWitness(tradeStartDate + TimeUnit.HOURS.toMillis(1));
+
+        assertTrue(publish(signedWitness));
+        assertTrue(signedWitnessService.getSignedWitnessMapValues().contains(signedWitness));
+    }
+
+    @Test
+    public void publishRejectsAWitnessDatedBeforeTheTrade() {
+        setupTrade();
+
+        assertFalse(publish(peersSignedWitness(tradeStartDate - TimeUnit.DAYS.toMillis(2))));
+        assertFalse(publish(peersSignedWitness(Long.MIN_VALUE)));
+        assertNothingWasPublished();
+    }
+
+    @Test
+    public void publishRejectsAForwardDatedWitness() {
+        setupTrade();
+
+        assertFalse(publish(peersSignedWitness(NOW + TimeUnit.DAYS.toMillis(2))));
+        assertFalse(publish(peersSignedWitness(Long.MAX_VALUE)));
+        assertNothingWasPublished();
+    }
+
+    @Test
+    public void publishRejectsAWitnessWhichDoesNotMatchTheTrade() {
+        setupTrade();
+        long date = NOW - 1000;
+
+        // Not created in a trade
+        assertFalse(publish(new SignedWitness(ARBITRATOR, account2DataHash, signature2, signer2PubKey,
+                witnessOwner3PubKey, date, tradeAmount.value)));
+        // For another account than the one we used in that trade
+        assertFalse(publish(new SignedWitness(TRADE, account3DataHash, signature3, signer2PubKey,
+                witnessOwner3PubKey, date, tradeAmount.value)));
+        // Signed by another key than the key of our trading peer
+        assertFalse(publish(new SignedWitness(TRADE, account2DataHash, signature2, signer3PubKey,
+                witnessOwner3PubKey, date, tradeAmount.value)));
+        // Owned by another key than our own key
+        assertFalse(publish(new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey,
+                witnessOwner2PubKey, date, tradeAmount.value)));
+        // With another trade amount than the one of that trade
+        assertFalse(publish(new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey,
+                witnessOwner3PubKey, date, tradeAmount.value + 1)));
+        assertNothingWasPublished();
+    }
+
+    @Test
+    public void publishRejectsAWitnessWithAnInvalidSignature() throws Exception {
+        setupTrade();
+        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(Charsets.UTF_8));
+
+        assertFalse(publish(new SignedWitness(TRADE, account2DataHash, invalidSignature, signer2PubKey,
+                witnessOwner3PubKey, NOW - 1000, tradeAmount.value)));
+        assertNothingWasPublished();
+    }
+
+    @Test
+    public void publishRejectsAWitnessWhosePeerIsNotAValidSigner() {
+        // We do not call setupTrade, so the seller has no arbitrator signed witness and is not a valid signer.
+        assertFalse(publish(peersSignedWitness(NOW - 1000)));
+        assertNothingWasPublished();
+    }
+
+    @Test
+    public void publishRejectsAWitnessFromATradeWithATooLowAmount() {
+        setupTrade();
+        Coin tooLowAmount = SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING.subtract(Coin.SATOSHI);
+        SignedWitness signedWitness = new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey,
+                witnessOwner3PubKey, NOW - 1000, tooLowAmount.value);
+
+        assertFalse(signedWitnessService.publishOwnSignedWitness(signedWitness, tooLowAmount, aew2,
+                signer2PubKey, witnessOwner3PubKey, tradeStartDate));
+        assertNothingWasPublished();
+    }
+
+    private void assertNothingWasPublished() {
+        verify(p2pService, never()).addPersistableNetworkPayload(any(PersistableNetworkPayload.class), anyBoolean());
     }
 
     @Test

@@ -830,8 +830,43 @@ public class AccountAgeWitnessService {
         return Optional.empty();
     }
 
-    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
-        return signedWitnessService.publishOwnSignedWitness(signedWitness);
+    // The signedWitness was created by the seller and received with the PayoutTxPublishedMessage, so all its
+    // fields are peer controlled. We pass the data we have validated in the trade protocol to the
+    // signedWitnessService, which accepts the witness only if it is the one the seller was supposed to create
+    // for that trade.
+    // This method is called from the buyer and the witness is the buyer's witness signed by the seller.
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness, Trade trade) {
+        try {
+            Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
+            PubKeyRing buyerPubKeyRing = checkNotNull(contract.getBuyerPubKeyRing(), "buyerPubKeyRing must not be null");
+            PubKeyRing sellerPubKeyRing = checkNotNull(contract.getSellerPubKeyRing(), "sellerPubKeyRing must not be null");
+            PaymentAccountPayload myPaymentAccountPayload = checkNotNull(
+                    trade.getProcessModel().getPaymentAccountPayload(trade),
+                    "myPaymentAccountPayload must not be null");
+            Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
+
+            byte[] witnessOwnerPubKey = keyRing.getPubKeyRing().getSignaturePubKeyBytes();
+            byte[] signerPubKey = signedWitness.getSignerPubKey();
+            checkArgument(Arrays.equals(buyerPubKeyRing.getSignaturePubKeyBytes(), witnessOwnerPubKey),
+                    "Buyer signature must be witnessOwnerPubKey");
+            checkArgument(Arrays.equals(sellerPubKeyRing.getSignaturePubKeyBytes(), signerPubKey),
+                    "Seller signature must be signerPubKey");
+
+            byte[] accountAgeWitnessHash = signedWitness.getAccountAgeWitnessHash();
+            AccountAgeWitness myWitness = getMyWitness(myPaymentAccountPayload);
+            checkArgument(Arrays.equals(accountAgeWitnessHash, myWitness.getHash()),
+                    "The witness hash is not matching");
+
+            return signedWitnessService.publishOwnSignedWitness(signedWitness,
+                    tradeAmount,
+                    myWitness,
+                    signerPubKey,
+                    witnessOwnerPubKey,
+                    trade.getDate().getTime());
+        } catch (Exception e) {
+            log.warn("Failed to publish signedWitness received in trade {}, exception {}", trade.getId(), e.toString());
+        }
+        return false;
     }
 
     // Arbitrator signing

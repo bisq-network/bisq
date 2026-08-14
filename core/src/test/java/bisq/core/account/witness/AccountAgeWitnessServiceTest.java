@@ -33,6 +33,8 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
@@ -50,6 +52,12 @@ import org.bitcoinj.core.ECKey;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+
+import java.nio.charset.StandardCharsets;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,8 +89,12 @@ import static org.mockito.Mockito.when;
 // Using Utilities.removeCryptographyRestrictions(); did not work.
 //@Ignore
 public class AccountAgeWitnessServiceTest {
+    private static final long NOW = Instant.parse("2026-08-14T12:00:00Z").toEpochMilli();
+
+    private final Clock clock = Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC);
     private PublicKey publicKey;
     private KeyPair keypair;
+    private KeyRing keyRing;
     private SignedWitnessService signedWitnessService;
     private AccountAgeWitnessService service;
     private ChargeBackRisk chargeBackRisk;
@@ -104,6 +116,7 @@ public class AccountAgeWitnessServiceTest {
     }
 
     private void setupService(KeyRing keyRing) {
+        this.keyRing = keyRing;
         chargeBackRisk = mock(ChargeBackRisk.class);
         AppendOnlyDataStoreService dataStoreService = mock(AppendOnlyDataStoreService.class);
         P2PService p2pService = mock(P2PService.class);
@@ -111,8 +124,9 @@ public class AccountAgeWitnessServiceTest {
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         filterPolicyService = mock(FilterPolicyService.class);
-        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, filterPolicyService);
-        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, null, null, filterPolicyService);
+        signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null,
+                appendOnlyDataStoreService, filterPolicyService, clock);
+        service = new AccountAgeWitnessService(keyRing, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, clock, null, filterPolicyService);
     }
 
     private File makeDir(String name) throws IOException {
@@ -386,6 +400,83 @@ public class AccountAgeWitnessServiceTest {
         assertTrue(service.accountIsSigner(aew2));
         assertFalse(service.accountIsSigner(aew3));
         assertTrue(signedWitnessService.isSignedAccountAgeWitness(aew2));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // publishOwnSignedWitness: the SignedWitness we received in the PayoutTxPublishedMessage
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // We are the buyer and the seller signed the account we used in that trade. These tests cover that the
+    // expected values are taken from the trade. The admission rules themselves are covered by
+    // SignedWitnessServiceTest.
+    @Test
+    public void publishOwnSignedWitnessTakesTheExpectedValuesFromTheTrade() throws CryptoException {
+        KeyRing buyerKeyRing = new KeyRing(new KeyStorage(dir1));
+        KeyRing sellerKeyRing = new KeyRing(new KeyStorage(dir2));
+        setupService(buyerKeyRing);
+        Trade trade = setupTrade(buyerKeyRing, sellerKeyRing);
+
+        AccountAgeWitness myWitness = service.getMyWitness(
+                trade.getProcessModel().getPaymentAccountPayload(trade));
+        SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.TRADE,
+                myWitness.getHash(),
+                Sig.sign(sellerKeyRing.getSignatureKeyPair().getPrivate(), myWitness.getHash()),
+                sellerKeyRing.getPubKeyRing().getSignaturePubKeyBytes(),
+                buyerKeyRing.getPubKeyRing().getSignaturePubKeyBytes(),
+                NOW - 1000,
+                trade.getAmount().value);
+
+        assertTrue(service.publishOwnSignedWitness(signedWitness, trade));
+        assertTrue(signedWitnessService.getSignedWitnessMapValues().contains(signedWitness));
+    }
+
+    @Test
+    public void publishOwnSignedWitnessRejectsATradeWhereWeAreNotTheBuyer() throws CryptoException {
+        KeyRing buyerKeyRing = new KeyRing(new KeyStorage(dir1));
+        KeyRing sellerKeyRing = new KeyRing(new KeyStorage(dir2));
+        setupService(sellerKeyRing);
+        Trade trade = setupTrade(buyerKeyRing, sellerKeyRing);
+
+        AccountAgeWitness buyerWitness = service.getNewWitness(
+                trade.getProcessModel().getPaymentAccountPayload(trade), buyerKeyRing.getPubKeyRing());
+        SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.TRADE,
+                buyerWitness.getHash(),
+                Sig.sign(sellerKeyRing.getSignatureKeyPair().getPrivate(), buyerWitness.getHash()),
+                sellerKeyRing.getPubKeyRing().getSignaturePubKeyBytes(),
+                buyerKeyRing.getPubKeyRing().getSignaturePubKeyBytes(),
+                NOW - 1000,
+                trade.getAmount().value);
+
+        assertFalse(service.publishOwnSignedWitness(signedWitness, trade));
+        assertFalse(signedWitnessService.getSignedWitnessMapValues().contains(signedWitness));
+    }
+
+    private Trade setupTrade(KeyRing buyerKeyRing, KeyRing sellerKeyRing) {
+        PaymentAccountPayload buyerPaymentAccountPayload =
+                new SepaAccountPayload(PaymentMethod.SEPA_ID, "1", CountryUtil.getAllSepaCountries());
+        // The seller is signed by an arbitrator, so the seller is a valid signer.
+        ECKey arbitratorKey = LowRSigningKey.from(new ECKey());
+        byte[] sellerAccountHash = Hash.getSha256Ripemd160hash("seller".getBytes(StandardCharsets.UTF_8));
+        signedWitnessService.addToMap(new SignedWitness(SignedWitness.VerificationMethod.ARBITRATOR,
+                sellerAccountHash,
+                arbitratorKey.signMessage(Utilities.encodeToHex(sellerAccountHash)).getBytes(StandardCharsets.UTF_8),
+                arbitratorKey.getPubKey(),
+                sellerKeyRing.getPubKeyRing().getSignaturePubKeyBytes(),
+                NOW - TimeUnit.DAYS.toMillis(90),
+                SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING.value));
+
+        Contract contract = mock(Contract.class);
+        when(contract.getBuyerPubKeyRing()).thenReturn(buyerKeyRing.getPubKeyRing());
+        when(contract.getSellerPubKeyRing()).thenReturn(sellerKeyRing.getPubKeyRing());
+        ProcessModel processModel = mock(ProcessModel.class);
+        Trade trade = mock(Trade.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(trade.getProcessModel()).thenReturn(processModel);
+        when(processModel.getPaymentAccountPayload(trade)).thenReturn(buyerPaymentAccountPayload);
+        when(trade.getAmount()).thenReturn(SignedWitnessService.MINIMUM_TRADE_AMOUNT_FOR_SIGNING);
+        when(trade.getDate()).thenReturn(new Date(NOW - TimeUnit.DAYS.toMillis(2)));
+        when(trade.getId()).thenReturn("trade1");
+        return trade;
     }
 
     private void signAccountAgeWitness(AccountAgeWitness accountAgeWitness,
