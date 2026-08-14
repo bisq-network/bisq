@@ -848,9 +848,9 @@ public class AccountAgeWitnessService {
             byte[] witnessOwnerPubKey = keyRing.getPubKeyRing().getSignaturePubKeyBytes();
             byte[] signerPubKey = signedWitness.getSignerPubKey();
             checkArgument(Arrays.equals(buyerPubKeyRing.getSignaturePubKeyBytes(), witnessOwnerPubKey),
-                    "Buyer signature must be witnessOwnerPubKey");
+                    "Contract buyer pub key must match local witness owner pub key");
             checkArgument(Arrays.equals(sellerPubKeyRing.getSignaturePubKeyBytes(), signerPubKey),
-                    "Seller signature must be signerPubKey");
+                    "Contract seller pub key must match signedWitness signer pub key");
 
             byte[] accountAgeWitnessHash = signedWitness.getAccountAgeWitnessHash();
             AccountAgeWitness myWitness = getMyWitness(myPaymentAccountPayload);
