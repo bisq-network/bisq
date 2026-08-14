@@ -90,7 +90,7 @@ public class MeritConsensusV2 {
     static int getBlindVoteTxHeight(String blindVoteTxId, DaoStateService daoStateService) {
         int blindVoteTxHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
         if (blindVoteTxHeight <= 0) {
-            log.error("Error at getMeritStake: blindVoteTx not found in daoStateService. blindVoteTxId=" + blindVoteTxId);
+            log.error("Error at getBlindVoteTxHeight: blindVoteTx not found in daoStateService. blindVoteTxId={}", blindVoteTxId);
         }
         return blindVoteTxHeight;
     }
