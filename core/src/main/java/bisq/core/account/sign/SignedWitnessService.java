@@ -259,8 +259,8 @@ public class SignedWitnessService {
             return false;
         }
         if (!isSignDateInTradeRange(signedWitness.getDate(), tradeStartDate)) {
-            log.warn("Received signedWitness has a date which is not inside the duration of the trade. " +
-                    "signedWitness={}", signedWitness);
+            log.warn("Received signedWitness date is outside allowed bounds (before trade start or in the future). signedWitness={}",
+                    signedWitness);
             return false;
         }
         if (!verifySignature(signedWitness)) {
