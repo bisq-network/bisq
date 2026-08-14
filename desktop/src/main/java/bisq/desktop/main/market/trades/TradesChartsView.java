@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
+import bisq.desktop.components.controls.BisqJfxTabPane;
 import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
 import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
@@ -56,8 +57,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.collect.Lists;
-
-import bisq.desktop.components.controls.BisqJfxTabPane;
 
 import javafx.stage.Stage;
 
@@ -165,7 +164,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
     private TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem> priceColumn, volumeColumn, marketColumn;
-    private SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
+    private volatile SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
+    private volatile boolean deactivateCalled;
 
     private ChangeListener<Toggle> timeUnitChangeListener;
     private ChangeListener<Number> priceAxisYWidthListener;
@@ -289,6 +289,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void activate() {
+        deactivateCalled = false;
         tabPaneSelectionModel = GUIUtil.getParentOfType(root, BisqJfxTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
@@ -363,6 +364,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void deactivate() {
+        deactivateCalled = true;
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.priceItems.removeListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
@@ -379,6 +381,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceSeries.getData().clear();
         priceChart.getData().clear();
+
+        // Release the large table of list items (one per trade statistic) so it is
+        // not retained while the screen is not shown. It is rebuilt on activate.
+        sortedList = new SortedList<>(FXCollections.observableArrayList());
+        tableView.setItems(sortedList);
 
         exportLink.setOnAction(null);
         showVolumeAsUsdToggleButton.setOnAction(null);
@@ -406,6 +413,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         showAllTradeCurrencies))
                 .collect(Collectors.toCollection(FXCollections::observableArrayList))
         ).whenComplete((listItems, throwable) -> {
+            // We might have left the screen while the list was being built; do not
+            // repopulate the released table on the cached view.
+            if (deactivateCalled) {
+                return;
+            }
             log.debug("Creating listItems took {} ms", System.currentTimeMillis() - ts);
 
             long ts2 = System.currentTimeMillis();
@@ -415,6 +427,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             sortedList.comparatorProperty().bind(tableView.comparatorProperty());
             log.debug("Created sorted list took {} ms", System.currentTimeMillis() - ts2);
             UserThread.execute(() -> {
+                if (deactivateCalled) {
+                    // deactivate ran after we bound the list on the background thread;
+                    // release it instead of attaching it to the cached view.
+                    sortedList.comparatorProperty().unbind();
+                    sortedList = new SortedList<>(FXCollections.observableArrayList());
+                    tableView.setItems(sortedList);
+                    return;
+                }
                 // When we attach the list to the table we need to be on the UI thread.
                 tableView.setItems(sortedList);
             });
