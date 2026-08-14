@@ -71,7 +71,7 @@ same condition the seller checks before signing. It must not be evaluated for th
 would ask whether the receiver is already a signer, which is a different question and which excludes
 the case of a first account being signed.
 
-A rejected witness must not enter the in memory maps or the persisted append-only store. A rejection
+A rejected witness must not enter the in-memory maps or the persisted append-only store. A rejection
 must not fail payout processing; the witness is optional reputation data.
 
 ### Locally created witnesses
