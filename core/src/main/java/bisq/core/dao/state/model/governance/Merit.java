@@ -19,10 +19,10 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
-
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
@@ -30,14 +30,13 @@ import bisq.common.util.Utilities;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
+import java.util.Objects;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-@EqualsAndHashCode
 public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel, Canonical {
     @Getter
     private final Issuance issuance;
@@ -96,5 +95,16 @@ public class Merit implements PersistablePayload, NetworkPayload, ConsensusCriti
                 "\n     issuance=" + issuance +
                 ",\n     signature=" + Utilities.bytesAsHexString(signature) +
                 "\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Merit merit)) return false;
+        return Objects.equals(issuance, merit.issuance) && Objects.deepEquals(signature, merit.signature);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(issuance, Arrays.hashCode(signature));
     }
 }
