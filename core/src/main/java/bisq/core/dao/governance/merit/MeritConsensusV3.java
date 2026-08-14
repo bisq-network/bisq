@@ -36,10 +36,11 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Adds cycle wide uniqueness of merit issuances to the rules of {@link MeritConsensusV2}.
  * <p>
- * V2 rejects a merit list which claims the same issuance twice, but it evaluates each blind vote on its own, so the
- * same issuance still backed merit once per blind vote. A contributor could therefore publish several blind votes in
- * one cycle, each with a merit list re-signed for its own blind vote transaction id, and have their merit counted once
- * per blind vote.
+ * V2 filters each merit list for valid claims: claims with duplicated or otherwise invalid issuances, or with invalid
+ * signatures, are skipped, keeping the first encountered valid claim for an issuance. However, it evaluates each blind
+ * vote on its own, so the same issuance can still back merit once per blind vote. A contributor could therefore publish
+ * several blind votes in one cycle, each with a merit list re-signed for its own blind vote transaction id, and have
+ * their merit counted once per blind vote.
  * <p>
  * An issuance claimed by more than one blind vote of the cycle is counted for none of them. Awarding it to one blind
  * vote instead would let whoever holds a stolen issuance key take the merit, and any tie break on transaction ids

@@ -123,7 +123,7 @@ public class MeritConsensusV2 {
             return Optional.empty();
         }
         Issuance issuance = optionalIssuance.get();
-        if (!issuance.isValueEqual(untrustedIssuance)) {
+        if (!issuance.equals(untrustedIssuance)) {
             log.warn("DAO state compensation issuance is not the same as the one from the untrusted merit. " +
                     "DAO state compensation issuance={}, untrustedMerit={}", issuance, untrustedMerit);
             return Optional.empty();
