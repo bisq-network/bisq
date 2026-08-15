@@ -28,7 +28,10 @@ public class DateUtil {
      * sources (for instance a stored trade date and the local clock), and validation of peer controlled
      * data must fail closed rather than let the caller fail with an exception.
      */
-    public static boolean isWithinBounds(long timestamp, long lowerBound, long upperBound) {
+public static boolean isWithinBounds(long timestamp, long lowerBound, long upperBound) {
+        if (lowerBound > upperBound) {
+            return false;
+        }
         return timestamp >= lowerBound && timestamp <= upperBound;
     }
 
