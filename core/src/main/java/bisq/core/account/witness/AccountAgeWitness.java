@@ -24,6 +24,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload;
 
 import bisq.common.proto.network.GetDataResponsePriority;
+import bisq.common.util.DateUtil;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -98,8 +99,7 @@ public class AccountAgeWitness implements ProcessOncePersistableNetworkPayload, 
         // Preventing forward dating is also important to protect against a sophisticated attack.
         // The date is peer controlled, so we must not calculate a difference: Math.abs(now - date)
         // can overflow for extreme date values and would then accept the payload.
-        long now = clock.millis();
-        return date >= now - TOLERANCE && date <= now + TOLERANCE;
+        return DateUtil.isWithinTolerance(date, clock.millis(), TOLERANCE);
     }
 
     @Override

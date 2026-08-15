@@ -38,8 +38,15 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/merit.md`](dao/merit.md) | Merit as vote weight: what a merit claim must prove against DAO state, decay, uniqueness per cycle, and the activation boundary. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
 
+### `network/`
+
+| Specification | Covers |
+|---|---|
+| [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
+
 ### `trade/`
 
 | Specification | Covers |
 |---|---|
 | [`trade/fiat-buyer-payment-account-validation.md`](trade/fiat-buyer-payment-account-validation.md) | Contract-bound buyer payment-account validation and the fiat deposit/settlement gates that depend on it. |
+| [`trade/xmr-payment-proof-timestamp.md`](trade/xmr-payment-proof-timestamp.md) | The timestamp rule of the XMR payment proof used for automatic confirmation, and why it is one-sided. |

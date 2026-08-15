@@ -2,10 +2,9 @@ package bisq.core.trade.txproof.xmr;
 
 import bisq.core.user.AutoConfirmSettings;
 
-import java.time.Instant;
-
 import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,11 +119,18 @@ public class XmrTxProofParserTest {
 
         long tradeTimeSec = tradeDate.getTime() / 1000;
         String ts = String.valueOf(tradeTimeSec - MAX_DATE_TOLERANCE - 1);
-        String invalid_tx_timestamp_1ms_too_old = "{'data':{'address':'" + recipientAddressHex + "', " +
+        String invalid_tx_timestamp_1sec_too_old = "{'data':{'address':'" + recipientAddressHex + "', " +
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
-        assertSame(parser.parse(xmrTxProofModel, invalid_tx_timestamp_1ms_too_old).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+        assertSame(parser.parse(xmrTxProofModel, invalid_tx_timestamp_1sec_too_old).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+
+        // A difference based check would overflow with that value and accept it
+        String invalid_extreme_tx_timestamp = "{'data':{'address':'" + recipientAddressHex + "', " +
+                "'tx_hash':'" + txHash + "', " +
+                "'viewkey':'" + txKey + "'," +
+                "'tx_timestamp':'" + Long.MIN_VALUE + "'}, 'status':'success'}";
+        assertSame(parser.parse(xmrTxProofModel, invalid_extreme_tx_timestamp).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
 
         ts = String.valueOf(tradeTimeSec - MAX_DATE_TOLERANCE);
         String valid_tx_timestamp_exact_MAX_DATE_TOLERANCE = "{'data':{'address':'" + recipientAddressHex + "', " +
@@ -140,11 +146,21 @@ public class XmrTxProofParserTest {
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
         assertNotSame(parser.parse(xmrTxProofModel, valid_tx_timestamp_less_than_MAX_DATE_TOLERANCE).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+
+        // The buyer can pay at any time during the trade period, thus a transaction confirmed long after the
+        // trade started is the normal case and must be accepted.
+        ts = String.valueOf(tradeTimeSec + TimeUnit.HOURS.toSeconds(20));
+        String valid_tx_timestamp_long_after_trade_date = "{'data':{'address':'" + recipientAddressHex + "', " +
+                "'tx_hash':'" + txHash + "', " +
+                "'viewkey':'" + txKey + "'," +
+                "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
+        assertNotSame(parser.parse(xmrTxProofModel, valid_tx_timestamp_long_after_trade_date).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
     }
 
     @Test
     public void testJsonTxConfirmation() {
-        long epochDate = Instant.now().toEpochMilli() / 1000;
+        // The payment is made during the trade, thus the transaction is confirmed after the trade date
+        long epochDate = tradeDate.getTime() / 1000 + TimeUnit.HOURS.toSeconds(20);
         String outputs = "'outputs':[" +
                 "{'amount':100000000000,'match':true,'output_idx':0,'output_pubkey':'972a2c9178876f1fae4ecd22f9d7c132a12706db8ffb5d1f223f9aa8ced75b61'}," +
                 "{'amount':0,'match':false,'output_idx':1,'output_pubkey':'658330d2d56c74aca3b40900c56cd0f0111e2876be677ade493d06d539a1bab0'}],";

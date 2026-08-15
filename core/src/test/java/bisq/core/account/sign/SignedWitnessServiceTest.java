@@ -569,6 +569,19 @@ public class SignedWitnessServiceTest {
     }
 
     @Test
+    public void publishRejectsAWitnessIfTheLocalClockIsBehindTheTradeStartDate() {
+        setupTrade();
+        // If the local clock is behind the stored trade start date by more than twice the tolerance, the lower
+        // bound of the accepted range is above the upper bound. We then accept no date at all instead of failing
+        // with an exception.
+        long tradeStartDateInFuture = NOW + TimeUnit.DAYS.toMillis(3);
+
+        assertFalse(signedWitnessService.publishOwnSignedWitness(peersSignedWitness(NOW - 1000), tradeAmount, aew2,
+                signer2PubKey, witnessOwner3PubKey, tradeStartDateInFuture));
+        assertNothingWasPublished();
+    }
+
+    @Test
     public void publishRejectsAWitnessWhichDoesNotMatchTheTrade() {
         setupTrade();
         long date = NOW - 1000;

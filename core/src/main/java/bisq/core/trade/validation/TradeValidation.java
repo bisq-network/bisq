@@ -26,6 +26,7 @@ import bisq.core.user.User;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.util.DateUtil;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
@@ -80,7 +81,8 @@ public final class TradeValidation {
 
     public static long checkPeersDate(long currentDate) {
         long now = System.currentTimeMillis();
-        checkArgument(Math.abs(now - currentDate) <= MAX_DATE_DEVIATION, "currentDate is outside of allowed range.");
+        checkArgument(DateUtil.isWithinTolerance(currentDate, now, MAX_DATE_DEVIATION),
+                "currentDate is outside of allowed range.");
         return currentDate;
     }
 

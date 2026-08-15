@@ -31,6 +31,7 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
+import bisq.common.util.DateUtil;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -284,7 +285,9 @@ public class SignedWitnessService {
     // We compare the bounds directly instead of calculating a difference, so that a peer controlled extreme
     // date value cannot cause a long overflow.
     private boolean isSignDateInTradeRange(long date, long tradeStartDate) {
-        return date >= tradeStartDate - SIGN_DATE_TOLERANCE && date <= clock.millis() + SIGN_DATE_TOLERANCE;
+        return DateUtil.isWithinBounds(date,
+                tradeStartDate - SIGN_DATE_TOLERANCE,
+                clock.millis() + SIGN_DATE_TOLERANCE);
     }
 
     // Arbitrators sign with EC key

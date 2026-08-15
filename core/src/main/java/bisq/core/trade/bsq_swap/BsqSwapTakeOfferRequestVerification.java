@@ -28,10 +28,10 @@ import bisq.core.util.Validator;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.DateUtil;
 
 import org.bitcoinj.core.Coin;
 
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +43,6 @@ import static bisq.core.trade.validation.TradeFeeValidation.checkTakerFee;
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.Math.abs;
 
 @Slf4j
 public class BsqSwapTakeOfferRequestVerification {
@@ -106,6 +105,8 @@ public class BsqSwapTakeOfferRequestVerification {
     }
 
     private static boolean isDateInTolerance(BsqSwapRequest request) {
-        return abs(request.getTradeDate() - new Date().getTime()) < TimeUnit.MINUTES.toMillis(10);
+        long now = System.currentTimeMillis();
+        long tolerance = TimeUnit.MINUTES.toMillis(10);
+        return DateUtil.isWithinTolerance(request.getTradeDate(), now, tolerance);
     }
 }

@@ -183,7 +183,6 @@ public class AccountAgeWitnessServiceTest {
         // Do teardown stuff
     }
 
-    @Disabled
     @Test
     public void testIsTradeDateAfterReleaseDate() {
         Date ageWitnessReleaseDate = new GregorianCalendar(2017, Calendar.OCTOBER, 23).getTime();
@@ -201,6 +200,31 @@ public class AccountAgeWitnessServiceTest {
         }));
         tradeDate = new GregorianCalendar(2017, Calendar.OCTOBER, 21).getTime();
         assertFalse(service.isDateAfterReleaseDate(tradeDate.getTime(), ageWitnessReleaseDate, errorMessage -> {
+        }));
+    }
+
+    @Test
+    public void verifyPeersCurrentDateAcceptsDatesInsideTheTolerance() {
+        assertTrue(service.verifyPeersCurrentDate(new Date(NOW), errorMessage -> {
+        }));
+        assertTrue(service.verifyPeersCurrentDate(new Date(NOW - TimeUnit.DAYS.toMillis(1)), errorMessage -> {
+        }));
+        assertTrue(service.verifyPeersCurrentDate(new Date(NOW + TimeUnit.DAYS.toMillis(1)), errorMessage -> {
+        }));
+    }
+
+    @Test
+    public void verifyPeersCurrentDateRejectsDatesOutsideTheTolerance() {
+        assertFalse(service.verifyPeersCurrentDate(new Date(NOW - TimeUnit.DAYS.toMillis(1) - 1), errorMessage -> {
+        }));
+        assertFalse(service.verifyPeersCurrentDate(new Date(NOW + TimeUnit.DAYS.toMillis(1) + 1), errorMessage -> {
+        }));
+        // A difference based check would overflow with those values and accept them
+        assertFalse(service.verifyPeersCurrentDate(new Date(Long.MIN_VALUE), errorMessage -> {
+        }));
+        assertFalse(service.verifyPeersCurrentDate(new Date(NOW + Long.MIN_VALUE), errorMessage -> {
+        }));
+        assertFalse(service.verifyPeersCurrentDate(new Date(Long.MAX_VALUE), errorMessage -> {
         }));
     }
 

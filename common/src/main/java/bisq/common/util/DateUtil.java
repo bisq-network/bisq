@@ -23,6 +23,34 @@ import java.util.GregorianCalendar;
 
 public class DateUtil {
     /**
+     * Returns whether {@code timestamp} falls within the inclusive bounds. An inverted range contains no
+     * value, thus we return false for it instead of throwing. Bounds can be derived from independent
+     * sources (for instance a stored trade date and the local clock), and validation of peer controlled
+     * data must fail closed rather than let the caller fail with an exception.
+     */
+    public static boolean isWithinBounds(long timestamp, long lowerBound, long upperBound) {
+        return timestamp >= lowerBound && timestamp <= upperBound;
+    }
+
+    /**
+     * Returns whether {@code timestamp} is within the inclusive tolerance around {@code referenceTimestamp}.
+     * The bounds are saturated so attacker-controlled extreme values cannot exploit signed-long overflow.
+     */
+    public static boolean isWithinTolerance(long timestamp, long referenceTimestamp, long tolerance) {
+        if (tolerance < 0) {
+            throw new IllegalArgumentException("tolerance must not be negative");
+        }
+
+        long lowerBound = referenceTimestamp < Long.MIN_VALUE + tolerance
+                ? Long.MIN_VALUE
+                : referenceTimestamp - tolerance;
+        long upperBound = referenceTimestamp > Long.MAX_VALUE - tolerance
+                ? Long.MAX_VALUE
+                : referenceTimestamp + tolerance;
+        return isWithinBounds(timestamp, lowerBound, upperBound);
+    }
+
+    /**
      *
      * @param date      The date which should be reset to first day of month
      * @return First day in given date with time set to zero.

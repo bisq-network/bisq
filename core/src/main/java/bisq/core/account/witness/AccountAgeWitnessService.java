@@ -50,6 +50,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.util.DateUtil;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -684,6 +685,7 @@ public class AccountAgeWitnessService {
         // Release date minus 1 day as tolerance for not synced clocks
         Date releaseDateWithTolerance = new Date(ageWitnessReleaseDate.getTime() - TimeUnit.DAYS.toMillis(1));
         final Date witnessDate = new Date(witnessDateAsLong);
+        // A one sided comparison, no subtraction on the peer controlled date, thus no overflow risk
         final boolean result = witnessDate.after(releaseDateWithTolerance);
         if (!result) {
             final String msg = "Witness date is set earlier than release date of ageWitness feature. " +
@@ -694,11 +696,14 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    private boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
-        boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
+    @VisibleForTesting
+    boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
+        long now = clock.millis();
+        boolean result = DateUtil.isWithinTolerance(
+                peersCurrentDate.getTime(), now, TimeUnit.DAYS.toMillis(1));
         if (!result) {
             String msg = "Peers current date is further than 1 day off to our current date. " +
-                    "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date();
+                    "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date(now);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
