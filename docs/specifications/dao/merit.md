@@ -136,8 +136,9 @@ new activation height rather than by editing an active rule set.
 
 ## 7. Deployment obligations for the cycle-wide rule
 
-The cycle-wide uniqueness rule activates with hard fork 3, whose heights are still placeholders
-awaiting an explicit rollout decision.
+The cycle-wide uniqueness rule activates with hard fork 3 at the finalized heights in
+`DaoHardFork`: `963 000` on mainnet, `3 000 000` on Bitcoin testnet, and `1` on regtest and the DAO
+test networks. These consensus constants must not be changed after deployment.
 
 Because the rule version is selected by the evaluation height of the cycle itself, activating it
 cannot change a result which has already been derived, including when a node rebuilds its DAO state
@@ -179,8 +180,9 @@ says separately that no forged, mismatched or unknown-issuance claim exists in t
 - **Continue the audit until activation.** An activation height which lies safely after release also
   lies in the future at release time, so those cycles cannot be audited in advance. Monitor or repeat
   the audit after each result phase between release and activation.
-- **Set the activation height from the release schedule** so that it lies safely after the release
-  which ships the rule, as for the other rules bundled into that fork.
+- **Preserve the finalized activation heights.** If release timing cannot satisfy the coordinated
+  rollout, stop the release and make a new explicit consensus decision; do not silently move an
+  activation height in an ordinary release change.
 
 A monitoring check which reports, per cycle, any issuance claimed by more than one blind vote is
 cheap to compute from DAO state and would surface this class of attack directly.

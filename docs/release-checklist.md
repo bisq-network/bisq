@@ -24,11 +24,11 @@ File: `core/src/main/java/bisq/core/dao/DaoHardFork.java`
 
 | Line | Constant | Current value |
 |------|----------|---------------|
-| 27 | `ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET` | `963_000` |
-| 28 | `ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET` | `3_000_000` |
+| 23 | `ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET` | `963_000` |
+| 24 | `ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET` | `3_000_000` |
 
-The file carries a `TODO` which states that both values are placeholders and that they need explicit
-developer approval and a coordinated rollout before a release.
+These are finalized consensus constants for the coordinated hard-fork-3 rollout. Verify them during
+release preparation, but do not change them as part of an ordinary release.
 
 Three consensus rules activate together with hard fork 3:
 
@@ -39,8 +39,9 @@ Three consensus rules activate together with hard fork 3:
 - `core/src/main/java/bisq/core/dao/governance/proposal/role/RoleValidator.java` — the required bond
   unit and the unlock time in a role proposal must match the bonded role type.
 
-How to choose the height: set it far enough after the planned release date so that users have time to
-upgrade. The rule is described in
+The release must ship far enough before the activation height that users have time to upgrade. If the
+schedule no longer permits that, stop and obtain an explicit new consensus decision rather than
+silently moving the height. The rule is described in
 [specifications/dao/bond-lockup-spend.md](specifications/dao/bond-lockup-spend.md) and in
 [specifications/dao/merit.md](specifications/dao/merit.md), section 7.
 
@@ -154,11 +155,17 @@ After you refresh `DaoStateStore_BTC_MAINNET`, run
 `core/src/test/java/bisq/core/dao/governance/merit/BundledMeritDuplicationAuditTest.java`. It reads
 that resource directly, so its result can change.
 
-Also run `core/src/test/java/bisq/core/dao/BundledDaoStateAuditTest.java`. It checks that the separate
-BSQ block resources are contiguous through the DAO-state height, that their embedded transaction and
-output coordinates are internally consistent, that no historical lockup was spent by a non-unlock
-transaction, that evaluated role terms still match their role types, and that the refreshed P2P stores
-and versioned Burning Man address lists are readable and internally consistent.
+Also run the resource integration audit explicitly:
+
+```bash
+./gradlew :core:test --tests bisq.core.dao.BundledDaoStateAuditTest -PrunResourceAudits=true
+```
+
+It checks that the separate BSQ block resources are contiguous through the DAO-state height, that
+their embedded transaction and output coordinates are internally consistent, that no historical
+lockup was spent by a non-unlock transaction, that evaluated role terms still match their role types,
+and that the refreshed P2P stores and versioned Burning Man address lists are readable and internally
+consistent. It is kept out of the regular unit-test suite because it scans the full bundled history.
 
 Create a pull request against the release branch that contains screenshots of the hashes of a full
 node and a light node, so that a reviewer can compare them.

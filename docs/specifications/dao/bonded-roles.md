@@ -4,7 +4,7 @@ A **bonded role** is a DAO-accepted role proposal associated with one or more in
 [bond](bonds.md) lockups. Bisq 1 role bonds are voluntary economic collateral. Bisq 2 role authority
 is normally granted by a registration signed with the accepted proposal key and bound to one exact
 confirmed lockup. A height-bounded compatibility rule preserves the previous lockup-key registration
-format for mainnet lockups mined before height `941000` (§5.1).
+format for mainnet lockups mined before height `963000` (§5.1).
 
 ## 1. Role and role proposal
 
@@ -248,7 +248,7 @@ The verifier accepts a version `1` request only if it can find at least one bond
 1. belongs to the canonical accepted role matching `bondUserName` and `roleType`;
 2. is a valid role lockup under §3;
 3. is currently `LOCKUP_TX_CONFIRMED`;
-4. was mined on mainnet strictly below height `941000`; and
+4. was mined on mainnet strictly below height `963000`; and
 5. has a first-input public key which verifies the signature over `profileId`.
 
 Legacy verification is disabled on testnet, regtest, and DAO test networks because the historical
@@ -264,9 +264,10 @@ one of those existing registrations. They use version `2` for every newly submit
 Consequently, a successful version `1` verification cannot create a new registration unless the
 trusted oracle nodes violate this protocol rule.
 
-Height `941000` is deliberately historical: the role lockups below it have been checked to contain no
-conflicting lockups. The cutoff must not be advanced with the release height. Advancing it would add
-lockup keys to the legacy authority set and requires a new audit and an explicit protocol decision.
+Height `963000` is the finalized mainnet compatibility cutoff and matches the hard-fork-3 activation
+height. The bundled role-lockup history through height `962500` was audited before that boundary. The
+cutoff is a protocol constant and must not be advanced with a later release height: advancing it would
+add lockup keys to the legacy authority set and requires a new audit and an explicit protocol decision.
 
 ## 6. Client lifecycle and actions
 

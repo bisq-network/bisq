@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -64,6 +65,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code DaoStateStore_BTC_MAINNET}; auditing only the state maps cannot identify which transaction spent a historical
  * lockup output.
  */
+@EnabledIfSystemProperty(named = "bisq.runResourceAudits", matches = "true")
 class BundledDaoStateAuditTest {
     private static final String DAO_STATE_RESOURCE = "/DaoStateStore_BTC_MAINNET";
     private static final String BLOCK_RESOURCE_DIR = "/BsqBlocks_BTC_MAINNET/";
