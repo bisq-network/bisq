@@ -1,7 +1,7 @@
 # DAO state hash checkpoints, one entry per line as <blockHeight>,<daoStateHash>.
 # The hash must be 40 lower-case hex chars. Lines starting with # are ignored.
 # Generate entries with the --dumpDaoStateHashCheckpoints=true program argument.
-# See docs/dao-state-checkpoint.md.
+# See docs/specifications/dao/dao-state-checkpoints.md.
 
 # Genesis block height was: 571747
 

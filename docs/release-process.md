@@ -1,5 +1,9 @@
 # Release Process
 
+See [release-checklist.md](release-checklist.md) for the complete task list of a release. It also
+covers the DAO state hash checkpoints, the Burning Man address list and the hard fork activation
+heights, which are not listed below.
+
 * Update translations [translation-process.md](translation-process.md#synchronising-translations).
 * Update data stores [data-stores.md](data-stores.md#update-stores).
 * Update bitcoinj checkpoint [bitcoinj-checkpoint](bitcoinj-checkpoint.md#update-checkpoint).
