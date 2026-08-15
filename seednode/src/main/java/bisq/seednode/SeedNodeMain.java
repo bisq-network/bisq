@@ -32,7 +32,6 @@ import bisq.common.app.Capability;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
-import bisq.common.handlers.ResultHandler;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -62,7 +61,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void doExecute() {
         super.doExecute();
 
-        checkMemory(config, this);
+        checkMemory(config);
         keepRunning();
     }
 
@@ -106,16 +105,18 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                 // that all seeds get restarted at the same time.
                 () -> {
                     injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.DELAY_STARTUP, true);
-                    shutDown(this);
+                    shutDown();
                 }
         );
     }
 
     @Override
-    public void gracefulShutDown(ResultHandler resultHandler) {
-        seedNode.shutDown();
-
-        super.gracefulShutDown(resultHandler);
+    protected void shutDownAdditionalServices() {
+        // A termination signal can arrive after CommonSetup.setup registered the JVM shutdown hook but before
+        // applyInjector assigned seedNode.
+        if (seedNode != null) {
+            seedNode.shutDown();
+        }
     }
 
     @Override
@@ -151,7 +152,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             target,
                             ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toString());
-                    shutDown(this);
+                    shutDown();
                 }
             }, TimeUnit.MINUTES.toSeconds(10));
         }, TimeUnit.HOURS.toSeconds(2));

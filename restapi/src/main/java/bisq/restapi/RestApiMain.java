@@ -106,6 +106,11 @@ public class RestApiMain extends ResourceConfig {
             httpServer = JdkHttpServerFactory.createHttpServer(URI.create(baseUrl), this);
             httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
+            // A shutdown started inside the application (checkpoint failure, memory limit, periodic restart,
+            // connection loss) does not pass our shutDown method, so we hook the server stop into the graceful
+            // shutdown of RestApi as well.
+            restApi.setStopServerHandler(this::stopServer);
+
             Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
 
             log.info("Server started at {}.", baseUrl);

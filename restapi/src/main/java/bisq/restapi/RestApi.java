@@ -40,6 +40,7 @@ import bisq.common.config.Config;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -69,6 +70,10 @@ public class RestApi extends ExecutableForAppWithP2p {
     private PriceFeedService priceFeedService;
     @Getter
     private final AtomicBoolean parseBlockCompleteAfterBatchProcessing = new AtomicBoolean();
+    // Set by RestApiMain once the http server is created, so that a shutdown started inside the application stops
+    // the server before the services behind the endpoints get shut down.
+    @Setter
+    private Runnable stopServerHandler;
 
     public RestApi() {
         super("Bisq Rest Api", "bisq_restapi", "bisq_restapi", Version.VERSION);
@@ -82,7 +87,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     protected void doExecute() {
         super.doExecute();
 
-        checkMemory(config, this);
+        checkMemory(config);
     }
 
     @Override
@@ -125,6 +130,13 @@ public class RestApi extends ExecutableForAppWithP2p {
         accountAgeWitnessService.onAllServicesInitialized();
         priceFeedService.setCurrencyCodeOnInit();
         priceFeedService.initialRequestPriceFeed();
+    }
+
+    @Override
+    protected void shutDownAdditionalServices() {
+        if (stopServerHandler != null) {
+            stopServerHandler.run();
+        }
     }
 
     public void checkDaoReady() {

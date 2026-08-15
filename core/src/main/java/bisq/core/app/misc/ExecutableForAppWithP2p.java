@@ -46,7 +46,6 @@ import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.util.Profiler;
 import bisq.common.util.SingleThreadExecutorUtils;
 
@@ -76,7 +75,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     protected Cookie cookie;
     private Timer checkConnectionLossTimer;
     private Boolean preventPeriodicShutdownAtSeedNode;
-    private volatile int exitStatus = BisqExecutable.EXIT_SUCCESS;
 
     public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
         super(fullName, scriptName, appName, version);
@@ -125,7 +123,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         daoStateMonitoringService.addListener(new DaoStateMonitoringService.Listener() {
             @Override
             public void onCheckpointFailed() {
-                gracefulShutDown();
+                ExecutableForAppWithP2p.this.shutDown();
             }
         });
 
@@ -184,16 +182,24 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     @Override
     public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
         if (throwable instanceof OutOfMemoryError || doShutDown) {
-            log.error("We got an OutOfMemoryError and shut down");
-            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
+            log.error("We shut down because of an uncaught error.", throwable);
+            shutDown();
         }
     }
 
     // We don't use the gracefulShutDown implementation of the super class as we have a limited set of modules
     @Override
-    public void gracefulShutDown(ResultHandler resultHandler) {
+    public final void gracefulShutDown(ResultHandler resultHandler) {
+        gracefulShutDown(resultHandler, BisqExecutable.EXIT_SUCCESS);
+    }
+
+    private void gracefulShutDown(ResultHandler resultHandler, int requestedExitStatus) {
         log.info("gracefulShutDown");
         if (!beginGracefulShutDown(resultHandler)) {
+            if (requestedExitStatus != BisqExecutable.EXIT_SUCCESS) {
+                log.warn("A shutdown is already in progress. We keep the exit status of that shutdown and " +
+                        "do not apply the requested exit status {}.", requestedExitStatus);
+            }
             return;
         }
 
@@ -201,6 +207,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
             checkConnectionLossTimer.stop();
         }
         try {
+            shutDownAdditionalServices();
             if (injector != null) {
                 JsonFileManager.shutDownAllInstances();
                 injector.getInstance(OpenBsqSwapOfferService.class).shutDown();
@@ -211,7 +218,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                         module.close(injector);
 
                         PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                            completeShutDown(exitStatus, 1, TimeUnit.SECONDS);
+                            completeShutDown(requestedExitStatus, 1, TimeUnit.SECONDS);
                             log.info("Graceful shutdown completed. Exiting now.");
                         });
                     });
@@ -222,22 +229,24 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 // we wait max 5 sec.
                 UserThread.runAfter(() -> {
                     PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                        completeShutDown(exitStatus, 1, TimeUnit.SECONDS);
+                        completeShutDown(requestedExitStatus, 1, TimeUnit.SECONDS);
                         log.info("Graceful shutdown caused a timeout. Exiting now.");
                     });
                 }, 5);
             } else {
-                completeShutDown(exitStatus, 1, TimeUnit.SECONDS);
+                completeShutDown(requestedExitStatus, 1, TimeUnit.SECONDS);
             }
-        } catch (Throwable t) {
-            log.debug("App shutdown failed with exception");
-            t.printStackTrace();
+        } catch (Exception e) {
+            log.error("App shutdown failed with exception", e);
             PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                 completeShutDown(BisqExecutable.EXIT_FAILURE, 1, TimeUnit.SECONDS);
                 log.info("Graceful shutdown resulted in an error. Exiting now.");
             });
 
         }
+    }
+
+    protected void shutDownAdditionalServices() {
     }
 
     public void startShutDownInterval() {
@@ -252,7 +261,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                                 "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                         SHUTDOWN_INTERVAL / 3600000);
 
-                shutDown(this);
+                shutDown();
             }
 
         }, CHECK_SHUTDOWN_SEC);
@@ -269,7 +278,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         }
     }
 
-    protected void checkMemory(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
+    protected void checkMemory(Config config) {
         int maxMemory = config.maxMemory;
         UserThread.runPeriodically(() -> {
             Profiler.printSystemLoad();
@@ -297,17 +306,20 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                                         "We are over our memory limit ({}) and trigger a shutdown. usedMemory: {} MB. freeMemory: {} MB" +
                                         "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                                 maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
-                        shutDown(gracefulShutDownHandler);
+                        shutDown();
                     }
                 }, 5);
             }
         }, CHECK_MEMORY_PERIOD_SEC);
     }
 
-    protected void shutDown(GracefulShutDownHandler gracefulShutDownHandler) {
+    /**
+     * Shut down after an error condition. The process exits with {@link BisqExecutable#EXIT_FAILURE} so that the
+     * wrapper script or systemd restarts the node.
+     */
+    protected void shutDown() {
         stopped = true;
-        exitStatus = BisqExecutable.EXIT_FAILURE;
-        gracefulShutDownHandler.gracefulShutDown(() -> log.info("Shutdown complete"));
+        gracefulShutDown(() -> log.info("Shutdown complete"), BisqExecutable.EXIT_FAILURE);
     }
 
     protected void setupConnectionLossCheck() {
@@ -326,7 +338,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
                 // that can cause problems.
                 injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
-                shutDown(this);
+                shutDown();
             }
         }, CHECK_CONNECTION_LOSS_SEC);
     }

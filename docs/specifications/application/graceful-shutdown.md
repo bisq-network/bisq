@@ -17,7 +17,8 @@ downgrade deliberately suppresses persistence.
 
 A shutdown request received while graceful shutdown is already in progress must join the in-progress
 shutdown. Its completion handler must be notified when that shutdown completes; the repeated request
-must neither start shutdown work again nor report completion before the work has completed.
+must neither start shutdown work again nor report completion before the work has completed. This
+single-entry rule includes executable-specific service shutdown performed by subclasses.
 
 Process termination must not run on the UserThread. `System.exit` waits for JVM shutdown hooks, and a
 hook may itself require the UserThread; initiating it there can create a circular wait. The process
@@ -26,7 +27,8 @@ restarts for seed, statistics, bridge, and REST nodes.
 
 Only the first controlled exit request may schedule process termination. Competing normal, timeout,
 and error paths must not create multiple exit threads or replace the status chosen by the first
-completed path.
+completed path. A later failure-triggered request joining an already running normal shutdown must not
+mutate the exit status captured by that normal shutdown.
 
 ### JVM shutdown-hook backstop
 
