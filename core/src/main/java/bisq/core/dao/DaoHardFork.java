@@ -20,11 +20,7 @@ package bisq.core.dao;
 import bisq.common.config.Config;
 
 public final class DaoHardFork {
-    // TODO The mainnet and testnet heights below are placeholders. They require explicit developer approval and a
-    //  coordinated rollout before release. A future height does not prevent an old node from parsing past the fork;
-    //  incompatible nodes would derive different DAO state at the first illegal spend. The mainnet value is about
-    //  94 days after the DAO state snapshot shipped in the resources (chain height 961400).
-    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET = 975_000;
+    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET = 963_000;
     private static final int ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET = 3_000_000;
     private static final int ACTIVATE_HARD_FORK_3_HEIGHT_REGTEST = 1;
 

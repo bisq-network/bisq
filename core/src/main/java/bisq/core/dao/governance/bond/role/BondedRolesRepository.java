@@ -65,7 +65,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
-    static final int LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET = 941_000;
+    static final int LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET = 963_000;
 
     private record RoleLockup(ByteString roleHash, Tx tx, TxOutput txOutput) {
     }
