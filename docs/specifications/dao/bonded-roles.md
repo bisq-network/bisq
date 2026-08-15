@@ -57,10 +57,11 @@ introduced:
   75 to 110 days on April 7. No current role type's numeric terms changed after genesis.
 - A temporary `ANALYTICS_OPERATOR` type was added with unit 1, changed to 2 and removed in September
   2019. It is absent from the bundled role-proposal data and does not alter any current role type.
-- At bundled DAO-state height `961400`, all 60 evaluated role proposals (59 accepted and one rejected),
+- At bundled DAO-state height `962500`, all 60 evaluated role proposals (59 accepted and one rejected),
   all 60 append-only proposal payloads and the one temporary role proposal exactly match the current
   mainnet role-type units and 15840-block unlock time. Of the evaluated proposals, 38 were mined before
-  the factor change and 22 from its activation height onward.
+  the factor change and 22 from its activation height onward. No evaluated role proposal was added
+  between the previous audit at height `961400` and this snapshot.
 
 This audit establishes compatibility only through the bundled height. Source-defined enum constants
 remain a consensus risk: changing an existing unit or unlock time after hard-fork-3 would make nodes

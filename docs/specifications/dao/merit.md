@@ -146,7 +146,7 @@ it establishes is whether the weakness was exploited while it was open.
 
 ### 7.1 Audit of the bundled mainnet DAO state
 
-Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `949 481`. Claims were
+Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `962 500`. Claims were
 validated with the rules of §2, with the blind vote height taken from the vote reveal transaction
 which spent the blind vote stake output, which is in the same cycle but slightly later and therefore
 applies the "not younger than the blind vote" rule slightly permissively. The result is thus an upper
@@ -154,28 +154,28 @@ bound on the set of counted claims, which is what an audit for the *absence* of 
 
 | Measure | Value |
 |---|---|
-| Cycles, of which with votes | 81, 79 |
-| Decrypted blind votes | 852 |
-| Compensation issuances | 1 465 |
-| Merit claims | 7 535 |
-| Merit claims passing validation | 7 535 |
+| Cycles, of which with votes | 84, 82 |
+| Decrypted blind votes | 876 |
+| Compensation issuances | 1 527 |
+| Merit claims | 7 927 |
+| Merit claims passing validation | 7 927 |
 | Most blind votes in one cycle | 14 |
-| Issuances claimed again in a later cycle | 687 |
+| Issuances claimed again in a later cycle | 708 |
 | **Issuances claimed by several blind votes of one cycle** | **0** |
 | Same, without validating the claims at all | 0 |
 
 No issuance was ever claimed by more than one blind vote of the same cycle, so the weakness was not
 exploited up to that height, and no honest voter happened to trigger it either. The last two rows
-matter together: 687 issuances *are* claimed again in later cycles, which is legitimate and is what
+matter together: 708 issuances *are* claimed again in later cycles, which is legitimate and is what
 the per-cycle grouping has to tolerate, so the zero is a real result rather than an artefact of a
-grouping which never compares anything. That every one of the 7 535 claims also passes validation
+grouping which never compares anything. That every one of the 7 927 claims also passes validation
 says separately that no forged, mismatched or unknown-issuance claim exists in that history.
 
 ### 7.2 Remaining obligations
 
-- **The bundled resource ends at `949 481`**, below the merit consensus v2 activation height. Cycles
-  evaluated after that height are not covered. Before release, run the same audit against a synced
-  node through the latest completed cycle.
+- **The bundled resource ends at `962 500`.** Later completed cycles are not covered. Before release,
+  confirm that no newer result phase has completed; if one has, run the same audit against a synced
+  node through that cycle.
 - **Continue the audit until activation.** An activation height which lies safely after release also
   lies in the future at release time, so those cycles cannot be audited in advance. Monitor or repeat
   the audit after each result phase between release and activation.

@@ -61,3 +61,12 @@ Bisq 2 must additionally authenticate the confidential sender as the target prof
 accepted proof before publication, include the witness hash in oracle-authorized data, and apply the
 shared one-witness/one-profile rule across both account-age and signed-witness reputation sources.
 Legacy signed-witness authorized data lacks the witness identity and contributes no score.
+
+## Auditability of legacy authorization
+
+The 2026-08-15 resource audit parsed 27 311 unique signed-witness records and verified their structural
+owner-key and account-hash fields. These records describe Bisq 1 trust-chain inputs only. They contain
+no Bisq 2 profile id, requester key, oracle request or authorization result, so they cannot reveal
+whether the legacy missing-ownership-binding vulnerability was exploited. The evidence requirements
+and the prohibition on drawing a no-exploitation conclusion from Bisq 1 resources are specified in
+[account-age-reputation.md](account-age-reputation.md#auditability-of-legacy-authorization).

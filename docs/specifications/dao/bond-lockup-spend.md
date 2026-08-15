@@ -57,8 +57,10 @@ consensus rule. The security of every bond therefore rests on the parser's spend
 - Historical behaviour is preserved so that reparsing old blocks reproduces the persisted DAO state: below the
   activation height a non-unlock spend of a lockup output is parsed as an ordinary BSQ transfer, a zero valued
   lockup spend is not recorded, and the burnt BSQ of an invalid transaction omits prematurely spent unlock inputs.
-- No non-unlock lockup spend exists in mainnet history up to the DAO state snapshot at chain height 961400: all
-  spent lockup outputs were spent by formal unlock transactions.
+- No non-unlock lockup spend exists in mainnet history up to the DAO state snapshot at chain height 962500. The
+  bundled block history contains 187 lockups: 102 remain unspent and all 85 spent lockups were spent by formal unlock
+  transactions. The interval after the previous audit, heights 961401 through 962500, contains no new lockup or unlock
+  transaction.
 
 ## Block data integrity
 

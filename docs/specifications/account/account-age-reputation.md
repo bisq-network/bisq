@@ -101,3 +101,23 @@ unimplemented.
 Signed-witness reputation is a separate protocol. It remains disabled until it reuses this witness
 ownership proof and derives its sign date from records which individually satisfy the complete
 Bisq 1 signed-witness trust-chain rules.
+
+## Auditability of legacy authorization
+
+The bundled Bisq 1 witness stores are source data, not a history of Bisq 2 authorization decisions.
+An exploitation audit of the legacy missing-ownership-binding vulnerability cannot be performed from
+`AccountAgeWitnessStore` or `SignedWitnessStore`: an attacker reused a legitimate public witness hash
+and date, and the forged requester key, Bisq 2 profile id, oracle request and oracle-authorized result
+were never written back into either Bisq 1 store. The DAO block height is likewise not a boundary for
+those off-chain requests.
+
+The resource audit on 2026-08-15 verified that the refreshed `1.10.5` account-age store is readable
+and contains 6 172 unique, structurally valid witness records. This establishes resource integrity;
+it does **not** establish that the legacy authorization path was unexploited.
+
+Establishing exploitation or its absence requires Bisq 2 evidence from the vulnerable period: retained
+oracle authorization requests or private persistence, published authorized reputation data which
+retains the claimed witness identity, and profile-level reputation history. Each accepted legacy claim
+must be reconciled to an ownership proof. If the retained authorized data contains only a profile id
+and date, witness reuse cannot be reconstructed from it alone and the historical absence of exploitation
+is unprovable. An audit must state that limitation rather than infer safety from clean Bisq 1 resources.

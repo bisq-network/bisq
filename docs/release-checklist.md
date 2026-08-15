@@ -154,6 +154,12 @@ After you refresh `DaoStateStore_BTC_MAINNET`, run
 `core/src/test/java/bisq/core/dao/governance/merit/BundledMeritDuplicationAuditTest.java`. It reads
 that resource directly, so its result can change.
 
+Also run `core/src/test/java/bisq/core/dao/BundledDaoStateAuditTest.java`. It checks that the separate
+BSQ block resources are contiguous through the DAO-state height, that their embedded transaction and
+output coordinates are internally consistent, that no historical lockup was spent by a non-unlock
+transaction, that evaluated role terms still match their role types, and that the refreshed P2P stores
+and versioned Burning Man address lists are readable and internally consistent.
+
 Create a pull request against the release branch that contains screenshots of the hashes of a full
 node and a light node, so that a reviewer can compare them.
 
