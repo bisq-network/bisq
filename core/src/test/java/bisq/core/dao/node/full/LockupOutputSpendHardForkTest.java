@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.full;
 
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.node.parser.exceptions.InvalidParsingConditionException;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxInput;
@@ -45,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class LockupOutputSpendHardForkTest extends LockupOutputSpendTestBase {
     // The first height at which the rule applies on mainnet, which is the network the tests run on by default.
-    private static final int ACTIVATION_HEIGHT = 975_000;
+    private static final int ACTIVATION_HEIGHT = DaoHardFork.getHardFork3ActivationHeight();
 
     @BeforeEach
     public void setup() {
