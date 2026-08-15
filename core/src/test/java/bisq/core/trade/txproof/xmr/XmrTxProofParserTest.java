@@ -123,7 +123,8 @@ public class XmrTxProofParserTest {
                 "'tx_hash':'" + txHash + "', " +
                 "'viewkey':'" + txKey + "'," +
                 "'tx_timestamp':'" + ts + "'}, 'status':'success'}";
-        assertSame(parser.parse(xmrTxProofModel, invalid_tx_timestamp_1sec_too_old).getDetail(), XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
+        assertSame(XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING,
+                parser.parse(xmrTxProofModel, invalid_tx_timestamp_1sec_too_old).getDetail());
 
         // A difference based check would overflow with that value and accept it
         String invalid_extreme_tx_timestamp = "{'data':{'address':'" + recipientAddressHex + "', " +
