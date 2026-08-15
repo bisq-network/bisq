@@ -236,8 +236,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
             } else {
                 completeShutDown(requestedExitStatus, 1, TimeUnit.SECONDS);
             }
-        } catch (Exception e) {
-            log.error("App shutdown failed with exception", e);
+        } catch (Throwable t) {
+            log.error("App shutdown failed with exception", t);
             PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
                 completeShutDown(BisqExecutable.EXIT_FAILURE, 1, TimeUnit.SECONDS);
                 log.info("Graceful shutdown resulted in an error. Exiting now.");
