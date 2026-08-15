@@ -702,7 +702,7 @@ public class AccountAgeWitnessService {
         boolean result = DateUtil.isWithinTolerance(
                 peersCurrentDate.getTime(), now, TimeUnit.DAYS.toMillis(1));
         if (!result) {
-            String msg = "Peers current date is further than 1 day off to our current date. " +
+            String msg = "Peers current date is further than 1 day off from our current date. " +
                     "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date(now);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
