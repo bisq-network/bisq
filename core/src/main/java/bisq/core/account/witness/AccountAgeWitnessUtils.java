@@ -281,20 +281,10 @@ public class AccountAgeWitnessUtils {
         return accountAgeWitnessService.findWitness(account.getPaymentAccountPayload(), keyRing.getPubKeyRing())
                 .map(accountAgeWitness -> {
                     try {
-                        checkArgument(!accountAgeWitnessService.isFilteredWitness(accountAgeWitness), "Invalid account age witness");
                         byte[] witnessHash = accountAgeWitness.getHash();
                         String hashAsHex = Hex.encode(witnessHash);
                         KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
                         byte[] ownerPublicKey = Sig.getPublicKeyBytes(signatureKeyPair.getPublic());
-                        long witnessSignDate = accountAgeWitnessService.getWitnessSignDate(
-                                accountAgeWitness,
-                                ownerPublicKey);
-                        long ageInDays = (System.currentTimeMillis() - witnessSignDate) / TimeUnit.DAYS.toMillis(1);
-                        if (!DevEnv.isDevMode()) {
-                            checkArgument(witnessSignDate > 0, "Account is not signed yet");
-                            checkArgument(ageInDays > 60, "Account must have been signed at least 61 days ago");
-                        }
-
                         byte[] accountInputDataWithSalt = accountAgeWitnessService.getAccountInputDataWithSalt(
                                 account.getPaymentAccountPayload());
                         byte[] calculatedHash = Hash.getSha256Ripemd160hash(
@@ -315,7 +305,12 @@ public class AccountAgeWitnessUtils {
                                 accountInputDataWithSalt,
                                 ownerPublicKey,
                                 signature);
-                        proof.verify();
+                        long witnessSignDate = accountAgeWitnessService.verifySignedWitnessOwnership(proof);
+                        long ageInDays = (System.currentTimeMillis() - witnessSignDate) /
+                                TimeUnit.DAYS.toMillis(1);
+                        if (!DevEnv.isDevMode()) {
+                            checkArgument(ageInDays > 60, "Account must have been signed at least 61 days ago");
+                        }
                         SignedWitnessDto dto = new SignedWitnessDto(
                                 proof.getProtocolVersion(),
                                 proof.getProfileId(),

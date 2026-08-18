@@ -196,6 +196,61 @@ public class SignedWitnessServiceTest {
     }
 
     @Test
+    public void provenOwnerDatesTolerateHistoricalArbitratorOwnerSwap() {
+        SignedWitness trusted = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                signature1,
+                signer1PubKey,
+                witnessOwner2PubKey,
+                date1,
+                tradeAmount1);
+        signedWitnessService.addToMap(trusted);
+
+        assertEquals(List.of(date1),
+                signedWitnessService.getVerifiedWitnessDateListForProvenOwner(aew1, witnessOwner1PubKey));
+    }
+
+    @Test
+    public void provenOwnerDatesRejectInvalidArbitratorSignatureDespiteOwnerSwap() {
+        SignedWitness forged = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                "invalid-arbitrator-signature".getBytes(Charsets.UTF_8),
+                signer1PubKey,
+                witnessOwner2PubKey,
+                date1,
+                tradeAmount1);
+        signedWitnessService.addToMap(forged);
+
+        assertTrue(signedWitnessService
+                .getVerifiedWitnessDateListForProvenOwner(aew1, witnessOwner1PubKey)
+                .isEmpty());
+    }
+
+    @Test
+    public void provenOwnerDatesRejectTradeLeafOwnerMismatch() {
+        SignedWitness root = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                signature1,
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+        SignedWitness tradeLeaf = new SignedWitness(TRADE,
+                account2DataHash,
+                signature2,
+                signer2PubKey,
+                witnessOwner2PubKey,
+                date2,
+                tradeAmount2);
+        signedWitnessService.addToMap(root);
+        signedWitnessService.addToMap(tradeLeaf);
+
+        assertTrue(signedWitnessService
+                .getVerifiedWitnessDateListForProvenOwner(aew2, witnessOwner3PubKey)
+                .isEmpty());
+    }
+
+    @Test
     public void testInvalidArbitratorSignatureDoesNotCountAsSignedByArbitrator() {
         SignedWitness sw1 = new SignedWitness(ARBITRATOR,
                 account1DataHash,

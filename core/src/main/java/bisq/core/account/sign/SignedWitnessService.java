@@ -172,6 +172,21 @@ public class SignedWitnessService {
         return getVerifiedWitnessDateList(accountAgeWitness, Optional.of(expectedWitnessOwnerPubKey));
     }
 
+    /**
+     * Returns qualifying dates after the caller has independently proven that {@code provenWitnessOwnerPubKey}
+     * owns the account-age witness hash. Legacy arbitrator signing swapped the buyer and seller owner keys before
+     * commit 09141eba92. A direct arbitrator signature still authenticates the account-age witness hash, so those
+     * records do not need the unauthenticated legacy owner field to match. Trade-signed leaves remain owner-bound.
+     */
+    public List<Long> getVerifiedWitnessDateListForProvenOwner(AccountAgeWitness accountAgeWitness,
+                                                                byte[] provenWitnessOwnerPubKey) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .filter(signedWitness -> isValidForProvenOwner(signedWitness, provenWitnessOwnerPubKey))
+                .map(SignedWitness::getDate)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
     private List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness,
                                                    Optional<byte[]> expectedWitnessOwnerPubKey) {
         return getSignedWitnessSet(accountAgeWitness).stream()
@@ -185,6 +200,17 @@ public class SignedWitnessService {
                 .map(SignedWitness::getDate)
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    private boolean isValidForProvenOwner(SignedWitness signedWitness, byte[] provenWitnessOwnerPubKey) {
+        if (Arrays.equals(provenWitnessOwnerPubKey, signedWitness.getWitnessOwnerPubKey())) {
+            return isValidSignerWitnessInternal(
+                    signedWitness,
+                    new Date().getTime() + SIGNER_AGE,
+                    new Stack<>());
+        }
+
+        return signedWitness.isSignedByArbitrator() && verifySignature(signedWitness);
     }
 
     /**

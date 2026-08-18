@@ -34,7 +34,10 @@ The bridge returns a sign date only when at least one `SignedWitness` leaf for t
 witness satisfies every existing Bisq 1 trust-chain rule. In particular:
 
 - the leaf signature must be valid;
-- the leaf's `witnessOwnerPubKey` must equal the public key from the ownership proof;
+- a trade-signed leaf's `witnessOwnerPubKey` must equal the public key from the ownership proof;
+- a directly arbitrator-signed leaf may carry a different historical owner key, because versions
+  before commit `09141eba92` accidentally exchanged the buyer and seller owner keys when producing
+  those records;
 - a trade-signed leaf must lead through the required signer-age intervals to a valid arbitrator
   root;
 - circular, overlong, too-young and banned chains do not qualify; and
@@ -44,7 +47,11 @@ A signature-valid record from a chain which does not reach a trusted root must n
 The same individually qualified set supplies signed-witness dates to Bisq 1 status and account-age
 consumers; an invalid leaf must not make a witness appear older in those paths either.
 The public `witnessOwnerPubKey` field alone is not an ownership proof because it is not committed by
-the deployed `SignedWitness` signature; equality with the independently proven owner key is required.
+the deployed `SignedWitness` signature. Trade-signed leaves remain bound to the independently proven
+owner key. For a directly arbitrator-signed leaf, the arbitrator signature authenticates the account-age
+witness hash and the ownership proof independently binds the requester key to that same hash. The
+historically incorrect auxiliary owner field is therefore not used for that compatibility case. The
+proven owner key must still pass the deny-list policy.
 
 Arbitrator roots must have a valid signature and a key accepted by the active environment. Developers
 who run with `useDevPrivilegeKeys=true` may explicitly enable `allowMainnetSignedWitnessesWithDevPrivilegeKeys` to add the
@@ -59,7 +66,8 @@ signature to `VerifySignedWitnessOwnership`. The response contains only the auth
 sign date. The requester does not supply either the account-age date or sign date.
 
 The legacy date-only RPC must reject authorization use. An unsupported version, invalid ownership
-proof, missing witness, owner mismatch, or missing qualifying chain fails closed and returns no date.
+proof, missing witness, trade-leaf owner mismatch, or missing qualifying chain fails closed and
+returns no date.
 
 ## Bisq 2 requirements
 

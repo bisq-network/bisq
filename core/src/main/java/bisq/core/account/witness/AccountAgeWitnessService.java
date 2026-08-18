@@ -351,17 +351,25 @@ public class AccountAgeWitnessService {
 
     public AccountAgeWitness verifyAccountAgeWitnessOwnership(AccountAgeWitnessOwnershipProof proof) {
         AccountAgeWitness witness = verifyWitnessOwnership(proof);
-        checkArgument(!filterPolicyService.isWitnessSignerPubKeyBanned(
-                        Utils.HEX.encode(proof.getOwnerPublicKey())),
-                "Account age witness owner is banned");
+        verifyWitnessOwnerIsNotBanned(proof);
         return witness;
     }
 
     public long verifySignedWitnessOwnership(SignedWitnessOwnershipProof proof) {
         AccountAgeWitness witness = verifyWitnessOwnership(proof);
-        long signDate = getWitnessSignDate(witness, proof.getOwnerPublicKey());
+        verifyWitnessOwnerIsNotBanned(proof);
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateListForProvenOwner(
+                witness,
+                proof.getOwnerPublicKey());
+        long signDate = dates.isEmpty() ? -1L : dates.get(0);
         checkArgument(signDate > 0, "Account age witness has no qualifying signed-witness chain");
         return signDate;
+    }
+
+    private void verifyWitnessOwnerIsNotBanned(WitnessOwnershipProof proof) {
+        checkArgument(!filterPolicyService.isWitnessSignerPubKeyBanned(
+                        Utils.HEX.encode(proof.getOwnerPublicKey())),
+                "Account age witness owner is banned");
     }
 
     private AccountAgeWitness verifyWitnessOwnership(WitnessOwnershipProof proof) {

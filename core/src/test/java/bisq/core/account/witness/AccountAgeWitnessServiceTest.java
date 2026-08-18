@@ -158,6 +158,44 @@ public class AccountAgeWitnessServiceTest {
                 () -> service.verifyAccountAgeWitnessOwnership(proof));
     }
 
+    @Test
+    public void signedWitnessOwnershipToleratesHistoricalArbitratorOwnerSwap() throws Exception {
+        byte[] accountInput = new byte[]{1, 2, 3};
+        SignedWitnessOwnershipProof proof = createSignedWitnessOwnershipProof(accountInput);
+        AccountAgeWitness witness = new AccountAgeWitness(proof.getWitnessHash(), 1234L);
+        service.addToMap(witness);
+
+        ECKey arbitratorKey = LowRSigningKey.from(new ECKey());
+        byte[] arbitratorSignature = arbitratorKey
+                .signMessage(Utilities.encodeToHex(proof.getWitnessHash()))
+                .getBytes(StandardCharsets.UTF_8);
+        byte[] counterpartyPublicKey = Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic());
+        long signDate = NOW - TimeUnit.DAYS.toMillis(100);
+        signedWitnessService.addToMap(new SignedWitness(
+                SignedWitness.VerificationMethod.ARBITRATOR,
+                proof.getWitnessHash(),
+                arbitratorSignature,
+                arbitratorKey.getPubKey(),
+                counterpartyPublicKey,
+                signDate,
+                Coin.COIN.value));
+
+        assertEquals(-1L, service.getWitnessSignDate(witness, proof.getOwnerPublicKey()));
+        assertEquals(signDate, service.verifySignedWitnessOwnership(proof));
+    }
+
+    @Test
+    public void signedWitnessOwnershipRejectsTheProvenOwnerKeyWhenBanned() throws Exception {
+        byte[] accountInput = new byte[]{1, 2, 3};
+        SignedWitnessOwnershipProof proof = createSignedWitnessOwnershipProof(accountInput);
+        service.addToMap(new AccountAgeWitness(proof.getWitnessHash(), 1234L));
+        when(filterPolicyService.isWitnessSignerPubKeyBanned(
+                Utilities.bytesAsHexString(proof.getOwnerPublicKey()))).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.verifySignedWitnessOwnership(proof));
+    }
+
     private AccountAgeWitnessOwnershipProof createAccountAgeOwnershipProof(byte[] accountInput) throws Exception {
         byte[] ownerPublicKey = Sig.getPublicKeyBytes(publicKey);
         byte[] witnessHash = Hash.getSha256Ripemd160hash(
@@ -171,6 +209,26 @@ public class AccountAgeWitnessServiceTest {
                         ownerPublicKey));
         return new AccountAgeWitnessOwnershipProof(
                 AccountAgeWitnessOwnershipProof.VERSION,
+                "12".repeat(20),
+                witnessHash,
+                accountInput,
+                ownerPublicKey,
+                signature);
+    }
+
+    private SignedWitnessOwnershipProof createSignedWitnessOwnershipProof(byte[] accountInput) throws Exception {
+        byte[] ownerPublicKey = Sig.getPublicKeyBytes(publicKey);
+        byte[] witnessHash = Hash.getSha256Ripemd160hash(
+                Utilities.concatenateByteArrays(accountInput, ownerPublicKey));
+        byte[] signature = Sig.sign(keypair.getPrivate(),
+                SignedWitnessOwnershipProof.getSignatureMessage(
+                        SignedWitnessOwnershipProof.VERSION,
+                        "12".repeat(20),
+                        witnessHash,
+                        accountInput,
+                        ownerPublicKey));
+        return new SignedWitnessOwnershipProof(
+                SignedWitnessOwnershipProof.VERSION,
                 "12".repeat(20),
                 witnessHash,
                 accountInput,
