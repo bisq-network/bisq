@@ -55,10 +55,14 @@ public class RolesListItemTest {
     }
 
     @Test
-    public void roleLevelLockupActionIsNotBlockedByAnExistingConfirmedLockup() {
+    public void lockupActionIsVisibleOnlyBeforeRoleIsLocked() {
         when(daoFacade.isMyRole(role)).thenReturn(true);
 
+        when(bondedRole.getBondState()).thenReturn(BondState.READY_FOR_LOCKUP);
         assertTrue(new RolesListItem(bondedRole, daoFacade, true).isLockupButtonVisible());
+
+        when(bondedRole.getBondState()).thenReturn(BondState.LOCKUP_TX_CONFIRMED);
+        assertFalse(new RolesListItem(bondedRole, daoFacade, true).isLockupButtonVisible());
         assertFalse(new RolesListItem(bondedRole, daoFacade, false).isLockupButtonVisible());
     }
 

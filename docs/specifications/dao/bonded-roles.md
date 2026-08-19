@@ -163,8 +163,10 @@ collateral lifecycles and permits actions only on the exact lockup to which the 
 
 Confiscation is an economic penalty against named collateral, not a permanent revocation of the
 accepted proposal identity. The proposal remains accepted after every lockup associated with it is
-confiscated. The proposal owner may fund a new valid lockup and create a new bound Bisq 2 registration;
-that registration grants authority again while its exact lockup remains confirmed and unspent.
+confiscated. The permissionless protocol still accepts a new valid lockup for that role, and the
+proposal owner may bind a new Bisq 2 registration to it; that registration grants authority again
+while its exact lockup remains confirmed and unspent. The Bisq 1 desktop does not itself offer an
+additional or replacement lockup action after a valid lockup is known (§6).
 
 Bisq 2 has an independent mechanism by which its security manager can ban a role without changing the
 Bisq 1 proposal or bond registration. That consumer-level ban is sufficient to disable a sanctioned
@@ -278,11 +280,13 @@ add lockup keys to the legacy authority set and requires a new audit and an expl
   transaction key. The entered profile id is transformed into the canonical bound message before
   signing or verification. The desktop creates version `2` registrations even for pre-cutoff
   lockups; version `1` exists only to keep already deployed callers operational.
-- Proposal ownership, not the absence of an existing lockup, controls whether the client offers the
-  role-level action to create collateral. The action remains available when another party funded a
-  lockup and after an earlier lockup starts unlocking, unlocks, is illegally spent or is confiscated.
-  The client may temporarily suppress it while its own same-role lockup transaction is unconfirmed,
-  to prevent accidental duplicate publication.
+- The client offers the role-level action to create collateral only to the proposal owner and only
+  on the role's `READY_FOR_LOCKUP` placeholder. That placeholder exists only while no valid role
+  lockup is known in the current DAO state. Once any valid lockup is known, including one funded by
+  another party, the client does not offer an additional or replacement lockup action. Unlocking,
+  unlock expiry, illegal spend and confiscation do not restore the placeholder. This is a client
+  limitation, not a protocol rule against multiple valid lockups; a reorg which removes the only
+  known valid lockup restores the placeholder.
 - Unlock is offered only when the local wallet owns that exact lockup output. Proposal ownership does
   not imply ownership of collateral supplied by another wallet.
 - Each still-confiscatable lockup is independently selectable in a confiscation proposal.

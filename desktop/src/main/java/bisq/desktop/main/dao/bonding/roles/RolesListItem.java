@@ -99,7 +99,7 @@ class RolesListItem {
     }
 
     public boolean isLockupButtonVisible() {
-        return iAmOwner() && lockupActionRow;
+        return iAmOwner() && lockupActionRow && bondedRole.getBondState() == BondState.READY_FOR_LOCKUP;
     }
 
     public boolean isRevokeButtonVisible() {
