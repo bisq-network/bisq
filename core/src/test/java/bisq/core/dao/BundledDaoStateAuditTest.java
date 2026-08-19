@@ -71,7 +71,7 @@ class BundledDaoStateAuditTest {
     private static final String DAO_STATE_RESOURCE = "/DaoStateStore_BTC_MAINNET";
     private static final String BLOCK_RESOURCE_DIR = "/BsqBlocks_BTC_MAINNET/";
     private static final int MAINNET_GENESIS_HEIGHT = 571_747;
-    private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 961_400;
+    private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 962_500;
 
     @Test
     void bundledBlockHistoryIsCompleteAndContainsOnlyCanonicalLockupSpends() throws IOException {

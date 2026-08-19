@@ -50,7 +50,7 @@ entry:
 
 Only lockups with a lock time of at least the minimum export lock time are exported.
 
-The bundled mainnet resources through height 962500 contain 187 lockups, of which 51 have reason
+The bundled mainnet resources through height 963120 contain 187 lockups, of which 51 have reason
 `BONDED_ROLE`; none of those 51 has a lock time of at least 50 000 blocks. The reason-selector change
 therefore removes no previously export-eligible `BONDED_ROLE` lockup from that bundled history. This
 does not establish the result for later blocks or other persistent networks.
@@ -62,9 +62,9 @@ against permanently destroyed capital cannot let the same capital back another p
 bond lifecycle still reports the terminal state as `ILLEGALLY_SPENT`.
 
 Before activation, a positive-valued non-canonical spend can preserve the BSQ without producing a
-bridge removal. No such spend exists in bundled mainnet history through height 962500. The rest of
-the pre-activation interval and other persistent network histories must be audited before assuming
-the export invariant holds there.
+bridge removal. No such spend exists in bundled mainnet history through height 963120. Heights 963121
+through 963349 immediately before mainnet activation and other persistent network histories must be
+audited before assuming the export invariant holds there.
 
 ## 3. My bonded reputations
 

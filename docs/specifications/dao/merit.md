@@ -137,7 +137,7 @@ new activation height rather than by editing an active rule set.
 ## 7. Deployment obligations for the cycle-wide rule
 
 The cycle-wide uniqueness rule activates with hard fork 3 at the finalized heights in
-`DaoHardFork`: `963 000` on mainnet, `3 000 000` on Bitcoin testnet, and `1` on regtest and the DAO
+`DaoHardFork`: `963 350` on mainnet, `3 000 000` on Bitcoin testnet, and `1` on regtest and the DAO
 test networks. These consensus constants must not be changed after deployment.
 
 Because the rule version is selected by the evaluation height of the cycle itself, activating it
@@ -147,7 +147,7 @@ it establishes is whether the weakness was exploited while it was open.
 
 ### 7.1 Audit of the bundled mainnet DAO state
 
-Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `962 500`. Claims were
+Audited over the shipped `DaoStateStore_BTC_MAINNET`, whose chain height is `963 120`. Claims were
 validated with the rules of §2, with the blind vote height taken from the vote reveal transaction
 which spent the blind vote stake output, which is in the same cycle but slightly later and therefore
 applies the "not younger than the blind vote" rule slightly permissively. The result is thus an upper
@@ -174,9 +174,10 @@ says separately that no forged, mismatched or unknown-issuance claim exists in t
 
 ### 7.2 Remaining obligations
 
-- **The bundled resource ends at `962 500`.** Later completed cycles are not covered. Before release,
+- **The bundled resource ends at `963 120`.** Later completed cycles are not covered. Before release,
   confirm that no newer result phase has completed; if one has, run the same audit against a synced
-  node through that cycle.
+  node through that cycle. In particular, the bundled resource does not cover heights `963 121`
+  through `963 349` immediately before mainnet activation.
 - **Continue the audit until activation.** An activation height which lies safely after release also
   lies in the future at release time, so those cycles cannot be audited in advance. Monitor or repeat
   the audit after each result phase between release and activation.

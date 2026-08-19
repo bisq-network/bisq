@@ -57,11 +57,11 @@ introduced:
   75 to 110 days on April 7. No current role type's numeric terms changed after genesis.
 - A temporary `ANALYTICS_OPERATOR` type was added with unit 1, changed to 2 and removed in September
   2019. It is absent from the bundled role-proposal data and does not alter any current role type.
-- At bundled DAO-state height `962500`, all 60 evaluated role proposals (59 accepted and one rejected),
+- At bundled DAO-state height `963120`, all 60 evaluated role proposals (59 accepted and one rejected),
   all 60 append-only proposal payloads and the one temporary role proposal exactly match the current
   mainnet role-type units and 15840-block unlock time. Of the evaluated proposals, 38 were mined before
   the factor change and 22 from its activation height onward. No evaluated role proposal was added
-  between the previous audit at height `961400` and this snapshot.
+  between the previous audit at height `962500` and this snapshot.
 
 This audit establishes compatibility only through the bundled height. Source-defined enum constants
 remain a consensus risk: changing an existing unit or unlock time after hard-fork-3 would make nodes
@@ -267,9 +267,11 @@ Consequently, a successful version `1` verification cannot create a new registra
 trusted oracle nodes violate this protocol rule.
 
 Height `963_350` is the finalized mainnet compatibility cutoff and matches the hard-fork-3 activation
-height. The bundled role-lockup history through height `962500` was audited before that boundary. The
+height. The bundled role-lockup history through height `963120` was audited before that boundary. The
 cutoff is a protocol constant and must not be advanced with a later release height: advancing it would
 add lockup keys to the legacy authority set and requires a new audit and an explicit protocol decision.
+The bundled resources do not cover heights `963121` through `963349`; that final pre-cutoff interval
+must be checked from a synced mainnet node before treating the entire legacy authority set as audited.
 
 ## 6. Client lifecycle and actions
 
