@@ -163,9 +163,10 @@ Also run the resource integration audit explicitly:
 
 It checks that the separate BSQ block resources are contiguous through the DAO-state height, that
 their embedded transaction and output coordinates are internally consistent, that no historical
-lockup was spent by a non-unlock transaction, that evaluated role terms still match their role types,
-and that the refreshed P2P stores and versioned Burning Man address lists are readable and internally
-consistent. It is kept out of the regular unit-test suite because it scans the full bundled history.
+lockup was spent by anything other than a canonical unlock shape matching its parsed transaction
+type, that evaluated role terms still match their role types, and that the refreshed P2P stores and
+versioned Burning Man address lists are readable and internally consistent. It is kept out of the
+regular unit-test suite because it scans the full bundled history.
 
 Create a pull request against the release branch that contains screenshots of the hashes of a full
 node and a light node, so that a reviewer can compare them.

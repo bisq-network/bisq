@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,7 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Release audit of the bundled mainnet DAO resources. This checks the block history which is stored separately from
  * {@code DaoStateStore_BTC_MAINNET}; auditing only the state maps cannot identify which transaction spent a historical
- * lockup output.
+ * lockup output. It is intentionally opt-in because it scans the complete bundled history.
  */
 @EnabledIfSystemProperty(named = "bisq.runResourceAudits", matches = "true")
 class BundledDaoStateAuditTest {
@@ -73,7 +74,7 @@ class BundledDaoStateAuditTest {
     private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 961_400;
 
     @Test
-    void bundledBlockHistoryIsCompleteAndContainsNoNonUnlockLockupSpend() throws IOException {
+    void bundledBlockHistoryIsCompleteAndContainsOnlyCanonicalLockupSpends() throws IOException {
         protobuf.PersistableEnvelope daoStateEnvelope = readDelimitedEnvelope(DAO_STATE_RESOURCE);
         assertTrue(daoStateEnvelope.hasDaoStateStore(), "resource is not a DAO state store");
         List<protobuf.DaoStateHash> daoStateHashes = daoStateEnvelope.getDaoStateStore().getDaoStateHashList();
@@ -133,6 +134,8 @@ class BundledDaoStateAuditTest {
 
         Map<String, LockupRecord> lockupsByOutputKey = new HashMap<>();
         Map<String, String> spenderTxIdByLockupOutputKey = new HashMap<>();
+        // Retaining every historical BTC output exhausts the test heap; unlock reconstruction needs only DAO spends.
+        Map<String, Long> spentOutputValueByOutputKey = new HashMap<>();
         Map<String, Integer> roleProposalHeightByTxId = new HashMap<>();
         EnumMap<LockupReason, Integer> lockupsByReason = new EnumMap<>(LockupReason.class);
         int blockCount = 0;
@@ -174,21 +177,24 @@ class BundledDaoStateAuditTest {
                         roleProposalHeightByTxId.put(tx.getId(), tx.getBlockHeight());
                     }
 
-                    for (protobuf.TxInput input : tx.getTxInputsList()) {
-                        String connectedOutputKey = outputKey(input.getConnectedTxOutputTxId(),
-                                input.getConnectedTxOutputIndex());
-                        if (lockupsByOutputKey.containsKey(connectedOutputKey)) {
-                            assertEquals(protobuf.TxType.UNLOCK, tx.getTx().getTxType(),
-                                    "non-UNLOCK transaction spent lockup output " + connectedOutputKey +
-                                            ": spender=" + tx.getId() + ", height=" + tx.getBlockHeight() +
-                                            ", type=" + tx.getTx().getTxType());
-                            assertFalse(spenderTxIdByLockupOutputKey.containsKey(connectedOutputKey),
-                                    "lockup output was spent more than once: " + connectedOutputKey);
-                            spenderTxIdByLockupOutputKey.put(connectedOutputKey, tx.getId());
-                            unlockSpendCount++;
-                            if (tx.getBlockHeight() > PREVIOUS_BOND_AUDIT_HEIGHT) {
-                                unlockSpendsAfterPreviousAudit++;
-                            }
+                    List<SpentLockup> spentLockups = tx.getTxInputsList().stream()
+                            .map(input -> outputKey(input.getConnectedTxOutputTxId(),
+                                    input.getConnectedTxOutputIndex()))
+                            .filter(lockupsByOutputKey::containsKey)
+                            .map(outputKey -> new SpentLockup(outputKey, lockupsByOutputKey.get(outputKey)))
+                            .toList();
+                    if (!spentLockups.isEmpty()) {
+                        assertEquals(1, spentLockups.size(),
+                                "transaction spends more than one lockup output: " + tx.getId());
+                        SpentLockup spentLockup = spentLockups.get(0);
+                        assertCanonicalUnlock(tx, spentLockup, spentOutputValueByOutputKey,
+                                daoState.getSpentInfoMapMap());
+                        assertFalse(spenderTxIdByLockupOutputKey.containsKey(spentLockup.outputKey()),
+                                "lockup output was spent more than once: " + spentLockup.outputKey());
+                        spenderTxIdByLockupOutputKey.put(spentLockup.outputKey(), tx.getId());
+                        unlockSpendCount++;
+                        if (tx.getBlockHeight() > PREVIOUS_BOND_AUDIT_HEIGHT) {
+                            unlockSpendsAfterPreviousAudit++;
                         }
                     }
 
@@ -196,6 +202,12 @@ class BundledDaoStateAuditTest {
                     for (protobuf.BaseTxOutput output : outputs) {
                         assertEquals(tx.getId(), output.getTxId(), "output transaction id mismatch");
                         assertEquals(block.getHeight(), output.getBlockHeight(), "output block height mismatch");
+                        String outputKey = outputKey(output.getTxId(), output.getIndex());
+                        if (daoState.getSpentInfoMapMap().containsKey(outputKey)) {
+                            assertFalse(spentOutputValueByOutputKey.containsKey(outputKey),
+                                    "duplicate spent transaction output key: " + outputKey);
+                            spentOutputValueByOutputKey.put(outputKey, output.getValue());
+                        }
                     }
 
                     for (protobuf.BaseTxOutput output : outputs) {
@@ -272,8 +284,8 @@ class BundledDaoStateAuditTest {
                 + "\n  DAO transactions=" + txCount
                 + "\n  lockups=" + lockupsByOutputKey.size() + " " + lockupsByReason
                 + "\n  unspent lockups=" + unspentLockups
-                + "\n  lockups spent by formal UNLOCK=" + spentLockups
-                + "\n  lockups spent by non-UNLOCK=" + 0
+                + "\n  lockups spent by canonical UNLOCK=" + spentLockups
+                + "\n  non-canonical lockup spends=" + 0
                 + "\n  zero-value lockups=" + zeroValueLockups
                 + "\n  BONDED_ROLE lockups with lock time >= 50000=" + roleLockupsAtLeastFiftyThousandBlocks
                 + "\n  evaluated role proposals=" + evaluatedRoleProposals
@@ -461,6 +473,67 @@ class BundledDaoStateAuditTest {
         return txId + ':' + index;
     }
 
+    private static void assertCanonicalUnlock(protobuf.BaseTx tx,
+                                              SpentLockup spentLockup,
+                                              Map<String, Long> spentOutputValueByOutputKey,
+                                              Map<String, protobuf.SpentInfo> spentInfoByOutputKey) {
+        String context = "lockup=" + spentLockup.outputKey() + ", spender=" + tx.getId();
+        List<ConnectedBsqInput> connectedBsqInputs = new ArrayList<>();
+        List<protobuf.TxInput> inputs = tx.getTxInputsList();
+        for (int inputIndex = 0; inputIndex < inputs.size(); inputIndex++) {
+            protobuf.TxInput input = inputs.get(inputIndex);
+            String connectedOutputKey = outputKey(input.getConnectedTxOutputTxId(),
+                    input.getConnectedTxOutputIndex());
+            protobuf.SpentInfo spentInfo = spentInfoByOutputKey.get(connectedOutputKey);
+            if (spentInfo == null) {
+                continue;
+            }
+
+            assertEquals(tx.getId(), spentInfo.getTxId(),
+                    "connected output has a different DAO spender: " + context);
+            assertEquals(inputIndex, spentInfo.getInputIndex(),
+                    "DAO spent-info input index mismatch: " + context);
+            Long connectedOutputValue = spentOutputValueByOutputKey.get(connectedOutputKey);
+            assertNotNull(connectedOutputValue,
+                    "BSQ input does not resolve to an earlier bundled output: " + context);
+            connectedBsqInputs.add(new ConnectedBsqInput(connectedOutputKey, connectedOutputValue));
+        }
+
+        assertEquals(1, connectedBsqInputs.size(),
+                "canonical unlock must have exactly one BSQ input: " + context);
+        ConnectedBsqInput connectedBsqInput = connectedBsqInputs.get(0);
+        assertEquals(spentLockup.outputKey(), connectedBsqInput.outputKey(),
+                "canonical unlock's only BSQ input is not the lockup output: " + context);
+        long availableBsqInputValue = connectedBsqInputs.stream()
+                .mapToLong(ConnectedBsqInput::value)
+                .reduce(0L, Math::addExact);
+        assertEquals(spentLockup.lockup().value(), availableBsqInputValue,
+                "canonical unlock input value differs from the lockup value: " + context);
+
+        List<protobuf.BaseTxOutput> outputs = tx.getTx().getTxOutputsList();
+        assertFalse(outputs.isEmpty(), "canonical unlock has no outputs: " + context);
+        for (int outputIndex = 0; outputIndex < outputs.size(); outputIndex++) {
+            protobuf.BaseTxOutput output = outputs.get(outputIndex);
+            assertEquals(outputIndex, output.getIndex(), "unlock output index/order mismatch: " + context);
+            assertTrue(output.hasTxOutput(), "unlock contains an unparsed output: " + context);
+            assertTrue(output.getOpReturnData().isEmpty(), "canonical unlock contains OP_RETURN: " + context);
+            protobuf.TxOutputType expectedType = outputIndex == 0
+                    ? protobuf.TxOutputType.UNLOCK_OUTPUT
+                    : protobuf.TxOutputType.BTC_OUTPUT;
+            assertEquals(expectedType, output.getTxOutput().getTxOutputType(),
+                    "canonical unlock contains an unexpected output type: " + context);
+        }
+
+        protobuf.BaseTxOutput unlockOutput = outputs.get(0);
+        assertEquals(spentLockup.lockup().value(), unlockOutput.getValue(),
+                "unlock output value differs from the lockup value: " + context);
+        assertEquals(availableBsqInputValue, unlockOutput.getValue(),
+                "unlock output does not carry the whole available BSQ input value: " + context);
+        assertEquals(0L, tx.getTx().getBurntBsq(), "canonical unlock burns BSQ: " + context);
+        assertEquals(protobuf.TxType.UNLOCK, tx.getTx().getTxType(),
+                "canonical unlock shape has a different parsed transaction type: " + context);
+    }
+
     private static boolean hasCurrentRoleTerms(protobuf.RoleProposal roleProposal) {
         BondedRoleType roleType = BondedRoleType.valueOf(roleProposal.getRole().getBondedRoleType());
         return roleProposal.getRequiredBondUnit() == roleType.getRequiredBondUnit() &&
@@ -481,5 +554,11 @@ class BundledDaoStateAuditTest {
     }
 
     private record LockupRecord(int blockHeight, long value, LockupReason reason, int lockTime) {
+    }
+
+    private record SpentLockup(String outputKey, LockupRecord lockup) {
+    }
+
+    private record ConnectedBsqInput(String outputKey, long value) {
     }
 }
