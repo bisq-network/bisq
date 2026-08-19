@@ -25,12 +25,20 @@ option java_multiple_files = true;
 message BsqBlockSubscription {
 }
 
+message BsqBlockSubscriptionEvent {
+    oneof payload {
+        sint32 subscriptionReadyHeight = 1;
+        BsqBlockDto bsqBlock = 2;
+    }
+}
+
 message BsqBlocksRequest {
     sint32 startBlockHeight = 1;
 }
 
 message BsqBlocksResponse {
     repeated BsqBlockDto bsqBlocks = 1;
+    sint32 snapshotHeight = 2;
 }
 
 message BsqBlockDto {
