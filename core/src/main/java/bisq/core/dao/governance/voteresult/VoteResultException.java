@@ -101,6 +101,17 @@ public class VoteResultException extends Exception {
         }
     }
 
+    @EqualsAndHashCode(callSuper = true)
+    @Value
+    public static class DuplicateVoteProposalTxIdException extends Exception {
+        private String proposalTxId;
+
+        DuplicateVoteProposalTxIdException(String proposalTxId) {
+            super("Duplicate proposal transaction ID in decrypted vote: " + proposalTxId);
+            this.proposalTxId = proposalTxId;
+        }
+    }
+
 
     @EqualsAndHashCode(callSuper = true)
     @Value

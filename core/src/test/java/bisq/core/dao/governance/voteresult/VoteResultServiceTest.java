@@ -69,6 +69,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anySet;
@@ -163,7 +164,8 @@ class VoteResultServiceTest {
         Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
                 Set.of(forgedFirstDecryptedBallotsWithMerits),
                 List.of(honestBlindVote),
-                mock(Cycle.class));
+                mock(Cycle.class),
+                ACTIVATION_HEIGHT);
 
         assertEquals(1, result.size());
         Vote vote = result.iterator().next().getVote(PROPOSAL_TX_ID).orElseThrow();
@@ -181,7 +183,8 @@ class VoteResultServiceTest {
         Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
                 Set.of(orphanDecryptedBallotsWithMerits),
                 List.of(),
-                mock(Cycle.class));
+                mock(Cycle.class),
+                ACTIVATION_HEIGHT);
 
         assertTrue(result.isEmpty());
         assertTrue(voteResultService.getInvalidDecryptedBallotsWithMeritItems()
@@ -200,7 +203,8 @@ class VoteResultServiceTest {
         Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
                 Set.of(decryptedBallotsWithMerits),
                 List.of(blindVote),
-                mock(Cycle.class));
+                mock(Cycle.class),
+                ACTIVATION_HEIGHT);
 
         assertTrue(result.isEmpty());
         assertTrue(voteResultService.getInvalidDecryptedBallotsWithMeritItems()
@@ -244,7 +248,8 @@ class VoteResultServiceTest {
         Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
                 Set.of(voteRevealData),
                 List.of(malformedBlindVote),
-                mock(Cycle.class));
+                mock(Cycle.class),
+                ACTIVATION_HEIGHT);
 
         assertEquals(1, result.size());
         DecryptedBallotsWithMerits decryptedBallotsWithMerits = result.iterator().next();
@@ -252,6 +257,56 @@ class VoteResultServiceTest {
         assertFalse(vote.isAccepted());
         assertEquals(123_456, decryptedBallotsWithMerits.getStake());
         assertTrue(decryptedBallotsWithMerits.getMeritList().getList().isEmpty());
+    }
+
+    @Test
+    void duplicateProposalTxIdDropsOnlyMalformedVoterFromActivation() throws Exception {
+        SecretKey malformedVoteSecretKey = BlindVoteConsensus.createSecretKey();
+        SecretKey honestVoteSecretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BlindVote malformedBlindVote = blindVoteWithDuplicateProposalTxId(malformedVoteSecretKey);
+        BlindVote honestBlindVote = withTxId(blindVote(honestVoteSecretKey, true), SECOND_BLIND_VOTE_TX_ID);
+        DecryptedBallotsWithMerits malformedVoteRevealData = voteRevealData(BLIND_VOTE_TX_ID,
+                VOTE_REVEAL_TX_ID,
+                proposal);
+        DecryptedBallotsWithMerits honestVoteRevealData = voteRevealData(SECOND_BLIND_VOTE_TX_ID,
+                SECOND_VOTE_REVEAL_TX_ID,
+                proposal);
+        VoteResultService voteResultService = voteResultService(Set.of(
+                voteRevealTxOutput(VOTE_REVEAL_TX_ID, malformedVoteSecretKey),
+                voteRevealTxOutput(SECOND_VOTE_REVEAL_TX_ID, honestVoteSecretKey)), proposal);
+
+        Set<DecryptedBallotsWithMerits> result = voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+                Set.of(malformedVoteRevealData, honestVoteRevealData),
+                List.of(malformedBlindVote, honestBlindVote),
+                mock(Cycle.class),
+                DaoHardFork.getDuplicateVoteProposalTxIdValidationActivationHeight());
+
+        assertEquals(1, result.size());
+        DecryptedBallotsWithMerits honestResult = result.iterator().next();
+        assertEquals(SECOND_BLIND_VOTE_TX_ID, honestResult.getBlindVoteTxId());
+        assertTrue(honestResult.getVote(PROPOSAL_TX_ID).orElseThrow().isAccepted());
+        assertEquals(1, voteResultService.getVoteResultExceptions().size());
+        assertInstanceOf(VoteResultException.DuplicateVoteProposalTxIdException.class,
+                voteResultService.getVoteResultExceptions().get(0).getCause());
+    }
+
+    @Test
+    void duplicateProposalTxIdPreservesCycleAbortBeforeActivation() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BlindVote malformedBlindVote = blindVoteWithDuplicateProposalTxId(secretKey);
+        DecryptedBallotsWithMerits voteRevealData = voteRevealData(BLIND_VOTE_TX_ID, VOTE_REVEAL_TX_ID, proposal);
+        VoteResultService voteResultService = voteResultService(secretKey, proposal);
+
+        assertThrows(IllegalStateException.class,
+                () -> voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+                        Set.of(voteRevealData),
+                        List.of(malformedBlindVote),
+                        mock(Cycle.class),
+                        DaoHardFork.getDuplicateVoteProposalTxIdValidationActivationHeight() - 1));
     }
 
     @Test
@@ -639,6 +694,12 @@ class VoteResultServiceTest {
         return voteRevealTxOutput(secretKey, new byte[20]);
     }
 
+    private static TxOutput voteRevealTxOutput(String voteRevealTxId, SecretKey secretKey) throws Exception {
+        TxOutput voteRevealTxOutput = voteRevealTxOutput(secretKey);
+        when(voteRevealTxOutput.getTxId()).thenReturn(voteRevealTxId);
+        return voteRevealTxOutput;
+    }
+
     private static TxOutput voteRevealTxOutput(SecretKey secretKey, byte[] hashOfBlindVoteList) throws Exception {
         TxOutput voteRevealTxOutput = mock(TxOutput.class);
         when(voteRevealTxOutput.getTxId()).thenReturn(VOTE_REVEAL_TX_ID);
@@ -680,12 +741,55 @@ class VoteResultServiceTest {
                 blindVote.getDate());
     }
 
+    private static BlindVote blindVoteWithDuplicateProposalTxId(SecretKey secretKey) throws Exception {
+        byte[] encryptedVotes = BlindVoteConsensus.getEncryptedVotes(
+                voteWithDuplicateProposalTxIdListBytes(), secretKey);
+        byte[] encryptedMeritList = BlindVoteConsensus.getEncryptedMeritList(
+                protobuf.MeritList.newBuilder().build().toByteArray(), secretKey);
+        return new BlindVote(encryptedVotes,
+                BLIND_VOTE_TX_ID,
+                123_456,
+                encryptedMeritList,
+                1_700_000_000_000L);
+    }
+
+    private static BlindVote withTxId(BlindVote blindVote, String txId) {
+        return new BlindVote(blindVote.getEncryptedVotes(),
+                txId,
+                blindVote.getStake(),
+                blindVote.getEncryptedMeritList(),
+                blindVote.getDate());
+    }
+
+    private static DecryptedBallotsWithMerits voteRevealData(String blindVoteTxId,
+                                                              String voteRevealTxId,
+                                                              Proposal proposal) {
+        return new DecryptedBallotsWithMerits(HASH_OF_BLIND_VOTE_LIST,
+                blindVoteTxId,
+                voteRevealTxId,
+                123_456,
+                new BallotList(List.of(new Ballot(proposal, new Vote(true)))),
+                new MeritList(new ArrayList<>()));
+    }
+
     private static byte[] voteWithProposalTxIdListBytes(boolean accepted) {
         return protobuf.VoteWithProposalTxIdList.newBuilder()
                 .addItem(protobuf.VoteWithProposalTxId.newBuilder()
                         .setProposalTxId(PROPOSAL_TX_ID)
                         .setVote(protobuf.Vote.newBuilder()
                                 .setAccepted(accepted)))
+                .build()
+                .toByteArray();
+    }
+
+    private static byte[] voteWithDuplicateProposalTxIdListBytes() {
+        return protobuf.VoteWithProposalTxIdList.newBuilder()
+                .addItem(protobuf.VoteWithProposalTxId.newBuilder()
+                        .setProposalTxId(PROPOSAL_TX_ID)
+                        .setVote(protobuf.Vote.newBuilder().setAccepted(true)))
+                .addItem(protobuf.VoteWithProposalTxId.newBuilder()
+                        .setProposalTxId(PROPOSAL_TX_ID)
+                        .setVote(protobuf.Vote.newBuilder().setAccepted(false)))
                 .build()
                 .toByteArray();
     }
