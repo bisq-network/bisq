@@ -38,8 +38,8 @@ Each file contains:
 - `legacyBurningManAddress`: fallback receiver for legacy BM payments.
 - `entries`: active BM receiver addresses at export time.
 
-Entries are sorted lexicographically by `receiverAddress`. The exporter builds them in sorted order and the loader
-validates that order.
+Entry order is not significant. The loader accepts unsorted entries and validates receiver-address uniqueness rather
+than imposing an order. The exporter preserves the order in which grouped receiver addresses are first encountered.
 
 `cappedBurnAmountShare` is included as reference data. It is valid JSON for values to be written in scientific notation,
 for example:
@@ -197,7 +197,7 @@ The following behavior should be covered by focused tests:
 
 - bundled resource files load by version.
 - file name version and `listVersion` must match.
-- entries must be sorted by `receiverAddress`.
+- unsorted entries must load without being reordered; receiver addresses must remain non-blank and unique.
 - supported version lists must be sorted, positive, distinct, and non-empty.
 - highest common version selection returns the expected version.
 - peer messages round-trip supported versions through protobuf.

@@ -434,13 +434,6 @@ class BundledDaoStateAuditTest {
         assertNotNull(latestWalletCheckpoint);
 
         BurningManAddressListService addressListService = new BurningManAddressListService();
-        addressListService.getAddressListsByVersion().values().forEach(addressList -> {
-            List<String> addresses = addressList.getEntries().stream()
-                    .map(BurningManAddressList.Entry::getReceiverAddress)
-                    .toList();
-            assertEquals(addresses.stream().sorted().toList(), addresses,
-                    "Burning Man address-list entries are not sorted for version " + addressList.getListVersion());
-        });
         BurningManAddressList latestAddressList =
                 addressListService.getAddressList(addressListService.getLatestVersion());
 

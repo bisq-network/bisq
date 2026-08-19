@@ -29,6 +29,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BurningManAddressListServiceTest {
     @Test
+    void preservesEntryOrder() {
+        List<BurningManAddressList.Entry> entries = List.of(
+                new BurningManAddressList.Entry("address-b", 0.6),
+                new BurningManAddressList.Entry("address-a", 0.4));
+
+        BurningManAddressList addressList = new BurningManAddressList(BurningManAddressList.SCHEMA_VERSION,
+                1,
+                "BTC_MAINNET",
+                1,
+                1,
+                "legacy-address",
+                entries);
+
+        assertEquals(entries, addressList.getEntries());
+    }
+
+    @Test
     void loadsBundledAddressListsByVersion() {
         BurningManAddressListService service = new BurningManAddressListService();
 

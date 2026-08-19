@@ -191,8 +191,9 @@ so the file changes even when no new address was added.
 5. Copy the file into `p2p/src/main/resources/burningman/`.
 
 There is no constant to change. The service reads the directory and takes the highest version number
-it finds. The value `listVersion` inside the file must match the number in the file name, and the
-entries must be sorted by `receiverAddress`. Both rules are checked when the file is loaded.
+it finds. The value `listVersion` inside the file must match the number in the file name. Entry order
+is not significant; the loader accepts unsorted entries while still rejecting blank or duplicate
+receiver addresses.
 
 Never change a file that was already released.
 

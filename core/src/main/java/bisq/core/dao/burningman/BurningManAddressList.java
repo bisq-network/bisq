@@ -19,7 +19,7 @@ package bisq.core.dao.burningman;
 
 import bisq.common.config.Config;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,9 +60,7 @@ public final class BurningManAddressList {
         this.chainHeight = chainHeight;
         this.burningManSelectionHeight = burningManSelectionHeight;
         this.legacyBurningManAddress = legacyBurningManAddress;
-        this.entries = entries.stream()
-                .sorted(Comparator.comparing(Entry::getReceiverAddress))
-                .collect(Collectors.toList());
+        this.entries = new ArrayList<>(entries);
     }
 
     public boolean isForCurrentNetwork() {
