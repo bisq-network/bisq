@@ -35,6 +35,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/bond-lockup-spend.md`](dao/bond-lockup-spend.md) | The consensus rule for spending bond lockup outputs, including hard-fork activation, invalid-spend burning, and parsed block-data integrity. |
 | [`dao/bonded-roles.md`](dao/bonded-roles.md) | Role proposals, independent role-lockup lifecycles, and proposal-key registrations bound to exact collateral for Bisq 2. |
 | [`dao/bonded-reputation.md`](dao/bonded-reputation.md) | Reputation lockups, how they are collected, and what the Bisq 1 → Bisq 2 bridge exports. |
+| [`dao/proposal-validation.md`](dao/proposal-validation.md) | Append-only proposal admission, activated consensus data-field validation, and startup/live consistency. |
 | [`dao/merit.md`](dao/merit.md) | Merit as vote weight: what a merit claim must prove against DAO state, decay, uniqueness per cycle, and the activation boundary. |
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |

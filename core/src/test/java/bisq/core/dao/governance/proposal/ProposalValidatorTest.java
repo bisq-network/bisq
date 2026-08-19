@@ -17,19 +17,24 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.core.dao.DaoHardFork;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
+import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.GenericProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
+import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 
@@ -112,6 +117,45 @@ public class ProposalValidatorTest {
                 mock(PeriodService.class));
 
         assertTrue(proposalValidator.isTxTypeValid(proposal));
+    }
+
+    @Test
+    public void consensusDataFieldValidationActivatesForTheWholeProposalCycle() {
+        Proposal proposal = new GenericProposal("x".repeat(201), "https://bisq.network", null)
+                .cloneProposal(TX_ID);
+        DaoStateService daoStateService = mockDaoStateService(proposal);
+        PeriodService periodService = mock(PeriodService.class);
+        ProposalValidator proposalValidator = new GenericProposalValidator(daoStateService, periodService);
+        int activationHeight = DaoHardFork.getProposalDataFieldValidationActivationHeight();
+
+        when(periodService.getFirstBlockOfPhase(TX_HEIGHT, DaoPhase.Phase.RESULT))
+                .thenReturn(activationHeight - 1, activationHeight);
+
+        assertTrue(proposalValidator.isValidForConsensus(proposal));
+        assertFalse(proposalValidator.isValidForConsensus(proposal));
+    }
+
+    @Test
+    public void activatedConsensusValidationDoesNotSkipChangeParamFieldsDuringInitialParsing() {
+        Proposal proposal = new ChangeParamProposal("name",
+                "https://bisq.network",
+                Param.UNDEFINED,
+                "x".repeat(201),
+                null)
+                .cloneProposal(TX_ID);
+        DaoStateService daoStateService = mockDaoStateService(proposal);
+        PeriodService periodService = mock(PeriodService.class);
+        ProposalValidator proposalValidator = new ChangeParamValidator(daoStateService,
+                periodService,
+                new BsqFormatter());
+        int activationHeight = DaoHardFork.getProposalDataFieldValidationActivationHeight();
+
+        when(daoStateService.isParseBlockChainComplete()).thenReturn(false);
+        when(daoStateService.getParamValue(Param.UNDEFINED, TX_HEIGHT)).thenReturn("0");
+        when(periodService.getFirstBlockOfPhase(TX_HEIGHT, DaoPhase.Phase.RESULT)).thenReturn(activationHeight);
+
+        assertTrue(proposalValidator.areDataFieldsValid(proposal));
+        assertFalse(proposalValidator.isValidForConsensus(proposal));
     }
 
     private DaoStateService mockDaoStateService(Proposal proposal) {

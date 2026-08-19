@@ -73,9 +73,10 @@ From activation:
 - other voters in the cycle continue to be evaluated; and
 - the validation failure is recorded for diagnosis.
 
-The node's valid ballot universe is expected to contain only one canonical proposal for a proposal
-transaction ID. A conflict in that local consensus input is a DAO-state integrity failure, not
-malformed data attributable to one voter, and must not be silently resolved by choosing a ballot.
+The node's valid ballot universe is defined by [`proposal-validation.md`](proposal-validation.md)
+and is expected to contain only one canonical proposal for a proposal transaction ID. A conflict in
+that local consensus input is a DAO-state integrity failure, not malformed data attributable to one
+voter, and must not be silently resolved by choosing a ballot.
 
 ## Activation and compatibility
 

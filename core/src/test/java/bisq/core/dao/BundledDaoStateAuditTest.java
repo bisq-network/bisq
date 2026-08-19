@@ -24,6 +24,8 @@ import bisq.core.dao.burningman.BurningManAddressListService;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.proposal.ProposalValidator;
+import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.trade.statistics.TradeStatistics3;
@@ -388,8 +390,16 @@ class BundledDaoStateAuditTest {
 
         int proposalRoleCount = 0;
         int proposalRoleTermMismatches = 0;
+        int proposalsWithInvalidCommonDataFields = 0;
+        Set<String> proposalTxIds = new HashSet<>();
+        ProposalValidator commonProposalValidator = new GenericProposalValidator(null, null);
         for (protobuf.ProposalPayload payload : proposals.getProposalStore().getItemsList()) {
-            ProposalPayload.fromProto(payload);
+            ProposalPayload proposalPayload = ProposalPayload.fromProto(payload);
+            if (!commonProposalValidator.areCommonDataFieldsValid(proposalPayload.getProposal())) {
+                proposalsWithInvalidCommonDataFields++;
+            }
+            assertTrue(proposalTxIds.add(proposalPayload.getProposal().getTxId()),
+                    "duplicate append-only proposal transaction id");
             protobuf.Proposal proposal = payload.getProposal();
             if (proposal.hasRoleProposal()) {
                 proposalRoleCount++;
@@ -398,6 +408,8 @@ class BundledDaoStateAuditTest {
                 }
             }
         }
+        assertEquals(0, proposalsWithInvalidCommonDataFields,
+                "append-only proposal fails common data-field validation");
         int tempProposalRoleCount = 0;
         int tempProposalRoleTermMismatches = 0;
         for (protobuf.ProtectedStorageEntry entry : tempProposals.getTempProposalStore().getItemsList()) {
@@ -449,7 +461,9 @@ class BundledDaoStateAuditTest {
                 + "\n  blind votes=" + blindVoteCount
                 + "\n  append-only proposals=" + proposalCount
                 + " (role proposals=" + proposalRoleCount + ", role-term mismatches="
-                + proposalRoleTermMismatches + ")"
+                + proposalRoleTermMismatches + ", common-field failures="
+                + proposalsWithInvalidCommonDataFields + ", duplicate transaction ids="
+                + (proposalCount - proposalTxIds.size()) + ")"
                 + "\n  temporary proposals=" + tempProposalCount
                 + " (role proposals=" + tempProposalRoleCount + ", role-term mismatches="
                 + tempProposalRoleTermMismatches + ")"

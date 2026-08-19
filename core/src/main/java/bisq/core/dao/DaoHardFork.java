@@ -32,6 +32,10 @@ public final class DaoHardFork {
     private static final int BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_TESTNET = 3_000_000;
     private static final int BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_REGTEST = 1;
 
+    private static final int PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_MAINNET = 963_350;
+    private static final int PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_TESTNET = 3_000_000;
+    private static final int PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_REGTEST = 1;
+
     public static boolean isHardFork3Activated(int blockHeight) {
         return blockHeight >= getHardFork3ActivationHeight();
     }
@@ -68,6 +72,19 @@ public final class DaoHardFork {
             case BTC_TESTNET -> BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_TESTNET;
             case BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET, BTC_DAO_REGTEST ->
                     BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_REGTEST;
+        };
+    }
+
+    public static boolean isProposalDataFieldValidationActivated(int resultEvaluationHeight) {
+        return resultEvaluationHeight >= getProposalDataFieldValidationActivationHeight();
+    }
+
+    public static int getProposalDataFieldValidationActivationHeight() {
+        return switch (Config.baseCurrencyNetwork()) {
+            case BTC_MAINNET -> PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_MAINNET;
+            case BTC_TESTNET -> PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_TESTNET;
+            case BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET, BTC_DAO_REGTEST ->
+                    PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_REGTEST;
         };
     }
 

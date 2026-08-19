@@ -174,6 +174,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         // Fill the lists with the data we have collected in our stores.
         fillListFromProtectedStore();
         fillListFromAppendOnlyDataStore();
+        removeProposalPayloadsWithInvalidDataFields();
     }
 
 
@@ -218,6 +219,28 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     private void fillListFromAppendOnlyDataStore() {
         proposalStorageService.getMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
+    }
+
+    private void removeProposalPayloadsWithInvalidDataFields() {
+        proposalPayloads.removeIf(proposalPayload -> {
+            Proposal proposal = proposalPayload.getProposal();
+            ProposalValidator validator = validatorProvider.getValidator(proposal);
+            boolean invalid = !areDataFieldsValidForAdmission(validator, proposal);
+            if (invalid) {
+                log.warn("Removing an append-only proposal with invalid data fields after DAO parsing completed. " +
+                                "Proposal={}, blockHeight={}",
+                        proposal, daoStateService.getChainHeight());
+            }
+            return invalid;
+        });
+    }
+
+    private boolean areDataFieldsValidForAdmission(ProposalValidator validator, Proposal proposal) {
+        if (!daoStateService.isParseBlockChainComplete() ||
+                !validator.isProposalDataFieldValidationActivated(proposal)) {
+            return validator.areCommonDataFieldsValid(proposal);
+        }
+        return validator.areDataFieldsValid(proposal);
     }
 
     private void maybePublishToAppendOnlyDataStore() {
@@ -317,10 +340,11 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                 // Beside that we might receive payloads we requested at the vote result phase in case we missed some
                 // payloads. We prefer here resilience over protection against late publishing attacks.
 
-                // We only validate in case the blocks are parsed as otherwise some validators like param validator
-                // might fail as Dao state is not complete.
-                if (!daoStateService.isParseBlockChainComplete() ||
-                        validatorProvider.getValidator(proposal).areDataFieldsValid(proposal)) {
+                // Common fields do not depend on DAO state and must be validated before a payload enters the
+                // consensus-facing collection. For activated cycles, type-specific checks run once parsing has
+                // completed; consensus consumers independently enforce the full rule during historical parsing.
+                ProposalValidator validator = validatorProvider.getValidator(proposal);
+                if (areDataFieldsValidForAdmission(validator, proposal)) {
                     if (fromBroadcastMessage) {
                         log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
                                 proposal.getTxId());

@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
@@ -62,7 +63,21 @@ public abstract class ProposalValidator implements ConsensusCritical {
         }
     }
 
+    public boolean areCommonDataFieldsValid(Proposal proposal) {
+        try {
+            validateCommonDataFields(proposal);
+            return true;
+        } catch (ProposalValidationException e) {
+            log.warn("Proposal common data fields are invalid. proposal={}, error={}", proposal, e.toString());
+            return false;
+        }
+    }
+
     public void validateDataFields(Proposal proposal) throws ProposalValidationException {
+        validateCommonDataFields(proposal);
+    }
+
+    protected void validateCommonDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             notEmpty(proposal.getName(), "name must not be empty");
             notEmpty(proposal.getLink(), "link must not be empty");
@@ -87,8 +102,7 @@ public abstract class ProposalValidator implements ConsensusCritical {
 
     /**
      * Validates a proposal for consensus-critical consumers such as ballot creation and proposal-state hashing.
-     * Subclasses can add activated data-field rules without changing the historical validation of other proposal
-     * types.
+     * The proposal cycle's result height selects activated rules so every phase of a cycle uses the same proposal set.
      */
     public boolean isValidForConsensus(Proposal proposal) {
         if (!isTxTypeValid(proposal)) {
@@ -96,12 +110,25 @@ public abstract class ProposalValidator implements ConsensusCritical {
         }
 
         try {
+            if (isProposalDataFieldValidationActivated(proposal)) {
+                validateDataFieldsForConsensus(proposal);
+            }
             validateConsensusDataFields(proposal);
             return true;
         } catch (ProposalValidationException e) {
             log.warn("Proposal consensus data fields are invalid. proposal={}, error={}", proposal, e.toString());
             return false;
         }
+    }
+
+    public boolean isProposalDataFieldValidationActivated(Proposal proposal) {
+        int resultEvaluationHeight = periodService.getFirstBlockOfPhase(getBlockHeight(proposal),
+                DaoPhase.Phase.RESULT);
+        return DaoHardFork.isProposalDataFieldValidationActivated(resultEvaluationHeight);
+    }
+
+    protected void validateDataFieldsForConsensus(Proposal proposal) throws ProposalValidationException {
+        validateDataFields(proposal);
     }
 
     protected void validateConsensusDataFields(Proposal proposal) throws ProposalValidationException {

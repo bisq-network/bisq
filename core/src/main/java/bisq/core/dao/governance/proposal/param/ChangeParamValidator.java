@@ -62,11 +62,19 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
 
     @Override
     public void validateDataFields(Proposal proposal) throws ProposalValidationException {
+        validateDataFields(proposal, daoStateService.isParseBlockChainComplete());
+    }
+
+    @Override
+    protected void validateDataFieldsForConsensus(Proposal proposal) throws ProposalValidationException {
+        validateDataFields(proposal, true);
+    }
+
+    private void validateDataFields(Proposal proposal, boolean validateParamFields) throws ProposalValidationException {
         try {
             super.validateDataFields(proposal);
 
-            // Only once parsing is complete we can check for param changes
-            if (daoStateService.isParseBlockChainComplete()) {
+            if (validateParamFields) {
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
                 validateParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue(), getBlockHeight(proposal));
                 checkArgument(changeParamProposal.getParamValue().length() <= 200, "ParamValue must not exceed 200 chars");
