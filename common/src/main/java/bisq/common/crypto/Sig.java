@@ -29,6 +29,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.DSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -50,6 +51,15 @@ public class Sig {
 
     public static final String KEY_ALGO = "DSA";
     private static final String ALGO = "SHA256withDSA";
+
+    // We generate 1024 bit DSA keys only, which encode to 443 or 444 bytes as X.509 SubjectPublicKeyInfo.
+    // The bound is the same one WitnessOwnershipProof already applies to owner public keys, so a key which
+    // passes one check passes the other.
+    public static final int MAX_SIG_PUB_KEY_BYTES = 600;
+
+    // The encoded size alone does not bound the modulus: a hand crafted SPKI can carry a huge p together with a
+    // tiny g and y. DSA verification is quadratic in the modulus size, so we bound p explicitly as well.
+    private static final int MAX_MODULUS_BIT_LENGTH = 2048;
 
 
     /**
@@ -126,8 +136,25 @@ public class Sig {
      * @return
      */
     public static PublicKey getPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
+        // The key material is peer controlled and is parsed and used for verification before any ownership or
+        // authorization check. Reject oversized keys before handing them to the JDK, which does not bound the
+        // DSA modulus itself and would let a peer impose an arbitrarily expensive verification on us.
+        if (sigPublicKeyBytes.length > MAX_SIG_PUB_KEY_BYTES) {
+            throw new KeyConversionException("Sig public key exceeds the permitted size. length=" +
+                    sigPublicKeyBytes.length + ", max=" + MAX_SIG_PUB_KEY_BYTES);
+        }
         try {
-            return KeyFactory.getInstance(Sig.KEY_ALGO).generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+            PublicKey publicKey = KeyFactory.getInstance(Sig.KEY_ALGO)
+                    .generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+            if (!(publicKey instanceof DSAPublicKey dsaKey) || dsaKey.getParams() == null) {
+                throw new KeyConversionException("Missing DSA public key parameters");
+            }
+            int modulusBitLength = dsaKey.getParams().getP().bitLength();
+            if (modulusBitLength > MAX_MODULUS_BIT_LENGTH) {
+                throw new KeyConversionException("Sig public key modulus exceeds the permitted size. bitLength=" +
+                        modulusBitLength + ", max=" + MAX_MODULUS_BIT_LENGTH);
+            }
+            return publicKey;
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Utilities.bytesAsHexString(sigPublicKeyBytes), e);
             e.printStackTrace();

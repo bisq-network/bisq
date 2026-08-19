@@ -24,10 +24,6 @@ import org.bitcoinj.core.ECKey;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.Security;
 
@@ -59,10 +55,9 @@ public class FilterSerializationTests {
     private final ECKey signerKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(DevEnv.getDEV_PRIVILEGE_PRIV_KEY())));
     private final String signerPubKeyAsHex = HEX.encode(signerKey.getPubKey());
 
-    public FilterSerializationTests() throws NoSuchAlgorithmException, NoSuchProviderException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(Sig.KEY_ALGO, "BC");
-        KeyPair ownerKeyPair = keyPairGenerator.generateKeyPair();
-        ownerPublicKey = ownerKeyPair.getPublic();
+    public FilterSerializationTests() {
+        // Use the app's own generator so the test keys keep the size the app actually creates.
+        ownerPublicKey = Sig.generateKeyPair().getPublic();
     }
 
     @Test
