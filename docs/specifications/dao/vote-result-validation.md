@@ -78,6 +78,12 @@ and is expected to contain only one canonical proposal for a proposal transactio
 that local consensus input is a DAO-state integrity failure, not malformed data attributable to one
 voter, and must not be silently resolved by choosing a ballot.
 
+Persisted ballot lists can nevertheless contain duplicate objects. Vote-result reconstruction
+collapses them only when the proposals have identical canonical bytes; the local `Vote` values are
+irrelevant because the decrypted voter's vote replaces them. If the canonical proposal bytes differ,
+processing raises an explicit integrity failure outside the per-voter malformed-data catch. This
+keeps local state corruption visible instead of turning it into a node-local voter exclusion.
+
 ## Activation and compatibility
 
 Both rules are selected by the result-evaluation block height of the cycle being processed. Each has
@@ -88,6 +94,11 @@ other rule in this specification. Their initial schedules are:
 |---|---:|---:|---:|
 | Duplicate proposal transaction ID validation | `963 350` | `3 000 000` | `1` |
 | Blind-vote merit decryptability and equal-ID ordering | `963 350` | `3 000 000` | `1` |
+
+The constants remain independent even though the initial schedules are equal. A release must verify
+and approve each rule explicitly; equality with hard fork 3 is not an instruction to couple their
+future schedules. Vote-reveal code must select the ordering rule using the current cycle's future
+RESULT height, while vote-result code uses the RESULT height being evaluated.
 
 Before the respective activation, historical behavior is preserved:
 
@@ -100,9 +111,27 @@ Before the respective activation, historical behavior is preserved:
 These behaviors are retained only for deterministic replay of old cycles; they are not the desired
 validation or failure boundaries.
 
-The bundled mainnet resources through height `963 120` contain 935 revealed blind-vote payloads that
-could be decrypted. None contains a duplicate proposal transaction ID, none has a merit-list
-decryption failure, and all 947 stored blind-vote payloads have distinct transaction IDs. This audit
-supports deployment confidence but does not replace the explicit height gates, and it does not cover
-blocks after the resource height. The 12 stored payloads without an on-chain reveal cannot enter a
-vote result and their encrypted contents could not be audited.
+## Historical compatibility audit
+
+The opt-in `BundledDaoStateAuditTest` makes the bundled-history claims executable. It reads the 947
+payloads in `BlindVoteStore_BTC_MAINNET`, rejects duplicate blind-vote transaction IDs, resolves each
+VOTE_REVEAL transaction from the complete bundled block history, extracts the on-chain secret key,
+decrypts both ciphertexts with the production routines, and checks proposal transaction-ID
+uniqueness in every decrypted vote list. Run it with:
+
+```bash
+./gradlew --no-daemon --max-workers=2 :core:cleanTest :core:test \
+  --tests bisq.core.dao.BundledDaoStateAuditTest.bundledBlockHistoryAndRevealedBlindVotesAreInternallyConsistent \
+  -PrunResourceAudits=true --console=plain
+```
+
+For the bundled mainnet resources through height `963 120`, all 947 stored payloads have distinct
+transaction IDs. Exactly 935 have an on-chain reveal and decrypt successfully; none contains a
+duplicate proposal transaction ID and none has a merit-list decryption failure. The 12 payloads
+without a reveal cannot enter a vote result and their encrypted contents cannot be audited.
+
+This audit supports deployment confidence but does not replace the explicit height gates. Before
+release, audit any proposal, blind-vote, and completed RESULT data after bundled height `963 120` from
+a synced mainnet node. Repeat after every RESULT phase through activation. A changed resource count
+requires review and an intentional update to the test's expected snapshot counts, not a weakened
+assertion.

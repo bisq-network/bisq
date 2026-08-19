@@ -25,6 +25,9 @@ import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
+import bisq.core.dao.governance.proposal.ProposalService;
+import bisq.core.dao.governance.proposal.ProposalValidator;
+import bisq.core.dao.governance.proposal.ProposalValidatorProvider;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealConsensus;
 import bisq.core.dao.state.DaoStateService;
@@ -49,6 +52,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ProposalVoteResult;
 import bisq.core.dao.state.model.governance.Vote;
 
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -64,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 
@@ -72,7 +77,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -307,6 +314,50 @@ class VoteResultServiceTest {
                         List.of(malformedBlindVote),
                         mock(Cycle.class),
                         DaoHardFork.getDuplicateVoteProposalTxIdValidationActivationHeight() - 1));
+    }
+
+    @Test
+    void identicalPersistedBallotProposalsAreMergedDuringResultReconstruction() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal proposal = new GenericProposal("name", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BallotListService ballotListService = persistedBallotListService(List.of(
+                new Ballot(proposal, new Vote(false)),
+                new Ballot(proposal, new Vote(true))));
+        VoteResultService voteResultService = voteResultService(
+                Set.of(voteRevealTxOutput(secretKey)), ballotListService);
+
+        Set<DecryptedBallotsWithMerits> result = voteResultService
+                .getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+                        Set.of(voteRevealData(BLIND_VOTE_TX_ID, VOTE_REVEAL_TX_ID, proposal)),
+                        List.of(blindVote(secretKey, true)),
+                        mock(Cycle.class),
+                        DaoHardFork.getDuplicateVoteProposalTxIdValidationActivationHeight());
+
+        assertEquals(1, result.size());
+        assertTrue(result.iterator().next().getVote(PROPOSAL_TX_ID).orElseThrow().isAccepted());
+    }
+
+    @Test
+    void conflictingPersistedBallotProposalsRaiseIntegrityFailure() throws Exception {
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        Proposal firstProposal = new GenericProposal("first", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        Proposal secondProposal = new GenericProposal("second", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        BallotListService ballotListService = persistedBallotListService(List.of(
+                new Ballot(firstProposal),
+                new Ballot(secondProposal)));
+        VoteResultService voteResultService = voteResultService(
+                Set.of(voteRevealTxOutput(secretKey)), ballotListService);
+
+        assertThrows(VoteResultException.ConflictingBallotProposalException.class,
+                () -> voteResultService.getDecryptedBallotsWithMeritsMatchingBlindVoteList(
+                        Set.of(voteRevealData(BLIND_VOTE_TX_ID, VOTE_REVEAL_TX_ID, firstProposal)),
+                        List.of(blindVote(secretKey, true)),
+                        mock(Cycle.class),
+                        DaoHardFork.getDuplicateVoteProposalTxIdValidationActivationHeight()));
+        assertTrue(voteResultService.getVoteResultExceptions().isEmpty());
     }
 
     @Test
@@ -713,6 +764,20 @@ class VoteResultServiceTest {
                 proposal);
     }
 
+    private static VoteResultService voteResultService(Set<TxOutput> voteRevealTxOutputs,
+                                                       BallotListService ballotListService) {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(voteRevealTxOutputs);
+
+        return new VoteResultService(mock(ProposalListPresentation.class),
+                daoStateService,
+                mock(PeriodService.class),
+                ballotListService,
+                mock(BlindVoteListService.class),
+                mock(IssuanceService.class),
+                mock(MissingDataRequestService.class));
+    }
+
     private static VoteResultService voteResultService(DaoStateService daoStateService,
                                                        PeriodService periodService,
                                                        BlindVoteListService blindVoteListService,
@@ -740,6 +805,37 @@ class VoteResultServiceTest {
                 blindVoteListService,
                 mock(IssuanceService.class),
                 missingDataRequestService);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static BallotListService persistedBallotListService(List<Ballot> ballots) {
+        ProposalValidatorProvider validatorProvider = mock(ProposalValidatorProvider.class);
+        ballots.forEach(ballot -> {
+            Proposal proposal = ballot.getProposal();
+            ProposalValidator validator = mock(ProposalValidator.class);
+            when(validatorProvider.getValidator(proposal)).thenReturn(validator);
+            when(validator.isValidForConsensus(proposal)).thenReturn(true);
+        });
+
+        PeriodService periodService = mock(PeriodService.class);
+        int chainHeight = DaoHardFork.getDuplicateVoteProposalTxIdValidationActivationHeight();
+        when(periodService.getChainHeight()).thenReturn(chainHeight);
+        when(periodService.isTxInCorrectCycle(PROPOSAL_TX_ID, chainHeight)).thenReturn(true);
+
+        PersistenceManager<BallotList> persistenceManager = mock(PersistenceManager.class);
+        doAnswer(invocation -> {
+            Consumer<BallotList> resultHandler = invocation.getArgument(0);
+            resultHandler.accept(new BallotList(ballots));
+            return null;
+        }).when(persistenceManager).readPersisted(any(), any());
+
+        BallotListService ballotListService = new BallotListService(mock(ProposalService.class),
+                periodService,
+                validatorProvider,
+                persistenceManager);
+        ballotListService.readPersisted(() -> {
+        });
+        return ballotListService;
     }
 
     private static void configureVoteRevealBlockchainData(DaoStateService daoStateService,

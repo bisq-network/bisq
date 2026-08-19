@@ -21,12 +21,18 @@ import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.dao.burningman.BurningManAddressList;
 import bisq.core.dao.burningman.BurningManAddressListService;
+import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.blindvote.VoteWithProposalTxId;
+import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.lockup.LockupReason;
+import bisq.core.dao.governance.merit.MeritConsensus;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.proposal.generic.GenericProposalValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
+import bisq.core.dao.governance.voteresult.VoteResultConsensus;
+import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.trade.statistics.TradeStatistics3;
 
@@ -38,6 +44,8 @@ import com.google.protobuf.CodedInputStream;
 import org.bitcoinj.core.CheckpointManager;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.params.MainNetParams;
+
+import javax.crypto.SecretKey;
 
 import java.nio.charset.StandardCharsets;
 
@@ -66,17 +74,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Release audit of the bundled mainnet DAO resources. This checks the block history which is stored separately from
  * {@code DaoStateStore_BTC_MAINNET}; auditing only the state maps cannot identify which transaction spent a historical
- * lockup output. It is intentionally opt-in because it scans the complete bundled history.
+ * lockup output or reproduce the decryption of stored blind votes from their reveal transactions. It is intentionally
+ * opt-in because it scans the complete bundled history.
  */
 @EnabledIfSystemProperty(named = "bisq.runResourceAudits", matches = "true")
 class BundledDaoStateAuditTest {
     private static final String DAO_STATE_RESOURCE = "/DaoStateStore_BTC_MAINNET";
+    private static final String BLIND_VOTE_RESOURCE = "/BlindVoteStore_BTC_MAINNET";
     private static final String BLOCK_RESOURCE_DIR = "/BsqBlocks_BTC_MAINNET/";
     private static final int MAINNET_GENESIS_HEIGHT = 571_747;
     private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 962_500;
+    private static final int EXPECTED_BLIND_VOTE_COUNT = 947;
+    private static final int EXPECTED_REVEALED_BLIND_VOTE_COUNT = 935;
 
     @Test
-    void bundledBlockHistoryIsCompleteAndContainsOnlyCanonicalLockupSpends() throws IOException {
+    void bundledBlockHistoryAndRevealedBlindVotesAreInternallyConsistent() throws IOException {
         protobuf.PersistableEnvelope daoStateEnvelope = readDelimitedEnvelope(DAO_STATE_RESOURCE);
         assertTrue(daoStateEnvelope.hasDaoStateStore(), "resource is not a DAO state store");
         List<protobuf.DaoStateHash> daoStateHashes = daoStateEnvelope.getDaoStateStore().getDaoStateHashList();
@@ -84,6 +96,19 @@ class BundledDaoStateAuditTest {
         assertTrue(!daoStateHashes.isEmpty(), "DAO state hash chain is empty");
         assertEquals(daoState.getChainHeight(), daoStateHashes.get(daoStateHashes.size() - 1).getHeight(),
                 "DAO state and its hash chain end at different heights");
+
+        protobuf.PersistableEnvelope blindVoteEnvelope = readDelimitedEnvelope(BLIND_VOTE_RESOURCE);
+        assertTrue(blindVoteEnvelope.hasBlindVoteStore(), "resource is not a blind-vote store");
+        Map<String, BlindVote> blindVoteByTxId = new HashMap<>();
+        for (protobuf.BlindVotePayload proto : blindVoteEnvelope.getBlindVoteStore().getItemsList()) {
+            BlindVote blindVote = BlindVotePayload.fromProto(proto).getBlindVote();
+            assertFalse(blindVoteByTxId.containsKey(blindVote.getTxId()),
+                    "duplicate blind-vote transaction id: " + blindVote.getTxId());
+            blindVoteByTxId.put(blindVote.getTxId(), blindVote);
+        }
+        assertEquals(EXPECTED_BLIND_VOTE_COUNT, blindVoteByTxId.size(),
+                "bundled blind-vote count changed; refresh the compatibility audit");
+
         Map<Integer, String> daoStateHashByHeight = new HashMap<>();
         daoStateHashes.forEach(hash -> daoStateHashByHeight.put(hash.getHeight(),
                 HexFormat.of().formatHex(hash.getHash().toByteArray())));
@@ -146,6 +171,8 @@ class BundledDaoStateAuditTest {
         int unlockSpendsAfterPreviousAudit = 0;
         int lockupsAfterPreviousAudit = 0;
         int roleLockupsAtLeastFiftyThousandBlocks = 0;
+        int revealedBlindVoteCount = 0;
+        Set<String> revealedBlindVoteTxIds = new HashSet<>();
         int previousHeight = MAINNET_GENESIS_HEIGHT - 1;
         String previousHash = null;
 
@@ -201,6 +228,41 @@ class BundledDaoStateAuditTest {
                     }
 
                     List<protobuf.BaseTxOutput> outputs = tx.getTx().getTxOutputsList();
+                    if (tx.getTx().getTxType() == protobuf.TxType.VOTE_REVEAL) {
+                        assertTrue(tx.getTxInputsCount() > 0, "vote reveal has no stake input: " + tx.getId());
+                        String blindVoteTxId = tx.getTxInputs(0).getConnectedTxOutputTxId();
+                        BlindVote blindVote = blindVoteByTxId.get(blindVoteTxId);
+                        assertNotNull(blindVote,
+                                "vote reveal has no bundled blind-vote payload: " + tx.getId());
+                        assertTrue(revealedBlindVoteTxIds.add(blindVoteTxId),
+                                "blind vote has more than one reveal: " + blindVoteTxId);
+
+                        protobuf.BaseTxOutput voteRevealOpReturn = outputs.stream()
+                                .filter(candidate -> candidate.hasTxOutput() && candidate.getTxOutput()
+                                        .getTxOutputType() == protobuf.TxOutputType.VOTE_REVEAL_OP_RETURN_OUTPUT)
+                                .findFirst()
+                                .orElseThrow(() -> new AssertionError(
+                                        "vote reveal has no parsed OP_RETURN: " + tx.getId()));
+                        byte[] opReturnData = voteRevealOpReturn.getOpReturnData().toByteArray();
+                        assertTrue(VoteResultConsensus.hasOpReturnDataValidLength(opReturnData),
+                                "invalid vote-reveal OP_RETURN length: " + tx.getId());
+                        SecretKey secretKey = VoteResultConsensus.getSecretKey(opReturnData);
+                        try {
+                            VoteWithProposalTxIdList voteList = VoteResultConsensus.decryptVotes(
+                                    blindVote.getEncryptedVotes(), secretKey);
+                            Set<String> proposalTxIds = new HashSet<>();
+                            for (VoteWithProposalTxId vote : voteList.getList()) {
+                                assertTrue(proposalTxIds.add(vote.getProposalTxId()),
+                                        "duplicate proposal transaction id in blind vote " + blindVoteTxId);
+                            }
+                            MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
+                        } catch (VoteResultException.DecryptionException exception) {
+                            throw new AssertionError(
+                                    "bundled blind-vote payload does not decrypt: " + blindVoteTxId, exception);
+                        }
+                        revealedBlindVoteCount++;
+                    }
+
                     for (protobuf.BaseTxOutput output : outputs) {
                         assertEquals(tx.getId(), output.getTxId(), "output transaction id mismatch");
                         assertEquals(block.getHeight(), output.getBlockHeight(), "output block height mismatch");
@@ -254,6 +316,11 @@ class BundledDaoStateAuditTest {
                 "not every evaluated role proposal transaction exists in bundled blocks");
         assertEquals(0, roleProposalsWithMismatchedTerms,
                 "historical role proposal terms differ from the current role type constants");
+        assertEquals(EXPECTED_REVEALED_BLIND_VOTE_COUNT, revealedBlindVoteCount,
+                "revealed blind-vote count changed; refresh the compatibility audit");
+        assertEquals(EXPECTED_BLIND_VOTE_COUNT - EXPECTED_REVEALED_BLIND_VOTE_COUNT,
+                blindVoteByTxId.size() - revealedBlindVoteTxIds.size(),
+                "unexpected number of bundled blind votes without a reveal");
 
         int unspentLockups = 0;
         int spentLockups = 0;
@@ -293,6 +360,11 @@ class BundledDaoStateAuditTest {
                 + "\n  evaluated role proposals=" + evaluatedRoleProposals
                 + " (accepted=" + acceptedRoleProposals + ")"
                 + "\n  role proposals with mismatched current terms=" + roleProposalsWithMismatchedTerms
+                + "\n  blind-vote payloads=" + blindVoteByTxId.size()
+                + " (revealed and decrypted=" + revealedBlindVoteCount
+                + ", without reveal=" + (blindVoteByTxId.size() - revealedBlindVoteTxIds.size()) + ")"
+                + "\n  revealed votes with duplicate proposal transaction ids=" + 0
+                + "\n  revealed merit-list decryption failures=" + 0
                 + "\n  since height " + PREVIOUS_BOND_AUDIT_HEIGHT + ": lockups=" + lockupsAfterPreviousAudit
                 + ", unlock spends=" + unlockSpendsAfterPreviousAudit
                 + ", evaluated role proposals=" + roleProposalsAfterPreviousAudit);
@@ -305,7 +377,7 @@ class BundledDaoStateAuditTest {
         protobuf.PersistableEnvelope signedWitness = readDelimitedEnvelope("/SignedWitnessStore_BTC_MAINNET");
         protobuf.PersistableEnvelope tradeStatistics =
                 readDelimitedEnvelope("/TradeStatistics3Store_1.10.5_BTC_MAINNET");
-        protobuf.PersistableEnvelope blindVotes = readDelimitedEnvelope("/BlindVoteStore_BTC_MAINNET");
+        protobuf.PersistableEnvelope blindVotes = readDelimitedEnvelope(BLIND_VOTE_RESOURCE);
         protobuf.PersistableEnvelope proposals = readDelimitedEnvelope("/ProposalStore_BTC_MAINNET");
         protobuf.PersistableEnvelope tempProposals = readDelimitedEnvelope("/TempProposalStore_BTC_MAINNET");
         protobuf.PersistableEnvelope accounting =

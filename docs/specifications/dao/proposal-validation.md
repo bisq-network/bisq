@@ -81,6 +81,10 @@ other DAO hard-fork rules:
 | Bitcoin testnet | `3 000 000` |
 | Regtest and DAO test networks | `1` |
 
+The independent constants permit this rule to be rescheduled without changing another consensus
+rule. Their initial values happen to match hard fork 3, but release approval must cover this rule and
+its cycle-level selection semantics explicitly rather than infer approval from that equality.
+
 The first RESULT block of the proposal transaction's cycle selects the rule. This treats every
 proposal in one cycle identically and prevents nodes creating ballots at different blocks within the
 cycle from selecting different rules. The first cycle whose result-evaluation height is at or above
@@ -94,7 +98,19 @@ their own specified activation semantics.
 The bundled mainnet resources through height `963 120` contain 1,989 append-only proposal payloads.
 None fails the common name, link, transaction-ID, or extra-data validation, and no two payloads use
 the same proposal transaction ID. This audit supports historical compatibility of the admission
-hardening but does not replace the activation gate or cover later blocks.
+hardening but does not replace the activation gate or cover later blocks. The common-field and
+transaction-ID checks are reproduced by the opt-in resource audit:
+
+```bash
+./gradlew --no-daemon --max-workers=2 :core:cleanTest :core:test \
+  --tests bisq.core.dao.BundledDaoStateAuditTest.refreshedBundledStoresAreReadableAndInternallyNonEmpty \
+  -PrunResourceAudits=true --console=plain
+```
+
+Before release, audit proposals observed after bundled height `963 120` through activation against a
+synced mainnet node, including proposal-type-specific validation at the DAO state effective at each
+proposal transaction height. Repeat the audit if another proposal or RESULT phase completes before
+activation.
 
 ## Security rationale
 

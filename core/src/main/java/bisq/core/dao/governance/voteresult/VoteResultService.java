@@ -438,9 +438,10 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         Map<String, Optional<Vote>> voteByTxIdMap = getVoteByTxIdMap(voteWithProposalTxIdList, chainHeight);
 
         // We make a map with proposalTxId as key and the ballot as value out of our stored ballot list.
-        // This can contain ballots which have been added later and have a null value for the vote.
+        // This can contain ballots which have been added later and have a null value for the vote. Identical
+        // persisted proposals are harmless duplicates; conflicting canonical proposals indicate local corruption.
         Map<String, Ballot> ballotByTxIdMap = ballotListService.getValidBallotsOfCycle().stream()
-                .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
+                .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot, VoteResultService::mergeBallots));
 
         // It could be that we missed some proposalPayloads.
         // If we have votes with proposals which are not found in our ballots we add it to missingBallots.
@@ -497,6 +498,16 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // Let's keep the data more deterministic by sorting it by txId. Though we are not using the sorting.
         ballots.sort(Comparator.comparing(Ballot::getTxId));
         return new BallotList(ballots);
+    }
+
+    private static Ballot mergeBallots(Ballot first, Ballot second) {
+        if (!Arrays.equals(first.getProposal().encodeCanonical(), second.getProposal().encodeCanonical())) {
+            throw new VoteResultException.ConflictingBallotProposalException(first.getTxId());
+        }
+
+        // The local vote is diagnostic only while reconstructing another voter's ballot list. Either ballot
+        // therefore produces the same consensus proposal and the decrypted vote replaces the local vote below.
+        return first;
     }
 
     private Map<String, Optional<Vote>> getVoteByTxIdMap(VoteWithProposalTxIdList voteWithProposalTxIdList,

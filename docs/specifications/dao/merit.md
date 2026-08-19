@@ -151,6 +151,11 @@ The cycle-wide uniqueness rule activates with hard fork 3 at the finalized heigh
 test networks. The blind-vote merit-decryptability rule initially uses those same network heights
 through independent constants. These consensus constants must not be changed after deployment.
 
+The separate constants are intentional even where their initial values match hard fork 3: the
+failure boundary, majority-list ordering, and cycle-wide merit-claim rule are independent consensus
+decisions. Release approval must name each rule and, for the merit-decryptability and equal-ID
+ordering rule, verify the height used by both vote reveal and vote result.
+
 Because the rule version is selected by the evaluation height of the cycle itself, activating it
 cannot change a result which has already been derived, including when a node rebuilds its DAO state
 from genesis. The audit below therefore does not establish compatibility — the height gate does. What
@@ -182,6 +187,10 @@ matter together: 708 issuances *are* claimed again in later cycles, which is leg
 the per-cycle grouping has to tolerate, so the zero is a real result rather than an artefact of a
 grouping which never compares anything. That every one of the 7 927 claims also passes validation
 says separately that no forged, mismatched or unknown-issuance claim exists in that history.
+
+Merit-ciphertext decryptability is audited separately with the complete bundled block and blind-vote
+stores. The reproducible command and its 935 revealed-payload result are specified in
+[`vote-result-validation.md`](vote-result-validation.md#historical-compatibility-audit).
 
 ### 7.2 Remaining obligations
 
