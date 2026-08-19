@@ -43,6 +43,13 @@ A claim contributes merit only when **all** of the following hold:
 An invalid claim is skipped; it must not invalidate the other claims of the same merit list, and it
 must not affect any other blind vote.
 
+An entire merit ciphertext which cannot be decrypted is handled at the blind-vote payload boundary,
+not as an individual claim. From the dedicated merit-decryptability activation, the blind vote keeps
+its ballots and on-chain stake but receives an empty merit list. The payload remains part of the list
+matched against the vote-reveal majority commitment. If several P2P payloads name the same blind-vote
+transaction, a decryptable merit payload is preferred deterministically after that exact list is
+matched; see [`vote-result-validation.md`](vote-result-validation.md).
+
 Rule 3 is what makes rule 5 meaningful. Verifying a signature against a key supplied by the same
 party who supplied the signature proves nothing, so the verification key must come from DAO state.
 Requiring full value equality — rather than only that the `txId` exists — additionally prevents a
@@ -106,8 +113,8 @@ could not add weight either.
 
 Summing merit must not silently wrap. An overflow in the merit total or in the decay computation is
 a consensus fault: it must abort the vote result calculation rather than be reported as zero or as a
-negative weight. Zero merit and "merit could not be computed" are different outcomes and must not be
-conflated.
+negative weight. Arithmetic failure must not be conflated with the explicitly defined empty-merit
+outcome for an undecryptable merit ciphertext.
 
 Rejecting an individual malformed claim is not a fault and must leave the remaining claims intact.
 
@@ -120,25 +127,29 @@ consensus change and applies from its own activation height:
 |---|---|
 | Validation against DAO state (§2), uniqueness within one merit list (§4), checked arithmetic (§5) | `954 200` on mainnet, shared with the other DAO consensus v2 rules |
 | Uniqueness across the blind votes of a cycle (§4) | hard fork 3 |
+| Undecryptable merit fallback and deterministic same-transaction-ID payload selection (§2) | dedicated blind-vote merit-decryptability height |
 
 Below the first activation height the historical behaviour is preserved so that replaying old blocks
 reproduces the persisted DAO state: a claim was accepted on the strength of its own embedded
 `pubKey`, no DAO state lookup was made, and no uniqueness rule applied.
 
-The cycle-wide rule is separated from the earlier ones because the `954 200` height had already
-passed when it was written: cycles had been evaluated under the v2 rules, and tightening those rules
-in place would have changed results which were already derived and persisted.
+The cycle-wide and merit-decryptability rules are separated from the earlier ones because the
+`954 200` height had already passed when they were written: cycles had been evaluated under the v2
+rules, and tightening those rules in place would have changed results which were already derived and
+persisted. The merit-decryptability rule also has its own setting rather than being coupled to hard
+fork 3, even where their initial heights are equal.
 
 The rule version is selected by the **vote result evaluation height** of the cycle being evaluated,
 not by the current chain tip. Consequently a cycle evaluated before an activation height keeps its
 historical result forever, and any later change to the rules of §2–§5 must again be introduced at a
 new activation height rather than by editing an active rule set.
 
-## 7. Deployment obligations for the cycle-wide rule
+## 7. Deployment obligations for the later rules
 
 The cycle-wide uniqueness rule activates with hard fork 3 at the finalized heights in
 `DaoHardFork`: `963 350` on mainnet, `3 000 000` on Bitcoin testnet, and `1` on regtest and the DAO
-test networks. These consensus constants must not be changed after deployment.
+test networks. The blind-vote merit-decryptability rule initially uses those same network heights
+through independent constants. These consensus constants must not be changed after deployment.
 
 Because the rule version is selected by the evaluation height of the cycle itself, activating it
 cannot change a result which has already been derived, including when a node rebuilds its DAO state

@@ -194,21 +194,18 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     // Get majority hash
                     byte[] majorityBlindVoteListHash = calculateMajorityBlindVoteListHash(stakeByHashOfBlindVoteListMap, chainHeight);
 
-                    // Filter the local blind vote list by attempting to decrypt each payload's merit list under the
-                    // on-chain secret key. The blind vote OP_RETURN commits to encryptedVotes but not to
-                    // encryptedMeritList (see report19). A same-txid forged duplicate that copies the honest
-                    // encryptedVotes but replaces encryptedMeritList with malformed bytes must be removed here,
-                    // before it can squat the blindVoteByTxId map entry used downstream. Payloads whose vote
-                    // reveal is not yet observable on-chain are kept because we cannot yet judge them and they
-                    // may still be needed to reconstruct the majority hash.
+                    // Before the activated rule, malformed merit payloads were removed before majority matching.
+                    // From activation, majority matching must use the complete committed list; merit decryptability
+                    // is considered only when selecting among same-txid payloads after an exact match.
                     Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId =
                             getVoteRevealOpReturnDataByBlindVoteTxId(voteRevealDataSet);
-                    List<BlindVote> filteredBlindVoteList =
-                            getMeritDecryptableBlindVoteList(voteRevealOpReturnDataByBlindVoteTxId);
+                    List<BlindVote> blindVoteListForMajorityHash =
+                            getBlindVoteListForMajorityHash(voteRevealOpReturnDataByBlindVoteTxId, chainHeight);
 
                     // Is our local list matching the majority data view?
                     Optional<List<BlindVote>> optionalBlindVoteListMatchingMajorityHash =
-                            findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash, filteredBlindVoteList);
+                            findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash,
+                                    blindVoteListForMajorityHash);
                     if (optionalBlindVoteListMatchingMajorityHash.isPresent()) {
                         List<BlindVote> blindVoteList = optionalBlindVoteListMatchingMajorityHash.get();
                         log.debug("blindVoteListMatchingMajorityHash: {}",
@@ -332,8 +329,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             List<BlindVote> blindVoteList,
             Cycle currentCycle,
             int chainHeight) {
-        Map<String, BlindVote> blindVoteByTxIdMap = blindVoteList.stream()
-                .collect(Collectors.toMap(BlindVote::getTxId, Function.identity(), (first, second) -> first));
+        Map<String, List<BlindVote>> blindVotesByTxIdMap = blindVoteList.stream()
+                .collect(Collectors.groupingBy(BlindVote::getTxId));
         Map<String, byte[]> voteRevealOpReturnDataByTxIdMap = daoStateService.getVoteRevealOpReturnTxOutputs().stream()
                 .filter(txOutput -> txOutput.getOpReturnData() != null)
                 .collect(Collectors.toMap(TxOutput::getTxId, TxOutput::getOpReturnData, (first, second) -> first));
@@ -341,7 +338,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         return decryptedBallotsWithMeritsSet.stream()
                 .map(decryptedBallotsWithMerits -> getDecryptedBallotsWithMeritsMatchingBlindVoteListItem(
                         decryptedBallotsWithMerits,
-                        blindVoteByTxIdMap,
+                        blindVotesByTxIdMap,
                         voteRevealOpReturnDataByTxIdMap,
                         currentCycle,
                         chainHeight))
@@ -352,13 +349,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     @Nullable
     private DecryptedBallotsWithMerits getDecryptedBallotsWithMeritsMatchingBlindVoteListItem(
             DecryptedBallotsWithMerits decryptedBallotsWithMerits,
-            Map<String, BlindVote> blindVoteByTxIdMap,
+            Map<String, List<BlindVote>> blindVotesByTxIdMap,
             Map<String, byte[]> voteRevealOpReturnDataByTxIdMap,
             Cycle currentCycle,
             int chainHeight) {
         String blindVoteTxId = decryptedBallotsWithMerits.getBlindVoteTxId();
-        BlindVote blindVote = blindVoteByTxIdMap.get(blindVoteTxId);
-        if (blindVote == null) {
+        List<BlindVote> blindVoteCandidates = blindVotesByTxIdMap.get(blindVoteTxId);
+        if (blindVoteCandidates == null || blindVoteCandidates.isEmpty()) {
             invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
             return null;
         }
@@ -370,6 +367,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             invalidDecryptedBallotsWithMeritItems.add(decryptedBallotsWithMerits);
             return null;
         }
+
+        BlindVote blindVote = selectBlindVotePayload(blindVoteCandidates, voteRevealOpReturnData, chainHeight);
 
         try {
             return getDecryptedBallotsWithMerits(voteRevealTxId,
@@ -563,14 +562,24 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
     @VisibleForTesting
-    List<BlindVote> getMeritDecryptableBlindVoteList(Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId) {
-        return BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService).stream()
-                .filter(blindVote -> canDecryptMerit(blindVote, voteRevealOpReturnDataByBlindVoteTxId))
+    List<BlindVote> getBlindVoteListForMajorityHash(
+            Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId,
+            int chainHeight) {
+        List<BlindVote> sortedBlindVoteList =
+                BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService, chainHeight);
+        if (DaoHardFork.isBlindVoteMeritDecryptabilityActivated(chainHeight)) {
+            return sortedBlindVoteList;
+        }
+
+        return sortedBlindVoteList.stream()
+                .filter(blindVote -> canDecryptMeritBeforeMajorityMatching(blindVote,
+                        voteRevealOpReturnDataByBlindVoteTxId))
                 .collect(Collectors.toList());
     }
 
-    private boolean canDecryptMerit(BlindVote blindVote,
-                                    Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId) {
+    private boolean canDecryptMeritBeforeMajorityMatching(
+            BlindVote blindVote,
+            Map<String, byte[]> voteRevealOpReturnDataByBlindVoteTxId) {
         byte[] voteRevealOpReturnData = voteRevealOpReturnDataByBlindVoteTxId.get(blindVote.getTxId());
         if (voteRevealOpReturnData == null) {
             // The vote reveal for this blind vote is not on-chain in the current cycle. We cannot yet judge
@@ -578,18 +587,47 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             // attack is possible until the secret key has been revealed.
             return true;
         }
+        boolean decryptable = canDecryptMerit(blindVote, voteRevealOpReturnData);
+        if (!decryptable) {
+            log.warn("Filtering out blind vote payload whose merit list does not decrypt under the on-chain " +
+                            "secret key. blindVoteTxId={}",
+                    blindVote.getTxId());
+        }
+        return decryptable;
+    }
+
+    private boolean canDecryptMerit(BlindVote blindVote, byte[] voteRevealOpReturnData) {
         try {
             SecretKey secretKey = VoteResultConsensus.getSecretKey(voteRevealOpReturnData);
             MeritConsensus.decryptMeritList(blindVote.getEncryptedMeritList(), secretKey);
             return true;
-        } catch (Throwable e) {
-            log.warn("Filtering out blind vote payload whose merit list does not decrypt under the on-chain " +
-                            "secret key. This is either a same-txid forged duplicate with malformed encryptedMeritList " +
-                            "or a corrupted payload. blindVoteTxId={}, error={}",
-                    blindVote.getTxId(),
-                    e.toString());
+        } catch (VoteResultException.DecryptionException e) {
             return false;
         }
+    }
+
+    private BlindVote selectBlindVotePayload(List<BlindVote> blindVoteCandidates,
+                                              byte[] voteRevealOpReturnData,
+                                              int chainHeight) {
+        if (!DaoHardFork.isBlindVoteMeritDecryptabilityActivated(chainHeight) ||
+                blindVoteCandidates.size() == 1) {
+            return blindVoteCandidates.get(0);
+        }
+
+        List<BlindVote> sortedCandidates =
+                BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteCandidates, chainHeight);
+        Optional<BlindVote> decryptableCandidate = sortedCandidates.stream()
+                .filter(blindVote -> canDecryptMerit(blindVote, voteRevealOpReturnData))
+                .findFirst();
+        if (decryptableCandidate.isPresent()) {
+            return decryptableCandidate.get();
+        }
+
+        log.warn("No same-txid blind vote payload has a decryptable merit list. The canonical payload will be " +
+                        "used with zero merit. blindVoteTxId={}, candidateCount={}",
+                sortedCandidates.get(0).getTxId(),
+                sortedCandidates.size());
+        return sortedCandidates.get(0);
     }
 
     // Deal with eventually consistency of P2P network

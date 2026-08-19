@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.blindvote;
 
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
@@ -32,13 +33,12 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import javax.crypto.SecretKey;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,14 +62,26 @@ public class BlindVoteConsensus {
         return new BallotList(ballotList);
     }
 
-    public static List<BlindVote> getSortedBlindVoteListOfCycle(BlindVoteListService blindVoteListService) {
-        return getSortedBlindVoteListOfCycle(blindVoteListService.getBlindVotesInPhaseAndCycle());
+    public static List<BlindVote> getSortedBlindVoteListOfCycle(BlindVoteListService blindVoteListService,
+                                                                 int resultEvaluationHeight) {
+        return getSortedBlindVoteListOfCycle(blindVoteListService.getBlindVotesInPhaseAndCycle(),
+                resultEvaluationHeight);
     }
 
-    @VisibleForTesting
-    static List<BlindVote> getSortedBlindVoteListOfCycle(List<BlindVote> blindVoteList) {
+    public static List<BlindVote> getSortedBlindVoteListOfCycle(List<BlindVote> blindVoteList,
+                                                                 int resultEvaluationHeight) {
+        Comparator<BlindVote> comparator = Comparator.comparing(BlindVote::getTxId);
+        if (DaoHardFork.isBlindVoteMeritDecryptabilityActivated(resultEvaluationHeight)) {
+            comparator = comparator.thenComparing(blindVote -> blindVote.encodeCanonical(),
+                    Arrays::compareUnsigned);
+        }
+        return getSortedBlindVoteList(blindVoteList, comparator);
+    }
+
+    private static List<BlindVote> getSortedBlindVoteList(List<BlindVote> blindVoteList,
+                                                           Comparator<BlindVote> comparator) {
         List<BlindVote> list = blindVoteList.stream()
-                .sorted(Comparator.comparing(BlindVote::getTxId))
+                .sorted(comparator)
                 .collect(Collectors.toList());
         log.debug("Sorted blindVote txId list: " + list.stream()
                 .map(BlindVote::getTxId)
