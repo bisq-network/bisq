@@ -104,7 +104,7 @@ public class SignedWitnessServiceTest {
         p2pService = mock(P2PService.class);
         filterPolicyService = mock(FilterPolicyService.class);
         signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null,
-                appendOnlyDataStoreService, filterPolicyService, clock);
+                appendOnlyDataStoreService, filterPolicyService, false, clock);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
@@ -219,7 +219,7 @@ public class SignedWitnessServiceTest {
         ArbitratorManager strictArbitratorManager = mock(ArbitratorManager.class);
         when(strictArbitratorManager.isPublicKeyInList(any())).thenReturn(false);
         SignedWitnessService strictService = new SignedWitnessService(keyRing, p2pService,
-                strictArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, clock);
+                strictArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, false, clock);
 
         SignedWitness sw1 = new SignedWitness(ARBITRATOR,
                 account1DataHash,
@@ -233,6 +233,33 @@ public class SignedWitnessServiceTest {
 
         assertFalse(strictService.verifySignature(sw1));
         assertFalse(strictService.isSignedByArbitrator(aew1));
+    }
+
+    @Test
+    public void testLegacyMainnetArbitratorRequiresExplicitOptInWhenRuntimeListRejectsKey() {
+        AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
+        ArbitratorManager devArbitratorManager = mock(ArbitratorManager.class);
+        when(devArbitratorManager.isPublicKeyInList(any())).thenReturn(false);
+        when(devArbitratorManager.isLegacyArbitratorPublicKey(any())).thenReturn(true);
+        SignedWitnessService defaultService = new SignedWitnessService(keyRing, p2pService,
+                devArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, false, clock);
+        SignedWitnessService mainnetDataService = new SignedWitnessService(keyRing, p2pService,
+                devArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, true, clock);
+
+        SignedWitness signedWitness = new SignedWitness(ARBITRATOR,
+                account1DataHash,
+                signature1,
+                signer1PubKey,
+                witnessOwner1PubKey,
+                date1,
+                tradeAmount1);
+        defaultService.addToMap(signedWitness);
+        mainnetDataService.addToMap(signedWitness);
+
+        assertFalse(defaultService.isSignedByArbitrator(aew1));
+        assertFalse(defaultService.isSignedAccountAgeWitness(aew1));
+        assertTrue(mainnetDataService.isSignedByArbitrator(aew1));
+        assertTrue(mainnetDataService.isSignedAccountAgeWitness(aew1));
     }
 
     @Test

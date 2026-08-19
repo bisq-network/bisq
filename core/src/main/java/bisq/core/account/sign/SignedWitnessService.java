@@ -27,6 +27,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
@@ -39,6 +40,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -80,6 +82,7 @@ public class SignedWitnessService {
     private final ArbitratorManager arbitratorManager;
     private final SignedWitnessStorageService signedWitnessStorageService;
     private final FilterPolicyService filterPolicyService;
+    private final boolean allowMainnetSignedWitnessesWithDevPrivilegeKeys;
     private final Clock clock;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
@@ -111,12 +114,15 @@ public class SignedWitnessService {
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
                                 FilterPolicyService filterPolicyService,
+                                @Named(Config.ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS)
+                                boolean allowMainnetSignedWitnessesWithDevPrivilegeKeys,
                                 Clock clock) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
         this.signedWitnessStorageService = signedWitnessStorageService;
         this.filterPolicyService = filterPolicyService;
+        this.allowMainnetSignedWitnessesWithDevPrivilegeKeys = allowMainnetSignedWitnessesWithDevPrivilegeKeys;
         this.clock = clock;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
@@ -397,7 +403,11 @@ public class SignedWitnessService {
             String message = Utilities.encodeToHex(signedWitness.getAccountAgeWitnessHash());
             String signatureBase64 = new String(signedWitness.getSignature(), StandardCharsets.UTF_8);
             ECKey key = ECKey.fromPublicOnly(signedWitness.getSignerPubKey());
-            if (arbitratorManager.isPublicKeyInList(Utilities.encodeToHex(key.getPubKey()))) {
+            String pubKeyAsHex = Utilities.encodeToHex(key.getPubKey());
+            boolean isAcceptedArbitrator = arbitratorManager.isPublicKeyInList(pubKeyAsHex) ||
+                    (allowMainnetSignedWitnessesWithDevPrivilegeKeys &&
+                            arbitratorManager.isLegacyArbitratorPublicKey(pubKeyAsHex));
+            if (isAcceptedArbitrator) {
                 key.verifyMessage(message, signatureBase64);
                 verifySignatureWithECKeyResultCache.put(hash, true);
                 return true;

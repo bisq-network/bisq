@@ -90,6 +90,8 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
 
         bindConstant().annotatedWith(named(USE_DEV_PRIVILEGE_KEYS)).to(config.useDevPrivilegeKeys);
+        bindConstant().annotatedWith(named(ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS))
+                .to(config.allowMainnetSignedWitnessesWithDevPrivilegeKeys);
         bindConstant().annotatedWith(named(USE_DEV_MODE)).to(config.useDevMode);
         bindConstant().annotatedWith(named(USE_DEV_MODE_HEADER)).to(config.useDevModeHeader);
         bindConstant().annotatedWith(named(IGNORE_POPUPS_IN_DEV_MODE)).to(config.ignorePopupsInDevMode);

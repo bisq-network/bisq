@@ -93,6 +93,14 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
                 "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5");
     }
 
+    /**
+     * Checks the immutable legacy roots without applying the dev-privilege-key override.
+     * This is only for validating historical signed-witness chains.
+     */
+    public boolean isLegacyArbitratorPublicKey(String pubKeyAsHex) {
+        return getPubKeyList().contains(pubKeyAsHex);
+    }
+
     @Override
     protected boolean isExpectedInstance(ProtectedStorageEntry data) {
         return data.getProtectedStoragePayload() instanceof Arbitrator;

@@ -287,6 +287,19 @@ public class ConfigTests {
     }
 
     @Test
+    public void mainnetSignedWitnessOptionRequiresDevPrivilegeKeys() {
+        assertFalse(new Config().allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+        assertFalse(configWithOpts(opt(ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS, true))
+                .allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+        assertFalse(configWithOpts(opt(USE_DEV_PRIVILEGE_KEYS, true))
+                .allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+        assertTrue(configWithOpts(
+                opt(USE_DEV_PRIVILEGE_KEYS, true),
+                opt(ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS, true))
+                .allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+    }
+
+    @Test
     public void whenP2PDataLimitOptionsAreSet_thenPropertiesReflectTheirValues() {
         try {
             Config config = configWithOpts(

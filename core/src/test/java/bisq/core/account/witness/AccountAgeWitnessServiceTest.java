@@ -125,7 +125,7 @@ public class AccountAgeWitnessServiceTest {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         filterPolicyService = mock(FilterPolicyService.class);
         signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null,
-                appendOnlyDataStoreService, filterPolicyService, clock);
+                appendOnlyDataStoreService, filterPolicyService, false, clock);
         service = new AccountAgeWitnessService(keyRing, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, clock, null, filterPolicyService);
     }
 

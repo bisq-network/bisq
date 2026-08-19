@@ -80,6 +80,8 @@ public class Config {
     public static final String KEY_STORAGE_DIR = "keyStorageDir";
     public static final String WALLET_DIR = "walletDir";
     public static final String USE_DEV_PRIVILEGE_KEYS = "useDevPrivilegeKeys";
+    public static final String ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS =
+            "allowMainnetSignedWitnessesWithDevPrivilegeKeys";
     public static final String DUMP_STATISTICS = "dumpStatistics";
     public static final String DUMP_BURNING_MAN_DATA = "dumpBurningManData";
     public static final String IGNORE_DEV_MSG = "ignoreDevMsg";
@@ -209,6 +211,7 @@ public class Config {
     public final boolean useDevModeHeader;
     public final boolean ignorePopupsInDevMode;
     public final boolean useDevPrivilegeKeys;
+    public final boolean allowMainnetSignedWitnessesWithDevPrivilegeKeys;
     public final boolean dumpStatistics;
     public final boolean dumpBurningManData;
     public final boolean ignoreDevMsg;
@@ -466,6 +469,14 @@ public class Config {
         ArgumentAcceptingOptionSpec<Boolean> useDevPrivilegeKeysOpt =
                 parser.accepts(USE_DEV_PRIVILEGE_KEYS, "If set to true all privileged features requiring a private " +
                                 "key to be enabled are overridden by a dev key pair (This is for developers only!)")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<Boolean> allowMainnetSignedWitnessesWithDevPrivilegeKeysOpt =
+                parser.accepts(ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS,
+                                "Accept legacy mainnet arbitrator keys as signed-witness trust roots when " +
+                                        "useDevPrivilegeKeys is enabled (This is for developers only!)")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -1018,6 +1029,8 @@ public class Config {
             this.useDevModeHeader = options.valueOf(useDevModeHeaderOpt);
             this.ignorePopupsInDevMode = options.valueOf(ignorePopupsInDevModeOpt);
             this.useDevPrivilegeKeys = options.valueOf(useDevPrivilegeKeysOpt);
+            this.allowMainnetSignedWitnessesWithDevPrivilegeKeys =
+                    this.useDevPrivilegeKeys && options.valueOf(allowMainnetSignedWitnessesWithDevPrivilegeKeysOpt);
             this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
             this.dumpBurningManData = options.valueOf(dumpBurningManDataOpt);
             this.ignoreDevMsg = options.valueOf(ignoreDevMsgOpt);

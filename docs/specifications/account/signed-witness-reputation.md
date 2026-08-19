@@ -46,6 +46,12 @@ consumers; an invalid leaf must not make a witness appear older in those paths e
 The public `witnessOwnerPubKey` field alone is not an ownership proof because it is not committed by
 the deployed `SignedWitness` signature; equality with the independently proven owner key is required.
 
+Arbitrator roots must have a valid signature and a key accepted by the active environment. Developers
+who run with `useDevPrivilegeKeys=true` may explicitly enable `allowMainnetSignedWitnessesWithDevPrivilegeKeys` to add the
+immutable legacy mainnet arbitrator keys to the signed-witness trust roots. The option is disabled by
+default and affects only signed-witness validation; it must not authorize those legacy keys for live
+dispute-agent registration or other privileged operations.
+
 ## Bridge contract and failures
 
 Protocol version `2` sends the profile id, witness hash, salted account input, owner key and ownership
