@@ -22,13 +22,15 @@ the activation heights depend on the planned release date.
 
 File: `core/src/main/java/bisq/core/dao/DaoHardFork.java`
 
-| Line | Constant | Current value |
-|------|----------|---------------|
-| 23 | `ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET` | `963_350` |
-| 24 | `ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET` | `3_000_000` |
+| Scheduled rule | Constant prefix | Mainnet | Bitcoin testnet | Regtest and DAO test networks | Rule-selection height |
+|----------------|-----------------|--------:|----------------:|------------------------------:|-----------------------|
+| Hard fork 3 | `ACTIVATE_HARD_FORK_3_HEIGHT_` | `963_350` | `3_000_000` | `1` | Height consumed by each hard-fork-3 rule |
+| Duplicate vote proposal-ID validation | `DUPLICATE_VOTE_PROPOSAL_TX_ID_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | Cycle's RESULT block |
+| Blind-vote merit fallback and equal-ID ordering | `BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | Cycle's RESULT block |
+| Proposal data-field validation | `PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | First RESULT block of the proposal's cycle |
 
-These are finalized consensus constants for the coordinated hard-fork-3 rollout. Verify them during
-release preparation, but do not change them as part of an ordinary release.
+These are finalized consensus constants for the coordinated rollout. Verify every row during release
+preparation, but do not change one as part of an ordinary release.
 
 Three consensus rules activate together with hard fork 3:
 
@@ -39,16 +41,45 @@ Three consensus rules activate together with hard fork 3:
 - `core/src/main/java/bisq/core/dao/governance/proposal/role/RoleValidator.java` — the required bond
   unit and the unlock time in a role proposal must match the bonded role type.
 
+Three additional rules currently use the same network heights but retain independent constants:
+
+- `VoteResultService` rejects a decrypted vote containing a duplicate proposal transaction ID and
+  isolates that malformed voter.
+- `BlindVoteConsensus`, `VoteRevealService`, and `VoteResultService` preserve the complete
+  majority-committed blind-vote list, order equal transaction IDs by full canonical payload bytes,
+  and treat an undecryptable merit list as empty. Vote reveal must select this rule with the current
+  cycle's future RESULT height so reveal and result cannot disagree.
+- Proposal validators apply full proposal data-field validation at consensus consumers, including
+  startup replay and persisted ballots. `ProposalService` applies common admission checks and a full
+  post-parse recheck. Both select the rule for an entire cycle by its first RESULT block.
+
+The independent constants are intentional: each rule can be rescheduled without silently changing
+another consensus rule. Before publication, obtain and record explicit developer approval for every
+row, including the future-RESULT selection used by blind-vote ordering and the whole-cycle selection
+used by proposal validation. Equal numeric values do not substitute for that approval and are not a
+reason to fold the constants together.
+
 The release must ship far enough before the activation height that users have time to upgrade. If the
 schedule no longer permits that, stop and obtain an explicit new consensus decision rather than
 silently moving the height. The rule is described in
 [specifications/dao/bond-lockup-spend.md](specifications/dao/bond-lockup-spend.md) and in
-[specifications/dao/merit.md](specifications/dao/merit.md), section 7.
+[specifications/dao/merit.md](specifications/dao/merit.md), section 7. The additional voting and
+proposal rules are specified in
+[specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md) and
+[specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
 
-Before the release, repeat the duplicate merit audit described in
-[specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node that is synced
-past the last completed voting cycle. Repeat it after every result phase between the release and the
-activation height.
+Before the release:
+
+1. Run both bundled DAO resource audits in step 2.1. They reproduce the stored proposal checks and
+   the 947-payload/935-reveal blind-vote decryption audit through height `963_120`.
+2. Repeat the duplicate merit audit described in
+   [specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node synced past
+   the last completed voting cycle.
+3. From a synced mainnet node, audit proposal, blind-vote, and completed RESULT data after bundled
+   height `963_120` for invalid proposal fields, duplicate proposal transaction IDs, duplicate
+   blind-vote transaction IDs, and vote or merit decryption failures.
+4. Repeat the synced-node audits after every proposal or RESULT phase between release and activation.
+   Preserve the command and output used for release review.
 
 Historical hard fork heights must not be changed. Only check that they are unchanged:
 
@@ -164,9 +195,11 @@ Also run the resource integration audit explicitly:
 It checks that the separate BSQ block resources are contiguous through the DAO-state height, that
 their embedded transaction and output coordinates are internally consistent, that no historical
 lockup was spent by anything other than a canonical unlock shape matching its parsed transaction
-type, that evaluated role terms still match their role types, and that the refreshed P2P stores and
-versioned Burning Man address lists are readable and internally consistent. It is kept out of the
-regular unit-test suite because it scans the full bundled history.
+type, and that evaluated role terms still match their role types. It also validates proposal common
+fields and transaction-ID uniqueness, resolves every stored vote reveal against the bundled block
+history, decrypts its vote and merit ciphertexts, checks decrypted proposal-ID uniqueness, and checks
+that the refreshed P2P stores and versioned Burning Man address lists are readable and internally
+consistent. It is kept out of the regular unit-test suite because it scans the full bundled history.
 
 Create a pull request against the release branch that contains screenshots of the hashes of a full
 node and a light node, so that a reviewer can compare them.

@@ -5,6 +5,8 @@
 - Canonical hash/signature encodings reduce ambiguity across DAO and P2P payloads.
 - DAO block signatures, trusted providers, lite-node checks, checkpoints, and payload hash commitments are strengthened.
 - BSQ block bridge delivery requires contiguous state and recovers gaps.
+- Malformed decrypted votes are isolated per voter, while malformed merit can no longer remove a majority-committed blind vote.
+- Proposal validation is consistent across startup and live nodes and applies to the entire activating cycle.
 
 ## Reputation and Bonded Roles
 

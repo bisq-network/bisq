@@ -4,18 +4,21 @@ Security-focused release notes for the Bisq 1.10.5 integration branch.
 
 ## Scope
 
-This release is based on the integration branch fork point `5d93ef99d5a55eddc979b324f981ef8ab500b487` and covers the range through `6cc35ae02d75e12298f90aa6ff2c271356d277a1`. The `v1.10.3` tag is on a separate ancestry line, so the fork point—not a simple tag range—is the reproducible scope for this branch.
+This release is based on the integration branch fork point `5d93ef99d5a55eddc979b324f981ef8ab500b487` and covers the range through `0b9b0732f8437fea0957cc847327afc0ccade25d`. The `v1.10.3` tag is on a separate ancestry line, so the fork point—not a simple tag range—is the reproducible scope for this branch.
 
-- Reachable commits in scope: 531
-- Non-merge commits: 401
+- Reachable commits in scope: 538
+- Non-merge commits: 408
 - Merge commits: 130
-- Files changed from the fork point: 848
+- Files changed from the fork point: 864
 - Generated on: 2026-08-19
 
 ## Compatibility and Operator Notes
 
 - The application and packaging version is `1.10.5`.
-- DAO hard-fork 3 mainnet activation is set to height `963_350`.
+- DAO hard-fork 3 and three independently scheduled voting/proposal rules use mainnet height
+  `963_350` (`3_000_000` on Bitcoin testnet and `1` on regtest and DAO test networks). The voting
+  rules select by RESULT height; proposal validation selects the first RESULT block of the proposal's
+  cycle.
 - Bundled DAO, witness, trade-statistics, Burning Man, and checkpoint resources were refreshed and audited as part of release preparation. Operators should use the release resource-audit checks before publishing binaries.
 - DAO and P2P hash/signature validation is stricter. Nodes participating in the updated DAO block, witness, and bridge flows should be upgraded together where the protocol requires it.
 - Legacy arbitration registration and active legacy-arbitration handling are disabled; persisted legacy arbitrator state is no longer used for new operation.
@@ -35,6 +38,31 @@ Representative commits:
 - [b814f3743d](https://github.com/bisq-network/bisq/commit/b814f3743d) - Add DAO block signature verification.
 - [df5c181159](https://github.com/bisq-network/bisq/commit/df5c181159) - Validate blind-vote OP_RETURN commitments.
 - [790470e43a](https://github.com/bisq-network/bisq/commit/790470e43a) - Verify proposal OP_RETURN payload hashes.
+
+### DAO Voting and Proposal Validation
+
+Malformed decrypted vote plaintext is isolated to the voter that supplied it. A duplicate proposal
+transaction ID no longer aborts the entire vote-result cycle, while an honest voter in the same cycle
+continues to contribute ballots, stake, and merit. Duplicate local ballot objects are merged only
+when their canonical proposals are identical; conflicting proposals remain a visible DAO-state
+integrity failure.
+
+Vote result reconstruction now preserves the exact blind-vote list committed by the on-chain
+majority. Undecryptable merit data contributes zero merit without removing that voter's ballots or
+stake, and equal blind-vote transaction IDs use the complete canonical payload as a deterministic
+tie-break in both vote reveal and result processing.
+
+Proposal common fields are checked during initial store projection, provisional startup entries are
+revalidated after parsing, and full common and type-specific validation is enforced again at every
+consensus consumer. Activation is selected for the entire proposal cycle by its first RESULT block,
+so live, restarting, and resyncing nodes derive the same ballot universe.
+
+Representative commits:
+
+- [d5b07f628f](https://github.com/bisq-network/bisq/commit/d5b07f628f) - Isolate duplicate proposal IDs to the malformed voter.
+- [c4f72d633f](https://github.com/bisq-network/bisq/commit/c4f72d633f) - Preserve majority-committed blind votes with malformed merit.
+- [e4c9bcb626](https://github.com/bisq-network/bisq/commit/e4c9bcb626) - Enforce activated proposal data validation consistently.
+- [0b9b0732f8](https://github.com/bisq-network/bisq/commit/0b9b0732f8) - Harden duplicate ballot reconstruction and make the historical audit reproducible.
 
 ### Witness, Reputation, and Bridge Authentication
 
@@ -83,13 +111,13 @@ JavaFX runtime dependencies for bridge and headless applications, packaging outp
 
 ## Tests, Documentation, and Release Data
 
-The scope adds or updates regression coverage for canonical encodings, DAO block signatures, witness ownership and signature checks, bond and merit rules, filter and seed-node validation, trade settlement, dispute authentication, shutdown, resource handling, and cross-version or long-running end-to-end flows. Specifications were added or updated for DAO hashing, bonds, reputation, signed witnesses, bridge continuity, peer timestamps, and fiat payment-account validation.
+The scope adds or updates regression coverage for canonical encodings, DAO block signatures, witness ownership and signature checks, bond and merit rules, decrypted vote isolation, majority blind-vote reconstruction, proposal consensus validation, filter and seed-node validation, trade settlement, dispute authentication, shutdown, resource handling, and cross-version or long-running end-to-end flows. Specifications were added or updated for DAO hashing, vote-result payload validation, proposal validation, merit, bonds, reputation, signed witnesses, bridge continuity, peer timestamps, and fiat payment-account validation.
 
-Release data includes versioned 1.10.5 stores, refreshed DAO and Burning Man resources, state-hash checkpoints, and the hard-fork activation update.
+Release data includes versioned 1.10.5 stores, refreshed DAO and Burning Man resources, state-hash checkpoints, and the activation updates. The bundled audit now reproduces the 947 stored blind-vote payloads, 935 successful on-chain reveals, absence of duplicate decrypted proposal IDs, and absence of merit decryption failures through height `963_120`; later data remains a release-gate audit obligation.
 
 ## First-Parent Integration Inventory
 
-The table lists the 131 first-parent integration commits in scope. The range above remains the authoritative audit range and includes all 531 reachable commits; side-parent histories are not repeated in this compact inventory.
+The table lists the 138 first-parent integration commits in scope. The range above remains the authoritative audit range and includes all 538 reachable commits; side-parent histories are not repeated in this compact inventory.
 
 | Date | Commit | Type | Summary | Author |
 | --- | --- | --- | --- | --- |
@@ -225,7 +253,13 @@ The table lists the 131 first-parent integration commits in scope. The range abo
 | 2026-08-19 | [12816a1823](https://github.com/bisq-network/bisq/commit/12816a1823a928d03461937594995c981f6db9ff) | Merge | Merge pull request #91 from bisq-network/Update-resource-files | HenrikJannsen |
 | 2026-08-19 | [6cc35ae02d](https://github.com/bisq-network/bisq/commit/6cc35ae02d75e12298f90aa6ff2c271356d277a1) | Merge | Merge pull request #92 from bisq-network/Update-ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET-to-963_350 | HenrikJannsen |
 | 2026-08-19 | [9942e5b056](https://github.com/bisq-network/bisq/commit/9942e5b0569e6c73bccca2680099b73be99f2db0) | Commit | Audit bundled DAO history through height 963120 | HenrikJannsen |
+| 2026-08-19 | [2f5ce3e866](https://github.com/bisq-network/bisq/commit/2f5ce3e86642f871a7dba1decfe6e0bd1c7a4c25) | Commit | Add Bisq 1.10.5 release notes | HenrikJannsen |
+| 2026-08-19 | [65403427e8](https://github.com/bisq-network/bisq/commit/65403427e8ee798ece95976266ffafd4007b29a6) | Commit | Allow unsorted Burning Man address lists | HenrikJannsen |
+| 2026-08-19 | [d5b07f628f](https://github.com/bisq-network/bisq/commit/d5b07f628f1180107ae1cccb0c137d8281f74a28) | Commit | Isolate duplicate proposal IDs to the malformed voter | HenrikJannsen |
+| 2026-08-19 | [c4f72d633f](https://github.com/bisq-network/bisq/commit/c4f72d633fd54c8d6bd50002ae6c323959a6dff7) | Commit | Preserve majority-committed blind votes with malformed merit | HenrikJannsen |
+| 2026-08-19 | [e4c9bcb626](https://github.com/bisq-network/bisq/commit/e4c9bcb6267c671dbd09827ff3bb0fa834f2774a) | Commit | Enforce activated proposal data validation consistently | HenrikJannsen |
+| 2026-08-19 | [0b9b0732f8](https://github.com/bisq-network/bisq/commit/0b9b0732f8437fea0957cc847327afc0ccade25d) | Commit | Harden duplicate ballot reconstruction and audits | HenrikJannsen |
 
 ## Release Gate
 
-Before publication, run the project release checklist, resource audits, focused security tests, full supported-platform builds, and signature verification. This note was generated from repository history and does not itself certify those release checks.
+Before publication, run the project release checklist, resource audits, focused security tests, full supported-platform builds, and signature verification. Record explicit approval for every independently scheduled DAO rule and preserve the synced-node audit of proposal and vote data after bundled height `963_120` through activation. This note was generated from repository history and does not itself certify those release checks.
