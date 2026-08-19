@@ -20,6 +20,9 @@ package bisq.bridge.grpc.services;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.WitnessReputationPrivacy;
+
+import bisq.common.util.Hex;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -62,9 +65,9 @@ class AccountAgeWitnessGrpcServiceTest {
     }
 
     @Test
-    void verifiedOwnershipReturnsTheStoredWitnessDate() {
+    void verifiedOwnershipReturnsOnlyTheDateBucketAndNullifier() {
         AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
-        long date = System.currentTimeMillis() - 1000;
+        long date = 1_700_000_123_456L;
         AccountAgeWitness witness = new AccountAgeWitness(new byte[20], date);
         when(accountAgeWitnessService.verifyAccountAgeWitnessOwnership(any())).thenReturn(witness);
         AccountAgeWitnessGrpcService service = new AccountAgeWitnessGrpcService(accountAgeWitnessService);
@@ -77,7 +80,9 @@ class AccountAgeWitnessGrpcServiceTest {
                 ArgumentCaptor.forClass(AccountAgeWitnessOwnershipResponse.class);
         verify(observer).onNext(response.capture());
         verify(observer).onCompleted();
-        assertEquals(date, response.getValue().getDate());
+        assertEquals(WitnessReputationPrivacy.toDateBucket(date), response.getValue().getDateBucket());
+        assertEquals("f8595c82649513a9df373f4d14077922585b6ed555fdabc0c6c4e6967aa4f563",
+                Hex.encode(response.getValue().getWitnessNullifier().toByteArray()));
     }
 
     @Test

@@ -67,7 +67,36 @@ The bridge verifies the proof at the account-age-witness domain boundary. It mus
 4. resolve the recomputed hash to an actual account-age witness in the Bisq 1 witness store;
 5. reject the independently proven owner public key when it is banned by the current filter
    policy; and
-6. return only the date stored in that authoritative witness.
+6. derive the shared Bisq 2 witness nullifier from the verified secret preimage; and
+7. return the nullifier and only the one-day UTC bucket containing the date stored in that
+   authoritative witness.
+
+The nullifier is:
+
+```text
+SHA-256(
+    LP("BISQ2_WITNESS_REPUTATION_NULLIFIER_V1") ||
+    LP(accountInputDataWithSalt || ownerPublicKey)
+)
+```
+
+where `LP` is four-byte big-endian length framing. Framing the complete historical witness preimage
+rather than its two components preserves the equivalence relation used by
+`HASH160(accountInputDataWithSalt || ownerPublicKey)`: byte-identical historical witnesses always
+produce the same nullifier. Account-age and signed-witness exports use the same nullifier domain so
+Bisq 2 can detect reuse across both sources. The profile id, reputation source and oracle identity
+must not affect the nullifier.
+
+The date bucket is the start of the fixed one-day Unix-epoch interval containing the authoritative
+date, which is midnight UTC:
+
+```text
+bucket = floor(authoritativeDate / 24 hours) * 24 hours
+```
+
+Bisq 2 uses the latest millisecond inside that interval as the conservative scoring date
+(`bucket + 1 day - 1 millisecond`). That date is less than one day later than the exact Bisq 1 date,
+so the resulting whole-day age never exceeds the exact age and can be at most one day lower.
 
 An invalid proof is a request error. An unavailable or internally inconsistent bridge is an
 infrastructure error. In either case Bisq 2 must not issue new reputation.
@@ -83,6 +112,15 @@ identifiers even though they include the account salt. The oracle already persis
 account authorization material for abuse investigation, so operators must protect that private
 state accordingly.
 
+The bridge must not return the public Bisq 1 witness hash or exact witness date for publication.
+Bisq 1 distributes both values, so either would provide a direct correlation handle to the Bisq 2
+profile. The domain-separated nullifier is deterministic for one witness but cannot be derived from
+the public witness hash without the salted preimage. The one-day bucket removes millisecond
+precision but remains a comparatively weak defense against correlation, especially when account-age
+and signed-witness dates are combined. A former counterparty who retained the complete
+payment-account payload can still derive the nullifier; preventing that stronger form of linkage
+requires an anonymous-credential or zero-knowledge protocol.
+
 Avoiding this disclosure would require a different cryptographic protocol, such as a zero-knowledge
 proof of the hash preimage. A self-signature over the public witness hash is not an acceptable
 privacy-preserving substitute because it does not establish witness ownership.
@@ -96,7 +134,9 @@ chosen Bisq 2 profile.
 
 The compatible Bisq 1 bridge must be deployed before account-age version-2 issuance is enabled on
 Bisq 2 oracles. A new oracle talking to an older bridge fails closed because the ownership RPC is
-unimplemented.
+unimplemented or its response lacks the bucket and nullifier. The response's historical exact-date
+field number is reserved: an older oracle talking to a new bridge sees its required date as absent
+and also fails closed instead of interpreting a bucket as an exact timestamp.
 
 Signed-witness reputation is a separate protocol. It remains disabled until it reuses this witness
 ownership proof and derives its sign date from records which individually satisfy the complete

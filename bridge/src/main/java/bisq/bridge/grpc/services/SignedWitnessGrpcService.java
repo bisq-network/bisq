@@ -17,9 +17,17 @@
 
 package bisq.bridge.grpc.services;
 
+import bisq.bridge.protobuf.SignedWitnessDateRequest;
+import bisq.bridge.protobuf.SignedWitnessDateResponse;
+import bisq.bridge.protobuf.SignedWitnessGrpcServiceGrpc;
+import bisq.bridge.protobuf.SignedWitnessOwnershipRequest;
+import bisq.bridge.protobuf.SignedWitnessOwnershipResponse;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.account.witness.SignedWitnessOwnershipProof;
+import bisq.core.account.witness.WitnessReputationPrivacy;
 import bisq.core.account.witness.WitnessOwnershipProof;
+
+import com.google.protobuf.ByteString;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -27,14 +35,6 @@ import io.grpc.stub.StreamObserver;
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.bridge.protobuf.SignedWitnessDateRequest;
-import bisq.bridge.protobuf.SignedWitnessDateResponse;
-import bisq.bridge.protobuf.SignedWitnessGrpcServiceGrpc;
-import bisq.bridge.protobuf.SignedWitnessOwnershipRequest;
-import bisq.bridge.protobuf.SignedWitnessOwnershipResponse;
 
 @Slf4j
 public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.SignedWitnessGrpcServiceImplBase {
@@ -70,9 +70,13 @@ public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.Signe
                     request.getOwnerPublicKey().toByteArray(),
                     request.getSignature().toByteArray());
             long date = accountAgeWitnessService.verifySignedWitnessOwnership(proof);
-            log.info("Verified signed-witness ownership for hash {}",
-                    bisq.common.util.Hex.encode(proof.getWitnessHash()));
-            var response = SignedWitnessOwnershipResponse.newBuilder().setDate(date).build();
+            long dateBucket = WitnessReputationPrivacy.toDateBucket(date);
+            byte[] witnessNullifier = WitnessReputationPrivacy.deriveNullifier(proof);
+            log.info("Verified signed-witness ownership proof");
+            var response = SignedWitnessOwnershipResponse.newBuilder()
+                    .setDateBucket(dateBucket)
+                    .setWitnessNullifier(ByteString.copyFrom(witnessNullifier))
+                    .build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (IllegalArgumentException e) {

@@ -17,22 +17,24 @@
 
 package bisq.bridge.grpc.services;
 
-import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
-import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.account.witness.WitnessOwnershipProof;
-
-import io.grpc.stub.StreamObserver;
-
-import javax.inject.Inject;
-
-import java.util.Date;
-import lombok.extern.slf4j.Slf4j;
 import bisq.bridge.protobuf.AccountAgeWitnessDateRequest;
 import bisq.bridge.protobuf.AccountAgeWitnessDateResponse;
 import bisq.bridge.protobuf.AccountAgeWitnessGrpcServiceGrpc;
 import bisq.bridge.protobuf.AccountAgeWitnessOwnershipRequest;
 import bisq.bridge.protobuf.AccountAgeWitnessOwnershipResponse;
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessOwnershipProof;
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.WitnessReputationPrivacy;
+import bisq.core.account.witness.WitnessOwnershipProof;
+
+import com.google.protobuf.ByteString;
+
+import io.grpc.stub.StreamObserver;
+
+import javax.inject.Inject;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGrpc.AccountAgeWitnessGrpcServiceImplBase {
@@ -68,10 +70,13 @@ public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGr
                     request.getOwnerPublicKey().toByteArray(),
                     request.getSignature().toByteArray());
             AccountAgeWitness witness = accountAgeWitnessService.verifyAccountAgeWitnessOwnership(proof);
-            long date = witness.getDate();
-            log.info("Verified account age ownership for hash {}: {} ({})",
-                    bisq.common.util.Hex.encode(witness.getHash()), date, new Date(date));
-            var response = AccountAgeWitnessOwnershipResponse.newBuilder().setDate(date).build();
+            long dateBucket = WitnessReputationPrivacy.toDateBucket(witness.getDate());
+            byte[] witnessNullifier = WitnessReputationPrivacy.deriveNullifier(proof);
+            log.info("Verified account age ownership proof");
+            var response = AccountAgeWitnessOwnershipResponse.newBuilder()
+                    .setDateBucket(dateBucket)
+                    .setWitnessNullifier(ByteString.copyFrom(witnessNullifier))
+                    .build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (IllegalArgumentException e) {

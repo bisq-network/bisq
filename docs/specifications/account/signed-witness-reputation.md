@@ -62,8 +62,10 @@ dispute-agent registration or other privileged operations.
 ## Bridge contract and failures
 
 Protocol version `2` sends the profile id, witness hash, salted account input, owner key and ownership
-signature to `VerifySignedWitnessOwnership`. The response contains only the authoritative qualifying
-sign date. The requester does not supply either the account-age date or sign date.
+signature to `VerifySignedWitnessOwnership`. The response contains the shared witness nullifier and
+the fixed one-day UTC bucket containing the authoritative qualifying sign date. Nullifier
+construction, date bucketing and conservative Bisq 2 scoring are defined by the account-age
+reputation specification. The requester does not supply either the account-age date or sign date.
 
 The legacy date-only RPC must reject authorization use. An unsupported version, invalid ownership
 proof, missing witness, trade-leaf owner mismatch, or missing qualifying chain fails closed and
@@ -72,9 +74,10 @@ returns no date.
 ## Bisq 2 requirements
 
 Bisq 2 must additionally authenticate the confidential sender as the target profile, persist the
-accepted proof before publication, include the witness hash in oracle-authorized data, and apply the
-shared one-witness/one-profile rule across both account-age and signed-witness reputation sources.
-Legacy signed-witness authorized data lacks the witness identity and contributes no score.
+accepted proof before publication, include the nullifier and date bucket in oracle-authorized data,
+and apply the shared one-witness/one-profile rule across both account-age and signed-witness
+reputation sources. It must not publish the raw Bisq 1 hash or exact sign date. Legacy
+signed-witness authorized data lacks the witness identity and contributes no score.
 
 ## Auditability of legacy authorization
 

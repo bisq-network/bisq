@@ -105,7 +105,10 @@ message AccountAgeWitnessOwnershipRequest {
     bytes signature = 6;
 }
 message AccountAgeWitnessOwnershipResponse {
-    sint64 date = 1;
+    reserved 1;
+    reserved "date";
+    sint64 dateBucket = 2;
+    bytes witnessNullifier = 3;
 }
 
 
@@ -125,7 +128,10 @@ message SignedWitnessOwnershipRequest {
     bytes signature = 6;
 }
 message SignedWitnessOwnershipResponse {
-    sint64 date = 1;
+    reserved 1;
+    reserved "date";
+    sint64 dateBucket = 2;
+    bytes witnessNullifier = 3;
 }
 
 
