@@ -24,7 +24,7 @@ File: `core/src/main/java/bisq/core/dao/DaoHardFork.java`
 
 | Line | Constant | Current value |
 |------|----------|---------------|
-| 23 | `ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET` | `963_000` |
+| 23 | `ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET` | `963_350` |
 | 24 | `ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET` | `3_000_000` |
 
 These are finalized consensus constants for the coordinated hard-fork-3 rollout. Verify them during
@@ -58,7 +58,7 @@ Historical hard fork heights must not be changed. Only check that they are uncha
 | `core/src/main/java/bisq/core/dao/node/full/RpcService.java` | `ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET` | `680300` |
 | `core/src/main/java/bisq/core/dao/state/model/governance/DaoArithmetics.java` | `DAO_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
 | `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` | `MERIT_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
-| `core/src/main/java/bisq/core/dao/governance/bond/role/BondedRolesRepository.java` | `LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET` | `963_000` |
+| `core/src/main/java/bisq/core/dao/governance/bond/role/BondedRolesRepository.java` | `LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET` | `963_350` |
 
 ### 1.2 Activation dates
 

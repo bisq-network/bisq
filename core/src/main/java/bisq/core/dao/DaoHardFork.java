@@ -20,7 +20,7 @@ package bisq.core.dao;
 import bisq.common.config.Config;
 
 public final class DaoHardFork {
-    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET = 963_000;
+    private static final int ACTIVATE_HARD_FORK_3_HEIGHT_MAINNET = 963_350;
     private static final int ACTIVATE_HARD_FORK_3_HEIGHT_TESTNET = 3_000_000;
     private static final int ACTIVATE_HARD_FORK_3_HEIGHT_REGTEST = 1;
 
