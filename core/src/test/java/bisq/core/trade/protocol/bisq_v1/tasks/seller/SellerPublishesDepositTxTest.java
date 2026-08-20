@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.offer.Offer;
@@ -89,21 +90,33 @@ class SellerPublishesDepositTxTest {
     }
 
     @Test
-    void anOverlappingTaskRunnerDoesNotBroadcastTheDepositASecondTime() {
+    void anOverlappingCryptoTaskRunnerDoesNotBroadcastTheDepositASecondTime() {
         ProcessModel processModel = processModel(true, true);
         Transaction depositTx = new Transaction(MainNetParams.get());
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
         when(processModel.getDepositTx()).thenReturn(depositTx);
         when(processModel.getTradeWalletService()).thenReturn(tradeWalletService);
-        Trade trade = trade(processModel);
+        when(processModel.getBtcWalletService()).thenReturn(mock(BtcWalletService.class));
+        Trade trade = trade(processModel, false);
 
         // The callback of the first broadcast stays pending, so the trade phase does not advance yet.
-        runTask(trade);
-        TaskResult result = runTask(trade);
+        TaskResult firstResult = runTask(trade);
+        TaskResult overlappingResult = runTask(trade);
 
-        assertTrue(result.completed());
-        assertNull(result.errorMessage());
-        verify(tradeWalletService, times(1)).broadcastTx(same(depositTx), any(TxBroadcaster.Callback.class));
+        assertTrue(overlappingResult.completed());
+        assertNull(overlappingResult.errorMessage());
+        ArgumentCaptor<TxBroadcaster.Callback> callback = ArgumentCaptor.forClass(TxBroadcaster.Callback.class);
+        verify(tradeWalletService).broadcastTx(same(depositTx), callback.capture());
+
+        callback.getValue().onSuccess(depositTx);
+
+        assertTrue(firstResult.completed());
+        verify(trade).applyDepositTx(same(depositTx));
+
+        // The callback releases the guard. The mock deliberately keeps the persisted phase unpublished so a third
+        // task proves that publication can be retried after the in-flight operation ended.
+        runTask(trade);
+        verify(tradeWalletService, times(2)).broadcastTx(same(depositTx), any(TxBroadcaster.Callback.class));
     }
 
     @Test
@@ -146,8 +159,14 @@ class SellerPublishesDepositTxTest {
     }
 
     private static Trade trade(ProcessModel processModel) {
+        return trade(processModel, true);
+    }
+
+    private static Trade trade(ProcessModel processModel, boolean isFiatOffer) {
         Offer offer = mock(Offer.class);
-        when(offer.isFiatOffer()).thenReturn(true);
+        when(offer.isFiatOffer()).thenReturn(isFiatOffer);
+        when(offer.getId()).thenReturn("offer-id");
+        when(processModel.getOffer()).thenReturn(offer);
         Trade trade = mock(Trade.class);
         when(trade.getOffer()).thenReturn(offer);
         when(trade.getProcessModel()).thenReturn(processModel);
@@ -164,9 +183,16 @@ class SellerPublishesDepositTxTest {
                 errorMessage::set);
         taskRunner.addTasks(SellerPublishesDepositTx.class);
         taskRunner.run();
-        return new TaskResult(completed.get(), errorMessage.get());
+        return new TaskResult(completed, errorMessage);
     }
 
-    private record TaskResult(boolean completed, String errorMessage) {
+    private record TaskResult(AtomicBoolean completedState, AtomicReference<String> errorMessageState) {
+        private boolean completed() {
+            return completedState.get();
+        }
+
+        private String errorMessage() {
+            return errorMessageState.get();
+        }
     }
 }

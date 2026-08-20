@@ -17,21 +17,32 @@
 
 package bisq.core.trade.protocol.bisq_v1;
 
+import bisq.core.offer.Offer;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessShareBuyerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerVerifyBuyerPaymentAccount;
 
 import bisq.network.p2p.NodeAddress;
+
+import bisq.common.taskrunner.Task;
 
 import org.bitcoinj.core.Transaction;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -51,6 +62,42 @@ class SellerProtocolMessageHandlingTest {
 
         assertSame(message, setup.protocol.revealMessage);
         assertSame(peer, setup.protocol.revealPeer);
+    }
+
+    @Test
+    void cryptoBuyerAccountRevealDoesNotScheduleAnotherDepositPublication() {
+        TestSetup setup = new TestSetup();
+        Offer offer = mock(Offer.class);
+        when(offer.isFiatOffer()).thenReturn(false);
+        when(setup.trade.getOffer()).thenReturn(offer);
+        when(setup.processModel.getDepositTx()).thenReturn(mock(Transaction.class));
+        setup.protocol.recordTaskSelection = true;
+
+        setup.protocol.handleBuyerPaymentAccountReveal(mock(ShareBuyerPaymentAccountMessage.class), mock(NodeAddress.class));
+
+        assertArrayEquals(new Class[]{SellerProcessShareBuyerPaymentAccountMessage.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class},
+                setup.protocol.selectedTasks);
+    }
+
+    @Test
+    void fiatBuyerAccountRevealSchedulesPendingDepositPublication() {
+        TestSetup setup = new TestSetup();
+        Offer offer = mock(Offer.class);
+        when(offer.isFiatOffer()).thenReturn(true);
+        when(setup.trade.getOffer()).thenReturn(offer);
+        when(setup.processModel.getDepositTx()).thenReturn(mock(Transaction.class));
+        setup.protocol.recordTaskSelection = true;
+
+        setup.protocol.handleBuyerPaymentAccountReveal(mock(ShareBuyerPaymentAccountMessage.class), mock(NodeAddress.class));
+
+        assertArrayEquals(new Class[]{SellerProcessShareBuyerPaymentAccountMessage.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class,
+                        SellerPublishesDepositTx.class,
+                        SellerPublishesTradeStatistics.class},
+                setup.protocol.selectedTasks);
     }
 
     @Test
@@ -88,6 +135,8 @@ class SellerProtocolMessageHandlingTest {
         private boolean ackSent;
         private boolean ackResult;
         private boolean mailboxMessageRemoved;
+        private boolean recordTaskSelection;
+        private Class<? extends Task<TradeModel>>[] selectedTasks;
 
         private TestSellerProtocol(SellerAsMakerTrade trade) {
             super(trade);
@@ -97,6 +146,34 @@ class SellerProtocolMessageHandlingTest {
         protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
             revealMessage = message;
             revealPeer = peer;
+        }
+
+        private void handleBuyerPaymentAccountReveal(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
+            super.handle(message, peer);
+        }
+
+        @Override
+        protected FluentProtocol expect(FluentProtocol.Condition condition) {
+            if (!recordTaskSelection) {
+                return super.expect(condition);
+            }
+            return new FluentProtocol(this) {
+                @Override
+                public FluentProtocol setup(Setup setup) {
+                    selectedTasks = setup.getTasks();
+                    return this;
+                }
+
+                @Override
+                public FluentProtocol run(Runnable runnable) {
+                    return this;
+                }
+
+                @Override
+                public FluentProtocol executeTasks() {
+                    return this;
+                }
+            };
         }
 
         @Override
