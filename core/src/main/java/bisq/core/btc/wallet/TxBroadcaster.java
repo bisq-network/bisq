@@ -90,24 +90,29 @@ public class TxBroadcaster {
     }
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction tx, Callback callback, int timeOut) {
-        Timer timeoutTimer;
         final String txId = tx.getTxId().toString();
         log.info("Broadcast transaction with ID: {}. Serialized tx: {}", txId, Utils.HEX.encode(tx.bitcoinSerialize()));
-        if (!broadcastTimerMap.containsKey(txId)) {
-            timeoutTimer = UserThread.runAfter(() -> {
-                log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);
-                stopAndRemoveTimer(txId);
-                UserThread.execute(() -> callback.onTimeout(new TxBroadcastTimeoutException(tx, timeOut, wallet)));
-            }, timeOut);
-
-            broadcastTimerMap.put(txId, timeoutTimer);
-        } else {
+        if (broadcastTimerMap.containsKey(txId)) {
             // Would be the wrong way how to use the API (calling 2 times a broadcast with same tx).
             // An arbitrator reported that got the error after a manual payout, need to investigate why...
-            stopAndRemoveTimer(txId);
+            // We must not touch the state of the pending broadcast here. Removing its timeout timer would leave the
+            // first caller without any callback: the timeout can no longer fire and the peer group success handler
+            // below skips a broadcast whose timer is gone. The caller would then never learn that its transaction
+            // was published, even though the transaction is committed to the wallet and propagated to the network.
+            // We therefore only report the misuse to the second caller and leave the pending broadcast alone.
+            // Committing and broadcasting again is not needed either, as the first call already did both.
             UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got broadcastTx called with a tx " +
                     "which has an open timeoutTimer. txId=" + txId, txId)));
+            return;
         }
+
+        Timer timeoutTimer = UserThread.runAfter(() -> {
+            log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);
+            stopAndRemoveTimer(txId);
+            UserThread.execute(() -> callback.onTimeout(new TxBroadcastTimeoutException(tx, timeOut, wallet)));
+        }, timeOut);
+
+        broadcastTimerMap.put(txId, timeoutTimer);
 
         // We decided the least risky scenario is to commit the tx to the wallet and broadcast it later.
         // If it's a bsq tx WalletManager.publishAndCommitBsqTx() should have committed the tx to both bsq and btc
