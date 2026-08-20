@@ -118,10 +118,14 @@ public class TradeStatisticsManager {
                 .filter(TradeStatistics3::isValid)
                 .forEach(observableTradeStatisticsSet::add);
 
-        // get the most recent price for each ccy and notify priceFeedService
-        // (this relies on the trade statistics set being sorted by date)
+        // Seed the most recent price per currency. The set is date-sorted, so iterating
+        // newest-first makes the first entry seen per currency its latest; computeIfAbsent then
+        // calls getTradePrice() only for that row, not every element (putIfAbsent would eval all).
         Map<String, Price> newestPriceByCurrencyCode = new HashMap<>();
-        observableTradeStatisticsSet.forEach(e -> newestPriceByCurrencyCode.put(e.getCurrency(), e.getTradePrice()));
+        for (TradeStatistics3 tradeStatistics : navigableTradeStatisticsSet.descendingSet()) {
+            newestPriceByCurrencyCode.computeIfAbsent(tradeStatistics.getCurrency(),
+                    currencyCode -> tradeStatistics.getTradePrice());
+        }
         priceFeedService.applyInitialBisqMarketPrice(newestPriceByCurrencyCode);
         maybeDumpStatistics();
     }

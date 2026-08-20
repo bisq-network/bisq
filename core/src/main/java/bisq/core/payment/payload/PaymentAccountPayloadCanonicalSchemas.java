@@ -32,6 +32,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
             CanonicalSchema.<AliPayAccountPayload>newBuilder()
                     .string(1, AliPayAccountPayload::getAccountNr)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<ChaseQuickPayAccountPayload> CHASE_QUICK_PAY_ACCOUNT_SCHEMA =
             CanonicalSchema.<ChaseQuickPayAccountPayload>newBuilder()
                     .string(1, ChaseQuickPayAccountPayload::getEmail)
@@ -59,6 +60,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(3, InteracETransferAccountPayload::getQuestion)
                     .string(4, InteracETransferAccountPayload::getAnswer)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<OKPayAccountPayload> OK_PAY_ACCOUNT_SCHEMA =
             CanonicalSchema.<OKPayAccountPayload>newBuilder()
                     .string(1, OKPayAccountPayload::getAccountNr)
@@ -82,6 +84,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(1, UpholdAccountPayload::getAccountId)
                     .string(2, UpholdAccountPayload::getAccountOwner)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<CashAppAccountPayload> CASH_APP_ACCOUNT_SCHEMA =
             CanonicalSchema.<CashAppAccountPayload>newBuilder()
                     .string(1, CashAppAccountPayload::getCashTag)
@@ -90,6 +93,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
             CanonicalSchema.<MoneyBeamAccountPayload>newBuilder()
                     .string(1, MoneyBeamAccountPayload::getAccountId)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<VenmoAccountPayload> VENMO_ACCOUNT_SCHEMA =
             CanonicalSchema.<VenmoAccountPayload>newBuilder()
                     .string(1, VenmoAccountPayload::getVenmoUserName)
@@ -202,6 +206,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .string(1, MoneseAccountPayload::getMobileNr)
                     .string(2, MoneseAccountPayload::getHolderName)
                     .build();
+    @SuppressWarnings("deprecation")
     private static final CanonicalSchema<VerseAccountPayload> VERSE_ACCOUNT_SCHEMA =
             CanonicalSchema.<VerseAccountPayload>newBuilder()
                     .string(1, VerseAccountPayload::getHolderName)
@@ -375,6 +380,7 @@ final class PaymentAccountPayloadCanonicalSchemas {
                     .oneof(19, countryBasedPaymentAccountPayload -> as(countryBasedPaymentAccountPayload, MercadoPagoAccountPayload.class), MERCADO_PAGO_ACCOUNT_SCHEMA)
                     .build();
 
+    @SuppressWarnings("deprecation")
     static final CanonicalSchema<PaymentAccountPayload> SCHEMA =
             CanonicalSchema.<PaymentAccountPayload>newBuilder()
                     .string(1, paymentAccountPayload -> paymentAccountPayload.id)

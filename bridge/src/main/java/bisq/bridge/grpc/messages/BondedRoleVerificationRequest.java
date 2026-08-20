@@ -17,6 +17,8 @@
 
 package bisq.bridge.grpc.messages;
 
+import bisq.core.dao.governance.bond.role.BondedRoleRegistration;
+
 import bisq.common.Payload;
 
 import lombok.EqualsAndHashCode;
@@ -27,36 +29,34 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public final class BondedRoleVerificationRequest implements Payload {
-    private final String bondUserName;
-    private final String roleType;
-    private final String profileId;
-    private final String signatureBase64;
+    private final BondedRoleRegistration registration;
 
-    public BondedRoleVerificationRequest(String bondUserName,
-                                         String roleType,
-                                         String profileId,
-                                         String signatureBase64) {
-        this.bondUserName = bondUserName;
-        this.roleType = roleType;
-        this.profileId = profileId;
-        this.signatureBase64 = signatureBase64;
+    public BondedRoleVerificationRequest(BondedRoleRegistration registration) {
+        this.registration = registration;
     }
 
     @Override
     public bisq.bridge.protobuf.BondedRoleVerificationRequest toProtoMessage() {
         return bisq.bridge.protobuf.BondedRoleVerificationRequest.newBuilder()
-                .setBondUserName(bondUserName)
-                .setRoleType(roleType)
-                .setProfileId(profileId)
-                .setSignatureBase64(signatureBase64)
+                .setProtocolVersion(registration.protocolVersion())
+                .setBondUserName(registration.bondUserName())
+                .setRoleType(registration.roleType())
+                .setProposalTxId(registration.proposalTxId())
+                .setLockupTxId(registration.lockupTxId())
+                .setProfileId(registration.profileId())
+                .setSignatureBase64(registration.signatureBase64())
                 .build();
     }
 
     public static BondedRoleVerificationRequest fromProto(bisq.bridge.protobuf.BondedRoleVerificationRequest proto) {
-        return new BondedRoleVerificationRequest(proto.getBondUserName(),
+        return new BondedRoleVerificationRequest(new BondedRoleRegistration(
+                proto.hasProtocolVersion() ?
+                        proto.getProtocolVersion() : BondedRoleRegistration.LEGACY_PROTOCOL_VERSION,
+                proto.getBondUserName(),
                 proto.getRoleType(),
+                proto.getProposalTxId(),
+                proto.getLockupTxId(),
                 proto.getProfileId(),
-                proto.getSignatureBase64()
-        );
+                proto.getSignatureBase64()));
     }
 }

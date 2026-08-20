@@ -101,7 +101,6 @@ public class JsonTxOutput {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof JsonTxOutput)) return false;
-        if (!super.equals(o)) return false;
         JsonTxOutput that = (JsonTxOutput) o;
         return index == that.index &&
                 bsqAmount == that.bsqAmount &&
@@ -127,8 +126,8 @@ public class JsonTxOutput {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), txVersion, txId, index, bsqAmount, btcAmount, height, isVerified,
-                burntFee, invalidatedBsq, address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString,
-                txOutputType, txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
+        return Objects.hash(txVersion, txId, index, bsqAmount, btcAmount, height, isVerified, burntFee, invalidatedBsq,
+                address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString, txOutputType,
+                txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
     }
 }

@@ -142,9 +142,11 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     private void handleMailboxCollection(Collection<DecryptedMessageWithPubKey> collection) {
         collection.stream()
+                // Check isMyMessage before isPubKeyValid so we do not validate (and log a
+                // mismatch for) messages addressed to other trades, as onDirectMessage does.
+                .filter(message -> isMyMessage(message.getNetworkEnvelope()))
                 .filter(this::isPubKeyValid)
                 .map(DecryptedMessageWithPubKey::getNetworkEnvelope)
-                .filter(this::isMyMessage)
                 .filter(e -> e instanceof MailboxMessage)
                 .map(e -> (MailboxMessage) e)
                 .forEach(this::handleMailboxMessage);

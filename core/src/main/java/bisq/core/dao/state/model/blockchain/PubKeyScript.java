@@ -18,11 +18,11 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.node.full.rpc.DtoPubKeyScript;
+import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
-import bisq.core.dao.state.model.ImmutableDaoStateModel;
-
 import bisq.common.proto.persistable.PersistablePayload;
 
 import com.google.common.collect.ImmutableList;
@@ -111,7 +111,6 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel,
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PubKeyScript)) return false;
-        if (!super.equals(o)) return false;
         PubKeyScript that = (PubKeyScript) o;
         return reqSigs == that.reqSigs &&
                 scriptType.name().equals(that.scriptType.name()) &&
@@ -122,7 +121,6 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel,
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(super.hashCode(), reqSigs, scriptType.name(), addresses, asm, hex);
+        return Objects.hash(reqSigs, scriptType.name(), addresses, asm, hex);
     }
 }

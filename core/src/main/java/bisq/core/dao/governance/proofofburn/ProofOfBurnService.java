@@ -53,6 +53,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import java.security.SignatureException;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -240,7 +242,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     }
 
     private byte[] getHashFromPreImage(String preImageAsString) {
-        byte[] preImage = preImageAsString.getBytes(Charsets.UTF_8);
+        byte[] preImage = preImageAsString.getBytes(StandardCharsets.UTF_8);
         return ProofOfBurnConsensus.getHash(preImage);
     }
 

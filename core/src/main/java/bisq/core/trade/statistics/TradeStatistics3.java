@@ -55,6 +55,8 @@ import com.google.common.base.Charsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -309,7 +311,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
         // TradeDate is different for both peers so we ignore it for hash. ExtraDataMap is ignored as well as at
         // software updates we might have different entries which would cause a different hash.
-        return Hash.getSha256Ripemd160hash(JsonUtil.objectToJson(this).getBytes(Charsets.UTF_8));
+        return Hash.getSha256Ripemd160hash(JsonUtil.objectToJson(this).getBytes(StandardCharsets.UTF_8));
     }
 
     private protobuf.TradeStatistics3.Builder getBuilder() {

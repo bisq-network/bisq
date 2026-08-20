@@ -17,19 +17,13 @@
 
 package bisq.restapi.endpoints;
 
-import bisq.core.dao.SignVerifyService;
-import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.governance.bond.role.BondedRoleRegistration;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
-import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.util.Base64;
 import bisq.common.util.Hex;
 
-import java.security.SignatureException;
-
 import lombok.extern.slf4j.Slf4j;
-
-
 
 import bisq.restapi.RestApi;
 import bisq.restapi.RestApiMain;
@@ -43,29 +37,28 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Endpoint for getting the bonded role verification for the given parameters.
  * Used for bonded roles in Bisq 2.
- * <a href="http://localhost:8082/api/v1/bonded-roles/get-bonded-role-verification">Request the verification of a bonded role with the provided parameters</a>
+ * <a href="http://localhost:8082/api/v1/bonded-role-verification">Bonded role verification API</a>
  */
 @Slf4j
 @Path("/bonded-role-verification")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Bonded role API")
 public class BondedRoleVerificationApi {
-    private final DaoStateService daoStateService;
+    private final RestApi restApi;
     private final BondedRolesRepository bondedRolesRepository;
-    private final SignVerifyService signVerifyService;
 
     public BondedRoleVerificationApi(@Context Application application) {
-        RestApi restApi = ((RestApiMain) application).getRestApi();
-        daoStateService = restApi.getDaoStateService();
+        restApi = ((RestApiMain) application).getRestApi();
         bondedRolesRepository = restApi.getBondedRolesRepository();
-        signVerifyService = restApi.getSignVerifyService();
     }
 
     @Operation(description = "Request the verification of a bonded role with the provided parameters")
@@ -73,35 +66,96 @@ public class BondedRoleVerificationApi {
             content = {@Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(allOf = BondedRoleVerificationDto.class))}
     )
+    @ApiResponse(responseCode = "503", description = "DAO state is not ready and in sync",
+            content = {@Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(allOf = BondedRoleVerificationDto.class))}
+    )
     @GET
-    @Path("get-bonded-role-verification/{bond-user-name}/{role-type}/{profile-id}/{signature}")
-    public BondedRoleVerificationDto getBondedRoleVerification(@PathParam("bond-user-name") String bondUserName,
+    @Path("get-bonded-role-verification/{protocol-version}/{bond-user-name}/{role-type}/{proposal-tx-id}/{lockup-tx-id}/{profile-id}/{signature}")
+    public BondedRoleVerificationDto getBondedRoleVerification(@PathParam("protocol-version") String protocolVersion,
+                                                               @PathParam("bond-user-name") String bondUserName,
                                                                @PathParam("role-type") String roleType,
+                                                               @PathParam("proposal-tx-id") String proposalTxId,
+                                                               @PathParam("lockup-tx-id") String lockupTxId,
                                                                @PathParam("profile-id") String profileId,
                                                                @PathParam("signature") String signature) {
-        log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}, signature={}",
-                bondUserName, roleType, profileId, signature);
-        String signatureBase64 = Base64.encode(Hex.decode(signature));
-        return bondedRolesRepository.getAcceptedBonds().stream()
-                .filter(bondedRole -> bondedRole.getBondedAsset().getBondedRoleType().name().equals(roleType))
-                .filter(bondedRole -> bondedRole.getBondedAsset().getName().equals(bondUserName))
-                .filter(bondedRole -> bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
-                .flatMap(bondedRole -> daoStateService.getTx(bondedRole.getLockupTxId()).stream())
-                .map(tx -> tx.getTxInputs().get(0))
-                .map(txInput -> {
-                    try {
-                        signVerifyService.verify(profileId, txInput.getPubKey(), signatureBase64);
-                        log.info("Successfully verified bonded role");
-                        return new BondedRoleVerificationDto();
-                    } catch (SignatureException e) {
-                        return new BondedRoleVerificationDto("Signature verification failed.");
-                    }
-                })
-                .findAny()
-                .orElseGet(() -> {
-                    String errorMessage = "Did not find a bonded role matching the parameters";
-                    log.warn(errorMessage);
-                    return new BondedRoleVerificationDto(errorMessage);
-                });
+        checkDaoReadyAndInSync();
+        log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
+                bondUserName, roleType, profileId);
+
+        // Taken as a String so that a malformed version is answered with the same structured result as any other
+        // invalid parameter. A path parameter which cannot be converted would otherwise be answered with a plain 404,
+        // which a caller cannot tell apart from an unknown route.
+        int version;
+        try {
+            version = Integer.parseInt(protocolVersion);
+        } catch (NumberFormatException e) {
+            return new BondedRoleVerificationDto("Bonded role invalid. Invalid protocol version.");
+        }
+
+        return verifyRegistration(version, bondUserName, roleType, proposalTxId, lockupTxId, profileId, signature);
+    }
+
+    @Operation(description = "Request legacy verification for a role lockup mined before the cutoff")
+    @ApiResponse(responseCode = "200", description = "A BondedRoleVerification result object",
+            content = {@Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(allOf = BondedRoleVerificationDto.class))}
+    )
+    @ApiResponse(responseCode = "503", description = "DAO state is not ready and in sync",
+            content = {@Content(mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(allOf = BondedRoleVerificationDto.class))}
+    )
+    @GET
+    @Path("get-bonded-role-verification/{bond-user-name}/{role-type}/{profile-id}/{signature}")
+    public BondedRoleVerificationDto getLegacyBondedRoleVerification(
+            @PathParam("bond-user-name") String bondUserName,
+            @PathParam("role-type") String roleType,
+            @PathParam("profile-id") String profileId,
+            @PathParam("signature") String signature) {
+        checkDaoReadyAndInSync();
+        log.info("Received legacy request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
+                bondUserName, roleType, profileId);
+        return verifyRegistration(BondedRoleRegistration.LEGACY_PROTOCOL_VERSION,
+                bondUserName, roleType, "", "", profileId, signature);
+    }
+
+    private BondedRoleVerificationDto verifyRegistration(int protocolVersion,
+                                                         String bondUserName,
+                                                         String roleType,
+                                                         String proposalTxId,
+                                                         String lockupTxId,
+                                                         String profileId,
+                                                         String signature) {
+        String signatureBase64;
+        try {
+            signatureBase64 = Base64.encode(Hex.decode(signature));
+        } catch (IllegalArgumentException e) {
+            return new BondedRoleVerificationDto("Bonded role invalid. Invalid signature encoding.");
+        }
+
+        try {
+            bondedRolesRepository.verifyBondedRole(new BondedRoleRegistration(
+                    protocolVersion,
+                    bondUserName,
+                    roleType,
+                    proposalTxId,
+                    lockupTxId,
+                    profileId,
+                    signatureBase64));
+            return new BondedRoleVerificationDto();
+        } catch (IllegalArgumentException e) {
+            return new BondedRoleVerificationDto("Bonded role invalid. " + e.getMessage());
+        }
+    }
+
+    private void checkDaoReadyAndInSync() {
+        try {
+            restApi.checkDaoReadyAndInSync();
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(new BondedRoleVerificationDto("DAO state is not ready and in sync."))
+                    .build());
+        }
     }
 }

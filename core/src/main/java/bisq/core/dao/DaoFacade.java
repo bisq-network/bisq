@@ -316,6 +316,28 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.getAcceptedBonds();
     }
 
+    // The tx whose first input pub key proves ownership of the role. Used for signing and verifying bonded role
+    // messages, e.g. at a Bisq 2 bonded role registration, so that signing and verification cannot diverge.
+    public Optional<String> findBondedRoleVerificationTxId(Role role, String lockupTxId) {
+        return bondedRolesRepository.findVerificationTxId(role, lockupTxId);
+    }
+
+    public Optional<String> getBondedRoleRegistrationSignatureMessage(Role role,
+                                                                      String lockupTxId,
+                                                                      String profileId) {
+        return bondedRolesRepository.findVerificationTxId(role, lockupTxId)
+                .map(proposalTxId -> bondedRolesRepository.getRegistrationSignatureMessage(
+                        proposalTxId, lockupTxId, profileId));
+    }
+
+    public boolean isMyBondedRoleLockupTx(String lockupTxId) {
+        return bondedRolesRepository.isMyLockupTx(lockupTxId);
+    }
+
+    public boolean canCreateNewBondedRoleLockup(Role role) {
+        return bondedRolesRepository.canCreateNewLockup(role);
+    }
+
     // Show fee
     public Coin getProposalFee(int chainHeight) {
         return ProposalConsensus.getFee(daoStateService, chainHeight);
@@ -601,13 +623,15 @@ public class DaoFacade implements DaoSetupService {
 
     public List<Bond<?>> getAllBonds() {
         List<Bond<?>> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
-        bonds.addAll(bondedRolesRepository.getBonds());
+        bonds.addAll(bondedRolesRepository.getAllRoleBonds());
         return bonds;
     }
 
     public List<Bond<?>> getAllActiveBonds() {
         List<Bond<?>> bonds = new ArrayList<>(bondedReputationRepository.getActiveBonds());
-        bonds.addAll(bondedRolesRepository.getActiveBonds());
+        bonds.addAll(bondedRolesRepository.getAllRoleBonds().stream()
+                .filter(Bond::isActive)
+                .toList());
         return bonds;
     }
 

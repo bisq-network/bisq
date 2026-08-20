@@ -107,7 +107,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         bondedReputationRepository.getBonds().addListener(bondedReputationListener);
-        bondedRolesRepository.getBonds().addListener(bondedRolesListener);
+        bondedRolesRepository.getAllRoleBonds().addListener(bondedRolesListener);
         updateList();
         GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 30);
     }
@@ -116,7 +116,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         bondedReputationRepository.getBonds().removeListener(bondedReputationListener);
-        bondedRolesRepository.getBonds().removeListener(bondedRolesListener);
+        bondedRolesRepository.getAllRoleBonds().removeListener(bondedRolesListener);
     }
 
 
@@ -142,7 +142,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
     private void updateList() {
         List<Bond<?>> combined = new ArrayList<>(bondedReputationRepository.getBonds());
-        combined.addAll(bondedRolesRepository.getBonds());
+        combined.addAll(bondedRolesRepository.getAllRoleBonds());
         observableList.setAll(combined.stream()
                 .map(bond -> new BondListItem(bond, bsqFormatter))
                 .sorted(Comparator.comparing(BondListItem::getLockupDateString).reversed())

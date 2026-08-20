@@ -50,6 +50,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.util.DateUtil;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -84,6 +85,7 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -343,6 +345,40 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
+    public boolean isWitnessOwnerPubKeyBanned(byte[] ownerPublicKey) {
+        return filterPolicyService.isWitnessSignerPubKeyBanned(Utils.HEX.encode(ownerPublicKey));
+    }
+
+    public AccountAgeWitness verifyAccountAgeWitnessOwnership(AccountAgeWitnessOwnershipProof proof) {
+        AccountAgeWitness witness = verifyWitnessOwnership(proof);
+        verifyWitnessOwnerIsNotBanned(proof);
+        return witness;
+    }
+
+    public long verifySignedWitnessOwnership(SignedWitnessOwnershipProof proof) {
+        AccountAgeWitness witness = verifyWitnessOwnership(proof);
+        verifyWitnessOwnerIsNotBanned(proof);
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateListForProvenOwner(
+                witness,
+                proof.getOwnerPublicKey());
+        long signDate = dates.isEmpty() ? -1L : dates.get(0);
+        checkArgument(signDate > 0, "Account age witness has no qualifying signed-witness chain");
+        return signDate;
+    }
+
+    private void verifyWitnessOwnerIsNotBanned(WitnessOwnershipProof proof) {
+        checkArgument(!filterPolicyService.isWitnessSignerPubKeyBanned(
+                        Utils.HEX.encode(proof.getOwnerPublicKey())),
+                "Account age witness owner is banned");
+    }
+
+    private AccountAgeWitness verifyWitnessOwnership(WitnessOwnershipProof proof) {
+        proof.verify();
+        return getWitnessByHash(proof.getWitnessHash())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No account age witness found for the ownership proof"));
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Witness age
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -387,6 +423,13 @@ public class AccountAgeWitnessService {
 
     public long getWitnessSignDate(AccountAgeWitness accountAgeWitness) {
         List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        return dates.isEmpty() ? -1L : dates.get(0);
+    }
+
+    public long getWitnessSignDate(AccountAgeWitness accountAgeWitness, byte[] expectedWitnessOwnerPubKey) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(
+                accountAgeWitness,
+                expectedWitnessOwnerPubKey);
         if (dates.isEmpty()) {
             return -1L;
         } else {
@@ -546,6 +589,41 @@ public class AccountAgeWitnessService {
                                            byte[] nonce,
                                            byte[] signature,
                                            ErrorMessageHandler errorMessageHandler) {
+        return verifyAccountAgeWitness(trade,
+                peersPaymentAccountPayload,
+                peersCurrentDate,
+                peersPubKeyRing,
+                nonce,
+                signature,
+                true,
+                errorMessageHandler);
+    }
+
+    public boolean verifyAccountAgeWitnessAtTradeDate(Trade trade,
+                                                      PaymentAccountPayload peersPaymentAccountPayload,
+                                                      Date peersTradeDate,
+                                                      PubKeyRing peersPubKeyRing,
+                                                      byte[] nonce,
+                                                      byte[] signature,
+                                                      ErrorMessageHandler errorMessageHandler) {
+        return verifyAccountAgeWitness(trade,
+                peersPaymentAccountPayload,
+                peersTradeDate,
+                peersPubKeyRing,
+                nonce,
+                signature,
+                false,
+                errorMessageHandler);
+    }
+
+    private boolean verifyAccountAgeWitness(Trade trade,
+                                            PaymentAccountPayload peersPaymentAccountPayload,
+                                            Date peersCurrentDate,
+                                            PubKeyRing peersPubKeyRing,
+                                            byte[] nonce,
+                                            byte[] signature,
+                                            boolean verifyCurrentDate,
+                                            ErrorMessageHandler errorMessageHandler) {
         final Optional<AccountAgeWitness> accountAgeWitnessOptional =
                 findWitness(peersPaymentAccountPayload, peersPubKeyRing);
         // If we don't find a stored witness data we create a new dummy object which makes is easier to reuse the
@@ -565,7 +643,7 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if peer current date is in tolerance range
-        if (!verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
+        if (verifyCurrentDate && !verifyPeersCurrentDate(peersCurrentDate, errorMessageHandler))
             return false;
 
         final byte[] peersAccountInputDataWithSalt = Utilities.concatenateByteArrays(
@@ -615,6 +693,7 @@ public class AccountAgeWitnessService {
         // Release date minus 1 day as tolerance for not synced clocks
         Date releaseDateWithTolerance = new Date(ageWitnessReleaseDate.getTime() - TimeUnit.DAYS.toMillis(1));
         final Date witnessDate = new Date(witnessDateAsLong);
+        // A one sided comparison, no subtraction on the peer controlled date, thus no overflow risk
         final boolean result = witnessDate.after(releaseDateWithTolerance);
         if (!result) {
             final String msg = "Witness date is set earlier than release date of ageWitness feature. " +
@@ -625,11 +704,14 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    private boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
-        boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
+    @VisibleForTesting
+    boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
+        long now = clock.millis();
+        boolean result = DateUtil.isWithinTolerance(
+                peersCurrentDate.getTime(), now, TimeUnit.DAYS.toMillis(1));
         if (!result) {
-            String msg = "Peers current date is further than 1 day off to our current date. " +
-                    "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date();
+            String msg = "Peers current date is further than 1 day off from our current date. " +
+                    "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date(now);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }
@@ -761,8 +843,43 @@ public class AccountAgeWitnessService {
         return Optional.empty();
     }
 
-    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
-        return signedWitnessService.publishOwnSignedWitness(signedWitness);
+    // The signedWitness was created by the seller and received with the PayoutTxPublishedMessage, so all its
+    // fields are peer controlled. We pass the data we have validated in the trade protocol to the
+    // signedWitnessService, which accepts the witness only if it is the one the seller was supposed to create
+    // for that trade.
+    // This method is called from the buyer and the witness is the buyer's witness signed by the seller.
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness, Trade trade) {
+        try {
+            Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
+            PubKeyRing buyerPubKeyRing = checkNotNull(contract.getBuyerPubKeyRing(), "buyerPubKeyRing must not be null");
+            PubKeyRing sellerPubKeyRing = checkNotNull(contract.getSellerPubKeyRing(), "sellerPubKeyRing must not be null");
+            PaymentAccountPayload myPaymentAccountPayload = checkNotNull(
+                    trade.getProcessModel().getPaymentAccountPayload(trade),
+                    "myPaymentAccountPayload must not be null");
+            Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
+
+            byte[] witnessOwnerPubKey = keyRing.getPubKeyRing().getSignaturePubKeyBytes();
+            byte[] signerPubKey = signedWitness.getSignerPubKey();
+            checkArgument(Arrays.equals(buyerPubKeyRing.getSignaturePubKeyBytes(), witnessOwnerPubKey),
+                    "Contract buyer pub key must match local witness owner pub key");
+            checkArgument(Arrays.equals(sellerPubKeyRing.getSignaturePubKeyBytes(), signerPubKey),
+                    "Contract seller pub key must match signedWitness signer pub key");
+
+            byte[] accountAgeWitnessHash = signedWitness.getAccountAgeWitnessHash();
+            AccountAgeWitness myWitness = getMyWitness(myPaymentAccountPayload);
+            checkArgument(Arrays.equals(accountAgeWitnessHash, myWitness.getHash()),
+                    "The witness hash is not matching");
+
+            return signedWitnessService.publishOwnSignedWitness(signedWitness,
+                    tradeAmount,
+                    myWitness,
+                    signerPubKey,
+                    witnessOwnerPubKey,
+                    trade.getDate().getTime());
+        } catch (Exception e) {
+            log.warn("Failed to publish signedWitness received in trade {}, exception {}", trade.getId(), e.toString());
+        }
+        return false;
     }
 
     // Arbitrator signing

@@ -961,8 +961,13 @@ message BondedRoleInfo {
     string bonded_role_type = 1;     // BondedRoleType enum name.
     string name = 2;                 // Role name.
     string link = 3;                 // Role link.
-    bool is_accepted = 4;            // Whether the role has been accepted by the DAO.
+    // Deprecated. It is true only while this lockup lifecycle is active, so it is false for a READY_FOR_LOCKUP,
+    // UNLOCKED, ILLEGALLY_SPENT or CONFISCATED entry of a role the DAO did accept. Use bond_state instead.
+    bool is_accepted = 4;
     int64 required_bond = 5;         // Required BSQ bond in sats.
+    string role_uid = 6;             // Stable role uid; several entries can share it.
+    optional string lockup_tx_id = 7; // Exact lockup represented by this entry, absent for READY_FOR_LOCKUP.
+    string bond_state = 8;           // BondState enum name for this exact lockup lifecycle.
 }
 
 message GetBondedRolesReply {

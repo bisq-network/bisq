@@ -25,12 +25,20 @@ option java_multiple_files = true;
 message BsqBlockSubscription {
 }
 
+message BsqBlockSubscriptionEvent {
+    oneof payload {
+        sint32 subscriptionReadyHeight = 1;
+        BsqBlockDto bsqBlock = 2;
+    }
+}
+
 message BsqBlocksRequest {
     sint32 startBlockHeight = 1;
 }
 
 message BsqBlocksResponse {
     repeated BsqBlockDto bsqBlocks = 1;
+    sint32 snapshotHeight = 2;
 }
 
 message BsqBlockDto {
@@ -96,6 +104,21 @@ message AccountAgeWitnessDateResponse {
     sint64 date = 1;
 }
 
+message AccountAgeWitnessOwnershipRequest {
+    uint32 protocolVersion = 1;
+    string profileId = 2;
+    bytes witnessHash = 3;
+    bytes accountInputDataWithSalt = 4;
+    bytes ownerPublicKey = 5;
+    bytes signature = 6;
+}
+message AccountAgeWitnessOwnershipResponse {
+    reserved 1;
+    reserved "date";
+    sint64 dateBucket = 2;
+    bytes witnessNullifier = 3;
+}
+
 
 message SignedWitnessDateRequest {
     string hashAsHex = 1;
@@ -104,13 +127,41 @@ message SignedWitnessDateResponse {
     sint64 date = 1;
 }
 
+message SignedWitnessOwnershipRequest {
+    uint32 protocolVersion = 1;
+    string profileId = 2;
+    bytes witnessHash = 3;
+    bytes accountInputDataWithSalt = 4;
+    bytes ownerPublicKey = 5;
+    bytes signature = 6;
+}
+message SignedWitnessOwnershipResponse {
+    reserved 1;
+    reserved "date";
+    sint64 dateBucket = 2;
+    bytes witnessNullifier = 3;
+}
+
 
 message BondedRoleVerificationRequest {
     string bondUserName = 1;
     string roleType = 2;
     string profileId = 3;
     string signatureBase64 = 4;
+    string proposalTxId = 5; // Empty for legacy version 1; required from version 2.
+    string lockupTxId = 6; // Empty for legacy version 1; required from version 2.
+    optional uint32 protocolVersion = 7; // Missing is read as legacy version 1.
 }
 message BondedRoleVerificationResponse {
     optional string errorMessage = 1;
+}
+
+// Revalidates a consumer's complete set of active registrations against one DAO-state snapshot.
+message BondedRolesVerificationRequest {
+    repeated BondedRoleVerificationRequest registrations = 1;
+}
+message BondedRolesVerificationResponse {
+    sint32 daoStateBlockHeight = 1;
+    // Results have the same order and cardinality as registrations in the request.
+    repeated BondedRoleVerificationResponse verifications = 2;
 }

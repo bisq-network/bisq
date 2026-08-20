@@ -127,7 +127,8 @@ public enum Param {
 
     MAX_TRADE_LIMIT("2", ParamType.BTC, 2, 2), // max trade limit for lowest risk payment method. Others will get derived from that.
 
-    // The base factor to multiply the bonded role amount. E.g. If Twitter admin has 20 as amount and BONDED_ROLE_FACTOR is 1000 we get 20000 BSQ as required bond.
+    // The base factor applied at the role proposal's block height. E.g. If Twitter admin has 20 as amount and
+    // BONDED_ROLE_FACTOR is 1000 we get 20000 BSQ as required bond. Later changes affect new role proposals only.
     // Using BSQ as type is not really the best option but we don't want to introduce a new ParamType just for that one Param.
     // As the end rules is in fact BSQ it is not completely incorrect as well.
     BONDED_ROLE_FACTOR("1000", ParamType.BSQ, 2, 2),

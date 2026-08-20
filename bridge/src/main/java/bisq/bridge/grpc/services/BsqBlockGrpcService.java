@@ -67,6 +67,8 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
     private final BondedReputationRepository bondedReputationRepository;
     private final ExecutorService notifyObserversExecutor, requestBlocksExecutor;
     private final Set<ManagedStreamObserver<bisq.bridge.protobuf.BsqBlockDto>> streamObservers = new CopyOnWriteArraySet<>();
+    private final Set<ManagedStreamObserver<bisq.bridge.protobuf.BsqBlockSubscriptionEvent>> snapshotStreamObservers =
+            new CopyOnWriteArraySet<>();
 
     @Inject
     public BsqBlockGrpcService(DaoStateService daoStateService,
@@ -83,7 +85,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         log.info("onParseBlockCompleteAfterBatchProcessing");
-        if (streamObservers.isEmpty()) {
+        if (streamObservers.isEmpty() && snapshotStreamObservers.isEmpty()) {
             return;
         }
 
@@ -92,11 +94,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                 Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
                 Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
                 BsqBlockDto bsqBlockDto = toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId);
-                if (bsqBlockDto.getTxDtoList().isEmpty()) {
-                    log.info("No relevant BSQ transactions in that block, therefor we skip publishing. bsqBlockDto={}", bsqBlockDto);
-                    return;
-                }
-
+                // Empty live blocks provide the clock for bonded-role revalidation. Historical requests stay sparse.
                 log.info("Notify observers of new bsqBlockDto: {}", bsqBlockDto);
                 var responseProto = bsqBlockDto.toProtoMessage();
                 streamObservers.forEach(observer -> {
@@ -107,9 +105,21 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                         notifyOnError(observer, e);
                     }
                 });
+                var snapshotStreamResponse = bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
+                        .setBsqBlock(responseProto)
+                        .build();
+                snapshotStreamObservers.forEach(observer -> {
+                    try {
+                        observer.onNext(snapshotStreamResponse);
+                    } catch (Exception e) {
+                        log.error("Failed to notify snapshot observer", e);
+                        notifyOnError(observer, e);
+                    }
+                });
             } catch (Exception e) {
                 log.error("Error at processing new bsqBlockDto", e);
                 streamObservers.forEach(observer -> notifyOnError(observer, e));
+                snapshotStreamObservers.forEach(observer -> notifyOnError(observer, e));
             }
         }, notifyObserversExecutor);
     }
@@ -121,6 +131,26 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         log.info("subscribe streamObserver {}", streamObserver);
         var managedStreamObserver = new ManagedStreamObserver<>(streamObserver, streamObservers::remove, streamObservers::remove);
         streamObservers.add(managedStreamObserver);
+    }
+
+    @Override
+    public void subscribeWithSnapshot(bisq.bridge.protobuf.BsqBlockSubscription subscription,
+                                      StreamObserver<bisq.bridge.protobuf.BsqBlockSubscriptionEvent> streamObserver) {
+        log.info("subscribeWithSnapshot streamObserver {}", streamObserver);
+        var managedStreamObserver = new ManagedStreamObserver<>(streamObserver,
+                snapshotStreamObservers::remove,
+                snapshotStreamObservers::remove);
+        CompletableFuture.runAsync(() -> {
+            try {
+                snapshotStreamObservers.add(managedStreamObserver);
+                managedStreamObserver.onNext(bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
+                        .setSubscriptionReadyHeight(daoStateService.getChainHeight())
+                        .build());
+            } catch (Exception e) {
+                log.error("Failed to establish snapshot stream observer", e);
+                notifyOnError(managedStreamObserver, e);
+            }
+        }, notifyObserversExecutor);
     }
 
     @Override
@@ -138,18 +168,20 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
 
                 long ts = System.currentTimeMillis();
                 int startBlockHeight = BsqBlocksRequest.fromProto(bsqBlocksRequest).getStartBlockHeight();
+                int snapshotHeight = daoStateService.getChainHeight();
                 log.info("Request Bsq blocks from block {}", startBlockHeight);
 
                 Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
                 Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
                 List<BsqBlockDto> blocks = daoStateService.getBlocksFromBlockHeight(startBlockHeight).stream()
+                        .filter(block -> block.getHeight() <= snapshotHeight)
                         .map(block -> toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId))
                         .filter(dto -> !dto.getTxDtoList().isEmpty())
                         .collect(Collectors.toList());
 
                 // About 108 ms for 703 BsqBlocks, responseProto is about 73kb
                 log.info("Creating {} BsqBlocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
-                var responseProto = new BsqBlocksResponse(blocks).toProtoMessage();
+                var responseProto = new BsqBlocksResponse(blocks, snapshotHeight).toProtoMessage();
                 streamObserver.onNext(responseProto);
                 streamObserver.onCompleted();
             } catch (Exception e) {
@@ -166,6 +198,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         ExecutorFactory.shutdownAndAwaitTermination(requestBlocksExecutor, 1000);
 
         streamObservers.clear();
+        snapshotStreamObservers.clear();
     }
 
     private BsqBlockDto toBlockDto(Block block,

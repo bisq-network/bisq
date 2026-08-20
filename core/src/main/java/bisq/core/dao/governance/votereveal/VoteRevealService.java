@@ -45,6 +45,8 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -130,8 +132,11 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private byte[] getHashOfBlindVoteList() {
-        List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
+    @VisibleForTesting
+    byte[] getHashOfBlindVoteList(int chainHeight) {
+        int resultEvaluationHeight = periodService.getFirstBlockOfPhase(chainHeight, DaoPhase.Phase.RESULT);
+        List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService,
+                resultEvaluationHeight);
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
         log.debug("blindVoteList for creating hash: {}", blindVotes);
         log.info("Sha256Ripemd160 hash of hashOfBlindVoteList {}", Utilities.bytesAsHexString(hashOfBlindVoteList));
@@ -179,7 +184,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                     if (isInVoteRevealPhase && !isLastBlockInPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
                         log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, blindVoteTxId);
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
-                        revealVote(myVote, true);
+                        revealVote(myVote, true, chainHeight);
                     } else {
                         // We missed the vote reveal phase but publish a vote reveal tx to unlock the blind vote stake.
                         boolean isAfterVoteRevealPhase = periodService.getPhaseForHeight(chainHeight).ordinal() > DaoPhase.Phase.VOTE_REVEAL.ordinal();
@@ -206,13 +211,13 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                             // We handle the exception here inside the stream iteration as we have not get triggered from an
                             // outside user intent anyway. We keep errors in a observable list so clients can observe that to
                             // get notified if anything went wrong.
-                            revealVote(myVote, false);
+                            revealVote(myVote, false, chainHeight);
                         }
                     }
                 });
     }
 
-    private void revealVote(MyVote myVote, boolean isInVoteRevealPhase) {
+    private void revealVote(MyVote myVote, boolean isInVoteRevealPhase, int chainHeight) {
         try {
             // We collect all valid blind vote items we received via the p2p network.
             // It might be that different nodes have a different collection of those items.
@@ -222,7 +227,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
             // If we are not in the right phase we just add an empty hash (still need to have the hash as otherwise we
             // would not recognize the tx as vote reveal tx)
-            byte[] hashOfBlindVoteList = isInVoteRevealPhase ? getHashOfBlindVoteList() : new byte[20];
+            byte[] hashOfBlindVoteList = isInVoteRevealPhase ? getHashOfBlindVoteList(chainHeight) : new byte[20];
             byte[] opReturnData = VoteRevealConsensus.getOpReturnData(hashOfBlindVoteList, myVote.getSecretKey());
 
             // We search for my unspent stake output.

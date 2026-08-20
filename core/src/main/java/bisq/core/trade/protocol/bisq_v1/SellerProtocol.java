@@ -29,15 +29,10 @@ import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerBroadcastPayoutTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessShareBuyerPaymentAccountMessage;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublishedMessage;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerVerifyBuyerPaymentAccount;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -57,6 +52,20 @@ public abstract class SellerProtocol extends DisputeProtocol {
         super(trade);
     }
 
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+                .with(SellerEvent.STARTUP)
+                .preCondition(trade.getOffer() != null &&
+                        trade.getOffer().isFiatOffer() &&
+                        processModel.getFinalizedDepositTx() != null &&
+                        trade.getDelayedPayoutTxBytes() != null))
+                .setup(tasks(SellerProtocolTaskSets.afterInitialization(
+                        processModel.isDepositTxAndDelayedPayoutTxMessageDelivered())))
+                .executeTasks();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Mailbox
@@ -66,7 +75,9 @@ public abstract class SellerProtocol extends DisputeProtocol {
     public void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
         super.onMailboxMessage(message, peerNodeAddress);
 
-        if (message instanceof CounterCurrencyTransferStartedMessage) {
+        if (message instanceof ShareBuyerPaymentAccountMessage) {
+            handle((ShareBuyerPaymentAccountMessage) message, peerNodeAddress);
+        } else if (message instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) message, peerNodeAddress);
         }
     }
@@ -80,21 +91,16 @@ public abstract class SellerProtocol extends DisputeProtocol {
         expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(SellerProcessDelayedPayoutTxSignatureResponse.class,
-                        SellerFinalizesDelayedPayoutTx.class,
-                        SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
-                        SellerPublishesDepositTx.class,
-                        SellerPublishesTradeStatistics.class))
+                .setup(tasks(SellerProtocolTaskSets.afterDelayedPayoutSignature()))
                 .executeTasks();
     }
 
     protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
+        boolean publishDepositAfterValidation = !trade.isDepositPublished() && processModel.getDepositTx() != null;
         expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED, Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(SellerProcessShareBuyerPaymentAccountMessage.class,
-                        ApplyFilter.class,
-                        VerifyPeersAccountAgeWitness.class))
+                .setup(tasks(SellerProtocolTaskSets.afterBuyerPaymentAccountReveal(publishDepositAfterValidation)))
                 .run(() -> {
                     // We stop timeout here and don't start a new one as the
                     // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats to send the message and has it's own
@@ -127,6 +133,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                             removeMailboxMessageAfterProcessing(message);
                         }))
                 .setup(tasks(
+                        SellerVerifyBuyerPaymentAccount.class,
                         SellerProcessCounterCurrencyTransferStartedMessage.class,
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass()))
@@ -143,6 +150,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                 .with(event)
                 .preCondition(trade.confirmPermitted()))
                 .setup(tasks(
+                        SellerVerifyBuyerPaymentAccount.class,
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),
                         SellerSignAndFinalizePayoutTx.class,

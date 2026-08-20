@@ -422,7 +422,7 @@ Schema version is currently `1`. Each file contains:
 - `chainHeight`
 - `burningManSelectionHeight`
 - `legacyBurningManAddress`
-- sorted `entries`
+- `entries` in arbitrary order
 
 Each entry contains:
 
@@ -438,7 +438,7 @@ Loader validation requires:
 - positive `burningManSelectionHeight`
 - non-blank `legacyBurningManAddress`
 - non-empty entries
-- non-blank, unique, lexicographically sorted receiver addresses
+- non-blank, unique receiver addresses; entry order is not significant
 - finite, non-negative `cappedBurnAmountShare`
 
 Mainnet requires at least one address list for the current network. Non-mainnet modes can load bundled lists without
@@ -486,7 +486,8 @@ address list to the app data directory:
 - `chainHeight = current DAO chain height`
 - `burningManSelectionHeight = current DPT snapshot height`
 - `legacyBurningManAddress = legacy address at the snapshot height`
-- entries are active candidates grouped by receiver address, with duplicate-address shares merged
+- entries are active candidates grouped by receiver address, with duplicate-address shares merged and
+  first-encounter order preserved
 
 The exported file name is `bm-addresses-v%04d`. Released list files should be append-only and immutable.
 

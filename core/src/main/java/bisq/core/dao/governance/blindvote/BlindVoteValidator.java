@@ -32,7 +32,9 @@ import javax.inject.Inject;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BlindVoteValidator {
+    private static final Set<String> INVALID_BLIND_VOTE_TX_IDS = new HashSet<>();
 
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
@@ -130,7 +133,9 @@ public class BlindVoteValidator {
 
     private boolean isBlindVoteTxType(BlindVote blindVote, Tx tx) {
         boolean txTypeMatches = tx.getTxType() == TxType.BLIND_VOTE;
-        if (!txTypeMatches) {
+        // We get called many times and want to avoid to spam the logs, thus we use a cache
+        if (!txTypeMatches && !INVALID_BLIND_VOTE_TX_IDS.contains(blindVote.getTxId())) {
+            INVALID_BLIND_VOTE_TX_IDS.add(blindVote.getTxId());
             log.warn("blindVoteTx must have type BLIND_VOTE but is {}. blindVoteTxId={}",
                     tx.getTxType(),
                     blindVote.getTxId());

@@ -951,7 +951,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return new AvailabilityCheckResult(verifyTradePrice(offer, request), null, null);
         }
 
-        List<NodeAddress> acceptedMediators = offer.getOfferPayload().orElseThrow().getMediatorNodeAddresses();
+        @SuppressWarnings("deprecation") List<NodeAddress> acceptedMediators = offer.getOfferPayload().orElseThrow().getMediatorNodeAddresses();
         if (!DisputeAgentSelection.hasAvailableAcceptedDisputeAgent(acceptedMediators, mediatorManager)) {
             return new AvailabilityCheckResult(AvailabilityResult.NO_MEDIATORS, null, null);
         } else if (!DisputeAgentSelection.hasAvailableDisputeAgent(refundAgentManager)) {

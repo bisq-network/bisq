@@ -151,6 +151,7 @@ public class BisqSetup {
     private final AppStartupState appStartupState;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
 
     @Setter
@@ -241,7 +242,7 @@ public class BisqSetup {
                      Socks5ProxyProvider socks5ProxyProvider,
                      MediationManager mediationManager,
                      RefundManager refundManager,
-                     ArbitrationManager arbitrationManager) {
+                     @SuppressWarnings("deprecation") ArbitrationManager arbitrationManager) {
         this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;

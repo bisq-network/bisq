@@ -92,10 +92,10 @@ public class BondingViewUtils {
         long requiredBond = daoFacade.getRequiredBond(roleProposal);
         Coin lockupAmount = Coin.valueOf(requiredBond);
         int lockupTime = roleProposal.get().getUnlockTime();
-        if (!bondedRolesRepository.isBondedAssetAlreadyInBond(role)) {
+        if (bondedRolesRepository.canCreateNewLockup(role)) {
             lockupBond(role.getHash(), lockupAmount, lockupTime, LockupReason.BONDED_ROLE, resultHandler);
         } else {
-            handleError(new RuntimeException("The role has been used already for a lockup tx."));
+            handleError(new RuntimeException("A lockup transaction for the role is already pending."));
         }
     }
 

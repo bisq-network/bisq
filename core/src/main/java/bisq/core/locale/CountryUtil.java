@@ -99,7 +99,7 @@ public class CountryUtil {
 
     private static void populateCountryListByCodes(List<Country> list, String[] codes) {
         for (String code : codes) {
-            Locale locale = new Locale(LanguageUtil.getDefaultLanguage(), code, "");
+            Locale locale = Locale.of(LanguageUtil.getDefaultLanguage(), code, "");
             final String countryCode = locale.getCountry();
             String regionCode = getRegionCode(countryCode);
             final Region region = new Region(regionCode, getRegionName(regionCode));
@@ -157,7 +157,7 @@ public class CountryUtil {
         if (countryCode.equals("XK"))
             return "Republic of Kosovo";
         else
-            return new Locale(LanguageUtil.getDefaultLanguage(), countryCode).getDisplayCountry();
+            return Locale.of(LanguageUtil.getDefaultLanguage(), countryCode).getDisplayCountry();
     }
 
     public static String getNameAndCode(String countryCode) {

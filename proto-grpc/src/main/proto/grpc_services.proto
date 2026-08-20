@@ -266,7 +266,7 @@ service Dao {
     // If cycle_index is negative the most recent completed cycle is used.
     rpc GetVoteResults (GetVoteResultsRequest) returns (GetVoteResultsReply) {
     }
-    // List bonded roles with their bondedRoleType, name, and acceptance state.
+    // List role-bond lifecycle entries. A role with several lockups appears several times.
     rpc GetBondedRoles (GetBondedRolesRequest) returns (GetBondedRolesReply) {
     }
     // Get the current value of a DAO parameter (by Param enum name, e.g. "BONDED_ROLE_FACTOR").

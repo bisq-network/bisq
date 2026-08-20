@@ -31,7 +31,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -43,7 +42,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Immutable
 @Value
-@Slf4j
 public final class MyReputation implements PersistablePayload, NetworkPayload, BondedAsset {
     // Uid is needed to be sure that 2 objects with the same salt are kept separate.
     private final String uid;
@@ -102,7 +100,6 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof MyReputation)) return false;
-        if (!super.equals(o)) return false;
         MyReputation that = (MyReputation) o;
         return Objects.equals(uid, that.uid) &&
                 Arrays.equals(salt, that.salt);
@@ -110,12 +107,13 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
 
     @Override
     public int hashCode() {
-
-        int result = Objects.hash(super.hashCode(), uid);
+        int result = Objects.hashCode(uid);
         result = 31 * result + Arrays.hashCode(salt);
         return result;
     }
-///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 

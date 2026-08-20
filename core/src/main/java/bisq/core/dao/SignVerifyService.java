@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.crypto.LowRSigningKey;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
 
 import bisq.common.util.Utilities;
 
@@ -66,8 +67,12 @@ public class SignVerifyService {
     // Proofs ownership of the proof of burn tx.
     public byte[] getPubKey(String txId) {
         return daoStateService.getTx(txId)
-                .map(tx -> tx.getTxInputs().get(0))
-                .map(e -> Utilities.decodeFromHex(e.getPubKey()))
+                .filter(tx -> !tx.getTxInputs().isEmpty())
+                .map(tx -> tx.getTxInputs().getFirst())
+                .map(TxInput::getPubKey)
+                // Not set for input types from which we cannot extract the pub key. decodeFromHex would throw on null.
+                .filter(pubKey -> pubKey != null && !pubKey.isEmpty())
+                .map(Utilities::decodeFromHex)
                 .orElse(new byte[0]);
     }
 
@@ -97,5 +102,17 @@ public class SignVerifyService {
         ECKey key = ECKey.fromPublicOnly(HEX.decode(pubKey));
         checkNotNull(key, "ECKey must not be null");
         key.verifyMessage(message, signatureBase64);
+    }
+
+    // Beside a failed signature verification a malformed pubKey or signature would throw as well, so we
+    // catch any exception here to let callers check multiple candidate keys without special casing those.
+    public boolean isValidSignature(String message, String pubKey, String signatureBase64) {
+        try {
+            verify(message, pubKey, signatureBase64);
+            return true;
+        } catch (Exception e) {
+            log.debug("Signature verification failed. error={}", e.toString());
+            return false;
+        }
     }
 }

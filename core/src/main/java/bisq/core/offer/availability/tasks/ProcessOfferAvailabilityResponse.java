@@ -39,6 +39,7 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
         super(taskHandler, model);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void run() {
         Offer offer = model.getOffer();

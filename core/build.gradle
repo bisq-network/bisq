@@ -80,6 +80,7 @@ dependencies {
 
 test {
     systemProperty 'jdk.attach.allowAttachSelf', true
+    systemProperty 'bisq.runResourceAudits', providers.gradleProperty('runResourceAudits').getOrElse('false')
 }
 
 tasks.register('hashMapOrderToolClasspath') {

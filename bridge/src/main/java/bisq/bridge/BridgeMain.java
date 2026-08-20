@@ -21,7 +21,6 @@ import bisq.core.app.misc.ExecutableForAppWithP2p;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
-import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,10 +68,9 @@ public class BridgeMain extends ExecutableForAppWithP2p {
     }
 
     @Override
-    public void gracefulShutDown(ResultHandler resultHandler) {
+    protected void shutDownAdditionalServices() {
         if (bridge != null) {
             bridge.shutDown();
         }
-        super.gracefulShutDown(resultHandler);
     }
 }

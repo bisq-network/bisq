@@ -30,6 +30,7 @@ public enum BondState {
     UNLOCK_TX_CONFIRMED,
     UNLOCKING,              // Lock time still not expired
     UNLOCKED,               // Fully unlocked
+    ILLEGALLY_SPENT,        // Spent illegally without an unlock tx
     CONFISCATED;            // Bond got confiscated by DAO voting
 
     public boolean isActive() {

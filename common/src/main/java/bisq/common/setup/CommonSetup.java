@@ -38,6 +38,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import ch.qos.logback.classic.Level;
 
@@ -45,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonSetup {
+    private static final AtomicBoolean exitScheduled = new AtomicBoolean();
+    private static volatile Thread shutdownHook;
 
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         setupLog(config);
@@ -114,7 +117,7 @@ public class CommonSetup {
     }
 
     protected static void setupShutdownHandler(GracefulShutDownHandler gracefulShutDownHandler) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        Thread hook = new Thread(() -> {
             try {
                 var countDownLatch = new CountDownLatch(1);
                 UserThread.execute(() ->
@@ -125,7 +128,50 @@ public class CommonSetup {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-        }));
+        }, "BisqShutdownHook");
+        Runtime.getRuntime().addShutdownHook(hook);
+        shutdownHook = hook;
+    }
+
+    /**
+     * Terminates the process after an application-initiated graceful shutdown has completed.
+     * <p>
+     * The shutdown hook is a backstop for termination initiated outside the application. Running it
+     * again for our own controlled exit would re-enter the graceful shutdown and can deadlock: the
+     * hook waits for work posted to the UserThread while {@link System#exit(int)} waits for the hook.
+     * The exit therefore also runs outside the UserThread.
+     */
+    public static void exitAfter(int status, long delay, TimeUnit timeUnit) {
+        if (!exitScheduled.compareAndSet(false, true)) {
+            return;
+        }
+
+        removeShutdownHook();
+        Thread exitThread = new Thread(() -> {
+            try {
+                timeUnit.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            System.exit(status);
+        }, "BisqExit");
+        exitThread.setDaemon(false);
+        exitThread.start();
+    }
+
+    static boolean removeShutdownHook() {
+        Thread hook = shutdownHook;
+        shutdownHook = null;
+        if (hook == null) {
+            return false;
+        }
+
+        try {
+            return Runtime.getRuntime().removeShutdownHook(hook);
+        } catch (IllegalStateException | SecurityException ignored) {
+            // The JVM is already shutting down, or its security policy does not permit removal.
+            return false;
+        }
     }
 
     protected static void maybePrintPathOfCodeSource() {

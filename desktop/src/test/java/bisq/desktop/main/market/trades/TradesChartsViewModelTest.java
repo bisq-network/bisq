@@ -48,16 +48,21 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 
 public class TradesChartsViewModelTest {
@@ -105,12 +110,20 @@ public class TradesChartsViewModelTest {
             1
     );
 
+    private Locale previousLocale;
+
     @BeforeEach
     public void setup() throws IOException {
+        previousLocale = GlobalSettings.getLocale();
         GlobalSettings.setLocale(Locale.US);
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
         model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
                 mock(Navigation.class));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        GlobalSettings.setLocale(previousLocale);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -193,6 +206,34 @@ public class TradesChartsViewModelTest {
         assertEquals(volume, candleData.accumulatedVolume);
         assertEquals(isBullish, candleData.isBullish);
         assertEquals(date, candleData.date);
+    }
+
+    @Test
+    public void getUpdateChartResultToleratesEmptyUsdAveragePriceMaps() {
+        // Regression: a chart update that runs before the USD-average maps are populated must not
+        // NPE on a missing per-tick map. Current timestamp so the trade lands in a non-empty bucket
+        // and the candle path (where the dereference was) runs.
+        String currencyCode = "EUR";
+        List<TradeStatistics3> tradeStatisticsByCurrency = List.of(
+                new TradeStatistics3(currencyCode,
+                        Price.parse(currencyCode, "520").getValue(),
+                        Coin.parseCoin("1").getValue(),
+                        PaymentMethod.BLOCK_CHAINS_ID,
+                        System.currentTimeMillis(),
+                        null,
+                        null,
+                        null,
+                        null));
+
+        Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> emptyUsdAveragePriceMaps = new HashMap<>();
+
+        ChartCalculations.UpdateChartResult result = assertDoesNotThrow(() ->
+                ChartCalculations.getUpdateChartResult(tradeStatisticsByCurrency,
+                        TradesChartsViewModel.TickUnit.DAY,
+                        emptyUsdAveragePriceMaps,
+                        currencyCode).get());
+
+        assertFalse(result.getPriceItems().isEmpty());
     }
 
     // TODO JMOCKIT

@@ -29,6 +29,7 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
+import bisq.common.util.DateUtil;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -147,8 +148,10 @@ public class SignedWitness implements ProcessOncePersistableNetworkPayload, Pers
     @Override
     public boolean isDateInTolerance(Clock clock) {
         // We don't allow older or newer than 1 day.
-        // Preventing forward dating is also important to protect against a sophisticated attack
-        return Math.abs(clock.millis() - date) <= TOLERANCE;
+        // Preventing forward dating is also important to protect against a sophisticated attack.
+        // The date is peer controlled, so we must not calculate a difference: Math.abs(now - date)
+        // can overflow for extreme date values and would then accept the payload.
+        return DateUtil.isWithinTolerance(date, clock.millis(), TOLERANCE);
     }
 
     @Override

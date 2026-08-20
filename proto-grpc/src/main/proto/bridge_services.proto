@@ -27,6 +27,8 @@ option java_multiple_files = true;
 service BsqBlockGrpcService {
     rpc Subscribe (BsqBlockSubscription) returns (stream BsqBlockDto);
 
+    rpc SubscribeWithSnapshot (BsqBlockSubscription) returns (stream BsqBlockSubscriptionEvent);
+
     rpc RequestBsqBlocks (BsqBlocksRequest) returns (BsqBlocksResponse);
 }
 
@@ -42,12 +44,18 @@ service AccountTimestampGrpcService {
 
 service AccountAgeWitnessGrpcService {
     rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
+
+    rpc VerifyAccountAgeWitnessOwnership (AccountAgeWitnessOwnershipRequest) returns (AccountAgeWitnessOwnershipResponse);
 }
 
 service SignedWitnessGrpcService {
     rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);
+
+    rpc VerifySignedWitnessOwnership (SignedWitnessOwnershipRequest) returns (SignedWitnessOwnershipResponse);
 }
 
 service BondedRoleGrpcService {
     rpc RequestBondedRoleVerification (BondedRoleVerificationRequest) returns (BondedRoleVerificationResponse);
+
+    rpc RequestBondedRoleBatchVerification (BondedRolesVerificationRequest) returns (BondedRolesVerificationResponse);
 }

@@ -41,6 +41,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import java.nio.charset.StandardCharsets;
+
 import java.math.BigInteger;
 
 import java.util.Collection;
@@ -258,14 +260,14 @@ public class AlertManager {
     }
 
     private void signAndAddSignatureToAlertMessage(Alert alert) {
-        String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(Charsets.UTF_8));
+        String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(StandardCharsets.UTF_8));
         String signatureAsBase64 = LowRSigningKey.from(alertSigningKey).signMessage(alertMessageAsHex);
         alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(Alert alert) {
         try {
-            String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(Charsets.UTF_8));
+            String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(StandardCharsets.UTF_8));
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(alertMessageAsHex, alert.getSignatureAsBase64());
             return true;
         } catch (Exception e) {

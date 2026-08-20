@@ -110,6 +110,12 @@ class TradeValidationTest {
         assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(0));
     }
 
+    @Test
+    void checkPeersDateRejectsExtremeDates() {
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(Long.MIN_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> TradeValidation.checkPeersDate(Long.MAX_VALUE));
+    }
+
     /* --------------------------------------------------------------------- */
     // Contract hash
     /* --------------------------------------------------------------------- */

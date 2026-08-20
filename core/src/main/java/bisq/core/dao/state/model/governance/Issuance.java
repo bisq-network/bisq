@@ -115,13 +115,11 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
     // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
     // The equals and hashCode methods cannot be overwritten in Enums.
 
-    // equals use `super.equals` which makes it an identity equality check, not a value equality check. Use isValueEqual
-    // for value equality check.
+    // equals compares all fields. It used to delegate to `super.equals`, which made it an identity check.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Issuance)) return false;
-        if (!super.equals(o)) return false;
         Issuance issuance = (Issuance) o;
         return chainHeight == issuance.chainHeight &&
                 amount == issuance.amount &&
@@ -132,17 +130,7 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), txId, chainHeight, amount, pubKey, issuanceType.name());
-    }
-
-
-    public boolean isValueEqual(Object o) {
-        if (!(o instanceof Issuance issuance)) return false;
-        return chainHeight == issuance.chainHeight &&
-                amount == issuance.amount &&
-                Objects.equals(txId, issuance.txId) &&
-                Objects.equals(pubKey, issuance.pubKey) &&
-                issuanceType == issuance.issuanceType;
+        return Objects.hash(txId, chainHeight, amount, pubKey, issuanceType.name());
     }
 
 }

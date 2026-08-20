@@ -28,6 +28,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.base.Charsets;
 
+import java.nio.charset.StandardCharsets;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -41,7 +43,7 @@ public class AssetConsensus {
 
     public static byte[] getHash(StatefulAsset statefulAsset) {
         String stringInput = "AssetListingFee-" + statefulAsset.getTickerSymbol();
-        final byte[] bytes = stringInput.getBytes(Charsets.UTF_8);
+        final byte[] bytes = stringInput.getBytes(StandardCharsets.UTF_8);
         return Hash.getSha256Ripemd160hash(bytes);
     }
 

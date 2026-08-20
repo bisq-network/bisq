@@ -49,11 +49,8 @@ public class MeritConsensusV2 {
                                      MeritList untrustedMeritList,
                                      DaoStateService daoStateService) {
         try {
-            // We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even at
-            // later blocks (merit decreases with each block).
-            int blindVoteTxHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
+            int blindVoteTxHeight = getBlindVoteTxHeight(blindVoteTxId, daoStateService);
             if (blindVoteTxHeight <= 0) {
-                log.error("Error at getMeritStake: blindVoteTx not found in daoStateService. blindVoteTxId=" + blindVoteTxId);
                 return 0;
             }
 
@@ -61,44 +58,15 @@ public class MeritConsensusV2 {
             long totalMeritAmount = 0;
 
             for (Merit untrustedMerit : untrustedMeritList.getList()) {
-                Issuance untrustedIssuance = untrustedMerit.getIssuance();
-                String issuanceTxId = untrustedIssuance.getTxId();
-
-                if (untrustedMerit.getIssuance().getIssuanceType() != IssuanceType.COMPENSATION) {
-                    log.warn("Issuance type is not COMPENSATION. issuanceTxId={}, issuanceType={}",
-                            issuanceTxId, untrustedMerit.getIssuance().getIssuanceType());
-                    continue;
-                }
-                Optional<Issuance> optionalIssuance = daoStateService.getIssuance(issuanceTxId, IssuanceType.COMPENSATION);
+                Optional<Issuance> optionalIssuance = validateMeritClaim(untrustedMerit,
+                        blindVoteTxId,
+                        daoStateService,
+                        blindVoteTxHeight,
+                        alreadyUsedIssuanceTxIds);
                 if (optionalIssuance.isEmpty()) {
-                    log.warn("No DAO state compensation issuance found for merit. issuanceTxId={}", issuanceTxId);
                     continue;
                 }
                 Issuance issuance = optionalIssuance.get();
-                if (!issuance.isValueEqual(untrustedIssuance)) {
-                    log.warn("DAO state compensation issuance is not the same as the one from the untrusted merit. " +
-                            "DAO state compensation issuance={}, untrustedMerit={}", issuance, untrustedMerit);
-                    continue;
-                }
-
-                int issuanceHeight = issuance.getChainHeight();
-                if (issuanceHeight > blindVoteTxHeight) {
-                    log.warn("Future merit ignored. issuanceTxId={}, issuanceHeight={}, blindVoteTxHeight={}",
-                            issuanceTxId, issuanceHeight, blindVoteTxHeight);
-                    continue;
-                }
-
-                if (!isSignatureValid(untrustedMerit.getSignature(), issuance.getPubKey(), blindVoteTxId)) {
-                    log.warn("Invalid signature in merit. merit={}", untrustedMerit);
-                    continue;
-                }
-
-                boolean didNotContain = alreadyUsedIssuanceTxIds.add(issuanceTxId);
-                if (!didNotContain) {
-                    log.warn("Issuance was already used. merit={}", untrustedMerit);
-                    continue;
-                }
-
                 long weightedMeritAmount = getWeightedMeritAmount(issuance.getAmount(),
                         issuance.getChainHeight(),
                         blindVoteTxHeight,
@@ -113,6 +81,72 @@ public class MeritConsensusV2 {
             log.error("Error at getMeritStake. merit={}", untrustedMeritList, e);
             return 0;
         }
+    }
+
+    /**
+     * We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even
+     * at later blocks (merit decreases with each block).
+     */
+    static int getBlindVoteTxHeight(String blindVoteTxId, DaoStateService daoStateService) {
+        int blindVoteTxHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
+        if (blindVoteTxHeight <= 0) {
+            log.error("Error at getBlindVoteTxHeight: blindVoteTx not found in daoStateService. blindVoteTxId={}", blindVoteTxId);
+        }
+        return blindVoteTxHeight;
+    }
+
+    /**
+     * Checks one untrusted merit claim and returns the DAO state issuance which backs it, or empty if the claim is not
+     * valid. The claimed issuance is only used to look up and to compare against the DAO state issuance; every value
+     * used afterwards, in particular the public key which verifies the signature, is taken from the DAO state.
+     * <p>
+     * The set of already used issuance txIds is updated for each accepted claim, so that a merit list cannot claim the
+     * same issuance twice. Callers which have to detect duplicates over a wider scope than one merit list evaluate the
+     * returned issuances further.
+     */
+    static Optional<Issuance> validateMeritClaim(Merit untrustedMerit,
+                                                 String blindVoteTxId,
+                                                 DaoStateService daoStateService,
+                                                 int blindVoteTxHeight,
+                                                 Set<String> alreadyUsedIssuanceTxIds) {
+        Issuance untrustedIssuance = untrustedMerit.getIssuance();
+        String issuanceTxId = untrustedIssuance.getTxId();
+
+        if (untrustedIssuance.getIssuanceType() != IssuanceType.COMPENSATION) {
+            log.warn("Issuance type is not COMPENSATION. issuanceTxId={}, issuanceType={}",
+                    issuanceTxId, untrustedIssuance.getIssuanceType());
+            return Optional.empty();
+        }
+        Optional<Issuance> optionalIssuance = daoStateService.getIssuance(issuanceTxId, IssuanceType.COMPENSATION);
+        if (optionalIssuance.isEmpty()) {
+            log.warn("No DAO state compensation issuance found for merit. issuanceTxId={}", issuanceTxId);
+            return Optional.empty();
+        }
+        Issuance issuance = optionalIssuance.get();
+        if (!issuance.equals(untrustedIssuance)) {
+            log.warn("DAO state compensation issuance is not the same as the one from the untrusted merit. " +
+                    "DAO state compensation issuance={}, untrustedMerit={}", issuance, untrustedMerit);
+            return Optional.empty();
+        }
+
+        int issuanceHeight = issuance.getChainHeight();
+        if (issuanceHeight > blindVoteTxHeight) {
+            log.warn("Future merit ignored. issuanceTxId={}, issuanceHeight={}, blindVoteTxHeight={}",
+                    issuanceTxId, issuanceHeight, blindVoteTxHeight);
+            return Optional.empty();
+        }
+
+        if (!isSignatureValid(untrustedMerit.getSignature(), issuance.getPubKey(), blindVoteTxId)) {
+            log.warn("Invalid signature in merit. merit={}", untrustedMerit);
+            return Optional.empty();
+        }
+
+        boolean didNotContain = alreadyUsedIssuanceTxIds.add(issuanceTxId);
+        if (!didNotContain) {
+            log.warn("Issuance was already used. merit={}", untrustedMerit);
+            return Optional.empty();
+        }
+        return Optional.of(issuance);
     }
 
     @VisibleForTesting
@@ -138,6 +172,14 @@ public class MeritConsensusV2 {
                     blindVoteTxId, pubKeyAsHex);
         }
         return result;
+    }
+
+    /**
+     * Applies the decay of the merit consensus rules to one validated issuance. Rule versions which only differ in
+     * which claims they accept use this so that the weighting itself cannot drift between them.
+     */
+    static long getWeightedMeritAmount(Issuance issuance, int blindVoteTxHeight) {
+        return getWeightedMeritAmount(issuance.getAmount(), issuance.getChainHeight(), blindVoteTxHeight, BLOCKS_PER_YEAR);
     }
 
     public static long getWeightedMeritAmount(long amount, int issuanceHeight, int blockHeight, int blocksPerYear) {

@@ -86,17 +86,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
-import static bisq.proto.grpc.DaoGrpc.DaoImplBase;
-import static bisq.proto.grpc.DaoGrpc.getCreateBondedRoleProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateChangeParamProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateCompensationProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateConfiscateBondProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateGenericProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateReimbursementProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getCreateRemoveAssetProposalMethod;
-import static bisq.proto.grpc.DaoGrpc.getGetRawTransactionMethod;
-import static bisq.proto.grpc.DaoGrpc.getPublishBlindVoteMethod;
-import static bisq.proto.grpc.DaoGrpc.getSetVoteMethod;
+import static bisq.proto.grpc.DaoGrpc.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -269,13 +259,18 @@ class GrpcDaoService extends DaoImplBase {
             GetBondedRolesReply.Builder b = GetBondedRolesReply.newBuilder();
             for (BondedRole br : coreApi.getDaoBondedRoles()) {
                 BondedRoleType type = br.getBondedAsset().getBondedRoleType();
-                b.addRoles(BondedRoleInfo.newBuilder()
+                BondedRoleInfo.Builder roleBuilder = BondedRoleInfo.newBuilder()
                         .setBondedRoleType(type.name())
                         .setName(br.getBondedAsset().getName())
                         .setLink(br.getBondedAsset().getLink())
                         .setIsAccepted(br.isActive())
                         .setRequiredBond(coreApi.getDaoRequiredBond(type))
-                        .build());
+                        .setRoleUid(br.getBondedAsset().getUid())
+                        .setBondState(br.getBondState().name());
+                if (br.getLockupTxId() != null) {
+                    roleBuilder.setLockupTxId(br.getLockupTxId());
+                }
+                b.addRoles(roleBuilder.build());
             }
             obs.onNext(b.build());
             obs.onCompleted();

@@ -24,16 +24,42 @@ import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 class RolesListItem {
     private final DaoFacade daoFacade;
     private final BondedRole bondedRole;
+    private final boolean lockupActionRow;
+    @Nullable
+    private String verificationTxId;
+    private boolean verificationTxIdResolved;
 
-    RolesListItem(BondedRole bondedRole, DaoFacade daoFacade) {
+    RolesListItem(BondedRole bondedRole, DaoFacade daoFacade, boolean lockupActionRow) {
         this.daoFacade = daoFacade;
         this.bondedRole = bondedRole;
+        this.lockupActionRow = lockupActionRow;
+    }
+
+    // Signing and verification must use the same tx, so both go through the verification tx of the role.
+    // Resolving it iterates the evaluated proposal list, so we cache it as it gets called at each table cell update.
+    // The items get recreated at each list update, thus the cache cannot get stale.
+    public String getVerificationTxId() {
+        if (!verificationTxIdResolved) {
+            verificationTxId = getLockupTxId() == null
+                    ? null
+                    : daoFacade.findBondedRoleVerificationTxId(getRole(), getLockupTxId()).orElse(null);
+            verificationTxIdResolved = true;
+        }
+        return verificationTxId;
+    }
+
+    public Optional<String> getRegistrationSignatureMessage(String profileId) {
+        return daoFacade.getBondedRoleRegistrationSignatureMessage(getRole(), getLockupTxId(), profileId);
     }
 
     public String getLockupTxId() {
@@ -73,18 +99,22 @@ class RolesListItem {
     }
 
     public boolean isLockupButtonVisible() {
-        return iAmOwner() && (this.bondedRole.getBondState() == BondState.READY_FOR_LOCKUP);
+        return iAmOwner() && lockupActionRow && bondedRole.getBondState() == BondState.READY_FOR_LOCKUP;
     }
 
     public boolean isRevokeButtonVisible() {
-        return iAmOwner() && (this.bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED);
+        return getLockupTxId() != null &&
+                daoFacade.isMyBondedRoleLockupTx(getLockupTxId()) &&
+                bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED;
     }
 
     public boolean isSignButtonVisible() {
-        return iAmOwner() && this.bondedRole.isActive();
+        return iAmOwner() && bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED &&
+                getVerificationTxId() != null;
     }
 
     public boolean isVerifyButtonVisible() {
-        return this.bondedRole.isActive();
+        return bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED &&
+                getVerificationTxId() != null;
     }
 }

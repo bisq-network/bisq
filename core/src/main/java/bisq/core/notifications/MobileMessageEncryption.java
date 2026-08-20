@@ -31,6 +31,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.security.NoSuchAlgorithmException;
 
+import java.nio.charset.StandardCharsets;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,7 +46,7 @@ public class MobileMessageEncryption {
     }
 
     public void setKey(String key) {
-        keySpec = new SecretKeySpec(key.getBytes(Charsets.UTF_8), "AES");
+        keySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
         try {
             cipher = Cipher.getInstance("AES/CBC/NOPadding");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
@@ -60,7 +62,7 @@ public class MobileMessageEncryption {
         if (iv.length() != 16) {
             throw new Exception("iv not 16 characters");
         }
-        IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(Charsets.UTF_8));
+        IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
         byte[] encryptedBytes = doEncrypt(valueToEncrypt, ivSpec);
         return Base64.encodeBase64String(encryptedBytes);
     }
@@ -73,7 +75,7 @@ public class MobileMessageEncryption {
         byte[] encrypted;
         try {
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-            encrypted = cipher.doFinal(text.getBytes(Charsets.UTF_8));
+            encrypted = cipher.doFinal(text.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new Exception("[encrypt] " + e.getMessage());
         }

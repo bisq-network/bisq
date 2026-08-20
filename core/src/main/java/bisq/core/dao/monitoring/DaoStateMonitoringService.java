@@ -21,7 +21,6 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.monitoring.model.UtxoMismatch;
-import bisq.core.dao.monitoring.network.Checkpoint;
 import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.monitoring.network.StateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
@@ -42,7 +41,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
-import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -53,9 +51,15 @@ import org.apache.commons.lang3.ArrayUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
-import java.util.Arrays;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,10 +68,13 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 
@@ -89,6 +96,12 @@ import javax.annotation.Nullable;
 @Slf4j
 public class DaoStateMonitoringService implements DaoSetupService, DaoStateListener,
         DaoStateNetworkService.Listener<NewDaoStateHashMessage, GetDaoStateHashesRequest, DaoStateHash> {
+
+    private static final String CHECKPOINTS_RESOURCE = "dao/daoStateHash.checkpoints";
+    // The dao state hash is a SHA256/RIPEMD160 hash, thus 20 bytes or 40 hex chars.
+    private static final Pattern CHECKPOINT_HASH_PATTERN = Pattern.compile("[0-9a-f]{40}");
+
+    private static final Map<Integer, String> checkPointDaoStateHashByBlockHeight = loadCheckpoints();
 
     public interface Listener {
         default void onDaoStateHashesChanged() {
@@ -121,18 +134,14 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private boolean daoStateBlockChainNotConnecting;
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
-
-    // TODO add recent checkpoint
-    private final List<Checkpoint> checkpoints = Arrays.asList(
-            new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
-    );
     private boolean checkpointFailed;
     private final boolean ignoreDevMsg;
     private int numCalls;
     private long accumulatedDuration;
 
     private final Preferences preferences;
-    private final File storageDir;
+    private final File appDataDir;
+    private final boolean dumpDaoStateHashCheckpoints;
     @Nullable
     private Runnable createSnapshotHandler;
     // Lookup map
@@ -150,15 +159,17 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
                                      Preferences preferences,
-                                     @Named(Config.STORAGE_DIR) File storageDir,
-                                     @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg) {
+                                     @Named(Config.APP_DATA_DIR) File appDataDir,
+                                     @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
+                                     @Named(Config.DUMP_DAO_STATE_HASH_CHECKPOINTS) boolean dumpDaoStateHashCheckpoints) {
         this.daoStateService = daoStateService;
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
         this.preferences = preferences;
-        this.storageDir = storageDir;
+        this.appDataDir = appDataDir;
         this.ignoreDevMsg = ignoreDevMsg;
+        this.dumpDaoStateHashCheckpoints = dumpDaoStateHashCheckpoints;
         seedNodeAddresses = seedNodeRepository.getSeedNodeAddresses().stream()
                 .map(NodeAddress::getFullAddress)
                 .collect(Collectors.toSet());
@@ -199,6 +210,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         int fromHeight = Math.min(nextBlockHeight, past10);
         daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
 
+        // We verify all checkpoints covered by our hash chain here as well and not only at createHashFromBlock.
+        // The hash chain is restored from the snapshot at startup, and checkpoints are usually far below the
+        // snapshot height, so the corresponding blocks are never parsed again and createHashFromBlock would
+        // never see them.
         if (!ignoreDevMsg) {
             verifyCheckpoints();
         }
@@ -261,7 +276,17 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void createHashFromBlock(Block block) {
-        createDaoStateBlock(block);
+        createDaoStateBlock(block).ifPresent(daoStateBlock -> {
+            // We verify the checkpoints here and not in onDaoStateChanged because onDaoStateChanged is
+            // called before the hash for the block has been created (daoStateSnapshotService, which calls
+            // createHashFromBlock, is registered as dao state listener after daoStateMonitoringService).
+            if (!ignoreDevMsg) {
+                maybeVerifyCheckpoint(block.getHeight());
+            }
+            if (dumpDaoStateHashCheckpoints && block.getHeight() % 1000 == 0) {
+                dumpDaoStateHashCheckpoint(daoStateBlock.getMyStateHash());
+            }
+        });
         if (parseBlockChainComplete) {
             // We notify listeners only after batch processing to avoid performance issues at UI code
             listeners.forEach(Listener::onDaoStateHashesChanged);
@@ -472,32 +497,119 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
     }
 
-    private void verifyCheckpoints() {
-        // Checkpoint
-        checkpoints.forEach(checkpoint -> daoStateHashChain.stream()
-                .filter(daoStateHash -> daoStateHash.getHeight() == checkpoint.getHeight())
-                .findAny()
-                .ifPresent(daoStateHash -> {
-                    if (Arrays.equals(daoStateHash.getHash(), checkpoint.getHash())) {
-                        log.info("Passed checkpoint {}", checkpoint);
-                    } else {
-                        if (checkpointFailed) {
-                            return;
+    private void dumpDaoStateHashCheckpoint(DaoStateHash daoStateHash) {
+        int height = daoStateHash.getHeight();
+        File file = new File(appDataDir, "dao_state_hash_checkpoints.txt");
+        String line = height + "," + Utilities.encodeToHex(daoStateHash.getHash()) + System.lineSeparator();
+        try {
+            Files.writeString(file.toPath(),
+                    line,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            log.error("Could not write DAO state hash checkpoint to file. height={}, file={}",
+                    height, file, e);
+        }
+    }
+
+    @VisibleForTesting
+    static Map<Integer, String> loadCheckpoints() {
+        Map<Integer, String> checkpoints = new HashMap<>();
+        // Reading via getResourceAsStream works when running from source, from a jar and from a binary.
+        try (InputStream inputStream = DaoStateMonitoringService.class.getResourceAsStream("/" + CHECKPOINTS_RESOURCE)) {
+            if (inputStream == null) {
+                log.info("No DAO state hash checkpoints resource found at {}", CHECKPOINTS_RESOURCE);
+                return checkpoints;
+            }
+            String content = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            content.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .filter(line -> !line.startsWith("#"))
+                    .forEach(line -> {
+                        String[] parts = line.split(",");
+                        if (parts.length != 2) {
+                            throw new IllegalArgumentException("Invalid DAO state hash checkpoint entry: " + line);
                         }
-                        checkpointFailed = true;
-                        log.warn("verifyCheckpoints failed. We resunc from resources " +
-                                        "daoStateHash.getHash()={}, checkpoint.getHash()={}, checkpoint {}",
-                                Hex.encode(daoStateHash.getHash()),
-                                Hex.encode(checkpoint.getHash()),
-                                checkpoint);
+                        int height;
                         try {
-                            daoStateStorageService.removeAndBackupAllDaoData();
-                        } catch (Throwable t) {
-                            log.error("removeAndBackupAllDaoData failed", t);
+                            height = Integer.parseInt(parts[0].trim());
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException("Invalid block height in DAO state hash checkpoint " +
+                                    "entry: " + line, e);
                         }
-                        listeners.forEach(Listener::onCheckpointFailed);
-                    }
-                }));
+                        if (height <= 0) {
+                            throw new IllegalArgumentException("Block height in DAO state hash checkpoint entry must " +
+                                    "be positive: " + line);
+                        }
+                        // A malformed hash would let every node fail the checkpoint and wipe its DAO data, so we
+                        // require the exact format we produce at dumpDaoStateHashCheckpoint.
+                        String hash = parts[1].trim();
+                        if (!CHECKPOINT_HASH_PATTERN.matcher(hash).matches()) {
+                            throw new IllegalArgumentException("DAO state hash in checkpoint entry must be 40 " +
+                                    "lower-case hex chars: " + line);
+                        }
+                        String previous = checkpoints.put(height, hash);
+                        if (previous != null && !previous.equals(hash)) {
+                            throw new IllegalArgumentException("Conflicting DAO state hash checkpoint entries for " +
+                                    "block height " + height + ": " + previous + " and " + hash);
+                        }
+                    });
+            return checkpoints;
+        } catch (IOException e) {
+            throw new UncheckedIOException("Could not load DAO state hash checkpoints resource " + CHECKPOINTS_RESOURCE, e);
+        }
+    }
+
+    private void verifyCheckpoints() {
+        checkPointDaoStateHashByBlockHeight.keySet().forEach(this::maybeVerifyCheckpoint);
+    }
+
+    @VisibleForTesting
+    void maybeVerifyCheckpoint(int blockHeight) {
+        maybeVerifyCheckpoint(blockHeight, checkPointDaoStateHashByBlockHeight, daoStateHashChain);
+    }
+
+    @VisibleForTesting
+    void maybeVerifyCheckpoint(int blockHeight,
+                               Map<Integer, String> checkpointByBlockHeight,
+                               LinkedList<DaoStateHash> hashChain) {
+        String checkPointHash = checkpointByBlockHeight.get(blockHeight);
+        if (checkPointHash == null) {
+            return;
+        }
+        hashChain.stream()
+                .filter(daoStateHash -> daoStateHash.getHeight() == blockHeight)
+                // We only compare hashes we have created ourselves. Hashes taken over from seed nodes or
+                // resources would only reflect the peers' view, not the validity of our local DAO state.
+                .filter(DaoStateHash::isSelfCreated)
+                .map(DaoStateHash::getHash)
+                .map(Utilities::encodeToHex)
+                .findFirst()
+                .ifPresentOrElse(daoStateHash -> {
+                            if (daoStateHash.equals(checkPointHash)) {
+                                log.info("Passed checkpoint at block height {}: daoStateHash={}", blockHeight, checkPointHash);
+                            } else {
+                                if (checkpointFailed) {
+                                    return;
+                                }
+                                checkpointFailed = true;
+                                log.warn("verifyCheckpoints failed. We resync from resources " +
+                                                "blockHeight={}, daoStateHash={}, checkPointHash={}",
+                                        blockHeight,
+                                        daoStateHash,
+                                        checkPointHash);
+                                try {
+                                    daoStateStorageService.removeAndBackupAllDaoData();
+                                } catch (Throwable t) {
+                                    log.error("removeAndBackupAllDaoData failed", t);
+                                }
+                                listeners.forEach(Listener::onCheckpointFailed);
+                            }
+                        },
+                        () -> log.info("We have no self-created daoStateHash for checkpoint at block height {}, " +
+                                "so we cannot verify it.", blockHeight));
     }
 
     private boolean isSeedNode(String peersNodeAddress) {

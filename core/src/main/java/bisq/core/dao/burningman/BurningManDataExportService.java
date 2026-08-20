@@ -32,9 +32,9 @@ import javax.inject.Singleton;
 
 import java.io.File;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +107,7 @@ public class BurningManDataExportService implements DaoSetupService, DaoStateLis
     }
 
     private List<BurningManAddressList.Entry> getEntries(int burningManSelectionHeight) {
-        Map<String, Double> shareByAddress = new TreeMap<>();
+        Map<String, Double> shareByAddress = new LinkedHashMap<>();
         burningManService.getActiveBurningManCandidates(burningManSelectionHeight).stream()
                 .filter(candidate -> candidate.getReceiverAddress().isPresent())
                 .forEach(candidate -> {

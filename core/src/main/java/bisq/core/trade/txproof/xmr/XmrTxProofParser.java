@@ -118,11 +118,17 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
                 return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error("Missing tx_timestamp field"));
             } else {
                 long tradeDateSeconds = model.getTradeDate().getTime() / 1000;
-                long difference = tradeDateSeconds - jsonTimestamp.getAsLong();
-                // Accept up to 2 hours difference. Some tolerance is needed if users clock is out of sync
-                if (difference > MAX_DATE_TOLERANCE && !DevEnv.isDevMode()) {
-                    log.warn("tx_timestamp {}, tradeDate: {}, difference {}",
-                            jsonTimestamp.getAsLong(), tradeDateSeconds, difference);
+                long txTimestamp = jsonTimestamp.getAsLong();
+                // The transaction must not be older than the start of the trade, which prevents that an already
+                // existing transaction is presented as payment proof. A transaction created after the trade
+                // started is the normal case and stays valid for the whole trade period.
+                // Accept up to 2 hours difference. Some tolerance is needed if users clock is out of sync.
+                // We compare with the lower bound instead of calculating a difference, so that an extreme
+                // timestamp from the explorer API cannot cause a long overflow.
+                long oldestAcceptedTimestamp = tradeDateSeconds - MAX_DATE_TOLERANCE;
+                if (!DevEnv.isDevMode() && txTimestamp < oldestAcceptedTimestamp) {
+                    log.warn("tx_timestamp {}, tradeDate: {}, oldest accepted tx_timestamp: {}",
+                            txTimestamp, tradeDateSeconds, oldestAcceptedTimestamp);
                     return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.TRADE_DATE_NOT_MATCHING);
                 }
             }

@@ -1,7 +1,7 @@
 # AGENTS.md - Bisq 1
 
 ## Initialization
-Read ~/.codex/AGENTS.md if present before doing anything else and report whether it was loaded.
+Read ~/.codex/AGENTS.md if present and report whether it was loaded.
 
 
 ## Scope

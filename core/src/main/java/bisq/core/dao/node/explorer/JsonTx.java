@@ -62,8 +62,8 @@ class JsonTx {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof JsonTx)) return false;
-        if (!super.equals(o)) return false;
         JsonTx jsonTx = (JsonTx) o;
+        //noinspection ConstantConditions
         return blockHeight == jsonTx.blockHeight &&
                 time == jsonTx.time &&
                 burntFee == jsonTx.burntFee &&
@@ -80,7 +80,7 @@ class JsonTx {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), txVersion, id, blockHeight, blockHash, time, inputs, outputs,
-                txType.name(), txTypeDisplayString, burntFee, invalidatedBsq, unlockBlockHeight);
+        return Objects.hash(txVersion, id, blockHeight, blockHash, time, inputs, outputs, txType.name(),
+                txTypeDisplayString, burntFee, invalidatedBsq, unlockBlockHeight);
     }
 }

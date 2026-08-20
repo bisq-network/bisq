@@ -108,10 +108,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
-    // depositTx is not set for maker as buyer
+    // depositTx is not set for maker as buyer. A finalized seller deposit can be restored from
+    // finalizedDepositTx while fiat publication is deferred.
     @Nullable
-    @Setter
-    @Getter
     transient private Transaction depositTx;
 
     // Persistable Immutable
@@ -177,6 +176,14 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     @Getter
     private int burningManAddressListVersion;
+    @Setter
+    @Getter
+    private boolean buyerPaymentAccountValidated;
+    @Setter
+    @Getter
+    private boolean depositTxAndDelayedPayoutTxMessageDelivered;
+    @Nullable
+    private byte[] finalizedDepositTx;
 
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
         this(offerId, accountId, pubKeyRing, new TradingPeer());
@@ -220,7 +227,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 .setBuyerPayoutAmountFromMediation(buyerPayoutAmountFromMediation)
                 .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation)
                 .setBurningManSelectionHeight(burningManSelectionHeight)
-                .setBurningManAddressListVersion(burningManAddressListVersion);
+                .setBurningManAddressListVersion(burningManAddressListVersion)
+                .setBuyerPaymentAccountValidated(buyerPaymentAccountValidated)
+                .setDepositTxAndDelayedPayoutTxMessageDelivered(depositTxAndDelayedPayoutTxMessageDelivered);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -231,6 +240,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(paymentAccount).ifPresent(e -> builder.setPaymentAccount(e.toProtoMessage()));
+        Optional.ofNullable(finalizedDepositTx).ifPresent(e -> builder.setFinalizedDepositTx(ByteString.copyFrom(e)));
 
         return builder.build();
     }
@@ -261,6 +271,10 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         processModel.setPaymentStartedMessageState(paymentStartedMessageState);
         processModel.setBurningManSelectionHeight(proto.getBurningManSelectionHeight());
         processModel.setBurningManAddressListVersion(proto.getBurningManAddressListVersion());
+        processModel.setBuyerPaymentAccountValidated(proto.getBuyerPaymentAccountValidated());
+        processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(
+                proto.getDepositTxAndDelayedPayoutTxMessageDelivered());
+        processModel.finalizedDepositTx = ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedDepositTx());
 
         if (proto.hasPaymentAccount()) {
             processModel.setPaymentAccount(PaymentAccount.fromProto(proto.getPaymentAccount(), coreProtoResolver));
@@ -285,6 +299,23 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
         this.takeOfferFeeTx = takeOfferFeeTx;
         takeOfferFeeTxId = takeOfferFeeTx.getTxId().toString();
+    }
+
+    @Nullable
+    public Transaction getDepositTx() {
+        if (depositTx == null && finalizedDepositTx != null) {
+            depositTx = getBtcWalletService().getTxFromSerializedTx(finalizedDepositTx);
+        }
+        return depositTx;
+    }
+
+    public void setDepositTx(@Nullable Transaction depositTx) {
+        this.depositTx = depositTx;
+    }
+
+    public void setFinalizedDepositTx(Transaction depositTx) {
+        this.depositTx = depositTx;
+        finalizedDepositTx = depositTx.bitcoinSerialize();
     }
 
     @Nullable
@@ -350,6 +381,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         if (tradingPeer.getPaymentAccountPayload() != null || tradingPeer.getContractAsJson() != null) {
             // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
             this.tradingPeer = new TradingPeer();
+            buyerPaymentAccountValidated = false;
             changed = true;
         }
         return changed;

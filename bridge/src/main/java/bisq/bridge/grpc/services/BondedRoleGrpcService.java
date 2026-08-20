@@ -17,19 +17,19 @@
 
 package bisq.bridge.grpc.services;
 
-import bisq.core.dao.SignVerifyService;
-import bisq.core.dao.governance.bond.BondState;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.bond.role.BondedRoleRegistration;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
-import bisq.core.dao.state.DaoStateService;
+
+import bisq.common.UserThread;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
-import java.security.SignatureException;
-
 import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,67 +38,132 @@ import lombok.extern.slf4j.Slf4j;
 import bisq.bridge.protobuf.BondedRoleGrpcServiceGrpc;
 import bisq.bridge.protobuf.BondedRoleVerificationRequest;
 import bisq.bridge.protobuf.BondedRoleVerificationResponse;
+import bisq.bridge.protobuf.BondedRolesVerificationRequest;
+import bisq.bridge.protobuf.BondedRolesVerificationResponse;
 
 @Slf4j
 public class BondedRoleGrpcService extends BondedRoleGrpcServiceGrpc.BondedRoleGrpcServiceImplBase {
-    private final DaoStateService daoStateService;
+    static final int MAX_BATCH_SIZE = 1_000;
+
+    private final DaoFacade daoFacade;
     private final BondedRolesRepository bondedRolesRepository;
-    private final SignVerifyService signVerifyService;
 
     @Inject
-    public BondedRoleGrpcService(DaoStateService daoStateService,
-                                 BondedRolesRepository bondedRolesRepository,
-                                 SignVerifyService signVerifyService) {
-        this.daoStateService = daoStateService;
+    public BondedRoleGrpcService(DaoFacade daoFacade,
+                                 BondedRolesRepository bondedRolesRepository) {
+        this.daoFacade = daoFacade;
         this.bondedRolesRepository = bondedRolesRepository;
-        this.signVerifyService = signVerifyService;
     }
 
     @Override
     public void requestBondedRoleVerification(BondedRoleVerificationRequest request,
                                               StreamObserver<BondedRoleVerificationResponse> responseObserver) {
-        try {
-            String bondUserName = request.getBondUserName();
-            String roleType = request.getRoleType();
-            String profileId = request.getProfileId();
-            String signatureBase64 = request.getSignatureBase64();
+        executeOnUserThread(
+                "requestBondedRoleVerification",
+                "Error at bonded role verification",
+                responseObserver,
+                () -> doRequestBondedRoleVerification(request, responseObserver));
+    }
 
-            log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}, signatureBase64={}",
-                    bondUserName, roleType, profileId, signatureBase64);
-
-            Optional<String> errorMessage = bondedRolesRepository.getAcceptedBonds().stream()
-                    .filter(bondedRole -> bondedRole.getBondedAsset().getBondedRoleType().name().equals(roleType))
-                    .filter(bondedRole -> bondedRole.getBondedAsset().getName().equals(bondUserName))
-                    .filter(bondedRole -> bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED)
-                    .flatMap(bondedRole -> daoStateService.getTx(bondedRole.getLockupTxId()).stream())
-                    .flatMap(tx -> tx.getTxInputs().stream().findFirst().stream())
-                    .map(txInput -> {
-                        try {
-                            signVerifyService.verify(profileId, txInput.getPubKey(), signatureBase64);
-                            log.info("Successfully verified bonded role");
-                            return Optional.<String>empty();
-                        } catch (SignatureException e) {
-                            return Optional.of("Signature verification failed.");
-                        }
-                    })
-                    .findAny()
-                    .orElseGet(() -> {
-                        String message = "Did not find a bonded role matching the parameters";
-                        log.warn(message);
-                        return Optional.of(message);
-                    });
-
-            BondedRoleVerificationResponse.Builder builder = BondedRoleVerificationResponse.newBuilder();
-            errorMessage.ifPresent(builder::setErrorMessage);
-            BondedRoleVerificationResponse response = builder.build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            log.error("requestBondedRoleVerification failed", e);
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Error at bonded role verification")
-                    .withCause(e)
+    private void doRequestBondedRoleVerification(BondedRoleVerificationRequest request,
+                                                 StreamObserver<BondedRoleVerificationResponse> responseObserver) {
+        if (!daoFacade.isDaoStateReadyAndInSync()) {
+            log.warn("Bonded role verification rejected because the DAO state is not ready and in sync. " +
+                    "chainHeight={}", daoFacade.getChainHeight());
+            responseObserver.onError(Status.FAILED_PRECONDITION
+                    .withDescription("DAO state is not ready and in sync")
                     .asRuntimeException());
+            return;
         }
+
+        BondedRoleRegistration registration = bisq.bridge.grpc.messages.BondedRoleVerificationRequest
+                .fromProto(request)
+                .getRegistration();
+        log.info("Received request for verifying a bonded role. bondUserName={}, roleType={}, profileId={}",
+                registration.bondUserName(), registration.roleType(), registration.profileId());
+        responseObserver.onNext(verifyBondedRole(registration));
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void requestBondedRoleBatchVerification(BondedRolesVerificationRequest request,
+                                               StreamObserver<BondedRolesVerificationResponse> responseObserver) {
+        executeOnUserThread(
+                "requestBondedRoleBatchVerification",
+                "Error at bonded roles verification",
+                responseObserver,
+                () -> doRequestBondedRoleBatchVerification(request, responseObserver));
+    }
+
+    private void doRequestBondedRoleBatchVerification(BondedRolesVerificationRequest request,
+                                                  StreamObserver<BondedRolesVerificationResponse> responseObserver) {
+        if (!daoFacade.isDaoStateReadyAndInSync()) {
+            log.warn("Bonded role batch verification rejected because the DAO state is not ready and in sync. " +
+                    "chainHeight={}", daoFacade.getChainHeight());
+            responseObserver.onError(Status.FAILED_PRECONDITION
+                    .withDescription("DAO state is not ready and in sync")
+                    .asRuntimeException());
+            return;
+        }
+        if (request.getRegistrationsCount() > MAX_BATCH_SIZE) {
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("Bonded role verification batch exceeds " + MAX_BATCH_SIZE + " registrations")
+                    .asRuntimeException());
+            return;
+        }
+
+        log.info("Received request for verifying {} bonded roles", request.getRegistrationsCount());
+        BondedRolesVerificationResponse.Builder responseBuilder = BondedRolesVerificationResponse.newBuilder();
+        responseBuilder.setDaoStateBlockHeight(daoFacade.getChainHeight());
+        request.getRegistrationsList().stream()
+                .map(bisq.bridge.grpc.messages.BondedRoleVerificationRequest::fromProto)
+                .map(bisq.bridge.grpc.messages.BondedRoleVerificationRequest::getRegistration)
+                .map(this::verifyBondedRole)
+                .forEach(responseBuilder::addVerifications);
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
+    }
+
+    // DAO block parsing and completed-block repository updates run on UserThread. Queuing the complete request there
+    // prevents a new block from interleaving the height read with proposal, transaction, or bond-state lookups.
+    private void executeOnUserThread(String operation,
+                                     String errorDescription,
+                                     StreamObserver<?> responseObserver,
+                                     Runnable request) {
+        try {
+            UserThread.execute(() -> {
+                try {
+                    request.run();
+                } catch (Exception e) {
+                    notifyInternalError(operation, errorDescription, responseObserver, e);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            notifyInternalError(operation, errorDescription, responseObserver, e);
+        }
+    }
+
+    private void notifyInternalError(String operation,
+                                     String errorDescription,
+                                     StreamObserver<?> responseObserver,
+                                     Exception exception) {
+        log.error("{} failed", operation, exception);
+        responseObserver.onError(Status.INTERNAL
+                .withDescription(errorDescription)
+                .withCause(exception)
+                .asRuntimeException());
+    }
+
+    private BondedRoleVerificationResponse verifyBondedRole(BondedRoleRegistration registration) {
+        Optional<String> errorMessage = Optional.empty();
+        try {
+            bondedRolesRepository.verifyBondedRole(registration);
+        } catch (IllegalArgumentException e) {
+            errorMessage = Optional.of("Bonded role invalid. " + e.getMessage());
+        }
+
+        BondedRoleVerificationResponse.Builder builder = BondedRoleVerificationResponse.newBuilder();
+        errorMessage.ifPresent(builder::setErrorMessage);
+        return builder.build();
     }
 }

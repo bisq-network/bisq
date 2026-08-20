@@ -52,9 +52,10 @@ class JsonTxOutput {
     private final boolean isUnspent;
 
     JsonTxOutput(String txId, int index, long bsqAmount, long btcAmount, int height, boolean isVerified, long burntFee,
-                 long invalidatedBsq, String address, JsonScriptPubKey scriptPubKey, JsonSpentInfo spentInfo,
-                 long time, JsonTxType txType, String txTypeDisplayString, JsonTxOutputType txOutputType,
-                 String txOutputTypeDisplayString, String opReturn, int lockTime, boolean isUnspent) {
+                 long invalidatedBsq, String address, @Nullable JsonScriptPubKey scriptPubKey,
+                 @Nullable JsonSpentInfo spentInfo, long time, JsonTxType txType, String txTypeDisplayString,
+                 JsonTxOutputType txOutputType, String txOutputTypeDisplayString, @Nullable String opReturn,
+                 int lockTime, boolean isUnspent) {
         this.txId = txId;
         this.index = index;
         this.bsqAmount = bsqAmount;
@@ -86,8 +87,8 @@ class JsonTxOutput {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof JsonTxOutput)) return false;
-        if (!super.equals(o)) return false;
         JsonTxOutput that = (JsonTxOutput) o;
+        //noinspection ConstantConditions
         return index == that.index &&
                 bsqAmount == that.bsqAmount &&
                 btcAmount == that.btcAmount &&
@@ -112,8 +113,8 @@ class JsonTxOutput {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), txVersion, txId, index, bsqAmount, btcAmount, height, isVerified,
-                burntFee, invalidatedBsq, address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString,
-                txOutputType, txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
+        return Objects.hash(txVersion, txId, index, bsqAmount, btcAmount, height, isVerified, burntFee, invalidatedBsq,
+                address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString, txOutputType,
+                txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
     }
 }

@@ -260,16 +260,19 @@ public class ConfigTests {
         Config defaultConfig = new Config();
         assertFalse(defaultConfig.verifyDaoStateHashChainSerialization);
         assertFalse(defaultConfig.dumpDaoStateHashChainSerialization);
+        assertFalse(defaultConfig.dumpDaoStateHashCheckpoints);
         assertFalse(defaultConfig.verifyBlindVoteEncryptedVotesSerialization);
         assertFalse(defaultConfig.verifyBlindVoteEncryptedMeritListSerialization);
 
         Config config = configWithOpts(
                 opt(VERIFY_DAO_STATE_HASH_CHAIN_SERIALIZATION, true),
                 opt(DUMP_DAO_STATE_HASH_CHAIN_SERIALIZATION, true),
+                opt(DUMP_DAO_STATE_HASH_CHECKPOINTS, true),
                 opt(VERIFY_BLIND_VOTE_ENCRYPTED_VOTES_SERIALIZATION, true),
                 opt(VERIFY_BLIND_VOTE_ENCRYPTED_MERIT_LIST_SERIALIZATION, true));
         assertTrue(config.verifyDaoStateHashChainSerialization);
         assertTrue(config.dumpDaoStateHashChainSerialization);
+        assertTrue(config.dumpDaoStateHashCheckpoints);
         assertTrue(config.verifyBlindVoteEncryptedVotesSerialization);
         assertTrue(config.verifyBlindVoteEncryptedMeritListSerialization);
     }
@@ -281,6 +284,19 @@ public class ConfigTests {
         assertThat(config.tradeStatistics3MaxItems, equalTo(DEFAULT_TRADE_STATISTICS_MAX_ITEMS));
         assertThat(config.p2pDataStorageMaxSize, equalTo(0D));
         assertFalse(config.p2pDataStorageMaxSizeOptionSetExplicitly);
+    }
+
+    @Test
+    public void mainnetSignedWitnessOptionRequiresDevPrivilegeKeys() {
+        assertFalse(new Config().allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+        assertFalse(configWithOpts(opt(ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS, true))
+                .allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+        assertFalse(configWithOpts(opt(USE_DEV_PRIVILEGE_KEYS, true))
+                .allowMainnetSignedWitnessesWithDevPrivilegeKeys);
+        assertTrue(configWithOpts(
+                opt(USE_DEV_PRIVILEGE_KEYS, true),
+                opt(ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS, true))
+                .allowMainnetSignedWitnessesWithDevPrivilegeKeys);
     }
 
     @Test

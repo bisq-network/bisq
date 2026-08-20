@@ -17,23 +17,24 @@
 
 package bisq.bridge.grpc.services;
 
+import bisq.bridge.protobuf.SignedWitnessDateRequest;
+import bisq.bridge.protobuf.SignedWitnessDateResponse;
+import bisq.bridge.protobuf.SignedWitnessGrpcServiceGrpc;
+import bisq.bridge.protobuf.SignedWitnessOwnershipRequest;
+import bisq.bridge.protobuf.SignedWitnessOwnershipResponse;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.SignedWitnessOwnershipProof;
+import bisq.core.account.witness.WitnessReputationPrivacy;
+import bisq.core.account.witness.WitnessOwnershipProof;
+
+import com.google.protobuf.ByteString;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
-import java.util.Date;
-import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.bridge.protobuf.SignedWitnessDateRequest;
-import bisq.bridge.protobuf.SignedWitnessDateResponse;
-import bisq.bridge.protobuf.SignedWitnessGrpcServiceGrpc;
 
 @Slf4j
 public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.SignedWitnessGrpcServiceImplBase {
@@ -47,25 +48,44 @@ public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.Signe
     @Override
     public void requestSignedWitnessDate(SignedWitnessDateRequest request,
                                          StreamObserver<SignedWitnessDateResponse> responseObserver) {
-        try {
-            String hashAsHex = request.getHashAsHex();
+        responseObserver.onError(Status.FAILED_PRECONDITION
+                .withDescription("Signed-witness authorization requires an ownership proof")
+                .asRuntimeException());
+    }
 
-            Optional<Long> date = accountAgeWitnessService.getWitnessByHashAsHex(hashAsHex)
-                    .map(accountAgeWitnessService::getWitnessSignDate);
-            if (date.isEmpty()) {
-                responseObserver.onError(Status.NOT_FOUND
-                        .withDescription("No witness found for hashAsHex: " + hashAsHex)
-                        .asRuntimeException());
-                return;
-            }
-            log.info("SignedWitness sign date for hash {}: {} ({})", hashAsHex, date, new Date(date.get()));
-            var response = SignedWitnessDateResponse.newBuilder()
-                    .setDate(date.get())
+    @Override
+    public void verifySignedWitnessOwnership(SignedWitnessOwnershipRequest request,
+                                             StreamObserver<SignedWitnessOwnershipResponse> responseObserver) {
+        try {
+            WitnessOwnershipProof.validateByteArrayLengths(
+                    request.getWitnessHash().size(),
+                    request.getAccountInputDataWithSalt().size(),
+                    request.getOwnerPublicKey().size(),
+                    request.getSignature().size());
+            SignedWitnessOwnershipProof proof = new SignedWitnessOwnershipProof(
+                    request.getProtocolVersion(),
+                    request.getProfileId(),
+                    request.getWitnessHash().toByteArray(),
+                    request.getAccountInputDataWithSalt().toByteArray(),
+                    request.getOwnerPublicKey().toByteArray(),
+                    request.getSignature().toByteArray());
+            long date = accountAgeWitnessService.verifySignedWitnessOwnership(proof);
+            long dateBucket = WitnessReputationPrivacy.toDateBucket(date);
+            byte[] witnessNullifier = WitnessReputationPrivacy.deriveNullifier(proof);
+            log.info("Verified signed-witness ownership proof");
+            var response = SignedWitnessOwnershipResponse.newBuilder()
+                    .setDateBucket(dateBucket)
+                    .setWitnessNullifier(ByteString.copyFrom(witnessNullifier))
                     .build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid signed-witness ownership proof", e);
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
         } catch (Exception e) {
-            log.error("requestSignedWitnessDate failed", e);
+            log.error("verifySignedWitnessOwnership failed", e);
             responseObserver.onError(Status.INTERNAL
                     .withDescription("Internal server error")
                     .withCause(e)

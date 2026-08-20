@@ -105,8 +105,9 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             if (signedWitness != null) {
                 // We received the signedWitness from the seller and publish the data to the network.
                 // The signer has published it as well but we prefer to re-do it on our side as well to achieve higher
-                // resilience.
-                processModel.getAccountAgeWitnessService().publishOwnSignedWitness(signedWitness);
+                // resilience. As the data is peer controlled it is accepted only if it matches the witness the
+                // seller was supposed to create for that trade.
+                processModel.getAccountAgeWitnessService().publishOwnSignedWitness(signedWitness, trade);
             }
 
             processModel.getTradeManager().requestPersistence();

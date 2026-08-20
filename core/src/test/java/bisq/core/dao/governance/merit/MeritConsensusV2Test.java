@@ -38,7 +38,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -54,7 +53,7 @@ class MeritConsensusV2Test {
         Issuance embeddedIssuance = copy(daoStateIssuance);
 
         assertNotSame(daoStateIssuance, embeddedIssuance);
-        assertTrue(daoStateIssuance.isValueEqual(embeddedIssuance));
+        assertEquals(daoStateIssuance, embeddedIssuance);
 
         MeritList meritList = new MeritList(List.of(merit(embeddedIssuance, key)));
         DaoStateService daoStateService = daoStateService(daoStateIssuance);

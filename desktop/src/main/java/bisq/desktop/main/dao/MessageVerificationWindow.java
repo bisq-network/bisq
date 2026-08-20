@@ -36,19 +36,28 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import java.security.SignatureException;
+import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
 public class MessageVerificationWindow extends Overlay<MessageVerificationWindow> {
     private final SignVerifyService signVerifyService;
     private final String pubKey;
+    private final MessageInputTransformer messageTransformer;
 
     private TextField verificationResultTextField;
     private VBox verificationResultBox;
 
     public MessageVerificationWindow(SignVerifyService signVerifyService, String txId) {
+        this(signVerifyService, txId, Optional::of);
+    }
+
+    public MessageVerificationWindow(SignVerifyService signVerifyService,
+                                     String txId,
+                                     MessageInputTransformer messageTransformer) {
         this.signVerifyService = signVerifyService;
         this.pubKey = signVerifyService.getPubKeyAsHex(txId);
+        this.messageTransformer = messageTransformer;
         type = Type.Attention;
     }
 
@@ -86,9 +95,14 @@ public class MessageVerificationWindow extends Overlay<MessageVerificationWindow
         Button verifyButton = FormBuilder.addButton(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.verify"), 10);
 
         verifyButton.setOnAction(e -> {
+            Optional<String> message = messageTransformer.transform(messageInputTextField.getText());
+            verificationResultBox.setVisible(true);
+            if (message.isEmpty()) {
+                verificationResultTextField.setText(Res.get("dao.bond.registration.notAvailable"));
+                return;
+            }
             try {
-                verificationResultBox.setVisible(true);
-                signVerifyService.verify(messageInputTextField.getText(), pubKey, signatureInputTextField.getText());
+                signVerifyService.verify(message.get(), pubKey, signatureInputTextField.getText());
                 verificationResultTextField.setText(Res.get("dao.proofOfBurn.verificationResult.ok"));
             } catch (SignatureException e1) {
                 verificationResultTextField.setText(Res.get("dao.proofOfBurn.verificationResult.failed"));

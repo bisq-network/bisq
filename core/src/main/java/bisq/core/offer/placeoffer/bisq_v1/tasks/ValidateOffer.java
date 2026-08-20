@@ -105,6 +105,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
         }
     }
 
+    @SuppressWarnings("deprecation")
     static void checkDisputeAgentAvailability(Offer offer, PlaceOfferModel model) {
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
         checkArgument(DisputeAgentSelection.hasAvailableAcceptedDisputeAgent(

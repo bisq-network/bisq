@@ -113,11 +113,11 @@ public class LanguageUtil {
     }
 
     public static String getDefaultLanguageLocaleAsCode() {
-        return new Locale(LanguageUtil.getDefaultLanguage()).getLanguage();
+        return Locale.of(LanguageUtil.getDefaultLanguage()).getLanguage();
     }
 
     public static String getEnglishLanguageLocaleCode() {
-        return new Locale(Locale.ENGLISH.getLanguage()).getLanguage();
+        return Locale.of(Locale.ENGLISH.getLanguage()).getLanguage();
     }
 
     public static String getDisplayName(String code) {

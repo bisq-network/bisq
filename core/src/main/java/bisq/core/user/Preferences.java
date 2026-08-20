@@ -297,7 +297,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private void initFromPersistedPreferences(PreferencesPayload persisted) {
         prefPayload = persisted;
-        GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+        GlobalSettings.setLocale(Locale.of(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
         GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
         TradeCurrency preferredTradeCurrency = checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null");
         setPreferredTradeCurrency(preferredTradeCurrency);
@@ -322,7 +322,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         prefPayload = new PreferencesPayload();
         prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
         prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
-        GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+        GlobalSettings.setLocale(Locale.of(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
 
         TradeCurrency preferredTradeCurrency = CurrencyUtil.getCurrencyByCountryCode("US"); // default fallback option
         try {
@@ -546,14 +546,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setUserLanguage(@NotNull String userLanguageCode) {
         prefPayload.setUserLanguage(userLanguageCode);
         if (prefPayload.getUserCountry() != null && prefPayload.getUserLanguage() != null)
-            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+            GlobalSettings.setLocale(Locale.of(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
         requestPersistence();
     }
 
     public void setUserCountry(@NotNull Country userCountry) {
         prefPayload.setUserCountry(userCountry);
         if (prefPayload.getUserLanguage() != null)
-            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), userCountry.code));
+            GlobalSettings.setLocale(Locale.of(prefPayload.getUserLanguage(), userCountry.code));
         requestPersistence();
     }
 

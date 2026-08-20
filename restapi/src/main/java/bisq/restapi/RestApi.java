@@ -21,7 +21,6 @@ package bisq.restapi;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.period.CycleService;
@@ -41,6 +40,7 @@ import bisq.common.config.Config;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -55,8 +55,6 @@ public class RestApi extends ExecutableForAppWithP2p {
     private AccountAgeWitnessService accountAgeWitnessService;
     @Getter
     private BondedRolesRepository bondedRolesRepository;
-    @Getter
-    private SignVerifyService signVerifyService;
     private DaoStateSnapshotService daoStateSnapshotService;
     private Preferences preferences;
     @Getter
@@ -72,6 +70,10 @@ public class RestApi extends ExecutableForAppWithP2p {
     private PriceFeedService priceFeedService;
     @Getter
     private final AtomicBoolean parseBlockCompleteAfterBatchProcessing = new AtomicBoolean();
+    // Set by RestApiMain once the http server is created, so that a shutdown started inside the application stops
+    // the server before the services behind the endpoints get shut down.
+    @Setter(lombok.AccessLevel.PACKAGE)
+    private volatile Runnable stopServerHandler;
 
     public RestApi() {
         super("Bisq Rest Api", "bisq_restapi", "bisq_restapi", Version.VERSION);
@@ -85,7 +87,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     protected void doExecute() {
         super.doExecute();
 
-        checkMemory(config, this);
+        checkMemory(config);
     }
 
     @Override
@@ -97,7 +99,6 @@ public class RestApi extends ExecutableForAppWithP2p {
         accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
         bondedReputationRepository = injector.getInstance(BondedReputationRepository.class);
         bondedRolesRepository = injector.getInstance(BondedRolesRepository.class);
-        signVerifyService = injector.getInstance(SignVerifyService.class);
         daoStateSnapshotService = injector.getInstance(DaoStateSnapshotService.class);
         daoFacade = injector.getInstance(DaoFacade.class);
         proposalService = injector.getInstance(ProposalService.class);
@@ -131,7 +132,19 @@ public class RestApi extends ExecutableForAppWithP2p {
         priceFeedService.initialRequestPriceFeed();
     }
 
+    @Override
+    protected void shutDownAdditionalServices() {
+        if (stopServerHandler != null) {
+            stopServerHandler.run();
+        }
+    }
+
     public void checkDaoReady() {
         checkArgument(parseBlockCompleteAfterBatchProcessing.get(), "DAO not ready yet");
+    }
+
+    public void checkDaoReadyAndInSync() {
+        checkDaoReady();
+        checkArgument(daoFacade.isDaoStateReadyAndInSync(), "DAO not ready and in sync yet");
     }
 }

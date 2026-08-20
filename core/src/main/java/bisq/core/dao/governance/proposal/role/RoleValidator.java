@@ -17,18 +17,22 @@
 
 package bisq.core.dao.governance.proposal.role;
 
+import bisq.core.dao.DaoHardFork;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
@@ -49,8 +53,31 @@ public class RoleValidator extends ProposalValidator implements ConsensusCritica
 
             RoleProposal roleProposal = (RoleProposal) proposal;
             notNull(roleProposal.getRole(), "Bonded role must not be null");
+            validateBondTerms(roleProposal);
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
+    }
+
+    @Override
+    protected void validateConsensusDataFields(Proposal proposal) throws ProposalValidationException {
+        try {
+            validateBondTerms((RoleProposal) proposal);
+        } catch (Throwable throwable) {
+            throw new ProposalValidationException(throwable);
+        }
+    }
+
+    private void validateBondTerms(RoleProposal roleProposal) {
+        if (!DaoHardFork.isHardFork3Activated(getBlockHeight(roleProposal))) {
+            return;
+        }
+
+        Role role = notNull(roleProposal.getRole(), "Bonded role must not be null");
+        BondedRoleType bondedRoleType = notNull(role.getBondedRoleType(), "Bonded role type must not be null");
+        checkArgument(roleProposal.getRequiredBondUnit() == bondedRoleType.getRequiredBondUnit(),
+                "Required bond unit must match the bonded role type");
+        checkArgument(roleProposal.getUnlockTime() == bondedRoleType.getUnlockTimeInBlocks(),
+                "Unlock time must match the bonded role type");
     }
 }

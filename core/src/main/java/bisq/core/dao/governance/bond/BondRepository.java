@@ -28,8 +28,6 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
-import com.google.protobuf.ByteString;
-
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -46,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,8 +68,7 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
                                       Bond<?> bond,
                                       Tx lockupTx,
                                       TxOutput lockupTxOutput) {
-        if (bond.getBondState() != BondState.LOCKUP_TX_PENDING || bond.getBondState() != BondState.UNLOCK_TX_PENDING)
-            bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
+        bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
 
         bond.setLockupTxId(lockupTx.getId());
         // We use the tx time as we want to have a unique time for all users
@@ -80,23 +78,29 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
 
         if (!daoStateService.isUnspent(lockupTxOutput.getKey())) {
             // Lockup is already spent (in unlock tx)
-            daoStateService.getSpentInfo(lockupTxOutput)
+            Optional<Tx> spendingTx = daoStateService.getSpentInfo(lockupTxOutput)
                     .map(SpentInfo::getTxId)
-                    .flatMap(daoStateService::getTx)
-                    .filter(unlockTx -> unlockTx.getTxType() == TxType.UNLOCK)
-                    .ifPresent(unlockTx -> {
-                        // cross check if it is in daoStateService.getUnlockTxOutputs() ?
-                        String unlockTxId = unlockTx.getId();
-                        bond.setUnlockTxId(unlockTxId);
-                        bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
-                        bond.setUnlockDate(unlockTx.getTime());
-                        boolean unlocking = daoStateService.isUnlockingAndUnspent(unlockTxId);
-                        if (unlocking) {
-                            bond.setBondState(BondState.UNLOCKING);
-                        } else {
-                            bond.setBondState(BondState.UNLOCKED);
-                        }
-                    });
+                    .flatMap(daoStateService::getTx);
+            if (spendingTx.isEmpty()) {
+                // The output is known to be spent but daoStateService.getSpentInfo cannot resolve it. Do not leave the bond confirmed.
+                bond.setBondState(BondState.ILLEGALLY_SPENT);
+            } else if (spendingTx.get().getTxType() == TxType.UNLOCK) {
+                Tx unlockTx = spendingTx.get();
+                // cross check if it is in daoStateService.getUnlockTxOutputs() ?
+                String unlockTxId = unlockTx.getId();
+                bond.setUnlockTxId(unlockTxId);
+                bond.setBondState(BondState.UNLOCK_TX_CONFIRMED);
+                bond.setUnlockDate(unlockTx.getTime());
+                boolean unlocking = daoStateService.isUnlockingAndUnspent(unlockTxId);
+                if (unlocking) {
+                    bond.setBondState(BondState.UNLOCKING);
+                } else {
+                    bond.setBondState(BondState.UNLOCKED);
+                }
+            } else {
+                // The collateral is gone even though it was not spent by a normal unlock transaction.
+                bond.setBondState(BondState.ILLEGALLY_SPENT);
+            }
         }
 
         if ((bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
@@ -134,6 +138,19 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
     }
 
+    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService, String lockupTxId) {
+        return bsqWalletService.getPendingWalletTransactionsStream()
+                .flatMap(transaction -> transaction.getInputs().stream())
+                .map(TransactionInput::getConnectedOutput)
+                .filter(Objects::nonNull)
+                .filter(transactionOutput -> transactionOutput.getIndex() == 0)
+                .map(TransactionOutput::getParentTransaction)
+                .filter(Objects::nonNull)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
+                .anyMatch(lockupTxId::equals);
+    }
+
     public static boolean isConfiscated(Bond<?> bond, DaoStateService daoStateService) {
         return (bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
                 (bond.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(bond.getUnlockTxId()));
@@ -145,7 +162,6 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
 
     // These maps are just for convenience. The data which are used to fill the maps are stored in the DaoState (role, txs).
     protected final Map<String, B> bondByUidMap = new HashMap<>();
-    private Map<ByteString, T> bondedAssetByHashMap;
     @Getter
     protected final ObservableList<B> bonds = FXCollections.observableArrayList();
 
@@ -215,16 +231,9 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
 
     protected abstract Stream<T> getBondedAssetStream();
 
-    protected Map<ByteString, T> getBondedAssetByHashMap() {
-        return bondedAssetByHashMap != null ? bondedAssetByHashMap
-                : (bondedAssetByHashMap = getBondedAssetStream()
-                .collect(Collectors.toMap(a -> ByteString.copyFrom(a.getHash()), a -> a, (a, b) -> a)));
-    }
-
     protected void update() {
         long ts = System.currentTimeMillis();
         log.debug("update");
-        bondedAssetByHashMap = null;
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
             B bond = bondByUidMap.computeIfAbsent(uid, u -> createBond(bondedAsset));

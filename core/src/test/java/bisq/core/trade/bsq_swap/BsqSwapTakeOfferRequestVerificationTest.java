@@ -36,9 +36,9 @@ import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -108,11 +108,34 @@ class BsqSwapTakeOfferRequestVerificationTest {
                 newRequest(OUTSIDE_TOLERANCE)));
     }
 
+    @Test
+    void rejectsRequestWithExtremeTradeDate() {
+        Fixture fixture = new Fixture(NETWORK_MIN);
+
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newRequest(NETWORK_MIN, MAKER_FEE, TAKER_FEE, Long.MIN_VALUE)));
+        assertFalse(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newRequest(NETWORK_MIN, MAKER_FEE, TAKER_FEE, Long.MAX_VALUE)));
+    }
+
     private static BsqSwapRequest newRequest(long txFeePerVbyte) {
         return newRequest(txFeePerVbyte, MAKER_FEE, TAKER_FEE);
     }
 
     private static BsqSwapRequest newRequest(long txFeePerVbyte, long makerFee, long takerFee) {
+        return newRequest(txFeePerVbyte, makerFee, takerFee, System.currentTimeMillis());
+    }
+
+    private static BsqSwapRequest newRequest(long txFeePerVbyte,
+                                             long makerFee,
+                                             long takerFee,
+                                             long tradeDate) {
         return new SellersBsqSwapRequest(TRADE_ID,
                 PEER,
                 mock(PubKeyRing.class),
@@ -120,7 +143,7 @@ class BsqSwapTakeOfferRequestVerificationTest {
                 txFeePerVbyte,
                 makerFee,
                 takerFee,
-                System.currentTimeMillis());
+                tradeDate);
     }
 
     private static class Fixture {

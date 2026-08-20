@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.RejectedExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -117,42 +118,49 @@ public class MemPoolSpaceTxBroadcaster {
         httpClient.setIgnoreSocks5Proxy(false);
 
         log.info("We broadcast rawTx {} to {}", rawTx, serviceAddress);
-        ListenableFuture<String> future = executorService.submit(() -> {
-            Thread.currentThread().setName("MemPoolSpaceTxBroadcaster @ " + serviceAddress);
-            return httpClient.post(rawTx, "User-Agent", "bisq/" + Version.VERSION);
-        });
+        try {
+            ListenableFuture<String> future = executorService.submit(() -> {
+                Thread.currentThread().setName("MemPoolSpaceTxBroadcaster @ " + serviceAddress);
+                return httpClient.post(rawTx, "User-Agent", "bisq/" + Version.VERSION);
+            });
 
-        Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(String txId) {
-                if (txId.equals(txIdToSend)) {
-                    log.info("Broadcast of raw tx with txId {} to {} was successful. rawTx={}",
-                            txId, serviceAddress, rawTx);
-                } else {
-                    log.error("The txId we got returned from the service does not match " +
-                                    "out tx of the sending tx. txId={}; txIdToSend={}",
-                            txId, txIdToSend);
-                }
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                Throwable cause = throwable.getCause();
-                if (cause instanceof HttpException) {
-                    int responseCode = ((HttpException) cause).getResponseCode();
-                    String message = cause.getMessage();
-                    // See all error codes at: https://github.com/bitcoin/bitcoin/blob/master/src/rpc/protocol.h
-                    if (responseCode == 400 && message.contains("code\":-27")) {
-                        log.info("Broadcast of raw tx to {} failed as transaction {} is already confirmed",
-                                serviceAddress, txIdToSend);
+            Futures.addCallback(future, new FutureCallback<>() {
+                public void onSuccess(String txId) {
+                    if (txId.equals(txIdToSend)) {
+                        log.info("Broadcast of raw tx with txId {} to {} was successful. rawTx={}",
+                                txId, serviceAddress, rawTx);
                     } else {
-                        log.info("Broadcast of raw tx to {} failed for transaction {}. responseCode={}, error={}",
-                                serviceAddress, txIdToSend, responseCode, message);
+                        log.error("The txId we got returned from the service does not match " +
+                                        "our tx of the sending tx. txId={}; txIdToSend={}",
+                                txId, txIdToSend);
                     }
-                } else {
-                    log.warn("Broadcast of raw tx with txId {} to {} failed. Error={}",
-                            txIdToSend, serviceAddress, throwable.toString());
                 }
-            }
-        }, MoreExecutors.directExecutor());
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    Throwable cause = throwable.getCause();
+                    if (cause instanceof HttpException) {
+                        int responseCode = ((HttpException) cause).getResponseCode();
+                        String message = cause.getMessage();
+                        // See all error codes at: https://github.com/bitcoin/bitcoin/blob/master/src/rpc/protocol.h
+                        if (responseCode == 400 && message.contains("code\":-27")) {
+                            log.info("Broadcast of raw tx to {} failed as transaction {} is already confirmed",
+                                    serviceAddress, txIdToSend);
+                        } else {
+                            log.info("Broadcast of raw tx to {} failed for transaction {}. responseCode={}, error={}",
+                                    serviceAddress, txIdToSend, responseCode, message);
+                        }
+                    } else {
+                        log.warn("Broadcast of raw tx with txId {} to {} failed. Error={}",
+                                txIdToSend, serviceAddress, throwable.toString());
+                    }
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (RejectedExecutionException exception) {
+            log.warn("Broadcast of raw tx with txId {} to {} was rejected as our executorService is " +
+                            "exhausted. As we use the mempool.space broadcast only for redundancy to the " +
+                            "BitcoinJ broadcast we ignore that error. Error={}",
+                    txIdToSend, serviceAddress, exception.toString());
+        }
     }
 
     @Nullable

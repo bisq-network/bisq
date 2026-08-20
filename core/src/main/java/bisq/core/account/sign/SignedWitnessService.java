@@ -27,10 +27,12 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
+import bisq.common.util.DateUtil;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -38,17 +40,19 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 import java.security.SignatureException;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -68,12 +72,18 @@ public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
     private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
     public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.divide(4);
+    // Tolerance for clock differences between the peers when we check the date of a SignedWitness we received
+    // from the trading peer.
+    private static final long SIGN_DATE_TOLERANCE = ChronoUnit.DAYS.getDuration().toMillis();
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
+    @SuppressWarnings("deprecation")
     private final ArbitratorManager arbitratorManager;
     private final SignedWitnessStorageService signedWitnessStorageService;
     private final FilterPolicyService filterPolicyService;
+    private final boolean allowMainnetSignedWitnessesWithDevPrivilegeKeys;
+    private final Clock clock;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
@@ -100,15 +110,20 @@ public class SignedWitnessService {
     @Inject
     public SignedWitnessService(KeyRing keyRing,
                                 P2PService p2PService,
-                                ArbitratorManager arbitratorManager,
+                                @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                FilterPolicyService filterPolicyService) {
+                                FilterPolicyService filterPolicyService,
+                                @Named(Config.ALLOW_MAINNET_SIGNED_WITNESSES_WITH_DEV_PRIVILEGE_KEYS)
+                                boolean allowMainnetSignedWitnessesWithDevPrivilegeKeys,
+                                Clock clock) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
         this.signedWitnessStorageService = signedWitnessStorageService;
         this.filterPolicyService = filterPolicyService;
+        this.allowMainnetSignedWitnessesWithDevPrivilegeKeys = allowMainnetSignedWitnessesWithDevPrivilegeKeys;
+        this.clock = clock;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -149,14 +164,53 @@ public class SignedWitnessService {
      * Witnesses that were added but are no longer considered signed won't be shown
      */
     public List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness) {
-        if (!isSignedAccountAgeWitness(accountAgeWitness)) {
-            return new ArrayList<>();
-        }
+        return getVerifiedWitnessDateList(accountAgeWitness, Optional.empty());
+    }
+
+    public List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness,
+                                                  byte[] expectedWitnessOwnerPubKey) {
+        return getVerifiedWitnessDateList(accountAgeWitness, Optional.of(expectedWitnessOwnerPubKey));
+    }
+
+    /**
+     * Returns qualifying dates after the caller has independently proven that {@code provenWitnessOwnerPubKey}
+     * owns the account-age witness hash. Legacy arbitrator signing swapped the buyer and seller owner keys before
+     * commit 09141eba92. A direct arbitrator signature still authenticates the account-age witness hash, so those
+     * records do not need the unauthenticated legacy owner field to match. Trade-signed leaves remain owner-bound.
+     */
+    public List<Long> getVerifiedWitnessDateListForProvenOwner(AccountAgeWitness accountAgeWitness,
+                                                                byte[] provenWitnessOwnerPubKey) {
         return getSignedWitnessSet(accountAgeWitness).stream()
-                .filter(this::verifySignature)
+                .filter(signedWitness -> isValidForProvenOwner(signedWitness, provenWitnessOwnerPubKey))
                 .map(SignedWitness::getDate)
                 .sorted()
                 .collect(Collectors.toList());
+    }
+
+    private List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness,
+                                                   Optional<byte[]> expectedWitnessOwnerPubKey) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .filter(signedWitness -> expectedWitnessOwnerPubKey
+                        .map(expected -> Arrays.equals(expected, signedWitness.getWitnessOwnerPubKey()))
+                        .orElse(true))
+                .filter(signedWitness -> isValidSignerWitnessInternal(
+                        signedWitness,
+                        new Date().getTime() + SIGNER_AGE,
+                        new Stack<>()))
+                .map(SignedWitness::getDate)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private boolean isValidForProvenOwner(SignedWitness signedWitness, byte[] provenWitnessOwnerPubKey) {
+        if (Arrays.equals(provenWitnessOwnerPubKey, signedWitness.getWitnessOwnerPubKey())) {
+            return isValidSignerWitnessInternal(
+                    signedWitness,
+                    new Date().getTime() + SIGNER_AGE,
+                    new Stack<>());
+        }
+
+        return signedWitness.isSignedByArbitrator() && verifySignature(signedWitness);
     }
 
     /**
@@ -204,15 +258,68 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
-    public boolean publishOwnSignedWitness(SignedWitness signedWitness) {
-        if (!Arrays.equals(signedWitness.getWitnessOwnerPubKey(), keyRing.getPubKeyRing().getSignaturePubKeyBytes()) ||
-                !verifySigner(signedWitness)) {
+    // The signedWitness was created by the trading peer and received with a trade message, so all its fields
+    // are peer controlled. We publish it with the local publication API which does not apply the date tolerance
+    // check of the P2P layer, and we add it to our maps and to our persisted append-only store. We therefore
+    // build the witness the peer was supposed to create for that trade from our own validated trade data and
+    // accept the received one only if it is identical to it. Two fields cannot be derived from the trade data:
+    // - The signature. It is the reason why we cannot create the witness ourselves. We verify it below.
+    // - The date. The trade message can be delivered late over the mailbox, so the date can be legitimately
+    //   much older than the current time and a tolerance check against the current time is not applicable
+    //   here. The peer signs when the payout transaction gets published, thus we require instead that the date
+    //   is not before the start of the trade and not in the future.
+    public boolean publishOwnSignedWitness(SignedWitness signedWitness,
+                                           Coin tradeAmount,
+                                           AccountAgeWitness myAccountAgeWitness,
+                                           byte[] signerPubKey,
+                                           byte[] witnessOwnerPubKey,
+                                           long tradeStartDate) {
+        SignedWitness expected = new SignedWitness(SignedWitness.VerificationMethod.TRADE,
+                myAccountAgeWitness.getHash(),
+                signedWitness.getSignature(),
+                signerPubKey,
+                witnessOwnerPubKey,
+                signedWitness.getDate(),
+                tradeAmount.value);
+        if (!expected.equals(signedWitness)) {
+            log.warn("Received signedWitness is not the one the peer was supposed to create for that trade. " +
+                    "signedWitness={}", signedWitness);
+            return false;
+        }
+        if (!isSufficientTradeAmountForSigning(tradeAmount)) {
+            log.warn("Received signedWitness is from a trade with a too low trade amount. signedWitness={}",
+                    signedWitness);
+            return false;
+        }
+        if (!isSignDateInTradeRange(signedWitness.getDate(), tradeStartDate)) {
+            log.warn("Received signedWitness date is outside allowed bounds (before trade start or in the future). signedWitness={}",
+                    signedWitness);
+            return false;
+        }
+        if (!verifySignature(signedWitness)) {
+            log.warn("Received signedWitness has an invalid signature. signedWitness={}", signedWitness);
+            return false;
+        }
+
+        // Does the witness signer hold a witness that makes them a valid signer at the date of this signature?
+        long signedWitnessDate = signedWitness.getDate();
+        if (!verifySigner(signerPubKey, signedWitnessDate)) {
+            log.warn("The signer of the received signedWitness is not a valid signer. signedWitness={}",
+                    signedWitness);
             return false;
         }
 
         log.info("Publish own signedWitness {}", signedWitness);
         publishSignedWitness(signedWitness);
         return true;
+    }
+
+    // We compare the bounds directly instead of calculating a difference, so that a peer controlled extreme
+    // date value cannot cause a long overflow.
+    private boolean isSignDateInTradeRange(long date, long tradeStartDate) {
+        return DateUtil.isWithinBounds(date,
+                tradeStartDate - SIGN_DATE_TOLERANCE,
+                clock.millis() + SIGN_DATE_TOLERANCE);
     }
 
     // Arbitrators sign with EC key
@@ -262,7 +369,7 @@ public class SignedWitnessService {
         String signatureBase64 = LowRSigningKey.from(key).signMessage(accountAgeWitnessHashAsHex);
         SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.ARBITRATOR,
                 accountAgeWitness.getHash(),
-                signatureBase64.getBytes(Charsets.UTF_8),
+                signatureBase64.getBytes(StandardCharsets.UTF_8),
                 key.getPubKey(),
                 peersPubKey,
                 time,
@@ -320,9 +427,13 @@ public class SignedWitnessService {
         }
         try {
             String message = Utilities.encodeToHex(signedWitness.getAccountAgeWitnessHash());
-            String signatureBase64 = new String(signedWitness.getSignature(), Charsets.UTF_8);
+            String signatureBase64 = new String(signedWitness.getSignature(), StandardCharsets.UTF_8);
             ECKey key = ECKey.fromPublicOnly(signedWitness.getSignerPubKey());
-            if (arbitratorManager.isPublicKeyInList(Utilities.encodeToHex(key.getPubKey()))) {
+            String pubKeyAsHex = Utilities.encodeToHex(key.getPubKey());
+            boolean isAcceptedArbitrator = arbitratorManager.isPublicKeyInList(pubKeyAsHex) ||
+                    (allowMainnetSignedWitnessesWithDevPrivilegeKeys &&
+                            arbitratorManager.isLegacyArbitratorPublicKey(pubKeyAsHex));
+            if (isAcceptedArbitrator) {
                 key.verifyMessage(message, signatureBase64);
                 verifySignatureWithECKeyResultCache.put(hash, true);
                 return true;
@@ -424,9 +535,13 @@ public class SignedWitnessService {
         return !tradeAmount.isLessThan(MINIMUM_TRADE_AMOUNT_FOR_SIGNING);
     }
 
-    private boolean verifySigner(SignedWitness signedWitness) {
-        return getSignedWitnessSetByOwnerPubKey(signedWitness.getWitnessOwnerPubKey(), new Stack<>()).stream()
-                .anyMatch(w -> isValidSignerWitnessInternal(w, signedWitness.getDate(), new Stack<>()));
+    // We check if the signer was allowed to sign at the time they signed. We look up the witnesses owned by the
+    // signer, the same way isValidSignerWitnessInternal walks up the chain. Looking up the witnesses owned by
+    // the witness owner instead would ask if the receiver of the signature is a signer, which is not the
+    // question here and which would exclude the case that our first account gets signed.
+    private boolean verifySigner(byte[] signerPubKey, long signedWitnessDate) {
+        return getSignedWitnessSetByOwnerPubKey(signerPubKey, new Stack<>()).stream()
+                .anyMatch(w -> isValidSignerWitnessInternal(w, signedWitnessDate, new Stack<>()));
     }
 
     /**

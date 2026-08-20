@@ -111,7 +111,8 @@ public class ProposalDisplay {
     private final Navigation navigation;
 
     @Nullable
-    private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
+    private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField,
+            unlockTimeForRoleTextField;
     private TextField proposalTypeTextField, myVoteTextField, voteResultTextField;
     public InputTextField nameTextField;
     public InputTextField linkInputTextField;
@@ -139,7 +140,7 @@ public class ProposalDisplay {
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
     private ChangeListener<Param> paramChangeListener;
-    private ChangeListener<BondedRoleType> requiredBondForRoleListener;
+    private ChangeListener<BondedRoleType> bondedRoleTypeListener;
     private TitledGroupBg myVoteTitledGroup;
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
     private int votingBoxRowSpan;
@@ -353,13 +354,17 @@ public class ProposalDisplay {
                 comboBoxes.add(bondedRoleTypeComboBox);
                 requiredBondForRoleTextField = addTopLabelReadOnlyTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.requiredBondForRole.label")).second;
+                // The unlock time is a bond term of the proposal, so voters must be able to see it before voting.
+                unlockTimeForRoleTextField = addTopLabelReadOnlyTextField(gridPane, ++gridRow,
+                        Res.get("dao.proposal.display.unlockTimeForRole.label")).second;
 
-                requiredBondForRoleListener = (observable, oldValue, newValue) -> {
+                bondedRoleTypeListener = (observable, oldValue, newValue) -> {
                     if (newValue != null) {
                         requiredBondForRoleTextField.setText(bsqFormatter.formatCoinWithCode(Coin.valueOf(daoFacade.getRequiredBond(newValue))));
+                        unlockTimeForRoleTextField.setText(Res.get("dao.bond.details.blocks", newValue.getUnlockTimeInBlocks()));
                     }
                 };
-                bondedRoleTypeComboBox.getSelectionModel().selectedItemProperty().addListener(requiredBondForRoleListener);
+                bondedRoleTypeComboBox.getSelectionModel().selectedItemProperty().addListener(bondedRoleTypeListener);
 
                 break;
             case CONFISCATE_BOND:
@@ -574,8 +579,10 @@ public class ProposalDisplay {
             Role role = roleProposal.getRole();
             bondedRoleTypeComboBox.getSelectionModel().select(role.getBondedRoleType());
             comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(role.getBondedRoleType()));
+            // Both bond terms come from the proposal, not from the role type constants, so that a proposal which
+            // carries terms deviating from its role type is visible to voters rather than displayed as the expected one.
             requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(daoFacade.getRequiredBond(roleProposal))));
-            // TODO maybe show also unlock time?
+            unlockTimeForRoleTextField.setText(Res.get("dao.bond.details.blocks", roleProposal.getUnlockTime()));
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
@@ -631,8 +638,8 @@ public class ProposalDisplay {
         if (paramComboBox != null && paramChangeListener != null)
             paramComboBox.getSelectionModel().selectedItemProperty().removeListener(paramChangeListener);
 
-        if (bondedRoleTypeComboBox != null && requiredBondForRoleListener != null)
-            bondedRoleTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(requiredBondForRoleListener);
+        if (bondedRoleTypeComboBox != null && bondedRoleTypeListener != null)
+            bondedRoleTypeComboBox.getSelectionModel().selectedItemProperty().removeListener(bondedRoleTypeListener);
     }
 
     public void clearForm() {
