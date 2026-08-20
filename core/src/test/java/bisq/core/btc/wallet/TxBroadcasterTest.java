@@ -21,6 +21,10 @@ import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 
+import bisq.common.FrameRateTimer;
+import bisq.common.Timer;
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionBroadcast;
@@ -29,14 +33,18 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.time.Duration;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -47,10 +55,18 @@ class TxBroadcasterTest {
 
     @BeforeEach
     void setUp() {
+        ManualTimer.clear();
+        UserThread.setTimerClass(ManualTimer.class);
         // Keeps the redundant broadcast to the mempool services out of the test.
         LocalBitcoinNode localBitcoinNode = mock(LocalBitcoinNode.class);
         when(localBitcoinNode.shouldBeUsed()).thenReturn(true);
         MemPoolSpaceTxBroadcaster.init(null, null, localBitcoinNode, false, false);
+    }
+
+    @AfterEach
+    void tearDown() {
+        ManualTimer.firePendingTimers();
+        UserThread.setTimerClass(FrameRateTimer.class);
     }
 
     @Test
@@ -79,6 +95,102 @@ class TxBroadcasterTest {
         assertNull(firstCallback.failure.get());
     }
 
+    @Test
+    void aLateResultFromAnExpiredBroadcastDoesNotConsumeANewerRequest() {
+        Transaction tx = new Transaction(MainNetParams.get());
+        Wallet wallet = mock(Wallet.class);
+        SettableFuture<Transaction> firstFuture = SettableFuture.create();
+        SettableFuture<Transaction> secondFuture = SettableFuture.create();
+        TransactionBroadcast firstBroadcast = TransactionBroadcast.createMockBroadcast(tx, firstFuture);
+        TransactionBroadcast secondBroadcast = TransactionBroadcast.createMockBroadcast(tx, secondFuture);
+        PeerGroup peerGroup = mock(PeerGroup.class);
+        when(peerGroup.broadcastTransaction(tx)).thenReturn(firstBroadcast, secondBroadcast);
+        RecordingCallback firstCallback = new RecordingCallback();
+        RecordingCallback secondCallback = new RecordingCallback();
+
+        TxBroadcaster.broadcastTx(wallet, peerGroup, tx, firstCallback, TIMEOUT_NOT_REACHED_IN_TEST);
+        ManualTimer firstTimer = ManualTimer.latest();
+        firstTimer.fire();
+        assertSame(tx, firstCallback.success.get());
+        assertEquals(1, firstCallback.successCount.get());
+
+        TxBroadcaster.broadcastTx(wallet, peerGroup, tx, secondCallback, TIMEOUT_NOT_REACHED_IN_TEST);
+        ManualTimer secondTimer = ManualTimer.latest();
+        firstFuture.set(tx);
+
+        assertFalse(secondTimer.stopped);
+        assertNull(secondCallback.success.get());
+        assertNull(secondCallback.failure.get());
+        assertEquals(1, firstCallback.successCount.get());
+
+        secondFuture.set(tx);
+
+        assertTrue(secondTimer.stopped);
+        assertSame(tx, secondCallback.success.get());
+        assertEquals(1, secondCallback.successCount.get());
+        assertNull(secondCallback.failure.get());
+    }
+
+    @Test
+    void aSynchronousWalletCommitFailureRemovesThePendingRequest() {
+        Transaction tx = new Transaction(MainNetParams.get());
+        Wallet wallet = mock(Wallet.class);
+        IllegalStateException setupFailure = new IllegalStateException("commit failed");
+        when(wallet.maybeCommitTx(tx)).thenThrow(setupFailure);
+        RecordingCallback callback = new RecordingCallback();
+
+        IllegalStateException thrown = assertThrows(IllegalStateException.class,
+                () -> TxBroadcaster.broadcastTx(wallet,
+                        mock(PeerGroup.class),
+                        tx,
+                        callback,
+                        TIMEOUT_NOT_REACHED_IN_TEST));
+
+        assertSame(setupFailure, thrown);
+        assertSynchronousFailureWasCleanedUp(tx, callback);
+    }
+
+    @Test
+    void aSynchronousPeerGroupFailureRemovesThePendingRequest() {
+        Transaction tx = new Transaction(MainNetParams.get());
+        Wallet wallet = mock(Wallet.class);
+        PeerGroup peerGroup = mock(PeerGroup.class);
+        IllegalStateException setupFailure = new IllegalStateException("broadcast failed");
+        when(peerGroup.broadcastTransaction(tx)).thenThrow(setupFailure);
+        RecordingCallback callback = new RecordingCallback();
+
+        IllegalStateException thrown = assertThrows(IllegalStateException.class,
+                () -> TxBroadcaster.broadcastTx(wallet,
+                        peerGroup,
+                        tx,
+                        callback,
+                        TIMEOUT_NOT_REACHED_IN_TEST));
+
+        assertSame(setupFailure, thrown);
+        assertSynchronousFailureWasCleanedUp(tx, callback);
+    }
+
+    private static void assertSynchronousFailureWasCleanedUp(Transaction tx, RecordingCallback failedCallback) {
+        ManualTimer failedTimer = ManualTimer.latest();
+        assertTrue(failedTimer.stopped);
+        failedTimer.fire();
+        assertEquals(0, failedCallback.successCount.get());
+        assertEquals(0, failedCallback.failureCount.get());
+
+        Wallet retryWallet = mock(Wallet.class);
+        SettableFuture<Transaction> retryFuture = SettableFuture.create();
+        RecordingCallback retryCallback = new RecordingCallback();
+        TxBroadcaster.broadcastTx(retryWallet,
+                peerGroup(tx, retryFuture),
+                tx,
+                retryCallback,
+                TIMEOUT_NOT_REACHED_IN_TEST);
+        retryFuture.set(tx);
+
+        assertSame(tx, retryCallback.success.get());
+        assertNull(retryCallback.failure.get());
+    }
+
     private static PeerGroup peerGroup(Transaction tx, SettableFuture<Transaction> broadcastFuture) {
         TransactionBroadcast broadcast = TransactionBroadcast.createMockBroadcast(tx, broadcastFuture);
         PeerGroup peerGroup = mock(PeerGroup.class);
@@ -89,15 +201,65 @@ class TxBroadcasterTest {
     private static class RecordingCallback implements TxBroadcaster.Callback {
         private final AtomicReference<Transaction> success = new AtomicReference<>();
         private final AtomicReference<TxBroadcastException> failure = new AtomicReference<>();
+        private final AtomicInteger successCount = new AtomicInteger();
+        private final AtomicInteger failureCount = new AtomicInteger();
 
         @Override
         public void onSuccess(Transaction transaction) {
             success.set(transaction);
+            successCount.incrementAndGet();
         }
 
         @Override
         public void onFailure(TxBroadcastException exception) {
             failure.set(exception);
+            failureCount.incrementAndGet();
+        }
+    }
+
+    public static class ManualTimer implements Timer {
+        private static final List<ManualTimer> timers = new ArrayList<>();
+
+        private Runnable action;
+        private boolean stopped;
+
+        public ManualTimer() {
+            timers.add(this);
+        }
+
+        @Override
+        public Timer runLater(Duration delay, Runnable action) {
+            this.action = action;
+            return this;
+        }
+
+        @Override
+        public Timer runPeriodically(Duration interval, Runnable action) {
+            this.action = action;
+            return this;
+        }
+
+        @Override
+        public void stop() {
+            stopped = true;
+        }
+
+        private void fire() {
+            if (!stopped) {
+                action.run();
+            }
+        }
+
+        private static ManualTimer latest() {
+            return timers.get(timers.size() - 1);
+        }
+
+        private static void firePendingTimers() {
+            List.copyOf(timers).forEach(ManualTimer::fire);
+        }
+
+        private static void clear() {
+            timers.clear();
         }
     }
 }
