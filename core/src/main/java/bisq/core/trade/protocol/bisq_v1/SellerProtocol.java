@@ -96,7 +96,13 @@ public abstract class SellerProtocol extends DisputeProtocol {
     }
 
     protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
-        boolean publishDepositAfterValidation = !trade.isDepositPublished() && processModel.getDepositTx() != null;
+        // Only fiat publication is deferred until the buyer account is validated. A crypto deposit is already
+        // published by the delayed-payout task runner, so adding the publisher here would broadcast the same
+        // transaction a second time while the first broadcast is still pending.
+        boolean publishDepositAfterValidation = trade.getOffer() != null &&
+                trade.getOffer().isFiatOffer() &&
+                !trade.isDepositPublished() &&
+                processModel.getDepositTx() != null;
         expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED, Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(message)
                 .from(peer))

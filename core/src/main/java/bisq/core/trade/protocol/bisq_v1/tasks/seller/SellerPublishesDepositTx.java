@@ -56,40 +56,59 @@ public class SellerPublishesDepositTx extends TradeTask {
             }
 
             Transaction depositTx = checkCanonicalDepositTxFields(processModel.getDepositTx());
+            if (!processModel.tryStartDepositTxBroadcast()) {
+                log.info("A broadcast of the deposit tx is already pending, so we do not broadcast it again.");
+                complete();
+                return;
+            }
+
+            broadcastDepositTx(depositTx);
+        } catch (Throwable t) {
+            failed(t);
+        }
+    }
+
+    private void broadcastDepositTx(Transaction depositTx) {
+        try {
             processModel.getTradeWalletService().broadcastTx(depositTx,
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            if (!completed) {
-                                // Now as we have published the deposit tx we set it in trade
-                                trade.applyDepositTx(depositTx);
-
-                                if (!trade.isDepositConfirmed()) {
-                                    trade.setState(Trade.State.SELLER_PUBLISHED_DEPOSIT_TX);
-                                }
-
-                                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(),
-                                        AddressEntry.Context.RESERVED_FOR_TRADE);
-
-                                processModel.getTradeManager().requestPersistence();
-
-                                complete();
-                            } else {
+                            processModel.finishDepositTxBroadcast();
+                            if (completed) {
                                 log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
+                                return;
                             }
+
+                            // Now as we have published the deposit tx we set it in trade
+                            trade.applyDepositTx(depositTx);
+
+                            if (!trade.isDepositConfirmed()) {
+                                trade.setState(Trade.State.SELLER_PUBLISHED_DEPOSIT_TX);
+                            }
+
+                            processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(),
+                                    AddressEntry.Context.RESERVED_FOR_TRADE);
+
+                            processModel.getTradeManager().requestPersistence();
+
+                            complete();
                         }
 
                         @Override
                         public void onFailure(TxBroadcastException exception) {
-                            if (!completed) {
-                                failed(exception);
-                            } else {
+                            processModel.finishDepositTxBroadcast();
+                            if (completed) {
                                 log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
+                                return;
                             }
+
+                            failed(exception);
                         }
                     });
         } catch (Throwable t) {
-            failed(t);
+            processModel.finishDepositTxBroadcast();
+            throw t;
         }
     }
 }

@@ -45,6 +45,17 @@ The prerequisites may complete in either order. Completing either one must re-ev
 publication, but publication must remain blocked until both are persisted as complete. Repeated
 messages and retries must not cause a second logical publication.
 
+Deferred publication belongs to fiat trades only. A crypto deposit is published as soon as the
+delayed-payout signature has been processed, so a buyer account reveal must not trigger publication
+for a crypto trade.
+
+Publication is single-flight per trade. The persisted trade phase advances only when the wallet
+reports the broadcast result, so it cannot express that a broadcast is still pending. A second
+publication attempt that starts before that result arrived must complete without broadcasting again,
+and the first attempt stays responsible for recording the transaction on the trade. Requesting a
+second broadcast of a transaction that is already being broadcast must never disturb the pending
+broadcast; otherwise the transaction can reach the blockchain while the trade keeps no record of it.
+
 The seller must persist the finalized deposit transaction before publication can be deferred. If the
 seller restarts while either prerequisite is still pending, it must restore the exact transaction,
 resume delivery of the deposit and delayed-payout transaction message when necessary, and

@@ -33,8 +33,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,70 +83,98 @@ public class TxBroadcaster {
     // For trade fee txs we set only 1 sec timeout for now.
     // FIXME
     private static final int DEFAULT_BROADCAST_TIMEOUT = 5;
-    private static final Map<String, Timer> broadcastTimerMap = new HashMap<>();
+    private static final Map<String, BroadcastRequest> broadcastRequestMap = new ConcurrentHashMap<>();
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction localTx, Callback callback) {
         broadcastTx(wallet, peerGroup, localTx, callback, DEFAULT_BROADCAST_TIMEOUT);
     }
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction tx, Callback callback, int timeOut) {
-        Timer timeoutTimer;
         final String txId = tx.getTxId().toString();
         log.info("Broadcast transaction with ID: {}. Serialized tx: {}", txId, Utils.HEX.encode(tx.bitcoinSerialize()));
-        if (!broadcastTimerMap.containsKey(txId)) {
-            timeoutTimer = UserThread.runAfter(() -> {
-                log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);
-                stopAndRemoveTimer(txId);
-                UserThread.execute(() -> callback.onTimeout(new TxBroadcastTimeoutException(tx, timeOut, wallet)));
-            }, timeOut);
-
-            broadcastTimerMap.put(txId, timeoutTimer);
-        } else {
+        BroadcastRequest request = new BroadcastRequest();
+        if (broadcastRequestMap.putIfAbsent(txId, request) != null) {
             // Would be the wrong way how to use the API (calling 2 times a broadcast with same tx).
             // An arbitrator reported that got the error after a manual payout, need to investigate why...
-            stopAndRemoveTimer(txId);
+            // We must not touch the state of the pending broadcast here. Removing its timeout timer would leave the
+            // first caller without any callback: the timeout can no longer fire and the peer group success handler
+            // below skips a broadcast whose timer is gone. The caller would then never learn that its transaction
+            // was published, even though the transaction is committed to the wallet and propagated to the network.
+            // We therefore only report the misuse to the second caller and leave the pending broadcast alone.
+            // Committing and broadcasting again is not needed either, as the first call already did both.
             UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got broadcastTx called with a tx " +
                     "which has an open timeoutTimer. txId=" + txId, txId)));
+            return;
         }
 
-        // We decided the least risky scenario is to commit the tx to the wallet and broadcast it later.
-        // If it's a bsq tx WalletManager.publishAndCommitBsqTx() should have committed the tx to both bsq and btc
-        // wallets so the next line causes no effect.
-        // If it's a btc tx, the next line adds the tx to the wallet.
-        wallet.maybeCommitTx(tx);
-
-        Futures.addCallback(peerGroup.broadcastTransaction(tx).future(), new FutureCallback<>() {
-            @Override
-            public void onSuccess(@Nullable Transaction result) {
-                // We expect that there is still a timeout in our map, otherwise the timeout got triggered
-                if (broadcastTimerMap.containsKey(txId)) {
-                    stopAndRemoveTimer(txId);
-                    // At regtest we get called immediately back but we want to make sure that the handler is not called
-                    // before the caller is finished.
-                    UserThread.execute(() -> callback.onSuccess(tx));
-                } else {
-                    log.warn("We got an onSuccess callback for a broadcast which already triggered the timeout. txId={}", txId);
+        try {
+            request.setTimeoutTimer(UserThread.runAfter(() -> {
+                if (stopAndRemoveRequest(txId, request)) {
+                    log.warn("Broadcast of tx {} not completed after {} sec.", txId, timeOut);
+                    UserThread.execute(() -> callback.onTimeout(new TxBroadcastTimeoutException(tx, timeOut, wallet)));
                 }
-            }
+            }, timeOut));
 
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                stopAndRemoveTimer(txId);
-                UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got an onFailure from " +
-                        "the peerGroup.broadcastTransaction callback.", throwable)));
-            }
-        }, MoreExecutors.directExecutor());
+            // We decided the least risky scenario is to commit the tx to the wallet and broadcast it later.
+            // If it's a bsq tx WalletManager.publishAndCommitBsqTx() should have committed the tx to both bsq and btc
+            // wallets so the next line causes no effect.
+            // If it's a btc tx, the next line adds the tx to the wallet.
+            wallet.maybeCommitTx(tx);
+
+            Futures.addCallback(peerGroup.broadcastTransaction(tx).future(), new FutureCallback<>() {
+                @Override
+                public void onSuccess(@Nullable Transaction result) {
+                    if (stopAndRemoveRequest(txId, request)) {
+                        // At regtest we get called immediately back but we want to make sure that the handler is not
+                        // called before the caller is finished.
+                        UserThread.execute(() -> callback.onSuccess(tx));
+                    } else {
+                        log.warn("We got an onSuccess callback for a broadcast which already completed. txId={}", txId);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable throwable) {
+                    if (stopAndRemoveRequest(txId, request)) {
+                        UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got an onFailure " +
+                                "from the peerGroup.broadcastTransaction callback.", throwable)));
+                    } else {
+                        log.warn("We got an onFailure callback for a broadcast which already completed. txId={}", txId);
+                    }
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (RuntimeException | Error throwable) {
+            stopAndRemoveRequest(txId, request);
+            throw throwable;
+        }
 
         // For better redundancy in case the broadcast via BitcoinJ fails we also
         // publish the tx via mempool nodes.
         MemPoolSpaceTxBroadcaster.broadcastTx(tx);
     }
 
-    private static void stopAndRemoveTimer(String txId) {
-        Timer timer = broadcastTimerMap.get(txId);
-        if (timer != null)
-            timer.stop();
+    private static boolean stopAndRemoveRequest(String txId, BroadcastRequest request) {
+        if (!broadcastRequestMap.remove(txId, request)) {
+            return false;
+        }
 
-        broadcastTimerMap.remove(txId);
+        request.stopTimeoutTimer();
+        return true;
+    }
+
+    private static class BroadcastRequest {
+        @Nullable
+        private volatile Timer timeoutTimer;
+
+        private void setTimeoutTimer(Timer timeoutTimer) {
+            this.timeoutTimer = timeoutTimer;
+        }
+
+        private void stopTimeoutTimer() {
+            Timer timer = timeoutTimer;
+            if (timer != null) {
+                timer.stop();
+            }
+        }
     }
 }
