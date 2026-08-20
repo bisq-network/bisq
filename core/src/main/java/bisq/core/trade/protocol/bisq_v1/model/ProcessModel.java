@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -112,6 +113,12 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     // finalizedDepositTx while fiat publication is deferred.
     @Nullable
     transient private Transaction depositTx;
+    // The seller can reach deposit publication from overlapping task runners, for instance from the startup
+    // recovery and from a stored buyer account reveal delivered shortly afterwards. The trade phase only advances
+    // in the broadcast callback, so it cannot express that a broadcast is pending. We keep publication
+    // single-flight until the callback ran. The flag is transient so a restart can retry publication.
+    @Getter(AccessLevel.NONE)
+    transient private boolean depositTxBroadcastPending;
 
     // Persistable Immutable
     private final String offerId;
@@ -316,6 +323,19 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     public void setFinalizedDepositTx(Transaction depositTx) {
         this.depositTx = depositTx;
         finalizedDepositTx = depositTx.bitcoinSerialize();
+    }
+
+    public synchronized boolean tryStartDepositTxBroadcast() {
+        if (depositTxBroadcastPending) {
+            return false;
+        }
+
+        depositTxBroadcastPending = true;
+        return true;
+    }
+
+    public synchronized void finishDepositTxBroadcast() {
+        depositTxBroadcastPending = false;
     }
 
     @Nullable

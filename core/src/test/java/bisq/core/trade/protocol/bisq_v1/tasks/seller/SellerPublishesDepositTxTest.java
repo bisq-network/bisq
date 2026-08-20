@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
+import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.offer.Offer;
@@ -25,6 +26,9 @@ import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
+import bisq.common.crypto.Encryption;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
@@ -34,14 +38,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -81,12 +88,61 @@ class SellerPublishesDepositTxTest {
         verify(tradeWalletService).broadcastTx(same(depositTx), any(TxBroadcaster.Callback.class));
     }
 
+    @Test
+    void anOverlappingTaskRunnerDoesNotBroadcastTheDepositASecondTime() {
+        ProcessModel processModel = processModel(true, true);
+        Transaction depositTx = new Transaction(MainNetParams.get());
+        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+        when(processModel.getDepositTx()).thenReturn(depositTx);
+        when(processModel.getTradeWalletService()).thenReturn(tradeWalletService);
+        Trade trade = trade(processModel);
+
+        // The callback of the first broadcast stays pending, so the trade phase does not advance yet.
+        runTask(trade);
+        TaskResult result = runTask(trade);
+
+        assertTrue(result.completed());
+        assertNull(result.errorMessage());
+        verify(tradeWalletService, times(1)).broadcastTx(same(depositTx), any(TxBroadcaster.Callback.class));
+    }
+
+    @Test
+    void aFailedBroadcastReleasesTheGuardSoPublicationCanBeRetried() {
+        ProcessModel processModel = processModel(true, true);
+        Transaction depositTx = new Transaction(MainNetParams.get());
+        TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+        when(processModel.getDepositTx()).thenReturn(depositTx);
+        when(processModel.getTradeWalletService()).thenReturn(tradeWalletService);
+        Trade trade = trade(processModel);
+
+        runTask(trade);
+        ArgumentCaptor<TxBroadcaster.Callback> callback = ArgumentCaptor.forClass(TxBroadcaster.Callback.class);
+        verify(tradeWalletService).broadcastTx(same(depositTx), callback.capture());
+        callback.getValue().onFailure(new TxBroadcastException("broadcast failed"));
+
+        runTask(trade);
+
+        verify(tradeWalletService, times(2)).broadcastTx(same(depositTx), any(TxBroadcaster.Callback.class));
+    }
+
     private static ProcessModel processModel(boolean accountValidated, boolean messageDelivered) {
         ProcessModel processModel = mock(ProcessModel.class);
         when(processModel.isBuyerPaymentAccountValidated()).thenReturn(accountValidated);
         when(processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()).thenReturn(messageDelivered);
         when(processModel.getTradeManager()).thenReturn(mock(TradeManager.class));
+        // The single-flight guard is trade state, so we delegate it to a real ProcessModel instead of
+        // reimplementing it in the test.
+        ProcessModel guard = new ProcessModel("offer-id", "account-id", pubKeyRing());
+        when(processModel.tryStartDepositTxBroadcast()).thenAnswer(invocation -> guard.tryStartDepositTxBroadcast());
+        doAnswer(invocation -> {
+            guard.finishDepositTxBroadcast();
+            return null;
+        }).when(processModel).finishDepositTxBroadcast();
         return processModel;
+    }
+
+    private static PubKeyRing pubKeyRing() {
+        return new PubKeyRing(Sig.generateKeyPair().getPublic(), Encryption.generateKeyPair().getPublic());
     }
 
     private static Trade trade(ProcessModel processModel) {
