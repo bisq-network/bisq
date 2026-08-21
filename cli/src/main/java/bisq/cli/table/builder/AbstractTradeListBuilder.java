@@ -1,0 +1,306 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.cli.table.builder;
+
+import bisq.proto.grpc.ContractInfo;
+import bisq.proto.grpc.TradeInfo;
+
+import java.math.BigDecimal;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
+import static bisq.cli.CurrencyFormat.formatSatoshis;
+import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_BUYER_DEPOSIT;
+import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_SELLER_DEPOSIT;
+import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
+import static java.lang.String.format;
+import static protobuf.OfferDirection.SELL;
+
+
+
+import bisq.cli.table.column.Column;
+import bisq.cli.table.column.MixedTradeFeeColumn;
+
+abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
+
+    protected final List<TradeInfo> trades;
+
+    protected final TradeTableColumnSupplier colSupplier;
+
+    protected final Column<String> colTradeId;
+    @Nullable
+    protected final Column<Long> colCreateDate;
+    @Nullable
+    protected final Column<String> colMarket;
+    protected final Column<String> colPrice;
+    @Nullable
+    protected final Column<String> colPriceDeviation;
+    @Nullable
+    protected final Column<String> colCurrency;
+    @Nullable
+    protected final Column<Long> colAmount;
+    @Nullable
+    protected final Column<String> colMixedAmount;
+    @Nullable
+    protected final Column<Long> colMinerTxFee;
+    @Nullable
+    protected final MixedTradeFeeColumn colMixedTradeFee;
+    @Nullable
+    protected final Column<Long> colBuyerDeposit;
+    @Nullable
+    protected final Column<Long> colSellerDeposit;
+    @Nullable
+    protected final Column<String> colPaymentMethod;
+    @Nullable
+    protected final Column<String> colRole;
+    @Nullable
+    protected final Column<String> colOfferType;
+    @Nullable
+    protected final Column<String> colClosingStatus;
+
+    // Trade detail tbl specific columns
+
+    @Nullable
+    protected final Column<Boolean> colIsDepositPublished;
+    @Nullable
+    protected final Column<Boolean> colIsDepositConfirmed;
+    @Nullable
+    protected final Column<Boolean> colIsPayoutPublished;
+    @Nullable
+    protected final Column<Boolean> colIsCompleted;
+    @Nullable
+    protected final Column<Long> colBisqTradeFee;
+    @Nullable
+    protected final Column<String> colTradeCost;
+    @Nullable
+    protected final Column<Boolean> colIsPaymentStartedMessageSent;
+    @Nullable
+    protected final Column<Boolean> colIsPaymentReceivedMessageSent;
+    @Nullable
+    protected final Column<String> colAltcoinReceiveAddressColumn;
+
+    // BSQ swap trade detail specific columns
+
+    @Nullable
+    protected final Column<String> status;
+    @Nullable
+    protected final Column<String> colTxId;
+    @Nullable
+    protected final Column<Long> colNumConfirmations;
+
+    AbstractTradeListBuilder(TableType tableType, List<?> protos) {
+        super(tableType, protos);
+        validate();
+
+        this.trades = protos.stream().map(p -> (TradeInfo) p).collect(Collectors.toList());
+        this.colSupplier = new TradeTableColumnSupplier(tableType, trades);
+
+        this.colTradeId = colSupplier.tradeIdColumn.get();
+        this.colCreateDate = colSupplier.createDateColumn.get();
+        this.colMarket = colSupplier.marketColumn.get();
+        this.colPrice = colSupplier.priceColumn.get();
+        this.colPriceDeviation = colSupplier.priceDeviationColumn.get();
+        this.colCurrency = colSupplier.currencyColumn.get();
+        this.colAmount = colSupplier.amountColumn.get();
+        this.colMixedAmount = colSupplier.mixedAmountColumn.get();
+        this.colMinerTxFee = colSupplier.minerTxFeeColumn.get();
+        this.colMixedTradeFee = colSupplier.mixedTradeFeeColumn.get();
+        this.colBuyerDeposit = colSupplier.toSecurityDepositColumn.apply(COL_HEADER_BUYER_DEPOSIT);
+        this.colSellerDeposit = colSupplier.toSecurityDepositColumn.apply(COL_HEADER_SELLER_DEPOSIT);
+        this.colPaymentMethod = colSupplier.paymentMethodColumn.get();
+        this.colRole = colSupplier.roleColumn.get();
+        this.colOfferType = colSupplier.offerTypeColumn.get();
+        this.colClosingStatus = colSupplier.statusDescriptionColumn.get();
+
+        // Trade detail specific columns, some in common with BSQ swap trades detail.
+
+        this.colIsDepositPublished = colSupplier.depositPublishedColumn.get();
+        this.colIsDepositConfirmed = colSupplier.depositConfirmedColumn.get();
+        this.colIsPayoutPublished = colSupplier.payoutPublishedColumn.get();
+        this.colIsCompleted = colSupplier.fundsWithdrawnColumn.get();
+        this.colBisqTradeFee = colSupplier.bisqTradeDetailFeeColumn.get();
+        this.colTradeCost = colSupplier.tradeCostColumn.get();
+        this.colIsPaymentStartedMessageSent = colSupplier.paymentStartedMessageSentColumn.get();
+        this.colIsPaymentReceivedMessageSent = colSupplier.paymentReceivedMessageSentColumn.get();
+        //noinspection ConstantConditions
+        this.colAltcoinReceiveAddressColumn = colSupplier.altcoinReceiveAddressColumn.get();
+
+        // BSQ swap trade detail specific columns
+
+        this.status = colSupplier.bsqSwapStatusColumn.get();
+        this.colTxId = colSupplier.bsqSwapTxIdColumn.get();
+        this.colNumConfirmations = colSupplier.numConfirmationsColumn.get();
+    }
+
+    protected void validate() {
+        if (isTradeDetailTblBuilder.get()) {
+            if (protos.size() != 1)
+                throw new IllegalArgumentException("trade detail tbl can have only one row");
+        } else if (protos.isEmpty()) {
+            throw new IllegalArgumentException("trade tbl has no rows");
+        }
+    }
+
+    // Helper Functions
+
+    private final Supplier<Boolean> isTradeDetailTblBuilder = () -> tableType.equals(TRADE_DETAIL_TBL);
+    protected final Predicate<TradeInfo> isFiatTrade = (t) -> isFiatOffer.test(t.getOffer());
+    protected final Predicate<TradeInfo> isBsqTrade = (t) -> !isFiatOffer.test(t.getOffer()) && t.getOffer().getBaseCurrencyCode().equals("BSQ");
+    protected final Predicate<TradeInfo> isBsqSwapTrade = (t) -> t.getOffer().getIsBsqSwapOffer();
+    protected final Predicate<TradeInfo> isMyOffer = (t) -> t.getOffer().getIsMyOffer();
+    protected final Predicate<TradeInfo> isTaker = (t) -> t.getRole().toLowerCase().contains("taker");
+    protected final Predicate<TradeInfo> isSellOffer = (t) -> t.getOffer().getDirection().equals(SELL.name());
+    protected final Predicate<TradeInfo> isBtcSeller = (t) -> (isMyOffer.test(t) && isSellOffer.test(t))
+            || (!isMyOffer.test(t) && !isSellOffer.test(t));
+    protected final Predicate<TradeInfo> isTradeFeeBtc = (t) -> isMyOffer.test(t)
+            ? t.getOffer().getIsCurrencyForMakerFeeBtc()
+            : t.getIsCurrencyForTakerFeeBtc();
+
+
+    // Column Value Functions
+
+    // Altcoin volumes from server are string representations of decimals.
+    // Converting them to longs ("sats") requires shifting the decimal points
+    // to left:  2 for BSQ, 8 for other altcoins.
+    protected final Function<TradeInfo, Long> toAltcoinTradeVolumeAsLong = (t) ->
+            isBsqTrade.test(t)
+                    ? new BigDecimal(t.getTradeVolume()).movePointRight(2).longValue()
+                    : new BigDecimal(t.getTradeVolume()).movePointRight(8).longValue();
+
+    protected final Function<TradeInfo, String> toTradeVolumeAsString = (t) ->
+            isFiatTrade.test(t)
+                    ? t.getTradeVolume()
+                    : formatSatoshis(t.getTradeAmountAsLong());
+
+    protected final Function<TradeInfo, Long> toTradeVolumeAsLong = (t) ->
+            isFiatTrade.test(t)
+                    ? Long.parseLong(t.getTradeVolume())
+                    : toAltcoinTradeVolumeAsLong.apply(t);
+
+    protected final Function<TradeInfo, Long> toTradeAmount = (t) ->
+            isFiatTrade.test(t)
+                    ? t.getTradeAmountAsLong()
+                    : toTradeVolumeAsLong.apply(t);
+
+    protected final Function<TradeInfo, String> toMarket = (t) ->
+            t.getOffer().getBaseCurrencyCode() + "/"
+                    + t.getOffer().getCounterCurrencyCode();
+
+    protected final Function<TradeInfo, String> toPaymentCurrencyCode = (t) ->
+            isFiatTrade.test(t)
+                    ? t.getOffer().getCounterCurrencyCode()
+                    : t.getOffer().getBaseCurrencyCode();
+
+    protected final Function<TradeInfo, String> toPriceDeviation = (t) ->
+            t.getOffer().getUseMarketBasedPrice()
+                    ? format("%.2f%s", t.getOffer().getMarketPriceMarginPct(), "%")
+                    : "N/A";
+
+    protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
+        if (isBsqSwapTrade.test(t)) {
+            // The BTC seller pays the miner fee for both sides.
+            return isBtcSeller.test(t) ? t.getTxFeeAsLong() : 0L;
+        } else {
+            return isTaker.test(t)
+                    ? t.getTxFeeAsLong()
+                    : t.getOffer().getTxFee();
+        }
+    };
+
+    protected final Function<TradeInfo, Long> toTradeFeeBsq = (t) -> {
+        var isMyOffer = t.getOffer().getIsMyOffer();
+        if (isMyOffer) {
+            return t.getOffer().getIsCurrencyForMakerFeeBtc()
+                    ? 0L // Maker paid BTC fee, return 0.
+                    : t.getOffer().getMakerFee();
+        } else {
+            return t.getIsCurrencyForTakerFeeBtc()
+                    ? 0L // Taker paid BTC fee, return 0.
+                    : t.getTakerFeeAsLong();
+        }
+    };
+
+    protected final Function<TradeInfo, Long> toTradeFeeBtc = (t) -> {
+        var isMyOffer = t.getOffer().getIsMyOffer();
+        if (isMyOffer) {
+            return t.getOffer().getIsCurrencyForMakerFeeBtc()
+                    ? t.getOffer().getMakerFee()
+                    : 0L;  // Maker paid BSQ fee, return 0.
+        } else {
+            return t.getIsCurrencyForTakerFeeBtc()
+                    ? t.getTakerFeeAsLong()
+                    : 0L; // Taker paid BSQ fee, return 0.
+        }
+    };
+
+    protected final Function<TradeInfo, Long> toMyMakerOrTakerFee = (t) -> {
+        if (isBsqSwapTrade.test(t)) {
+            return isTaker.test(t)
+                    ? t.getBsqSwapTradeInfo().getBsqTakerTradeFee()
+                    : t.getBsqSwapTradeInfo().getBsqMakerTradeFee();
+        } else {
+            return isTaker.test(t)
+                    ? t.getTakerFeeAsLong()
+                    : t.getOffer().getMakerFee();
+        }
+    };
+
+    protected final Function<TradeInfo, String> toOfferType = (t) -> {
+        if (isFiatTrade.test(t)) {
+            return t.getOffer().getDirection() + " " + t.getOffer().getBaseCurrencyCode();
+        } else {
+            if (t.getOffer().getDirection().equals("BUY")) {
+                return "SELL " + t.getOffer().getBaseCurrencyCode();
+            } else {
+                return "BUY " + t.getOffer().getBaseCurrencyCode();
+            }
+        }
+    };
+
+    protected final Predicate<TradeInfo> showAltCoinBuyerAddress = (t) -> {
+        if (isFiatTrade.test(t)) {
+            return false;
+        } else {
+            ContractInfo contract = t.getContract();
+            boolean isBuyerMakerAndSellerTaker = contract.getIsBuyerMakerAndSellerTaker();
+            if (isTaker.test(t)) {
+                return !isBuyerMakerAndSellerTaker;
+            } else {
+                return isBuyerMakerAndSellerTaker;
+            }
+        }
+    };
+
+    protected final Function<TradeInfo, String> toAltcoinReceiveAddress = (t) -> {
+        if (showAltCoinBuyerAddress.test(t)) {
+            ContractInfo contract = t.getContract();
+            boolean isBuyerMakerAndSellerTaker = contract.getIsBuyerMakerAndSellerTaker();
+            return isBuyerMakerAndSellerTaker  // (is BTC buyer / maker)
+                    ? contract.getTakerPaymentAccountPayload().getAddress()
+                    : contract.getMakerPaymentAccountPayload().getAddress();
+        } else {
+            return "";
+        }
+    };
+}

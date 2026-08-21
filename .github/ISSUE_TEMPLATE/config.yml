@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💡 Feature Request
+    url: https://github.com/bisq-network/bisq/discussions
+    about: Request new features or upgrades to existing tools
+  - name: 💬 Community Support Chat
+    url: https://bisq.chat
+    about: Ask general questions and get community support

@@ -1,0 +1,10 @@
+RunAsDaemon 1
+SOCKSPort 9050
+ControlPort 9051
+Log notice syslog
+
+CookieAuthentication 1
+CookieAuthFile /var/lib/tor/control_auth_cookie
+CookieAuthFileGroupReadable 1
+
+DataDirectoryGroupReadable 1

@@ -1,0 +1,77 @@
+## Building Bisq
+
+1. **Clone Bisq**
+
+   ```sh
+   git clone --recurse-submodules https://github.com/bisq-network/bisq
+   cd bisq
+   ```
+
+   If the project was already cloned and you need to update the submodule, run:
+
+   ```sh
+   git submodule sync --recursive
+   git submodule update --init --recursive
+   ```
+
+2. **Build Bisq**
+
+   On macOS and Linux, execute:
+   ```sh
+   ./gradlew build
+   ```
+
+   On Windows:
+   ```cmd
+   gradlew.bat build
+   ```
+
+   If you prefer to skip tests to speed up the building process, just append _-x test_ to the previous commands.
+
+### Important notes
+
+1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
+
+2. Bisq currently works with JDK 21. You can find out which version you have with:
+
+   ```sh
+   javac -version
+   ```
+
+   If you have multiple JDK versions installed, check which one Gradle will use, with:
+
+   ```sh
+   ./gradlew --version
+   ```
+
+   and if the version number on the JVM line is not a supported one, you can pick the correct JDK at runtime with this syntax (verify your system path):
+
+   ```sh
+   JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:$PATH ./gradlew clean build
+   ```
+
+If you do not have JDK 21 installed, check out scripts in the [scripts](../scripts) directory or download it manually
+from https://jdk.java.net/archive/.
+
+## Running Bisq
+
+Once Bisq is installed, its executables will be available in the `scripts` folder under the root project directory. Run **Bisq Desktop** as follows:
+
+On macOS and Linux:
+```sh
+./scripts/desktop
+```
+or, to select a specific version of Java:
+```sh
+env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 ./scripts/desktop
+```
+
+On Windows:
+```cmd
+scripts\desktop.bat
+```
+
+## See also
+
+ - [Importing Bisq into IntelliJ IDEA](./idea-import.md)
+ - [Bisq development environment setup guide](./dev-setup.md)

@@ -1,0 +1,9 @@
+plugins {
+    id 'bisq.java-conventions'
+    id 'application'
+}
+
+build.dependsOn installDist
+
+distZip.enabled = false
+distTar.enabled = false

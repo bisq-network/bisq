@@ -1,0 +1,14 @@
+baseCurrencyNetwork=BTC_REGTEST
+useLocalhostForP2P=true
+useDevPrivilegeKeys=true
+fullDaoNode=true
+isBmFullNode=true
+btcNodes=bisq-bitcoind:18444
+rpcHost=bisq-bitcoind
+rpcPort=18443
+rpcUser=bisqdao
+rpcPassword=bsq
+rpcBlockNotificationPort=5120
+nodePort=2002
+userDataDir=/bisq
+appName=bisq-seednode

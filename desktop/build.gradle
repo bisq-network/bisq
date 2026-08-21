@@ -1,0 +1,61 @@
+plugins {
+    id 'bisq.application'
+    id 'bisq.javafx'
+    id 'bisq.gradle.app_start_plugin.AppStartPlugin'
+    id 'bisq.gradle.packaging.PackagingPlugin'
+}
+
+application {
+    mainClass = 'bisq.desktop.app.BisqAppMain'
+    applicationDefaultJvmArgs = ['-XX:MaxRAMPercentage=50', '-XX:+UseCompressedOops', '-Xss1280k', '-XX:+UseG1GC',
+                                 '-XX:MaxHeapFreeRatio=10', '-XX:MinHeapFreeRatio=5', '-XX:+UseStringDeduplication',
+                                 '-Djava.net.preferIPv4Stack=true',
+                                 '--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED']
+}
+
+javafx {
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':assets')
+    implementation project(':common')
+    implementation project(':proto')
+    implementation project(':p2p')
+    implementation project(':core')
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.logback.classic
+    implementation libs.logback.core
+    implementation libs.google.gson
+    implementation libs.google.guava
+    implementation libs.jcsv
+    implementation libs.commons.io
+    implementation libs.zxing.core
+    implementation libs.apache.commons.lang3
+    implementation libs.bouncycastle.bcpg.jdk18on
+    implementation libs.fxmisc.easybind
+    implementation libs.jetbrains.annotations
+    implementation libs.slf4j.api
+    implementation(libs.bitcoinj) {
+        exclude(module: 'bcprov-jdk15on')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'okhttp')
+        exclude(module: 'okio')
+        exclude(module: 'slf4j-api')
+    }
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+    testAnnotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testImplementation libs.natpryce.make.it.easy
+}
+
+test {
+    systemProperty 'jdk.attach.allowAttachSelf', true
+}

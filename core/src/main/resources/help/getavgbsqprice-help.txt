@@ -1,0 +1,19 @@
+getavgbsqprice
+
+NAME
+----
+getavgbsqprice - get average bsq price in btc and usd
+
+SYNOPSIS
+--------
+getavgbsqprice
+    --days=<30|90>
+
+DESCRIPTION
+-----------
+Returns the volume weighted average BSQ trade price over n days,
+in BTC and USD.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getavgbsqprice --days=30

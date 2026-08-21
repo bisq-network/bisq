@@ -1,0 +1,841 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.filter;
+
+import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.crypto.LowRSigningKey;
+import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferValidation;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.PriceFeedNodeAddressProvider;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.Preferences;
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.network.BanFilter;
+import bisq.network.p2p.storage.HashMapChangedListener;
+import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+
+import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.config.ConfigFileEditor;
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.ProofOfWork;
+import bisq.common.crypto.ProofOfWorkService;
+
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+
+import org.bouncycastle.util.encoders.Base64;
+
+import java.security.PublicKey;
+
+import java.nio.charset.StandardCharsets;
+
+import java.math.BigInteger;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.bitcoinj.core.Utils.HEX;
+
+/**
+ * We only support one active filter, if we receive multiple we use the one with the more recent creationDate.
+ */
+@Slf4j
+public class FilterManager {
+    private static final long MAX_FILTER_DATE_DRIFT = TimeUnit.HOURS.toMillis(2);
+    private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
+    private static final String BANNED_SEED_NODES = "bannedSeedNodes";
+    private static final String BANNED_BTC_NODES = "bannedBtcNodes";
+    private static final String FILTER_PROVIDED_SEED_NODES = "filterProvidedSeedNodes";
+    private static final String FILTER_PROVIDED_BTC_NODES = "filterProvidedBtcNodes";
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public interface Listener {
+        void onFilterAdded(Filter filter);
+    }
+
+    private final P2PService p2PService;
+    private final KeyRing keyRing;
+    private final User user;
+    private final Preferences preferences;
+    private final DenyList denyList;
+    private final ConfigFileEditor configFileEditor;
+    private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
+    private final PriceFeedService priceFeedService;
+    private final boolean ignoreNetworkFilter;
+    private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final List<String> publicKeys;
+    private ECKey filterSigningKey;
+    private final Set<Filter> invalidFilters = new HashSet<>();
+    private Consumer<String> filterWarningHandler;
+    private boolean noFilterWarningShown;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Inject
+    public FilterManager(P2PService p2PService,
+                         KeyRing keyRing,
+                         User user,
+                         Preferences preferences,
+                         DenyList denyList,
+                         Config config,
+                         PriceFeedNodeAddressProvider priceFeedNodeAddressProvider,
+                         BanFilter banFilter,
+                         PriceFeedService priceFeedService,
+                         @Named(Config.IGNORE_NETWORK_FILTER) boolean ignoreNetworkFilter,
+                         @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+        this.p2PService = p2PService;
+        this.keyRing = keyRing;
+        this.user = user;
+        this.preferences = preferences;
+        this.denyList = denyList;
+        this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
+        this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
+        this.priceFeedService = priceFeedService;
+        this.ignoreNetworkFilter = ignoreNetworkFilter;
+
+        publicKeys = useDevPrivilegeKeys ?
+                DevEnv.getDevPrivilegePubKeys() :
+                List.of("0358d47858acdc41910325fce266571540681ef83a0d6fedce312bef9810793a27",
+                        "029340c3e7d4bb0f9e651b5f590b434fecb6175aeaa57145c7804ff05d210e534f",
+                        "034dc7530bf66ffd9580aa98031ea9a18ac2d269f7c56c0e71eca06105b9ed69f9");
+
+        banFilter.setBannedNodePredicate(this::isNodeAddressBannedFromNetwork);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onAllServicesInitialized() {
+        if (ignoreNetworkFilter) {
+            clearBannedNodes();
+            return;
+        }
+
+        p2PService.getP2PDataStorage().getMap().values().stream()
+                .map(ProtectedStorageEntry::getProtectedStoragePayload)
+                .filter(protectedStoragePayload -> protectedStoragePayload instanceof Filter)
+                .map(protectedStoragePayload -> (Filter) protectedStoragePayload)
+                .forEach(this::onFilterAddedFromNetwork);
+
+        p2PService.addHashSetChangedListener(new HashMapChangedListener() {
+            @Override
+            public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.stream()
+                        .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof Filter)
+                        .forEach(protectedStorageEntry -> {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            onFilterAddedFromNetwork(filter);
+                        });
+            }
+
+            @Override
+            public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                protectedStorageEntries.stream()
+                        .filter(protectedStorageEntry -> protectedStorageEntry.getProtectedStoragePayload() instanceof Filter)
+                        .forEach(protectedStorageEntry -> {
+                            Filter filter = (Filter) protectedStorageEntry.getProtectedStoragePayload();
+                            onFilterRemovedFromNetwork(filter);
+                        });
+            }
+        });
+
+        p2PService.addP2PServiceListener(new P2PServiceListener() {
+            @Override
+            public void onDataReceived() {
+                // We should have received all data at that point and if the filters were not set we
+                // clean up the persisted banned nodes in the options file as it might be that we missed the filter
+                // remove message if we have not been online.
+                if (filterProperty.get() == null) {
+                    clearBannedNodes();
+
+                    // On mainNet we expect to have received a filter object by the time the initial data request
+                    // from the seed nodes has completed. We check here (not at startup) so that a slow network,
+                    // where the filter has not arrived yet, does not trigger a false-positive warning. We only
+                    // warn once.
+                    if (Config.baseCurrencyNetwork().isMainnet() && filterWarningHandler != null && !noFilterWarningShown) {
+                        noFilterWarningShown = true;
+                        filterWarningHandler.accept(Res.get("popup.warning.noFilter"));
+                    }
+                }
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+            }
+
+            @Override
+            public void onUpdatedDataReceived() {
+            }
+
+            @Override
+            public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+            }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+            }
+
+            @Override
+            public void onRequestCustomBridges() {
+            }
+        });
+    }
+
+    public void setFilterWarningHandler(Consumer<String> filterWarningHandler) {
+        this.filterWarningHandler = filterWarningHandler;
+
+        addListener(filter -> {
+            if (filter != null && filterWarningHandler != null) {
+                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
+                    log.info("One of the seed nodes got banned. {}", filter.getSeedNodes());
+                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                }
+
+                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
+                    log.info("One of the price relay nodes got banned. {}", filter.getPriceRelayNodes());
+                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                }
+
+                if (requireUpdateToNewVersionForTrading()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.trading"));
+                }
+
+                if (requireUpdateToNewVersionForDAO()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.dao"));
+                }
+                if (filter.isDisableDao()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.disable.dao"));
+                }
+            }
+        });
+    }
+
+    public boolean isPrivilegedDevPubKeyBanned(String pubKeyAsHex) {
+        Filter filter = getFilter();
+        if (filter == null) {
+            return false;
+        }
+
+        return filter.getBannedPrivilegedDevPubKeys().contains(pubKeyAsHex);
+    }
+
+    public boolean canAddDevFilter(String privKeyString) {
+        if (privKeyString == null || privKeyString.isEmpty()) {
+            return false;
+        }
+        if (!isValidDevPrivilegeKey(privKeyString)) {
+            log.warn("Key in invalid");
+            return false;
+        }
+
+        ECKey ecKeyFromPrivate = toECKey(privKeyString);
+        String pubKeyAsHex = getPubKeyAsHex(ecKeyFromPrivate);
+        if (isPrivilegedDevPubKeyBanned(pubKeyAsHex)) {
+            log.warn("Pub key is banned.");
+            return false;
+        }
+        return true;
+    }
+
+    public String getSignerPubKeyAsHex(String privKeyString) {
+        ECKey ecKey = toECKey(privKeyString);
+        return getPubKeyAsHex(ecKey);
+    }
+
+    public boolean addDevFilter(Filter filterWithoutSig, String privKeyString) {
+        return addDevFilter(filterWithoutSig, privKeyString, List.of(), List.of());
+    }
+
+    public boolean addDevFilter(Filter filterWithoutSig,
+                                String privKeyString,
+                                List<PaymentAccountFilter> bannedPaymentAccountPreimages,
+                                List<PaymentAccountFilter> delayedPayoutPaymentAccountPreimages) {
+        if (!isFilterValidForAdd(filterWithoutSig)) {
+            return false;
+        }
+
+        setFilterSigningKey(privKeyString);
+        String signatureAsBase64 = getSignature(filterWithoutSig);
+        Filter filterWithSig = Filter.cloneWithSig(filterWithoutSig, signatureAsBase64);
+        user.setDevelopersFilter(filterWithSig, bannedPaymentAccountPreimages, delayedPayoutPaymentAccountPreimages);
+
+        p2PService.addProtectedStorageEntry(filterWithSig);
+
+        // Cleanup potential old filters created in the past with same priv key
+        invalidFilters.forEach(filter -> {
+            removeInvalidFilters(filter, privKeyString);
+        });
+        return true;
+    }
+
+    public boolean isFilterValidForAdd(Filter filterWithoutSig) {
+        if (!arePersistedNodeListsValid(filterWithoutSig)) {
+            log.warn("Developer filter contains invalid persisted node list values. {}",
+                    getSafeFilterMetadata(filterWithoutSig));
+            return false;
+        }
+        return true;
+    }
+
+    public void addToInvalidFilters(Filter filter) {
+        invalidFilters.add(filter);
+    }
+
+    public void removeInvalidFilters(Filter filter, String privKeyString) {
+        if (filter.getOwnerPubKey() == null) {
+            log.info("The invalid filter has no owner pub key, so we cannot remove it from the network. {}",
+                    getSafeFilterMetadata(filter));
+            return;
+        }
+
+        // We can only remove the filter if it's our own filter
+        if (Arrays.equals(filter.getOwnerPubKey().getEncoded(), keyRing.getSignatureKeyPair().getPublic().getEncoded())) {
+            log.info("Remove invalid filter. {}", getSafeFilterMetadata(filter));
+            setFilterSigningKey(privKeyString);
+            String signatureAsBase64 = getSignature(Filter.cloneWithoutSig(filter));
+            Filter filterWithSig = Filter.cloneWithSig(filter, signatureAsBase64);
+            boolean result = p2PService.removeData(filterWithSig);
+            if (!result) {
+                log.warn("Could not remove filter. {}", getSafeFilterMetadata(filter));
+            }
+        } else {
+            log.info("The invalid filter is not our own, so we cannot remove it from the network");
+        }
+    }
+
+    public boolean canRemoveDevFilter(String privKeyString) {
+        if (privKeyString == null || privKeyString.isEmpty()) {
+            return false;
+        }
+
+        Filter developersFilter = getDevFilter();
+        if (developersFilter == null) {
+            log.warn("There is no persisted dev filter to be removed.");
+            return false;
+        }
+
+        if (!isValidDevPrivilegeKey(privKeyString)) {
+            log.warn("Key in invalid.");
+            return false;
+        }
+
+        ECKey ecKeyFromPrivate = toECKey(privKeyString);
+        String pubKeyAsHex = getPubKeyAsHex(ecKeyFromPrivate);
+        if (!developersFilter.getSignerPubKeyAsHex().equals(pubKeyAsHex)) {
+            log.warn("pubKeyAsHex derived from private key does not match filterSignerPubKey. " +
+                            "filterSignerPubKey={}, pubKeyAsHex derived from private key={}",
+                    developersFilter.getSignerPubKeyAsHex(), pubKeyAsHex);
+            return false;
+        }
+
+        if (isPrivilegedDevPubKeyBanned(pubKeyAsHex)) {
+            log.warn("Pub key is banned.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public void removeDevFilter(String privKeyString) {
+        setFilterSigningKey(privKeyString);
+        Filter filterWithSig = user.getDevelopersFilter();
+        if (filterWithSig == null) {
+            log.warn("removeDevFilter: filterWithSig == null. Should not happen as UI button is deactivated in that case");
+            return;
+        }
+
+        if (p2PService.removeData(filterWithSig)) {
+            user.setDevelopersFilter(null);
+        } else {
+            log.warn("Removing dev filter from network failed");
+        }
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public ObjectProperty<Filter> filterProperty() {
+        return filterProperty;
+    }
+
+    @Nullable
+    public Filter getFilter() {
+        return filterProperty.get();
+    }
+
+    @Nullable
+    public Filter getDevFilter() {
+        return user.getDevelopersFilter();
+    }
+
+    public List<PaymentAccountFilter> getDevFilterBannedPaymentAccountPreimages() {
+        return user.getDevelopersFilterBannedPaymentAccountPreimages();
+    }
+
+    public List<PaymentAccountFilter> getDevFilterDelayedPayoutPaymentAccountPreimages() {
+        return user.getDevelopersFilterDelayedPayoutPaymentAccountPreimages();
+    }
+
+    public PublicKey getOwnerPubKey() {
+        return keyRing.getSignatureKeyPair().getPublic();
+    }
+
+    public boolean isCurrencyBanned(String currencyCode) {
+        return getFilter() != null &&
+                getFilter().getBannedCurrencies() != null &&
+                getFilter().getBannedCurrencies().stream()
+                        .anyMatch(e -> e.equals(currencyCode));
+    }
+
+    public boolean isPaymentMethodBanned(PaymentMethod paymentMethod) {
+        return getFilter() != null &&
+                getFilter().getBannedPaymentMethods() != null &&
+                getFilter().getBannedPaymentMethods().stream()
+                        .anyMatch(e -> e.equals(paymentMethod.getId()));
+    }
+
+    public boolean isOfferIdBanned(String offerId) {
+        return getFilter() != null &&
+                getFilter().getBannedOfferIds().stream()
+                        .anyMatch(e -> e.equals(offerId));
+    }
+
+    public boolean isNodeAddressBanned(NodeAddress nodeAddress) {
+        return getFilter() != null &&
+                getFilter().getNodeAddressesBannedFromTrading().stream()
+                        .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
+    }
+
+    public boolean isBsqSwapDisabled() {
+        return getFilter() != null && getFilter().isDisableBsqSwap();
+    }
+
+    public boolean isPriceInBounds(Offer offer) {
+        // We allow 5% tolerance to the max allowed price percentage to avoid filtering offers in
+        // high volatility environments
+        return OfferValidation.isPriceInBounds(priceFeedService, offer, 1.05);
+    }
+
+    public boolean isNodeAddressBannedFromNetwork(NodeAddress nodeAddress) {
+        if (nodeAddress == null) {
+            return false;
+        }
+        String fullAddress = nodeAddress.getFullAddress();
+        return denyList.getNodeAddressesBannedFromNetwork().contains(fullAddress) ||
+                (getFilter() != null &&
+                        getFilter().getNodeAddressesBannedFromNetwork().stream()
+                                .anyMatch(e -> e.equals(fullAddress)));
+    }
+
+    public boolean isAutoConfExplorerBanned(String address) {
+        return getFilter() != null &&
+                getFilter().getBannedAutoConfExplorers().stream()
+                        .anyMatch(e -> e.equals(address));
+    }
+
+    public boolean requireUpdateToNewVersionForTrading() {
+        if (getFilter() == null) {
+            return false;
+        }
+
+        boolean requireUpdateToNewVersion = false;
+        String getDisableTradeBelowVersion = getFilter().getDisableTradeBelowVersion();
+        if (getDisableTradeBelowVersion != null && !getDisableTradeBelowVersion.isEmpty()) {
+            requireUpdateToNewVersion = Version.isNewVersion(getDisableTradeBelowVersion);
+        }
+
+        return requireUpdateToNewVersion;
+    }
+
+    public boolean requireUpdateToNewVersionForDAO() {
+        if (getFilter() == null) {
+            return false;
+        }
+
+        boolean requireUpdateToNewVersion = false;
+        String disableDaoBelowVersion = getFilter().getDisableDaoBelowVersion();
+        if (disableDaoBelowVersion != null && !disableDaoBelowVersion.isEmpty()) {
+            requireUpdateToNewVersion = Version.isNewVersion(disableDaoBelowVersion);
+        }
+
+        return requireUpdateToNewVersion;
+    }
+
+    public boolean arePeersPaymentAccountDataBanned(PaymentAccountPayload paymentAccountPayload) {
+        return getFilter() != null &&
+                paymentAccountPayload != null &&
+                getFilter().getBannedPaymentAccounts().stream()
+                        .anyMatch(paymentAccountFilter ->
+                                PaymentAccountFilterMatcher.matches(paymentAccountPayload, paymentAccountFilter));
+    }
+
+    public boolean isDelayedPayoutPaymentAccount(PaymentAccountPayload paymentAccountPayload) {
+        return getFilter() != null &&
+                paymentAccountPayload != null &&
+                getFilter().getDelayedPayoutPaymentAccounts().stream()
+                        .anyMatch(paymentAccountFilter ->
+                                PaymentAccountFilterMatcher.matches(paymentAccountPayload, paymentAccountFilter));
+    }
+
+    public boolean isWitnessSignerPubKeyBanned(String witnessSignerPubKeyAsHex) {
+        return getFilter() != null &&
+                getFilter().getBannedAccountWitnessSignerPubKeys() != null &&
+                getFilter().getBannedAccountWitnessSignerPubKeys().stream()
+                        .anyMatch(e -> e.equals(witnessSignerPubKeyAsHex));
+    }
+
+    public boolean isProofOfWorkValid(Offer offer) {
+        Filter filter = getFilter();
+        if (filter == null) {
+            return true;
+        }
+        checkArgument(offer.getBsqSwapOfferPayload().isPresent(), "Offer payload must be BsqSwapOfferPayload");
+        ProofOfWork pow = offer.getBsqSwapOfferPayload().get().getProofOfWork();
+        var service = ProofOfWorkService.forVersion(pow.getVersion());
+        return service.isPresent() && getEnabledPowVersions().contains(pow.getVersion()) &&
+                service.get().verify(pow, offer.getId(), offer.getOwnerNodeAddress().toString(), filter.getPowDifficulty());
+    }
+
+    public List<Integer> getEnabledPowVersions() {
+        Filter filter = getFilter();
+        return filter != null && !filter.getEnabledPowVersions().isEmpty() ? filter.getEnabledPowVersions() : List.of(0);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onFilterAddedFromNetwork(Filter filterFromNetwork) {
+        Filter currentFilter = getFilter();
+
+        if (!isFilterPublicKeyInList(filterFromNetwork)) {
+            if (filterFromNetwork.getSignerPubKeyAsHex() != null && !filterFromNetwork.getSignerPubKeyAsHex().isEmpty()) {
+                log.warn("isFilterPublicKeyInList failed. filterFromNetwork.getSignerPubKeyAsHex={}", filterFromNetwork.getSignerPubKeyAsHex());
+            } else {
+                log.info("isFilterPublicKeyInList failed. filterFromNetwork.getSignerPubKeyAsHex not set (expected case for pre v1.3.9 filter)");
+            }
+            return;
+        }
+        if (!isSignatureValid(filterFromNetwork)) {
+            log.warn("verifySignature failed. filterFromNetwork={}", filterFromNetwork);
+            return;
+        }
+
+        long filterFromNetworkCreationDate = filterFromNetwork.getCreationDate();
+        long now = System.currentTimeMillis();
+        if (filterFromNetworkCreationDate - now > MAX_FILTER_DATE_DRIFT) {
+            log.warn("Filter from network creation date is too far in the future. " +
+                            "filterFromNetworkCreationDate={}, current time={}",
+                    new Date(filterFromNetworkCreationDate), new Date(now));
+            return;
+        }
+        if (!arePersistedNodeListsValid(filterFromNetwork)) {
+            log.warn("Filter from network contains invalid persisted node list values. {}",
+                    getSafeFilterMetadata(filterFromNetwork));
+            return;
+        }
+
+        if (currentFilter != null) {
+            if (currentFilter.getCreationDate() > filterFromNetworkCreationDate) {
+                log.info("We received a new filter from the network but the creation date is older than the " +
+                                "filter we have already. We ignore the new filter from the network.\n" +
+                                "currentFilter\n{}" +
+                                "filterFromNetwork\n{}",
+                        currentFilter, filterFromNetwork);
+
+                addToInvalidFilters(filterFromNetwork);
+                return;
+            }
+
+            if (isPrivilegedDevPubKeyBanned(filterFromNetwork.getSignerPubKeyAsHex())) {
+                log.warn("Pub key of filter is banned. currentFilter={}, filterFromNetwork={}", currentFilter, filterFromNetwork);
+                return;
+            } else {
+                log.info("We received a new filter with a newer creation date and the signer is not banned. " +
+                        "We ignore the current (older) filter.");
+                addToInvalidFilters(currentFilter);
+            }
+
+        }
+
+        // Our new filter is newer so we apply it.
+        // We do not require strict guarantees here (e.g. clocks not synced) as only trusted developers have the key
+        // for deploying filters and this is only in place to avoid unintended situations of multiple filters
+        // from multiple devs or if same dev publishes new filter from different app without the persisted devFilter.
+        filterProperty.set(filterFromNetwork);
+
+        // Seed nodes are requested at startup before we get the filter so we only apply the banned
+        // nodes at the next startup and don't update the list in the P2P network domain.
+        // We persist it to the property file which is read before any other initialisation.
+        saveBannedNodes(BANNED_SEED_NODES, filterFromNetwork.getSeedNodes());
+        saveBannedNodes(BANNED_BTC_NODES, filterFromNetwork.getBtcNodes());
+        saveBannedNodes(FILTER_PROVIDED_BTC_NODES, filterFromNetwork.getAddedBtcNodes());
+        saveBannedNodes(FILTER_PROVIDED_SEED_NODES, filterFromNetwork.getAddedSeedNodes());
+
+        // Banned price relay nodes we can apply at runtime
+        List<String> priceRelayNodes = filterFromNetwork.getPriceRelayNodes();
+        saveBannedNodes(BANNED_PRICE_RELAY_NODES, priceRelayNodes);
+
+        //TODO should be moved to client with listening on onFilterAdded
+        priceFeedNodeAddressProvider.applyBannedNodes(priceRelayNodes);
+
+        //TODO should be moved to client with listening on onFilterAdded
+        if (filterFromNetwork.isPreventPublicBtcNetwork() &&
+                preferences.getBitcoinNodesOptionOrdinal() == BtcNodes.BitcoinNodesOption.PUBLIC.ordinal()) {
+            preferences.setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.PROVIDED.ordinal());
+        }
+
+        listeners.forEach(e -> e.onFilterAdded(filterFromNetwork));
+    }
+
+    private void onFilterRemovedFromNetwork(Filter filter) {
+        if (!isFilterPublicKeyInList(filter)) {
+            log.warn("isFilterPublicKeyInList failed. Filter={}", filter);
+            return;
+        }
+        if (!isSignatureValid(filter)) {
+            log.warn("verifySignature failed. Filter={}", filter);
+            return;
+        }
+
+        // We don't check for banned filter as we want to remove a banned filter anyway.
+
+        if (filterProperty.get() != null && !filterProperty.get().equals(filter)) {
+            return;
+        }
+
+        clearBannedNodes();
+
+        if (filter.equals(user.getDevelopersFilter())) {
+            user.setDevelopersFilter(null);
+        }
+        filterProperty.set(null);
+    }
+
+    // Clears options files from banned nodes
+    private void clearBannedNodes() {
+        saveBannedNodes(BANNED_BTC_NODES, null);
+        saveBannedNodes(FILTER_PROVIDED_BTC_NODES, null);
+        saveBannedNodes(BANNED_SEED_NODES, null);
+        saveBannedNodes(FILTER_PROVIDED_SEED_NODES, null);
+        saveBannedNodes(BANNED_PRICE_RELAY_NODES, null);
+
+        if (priceFeedNodeAddressProvider.getBannedNodes() != null) {
+            priceFeedNodeAddressProvider.applyBannedNodes(null);
+        }
+    }
+
+    private void saveBannedNodes(String optionName, List<String> bannedNodes) {
+        if (bannedNodes != null)
+            configFileEditor.setOption(optionName, String.join(",", bannedNodes));
+        else
+            configFileEditor.clearOption(optionName);
+    }
+
+    private boolean arePersistedNodeListsValid(Filter filter) {
+        return isValidNodeAddressList(BANNED_SEED_NODES, filter.getSeedNodes()) &&
+                isValidNodeAddressList(BANNED_BTC_NODES, filter.getBtcNodes()) &&
+                isValidNodeAddressList(FILTER_PROVIDED_BTC_NODES, filter.getAddedBtcNodes()) &&
+                isValidNodeAddressList(FILTER_PROVIDED_SEED_NODES, filter.getAddedSeedNodes()) &&
+                isSafeConfigValueList(BANNED_PRICE_RELAY_NODES, filter.getPriceRelayNodes());
+    }
+
+    private boolean isValidNodeAddressList(String optionName, List<String> values) {
+        if (!isSafeConfigValueList(optionName, values)) {
+            return false;
+        }
+
+        for (String value : values) {
+            try {
+                new NodeAddress(value);
+            } catch (Throwable t) {
+                log.warn("Invalid node address in filter option {}: {}", optionName, value);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isSafeConfigValueList(String optionName, List<String> values) {
+        for (String value : values) {
+            if (!isSafeConfigValue(value)) {
+                log.warn("Unsafe value in filter option {}", optionName);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isSafeConfigValue(String value) {
+        if (value == null || value.isBlank() || !value.equals(value.trim()) ||
+                value.indexOf(',') >= 0 || value.indexOf('=') >= 0) {
+            return false;
+        }
+
+        for (int i = 0; i < value.length(); i++) {
+            if (Character.isISOControl(value.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String getSafeFilterMetadata(Filter filter) {
+        return "signerPubKeyAsHex=" + sanitizeLogValue(filter.getSignerPubKeyAsHex()) +
+                ", creationDate=" + filter.getCreationDate() + " (" + new Date(filter.getCreationDate()) + ")";
+    }
+
+    private String sanitizeLogValue(@Nullable String value) {
+        if (value == null) {
+            return "null";
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        int maxLength = 80;
+        for (int i = 0; i < value.length() && i < maxLength; i++) {
+            char c = value.charAt(i);
+            stringBuilder.append(Character.isISOControl(c) ? '?' : c);
+        }
+        if (value.length() > maxLength) {
+            stringBuilder.append("...");
+        }
+        return stringBuilder.toString();
+    }
+
+    private boolean isValidDevPrivilegeKey(String privKeyString) {
+        try {
+            ECKey filterSigningKey = toECKey(privKeyString);
+            String pubKeyAsHex = getPubKeyAsHex(filterSigningKey);
+            return isPublicKeyInList(pubKeyAsHex);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private void setFilterSigningKey(String privKeyString) {
+        this.filterSigningKey = toECKey(privKeyString);
+    }
+
+    private String getSignature(Filter filterWithoutSig) {
+        Sha256Hash hash = getSha256Hash(filterWithoutSig);
+        ECKey.ECDSASignature ecdsaSignature = LowRSigningKey.from(filterSigningKey).sign(hash);
+        byte[] encodeToDER = ecdsaSignature.encodeToDER();
+        return new String(Base64.encode(encodeToDER), StandardCharsets.UTF_8);
+    }
+
+    private boolean isFilterPublicKeyInList(Filter filter) {
+        String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
+        if (!isPublicKeyInList(signerPubKeyAsHex)) {
+            log.info("Invalid filter (expected case for pre v1.3.9 filter as we still keep that in the network " +
+                            "but the new version does not recognize it as valid filter): " +
+                            "signerPubKeyAsHex from filter is not part of our pub key list. " +
+                            "signerPubKeyAsHex={}, publicKeys={}, filterCreationDate={}",
+                    signerPubKeyAsHex, publicKeys, new Date(filter.getCreationDate()));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isPublicKeyInList(String pubKeyAsHex) {
+        boolean isPublicKeyInList = publicKeys.contains(pubKeyAsHex);
+        if (!isPublicKeyInList) {
+            log.info("pubKeyAsHex is not part of our pub key list (expected case for pre v1.3.9 filter). pubKeyAsHex={}, publicKeys={}", pubKeyAsHex, publicKeys);
+        }
+        return isPublicKeyInList;
+    }
+
+    private boolean isSignatureValid(Filter filter) {
+        try {
+            Filter filterForSigVerification = Filter.cloneWithoutSig(filter);
+            Sha256Hash hash = getSha256Hash(filterForSigVerification);
+
+            checkNotNull(filter.getSignatureAsBase64(), "filter.getSignatureAsBase64() must not be null");
+            byte[] sigData = Base64.decode(filter.getSignatureAsBase64());
+            ECKey.ECDSASignature ecdsaSignature = ECKey.ECDSASignature.decodeFromDER(sigData);
+
+            String signerPubKeyAsHex = filter.getSignerPubKeyAsHex();
+            byte[] decode = HEX.decode(signerPubKeyAsHex);
+            ECKey ecPubKey = ECKey.fromPublicOnly(decode);
+            return ecPubKey.verify(hash, ecdsaSignature);
+        } catch (Throwable e) {
+            log.warn("verifySignature failed. filter={}", filter);
+            return false;
+        }
+    }
+
+    private ECKey toECKey(String privKeyString) {
+        return ECKey.fromPrivate(new BigInteger(1, HEX.decode(privKeyString)));
+    }
+
+    private Sha256Hash getSha256Hash(Filter filter) {
+        return Sha256Hash.of(filter.encodeCanonical());
+    }
+
+    private String getPubKeyAsHex(ECKey ecKey) {
+        return HEX.encode(ecKey.getPubKey());
+    }
+}

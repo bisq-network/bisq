@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ This file is part of Bisq.
+  ~
+  ~ Bisq is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<VBox fx:id="root" fx:controller="bisq.desktop.main.account.register.mediator.MediatorRegistrationView"
+      spacing="10"
+      xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="0.0" left="10.0" right="10.0" top="0.0"/>
+    </padding>
+</VBox>

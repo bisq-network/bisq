@@ -1,0 +1,26 @@
+getoffer
+
+NAME
+----
+getoffer - get an offer to buy or sell BTC
+
+SYNOPSIS
+--------
+getoffer
+		--offer-id=<offer-id>
+
+DESCRIPTION
+-----------
+List an existing offer's details.  The offer must not be one of your own.
+The offer must be available to take with one of your matching payment accounts.
+
+OPTIONS
+-------
+--offer-id
+		The ID of the buy or sell offer to view.
+
+EXAMPLES
+--------
+To view an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea:
+$ ./bisq-cli --password=xyz --port=9998 getoffer --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea
+

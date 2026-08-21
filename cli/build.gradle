@@ -1,0 +1,41 @@
+plugins {
+    id 'bisq.application'
+    id 'bisq.gradle.app_start_plugin.AppStartPlugin'
+}
+
+distTar.enabled = true
+
+application {
+    mainClass = 'bisq.cli.CliMain'
+}
+
+dependencies {
+    implementation project(':proto')
+    implementation project(':proto-grpc')
+    annotationProcessor libs.lombok
+    compileOnly libs.checker.qual
+    compileOnly libs.lombok
+    implementation libs.logback.classic
+    implementation libs.logback.core
+    implementation libs.google.guava
+    implementation libs.protobuf.java
+    implementation libs.jopt
+    implementation libs.slf4j.api
+    implementation(libs.grpc.core) {
+        exclude(module: 'animal-sniffer-annotations')
+        exclude(module: 'guava')
+    }
+    implementation(libs.grpc.stub) {
+        exclude(module: 'animal-sniffer-annotations')
+        exclude(module: 'guava')
+    }
+    runtimeOnly(libs.grpc.netty.shaded) {
+        exclude(module: 'animal-sniffer-annotations')
+        exclude(module: 'guava')
+    }
+    testAnnotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testImplementation libs.cowwoc.diff.match.patch
+
+    testRuntimeOnly libs.javax.annotation
+}

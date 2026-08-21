@@ -1,0 +1,22 @@
+version: '2.1'
+
+services:
+    seednode:
+        build:
+            context: .
+            dockerfile: docker/development/Dockerfile
+        image: bisq-seednode
+        ports:
+            - 8000:8000
+        environment:
+            - NODE_PORT=8000
+            - BASE_CURRENCY_NETWORK=BTC_REGTEST
+            - SEED_NODES=seednode:8000
+            - MY_ADDRESS=seednode:8000
+            - USE_LOCALHOST_FOR_P2P=true
+        volumes:
+          - m2:/root/.m2
+
+volumes:
+  m2:
+    name: m2

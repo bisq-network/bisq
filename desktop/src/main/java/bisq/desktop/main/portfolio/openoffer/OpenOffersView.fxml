@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bisq.
+  ~
+  ~ Bisq is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import bisq.desktop.components.AutoTooltipButton?>
+<?import bisq.desktop.components.AutoTooltipSlideToggleButton?>
+<?import bisq.desktop.components.list.FilterBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.openoffer.OpenOffersView"
+      spacing="10" xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
+    </padding>
+    <HBox>
+        <FilterBox fx:id="filterBox" />
+        <Pane HBox.hgrow="ALWAYS"/>
+        <AutoTooltipSlideToggleButton fx:id="selectToggleButton"/>
+    </HBox>
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="offerIdColumn" minWidth="110" maxWidth="120"/>
+            <TableColumn fx:id="makerFeeTxIdColumn" minWidth="70"/>
+            <TableColumn fx:id="dateColumn" minWidth="170"/>
+            <TableColumn fx:id="marketColumn" minWidth="75"/>
+            <TableColumn fx:id="priceColumn" minWidth="100"/>
+            <TableColumn fx:id="deviationColumn" minWidth="70"/>
+            <TableColumn fx:id="triggerPriceColumn" minWidth="90"/>
+            <TableColumn fx:id="amountColumn" minWidth="110"/>
+            <TableColumn fx:id="volumeColumn" minWidth="110"/>
+            <TableColumn fx:id="paymentMethodColumn" minWidth="120" maxWidth="170"/>
+            <TableColumn fx:id="directionColumn" minWidth="70"/>
+            <TableColumn fx:id="deactivateItemColumn" minWidth="60" maxWidth="60" sortable="false"/>
+            <TableColumn fx:id="editItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="triggerIconColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="duplicateItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="cloneItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="removeItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
+        </columns>
+    </TableView>
+    <HBox spacing="10">
+        <Label fx:id="numItems"/>
+        <Region fx:id="footerSpacer"/>
+        <AutoTooltipButton fx:id="exportButton"/>
+    </HBox>
+</VBox>

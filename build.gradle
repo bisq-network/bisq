@@ -1,0 +1,3519 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
+
+import org.gradle.jvm.tasks.Jar
+import org.gradle.api.tasks.bundling.Zip
+
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.zip.ZipFile
+
+plugins {
+    id 'bisq.gradle.regtest_plugin.RegtestPlugin'
+}
+
+def dependencyVerificationMetadata = layout.projectDirectory.file('gradle/verification-metadata.xml')
+def dependencyVerificationKeyring = layout.projectDirectory.file('gradle/verification-keyring.keys')
+def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/verification-keyring.gpg')
+def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/dependency-checksum-fallback-allowlist.tsv')
+def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
+def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
+def linuxReleaseBuilderDockerfile = layout.projectDirectory.file('docker/release-builder/linux/Dockerfile')
+def linuxReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/release-builder.yml')
+def installerEvidenceWorkflow = layout.projectDirectory.file('.github/workflows/installer-evidence.yml')
+def gradleWrapperCommand = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : './gradlew'
+
+def htmlEscape = { value ->
+    value == null
+            ? ''
+            : value.toString()
+            .replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('|', '&#124;')
+}
+
+def keyIdSuffix = { String keyId ->
+    def normalized = keyId.toUpperCase(Locale.ROOT).replaceAll(/\s/, '')
+    normalized.length() > 16 ? normalized.substring(normalized.length() - 16) : normalized
+}
+
+def decodeArmoredPublicKey = { String armoredPublicKey ->
+    def base64Lines = []
+    def inBody = false
+    armoredPublicKey.eachLine { line ->
+        if (line.startsWith('-----BEGIN')) {
+            return
+        }
+        if (!inBody) {
+            if (line.trim().empty) {
+                inBody = true
+            }
+            return
+        }
+        if (line.startsWith('=') || line.startsWith('-----END')) {
+            return
+        }
+        if (!line.trim().empty) {
+            base64Lines << line.trim()
+        }
+    }
+
+    if (base64Lines.empty) {
+        return new byte[0]
+    }
+
+    try {
+        Base64.decoder.decode(base64Lines.join(''))
+    } catch (Exception ignored) {
+        new byte[0]
+    }
+}
+
+def parseOpenPgpPackets = { String armoredPublicKey ->
+    def packets = []
+
+    try {
+        byte[] bytes = decodeArmoredPublicKey(armoredPublicKey)
+        int offset = 0
+        while (offset < bytes.length) {
+            int ctb = bytes[offset++] & 0xff
+            if ((ctb & 0x80) == 0) {
+                return packets
+            }
+
+            int tag
+            long length
+            if ((ctb & 0x40) != 0) {
+                tag = ctb & 0x3f
+                int firstLengthOctet = bytes[offset++] & 0xff
+                if (firstLengthOctet < 192) {
+                    length = firstLengthOctet
+                } else if (firstLengthOctet <= 223) {
+                    length = ((firstLengthOctet - 192) << 8) + (bytes[offset++] & 0xff) + 192
+                } else if (firstLengthOctet == 255) {
+                    length = ((bytes[offset++] & 0xffL) << 24) |
+                            ((bytes[offset++] & 0xffL) << 16) |
+                            ((bytes[offset++] & 0xffL) << 8) |
+                            (bytes[offset++] & 0xffL)
+                } else {
+                    return packets
+                }
+            } else {
+                tag = (ctb >> 2) & 0x0f
+                int lengthType = ctb & 0x03
+                if (lengthType == 0) {
+                    length = bytes[offset++] & 0xff
+                } else if (lengthType == 1) {
+                    length = ((bytes[offset++] & 0xff) << 8) | (bytes[offset++] & 0xff)
+                } else if (lengthType == 2) {
+                    length = ((bytes[offset++] & 0xffL) << 24) |
+                            ((bytes[offset++] & 0xffL) << 16) |
+                            ((bytes[offset++] & 0xffL) << 8) |
+                            (bytes[offset++] & 0xffL)
+                } else {
+                    length = bytes.length - offset
+                }
+            }
+
+            if (length > Integer.MAX_VALUE || offset + (int) length > bytes.length) {
+                return packets
+            }
+
+            packets << [
+                    tag : tag,
+                    body: Arrays.copyOfRange(bytes, offset, offset + (int) length)
+            ]
+            offset += (int) length
+        }
+    } catch (Exception ignored) {
+        return packets
+    }
+
+    packets
+}
+
+def normalizeOpenPgpUserId = { String userId ->
+    userId
+            .replace('\uFFFDamonn McManus <eamonn@mcmanus.net>', '\u00C9amonn McManus <eamonn@mcmanus.net>')
+            .replace('\u003Famonn McManus <eamonn@mcmanus.net>', '\u00C9amonn McManus <eamonn@mcmanus.net>')
+}
+
+def parsePublicKeyUserIds = { String armoredPublicKey ->
+    parseOpenPgpPackets(armoredPublicKey)
+            .findAll { it.tag == 13 }
+            .collect { packet -> normalizeOpenPgpUserId(new String(packet.body, StandardCharsets.UTF_8).trim()) }
+            .findAll { it }
+}
+
+def parsePublicKeyCreatedDate = { String armoredPublicKey ->
+    def publicKeyPacket = parseOpenPgpPackets(armoredPublicKey).find { it.tag == 6 }
+    if (publicKeyPacket?.body == null || publicKeyPacket.body.length < 5) {
+        return null
+    }
+
+    byte[] body = publicKeyPacket.body
+    long created = ((body[1] & 0xffL) << 24) |
+            ((body[2] & 0xffL) << 16) |
+            ((body[3] & 0xffL) << 8) |
+            (body[4] & 0xffL)
+
+    java.time.Instant.ofEpochSecond(created)
+            .atZone(java.time.ZoneOffset.UTC)
+            .toLocalDate()
+            .toString()
+}
+
+def parseSignerUserId = { String userId ->
+    def matcher = userId =~ /^(.*?)\s*<([^>]+)>$/
+    matcher.matches()
+            ? [name: matcher[0][1].trim(), email: matcher[0][2].trim(), userId: userId]
+            : [name: userId, email: '', userId: userId]
+}
+
+def loadSignerMetadata = { File keyringFile ->
+    def signers = [:]
+    if (!keyringFile.exists()) {
+        return signers
+    }
+
+    def current = null
+    def saveCurrent = {
+        if (current?.keyId) {
+            def userIds = parsePublicKeyUserIds(current.armor.toString()) ?: current.userIds
+            def user = userIds ? parseSignerUserId(userIds[0]) : [name: '', email: '', userId: '']
+            def signer = user + [
+                    keyId  : current.keyId,
+                    created: parsePublicKeyCreatedDate(current.armor.toString()) ?: ''
+            ]
+            ([current.keyId] + current.subKeyIds).each { keyId ->
+                signers[keyId] = signer
+            }
+        }
+    }
+
+    keyringFile.eachLine(StandardCharsets.UTF_8.name()) { line ->
+        def pubMatcher = line =~ /^pub\s+([0-9A-Fa-f]+)\s*$/
+        if (pubMatcher.matches()) {
+            saveCurrent()
+            current = [
+                    keyId    : keyIdSuffix(pubMatcher[0][1]),
+                    subKeyIds: [],
+                    userIds  : [],
+                    armor    : new StringBuilder(),
+                    inArmor  : false
+            ]
+            return
+        }
+
+        if (current == null) {
+            return
+        }
+
+        def uidMatcher = line =~ /^uid\s+(.*)$/
+        if (uidMatcher.matches()) {
+            current.userIds << uidMatcher[0][1].trim()
+            return
+        }
+
+        def subMatcher = line =~ /^sub\s+([0-9A-Fa-f]+)\s*$/
+        if (subMatcher.matches()) {
+            current.subKeyIds << keyIdSuffix(subMatcher[0][1])
+            return
+        }
+
+        if (line.startsWith('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+            current.inArmor = true
+        }
+        if (current.inArmor) {
+            current.armor << line << '\n'
+        }
+        if (line.startsWith('-----END PGP PUBLIC KEY BLOCK-----')) {
+            current.inArmor = false
+        }
+    }
+    saveCurrent()
+
+    signers
+}
+
+def resolvableConfigurations = {
+    allprojects.collectMany { project ->
+        (project.configurations + project.buildscript.configurations).findAll { it.canBeResolved }.collect { configuration ->
+            [project: project, configuration: configuration]
+        }
+    }.sort { left, right ->
+        def leftPath = "${left.project.path}:${left.configuration.name}"
+        def rightPath = "${right.project.path}:${right.configuration.name}"
+        leftPath <=> rightPath
+    }
+}
+
+def resolveConfigurations = { boolean collectComponents ->
+    def resolvedComponents = new TreeSet<String>()
+    def directComponents = new TreeSet<String>()
+    def failures = []
+
+    resolvableConfigurations().each { entry ->
+        def configuration = entry.configuration
+        try {
+            if (collectComponents) {
+                def result = configuration.incoming.resolutionResult
+                result.root.dependencies.each { dependency ->
+                    def selected = dependency.hasProperty('selected') ? dependency.selected?.id : null
+                    if (selected instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier) {
+                        directComponents.add("${selected.group}:${selected.module}:${selected.version}".toString())
+                    }
+                }
+                result.allComponents.each { component ->
+                    def id = component.id
+                    if (id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier) {
+                        resolvedComponents.add("${id.group}:${id.module}:${id.version}".toString())
+                    }
+                }
+            }
+
+            configuration.resolve()
+        } catch (Exception exception) {
+            failures << "${entry.project.path}:${configuration.name} - ${exception.message}"
+        }
+    }
+
+    if (!failures.empty) {
+        throw new GradleException("Failed to resolve ${failures.size()} configuration(s):\n - ${failures.join('\n - ')}")
+    }
+
+    [resolvedComponents: resolvedComponents, directComponents: directComponents]
+}
+
+def readChecksumFallbackAllowlist = { File allowlistFile ->
+    if (!allowlistFile.exists()) {
+        throw new GradleException("Missing ${allowlistFile}. Review checksum-only dependencies and add the approved entries.")
+    }
+
+    def sortKey = { String entry ->
+        def columns = entry.split(/\t/, -1)
+        def module = columns[0].split(':', -1)
+        "${module[0]}\t${module[1]}\t${module[2]}\t${columns[1]}".toString()
+    }
+    def allowedEntries = new TreeSet<String>()
+    def rationaleByEntry = new TreeMap<String, String>()
+    def entryOrder = []
+    def duplicateEntries = []
+    allowlistFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
+        def trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) {
+            return
+        }
+
+        def columns = line.split(/\t/, -1)
+        if (columns.size() != 3 || columns.any { !it.trim() }) {
+            throw new GradleException("Invalid checksum fallback allowlist entry at ${allowlistFile}:${number}. Expected '<group:name:version>\\t<artifact-file-name>\\t<review-rationale>'.")
+        }
+
+        def entry = "${columns[0].trim()}\t${columns[1].trim()}".toString()
+        entryOrder << entry
+        if (!allowedEntries.add(entry)) {
+            duplicateEntries << entry
+        }
+        rationaleByEntry[entry] = columns[2].trim()
+    }
+
+    if (!duplicateEntries.empty) {
+        throw new GradleException("Duplicate checksum fallback allowlist entries:\n - ${duplicateEntries.unique().sort().join('\n - ')}")
+    }
+    if (entryOrder != entryOrder.sort(false) { left, right -> sortKey(left) <=> sortKey(right) }) {
+        throw new GradleException(
+                "Checksum fallback allowlist entries must be sorted by module and artifact:\n" +
+                        allowlistFile
+        )
+    }
+
+    [entries: allowedEntries, rationales: rationaleByEntry]
+}
+
+tasks.register('resolveAndVerifyDependencies') {
+    group = 'verification'
+    description = 'Resolves every resolvable configuration so Gradle dependency verification checks all dependency artifacts.'
+
+    doLast {
+        resolveConfigurations(false)
+        logger.lifecycle("Resolved and verified ${resolvableConfigurations().size()} configurations.")
+    }
+}
+
+tasks.register('verifyDependencySignaturePolicy') {
+    group = 'verification'
+    description = 'Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed.'
+
+    inputs.file(dependencyVerificationMetadata)
+    inputs.file(dependencyChecksumFallbackAllowlist)
+
+    doLast {
+        resolveConfigurations(false)
+
+        def metadataFile = dependencyVerificationMetadata.asFile
+        def allowlistFile = dependencyChecksumFallbackAllowlist.asFile
+        if (!metadataFile.exists()) {
+            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
+        }
+        def allowlist = readChecksumFallbackAllowlist(allowlistFile)
+        def allowedEntries = allowlist.entries
+
+        def metadata = new XmlSlurper(false, false).parse(metadataFile)
+        def checksumFallbackEntries = new TreeSet<String>()
+        metadata.components.component.each { component ->
+            def id = "${component.@group}:${component.@name}:${component.@version}".toString()
+            component.artifact.each { artifact ->
+                def checksumOnly = artifact.sha256.any { checksum ->
+                    checksum.@reason.text() == 'Artifact is not signed'
+                }
+                if (checksumOnly) {
+                    checksumFallbackEntries.add("${id}\t${artifact.@name}".toString())
+                }
+            }
+        }
+
+        def unapprovedEntries = checksumFallbackEntries.findAll { !allowedEntries.contains(it) }
+        def staleEntries = allowedEntries.findAll { !checksumFallbackEntries.contains(it) }
+        if (!unapprovedEntries.empty || !staleEntries.empty) {
+            def message = new StringBuilder()
+            message << 'Dependency signature policy failed.'
+            if (!unapprovedEntries.empty) {
+                message << "\n\nUnapproved checksum-only dependency artifacts:\n - ${unapprovedEntries.join('\n - ')}"
+            }
+            if (!staleEntries.empty) {
+                message << "\n\nAllowlist entries that are no longer checksum-only artifacts:\n - ${staleEntries.join('\n - ')}"
+            }
+            message << "\n\nReview each checksum-only artifact, update ${allowlistFile}, and regenerate ${dependencySignatureReport.asFile}."
+            throw new GradleException(message.toString())
+        }
+
+        logger.lifecycle("Verified ${checksumFallbackEntries.size()} approved checksum-only dependency artifact(s).")
+    }
+}
+
+tasks.register('refreshDependencyVerificationKeyring') {
+    group = 'verification'
+    description = 'Refreshes dependency verification PGP public keys from key servers and exports the armored keyring.'
+
+    inputs.file(dependencyVerificationMetadata)
+    outputs.file(dependencyVerificationKeyring)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def keyringFile = dependencyVerificationKeyring.asFile
+        def previousModified = keyringFile.exists() ? keyringFile.lastModified() : 0L
+        def result = exec {
+            commandLine gradleWrapperCommand, '--no-daemon', 'help', '--refresh-keys', '--export-keys'
+            ignoreExitValue = true
+        }
+
+        if (!keyringFile.exists()) {
+            throw new GradleException("Failed to write ${keyringFile}. Check network access to the configured Gradle verification key servers.")
+        }
+
+        if (result.exitValue != 0) {
+            if (keyringFile.lastModified() <= previousModified) {
+                throw new GradleException("Gradle --refresh-keys --export-keys failed with exit code ${result.exitValue} and did not update ${keyringFile}.")
+            }
+            logger.warn("Gradle --refresh-keys --export-keys exited with ${result.exitValue} after updating ${keyringFile}. This can happen in some Gradle/Bouncy Castle combinations.")
+        }
+
+        if (dependencyVerificationBinaryKeyring.asFile.exists()) {
+            logger.warn("Ignoring ${dependencyVerificationBinaryKeyring.asFile}; dependency verification is configured to use the armored keyring.")
+        }
+
+        logger.lifecycle("Refreshed ${keyringFile}.")
+    }
+}
+
+tasks.register('dependencySignatureReport') {
+    group = 'verification'
+    description = 'Writes a report of signed and checksum-only dependencies from Gradle verification metadata.'
+
+    inputs.file(dependencyVerificationMetadata)
+    inputs.file(dependencyVerificationKeyring).optional()
+    inputs.file(dependencyChecksumFallbackAllowlist)
+    outputs.file(dependencySignatureReport)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def resolved = resolveConfigurations(true)
+        def metadataFile = dependencyVerificationMetadata.asFile
+        def keyringFile = dependencyVerificationKeyring.asFile
+        if (!metadataFile.exists()) {
+            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
+        }
+        def allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist.asFile)
+        def signerMetadata = loadSignerMetadata(keyringFile)
+
+        def metadata = new XmlSlurper(false, false).parse(metadataFile)
+        def componentsById = new TreeMap<String, Object>()
+        metadata.components.component.each { component ->
+            def id = "${component.@group}:${component.@name}:${component.@version}".toString()
+            componentsById[id] = component
+        }
+
+        def trustedKeys = []
+        metadata.configuration.'trusted-keys'.'trusted-key'.each { trustedKey ->
+            def entries = []
+            if (trustedKey.@group.text() || trustedKey.@name.text() || trustedKey.@version.text()) {
+                entries << [
+                        group  : trustedKey.@group.text(),
+                        name   : trustedKey.@name.text(),
+                        version: trustedKey.@version.text(),
+                        regex  : trustedKey.@regex.text()
+                ]
+            }
+            trustedKey.trusting.each { trusting ->
+                entries << [
+                        group  : trusting.@group.text(),
+                        name   : trusting.@name.text(),
+                        version: trusting.@version.text(),
+                        regex  : trusting.@regex.text()
+                ]
+            }
+            trustedKeys << [id: trustedKey.@id.text(), entries: entries]
+        }
+
+        def matches = { String pattern, String value, boolean regex ->
+            if (!pattern) {
+                return true
+            }
+            regex ? (value ==~ pattern) : pattern == value
+        }
+
+        def rows = []
+        resolved.resolvedComponents.each { id ->
+            def component = componentsById[id]
+            if (component == null) {
+                rows << [
+                        id               : id,
+                        scope            : resolved.directComponents.contains(id) ? 'direct' : 'transitive',
+                        status           : 'missing from metadata',
+                        signedCount      : 0,
+                        checksumOnlyCount: 0,
+                        keyIds           : [],
+                        checksumArtifacts: ['metadata entry missing']
+                ]
+                return
+            }
+
+            def group = component.@group.text()
+            def name = component.@name.text()
+            def version = component.@version.text()
+            def artifacts = component.artifact.collect { artifact ->
+                def checksumOnly = artifact.sha256.any { checksum ->
+                    checksum.@reason.text() == 'Artifact is not signed'
+                }
+                [
+                        name        : artifact.@name.text(),
+                        checksumOnly: checksumOnly,
+                        keyIds      : artifact.pgp.collect { it.@value.text() }.findAll { it }
+                ]
+            }
+
+            def matchingTrustedKeys = trustedKeys.findAll { trustedKey ->
+                trustedKey.entries.any { entry ->
+                    def regex = entry.regex == 'true'
+                    matches(entry.group, group, regex) &&
+                            matches(entry.name, name, regex) &&
+                            matches(entry.version, version, regex)
+                }
+            }.collect { it.id }
+
+            def signedCount = artifacts.count { !it.checksumOnly }
+            def checksumOnlyCount = artifacts.count { it.checksumOnly }
+            def status = checksumOnlyCount == 0
+                    ? 'PGP signed'
+                    : signedCount == 0 ? 'checksum fallback' : 'mixed'
+
+            def keyIds = signedCount == 0
+                    ? []
+                    : (artifacts.collectMany { it.keyIds } + matchingTrustedKeys).unique().sort()
+
+            rows << [
+                    id               : id,
+                    scope            : resolved.directComponents.contains(id) ? 'direct' : 'transitive',
+                    status           : status,
+                    signedCount      : signedCount,
+                    checksumOnlyCount: checksumOnlyCount,
+                    keyIds           : keyIds,
+                    checksumArtifacts: artifacts.findAll { it.checksumOnly }.collect { artifact ->
+                        [
+                                name     : artifact.name,
+                                rationale: allowlist.rationales["${id}\t${artifact.name}".toString()] ?: 'Missing allowlist rationale'
+                        ]
+                    }.sort { it.name }
+            ]
+        }
+
+        def reportFile = dependencySignatureReport.asFile
+        reportFile.parentFile.mkdirs()
+
+        def signedRows = rows.findAll { it.status == 'PGP signed' }
+        def checksumRows = rows.findAll { it.status == 'checksum fallback' }
+        def mixedRows = rows.findAll { it.status == 'mixed' }
+        def missingRows = rows.findAll { it.status == 'missing from metadata' }
+        def totalArtifacts = rows.sum { it.signedCount + it.checksumOnlyCount } ?: 0
+        def signedArtifacts = rows.sum { it.signedCount } ?: 0
+        def checksumOnlyArtifacts = rows.sum { it.checksumOnlyCount } ?: 0
+        def reportedKeyIds = rows.collectMany { it.keyIds }.unique().sort()
+        def reportedKeyIdsInKeyring = reportedKeyIds.count { signerMetadata[keyIdSuffix(it)] != null }
+        def reportedKeyIdsWithUserId = reportedKeyIds.count {
+            def signer = signerMetadata[keyIdSuffix(it)]
+            signer?.name || signer?.email
+        }
+        def reportedKeyIdsWithCreatedDate = reportedKeyIds.count {
+            signerMetadata[keyIdSuffix(it)]?.created
+        }
+
+        def signerDetails = { List<String> keyIds ->
+            if (!keyIds) {
+                return '-'
+            }
+
+            keyIds.collect { keyId ->
+                def signer = signerMetadata[keyIdSuffix(keyId)]
+                if (signer == null) {
+                    return "`$keyId`"
+                }
+
+                def lines = ["`$keyId`"]
+                if (signer.name) {
+                    lines << htmlEscape(signer.name)
+                }
+                if (signer.email) {
+                    lines << "`$signer.email`"
+                }
+                if (signer.created) {
+                    lines << "created ${signer.created}"
+                }
+                lines.join('<br>')
+            }.join('<br><br>')
+        }
+
+        def markdown = new StringBuilder()
+        markdown << '# Dependency Signature Report\n\n'
+        markdown << "Generated from `gradle/verification-metadata.xml` after resolving ${resolvableConfigurations().size()} configurations.\n\n"
+        if (keyringFile.exists()) {
+            markdown << 'Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.\n\n'
+        } else {
+            markdown << 'Signer metadata is unavailable because `gradle/verification-keyring.keys` is missing.\n\n'
+        }
+        markdown << 'Checksum fallback review rationales are loaded from `gradle/dependency-checksum-fallback-allowlist.tsv`.\n\n'
+        markdown << 'Refresh the metadata before regenerating this report:\n\n'
+        markdown << '```bash\n'
+        markdown << './gradlew refreshDependencyVerificationKeyring\n'
+        markdown << './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256\n'
+        markdown << './gradlew dependencySignatureReport\n'
+        markdown << '```\n\n'
+        markdown << '## Summary\n\n'
+        markdown << "| Metric | Count |\n"
+        markdown << "| --- | ---: |\n"
+        markdown << "| Resolved external modules | ${rows.size()} |\n"
+        markdown << "| Modules with PGP-signed artifacts only | ${signedRows.size()} |\n"
+        markdown << "| Modules using checksum fallback only | ${checksumRows.size()} |\n"
+        markdown << "| Modules with mixed signed/checksum-only artifacts | ${mixedRows.size()} |\n"
+        markdown << "| Modules missing verification metadata | ${missingRows.size()} |\n"
+        markdown << "| Verified artifacts | ${totalArtifacts} |\n"
+        markdown << "| PGP-signed artifacts | ${signedArtifacts} |\n"
+        markdown << "| Checksum-fallback artifacts | ${checksumOnlyArtifacts} |\n"
+        markdown << "| Signer keys found in exported keyring | ${reportedKeyIdsInKeyring} / ${reportedKeyIds.size()} |\n"
+        markdown << "| Signer keys with name or email | ${reportedKeyIdsWithUserId} / ${reportedKeyIds.size()} |\n"
+        markdown << "| Signer keys with creation date | ${reportedKeyIdsWithCreatedDate} / ${reportedKeyIds.size()} |\n\n"
+
+        markdown << '## Handling Transitive Dependencies\n\n'
+        markdown << 'Treat transitive dependencies the same as direct dependencies. Gradle verifies the resolved artifact graph, so a transitive artifact with a published signature should be PGP-verified, and an unsigned transitive artifact should keep an explicit SHA-256 checksum fallback. Review metadata changes separately when dependency versions change, especially new trusted keys and new checksum-only artifacts.\n\n'
+
+        markdown << '## Checksum Fallback Dependencies\n\n'
+        if (checksumRows.empty && mixedRows.empty) {
+            markdown << 'All resolved modules have PGP-signed artifacts in the current metadata.\n\n'
+        } else {
+            markdown << "| Dependency | Scope | Checksum-only artifacts and review rationale |\n"
+            markdown << "| --- | --- | --- |\n"
+            (checksumRows + mixedRows).sort { it.id }.each { row ->
+                def checksumArtifacts = row.checksumArtifacts.collect { artifact ->
+                    "`$artifact.name`<br>${htmlEscape(artifact.rationale)}"
+                }.join('<br><br>')
+                markdown << "| `${row.id}` | ${row.scope} | ${checksumArtifacts} |\n"
+            }
+            markdown << '\n'
+        }
+
+        if (!missingRows.empty) {
+            markdown << '## Missing Metadata\n\n'
+            markdown << "| Dependency | Scope |\n"
+            markdown << "| --- | --- |\n"
+            missingRows.sort { it.id }.each { row ->
+                markdown << "| `${row.id}` | ${row.scope} |\n"
+            }
+            markdown << '\n'
+        }
+
+        markdown << '## Full Resolved Dependency Inventory\n\n'
+        markdown << "| Dependency | Scope | Status | Artifacts | Signer key and metadata |\n"
+        markdown << "| --- | --- | --- | ---: | --- |\n"
+        rows.sort { it.id }.each { row ->
+            def artifactSummary = "${row.signedCount} signed / ${row.checksumOnlyCount} checksum"
+            markdown << "| `${row.id}` | ${row.scope} | ${row.status} | ${artifactSummary} | ${signerDetails(row.keyIds)} |\n"
+        }
+
+        reportFile.setText(markdown.toString(), StandardCharsets.UTF_8.name())
+        logger.lifecycle("Wrote ${reportFile}.")
+    }
+}
+
+if (hasProperty('buildScan')) {
+    buildScan {
+        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+        termsOfServiceAgree = 'yes'
+    }
+}
+
+def sha256 = { File file ->
+    MessageDigest digest = MessageDigest.getInstance('SHA-256')
+    file.withInputStream { input ->
+        byte[] buffer = new byte[8192]
+        int read
+        while ((read = input.read(buffer)) != -1) {
+            digest.update(buffer, 0, read)
+        }
+    }
+    digest.digest().collect { String.format('%02x', it) }.join()
+}
+
+def sha256Bytes = { byte[] bytes ->
+    MessageDigest.getInstance('SHA-256')
+            .digest(bytes)
+            .collect { String.format('%02x', it & 0xff) }
+            .join()
+}
+
+def canonicalPath = { File file ->
+    rootProject.relativePath(file).replace(File.separatorChar, '/' as char)
+}
+
+def normalizeReleaseVersion = { String rawReleaseVersion ->
+    if (rawReleaseVersion == null || rawReleaseVersion.trim().empty) {
+        throw new GradleException('Missing required -PreleaseVersion=<version>, for example -PreleaseVersion=1.10.0')
+    }
+
+    def releaseVersion = rawReleaseVersion.trim()
+    if (releaseVersion.startsWith('v')) {
+        releaseVersion = releaseVersion.substring(1)
+    }
+    if (!(releaseVersion ==~ /\d+\.\d+\.\d+([.-][A-Za-z0-9_.-]+)?/)) {
+        throw new GradleException("Invalid release version '${rawReleaseVersion}'. Expected a version such as 1.10.0 or v1.10.0.")
+    }
+
+    releaseVersion
+}
+
+def resolveGpgExecutable = {
+    def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
+            providers.environmentVariable('GPG_EXECUTABLE').orNull
+    configuredGpgExecutable ?: [
+            '/opt/homebrew/bin/gpg',
+            '/usr/local/bin/gpg',
+            '/usr/bin/gpg'
+    ].find { new File(it).canExecute() } ?: 'gpg'
+}
+
+def enabledJarTasks = {
+    allprojects.collectMany { project ->
+        project.tasks.withType(Jar).findAll { it.enabled }
+    }
+}
+
+def tasksNamedAcrossProjects = { String taskName ->
+    allprojects.collect { project ->
+        project.tasks.names.contains(taskName) ? project.tasks.named(taskName) : null
+    }.findAll { it != null }
+}
+
+def manifestEntriesFor = { Collection<File> files ->
+    files.findAll { it.exists() && it.isFile() }
+            .collect { file ->
+                def path = canonicalPath(file)
+                [
+                        path  : path,
+                        size  : file.length(),
+                        sha256: sha256(file)
+                ]
+            }
+            .sort { left, right -> left.path <=> right.path }
+}
+
+def resolveManifestFile = { File manifestPath, String manifestFileName ->
+    if (manifestPath.file && manifestPath.name.toLowerCase(Locale.ROOT).endsWith('.zip')) {
+        def matchingEntries = []
+        def extractedManifest = null
+        new ZipFile(manifestPath).withCloseable { zipFile ->
+            zipFile.entries().each { entry ->
+                if (!entry.directory && (entry.name == manifestFileName || entry.name.endsWith("/${manifestFileName}"))) {
+                    matchingEntries << entry.name
+                }
+            }
+
+            if (matchingEntries.empty) {
+                throw new GradleException("No ${manifestFileName} found in ${manifestPath}")
+            }
+            if (matchingEntries.size() > 1) {
+                throw new GradleException(
+                        "Multiple ${manifestFileName} files found in ${manifestPath}:\n" +
+                                matchingEntries.collect { "  - ${it}" }.join('\n')
+                )
+            }
+
+            def extractedDir = new File(
+                    layout.buildDirectory.dir('tmp/manifest-inputs').get().asFile,
+                    Integer.toHexString(manifestPath.canonicalPath.hashCode())
+            )
+            project.delete(extractedDir)
+            extractedDir.mkdirs()
+
+            extractedManifest = new File(extractedDir, manifestFileName)
+            extractedManifest.withOutputStream { output ->
+                zipFile.getInputStream(zipFile.getEntry(matchingEntries[0])).withCloseable { input ->
+                    output << input
+                }
+            }
+        }
+        return extractedManifest
+    }
+
+    if (!manifestPath.directory) {
+        return manifestPath
+    }
+
+    def matchingManifests = fileTree(manifestPath) {
+        include "**/${manifestFileName}"
+    }.files.sort { left, right -> left.path <=> right.path }
+
+    if (matchingManifests.empty) {
+        throw new GradleException("No ${manifestFileName} found under ${manifestPath}")
+    }
+    if (matchingManifests.size() > 1) {
+        throw new GradleException(
+                "Multiple ${manifestFileName} files found under ${manifestPath}:\n" +
+                        matchingManifests.collect { "  - ${it}" }.join('\n')
+        )
+    }
+
+    matchingManifests[0]
+}
+
+def resolveReleaseManifestFile = { File manifestPath ->
+    resolveManifestFile(manifestPath, 'release-manifest.tsv')
+}
+
+def resolveInstallerManifestFile = { File manifestPath ->
+    resolveManifestFile(manifestPath, 'installer-manifest.tsv')
+}
+
+def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean required ->
+    def missingMessage = { String location ->
+        "No ${evidenceFileName} found ${location}"
+    }
+
+    if (evidencePath.file && evidencePath.name.toLowerCase(Locale.ROOT).endsWith('.zip')) {
+        def matchingEntries = []
+        def text = null
+        new ZipFile(evidencePath).withCloseable { zipFile ->
+            zipFile.entries().each { entry ->
+                if (!entry.directory && (entry.name == evidenceFileName || entry.name.endsWith("/${evidenceFileName}"))) {
+                    matchingEntries << entry.name
+                }
+            }
+
+            if (matchingEntries.empty) {
+                return
+            } else if (matchingEntries.size() > 1) {
+                throw new GradleException(
+                        "Multiple ${evidenceFileName} files found in ${evidencePath}:\n" +
+                                matchingEntries.collect { "  - ${it}" }.join('\n')
+                )
+            } else {
+                zipFile.getInputStream(zipFile.getEntry(matchingEntries[0])).withCloseable { input ->
+                    text = input.getText(StandardCharsets.UTF_8.name())
+                }
+            }
+        }
+        if (matchingEntries.empty && required) {
+            throw new GradleException(missingMessage("in ${evidencePath}"))
+        }
+        return text
+    }
+
+    if (evidencePath.directory) {
+        def matchingFiles = fileTree(evidencePath) {
+            include "**/${evidenceFileName}"
+        }.files.sort { left, right -> left.path <=> right.path }
+
+        if (matchingFiles.empty) {
+            if (required) {
+                throw new GradleException(missingMessage("under ${evidencePath}"))
+            }
+            return null
+        }
+        if (matchingFiles.size() > 1) {
+            throw new GradleException(
+                    "Multiple ${evidenceFileName} files found under ${evidencePath}:\n" +
+                            matchingFiles.collect { "  - ${it}" }.join('\n')
+            )
+        }
+        return matchingFiles[0].getText(StandardCharsets.UTF_8.name())
+    }
+
+    if (evidencePath.file && evidencePath.name == evidenceFileName) {
+        return evidencePath.getText(StandardCharsets.UTF_8.name())
+    }
+
+    if (required) {
+        throw new GradleException(missingMessage("at ${evidencePath}"))
+    }
+    null
+}
+
+def readReleaseManifest = { File manifestFile ->
+    if (!manifestFile.file) {
+        throw new GradleException("Missing release manifest: ${manifestFile}")
+    }
+
+    def lines = manifestFile.readLines(StandardCharsets.UTF_8.name())
+    if (lines.empty || lines[0] != 'sha256\tsize_bytes\tpath') {
+        throw new GradleException("Invalid release manifest header in ${manifestFile}. Expected: sha256\\tsize_bytes\\tpath")
+    }
+
+    def entries = new LinkedHashMap<String, Object>()
+    lines.drop(1).eachWithIndex { line, index ->
+        if (!line.trim().empty) {
+            def lineNumber = index + 2
+            def parts = line.split('\t', -1)
+            if (parts.length != 3) {
+                throw new GradleException("Invalid release manifest line ${lineNumber} in ${manifestFile}: ${line}")
+            }
+
+            def hash = parts[0]
+            def size = parts[1]
+            def path = parts[2]
+            if (!(hash ==~ /[0-9a-f]{64}/)) {
+                throw new GradleException("Invalid SHA-256 value on line ${lineNumber} in ${manifestFile}: ${hash}")
+            }
+            if (!(size ==~ /[0-9]+/)) {
+                throw new GradleException("Invalid file size on line ${lineNumber} in ${manifestFile}: ${size}")
+            }
+            if (!path || path.contains('\\')) {
+                throw new GradleException("Invalid path on line ${lineNumber} in ${manifestFile}: ${path}")
+            }
+            if (entries.containsKey(path)) {
+                throw new GradleException("Duplicate release manifest path on line ${lineNumber} in ${manifestFile}: ${path}")
+            }
+
+            entries[path] = [
+                    sha256: hash,
+                    size  : size as Long,
+                    path  : path
+            ]
+        }
+    }
+    entries
+}
+
+def readInstallerStructureReportRows = { File evidencePath ->
+    def reportText = readEvidenceTextFile(evidencePath, 'installer-structure-report.tsv', false)
+    if (reportText == null) {
+        return [:]
+    }
+
+    def lines = reportText.readLines()
+    def expectedHeader = 'artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage'
+    if (lines.empty || lines[0] != expectedHeader) {
+        throw new GradleException(
+                "Invalid installer-structure-report.tsv header in ${evidencePath}. Expected: ${expectedHeader.replace('\t', '\\t')}"
+        )
+    }
+
+    def rows = new LinkedHashMap<String, Object>()
+    lines.drop(1).eachWithIndex { line, index ->
+        if (!line.trim().empty) {
+            def lineNumber = index + 2
+            def columns = line.split('\t', -1)
+            if (columns.length != 6) {
+                throw new GradleException("Invalid installer structure report line ${lineNumber} in ${evidencePath}: ${line}")
+            }
+
+            def artifactPath = columns[0]
+            if (rows.containsKey(artifactPath)) {
+                throw new GradleException("Duplicate installer structure artifact path on line ${lineNumber} in ${evidencePath}: ${artifactPath}")
+            }
+
+            rows[artifactPath] = [
+                    artifactPath: artifactPath,
+                    sha256      : columns[1],
+                    format      : columns[2],
+                    status      : columns[3],
+                    reportPath  : columns[4],
+                    message     : columns[5]
+            ]
+        }
+    }
+    rows
+}
+
+def installerStructureZipEntryFor = { String reportPath ->
+    def normalizedReportPath = reportPath.replace('\\', '/')
+    def marker = 'installer-structure/'
+    if (normalizedReportPath.startsWith(marker)) {
+        return normalizedReportPath
+    }
+
+    def markerIndex = normalizedReportPath.indexOf("/${marker}")
+    markerIndex >= 0 ? normalizedReportPath.substring(markerIndex + 1) : null
+}
+
+def installerStructureReportReference = { File evidencePath, Map<String, Object> structureRow ->
+    if (structureRow == null || !structureRow.reportPath) {
+        return 'none'
+    }
+
+    def structureEntry = installerStructureZipEntryFor(structureRow.reportPath)
+    if (structureEntry == null) {
+        return structureRow.reportPath
+    }
+
+    if (evidencePath.file && evidencePath.name.toLowerCase(Locale.ROOT).endsWith('.zip')) {
+        return "${evidencePath}!${structureEntry}"
+    }
+    if (evidencePath.directory) {
+        return new File(evidencePath, structureEntry).path
+    }
+    structureRow.reportPath
+}
+
+def appendInstallerEvidenceArtifactDetails = {
+    StringBuilder message,
+    String label,
+    String artifactPath,
+    Map<String, Object> manifestEntry,
+    Map<String, Object> structureRow,
+    File evidencePath ->
+        if (manifestEntry == null) {
+            message << "    ${label}: missing\n"
+            return
+        }
+
+        message << "    ${label}: ${manifestEntry.sha256} ${manifestEntry.size}\n"
+        if (structureRow != null) {
+            message << "    ${label} structure: ${installerStructureReportReference(evidencePath, structureRow)}"
+            message << " (${structureRow.status ?: 'unknown'})"
+            if (structureRow.message) {
+                message << " - ${structureRow.message}"
+            }
+            message << "\n"
+        } else {
+            message << "    ${label} structure: none\n"
+        }
+}
+
+def appendReleaseEvidenceArtifactDetails = {
+    StringBuilder message,
+    String label,
+    Map<String, Object> manifestEntry ->
+        if (manifestEntry == null) {
+            message << "    ${label}: missing\n"
+            return
+        }
+
+        message << "    ${label}: ${manifestEntry.sha256} ${manifestEntry.size}\n"
+}
+
+def verifyManifestMatches = { String manifestLabel, File expectedManifest, File actualManifest ->
+    def expectedEntries = readReleaseManifest(expectedManifest)
+    def actualEntries = readReleaseManifest(actualManifest)
+    def expectedPaths = expectedEntries.keySet() as Set
+    def actualPaths = actualEntries.keySet() as Set
+
+    def missingPaths = (expectedPaths - actualPaths).sort()
+    def extraPaths = (actualPaths - expectedPaths).sort()
+    def changedPaths = expectedPaths.intersect(actualPaths)
+            .findAll { path ->
+                expectedEntries[path].sha256 != actualEntries[path].sha256 ||
+                        expectedEntries[path].size != actualEntries[path].size
+            }
+            .sort()
+
+    if (!missingPaths.empty || !extraPaths.empty || !changedPaths.empty) {
+        def formatPaths = { Collection<String> paths ->
+            def lines = paths.take(20).collect { "  ${it}" }
+            if (paths.size() > 20) {
+                lines << "  ... ${paths.size() - 20} more"
+            }
+            lines.join('\n')
+        }
+
+        def message = new StringBuilder()
+        message << "${manifestLabel} verification failed against ${expectedManifest}\n"
+        if (!missingPaths.empty) {
+            message << "\nMissing files:\n${formatPaths(missingPaths)}\n"
+        }
+        if (!extraPaths.empty) {
+            message << "\nExtra files:\n${formatPaths(extraPaths)}\n"
+        }
+        if (!changedPaths.empty) {
+            message << "\nChanged files:\n"
+            changedPaths.take(20).each { path ->
+                def expected = expectedEntries[path]
+                def actual = actualEntries[path]
+                message << "  ${path}\n"
+                message << "    expected ${expected.sha256} ${expected.size}\n"
+                message << "    actual   ${actual.sha256} ${actual.size}\n"
+            }
+            if (changedPaths.size() > 20) {
+                message << "  ... ${changedPaths.size() - 20} more\n"
+            }
+        }
+        throw new GradleException(message.toString())
+    }
+
+    logger.lifecycle("Verified ${actualEntries.size()} ${manifestLabel.toLowerCase(Locale.ROOT)} entries against ${expectedManifest}")
+}
+
+def installerArtifactIncludes = ['*.dmg', '*.deb', '*.rpm', '*.exe', '*.msi', '*.pkg']
+
+def installerArtifactsIn = { File installerDir ->
+    installerDir.directory
+            ? fileTree(installerDir) {
+                installerArtifactIncludes.each { include it }
+                exclude '**/jpackage_temp/**'
+            }.files
+                    .findAll { it.isFile() }
+                    .sort { left, right -> left.path <=> right.path }
+            : []
+}
+
+def expectedInstallerArtifactExtensions = {
+    def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    if (osName.contains('linux')) {
+        return ['deb', 'rpm']
+    }
+    if (osName.contains('mac')) {
+        return ['dmg']
+    }
+    if (osName.contains('windows')) {
+        return ['exe']
+    }
+    []
+}
+
+def releaseReportDir = layout.buildDirectory.dir('reports/release')
+def releaseSha256SumsFile = releaseReportDir.map { it.file('SHA256SUMS') }
+def releaseManifestFile = releaseReportDir.map { it.file('release-manifest.tsv') }
+def installerSha256SumsFile = releaseReportDir.map { it.file('INSTALLER-SHA256SUMS') }
+def installerManifestFile = releaseReportDir.map { it.file('installer-manifest.tsv') }
+def releaseBuildInfoFile = releaseReportDir.map { it.file('build-info.json') }
+def installerBuildInfoFile = releaseReportDir.map { it.file('installer-build-info.json') }
+def installerStructureReportFile = releaseReportDir.map { it.file('installer-structure-report.tsv') }
+def installerStructureSummaryFile = releaseReportDir.map { it.file('installer-structure-summary.txt') }
+def installerStructureReportDir = releaseReportDir.map { it.dir('installer-structure') }
+def releaseEvidenceBundleFile = releaseReportDir.map { it.file('release-evidence.zip') }
+def installerEvidenceBundleFile = releaseReportDir.map { it.file('installer-evidence.zip') }
+def githubReleaseReadinessReportFile = releaseReportDir.map { it.file('github-release-readiness.md') }
+def releaseEvidenceRequiredEntries = [
+        'release-manifest.tsv',
+        'SHA256SUMS',
+        'build-info.json',
+        'checksums/jars.sha256'
+]
+def installerEvidenceRequiredEntries = [
+        'installer-manifest.tsv',
+        'INSTALLER-SHA256SUMS',
+        'installer-build-info.json',
+        'installer-structure-summary.txt',
+        'installer-structure-report.tsv'
+]
+def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
+def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
+def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
+
+def validateReleaseEvidenceBundle = { File bundle ->
+    if (!bundle.file) {
+        throw new GradleException("Missing release evidence bundle: ${bundle}")
+    }
+
+    def actualEntries = new TreeSet<String>()
+    new ZipFile(bundle).withCloseable { zipFile ->
+        zipFile.entries().each { entry ->
+            if (!entry.directory) {
+                actualEntries << entry.name
+            }
+        }
+    }
+
+    def missingEntries = (releaseEvidenceRequiredEntries as Set) - actualEntries
+    if (!missingEntries.empty) {
+        throw new GradleException(
+                "Release evidence bundle is missing required entries:\n" +
+                        missingEntries.sort().collect { "  - ${it}" }.join('\n')
+        )
+    }
+
+    [
+            entryCount: actualEntries.size()
+    ]
+}
+
+def validateInstallerEvidenceBundle = { File bundle ->
+    if (!bundle.file) {
+        throw new GradleException("Missing installer evidence bundle: ${bundle}")
+    }
+
+    def actualEntries = new TreeSet<String>()
+    def missingEntries = new TreeSet<String>()
+    def structureReportText = null
+    def referencedStructureEntries = new TreeSet<String>()
+
+    new ZipFile(bundle).withCloseable { zipFile ->
+        zipFile.entries().each { entry ->
+            if (!entry.directory) {
+                actualEntries << entry.name
+            }
+        }
+
+        installerEvidenceRequiredEntries.each { entryName ->
+            def entry = zipFile.getEntry(entryName)
+            if (entry == null || entry.directory) {
+                missingEntries << entryName
+            }
+        }
+
+        def structureReportEntry = zipFile.getEntry('installer-structure-report.tsv')
+        if (structureReportEntry != null && !structureReportEntry.directory) {
+            zipFile.getInputStream(structureReportEntry).withCloseable { input ->
+                structureReportText = input.getText(StandardCharsets.UTF_8.name())
+            }
+        }
+    }
+
+    if (structureReportText != null) {
+        def lines = structureReportText.readLines()
+        def expectedHeader = 'artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage'
+        if (lines.empty || lines[0] != expectedHeader) {
+            throw new GradleException(
+                    "Invalid installer-structure-report.tsv header in ${bundle}. Expected: ${expectedHeader.replace('\t', '\\t')}"
+            )
+        }
+
+        lines.drop(1).eachWithIndex { line, index ->
+            if (!line.trim().empty) {
+                def lineNumber = index + 2
+                def columns = line.split('\t', -1)
+                if (columns.length != 6) {
+                    throw new GradleException("Invalid installer structure report line ${lineNumber} in ${bundle}: ${line}")
+                }
+
+                def status = columns[3]
+                def reportPath = columns[4]
+                if ((status == 'generated' || status == 'failed') && reportPath) {
+                    def structureEntry = installerStructureZipEntryFor(reportPath)
+                    if (structureEntry == null) {
+                        throw new GradleException(
+                                "Cannot map installer structure report path to a ZIP entry on line ${lineNumber} in ${bundle}: ${reportPath}"
+                        )
+                    }
+                    referencedStructureEntries << structureEntry
+                }
+            }
+        }
+    }
+
+    if (!referencedStructureEntries.empty) {
+        def structureTextEntries = actualEntries.findAll {
+            it.startsWith('installer-structure/') && it.endsWith('.txt')
+        }
+        if (structureTextEntries.empty) {
+            missingEntries << 'installer-structure/*.txt'
+        }
+        referencedStructureEntries.each { entryName ->
+            if (!actualEntries.contains(entryName)) {
+                missingEntries << entryName
+            }
+        }
+    }
+
+    if (!missingEntries.empty) {
+        throw new GradleException(
+                "Installer evidence bundle is missing required entries:\n" +
+                        missingEntries.collect { "  - ${it}" }.join('\n')
+        )
+    }
+
+    [
+            entryCount                    : actualEntries.size(),
+            referencedStructureEntryCount: referencedStructureEntries.size()
+    ]
+}
+
+def normalizeCommandOutput = { Object value ->
+    value == null
+            ? null
+            : value.toString()
+            .replace('\r\n', '\n')
+            .replace('\r', '\n')
+            .trim()
+}
+
+def firstNonEmptyLine = { String value ->
+    value == null
+            ? null
+            : value.readLines().collect { it.trim() }.find { !it.empty }
+}
+
+def compactMap = { Map<String, Object> values ->
+    values.findAll { entry ->
+        def value = entry.value
+        value != null &&
+                (!(value instanceof CharSequence) || value.length() > 0) &&
+                (!(value instanceof Map) || !value.empty)
+    }
+}
+
+def execResult = { List<String> command ->
+    def output = new ByteArrayOutputStream()
+    def stderrOutput = new ByteArrayOutputStream()
+    try {
+        def result = exec {
+            commandLine command
+            standardOutput = output
+            errorOutput = stderrOutput
+            ignoreExitValue = true
+        }
+        [
+                exitValue: result.exitValue,
+                stdout   : normalizeCommandOutput(output.toString(StandardCharsets.UTF_8.name())),
+                stderr   : normalizeCommandOutput(stderrOutput.toString(StandardCharsets.UTF_8.name()))
+        ]
+    } catch (Exception ignored) {
+        [
+                exitValue: null,
+                stdout   : null,
+                stderr   : null
+        ]
+    }
+}
+
+def execText = { List<String> command ->
+    def result = execResult(command)
+    result.exitValue == 0 ? result.stdout : null
+}
+
+def commandOutputInfo = { List<String> command, List<String> displayCommand = command ->
+    def result = execResult(command)
+    def output = result.stdout ?: result.stderr
+    compactMap([
+            command  : displayCommand,
+            available: result.exitValue == 0,
+            exitValue: result.exitValue,
+            output   : output
+    ])
+}
+
+def commandVersionInfo = { List<String> command, List<String> displayCommand = command ->
+    def result = execResult(command)
+    def output = result.stdout ?: result.stderr
+    compactMap([
+            command  : displayCommand,
+            available: result.exitValue == 0,
+            exitValue: result.exitValue,
+            version  : firstNonEmptyLine(output)
+    ])
+}
+
+def linuxReleaseBuilderInfo = {
+    def dockerfile = linuxReleaseBuilderDockerfile.asFile
+    if (!dockerfile.file) {
+        return [:]
+    }
+
+    def lines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
+    def snapshotLine = lines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
+    compactMap([
+            dockerfilePath   : canonicalPath(dockerfile),
+            dockerfileSha256 : sha256(dockerfile),
+            from             : lines.find { it.startsWith('FROM ') },
+            ubuntuAptSnapshot: snapshotLine?.replace('ARG UBUNTU_APT_SNAPSHOT=', '')
+    ])
+}
+
+def jdkToolVersionInfo = { String executable ->
+    def windows = System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
+    def executableName = windows ? "${executable}.exe" : executable
+    def toolFile = new File(System.getProperty('java.home'), "bin/${executableName}")
+    def command = toolFile.file ? [toolFile.absolutePath, '--version'] : [executable, '--version']
+    def info = commandVersionInfo(command, [executable, '--version'])
+    info.source = toolFile.file ? 'java.home' : 'PATH'
+    info
+}
+
+def readOsRelease = {
+    def osReleaseFile = ['/etc/os-release', '/usr/lib/os-release']
+            .collect { new File(it) }
+            .find { it.file }
+    if (osReleaseFile == null) {
+        return null
+    }
+
+    def values = new TreeMap<String, String>()
+    osReleaseFile.eachLine(StandardCharsets.UTF_8.name()) { line ->
+        def trimmed = line.trim()
+        if (trimmed && !trimmed.startsWith('#') && trimmed.contains('=')) {
+            def parts = trimmed.split('=', 2)
+            def value = parts[1].trim()
+            if (value.startsWith('"') && value.endsWith('"')) {
+                value = value.substring(1, value.length() - 1)
+                        .replace('\\"', '"')
+                        .replace('\\\\', '\\')
+            } else if (value.startsWith("'") && value.endsWith("'")) {
+                value = value.substring(1, value.length() - 1)
+            }
+            values[parts[0]] = value
+        }
+    }
+
+    [
+            path  : osReleaseFile.path,
+            values: values
+    ]
+}
+
+def localeEnvironment = {
+    ['LANG', 'LC_ALL', 'LC_COLLATE', 'LC_CTYPE', 'LC_MESSAGES', 'LC_MONETARY', 'LC_NUMERIC', 'LC_TIME']
+            .collectEntries { name -> [(name): System.getenv(name)] }
+            .findAll { entry -> entry.value != null }
+}
+
+def loadGradleWrapperProperties = {
+    def wrapperProperties = new Properties()
+    def wrapperPropertiesFile = file('gradle/wrapper/gradle-wrapper.properties')
+    if (wrapperPropertiesFile.file) {
+        wrapperPropertiesFile.withInputStream { wrapperProperties.load(it) }
+    }
+    wrapperProperties
+}
+
+def buildInfoForManifest = { Collection entries, File manifest, File checksums ->
+    def gitStatus = execText(['git', 'status', '--porcelain'])
+    def wrapperProperties = loadGradleWrapperProperties()
+    def defaultLocale = Locale.getDefault()
+    def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    def linux = osName.contains('linux')
+    def macos = osName.contains('mac')
+    def windows = osName.contains('windows')
+
+    [
+            buildInfoVersion: 1,
+            manifest        : [
+                    entryCount: entries.size(),
+                    sha256   : sha256(manifest),
+                    path     : canonicalPath(manifest)
+            ],
+            checksums       : [
+                    sha256: sha256(checksums),
+                    path  : canonicalPath(checksums)
+            ],
+            git             : [
+                    commit    : execText(['git', 'rev-parse', 'HEAD']),
+                    branch    : execText(['git', 'rev-parse', '--abbrev-ref', 'HEAD']),
+                    describe  : execText(['git', 'describe', '--tags', '--always', '--dirty']),
+                    dirty     : gitStatus != null && !gitStatus.empty,
+                    submodules: execText(['git', 'submodule', 'status', '--recursive'])
+            ],
+            gradle          : [
+                    version                     : gradle.gradleVersion,
+                    wrapperDistributionUrl      : wrapperProperties.getProperty('distributionUrl'),
+                    wrapperDistributionSha256Sum: wrapperProperties.getProperty('distributionSha256Sum'),
+                    expectedVersion             : expectedReleaseGradleVersion.get()
+            ],
+            java            : [
+                    version             : System.getProperty('java.version'),
+                    vendor              : System.getProperty('java.vendor'),
+                    runtimeVersion      : System.getProperty('java.runtime.version'),
+                    vmName              : System.getProperty('java.vm.name'),
+                    vmVersion           : System.getProperty('java.vm.version'),
+                    specificationVersion: System.getProperty('java.specification.version'),
+                    expectedVersion     : expectedReleaseJavaVersion.get(),
+                    expectedVendor      : expectedReleaseJavaVendor.get()
+            ],
+            releaseBuilder  : compactMap([
+                    linux: linuxReleaseBuilderInfo()
+            ]),
+            os              : [
+                    name          : System.getProperty('os.name'),
+                    version       : System.getProperty('os.version'),
+                    arch          : System.getProperty('os.arch'),
+                    uname         : commandOutputInfo(['uname', '-a']),
+                    osRelease     : linux ? readOsRelease() : null,
+                    macosSwVers   : macos ? commandOutputInfo(['sw_vers']) : null,
+                    windowsVersion: windows ? commandOutputInfo(['cmd', '/c', 'ver']) : null
+            ],
+            environment     : [
+                    sourceDateEpoch: System.getenv('SOURCE_DATE_EPOCH'),
+                    timezone       : [
+                            id          : TimeZone.getDefault().getID(),
+                            zoneId      : java.time.ZoneId.systemDefault().getId(),
+                            userTimezone: System.getProperty('user.timezone'),
+                            tz          : System.getenv('TZ')
+                    ],
+                    locale         : [
+                            defaultLocale: defaultLocale.toLanguageTag(),
+                            javaLocale   : defaultLocale.toString(),
+                            userLanguage : System.getProperty('user.language'),
+                            userCountry  : System.getProperty('user.country'),
+                            fileEncoding : System.getProperty('file.encoding'),
+                            environment  : localeEnvironment(),
+                            command      : commandOutputInfo(['locale'])
+                    ]
+            ],
+            tools           : compactMap([
+                    jdk          : [
+                            java    : jdkToolVersionInfo('java'),
+                            javac   : jdkToolVersionInfo('javac'),
+                            jlink   : jdkToolVersionInfo('jlink'),
+                            jpackage: jdkToolVersionInfo('jpackage')
+                    ],
+                    linuxPackages: linux ? [
+                            dpkg     : commandVersionInfo(['dpkg', '--version']),
+                            dpkgDeb  : commandVersionInfo(['dpkg-deb', '--version']),
+                            dpkgQuery: commandVersionInfo(['dpkg-query', '--version']),
+                            rpm      : commandVersionInfo(['rpm', '--version']),
+                            rpm2cpio : commandOutputInfo(['sh', '-c', 'command -v rpm2cpio'], ['rpm2cpio']),
+                            rpmbuild : commandVersionInfo(['rpmbuild', '--version']),
+                            fakeroot : commandVersionInfo(['fakeroot', '--version'])
+                    ] : null,
+                    macosInstallerTools: macos ? [
+                            hdiutil: commandOutputInfo(['which', 'hdiutil']),
+                            pkgutil: commandOutputInfo(['which', 'pkgutil']),
+                            xar    : commandVersionInfo(['xar', '--version'])
+                    ] : null,
+                    windowsInstallerTools: windows ? [
+                            powershell: commandVersionInfo(['powershell', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()']),
+                            pwsh      : commandVersionInfo(['pwsh', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()']),
+                            candle    : commandVersionInfo(['candle', '-?']),
+                            light     : commandVersionInfo(['light', '-?']),
+                            wix       : commandVersionInfo(['wix', '--version'])
+                    ] : null,
+                    archives     : linux ? [
+                            ar       : commandVersionInfo(['ar', '--version']),
+                            cpio     : commandVersionInfo(['cpio', '--version']),
+                            file     : commandVersionInfo(['file', '--version']),
+                            sha256sum: commandVersionInfo(['sha256sum', '--version']),
+                            tar      : commandVersionInfo(['tar', '--version']),
+                            gzip     : commandVersionInfo(['gzip', '--version']),
+                            xz       : commandVersionInfo(['xz', '--version'])
+                    ] : null
+            ])
+    ]
+}
+
+def writeBuildInfo = { File buildInfoFile, Map buildInfo ->
+    buildInfoFile.parentFile.mkdirs()
+    buildInfoFile.setText(
+            groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(buildInfo)) + '\n',
+            StandardCharsets.UTF_8.name()
+    )
+}
+
+tasks.register('verifyReleaseEnvironment') {
+    group = 'verification'
+    description = 'Verifies the local Gradle and Java runtime match the pinned release build environment.'
+
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
+    inputs.property('expectedReleaseJavaVendor', expectedReleaseJavaVendor)
+    inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def expectedJavaVersion = expectedReleaseJavaVersion.get()
+        def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
+        def expectedGradleVersion = expectedReleaseGradleVersion.get()
+        def actualJavaVersion = System.getProperty('java.version')
+        def actualJavaVendor = System.getProperty('java.vendor')
+        def violations = []
+
+        if (actualJavaVersion != expectedJavaVersion) {
+            violations << "Java version expected ${expectedJavaVersion} but was ${actualJavaVersion}"
+        }
+        if (actualJavaVendor != expectedJavaVendorValue) {
+            violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
+        }
+        if (gradle.gradleVersion != expectedGradleVersion) {
+            violations << "Gradle version expected ${expectedGradleVersion} but was ${gradle.gradleVersion}"
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("Release build environment verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified release build environment: Gradle ${gradle.gradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
+    }
+}
+
+tasks.register('verifyGradleWrapperSecurity') {
+    group = 'verification'
+    description = 'Verifies Gradle wrapper checksums and pinned distribution metadata.'
+
+    def wrapperFiles = files(
+            'gradlew',
+            'gradlew.bat',
+            'gradle/wrapper/gradle-wrapper.jar',
+            'gradle/wrapper/gradle-wrapper.properties'
+    )
+
+    inputs.file(gradleWrapperChecksums)
+    inputs.files(wrapperFiles)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def checksumFile = gradleWrapperChecksums.asFile
+        if (!checksumFile.file) {
+            throw new GradleException("Missing ${checksumFile}. Record the approved Gradle wrapper file checksums first.")
+        }
+
+        def requiredPaths = [
+                'gradlew',
+                'gradlew.bat',
+                'gradle/wrapper/gradle-wrapper.jar',
+                'gradle/wrapper/gradle-wrapper.properties'
+        ] as Set
+        def expectedHashes = new TreeMap<String, String>()
+        def duplicatePaths = []
+
+        checksumFile.eachLine(StandardCharsets.UTF_8.name()) { line, number ->
+            def trimmed = line.trim()
+            if (!trimmed || trimmed.startsWith('#')) {
+                return
+            }
+
+            def matcher = line =~ /^([0-9a-f]{64})\s{2}(.+)$/
+            if (!matcher.matches()) {
+                throw new GradleException("Invalid Gradle wrapper checksum entry at ${checksumFile}:${number}. Expected '<sha256>  <path>'.")
+            }
+
+            def path = matcher.group(2)
+            if (path.contains('\\') || path.startsWith('/') || path.contains('..')) {
+                throw new GradleException("Invalid Gradle wrapper checksum path at ${checksumFile}:${number}: ${path}")
+            }
+            if (expectedHashes.put(path, matcher.group(1)) != null) {
+                duplicatePaths << path
+            }
+        }
+
+        def missingExpectedPaths = requiredPaths.findAll { !expectedHashes.containsKey(it) }
+        def unexpectedPaths = expectedHashes.keySet().findAll { !requiredPaths.contains(it) }
+        def violations = []
+        if (!duplicatePaths.empty) {
+            violations << "Duplicate checksum entries: ${duplicatePaths.unique().sort().join(', ')}"
+        }
+        if (!missingExpectedPaths.empty) {
+            violations << "Missing checksum entries: ${missingExpectedPaths.sort().join(', ')}"
+        }
+        if (!unexpectedPaths.empty) {
+            violations << "Unexpected checksum entries: ${unexpectedPaths.sort().join(', ')}"
+        }
+
+        expectedHashes.each { path, expectedHash ->
+            def wrapperFile = file(path)
+            if (!wrapperFile.file) {
+                violations << "Missing Gradle wrapper file: ${path}"
+                return
+            }
+
+            def actualHash = sha256(wrapperFile)
+            if (actualHash != expectedHash) {
+                violations << "${path} expected ${expectedHash} but was ${actualHash}"
+            }
+        }
+
+        def wrapperProperties = loadGradleWrapperProperties()
+        def distributionUrl = wrapperProperties.getProperty('distributionUrl')
+        def distributionSha256Sum = wrapperProperties.getProperty('distributionSha256Sum')
+        if (!(distributionUrl ==~ /^https:\/\/services[.]gradle[.]org\/distributions\/gradle-[^\/]+-(bin|all)[.]zip$/)) {
+            violations << "Gradle wrapper distributionUrl must use https://services.gradle.org/distributions/gradle-<version>-bin.zip or -all.zip"
+        }
+        if (!(distributionSha256Sum ==~ /[0-9a-f]{64}/)) {
+            violations << 'Gradle wrapper distributionSha256Sum must be a pinned lowercase SHA-256 value'
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("Gradle wrapper security verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified Gradle wrapper checksums and distribution metadata.")
+    }
+}
+
+tasks.register('verifyReleaseBuilderImage') {
+    group = 'verification'
+    description = 'Verifies the Linux release-builder Dockerfile pins its base image and release-sensitive defaults.'
+
+    inputs.file(linuxReleaseBuilderDockerfile)
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def dockerfile = linuxReleaseBuilderDockerfile.asFile
+        if (!dockerfile.file) {
+            throw new GradleException("Missing Linux release-builder Dockerfile: ${dockerfile}")
+        }
+
+        def expectedJavaVersionValue = expectedReleaseJavaVersion.orNull
+        if (!expectedJavaVersionValue) {
+            throw new GradleException('Missing releaseBuild.javaVersion in gradle.properties')
+        }
+
+        def text = dockerfile.getText(StandardCharsets.UTF_8.name())
+        def trimmedLines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
+        def fromLine = trimmedLines.find { it.startsWith('FROM ') }
+        def snapshotLine = trimmedLines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
+        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaVersionValue}"
+        def violations = []
+
+        if (!(fromLine ==~ /^FROM --platform=linux\/amd64 ${java.util.regex.Pattern.quote(expectedBaseImage)}@sha256:[0-9a-f]{64}$/)) {
+            violations << "Dockerfile FROM must pin linux/amd64 ${expectedBaseImage} by lowercase sha256 digest"
+        }
+        if (!(snapshotLine ==~ /^ARG UBUNTU_APT_SNAPSHOT=\d{8}T\d{6}Z$/)) {
+            violations << 'Dockerfile must define UBUNTU_APT_SNAPSHOT as an exact UTC timestamp, for example 20260501T000000Z'
+        }
+        if (!text.contains('APT::Snapshot "%s";') || !text.contains('$UBUNTU_APT_SNAPSHOT')) {
+            violations << 'Dockerfile must write apt snapshot configuration from UBUNTU_APT_SNAPSHOT'
+        }
+        if (!text.contains('/etc/apt/sources.list.d/ubuntu.sources') || !text.contains('Snapshot: yes')) {
+            violations << 'Dockerfile must enable apt snapshots for deb822 ubuntu.sources files when present'
+        }
+        if (!text.contains('https?://(archive|security)')) {
+            violations << 'Dockerfile must snapshot-pin both HTTP and HTTPS legacy Ubuntu apt sources'
+        }
+        if (!text.contains('Legacy Ubuntu apt source must be snapshot-pinned')) {
+            violations << 'Dockerfile must fail if an active legacy Ubuntu apt source remains without snapshot=yes'
+        }
+        if (!text.contains('rm -f /etc/apt/sources.list.d/zulu.list')) {
+            violations << 'Dockerfile must remove the unused Azul apt source before apt-get update'
+        }
+        if (!text.contains('apt-get install -y --no-install-recommends ca-certificates')) {
+            violations << 'Dockerfile must bootstrap ca-certificates from the pinned HTTPS apt snapshot'
+        }
+        if (!text.contains('Acquire::https::Verify-Peer "false"') ||
+                !text.contains('rm -f /etc/apt/apt.conf.d/49bootstrap-no-verify-peer')) {
+            violations << 'Dockerfile must remove the temporary HTTPS peer verification bootstrap override before the main apt install'
+        }
+        if (!(text =~ /\bapt-get install -y --no-install-recommends\b/)) {
+            violations << 'Dockerfile apt installs must use --no-install-recommends'
+        }
+        if (text =~ /\bapt(-get)?\s+(dist-)?upgrade\b/) {
+            violations << 'Dockerfile must not run apt upgrade or dist-upgrade'
+        }
+        if (!text.contains('rm -rf /var/lib/apt/lists/*')) {
+            violations << 'Dockerfile must remove apt package lists after installation'
+        }
+
+        [
+                'LANG=C.UTF-8',
+                'LC_ALL=C.UTF-8',
+                'TZ=UTC',
+                'SOURCE_DATE_EPOCH=0',
+                'HOME=/tmp/bisq-home',
+                'GRADLE_USER_HOME=/tmp/bisq-home/.gradle'
+        ].each { expectedText ->
+            if (!text.contains(expectedText)) {
+                violations << "Dockerfile must set ${expectedText}"
+            }
+        }
+
+        [
+                'binutils',
+                'coreutils',
+                'cpio',
+                'dpkg',
+                'dpkg-dev',
+                'fakeroot',
+                'file',
+                'git',
+                'gnupg',
+                'gzip',
+                'rpm',
+                'tar',
+                'unzip',
+                'xz-utils',
+                'zip'
+        ].each { packageName ->
+            if (!(text =~ /(?m)^\s*${java.util.regex.Pattern.quote(packageName)}\s*;?\s*\\?$/)) {
+                violations << "Dockerfile must install ${packageName}"
+            }
+        }
+
+        if (!trimmedLines.contains('CMD ["./gradlew", "verifyReleaseBuild"]')) {
+            violations << 'Dockerfile default command must run ./gradlew verifyReleaseBuild'
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("Linux release-builder image verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified Linux release-builder Dockerfile: ${rootProject.relativePath(dockerfile)}")
+    }
+}
+
+tasks.register('verifyGithubActionsSecurity') {
+    group = 'verification'
+    description = 'Verifies GitHub Actions workflows use pinned actions and non-floating build environments.'
+
+    def workflowFiles = fileTree('.github/workflows') {
+        include '*.yml'
+        include '*.yaml'
+    }
+
+    inputs.files(workflowFiles)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def violations = []
+        workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
+            def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
+            lines.eachWithIndex { line, index ->
+                def lineNumber = index + 1
+                def usesMatcher = line =~ /^\s*-?\s*uses:\s*([^#\s]+)/
+                if (usesMatcher.find()) {
+                    def actionRef = usesMatcher.group(1)
+                    if (!actionRef.startsWith('./')) {
+                        def atIndex = actionRef.lastIndexOf('@')
+                        def ref = atIndex >= 0 ? actionRef.substring(atIndex + 1) : ''
+                        if (!(ref ==~ /[0-9a-fA-F]{40}/)) {
+                            violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses '${actionRef}' without a full 40-character commit SHA"
+                        }
+                    }
+
+                    if (actionRef.startsWith('actions/checkout@')) {
+                        def checkoutStepLines = []
+                        for (int nextLineIndex = index + 1; nextLineIndex < lines.size(); nextLineIndex++) {
+                            def nextLine = lines[nextLineIndex]
+                            if (nextLine ==~ /^\s*-\s+(name|uses):\s+.*/) {
+                                break
+                            }
+                            checkoutStepLines << nextLine
+                        }
+
+                        if (!checkoutStepLines.any { it ==~ /^\s*persist-credentials:\s*false\s*$/ }) {
+                            violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses actions/checkout without persist-credentials: false"
+                        }
+                    }
+                }
+
+                if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
+                }
+
+                if (line ==~ /^\s*java-version:\s*['"]?\d+['"]?\s*$/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
+                }
+
+                if (line ==~ /^\s*java:\s*\[\s*['"]?\d+['"]?\s*\]\s*$/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
+                }
+
+                if (line ==~ /^\s*check-latest:\s*true\s*$/) {
+                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} sets check-latest: true"
+                }
+            }
+        }
+
+        def releaseBuilderWorkflowFile = linuxReleaseBuilderWorkflow.asFile
+        if (!releaseBuilderWorkflowFile.file) {
+            violations << "Missing Linux release-builder workflow: ${rootProject.relativePath(releaseBuilderWorkflowFile)}"
+        } else {
+            def releaseBuilderWorkflowText = releaseBuilderWorkflowFile.getText(StandardCharsets.UTF_8.name())
+            def releaseBuilderWorkflowLines = releaseBuilderWorkflowFile.readLines(StandardCharsets.UTF_8.name())
+            def releaseBuilderWorkflowPath = rootProject.relativePath(releaseBuilderWorkflowFile)
+            [
+                    'name: Linux Release Builder',
+                    '  workflow_dispatch:',
+                    'runs-on: ubuntu-24.04',
+                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux',
+                    'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
+                    'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
+                    'git -C build/release-builder-worktrees/a submodule update --init --recursive',
+                    'git -C build/release-builder-worktrees/b submodule update --init --recursive',
+                    '-v "$PWD/.git:$PWD/.git"',
+                    '-v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a"',
+                    '-v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b"',
+                    '-v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro"',
+                    '-w "$PWD/build/release-builder-worktrees/a"',
+                    '-w "$PWD/build/release-builder-worktrees/b"',
+                    './gradlew compareReleaseEvidenceBundles \\',
+                    './gradlew compareInstallerEvidenceBundles \\',
+                    '-PleftReleaseEvidence=build/reports/release/release-evidence.zip \\',
+                    '-PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"',
+                    '-PleftInstallerEvidence=build/reports/release/installer-evidence.zip \\',
+                    '-PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"',
+                    'release-builder-linux-java-21.0.6',
+                    'release-builder-linux-installers-java-21.0.6',
+                    'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
+                    'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
+                    'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',
+                    'build/release-builder-worktrees/a/build/reports/release/installer-structure/**'
+            ].each { requiredText ->
+                if (!releaseBuilderWorkflowText.contains(requiredText)) {
+                    violations << "${releaseBuilderWorkflowPath} must contain '${requiredText}'"
+                }
+            }
+            if (releaseBuilderWorkflowText.contains('-v "$PWD:$PWD"') ||
+                    releaseBuilderWorkflowText.contains('-v "$PWD:/workspace"')) {
+                violations << "${releaseBuilderWorkflowPath} must not mount the full checkout into release-builder containers"
+            }
+
+            def cleanEvidenceRuns = releaseBuilderWorkflowLines.count {
+                it.trim() == './gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle'
+            }
+            if (cleanEvidenceRuns < 2) {
+                violations << "${releaseBuilderWorkflowPath} must run clean verifyReleaseBuild verifyInstallerEvidenceBundle in both release-builder worktrees"
+            }
+        }
+
+        [
+                (linuxReleaseBuilderWorkflow.asFile): [
+                        'group: release-builder-${{ github.ref }}',
+                        'cancel-in-progress: false'
+                ],
+                (installerEvidenceWorkflow.asFile)  : [
+                        'group: installer-evidence-${{ github.ref }}',
+                        'cancel-in-progress: false'
+                ]
+        ].each { workflowFile, requiredTexts ->
+            if (!workflowFile.file) {
+                violations << "Missing workflow: ${rootProject.relativePath(workflowFile)}"
+            } else {
+                def workflowText = workflowFile.getText(StandardCharsets.UTF_8.name())
+                def workflowPath = rootProject.relativePath(workflowFile)
+                requiredTexts.each { requiredText ->
+                    if (!workflowText.contains(requiredText)) {
+                        violations << "${workflowPath} must contain '${requiredText}'"
+                    }
+                }
+            }
+        }
+
+        if (!violations.empty) {
+            throw new GradleException("GitHub Actions security verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
+        }
+
+        logger.lifecycle("Verified ${workflowFiles.files.size()} GitHub Actions workflow files.")
+    }
+}
+
+tasks.register('generateJarHashes') {
+    group = 'verification'
+    description = 'Builds all project Jar task outputs and writes a canonical SHA-256 and size manifest.'
+
+    def jarTasks = provider {
+        enabledJarTasks()
+    }
+
+    dependsOn { jarTasks.get() }
+    inputs.files(provider {
+        jarTasks.get()
+                .collect { jarTask -> jarTask.archiveFile.get().asFile }
+                .findAll { it.exists() }
+    })
+
+    def outputFile = layout.buildDirectory.file('reports/checksums/jars.sha256')
+    outputs.file(outputFile)
+
+    doLast {
+        def lines = jarTasks.get()
+                .collect { jarTask -> jarTask.archiveFile.get().asFile }
+                .findAll { it.exists() }
+                .collect { jarFile ->
+                    def path = canonicalPath(jarFile)
+                    [
+                            path: path,
+                            line: "${sha256(jarFile)}  ${jarFile.length()}  ${path}"
+                    ]
+                }
+                .sort { left, right -> left.path <=> right.path }
+                .collect { it.line }
+
+        def output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.setText(lines.join('\n') + '\n', StandardCharsets.UTF_8.name())
+
+        logger.lifecycle("Wrote ${lines.size()} jar checksums to ${rootProject.relativePath(output)}")
+    }
+}
+
+tasks.register('generateReleaseManifest') {
+    group = 'verification'
+    description = 'Builds the desktop Java payload and writes canonical SHA-256 release manifests.'
+
+    def desktopInstallDist = project(':desktop').tasks.named('installDist')
+    def jarTasks = provider {
+        enabledJarTasks()
+    }
+    def desktopLibDir = project(':desktop').layout.buildDirectory.dir('install/desktop/lib')
+
+    dependsOn tasks.named('generateJarHashes')
+    dependsOn desktopInstallDist
+
+    inputs.files(provider {
+        def jarFiles = jarTasks.get()
+                .collect { jarTask -> jarTask.archiveFile.get().asFile }
+                .findAll { it.exists() }
+        def libDir = desktopLibDir.get().asFile
+        def desktopPayloadFiles = libDir.exists()
+                ? libDir.listFiles().findAll { it.isFile() }
+                : []
+        jarFiles + desktopPayloadFiles
+    })
+
+    outputs.file(releaseSha256SumsFile)
+    outputs.file(releaseManifestFile)
+    outputs.file(releaseBuildInfoFile)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def jarFiles = jarTasks.get()
+                .collect { jarTask -> jarTask.archiveFile.get().asFile }
+                .findAll { it.exists() }
+        def libDir = desktopLibDir.get().asFile
+        if (!libDir.directory) {
+            throw new GradleException("Missing desktop Java payload directory: ${libDir}")
+        }
+
+        def desktopPayloadFiles = libDir.listFiles().findAll { it.isFile() }
+        def entries = manifestEntriesFor(jarFiles + desktopPayloadFiles)
+
+        def sha256Sums = releaseSha256SumsFile.get().asFile
+        sha256Sums.parentFile.mkdirs()
+        sha256Sums.setText(
+                entries.collect { "${it.sha256}  ${it.path}" }.join('\n') + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
+        def releaseManifest = releaseManifestFile.get().asFile
+        releaseManifest.setText(
+                (['sha256\tsize_bytes\tpath'] +
+                        entries.collect { "${it.sha256}\t${it.size}\t${it.path}" }).join('\n') + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
+        def buildInfoFile = releaseBuildInfoFile.get().asFile
+        writeBuildInfo(buildInfoFile, buildInfoForManifest(entries, releaseManifest, sha256Sums))
+
+        logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${rootProject.relativePath(releaseManifest)}")
+        logger.lifecycle("Wrote ${entries.size()} release checksums to ${rootProject.relativePath(sha256Sums)}")
+        logger.lifecycle("Wrote release build info to ${rootProject.relativePath(buildInfoFile)}")
+    }
+}
+
+tasks.register('generateReleaseEvidenceBundle', Zip) {
+    group = 'verification'
+    description = 'Packages release manifest evidence into one reproducible ZIP for signing and publishing.'
+
+    dependsOn tasks.named('generateReleaseManifest')
+
+    archiveFileName = 'release-evidence.zip'
+    destinationDirectory = releaseReportDir
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+
+    from(releaseManifestFile)
+    from(releaseSha256SumsFile)
+    from(releaseBuildInfoFile)
+    from(layout.buildDirectory.file('reports/checksums/jars.sha256')) {
+        into 'checksums'
+    }
+
+    doLast {
+        def bundle = archiveFile.get().asFile
+        logger.lifecycle("Wrote release evidence bundle to ${rootProject.relativePath(bundle)}")
+        logger.lifecycle("Release evidence bundle SHA-256: ${sha256(bundle)}")
+    }
+}
+
+tasks.register('verifyReleaseEvidenceBundle') {
+    group = 'verification'
+    description = 'Verifies that the generated release evidence ZIP contains the required evidence files.'
+
+    dependsOn tasks.named('generateReleaseEvidenceBundle')
+    inputs.file(releaseEvidenceBundleFile)
+            .withPropertyName('releaseEvidenceBundle')
+
+    doLast {
+        def bundle = releaseEvidenceBundleFile.get().asFile
+        def validation = validateReleaseEvidenceBundle(bundle)
+        logger.lifecycle(
+                "Verified release evidence bundle ${rootProject.relativePath(bundle)} " +
+                        "with ${validation.entryCount} entries."
+        )
+    }
+}
+
+tasks.register('generateInstallerManifest') {
+    group = 'verification'
+    description = 'Builds desktop OS installer artifacts and writes canonical SHA-256 installer manifests.'
+
+    def desktopGenerateInstallers = project(':desktop').tasks.named('generateInstallers')
+    def desktopInstallerDir = project(':desktop').layout.buildDirectory.dir('packaging')
+
+    dependsOn tasks.named('verifyReleaseEnvironment')
+    dependsOn desktopGenerateInstallers
+
+    inputs.files(provider {
+        installerArtifactsIn(desktopInstallerDir.get().asFile)
+    })
+            .withPropertyName('installerArtifacts')
+            .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+    outputs.file(installerSha256SumsFile)
+    outputs.file(installerManifestFile)
+    outputs.file(installerBuildInfoFile)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def installerDir = desktopInstallerDir.get().asFile
+        if (!installerDir.directory) {
+            throw new GradleException("Missing desktop installer directory: ${installerDir}")
+        }
+
+        def installerFiles = installerArtifactsIn(installerDir)
+        if (installerFiles.empty) {
+            throw new GradleException(
+                    "No installer artifacts found in ${installerDir}. Expected one of: ${installerArtifactIncludes.join(', ')}"
+            )
+        }
+
+        def actualExtensions = installerFiles.collect { installerFile ->
+            installerFile.name.contains('.')
+                    ? installerFile.name.substring(installerFile.name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                    : ''
+        } as Set
+        def missingExpectedExtensions = expectedInstallerArtifactExtensions().findAll { !actualExtensions.contains(it) }
+        if (!missingExpectedExtensions.empty) {
+            throw new GradleException(
+                    "Missing expected installer artifact(s) for ${System.getProperty('os.name')}: " +
+                            missingExpectedExtensions.collect { ".${it}" }.join(', ') +
+                            ". Found: " + actualExtensions.findAll { it }.sort().collect { ".${it}" }.join(', ')
+            )
+        }
+
+        def entries = manifestEntriesFor(installerFiles)
+
+        def sha256Sums = installerSha256SumsFile.get().asFile
+        sha256Sums.parentFile.mkdirs()
+        sha256Sums.setText(
+                entries.collect { "${it.sha256}  ${it.path}" }.join('\n') + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
+        def installerManifest = installerManifestFile.get().asFile
+        installerManifest.setText(
+                (['sha256\tsize_bytes\tpath'] +
+                        entries.collect { "${it.sha256}\t${it.size}\t${it.path}" }).join('\n') + '\n',
+                StandardCharsets.UTF_8.name()
+        )
+
+        def buildInfoFile = installerBuildInfoFile.get().asFile
+        writeBuildInfo(buildInfoFile, buildInfoForManifest(entries, installerManifest, sha256Sums))
+
+        logger.lifecycle("Wrote ${entries.size()} installer manifest entries to ${rootProject.relativePath(installerManifest)}")
+        logger.lifecycle("Wrote ${entries.size()} installer checksums to ${rootProject.relativePath(sha256Sums)}")
+        logger.lifecycle("Wrote installer build info to ${rootProject.relativePath(buildInfoFile)}")
+    }
+}
+
+tasks.register('generateInstallerStructureReport') {
+    group = 'verification'
+    description = 'Writes investigation reports for installer package internals where local tools are available.'
+
+    def desktopInstallerDir = project(':desktop').layout.buildDirectory.dir('packaging')
+
+    dependsOn tasks.named('generateInstallerManifest')
+
+    inputs.files(provider {
+        installerArtifactsIn(desktopInstallerDir.get().asFile)
+    })
+            .withPropertyName('installerArtifacts')
+            .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+    outputs.file(installerStructureReportFile)
+    outputs.file(installerStructureSummaryFile)
+    outputs.dir(installerStructureReportDir)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def installerFiles = installerArtifactsIn(desktopInstallerDir.get().asFile)
+        def reportDir = installerStructureReportDir.get().asFile
+        project.delete(reportDir)
+        reportDir.mkdirs()
+        def normalizeReportOutput = { String value ->
+            value == null ? null : value.replace(rootProject.projectDir.absolutePath, '<repo>')
+        }
+        def powershellSingleQuoted = { String value ->
+            "'${value.replace("'", "''")}'"
+        }
+        def shellSingleQuoted = { String value ->
+            "'${value.replace("'", "'\"'\"'")}'"
+        }
+        def powershellExecutable = 'powershell'
+        def powershellInstallerMetadataCommand = { File file ->
+            def literalPath = powershellSingleQuoted(file.absolutePath)
+            [
+                    powershellExecutable,
+                    '-NoProfile',
+                    '-ExecutionPolicy',
+                    'Bypass',
+                    '-Command',
+                    "\$item = Get-Item -LiteralPath ${literalPath}; \$item | Select-Object FullName,Length,CreationTimeUtc,LastWriteTimeUtc,Attributes | Format-List *; \$item.VersionInfo | Format-List *; Get-AuthenticodeSignature -LiteralPath ${literalPath} | Format-List *"
+            ]
+        }
+        def powershellMsiPropertiesCommand = { File file ->
+            def literalPath = powershellSingleQuoted(file.absolutePath)
+            [
+                    powershellExecutable,
+                    '-NoProfile',
+                    '-ExecutionPolicy',
+                    'Bypass',
+                    '-Command',
+                    "\$path = ${literalPath}; \$installer = New-Object -ComObject WindowsInstaller.Installer; \$database = \$installer.OpenDatabase(\$path, 0); \$view = \$database.OpenView('SELECT `Property`, `Value` FROM `Property` ORDER BY `Property`'); \$view.Execute(); while (\$record = \$view.Fetch()) { '{0}={1}' -f \$record.StringData(1), \$record.StringData(2) }"
+            ]
+        }
+        def powershellPeHeaderCommand = { File file ->
+            def literalPath = powershellSingleQuoted(file.absolutePath)
+            [
+                    powershellExecutable,
+                    '-NoProfile',
+                    '-ExecutionPolicy',
+                    'Bypass',
+                    '-Command',
+                    "\$bytes = [System.IO.File]::ReadAllBytes(${literalPath}); if (\$bytes.Length -lt 64) { throw 'File is too small to contain a PE header.' }; \$peOffset = [BitConverter]::ToInt32(\$bytes, 0x3c); if (\$peOffset -lt 0 -or \$peOffset + 24 -gt \$bytes.Length) { throw \"Invalid PE header offset: \$peOffset\" }; \$signature = [System.Text.Encoding]::ASCII.GetString(\$bytes, \$peOffset, 4); \$machine = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 4); \$sections = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 6); \$timestamp = [BitConverter]::ToUInt32(\$bytes, \$peOffset + 8); \$optionalHeaderSize = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 20); \$characteristics = [BitConverter]::ToUInt16(\$bytes, \$peOffset + 22); [PSCustomObject]@{ PEHeaderOffset = \$peOffset; Signature = \$signature; Machine = ('0x{0:X4}' -f \$machine); NumberOfSections = \$sections; TimeDateStamp = \$timestamp; TimeDateStampUtc = [DateTimeOffset]::FromUnixTimeSeconds([int64]\$timestamp).UtcDateTime.ToString('o'); SizeOfOptionalHeader = \$optionalHeaderSize; Characteristics = ('0x{0:X4}' -f \$characteristics) } | Format-List *"
+            ]
+        }
+        def osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+        def macos = osName.contains('mac')
+        def windows = osName.contains('windows')
+        if (windows) {
+            def windowsPowerShell = execResult(['powershell', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()'])
+            if (windowsPowerShell.exitValue != 0) {
+                def powerShellCore = execResult(['pwsh', '-NoProfile', '-Command', '$PSVersionTable.PSVersion.ToString()'])
+                if (powerShellCore.exitValue == 0) {
+                    powershellExecutable = 'pwsh'
+                }
+            }
+        }
+
+        def rows = ['artifact_path\tartifact_sha256\tformat\tstatus\treport_path\tmessage']
+        def summaryRows = []
+        installerFiles.each { installerFile ->
+            def artifactPath = canonicalPath(installerFile)
+            def extension = installerFile.name.contains('.')
+                    ? installerFile.name.substring(installerFile.name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT)
+                    : ''
+            def reportName = artifactPath.replaceAll(/[^A-Za-z0-9._-]/, '_') + '.txt'
+            def reportFile = new File(reportDir, reportName)
+            def commands = [[label: 'File type', command: ['file', installerFile.absolutePath], optional: true]]
+            def message = ''
+
+            if (extension == 'deb') {
+                def debPath = shellSingleQuoted(installerFile.absolutePath)
+                def debTarListingCommand = { String dpkgDebOption ->
+                    [
+                            'sh',
+                            '-c',
+                            "dpkg-deb ${dpkgDebOption} ${debPath} | tar --list --verbose --full-time --numeric-owner --file -"
+                    ]
+                }
+                def debArchiveMemberHashesCommand = [
+                        'sh',
+                        '-c',
+                        "ar t ${debPath} | while IFS= read -r member; do printf '%s  ' \"\$member\"; ar p ${debPath} \"\$member\" | sha256sum | cut -d ' ' -f 1; done"
+                ]
+                commands << [label: 'Debian archive members', command: ['ar', 'tv', installerFile.absolutePath]]
+                commands << [label: 'Debian archive member hashes', command: debArchiveMemberHashesCommand]
+                commands << [label: 'Debian package fields', command: ['dpkg-deb', '--field', installerFile.absolutePath]]
+                commands << [label: 'Debian package contents', command: ['dpkg-deb', '--contents', installerFile.absolutePath]]
+                commands << [label: 'Debian control archive contents', command: debTarListingCommand('--ctrl-tarfile')]
+                commands << [label: 'Debian data archive contents', command: debTarListingCommand('--fsys-tarfile')]
+            } else if (extension == 'rpm') {
+                commands << [label: 'RPM package checks', command: ['rpm', '-Kv', installerFile.absolutePath], optional: true]
+                commands << [label: 'RPM package info', command: ['rpm', '-qip', installerFile.absolutePath]]
+                commands << [
+                        label   : 'RPM payload archive contents',
+                        command : ['sh', '-c', "rpm2cpio ${shellSingleQuoted(installerFile.absolutePath)} | cpio --list --verbose --numeric-uid-gid"],
+                        optional: true
+                ]
+                commands << [
+                        label  : 'RPM build metadata',
+                        command: [
+                                'rpm',
+                                '-qp',
+                                '--queryformat',
+                                'Name: %{NAME}\nVersion: %{VERSION}\nRelease: %{RELEASE}\nArchitecture: %{ARCH}\nBuild time: %{BUILDTIME:date}\nBuild host: %{BUILDHOST}\nSource RPM: %{SOURCERPM}\nPayload compressor: %{PAYLOADCOMPRESSOR}\nPayload flags: %{PAYLOADFLAGS}\n',
+                                installerFile.absolutePath
+                        ]
+                ]
+                commands << [label: 'RPM package dump', command: ['rpm', '-qp', '--dump', installerFile.absolutePath]]
+            } else if (extension == 'dmg' && macos) {
+                commands << [label: 'DMG image info', command: ['hdiutil', 'imageinfo', installerFile.absolutePath]]
+                commands << [label: 'DMG partition map', command: ['hdiutil', 'pmap', installerFile.absolutePath]]
+                commands << [label: 'DMG image verification', command: ['hdiutil', 'verify', installerFile.absolutePath]]
+                commands << [label: 'DMG SHA-256 checksum', command: ['hdiutil', 'checksum', '-type', 'SHA256', installerFile.absolutePath]]
+            } else if (extension == 'pkg' && macos) {
+                commands << [label: 'macOS package signature', command: ['pkgutil', '--check-signature', installerFile.absolutePath]]
+                commands << [label: 'macOS package payload files', command: ['pkgutil', '--payload-files', installerFile.absolutePath]]
+                commands << [label: 'macOS package archive members', command: ['xar', '-tf', installerFile.absolutePath], optional: true]
+            } else if ((extension == 'exe' || extension == 'msi') && windows) {
+                commands << [label: 'Windows installer metadata', command: powershellInstallerMetadataCommand(installerFile)]
+                if (extension == 'exe') {
+                    commands << [label: 'Windows PE header', command: powershellPeHeaderCommand(installerFile), optional: true]
+                }
+                if (extension == 'msi') {
+                    commands << [label: 'Windows MSI properties', command: powershellMsiPropertiesCommand(installerFile), optional: true]
+                }
+            } else {
+                message = "No installer structure inspector is configured for .${extension ?: 'unknown'} artifacts."
+            }
+
+            def status = 'skipped'
+            def requiredFailures = []
+            def optionalFailures = []
+            def requiredCommands = []
+            def optionalCommands = []
+            if (!commands.empty) {
+                def report = new StringBuilder()
+                report << "artifact: ${artifactPath}\n"
+                report << "sha256: ${sha256(installerFile)}\n"
+                report << "format: ${extension}\n"
+                requiredCommands = commands.findAll { !it.optional }
+                optionalCommands = commands.findAll { it.optional }
+
+                commands.each { commandSpec ->
+                    def displayCommand = commandSpec.command.collect {
+                        normalizeReportOutput(it == installerFile.absolutePath ? artifactPath : it)
+                    }
+                    def result = execResult(commandSpec.command)
+                    report << "\n## ${commandSpec.label}\n\n"
+                    report << "command: ${displayCommand.join(' ')}\n"
+                    report << "exitValue: ${result.exitValue == null ? 'not-run' : result.exitValue}\n"
+                    if (result.stdout) {
+                        report << "\nstdout:\n${normalizeReportOutput(result.stdout)}\n"
+                    }
+                    if (result.stderr) {
+                        report << "\nstderr:\n${normalizeReportOutput(result.stderr)}\n"
+                    }
+                    if (result.exitValue != 0) {
+                        if (commandSpec.optional) {
+                            optionalFailures << commandSpec.label
+                        } else {
+                            requiredFailures << commandSpec.label
+                        }
+                    }
+                }
+
+                reportFile.setText(report.toString(), StandardCharsets.UTF_8.name())
+                if (!requiredCommands.empty) {
+                    status = requiredFailures.empty ? 'generated' : 'failed'
+                    message = requiredFailures.empty ? '' : "Inspector command failed: ${requiredFailures.join(', ')}"
+                }
+            }
+
+            def reportPath = reportFile.file ? canonicalPath(reportFile) : ''
+            rows << [artifactPath, sha256(installerFile), extension, status, reportPath, message]
+                    .collect { it.replace('\t', ' ').replace('\n', ' ') }
+                    .join('\t')
+            summaryRows << [
+                    artifactPath         : artifactPath,
+                    format               : extension,
+                    status               : status,
+                    reportPath           : reportPath,
+                    message              : message,
+                    requiredCommandCount : requiredCommands.size(),
+                    optionalCommandCount : optionalCommands.size(),
+                    requiredFailures     : requiredFailures,
+                    optionalFailures     : optionalFailures
+            ]
+        }
+
+        def structureReport = installerStructureReportFile.get().asFile
+        structureReport.parentFile.mkdirs()
+        structureReport.setText(rows.join('\n') + '\n', StandardCharsets.UTF_8.name())
+
+        def statusCounts = summaryRows.countBy { it.status }
+        def requiredFailureRows = summaryRows.findAll { !it.requiredFailures.empty }
+        def optionalFailureRows = summaryRows.findAll { !it.optionalFailures.empty }
+        def summary = new StringBuilder()
+        summary << "Installer structure summary\n"
+        summary << "artifact_count: ${summaryRows.size()}\n"
+        summary << "generated_count: ${statusCounts.generated ?: 0}\n"
+        summary << "failed_count: ${statusCounts.failed ?: 0}\n"
+        summary << "skipped_count: ${statusCounts.skipped ?: 0}\n"
+        summary << "required_failure_count: ${requiredFailureRows.sum { it.requiredFailures.size() } ?: 0}\n"
+        summary << "optional_failure_count: ${optionalFailureRows.sum { it.optionalFailures.size() } ?: 0}\n"
+        summary << "\nArtifacts\n"
+        summaryRows.each { row ->
+            summary << "\n${row.artifactPath}\n"
+            summary << "  format: ${row.format ?: 'unknown'}\n"
+            summary << "  status: ${row.status}\n"
+            summary << "  report_path: ${row.reportPath ?: 'none'}\n"
+            summary << "  required_inspectors: ${row.requiredCommandCount}\n"
+            summary << "  optional_inspectors: ${row.optionalCommandCount}\n"
+            summary << "  required_failures: ${row.requiredFailures.empty ? 'none' : row.requiredFailures.join(', ')}\n"
+            summary << "  optional_failures: ${row.optionalFailures.empty ? 'none' : row.optionalFailures.join(', ')}\n"
+            if (row.message) {
+                summary << "  message: ${row.message}\n"
+            }
+        }
+
+        def structureSummary = installerStructureSummaryFile.get().asFile
+        structureSummary.setText(summary.toString(), StandardCharsets.UTF_8.name())
+
+        logger.lifecycle("Wrote installer structure report to ${rootProject.relativePath(structureReport)}")
+        logger.lifecycle("Wrote installer structure summary to ${rootProject.relativePath(structureSummary)}")
+    }
+}
+
+tasks.register('generateInstallerEvidenceBundle', Zip) {
+    group = 'verification'
+    description = 'Packages installer manifest evidence into one reproducible ZIP for signing and publishing.'
+
+    dependsOn tasks.named('generateInstallerStructureReport')
+
+    def requiredEvidenceFiles = [
+            installerManifestFile,
+            installerSha256SumsFile,
+            installerBuildInfoFile,
+            installerStructureSummaryFile,
+            installerStructureReportFile
+    ]
+    def structureReportFiles = {
+        def structureReport = installerStructureReportFile.get().asFile
+        if (!structureReport.file) {
+            return []
+        }
+        structureReport.readLines(StandardCharsets.UTF_8.name())
+                .drop(1)
+                .collect { it.split('\t', -1) }
+                .findAll { columns -> columns.length >= 5 && columns[4] }
+                .collect { columns -> file(columns[4]) }
+    }
+    def structureDirectoryFiles = {
+        def structureDir = installerStructureReportDir.get().asFile
+        structureDir.directory
+                ? fileTree(structureDir).files
+                .findAll { it.file }
+                .sort { left, right -> left.path <=> right.path }
+                : []
+    }
+
+    archiveFileName = 'installer-evidence.zip'
+    destinationDirectory = releaseReportDir
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+
+    from(installerManifestFile)
+    from(installerSha256SumsFile)
+    from(installerBuildInfoFile)
+    from(installerStructureSummaryFile)
+    from(installerStructureReportFile)
+    from(installerStructureReportDir) {
+        into 'installer-structure'
+    }
+
+    doFirst {
+        def missingFiles = []
+        requiredEvidenceFiles.each { provider ->
+            def requiredFile = provider.get().asFile
+            if (!requiredFile.file) {
+                missingFiles << canonicalPath(requiredFile)
+            }
+        }
+
+        def structureDir = installerStructureReportDir.get().asFile
+        if (!structureDir.directory) {
+            missingFiles << canonicalPath(structureDir)
+        }
+
+        if (missingFiles.empty) {
+            structureReportFiles().each { reportFile ->
+                if (!reportFile.file) {
+                    missingFiles << canonicalPath(reportFile)
+                }
+            }
+        }
+
+        if (!missingFiles.empty) {
+            throw new GradleException(
+                    "Cannot package installer evidence because required files are missing:\n" +
+                            missingFiles.unique().sort().collect { "  - ${it}" }.join('\n') +
+                            "\nRun ./gradlew generateInstallerStructureReport to regenerate installer evidence."
+            )
+        }
+    }
+
+    doLast {
+        def bundle = archiveFile.get().asFile
+        def expectedEntries = new TreeSet<String>()
+        requiredEvidenceFiles.each { provider ->
+            expectedEntries << provider.get().asFile.name
+        }
+        def structureDir = installerStructureReportDir.get().asFile
+        structureDirectoryFiles().each { reportFile ->
+            def relativeStructurePath = structureDir.toPath()
+                    .relativize(reportFile.toPath())
+                    .toString()
+                    .replace(File.separatorChar, '/' as char)
+            expectedEntries << "installer-structure/${relativeStructurePath}".toString()
+        }
+
+        def actualEntries = new TreeSet<String>()
+        new ZipFile(bundle).withCloseable { zipFile ->
+            zipFile.entries().each { entry ->
+                if (!entry.directory) {
+                    actualEntries << entry.name
+                }
+            }
+        }
+        def missingEntries = (expectedEntries - actualEntries).sort()
+        if (!missingEntries.empty) {
+            throw new GradleException(
+                    "Installer evidence bundle is missing required entries:\n" +
+                            missingEntries.collect { "  - ${it}" }.join('\n')
+            )
+        }
+
+        logger.lifecycle("Wrote installer evidence bundle to ${rootProject.relativePath(bundle)}")
+        logger.lifecycle("Installer evidence bundle SHA-256: ${sha256(bundle)}")
+    }
+}
+
+tasks.register('verifyInstallerEvidenceBundle') {
+    group = 'verification'
+    description = 'Verifies that the generated installer evidence ZIP contains the required evidence files.'
+
+    dependsOn tasks.named('generateInstallerEvidenceBundle')
+    inputs.file(installerEvidenceBundleFile)
+            .withPropertyName('installerEvidenceBundle')
+
+    doLast {
+        def bundle = installerEvidenceBundleFile.get().asFile
+        def validation = validateInstallerEvidenceBundle(bundle)
+        logger.lifecycle(
+                "Verified installer evidence bundle ${rootProject.relativePath(bundle)} " +
+                        "with ${validation.entryCount} entries and " +
+                        "${validation.referencedStructureEntryCount} referenced structure reports."
+        )
+    }
+}
+
+tasks.register('compareReleaseEvidenceBundles') {
+    group = 'verification'
+    description = 'Compares two release evidence ZIPs or extracted evidence directories.'
+
+    def leftReleaseEvidenceProperty = providers.gradleProperty('leftReleaseEvidence')
+    def rightReleaseEvidenceProperty = providers.gradleProperty('rightReleaseEvidence')
+
+    inputs.property('leftReleaseEvidence', leftReleaseEvidenceProperty.orElse(''))
+    inputs.property('rightReleaseEvidence', rightReleaseEvidenceProperty.orElse(''))
+
+    doLast {
+        def leftReleaseEvidencePath = leftReleaseEvidenceProperty.orNull
+        def rightReleaseEvidencePath = rightReleaseEvidenceProperty.orNull
+        if (!leftReleaseEvidencePath || !rightReleaseEvidencePath) {
+            throw new GradleException(
+                    'Missing required -PleftReleaseEvidence=<release-evidence.zip-or-directory> ' +
+                            'and -PrightReleaseEvidence=<release-evidence.zip-or-directory>'
+            )
+        }
+
+        def leftEvidence = file(leftReleaseEvidencePath)
+        def rightEvidence = file(rightReleaseEvidencePath)
+        def leftManifest = resolveReleaseManifestFile(leftEvidence)
+        def rightManifest = resolveReleaseManifestFile(rightEvidence)
+        def leftEntries = readReleaseManifest(leftManifest)
+        def rightEntries = readReleaseManifest(rightManifest)
+        def leftPaths = leftEntries.keySet() as Set
+        def rightPaths = rightEntries.keySet() as Set
+        def missingFromRight = (leftPaths - rightPaths).sort()
+        def extraInRight = (rightPaths - leftPaths).sort()
+        def changedPaths = leftPaths.intersect(rightPaths)
+                .findAll { path ->
+                    leftEntries[path].sha256 != rightEntries[path].sha256 ||
+                            leftEntries[path].size != rightEntries[path].size
+                }
+                .sort()
+
+        if (missingFromRight.empty && extraInRight.empty && changedPaths.empty) {
+            logger.lifecycle("Release evidence manifests match: ${leftEvidence} and ${rightEvidence}")
+            return
+        }
+
+        def message = new StringBuilder()
+        message << "Release evidence comparison failed\n"
+        message << "left: ${leftEvidence}\n"
+        message << "right: ${rightEvidence}\n"
+
+        if (!changedPaths.empty) {
+            message << "\nChanged files:\n"
+            changedPaths.take(20).each { path ->
+                message << "  ${path}\n"
+                appendReleaseEvidenceArtifactDetails(message, 'left', leftEntries[path])
+                appendReleaseEvidenceArtifactDetails(message, 'right', rightEntries[path])
+            }
+            if (changedPaths.size() > 20) {
+                message << "  ... ${changedPaths.size() - 20} more\n"
+            }
+        }
+
+        if (!missingFromRight.empty) {
+            message << "\nOnly in left:\n"
+            missingFromRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendReleaseEvidenceArtifactDetails(message, 'left', leftEntries[path])
+            }
+            if (missingFromRight.size() > 20) {
+                message << "  ... ${missingFromRight.size() - 20} more\n"
+            }
+        }
+
+        if (!extraInRight.empty) {
+            message << "\nOnly in right:\n"
+            extraInRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendReleaseEvidenceArtifactDetails(message, 'right', rightEntries[path])
+            }
+            if (extraInRight.size() > 20) {
+                message << "  ... ${extraInRight.size() - 20} more\n"
+            }
+        }
+
+        throw new GradleException(message.toString())
+    }
+}
+
+tasks.register('compareInstallerEvidenceBundles') {
+    group = 'verification'
+    description = 'Compares two installer evidence ZIPs or extracted evidence directories.'
+
+    def leftInstallerEvidenceProperty = providers.gradleProperty('leftInstallerEvidence')
+    def rightInstallerEvidenceProperty = providers.gradleProperty('rightInstallerEvidence')
+
+    inputs.property('leftInstallerEvidence', leftInstallerEvidenceProperty.orElse(''))
+    inputs.property('rightInstallerEvidence', rightInstallerEvidenceProperty.orElse(''))
+
+    doLast {
+        def leftInstallerEvidencePath = leftInstallerEvidenceProperty.orNull
+        def rightInstallerEvidencePath = rightInstallerEvidenceProperty.orNull
+        if (!leftInstallerEvidencePath || !rightInstallerEvidencePath) {
+            throw new GradleException(
+                    'Missing required -PleftInstallerEvidence=<installer-evidence.zip-or-directory> ' +
+                            'and -PrightInstallerEvidence=<installer-evidence.zip-or-directory>'
+            )
+        }
+
+        def leftEvidence = file(leftInstallerEvidencePath)
+        def rightEvidence = file(rightInstallerEvidencePath)
+        def leftManifest = resolveInstallerManifestFile(leftEvidence)
+        def rightManifest = resolveInstallerManifestFile(rightEvidence)
+        def leftEntries = readReleaseManifest(leftManifest)
+        def rightEntries = readReleaseManifest(rightManifest)
+        def leftStructureRows = readInstallerStructureReportRows(leftEvidence)
+        def rightStructureRows = readInstallerStructureReportRows(rightEvidence)
+        def leftPaths = leftEntries.keySet() as Set
+        def rightPaths = rightEntries.keySet() as Set
+        def missingFromRight = (leftPaths - rightPaths).sort()
+        def extraInRight = (rightPaths - leftPaths).sort()
+        def changedPaths = leftPaths.intersect(rightPaths)
+                .findAll { path ->
+                    leftEntries[path].sha256 != rightEntries[path].sha256 ||
+                            leftEntries[path].size != rightEntries[path].size
+                }
+                .sort()
+
+        if (missingFromRight.empty && extraInRight.empty && changedPaths.empty) {
+            logger.lifecycle("Installer evidence manifests match: ${leftEvidence} and ${rightEvidence}")
+            return
+        }
+
+        def message = new StringBuilder()
+        message << "Installer evidence comparison failed\n"
+        message << "left: ${leftEvidence}\n"
+        message << "right: ${rightEvidence}\n"
+
+        if (!changedPaths.empty) {
+            message << "\nChanged artifacts:\n"
+            changedPaths.take(20).each { path ->
+                message << "  ${path}\n"
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'left',
+                        path,
+                        leftEntries[path],
+                        leftStructureRows[path],
+                        leftEvidence
+                )
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'right',
+                        path,
+                        rightEntries[path],
+                        rightStructureRows[path],
+                        rightEvidence
+                )
+            }
+            if (changedPaths.size() > 20) {
+                message << "  ... ${changedPaths.size() - 20} more\n"
+            }
+        }
+
+        if (!missingFromRight.empty) {
+            message << "\nOnly in left:\n"
+            missingFromRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'left',
+                        path,
+                        leftEntries[path],
+                        leftStructureRows[path],
+                        leftEvidence
+                )
+            }
+            if (missingFromRight.size() > 20) {
+                message << "  ... ${missingFromRight.size() - 20} more\n"
+            }
+        }
+
+        if (!extraInRight.empty) {
+            message << "\nOnly in right:\n"
+            extraInRight.take(20).each { path ->
+                message << "  ${path}\n"
+                appendInstallerEvidenceArtifactDetails(
+                        message,
+                        'right',
+                        path,
+                        rightEntries[path],
+                        rightStructureRows[path],
+                        rightEvidence
+                )
+            }
+            if (extraInRight.size() > 20) {
+                message << "  ... ${extraInRight.size() - 20} more\n"
+            }
+        }
+
+        throw new GradleException(message.toString())
+    }
+}
+
+tasks.register('verifyReleaseBuild') {
+    group = 'verification'
+    description = 'Runs the full Java release payload verification and writes release evidence.'
+
+    dependsOn tasks.named('verifyReleaseEnvironment')
+    dependsOn tasks.named('verifyGradleWrapperSecurity')
+    dependsOn tasks.named('verifyReleaseBuilderImage')
+    dependsOn tasks.named('verifyGithubActionsSecurity')
+    dependsOn tasks.named('verifyDependencySignaturePolicy')
+    dependsOn tasks.named('verifyReleaseEvidenceBundle')
+    dependsOn {
+        tasksNamedAcrossProjects('build') + tasksNamedAcrossProjects('verifyReproducibleArchives')
+    }
+
+    doLast {
+        logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseEvidenceBundleFile.get().asFile)}")
+    }
+}
+
+tasks.register('createReleaseJarTxt') {
+    group = 'distribution'
+    description = 'Creates Bisq-<version>.jar.txt from the four platform jar SHA-256 files.'
+
+    def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+    def releaseDirProperty = providers.gradleProperty('releaseDir')
+    def jarSha256Inputs = [
+            [property: 'macosX86_64JarSha256', label: 'macOS Intel'],
+            [property: 'macosAarch64JarSha256', label: 'macOS Apple Silicon'],
+            [property: 'linuxJarSha256', label: 'Linux'],
+            [property: 'windowsJarSha256', label: 'Windows']
+    ]
+
+    inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
+    inputs.property('releaseDir', releaseDirProperty.orElse(''))
+    jarSha256Inputs.each { inputSpec ->
+        inputs.property(inputSpec.property, providers.gradleProperty(inputSpec.property).orElse(''))
+    }
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def releaseVersion = normalizeReleaseVersion(releaseVersionProperty.orNull)
+        def rawReleaseDir = releaseDirProperty.orNull
+        if (rawReleaseDir == null || rawReleaseDir.trim().empty) {
+            throw new GradleException('Missing required -PreleaseDir=<directory>, for example -PreleaseDir=/Users/ben/Documents/v1.10.0')
+        }
+
+        def releaseDir = file(rawReleaseDir.trim())
+        if (!releaseDir.exists() && !releaseDir.mkdirs()) {
+            throw new GradleException("Could not create release directory: ${releaseDir}")
+        }
+        if (!releaseDir.directory) {
+            throw new GradleException("Release directory is not a directory: ${releaseDir}")
+        }
+
+        def sourceFiles = jarSha256Inputs.collect { inputSpec ->
+            def rawPath = providers.gradleProperty(inputSpec.property).orNull
+            if (rawPath == null || rawPath.trim().empty) {
+                throw new GradleException("Missing required -P${inputSpec.property}=<path> for the ${inputSpec.label} jar SHA-256 file.")
+            }
+
+            def sourceFile = file(rawPath.trim())
+            if (!sourceFile.file) {
+                throw new GradleException("Missing ${inputSpec.label} jar SHA-256 file: ${sourceFile}")
+            }
+            sourceFile
+        }
+
+        def outputFile = new File(releaseDir, "Bisq-${releaseVersion}.jar.txt")
+        outputFile.withOutputStream { output ->
+            sourceFiles.each { sourceFile ->
+                def bytes = sourceFile.bytes
+                output.write(bytes)
+                if (bytes.length == 0 || bytes[bytes.length - 1] != ((byte) 10)) {
+                    output.write('\n'.getBytes(StandardCharsets.UTF_8.name()))
+                }
+            }
+        }
+
+        logger.lifecycle("Wrote ${outputFile.absolutePath}")
+        logger.lifecycle("Aggregated jar checksum sources:")
+        sourceFiles.each { sourceFile ->
+            logger.lifecycle("  - ${sourceFile.absolutePath}")
+        }
+    }
+}
+
+tasks.register('signReleaseArtifacts') {
+    group = 'distribution'
+    description = 'Signs release binary artifacts and Bisq-<version>.jar.txt in -PreleaseDir with detached armored GPG signatures.'
+
+    def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+    def releaseDirProperty = providers.gradleProperty('releaseDir')
+    def gpgUserProperty = providers.gradleProperty('gpgUser')
+    def bisqGpgUserProperty = providers.gradleProperty('bisqGpgUser')
+    def bisqGpgUserEnvironment = providers.environmentVariable('BISQ_GPG_USER')
+    def gpgExecutableProperty = providers.gradleProperty('gpgExecutable')
+    def gpgExecutableEnvironment = providers.environmentVariable('GPG_EXECUTABLE')
+    def binaryExtensions = ['dmg', 'deb', 'rpm', 'exe', 'zip', 'pkg', 'msi', 'tar.gz', 'tgz']
+
+    inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
+    inputs.property('releaseDir', releaseDirProperty.orElse(''))
+    inputs.property('gpgUser', gpgUserProperty.orElse(bisqGpgUserProperty).orElse(bisqGpgUserEnvironment).orElse(''))
+    inputs.property('gpgExecutable', gpgExecutableProperty.orElse(gpgExecutableEnvironment).orElse(''))
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def releaseVersion = normalizeReleaseVersion(releaseVersionProperty.orNull)
+        def rawReleaseDir = releaseDirProperty.orNull
+        if (rawReleaseDir == null || rawReleaseDir.trim().empty) {
+            throw new GradleException('Missing required -PreleaseDir=<directory>, for example -PreleaseDir=/Users/ben/Documents/v1.10.0')
+        }
+
+        def gpgUser = gpgUserProperty.orNull ?:
+                bisqGpgUserProperty.orNull ?:
+                        bisqGpgUserEnvironment.orNull
+        if (gpgUser == null || gpgUser.trim().empty) {
+            throw new GradleException('Missing required -PgpgUser=<key-id-or-email>. You can also use -PbisqGpgUser=<key-id-or-email> or BISQ_GPG_USER.')
+        }
+        gpgUser = gpgUser.trim()
+
+        def releaseDir = file(rawReleaseDir.trim())
+        if (!releaseDir.directory) {
+            throw new GradleException("Release directory is not a directory: ${releaseDir}")
+        }
+
+        def jarTxtFileName = "Bisq-${releaseVersion}.jar.txt"
+        def jarTxtFile = new File(releaseDir, jarTxtFileName)
+        if (!jarTxtFile.file) {
+            throw new GradleException(
+                    "Missing ${jarTxtFileName} in ${releaseDir}. Create it with the createReleaseJarTxt task or desktop/package/macosx/finalize.sh before signing."
+            )
+        }
+
+        def releaseDirFiles = releaseDir.listFiles()
+        if (releaseDirFiles == null) {
+            throw new GradleException("Cannot list release directory: ${releaseDir}. Check that it is readable.")
+        }
+
+        def artifacts = releaseDirFiles
+                .findAll { candidate ->
+                    def signableFile = candidate.file &&
+                            !candidate.name.startsWith('.') &&
+                            !candidate.name.endsWith('.asc')
+                    def lowerName = candidate.name.toLowerCase(Locale.ROOT)
+                    signableFile &&
+                            (candidate.name == jarTxtFileName ||
+                                    binaryExtensions.any { extension -> lowerName.endsWith(".${extension}") })
+                }
+                .sort { left, right -> left.name <=> right.name }
+
+        if (artifacts.empty) {
+            throw new GradleException("No release artifacts found to sign in ${releaseDir}")
+        }
+
+        def gpgExecutable = resolveGpgExecutable()
+        def failureDetails = { result ->
+            [result.stderr, result.stdout]
+                    .findAll { it != null && !it.trim().empty }
+                    .join('\n')
+                    .trim()
+        }
+
+        logger.lifecycle("Signing ${artifacts.size()} release artifact(s) in ${releaseDir.absolutePath}")
+        artifacts.each { artifact ->
+            def signatureFile = new File(artifact.parentFile, "${artifact.name}.asc")
+            def signResult = execResult([
+                    gpgExecutable,
+                    '--yes',
+                    '--digest-algo', 'SHA256',
+                    '--local-user', gpgUser,
+                    '--output', signatureFile.absolutePath,
+                    '--detach-sig',
+                    '--armor',
+                    artifact.absolutePath
+            ])
+            if (signResult.exitValue != 0) {
+                throw new GradleException("Failed to sign ${artifact.name}: ${failureDetails(signResult)}")
+            }
+            if (!signatureFile.file || signatureFile.length() == 0) {
+                throw new GradleException("GPG did not create a non-empty signature file for ${artifact.name}: ${signatureFile}")
+            }
+
+            def verifyResult = execResult([
+                    gpgExecutable,
+                    '--verify',
+                    signatureFile.absolutePath,
+                    artifact.absolutePath
+            ])
+            if (verifyResult.exitValue != 0) {
+                throw new GradleException("Failed to verify ${signatureFile.name}: ${failureDetails(verifyResult)}")
+            }
+
+            logger.lifecycle("Signed and verified ${artifact.name} -> ${signatureFile.name}")
+        }
+    }
+}
+
+tasks.register('verifyGithubReleaseReadiness') {
+    group = 'verification'
+    description = 'Manually verifies GitHub release assets, Bisq download URLs, versions, and signer keys for -PreleaseVersion=<version>.'
+
+    def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+
+    inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
+    outputs.file(githubReleaseReadinessReportFile)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def rawReleaseVersion = releaseVersionProperty.orNull
+        if (rawReleaseVersion == null || rawReleaseVersion.trim().empty) {
+            throw new GradleException('Missing required -PreleaseVersion=<version>, for example -PreleaseVersion=1.10.0')
+        }
+
+        def releaseVersion = rawReleaseVersion.trim()
+        if (releaseVersion.startsWith('v')) {
+            releaseVersion = releaseVersion.substring(1)
+        }
+        if (!(releaseVersion ==~ /\d+\.\d+\.\d+([.-][A-Za-z0-9_.-]+)?/)) {
+            throw new GradleException("Invalid release version '${rawReleaseVersion}'. Expected a version such as 1.10.0 or v1.10.0.")
+        }
+
+        def releaseTag = "v${releaseVersion}".toString()
+        def results = []
+        def addResult = { String status, String name, String details ->
+            results << [
+                    status : status,
+                    name   : name,
+                    details: details ?: ''
+            ]
+        }
+        def pass = { String name, String details -> addResult('PASS', name, details) }
+        def warn = { String name, String details -> addResult('WARN', name, details) }
+        def fail = { String name, String details -> addResult('FAIL', name, details) }
+
+        def escapeMarkdownCell = { value ->
+            htmlEscape(value)
+                    .replace('\r\n', '\n')
+                    .replace('\r', '\n')
+                    .replace('\n', '<br>')
+        }
+
+        def httpRequest = { String requestUrl, String method, Map<String, String> headers, boolean readBody ->
+            def currentUrl = requestUrl
+            int redirectCount = 0
+            while (true) {
+                def connection = (java.net.HttpURLConnection) new URL(currentUrl).openConnection()
+                connection.setInstanceFollowRedirects(false)
+                connection.setRequestMethod(method)
+                connection.setConnectTimeout(15_000)
+                connection.setReadTimeout(30_000)
+                connection.setRequestProperty('User-Agent', 'Bisq release readiness Gradle task')
+                headers.each { name, value ->
+                    if (value != null && !value.toString().empty) {
+                        connection.setRequestProperty(name, value.toString())
+                    }
+                }
+
+                int status = connection.responseCode
+                if ([301, 302, 303, 307, 308].contains(status)) {
+                    def location = connection.getHeaderField('Location')
+                    connection.disconnect()
+                    if (!location) {
+                        return [status: status, url: currentUrl, body: new byte[0]]
+                    }
+                    if (++redirectCount > 5) {
+                        throw new GradleException("Too many redirects while requesting ${requestUrl}")
+                    }
+                    currentUrl = new URL(new URL(currentUrl), location).toString()
+                    if (status == 303) {
+                        method = 'GET'
+                    }
+                    continue
+                }
+
+                byte[] body = new byte[0]
+                if (readBody) {
+                    def stream = status >= 400 ? connection.errorStream : connection.inputStream
+                    if (stream != null) {
+                        try {
+                            body = stream.bytes
+                        } finally {
+                            stream.close()
+                        }
+                    }
+                }
+                connection.disconnect()
+                return [status: status, url: currentUrl, body: body]
+            }
+        }
+
+        def httpGetBytes = { String url, Map<String, String> headers = [:] ->
+            def response = httpRequest(url, 'GET', headers, true)
+            if (response.status < 200 || response.status >= 300) {
+                def body = response.body ? new String(response.body, StandardCharsets.UTF_8).trim() : ''
+                if (body.length() > 300) {
+                    body = body.substring(0, 300) + '...'
+                }
+                throw new GradleException("GET ${url} returned HTTP ${response.status}${body ? ': ' + body : ''}")
+            }
+            response.body as byte[]
+        }
+
+        def httpProbe = { String url ->
+            def headFailure = null
+            try {
+                def response = httpRequest(url, 'HEAD', [:], false)
+                if (response.status >= 200 && response.status < 400) {
+                    return [ok: true, status: response.status, method: 'HEAD']
+                }
+                if (![403, 405].contains(response.status)) {
+                    return [ok: false, status: response.status, method: 'HEAD']
+                }
+            } catch (Exception exception) {
+                headFailure = exception.message
+            }
+
+            try {
+                def response = httpRequest(url, 'GET', ['Range': 'bytes=0-0'], false)
+                return [
+                        ok     : response.status >= 200 && response.status < 400,
+                        status : response.status,
+                        method : 'GET Range',
+                        details: headFailure
+                ]
+            } catch (Exception exception) {
+                return [ok: false, status: 'n/a', method: 'GET Range', details: exception.message ?: headFailure]
+            }
+        }
+
+        def checkVersionValue = { String label, File sourceFile, String regex ->
+            if (!sourceFile.file) {
+                fail(label, "Missing ${rootProject.relativePath(sourceFile)}")
+                return
+            }
+            def matcher = sourceFile.getText(StandardCharsets.UTF_8.name()) =~ regex
+            if (!matcher.find()) {
+                fail(label, "Could not find version declaration in ${rootProject.relativePath(sourceFile)}")
+                return
+            }
+            def actualVersion = matcher.group(1)
+            if (actualVersion == releaseVersion) {
+                pass(label, "${rootProject.relativePath(sourceFile)} is set to ${actualVersion}")
+            } else {
+                fail(label, "${rootProject.relativePath(sourceFile)} is ${actualVersion}, expected ${releaseVersion}")
+            }
+        }
+
+        checkVersionValue(
+                'Version.VERSION',
+                file('common/src/main/java/bisq/common/app/Version.java'),
+                /public\s+static\s+final\s+String\s+VERSION\s*=\s*"([^"]+)"/
+        )
+        checkVersionValue(
+                'PackagingPlugin.APP_VERSION',
+                file('build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt'),
+                /const\s+val\s+APP_VERSION\s*=\s*"([^"]+)"/
+        )
+        checkVersionValue(
+                'finalize.sh version',
+                file('desktop/package/macosx/finalize.sh'),
+                /(?m)^\s*version="([^"]+)"/
+        )
+
+        def installerSourceFile = file('desktop/src/main/java/bisq/desktop/main/overlays/windows/downloadupdate/BisqInstaller.java')
+        if (!installerSourceFile.file) {
+            fail('Updater source resources', "Missing ${rootProject.relativePath(installerSourceFile)}")
+        } else {
+            def installerSource = installerSourceFile.getText(StandardCharsets.UTF_8.name())
+            if (installerSource.contains('DOWNLOAD_HOST_URL = "https://bisq.network/downloads/"') &&
+                    installerSource.contains('PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/"')) {
+                pass('Updater source URLs', 'BisqInstaller points to bisq.network download and pubkey hosts')
+            } else {
+                fail('Updater source URLs', 'BisqInstaller does not contain the expected bisq.network download/pubkey hosts')
+            }
+        }
+
+        def expectedAssets = [
+                '387C8307.asc',
+                '4A133008.asc',
+                'E222AA02.asc',
+                'signingkey.asc',
+                "Bisq-x86_64-${releaseVersion}.dmg".toString(),
+                "Bisq-x86_64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-${releaseVersion}.jar.txt".toString(),
+                "Bisq-${releaseVersion}.jar.txt.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.deb".toString(),
+                "Bisq-64bit-${releaseVersion}.deb.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.exe".toString(),
+                "Bisq-64bit-${releaseVersion}.exe.asc".toString(),
+                "bisq-cli-${releaseVersion}.zip".toString(),
+                "bisq-cli-${releaseVersion}.zip.asc".toString(),
+                "bisq-daemon-${releaseVersion}.zip".toString(),
+                "bisq-daemon-${releaseVersion}.zip.asc".toString(),
+                "bisq-${releaseVersion}.tar.gz.asc".toString()
+        ].sort()
+
+        def updaterDownloadAssets = [
+                "Bisq-x86_64-${releaseVersion}.dmg".toString(),
+                "Bisq-x86_64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg".toString(),
+                "Bisq-aarch64-${releaseVersion}.dmg.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.deb".toString(),
+                "Bisq-64bit-${releaseVersion}.deb.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm".toString(),
+                "Bisq-64bit-${releaseVersion}.rpm.asc".toString(),
+                "Bisq-64bit-${releaseVersion}.exe".toString(),
+                "Bisq-64bit-${releaseVersion}.exe.asc".toString(),
+                "Bisq-${releaseVersion}.jar.txt".toString(),
+                "Bisq-${releaseVersion}.jar.txt.asc".toString(),
+                'signingkey.asc'
+        ].sort()
+
+        def githubToken = providers.gradleProperty('githubToken').orNull ?: providers.environmentVariable('GITHUB_TOKEN').orNull
+        def githubHeaders = [
+                'Accept'              : 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+        ]
+        if (githubToken) {
+            githubHeaders['Authorization'] = "Bearer ${githubToken}".toString()
+        }
+
+        def releaseAssetsByName = [:]
+        def githubReleaseApiUrl = "https://api.github.com/repos/bisq-network/bisq/releases/tags/${releaseTag}".toString()
+        try {
+            def releaseJson = new String(httpGetBytes(githubReleaseApiUrl, githubHeaders), StandardCharsets.UTF_8)
+            def release = new groovy.json.JsonSlurper().parseText(releaseJson)
+            if (release.tag_name == releaseTag) {
+                pass('GitHub release tag', "Found ${releaseTag} on GitHub release page")
+            } else {
+                fail('GitHub release tag', "GitHub API returned tag '${release.tag_name}', expected '${releaseTag}'")
+            }
+            if (release.draft) {
+                warn('GitHub release state', "${releaseTag} is still marked as a draft")
+            } else {
+                pass('GitHub release state', "${releaseTag} is published")
+            }
+            if (release.prerelease) {
+                warn('GitHub prerelease flag', "${releaseTag} is marked as a prerelease")
+            }
+
+            releaseAssetsByName = release.assets.collectEntries { asset ->
+                [(asset.name.toString()): asset]
+            }
+            pass('GitHub release API', "Loaded ${releaseAssetsByName.size()} uploaded asset(s) from ${githubReleaseApiUrl}")
+        } catch (Exception exception) {
+            fail('GitHub release API', exception.message)
+        }
+
+        if (!releaseAssetsByName.empty) {
+            expectedAssets.each { assetName ->
+                def asset = releaseAssetsByName[assetName]
+                if (asset == null) {
+                    fail("GitHub asset ${assetName}", 'Missing from uploaded release assets')
+                    return
+                }
+                if (!asset.browser_download_url) {
+                    fail("GitHub asset ${assetName}", 'Missing browser_download_url')
+                    return
+                }
+                def assetSize = asset.size instanceof Number ? asset.size : 0
+                if (assetSize <= 0) {
+                    fail("GitHub asset ${assetName}", "Asset exists but size is ${asset.size}")
+                    return
+                }
+                pass("GitHub asset ${assetName}", "Present, ${assetSize} byte(s)")
+
+                def probe = httpProbe(asset.browser_download_url.toString())
+                if (probe.ok) {
+                    pass("GitHub download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}")
+                } else {
+                    fail("GitHub download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}${probe.details ? ': ' + probe.details : ''}")
+                }
+            }
+
+            def extraAssets = (releaseAssetsByName.keySet() as Set) - (expectedAssets as Set)
+            if (!extraAssets.empty) {
+                warn('GitHub extra assets', "Unexpected uploaded asset(s): ${extraAssets.sort().join(', ')}")
+            }
+        }
+
+        updaterDownloadAssets.each { assetName ->
+            def downloadUrl = "https://bisq.network/downloads/${releaseTag}/${assetName}".toString()
+            def probe = httpProbe(downloadUrl)
+            if (probe.ok) {
+                pass("Bisq download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}")
+            } else {
+                fail("Bisq download URL ${assetName}", "HTTP ${probe.status} via ${probe.method}${probe.details ? ': ' + probe.details : ''}")
+            }
+        }
+
+        def keyIds = ['387C8307', '4A133008', 'E222AA02']
+        def signingKeyFile = file('desktop/package/signingkey.asc')
+        def activeSigningKeyId = ''
+        if (!signingKeyFile.file) {
+            fail('signingkey.asc local file', "Missing ${rootProject.relativePath(signingKeyFile)}")
+        } else {
+            activeSigningKeyId = signingKeyFile.getText(StandardCharsets.UTF_8.name()).trim().toUpperCase(Locale.ROOT)
+            if (keyIds.contains(activeSigningKeyId)) {
+                pass('Active signing key id', "desktop/package/signingkey.asc points to ${activeSigningKeyId}")
+            } else {
+                fail('Active signing key id', "desktop/package/signingkey.asc points to ${activeSigningKeyId ?: '<blank>'}, expected one of ${keyIds.join(', ')}")
+            }
+        }
+
+        def resourceKeyFiles = [:]
+        keyIds.each { keyId ->
+            def resourceFile = file("desktop/src/main/resources/keys/${keyId}.asc")
+            def packageFile = file("desktop/package/${keyId}.asc")
+            resourceKeyFiles[keyId] = resourceFile
+
+            def sourceBytesByName = [:]
+            if (resourceFile.file) {
+                sourceBytesByName['app resources'] = resourceFile.bytes
+            } else {
+                fail("Public key ${keyId} app resource", "Missing ${rootProject.relativePath(resourceFile)}")
+            }
+            if (packageFile.file) {
+                sourceBytesByName['release package'] = packageFile.bytes
+            } else {
+                fail("Public key ${keyId} package resource", "Missing ${rootProject.relativePath(packageFile)}")
+            }
+
+            try {
+                sourceBytesByName['bisq.network/pubkey'] = httpGetBytes("https://bisq.network/pubkey/${keyId}.asc".toString())
+            } catch (Exception exception) {
+                fail("Public key ${keyId} webpage", exception.message)
+            }
+
+            def githubAsset = releaseAssetsByName[keyId + '.asc']
+            if (githubAsset?.browser_download_url) {
+                try {
+                    sourceBytesByName['GitHub release'] = httpGetBytes(githubAsset.browser_download_url.toString())
+                } catch (Exception exception) {
+                    fail("Public key ${keyId} GitHub asset", exception.message)
+                }
+            } else if (!releaseAssetsByName.empty) {
+                fail("Public key ${keyId} GitHub asset", "Missing ${keyId}.asc from GitHub release")
+            }
+
+            def expectedKeySourceCount = releaseAssetsByName.empty ? 3 : 4
+            if (sourceBytesByName.size() == expectedKeySourceCount) {
+                def hashes = sourceBytesByName.collectEntries { name, bytes ->
+                    [(name): sha256Bytes(bytes as byte[])]
+                }
+                def uniqueHashes = hashes.values().toSet()
+                if (uniqueHashes.size() == 1) {
+                    pass("Public key ${keyId} exact content", "All checked sources match SHA-256 ${uniqueHashes.first()}")
+                } else {
+                    fail("Public key ${keyId} exact content", hashes.collect { name, hash -> "${name}=${hash}" }.join(', '))
+                }
+            }
+        }
+
+        if (signingKeyFile.file) {
+            def signingKeySources = ['release package': signingKeyFile.bytes]
+            def signingKeyAsset = releaseAssetsByName['signingkey.asc']
+            if (signingKeyAsset?.browser_download_url) {
+                try {
+                    signingKeySources['GitHub release'] = httpGetBytes(signingKeyAsset.browser_download_url.toString())
+                } catch (Exception exception) {
+                    fail('signingkey.asc GitHub asset', exception.message)
+                }
+            } else if (!releaseAssetsByName.empty) {
+                fail('signingkey.asc GitHub asset', 'Missing signingkey.asc from GitHub release')
+            }
+            try {
+                signingKeySources['bisq.network/downloads'] = httpGetBytes("https://bisq.network/downloads/${releaseTag}/signingkey.asc".toString())
+            } catch (Exception exception) {
+                fail('signingkey.asc download URL', exception.message)
+            }
+
+            def expectedSigningKeySourceCount = releaseAssetsByName.empty ? 2 : 3
+            if (signingKeySources.size() == expectedSigningKeySourceCount) {
+                def hashes = signingKeySources.collectEntries { name, bytes ->
+                    [(name): sha256Bytes(bytes as byte[])]
+                }
+                def uniqueHashes = hashes.values().toSet()
+                if (uniqueHashes.size() == 1) {
+                    pass('signingkey.asc exact content', "All checked sources match SHA-256 ${uniqueHashes.first()}")
+                } else {
+                    fail('signingkey.asc exact content', hashes.collect { name, hash -> "${name}=${hash}" }.join(', '))
+                }
+            }
+        }
+
+        def runCommand = { List<String> command ->
+            def stdout = new ByteArrayOutputStream()
+            def stderr = new ByteArrayOutputStream()
+            try {
+                def processResult = exec {
+                    commandLine command
+                    standardOutput = stdout
+                    errorOutput = stderr
+                    ignoreExitValue = true
+                }
+                return [
+                        exitValue: processResult.exitValue,
+                        stdout   : stdout.toString(StandardCharsets.UTF_8.name()),
+                        stderr   : stderr.toString(StandardCharsets.UTF_8.name())
+                ]
+            } catch (Exception exception) {
+                return [
+                        exitValue: -1,
+                        stdout   : stdout.toString(StandardCharsets.UTF_8.name()),
+                        stderr   : exception.message
+                ]
+            }
+        }
+
+        def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
+                providers.environmentVariable('GPG_EXECUTABLE').orNull
+        def gpgExecutable = configuredGpgExecutable ?: [
+                '/opt/homebrew/bin/gpg',
+                '/usr/local/bin/gpg',
+                '/usr/bin/gpg'
+        ].find { new File(it).canExecute() } ?: 'gpg'
+
+        def parseGpgKeyInfo = { String gpgOutput ->
+            def lines = gpgOutput.readLines()
+            def pubLine = lines.find { it.startsWith('pub:') }
+            def fprLine = lines.find { it.startsWith('fpr:') }
+            if (!pubLine || !fprLine) {
+                return null
+            }
+            def pubFields = pubLine.split(':', -1)
+            def fprFields = fprLine.split(':', -1)
+            [
+                    keyId      : pubFields.size() > 4 ? pubFields[4] : '',
+                    created    : pubFields.size() > 5 ? pubFields[5] : '',
+                    expires    : pubFields.size() > 6 ? pubFields[6] : '',
+                    fingerprint: fprFields.size() > 9 ? fprFields[9] : ''
+            ]
+        }
+
+        keyIds.each { keyId ->
+            def keyFile = resourceKeyFiles[keyId]
+            if (!keyFile?.file) {
+                return
+            }
+
+            def gpgResult = runCommand([gpgExecutable, '--show-keys', '--with-colons', '--fingerprint', keyFile.absolutePath])
+            if (gpgResult.exitValue != 0) {
+                fail(
+                        "Public key ${keyId} metadata",
+                        "${gpgExecutable} --show-keys failed. Install GnuPG or set -PgpgExecutable=/path/to/gpg. ${gpgResult.stderr?.trim()}"
+                )
+                return
+            }
+            def keyInfo = parseGpgKeyInfo(gpgResult.stdout)
+            if (keyInfo == null || !keyInfo.fingerprint) {
+                fail("Public key ${keyId} metadata", 'Could not parse fingerprint from gpg --show-keys output')
+                return
+            }
+
+            def isActiveSigningKey = activeSigningKeyId && (
+                    keyId.equalsIgnoreCase(activeSigningKeyId) ||
+                            keyInfo.keyId?.toUpperCase(Locale.ROOT)?.endsWith(activeSigningKeyId)
+            )
+            def now = java.time.Instant.now()
+            if (!keyInfo.expires) {
+                pass("Public key ${keyId} expiry", "Fingerprint ${keyInfo.fingerprint} has no expiry date")
+            } else {
+                def expiryInstant = java.time.Instant.ofEpochSecond(keyInfo.expires as long)
+                def expiryDate = expiryInstant.atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                def daysRemaining = java.time.Duration.between(now, expiryInstant).toDays()
+                if (!expiryInstant.isAfter(now)) {
+                    def report = isActiveSigningKey ? fail : warn
+                    report(
+                            "Public key ${keyId} expiry",
+                            "${isActiveSigningKey ? 'Active signing key' : 'Bundled non-active key'} expired on ${expiryDate}"
+                    )
+                } else if (daysRemaining <= 90) {
+                    warn("Public key ${keyId} expiry", "Expires on ${expiryDate} (${daysRemaining} day(s) remaining)")
+                } else {
+                    pass("Public key ${keyId} expiry", "Expires on ${expiryDate} (${daysRemaining} day(s) remaining)")
+                }
+            }
+
+            def keyserverUrls = [
+                    'keys.openpgp.org'     : "https://keys.openpgp.org/vks/v1/by-fingerprint/${keyInfo.fingerprint}".toString(),
+                    'keyserver.ubuntu.com': "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${keyInfo.fingerprint}".toString()
+            ]
+            def foundKeyservers = []
+            keyserverUrls.each { name, url ->
+                try {
+                    def body = new String(httpGetBytes(url), StandardCharsets.UTF_8)
+                    if (body.contains('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+                        foundKeyservers << name
+                    }
+                } catch (Exception ignored) {
+                    // Report a combined result below to keep the release report readable.
+                }
+            }
+
+            if (foundKeyservers.size() == keyserverUrls.size()) {
+                pass("Public key ${keyId} keyservers", "Found on ${foundKeyservers.join(', ')}")
+            } else if (!foundKeyservers.empty) {
+                warn("Public key ${keyId} keyservers", "Found on ${foundKeyservers.join(', ')}; missing from ${(keyserverUrls.keySet() - foundKeyservers).join(', ')}")
+            } else {
+                def report = isActiveSigningKey ? fail : warn
+                report(
+                        "Public key ${keyId} keyservers",
+                        "Fingerprint ${keyInfo.fingerprint} was not found on ${keyserverUrls.keySet().join(', ')}" +
+                                (isActiveSigningKey ? '' : ' (bundled non-active key)')
+                )
+            }
+        }
+
+        def reportFile = githubReleaseReadinessReportFile.get().asFile
+        reportFile.parentFile.mkdirs()
+        def markdown = new StringBuilder()
+        markdown << "# GitHub Release Readiness\n\n"
+        markdown << "- Release version: `${releaseVersion}`\n"
+        markdown << "- GitHub tag: `${releaseTag}`\n"
+        markdown << "- Generated at: `${java.time.Instant.now()}`\n\n"
+        markdown << "This report is generated by `./gradlew verifyGithubReleaseReadiness -PreleaseVersion=${releaseVersion}`. "
+        markdown << "The task is read-only: it checks local release metadata, GitHub release assets, bisq.network download URLs, public key consistency, key expiry, and common keyserver availability.\n\n"
+        markdown << "## Summary\n\n"
+        markdown << "| Status | Count |\n"
+        markdown << "| --- | ---: |\n"
+        ['PASS', 'WARN', 'FAIL'].each { status ->
+            markdown << "| ${status} | ${results.count { it.status == status }} |\n"
+        }
+        markdown << "\n## Checks\n\n"
+        markdown << "| Status | Check | Details |\n"
+        markdown << "| --- | --- | --- |\n"
+        results.each { result ->
+            markdown << "| ${result.status} | ${escapeMarkdownCell(result.name)} | ${escapeMarkdownCell(result.details)} |\n"
+        }
+        markdown << '\n'
+        reportFile.setText(markdown.toString(), StandardCharsets.UTF_8.name())
+        logger.lifecycle("Wrote ${rootProject.relativePath(reportFile)}")
+
+        def failures = results.findAll { it.status == 'FAIL' }
+        if (!failures.empty) {
+            throw new GradleException("GitHub release readiness failed with ${failures.size()} failure(s). See ${rootProject.relativePath(reportFile)}")
+        }
+
+        logger.lifecycle("GitHub release readiness passed with ${results.count { it.status == 'WARN' }} warning(s).")
+    }
+}
+
+tasks.register('verifyInstallerManifest') {
+    group = 'verification'
+    description = 'Builds desktop OS installer artifacts and verifies them against -PinstallerManifest=<file-directory-or-zip>.'
+
+    def expectedInstallerManifestProperty = providers.gradleProperty('installerManifest')
+
+    dependsOn tasks.named('generateInstallerManifest')
+    inputs.property('expectedInstallerManifest', expectedInstallerManifestProperty.orElse(''))
+    inputs.file(installerManifestFile)
+            .withPropertyName('actualInstallerManifest')
+
+    doLast {
+        def expectedInstallerManifestPath = expectedInstallerManifestProperty.orNull
+        if (!expectedInstallerManifestPath) {
+            throw new GradleException('Missing required -PinstallerManifest=<path-to-installer-manifest.tsv-directory-or-zip>')
+        }
+
+        def expectedManifest = resolveInstallerManifestFile(file(expectedInstallerManifestPath))
+        def actualManifest = installerManifestFile.get().asFile
+        if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
+            logger.warn("Expected installer manifest points at the generated local manifest: ${expectedManifest}")
+        }
+
+        verifyManifestMatches('Installer manifest', expectedManifest, actualManifest)
+    }
+}
+
+tasks.register('verifyReleaseManifest') {
+    group = 'verification'
+    description = 'Builds the desktop Java payload and verifies it against -PreleaseManifest=<file-directory-or-zip>.'
+
+    def expectedReleaseManifestProperty = providers.gradleProperty('releaseManifest')
+
+    dependsOn tasks.named('generateReleaseManifest')
+    dependsOn tasks.named('verifyReleaseEnvironment')
+    inputs.property('expectedReleaseManifest', expectedReleaseManifestProperty.orElse(''))
+    inputs.file(releaseManifestFile)
+            .withPropertyName('actualReleaseManifest')
+
+    doLast {
+        def expectedReleaseManifestPath = expectedReleaseManifestProperty.orNull
+        if (!expectedReleaseManifestPath) {
+            throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv-directory-or-zip>')
+        }
+
+        def expectedManifest = resolveReleaseManifestFile(file(expectedReleaseManifestPath))
+        def actualManifest = releaseManifestFile.get().asFile
+        if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
+            logger.warn("Expected release manifest points at the generated local manifest: ${expectedManifest}")
+        }
+
+        verifyManifestMatches('Release manifest', expectedManifest, actualManifest)
+    }
+}

@@ -1,0 +1,1056 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+package io.bisq.protobuffer;
+import "pb.proto";
+option java_package = "bisq.proto.grpc";
+option java_multiple_files = true;
+
+message RegisterDisputeAgentRequest {
+    // One of "mediator" or "refundagent".  Development / test arbitrators can only be registered in the UI.
+    string dispute_agent_type = 1;
+    // Private developer (only) registration key.
+    string registration_key = 2;
+}
+
+message RegisterDisputeAgentReply {
+}
+
+
+message GetMethodHelpRequest {
+    string method_name = 1;  // The CLI command name.
+}
+
+message GetMethodHelpReply {
+    string method_help = 1;  // The man page for the CLI command.
+}
+
+
+message GetOfferCategoryRequest {
+    string id = 1;          // The offer's unique identifier.
+    bool is_my_offer = 2;   // Whether the offer was created by the user or not.
+}
+
+message GetOfferCategoryReply {
+    enum OfferCategory {
+        UNKNOWN = 0;        // An invalid offer category probably indicates a software bug.
+        FIAT = 1;           // Indicates offer is to BUY or SELL BTC with a fiat currency.
+        ALTCOIN = 2;        // Indicates offer is to BUY or SELL BTC with an altcoin.
+        BSQ_SWAP = 3;       // Indicates offer is to swap BTC for BSQ.
+    }
+    OfferCategory offer_category = 1;
+}
+
+message GetBsqSwapOfferReply {
+    OfferInfo bsq_swap_offer = 1; // The returned BSQ swap offer.
+}
+
+message GetOfferRequest {
+    string id = 1;  // The offer's unique identifier.
+}
+
+message GetOfferReply {
+    OfferInfo offer = 1; // The returned v1 protocol offer.
+}
+
+message GetMyBsqSwapOfferReply {
+    OfferInfo bsq_swap_offer = 1; // The returned BSQ swap offer.
+}
+
+// Deprecated with rpc method GetMyOffer since 27-Dec-2021 (v1.8.0).
+message GetMyOfferRequest {
+    string id = 1;  // The offer's unique identifier.
+}
+
+message GetOffersRequest {
+    string direction = 1;       // The offer's BUY (BTC) or SELL (BTC) direction.
+    string currency_code = 2;   // The offer's fiat or altcoin currency code.
+    reserved 3; // This was the "all" field before.
+}
+
+message GetOffersReply {
+    repeated OfferInfo offers = 1;  // The returned list of available offers.
+}
+
+message GetBsqSwapOffersRequest {
+    string direction = 1;   // The BSQ swap offer's BUY (BTC) or SELL (BTC) direction.
+}
+
+message GetBsqSwapOffersReply {
+    repeated OfferInfo bsq_swap_offers = 1; // The returned list of available BSQ swap offers.
+}
+
+message GetMyOffersRequest {
+    string direction = 1;       // The offers' BUY (BTC) or SELL (BTC) direction.
+    string currency_code = 2;   // The offer's fiat or altcoin currency code.
+}
+
+message GetMyOffersReply {
+    repeated OfferInfo offers = 1;  // The returned list of user's open offers.
+}
+
+message GetMyBsqSwapOffersReply {
+    repeated OfferInfo bsq_swap_offers = 1;    // The returned list of user's open BSQ swap offers.
+}
+
+message CreateBsqSwapOfferRequest {
+    // The new BSQ swap offer's BUY (BTC) or SELL (BTC) direction.
+    string direction = 1;
+    // The amount of BTC to be traded as a long representing satoshi units.
+    uint64 amount = 2;
+    // The minimum amount of BTC to be traded as a long representing satoshi units.
+    uint64 min_amount = 3;
+    // The fixed price of the offer as a string representing BTC units, e.g., "0.00005" or "0.00005000".
+    string price = 4;
+}
+
+message CreateBsqSwapOfferReply {
+    OfferInfo bsq_swap_offer = 1;     // The newly created BSQ swap offer.
+}
+
+message CreateOfferRequest {
+    // The new offer's fiat or altcoin currency code.
+    string currency_code = 1;
+    // The new v1 protocol offer's BUY (BTC) or SELL (BTC) direction.
+    string direction = 2;
+    // For fiat offers:  a string representing the rounded, fixed fiat price of the offer, e.g., "45000", not "45000".
+    // For altcoin offers:  a string representing the fixed BTC price of the offer, e.g., "0.00005".
+    string price = 3;
+    // Whether the offer price is fixed, or market price margin based.
+    bool use_market_based_price = 4;
+    // The offer's market price margin as a percentage above or below the current market BTC price, e.g., 2.50 represents 2.5%.
+    double market_price_margin_pct = 5;
+    // The amount of BTC to be traded, in satoshis.
+    uint64 amount = 6;
+     // The minimum amount of BTC to be traded, in satoshis.
+    uint64 min_amount = 7;
+    // A BUY BTC offer maker's security deposit as a percentage of the BTC amount to be traded, e.g., 15.00 represents 15%.
+    double buyer_security_deposit_pct = 8;
+    // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
+    // Disabled offers are never automatically enabled, they must be manually re-enabled.
+    // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
+    string trigger_price = 9;
+    // The unique identifier of the payment account used to create the new offer, and send or receive trade payment.
+    string payment_account_id = 10;
+    // The offer maker's trade fee currency:  BTC or BSQ.
+    string maker_fee_currency_code = 11;
+}
+
+message CreateOfferReply {
+    OfferInfo offer = 1;    // The newly created v1 protocol offer.
+}
+
+message EditOfferRequest {
+    // The edited offer's unique identifier.
+    string id = 1;
+    // For fiat offers:  a string representing the new rounded, fixed fiat price of the offer, e.g., "45000", not "45000".
+    // For altcoin offers:  a string representing the new fixed BTC price of the offer, e.g., "0.00005".
+    string price = 2;
+    // Whether the offer price is fixed, or market price margin based.
+    bool use_market_based_price = 3;
+    // An offer's new market price margin as a percentage above or below the current market BTC price.
+    double market_price_margin_pct = 4;
+    // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
+    // Disabled offers are never automatically enabled, they must be manually re-enabled.
+    // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
+    string trigger_price = 5;
+    // Whether the offer's activation state should be changed (disable or enable), or left alone.
+    // Send a signed int, not a bool (with default=false).
+    //      -1 = do not change activation state
+    //      0 = disable
+    //      1 = enable
+    sint32 enable = 6;
+    // The EditType determines and constricts what offer details can be modified by the request, simplifying param
+    // validation.  (The CLI need to infer this detail from 'editoffer' command options, other clients do not.)
+    enum EditType {
+        // Edit only the offer's activation state (enabled or disabled).
+        ACTIVATION_STATE_ONLY = 0;
+        // Edit only the offer's fixed price.
+        FIXED_PRICE_ONLY = 1;
+        // Edit only the offer's fixed price and activation state.
+        FIXED_PRICE_AND_ACTIVATION_STATE = 2;
+        // Edit only the offer's market price margin.
+        MKT_PRICE_MARGIN_ONLY = 3;
+        // Edit only the offer's market price margin and activation state.
+        MKT_PRICE_MARGIN_AND_ACTIVATION_STATE = 4;
+        // Edit only the market price margin based offer's trigger price.
+        TRIGGER_PRICE_ONLY = 5;
+        // Edit only the market price margin based offer's trigger price and activation state.
+        TRIGGER_PRICE_AND_ACTIVATION_STATE = 6;
+        // Edit only the offer's market price margin and trigger price.
+        MKT_PRICE_MARGIN_AND_TRIGGER_PRICE = 7;
+        // Edit only the offer's market price margin, trigger price, and activation state.
+        MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE = 8;
+    }
+    // Tell the daemon precisely what is being edited.
+    EditType edit_type = 7;
+}
+
+message EditOfferReply {
+}
+
+message CancelOfferRequest {
+    string id = 1; // The canceled offer's unique identifier.
+}
+
+message CancelOfferReply {
+}
+
+// OfferInfo describes an offer to a client.  It is derived from the heavier
+// Offer object in the daemon, which holds too much state to be sent to clients.
+message OfferInfo {
+    // The offer's unique identifier.
+    string id = 1;
+    // The offer's BUY (BTC) or SELL (BTC) direction.
+    string direction = 2;
+    // For fiat offers:  the fiat price for 1 BTC to 4 decimal places, e.g., 45000 EUR is "45000.0000".
+    // For altcoin offers:  the altcoin price for 1 BTC to 8 decimal places, e.g., 0.00005 BTC is "0.00005000".
+    string price = 3;
+    // Whether the offer price is fixed, or market price margin based.
+    bool use_market_based_price = 4;
+    // The offer's market price margin above or below the current market BTC price, e.g., 5.00 represents 5%.
+    double market_price_margin_pct = 5;
+    // The offer's BTC amount in satoshis.  Ten million satoshis is represented as 10000000.
+    uint64 amount = 6;
+    // The offer's minimum BTC amount in satoshis.  One million satoshis is represented as 1000000.
+    uint64 min_amount = 7;
+    // The rounded volume of currency to be traded for BTC.
+    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to 2 decimal places.
+    string volume = 8;
+    // The rounded, minimum volume of currency to be traded for BTC.
+    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to 2 decimal places.
+    string min_volume = 9;
+    // A long representing the BTC buyer's security deposit in satoshis.
+    uint64 buyer_security_deposit = 10;
+    // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
+    // Disabled offers are never automatically enabled, they must be manually re-enabled.
+    // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
+    string trigger_price = 11;
+    // Whether the offer maker paid the trading fee in BTC or not (BSQ).
+    bool is_currency_for_maker_fee_btc = 12;
+    // The unique identifier of the payment account used to create the offer.
+    string payment_account_id = 13;
+    // The unique identifier of the payment method used to create the offer.
+    string payment_method_id = 14;
+    // The short description of the payment method used to create the offer.
+    string payment_method_short_name = 15;
+    // For fiat offers, the baseCurrencyCode is BTC, and the counter_currency_code is the fiat currency code.
+    // For altcoin offers it is the opposite, the baseCurrencyCode is the altcoin code and the counter_currency_code is BTC.
+    string base_currency_code = 16;
+    // For fiat offers, the base_currency_code is BTC, and the counter_currency_code is the fiat currency code.
+    // For altcoin offers it is the opposite, the base_currency_code is the altcoin code and the counter_currency_code is BTC.
+    string counter_currency_code = 17;
+    // The creation date of the offer as a long: the number of milliseconds that have elapsed since January 1, 1970.
+    uint64 date = 18;
+    // The internal state of the offer, e.g., AVAILABLE, NOT_AVAILABLE, REMOVED, etc.
+    string state = 19;
+    // A long representing the BTC seller's security deposit in satoshis.
+    uint64 seller_security_deposit = 20;
+    // The bitcoin transaction id of the offer maker's fee payment.
+    string offer_fee_payment_tx_id = 21;
+    // The bitcoin transaction fee (amount) for the offer maker's fee payment transaction, in satoshis.
+    uint64 tx_fee = 22;
+    // The offer maker's Bisq trade fee amount in satoshis.
+    uint64 maker_fee = 23;
+    // Whether the offer is currently enabled or not.
+    bool is_activated = 24;
+    // Whether the offer was created by the user or not.
+    bool is_my_offer = 25;
+    // Whether the newly created offer was created by the user or not.
+    bool is_my_pending_offer = 26;
+    // Whether the offer is a BSQ swap offer or not (v1 protocol offer).
+    bool is_bsq_swap_offer = 27;
+    // The offer creator's Tor onion address.
+    string owner_node_address = 28;
+    // The offer creator's public key ring as a string.
+    string pub_key_ring = 29;
+    // The Bisq software version used to create the offer.
+    string version_nr = 30;
+    // The bitcoin protocol version used to create the offer.
+    int32 protocol_version = 31;
+}
+
+// An offer's current availability status.
+message AvailabilityResultWithDescription {
+    // An offer's current status as an eum.
+    AvailabilityResult availability_result = 1;
+    // A user friendly description of an offer's current availability status.
+    string description = 2;
+}
+
+
+message CreatePaymentAccountRequest {
+    string payment_account_form = 1;      // File path of filled json payment account form.
+}
+
+message CreatePaymentAccountReply {
+    PaymentAccount payment_account = 1;  // The new payment account.
+}
+
+message GetPaymentAccountsRequest {
+}
+
+message GetPaymentAccountsReply {
+    repeated PaymentAccount payment_accounts = 1;    // All user's saved payment accounts.
+}
+
+message GetPaymentMethodsRequest {
+}
+
+message GetPaymentMethodsReply {
+    repeated PaymentMethod payment_methods = 1;  // Ids of all supported Bisq fiat payment methods.
+}
+
+message GetPaymentAccountFormRequest {
+    string payment_method_id = 1;     // Payment method id determining content of the requested payment account form.
+}
+
+message GetPaymentAccountFormReply {
+    // An empty payment account json form to be filled out and passed to rpc method CreatePaymentAccount.
+    string payment_account_form_json = 1;
+}
+
+message CreateCryptoCurrencyPaymentAccountRequest {
+    string account_name = 1;    // The name of the altcoin payment account.  Uniqueness is not enforced.
+    string currency_code = 2;   // The altcoin currency code.
+    string address = 3;         // The altcoin receiving address.
+    bool trade_instant = 4;     // Whether the altcoin payment account is an instant account or not.
+}
+
+message CreateCryptoCurrencyPaymentAccountReply {
+    PaymentAccount payment_account = 1;      // The new altcoin payment account.
+}
+
+message GetCryptoCurrencyPaymentMethodsRequest {
+}
+
+message GetCryptoCurrencyPaymentMethodsReply {
+    repeated PaymentMethod payment_methods = 1;  // Ids of all supported Bisq altcoin payment methods.
+}
+
+
+message MarketPriceRequest {
+    string currency_code = 1;   // The three letter currency code.
+}
+
+message MarketPriceReply {
+    double price = 1;   // The most recently available market price.
+}
+
+message GetAverageBsqTradePriceRequest {
+    sint32 days = 1;    // The number of days used in the average BSQ trade price calculations.
+}
+
+message GetAverageBsqTradePriceReply {
+    // The average BSQ trade price in USD to 4 decimal places, and in BTC to 8 decimal places.
+    AverageBsqTradePrice price = 1;
+}
+
+// The average BSQ trade price in USD and BTC.
+message AverageBsqTradePrice {
+    string usd_price = 1;   // The average BSQ trade price in USD to 4 decimal places.
+    string btc_price = 2;   // The average BSQ trade price in BTC to 8 decimal places.
+}
+
+
+message StopRequest {
+}
+
+message StopReply {
+}
+
+
+message TakeOfferRequest {
+    string offer_id = 1;                    // The unique identifier of the offer being taken.
+    // The unique identifier of the payment account used to take a Bisq v1 protocol offer.
+    // This payment_account_id request param is not used when taking a BSQ Swap offer;
+    // all BSQ Swap transactions use the daemon's default BsqSwapAccount.
+    string payment_account_id = 2;
+    // The code of the currency (BSQ or BTC) used to pay the taker's Bisq v1 protocol trade fee.
+    // This taker_fee_currency_code request param is not used when taking a BSQ Swap offer;
+    // all BSQ Swap trade fees are paid in BSQ.
+    string taker_fee_currency_code = 3;
+    // The trade's intended BTC amount in satoshis.  Ten million satoshis is represented as 10000000.
+    // If set, the takeoffer amount value must be >= offer.min_amount and <= offer.amount.
+    // If not set (0 default), the taken offer's (max) amount becomes the intended trade amount.
+    uint64 amount = 4;
+}
+
+message TakeOfferReply {
+    TradeInfo trade = 1;                                    // The new trade.
+    AvailabilityResultWithDescription failure_reason = 2;   // The reason the offer could not be taken.
+}
+
+message ConfirmPaymentStartedRequest {
+    string trade_id = 1;    // The unique identifier of the open trade.
+}
+
+message ConfirmPaymentStartedXmrRequest {
+    string trade_id = 1;    // The unique identifier of the open trade.
+    string tx_id = 2;       // XMR txId for payment proof
+    string tx_key = 3;      // XMR txKey for payment proof
+}
+
+message ConfirmPaymentStartedReply {
+}
+
+message ConfirmPaymentReceivedRequest {
+    string trade_id = 1;    // The unique identifier of the open trade.
+}
+
+message ConfirmPaymentReceivedReply {
+}
+
+message GetTradeRequest {
+    string trade_id = 1;    // The unique identifier of the trade.
+}
+
+message GetTradeReply {
+    TradeInfo trade = 1;    // The unique identifier of the trade.
+}
+
+message GetTradesRequest {
+    // Rpc method GetTrades parameter determining what category of trade list is is being requested.
+    enum Category {
+        OPEN = 0;       // Get all currently open trades.
+        CLOSED = 1;     // Get all completed trades.
+        FAILED = 2;     // Get all failed trades.
+    }
+    Category category = 1;
+}
+
+message GetTradesReply {
+    repeated TradeInfo trades = 1;  // All trades for GetTradesRequest.Category.
+}
+
+message CloseTradeRequest {
+    string trade_id = 1;    // The unique identifier of the trade.
+}
+
+message CloseTradeReply {
+}
+
+message FailTradeRequest {
+    string trade_id = 1;    // The unique identifier of the trade.
+}
+
+message FailTradeReply {
+}
+
+message UnFailTradeRequest {
+    string trade_id = 1;    // The unique identifier of the trade.
+}
+
+message UnFailTradeReply {
+}
+
+message WithdrawFundsRequest {
+    string trade_id = 1;    // The unique identifier of the trade.
+    string address = 2;     // The receiver's bitcoin wallet address.
+    string memo = 3;        // An optional memo saved with the sent btc transaction.
+}
+
+message WithdrawFundsReply {
+}
+
+// TODO Modify bisq-grpc-api-doc to include core Trade enums in API Reference.
+message TradeInfo {
+    // The original offer.
+    OfferInfo offer = 1;
+    // The unique identifier of the trade.
+    string trade_id = 2;
+    // An abbreviation of unique identifier of the trade.  It cannot be used as parameter to rpc methods GetTrade,
+    // ConfirmPaymentStarted, CloseTrade, etc., but it may be useful while interacting with support or trading peers.
+    string short_id = 3;
+    // The creation date of the trade as a long: the number of milliseconds that have elapsed since January 1, 1970.
+    uint64 date = 4;
+    // A brief description of the user's role in the trade, i.e., an offer maker or taker, a BTC buyer or seller.
+    string role = 5;
+    // Whether the offer taker's Bisq trade fee was paid in BTC or not (BSQ).
+    bool is_currency_for_taker_fee_btc = 6;
+    // The bitcoin miner transaction fee in satoshis.
+    uint64 tx_fee_as_long = 7;
+    // The offer taker's Bisq trade fee in satoshis.
+    uint64 taker_fee_as_long = 8;
+    // The bitcoin transaction id for offer taker's Bisq trade fee.
+    string taker_fee_tx_id = 9;
+    // The bitcoin transaction id for the offer taker's security deposit.
+    string deposit_tx_id = 10;
+    // The bitcoin transaction id for trade payout.
+    string payout_tx_id = 11;
+    // The trade payout amount in satoshis.
+    uint64 trade_amount_as_long = 12;
+    // For fiat trades:  the fiat price for 1 BTC to 4 decimal places, e.g., 41000.50 EUR is "41000.5000".
+    // For altcoin trades:  the altcoin price for 1 BTC to 8 decimal places, e.g., 0.5 BTC is "0.50000000".
+    string trade_price = 13;
+    // The trading peer's node address.
+    string trading_peer_node_address = 14;
+    // The internal state of the trade. (TODO bisq-grpc-api-doc -> include Trade.State in API Reference.)
+    string state = 15;
+    // The internal phase of the trade. (TODO bisq-grpc-api-doc -> include Trade.Phase in API Reference.)
+    string phase = 16;
+    // How much of the trade protocol's time limit has elapsed. (TODO bisq-grpc-api-doc -> include Trade.TradePeriodState in API Reference.)
+    string trade_period_state = 17;
+    // Whether the trade's security deposit bitcoin transaction has been broadcast, or not.
+    bool is_deposit_published = 18;
+    // Whether the trade's security deposit bitcoin transaction has been confirmed at least once, or not.
+    bool is_deposit_confirmed = 19;
+    // Whether the trade's 'start payment' message has been sent by the BTC buyer, or not.
+    bool is_payment_started_message_sent = 20;
+    // Whether the trade's 'payment received' message has been sent by the BTC seller, or not.
+    bool is_payment_received_message_sent = 21;
+    // Whether the trade's payout bitcoin transaction has been confirmed at least once, or not.
+    bool is_payout_published = 22;
+    // Whether the trade's payout has been completed and the trade is now closed, or not.
+    bool is_completed = 23;
+    // The entire trade contract as a json string.
+    string contract_as_json = 24;
+    // The summary of the trade contract.
+    ContractInfo contract = 25;
+    // The volume of currency traded for BTC.
+    string trade_volume = 26;
+    // The details specific to the BSQ swap trade.  If the trade is not a BSQ swap, this field should be ignored.
+    BsqSwapTradeInfo bsq_swap_trade_info = 28;
+    // Needed by open/closed/failed trade list items.
+    string closing_status = 29;
+    // Whether the trade failed.
+    bool has_failed = 30;
+    // Error message applicable when trade is failed.
+    string error_message = 31;
+    // txId used for XMR auto conf.
+    string auto_conf_tx_id = 32;
+    // tx key used for XMR auto conf.
+    string auto_conf_tx_key = 33;
+}
+
+message ContractInfo {
+    string buyer_node_address = 1;              // The BTC buyer peer's node address.
+    string seller_node_address = 2;             // The BTC seller peer's node address.
+    string mediator_node_address = 3;           // If the trade was disputed, the Bisq mediator's node address.
+    string refund_agent_node_address = 4;       // If a trade refund was requested, the Bisq refund agent's node address.
+    bool is_buyer_maker_and_seller_taker = 5;   // Whether the BTC buyer created the original offer, or not.
+    string maker_account_id = 6;                // The offer maker's payment account id.
+    string taker_account_id = 7;                // The offer taker's payment account id.
+    PaymentAccountPayloadInfo maker_payment_account_payload = 8;   // A summary of the offer maker's payment account.
+    PaymentAccountPayloadInfo taker_payment_account_payload = 9;   // A summary of the offer taker's payment account.
+    string maker_payout_address_string = 10;    // The offer maker's BTC payout address.
+    string taker_payout_address_string = 11;    // The offer taker's BTC payout address.
+    uint64 lock_time = 12;                      // The earliest time a transaction can be added to the block chain.
+}
+
+/*
+* BSQ Swap protocol specific fields not common to Bisq v1 trade protocol fields.
+*/
+message BsqSwapTradeInfo {
+    string tx_id = 1;                   // The BSQ swap's bitcoin transaction id.
+    uint64 bsq_trade_amount = 2;        // The amount of BSQ swapped in satoshis.
+    uint64 btc_trade_amount = 3;        // The amount of BTC swapped in satoshis.
+    uint64 bsq_maker_trade_fee = 4;     // The swap offer maker's BSQ trade fee.
+    uint64 bsq_taker_trade_fee = 5;     // The swap offer taker's BSQ trade fee.
+    uint64 tx_fee_per_vbyte = 6;        // The swap transaction's bitcoin transaction id.
+    string maker_bsq_address = 7;       // The swap offer maker's BSQ wallet address.
+    string maker_btc_address = 8;       // The swap offer maker's BTC wallet address.
+    string taker_bsq_address = 9;       // The swap offer taker's BSQ wallet address.
+    string taker_btc_address = 10;      // The swap offer taker's BTC wallet address.
+    uint64 num_confirmations = 11;      // The confirmations count for the completed swap's bitcoin transaction.
+    string error_message = 12;          // An explanation for a failure to complete the swap.
+    uint64 payout = 13;                 // The amount of the user's trade payout in satoshis.
+    uint64 swap_peer_payout = 14;       // The amount of the peer's trade payout in satoshis.
+}
+
+message PaymentAccountPayloadInfo {
+    string id = 1;                  // The unique identifier of the payment account.
+    string payment_method_id = 2;   // The unique identifier of the payment method.
+    string address = 3;             // The optional altcoin wallet address associated with the (altcoin) payment account.
+    string payment_details = 4;     // The optional payment details, if available.
+}
+
+message TxFeeRateInfo {
+    bool use_custom_tx_fee_rate = 1;    // Whether the daemon's custom btc transaction fee rate preference is set, or not.
+    uint64 custom_tx_fee_rate = 2;      // The daemon's custom btc transaction fee rate preference, in sats/byte.
+    uint64 fee_service_rate = 3;        // The Bisq network's most recently available btc transaction fee rate, in sats/byte.
+    // The date of the most recent Bisq network fee rate request as a long: the number of milliseconds that have elapsed since January 1, 1970.
+    uint64 last_fee_service_request_ts = 4;
+    uint64 min_fee_service_rate = 5;    // The Bisq network's minimum btc transaction fee rate, in sats/byte.
+}
+
+message TxInfo {
+    string tx_id = 1;       // The bitcoin transaction id.
+    uint64 input_sum = 2;   // The sum of the bitcoin transaction's input values in satoshis.
+    uint64 output_sum = 3;  // The sum of the bitcoin transaction's output values in satoshis.
+    uint64 fee = 4;         // The bitcoin transaction's miner fee in satoshis.
+    int32 size = 5;         // The bitcoin transaction's size in bytes.
+    bool is_pending = 6;    // Whether the bitcoin transaction has been confirmed at least one time, or not.
+    string memo = 7;        // An optional memo associated with the bitcoin transaction.
+}
+
+
+message GetNetworkRequest {
+}
+
+message GetNetworkReply {
+    string network = 1;         // The BTC network name (mainnet, testnet3, or regtest).
+}
+
+message GetDaoStatusRequest {
+}
+
+message GetDaoStatusReply {
+    bool is_dao_state_ready_and_in_sync = 1;
+}
+
+message GetWalletSyncStatusRequest {
+}
+
+message GetWalletSyncStatusReply {
+    bool is_chain_height_synced_within_tolerance = 1;   // Whether the bitcoinj wallet's best-chain height is within tolerance of its peers.
+    int32 best_chain_height = 2;                        // The bitcoinj wallet's best-chain height (0 if the wallet is not ready).
+}
+
+message GetBalancesRequest {
+    string currency_code = 1;   // The Bisq wallet currency (BSQ or BTC) for the balances request.
+}
+
+message GetBalancesReply {
+    BalancesInfo balances = 1;  // The summary of Bisq wallet's BSQ and BTC balances.
+}
+
+message GetAddressBalanceRequest {
+    string address = 1;         // The BTC wallet address being queried.
+}
+
+message GetAddressBalanceReply {
+    AddressBalanceInfo address_balance_info = 1;    // The BTC wallet address with its balance summary.
+}
+
+message GetUnusedBsqAddressRequest {
+}
+
+message GetUnusedBsqAddressReply {
+     string address = 1;    // The BSQ wallet's unused address.
+}
+
+message SendBsqRequest {
+    // The external BSQ wallet address.
+    string address = 1;
+    // The amount being sent to the external BSQ wallet address, as a string in "#######,##" format.
+    string amount = 2;
+    // An optional bitcoin miner transaction fee rate, in sats/byte.  If not defined, Bisq will revert
+    // to the custom transaction fee rate preference, if set, else the common Bisq network fee rate.
+    string tx_fee_rate = 3;
+}
+
+message SendBsqReply {
+    // The summary of a bitcoin transaction.  (BSQ is a colored coin, and transacted on the bitcoin blockchain.)
+    TxInfo tx_info = 1;
+}
+
+message SendBtcRequest {
+    // The external bitcoin address.
+    string address = 1;
+    // The amount of BTC to send to the external address, as a string in "##.########" (BTC unit) format.
+    string amount = 2;
+    // An optional bitcoin miner transaction fee rate, in sats/byte.  If not defined, Bisq will revert
+    // to the custom transaction fee rate preference, if set, else the common Bisq network fee rate.
+    string tx_fee_rate = 3;
+    // An optional memo associated with the bitcoin transaction.
+    string memo = 4;
+}
+
+message SendBtcReply {
+    TxInfo tx_info = 1;     // The summary of a bitcoin transaction.
+}
+
+message VerifyBsqSentToAddressRequest {
+    string address = 1;     // The internal BSQ wallet address.
+    string amount = 2;      // The amount supposedly sent to the BSQ wallet address, as a string in "#######,##" format.
+}
+
+message VerifyBsqSentToAddressReply {
+    // Whether a specific BSQ wallet address has received a specific amount of BSQ.  If the same address has received
+    // the same amount of BSQ more than once, a true value does not indicate payment has been made for a v1 protocol
+    // BSQ-BTC trade.  This BSQ payment verification problem is solved with BSQ swaps, which use a different BSQ
+    // address for each swap transaction.
+    bool is_amount_received = 1;
+}
+
+message GetTxFeeRateRequest {
+}
+
+message GetTxFeeRateReply {
+    TxFeeRateInfo tx_fee_rate_info = 1; // The summary of the most recently available bitcoin transaction fee rates.
+}
+
+message SetTxFeeRatePreferenceRequest {
+    uint64 tx_fee_rate_preference = 1;
+}
+
+message SetTxFeeRatePreferenceReply {
+    TxFeeRateInfo tx_fee_rate_info = 1; // The summary of the most recently available bitcoin transaction fee rates.
+}
+
+message UnsetTxFeeRatePreferenceRequest {
+}
+
+message UnsetTxFeeRatePreferenceReply {
+    TxFeeRateInfo tx_fee_rate_info = 1; // The summary of the most recently available bitcoin transaction fee rates.
+}
+
+message GetTransactionsRequest {
+}
+
+message GetTransactionsReply {
+    repeated TxInfo tx_info = 1; // List of Bitcoin transactions.
+}
+
+message GetTransactionRequest {
+    string tx_id = 1;
+}
+
+message GetTransactionReply {
+    TxInfo tx_info = 1; // The summary of a bitcoin transaction.
+}
+
+message GetFundingAddressesRequest {
+    optional bool only_funded = 1; // Return only addresses with positive balance.
+}
+
+message GetFundingAddressesReply {
+    repeated AddressBalanceInfo address_balance_info = 1; // The list of BTC wallet addresses with their balances.
+}
+
+message SetWalletPasswordRequest {
+    string password = 1;        // The new password for encrypting an unencrypted Bisq wallet.
+    string new_password = 2;    // The new password for encrypting an already encrypted Bisq wallet (a password override).
+}
+
+message SetWalletPasswordReply {
+}
+
+message RemoveWalletPasswordRequest {
+    string password = 1;    // The Bisq wallet's current encryption password.
+}
+
+message RemoveWalletPasswordReply {
+}
+
+message LockWalletRequest {
+}
+
+message LockWalletReply {
+}
+
+message UnlockWalletRequest {
+    string password = 1;    // The Bisq wallet's encryption password.
+    uint64 timeout = 2;     // The Bisq wallet's unlock time period, in seconds.
+}
+
+message UnlockWalletReply {
+}
+
+message BalancesInfo {
+    BsqBalanceInfo bsq = 1;     // BSQ wallet balance information.
+    BtcBalanceInfo btc = 2;     // BTC wallet balance information.
+}
+
+message BsqBalanceInfo {
+    // The BSQ amount currently available to send to other addresses at the user's discretion, in satoshis.
+    uint64 available_confirmed_balance = 1;
+    // The BSQ amount currently being used in send transactions, in satoshis. Unverified BSQ balances are
+    // not spendable until returned to the available_confirmed_balance when send transactions have been confirmed.
+    uint64 unverified_balance = 2;
+    // The BSQ transaction change amount tied up in unconfirmed transactions, remaining unspendable until transactions
+    // have been confirmed and the change returned to the available_confirmed_balance.
+    uint64 unconfirmed_change_balance = 3;
+    // The locked BSQ amount held by DAO voting transaction.
+    uint64 locked_for_voting_balance = 4;
+    // The locked BSQ amount held by DAO bonding transaction.
+    uint64 lockup_bonds_balance = 5;
+    // The BSQ bonding amount in unlocking state, awaiting a lockup transaction's lock time expiry before the funds
+    // can be spent in normal transactions.
+    uint64 unlocking_bonds_balance = 6;
+}
+
+message BtcBalanceInfo {
+    // The BTC amount currently available to send to other addresses at the user's discretion, in satoshis.
+    uint64 available_balance = 1;
+    // The BTC amount currently reserved to cover open offers' security deposits, and BTC sellers' payout amounts,
+    // in satoshis.  Reserved funds are not spendable, but are recoverable by users. When a user cancels an offer
+    // funds reserved for that offer are returned to the available_balance.
+    uint64 reserved_balance = 2;
+    // The sum of available_balance + reserved_balance, in satoshis.
+    uint64 total_available_balance = 3;
+    // The BTC amount being locked to cover the security deposits and BTC seller's pending trade payouts.  Locked
+    // funds are not recoverable until a trade is completed, when security deposits are returned to the available_balance.
+    uint64 locked_balance = 4;
+}
+
+message AddressBalanceInfo {
+    string address = 1;             // The bitcoin wallet address.
+    int64 balance = 2;              // The address' BTC balance in satoshis.
+    int64 num_confirmations = 3;    // The number of confirmations for the most recent transaction referencing the output address.
+    bool is_address_unused = 4;     // Whether the bitcoin address has ever been used, or not.
+}
+
+
+message GetVersionRequest {
+}
+
+message GetVersionReply {
+    string version = 1;     // The version of the Bisq software release.
+}
+
+
+// DAO phase enum mirroring bisq.core.dao.state.model.governance.DaoPhase.Phase.
+// Values match the Java enum's declaration order.
+enum DaoPhaseEnum {
+    DAO_PHASE_UNDEFINED = 0;
+    DAO_PHASE_PROPOSAL = 1;
+    DAO_PHASE_BREAK1 = 2;
+    DAO_PHASE_BLIND_VOTE = 3;
+    DAO_PHASE_BREAK2 = 4;
+    DAO_PHASE_VOTE_REVEAL = 5;
+    DAO_PHASE_BREAK3 = 6;
+    DAO_PHASE_RESULT = 7;
+}
+
+message GetCycleInfoRequest {
+}
+
+message GetCycleInfoReply {
+    int32 cycle_index = 1;                 // Zero-based index of the cycle currently active.
+    int32 chain_height = 2;                // Daemon's current DAO chain height.
+    DaoPhaseEnum phase = 3;                // The phase the chain height is currently in.
+    int32 first_block_of_cycle = 4;        // Height of the first block in the current cycle.
+    int32 last_block_of_cycle = 5;         // Height of the last block in the current cycle.
+    int32 first_block_of_phase = 6;        // Height of the first block in the current phase.
+    int32 last_block_of_phase = 7;         // Height of the last block in the current phase.
+    int32 duration_of_phase = 8;           // Number of blocks in the current phase.
+    int32 blocks_remaining_in_phase = 9;   // Blocks remaining until next phase starts (max 0).
+    bool is_dao_state_in_sync = 10;        // Whether the daemon believes its DAO state is fully synced.
+    int32 num_blind_votes_in_current_cycle = 11;  // Count of blind-vote payloads visible to this daemon in the current cycle (use to await P2P propagation).
+    int32 num_proposals_in_current_cycle = 12;    // Count of proposals (validated tempProposals) the daemon sees in the current cycle.
+}
+
+message GetCyclesRequest {
+}
+
+message CycleInfo {
+    int32 cycle_index = 1;
+    int32 height_of_first_block = 2;
+    int32 height_of_last_block = 3;
+    int32 duration = 4;
+}
+
+message GetCyclesReply {
+    repeated CycleInfo cycles = 1;
+}
+
+message GetProposalsRequest {
+    enum Filter {
+        // Proposals visible in the current cycle plus the user's unconfirmed proposals.
+        ACTIVE_OR_MY_UNCONFIRMED = 0;
+        // Only the local user's proposals.
+        MY = 1;
+        // All evaluated proposals across past cycles. A proposal only becomes evaluated
+        // after its cycle reaches the RESULT phase; for proposals in cycles still in
+        // PROPOSAL/BLIND_VOTE/VOTE_REVEAL, use ACTIVE_OR_MY_UNCONFIRMED.
+        ALL = 2;
+        // Evaluated proposals in the cycle identified by cycle_index. Returns an empty
+        // list for the current cycle until it reaches the RESULT phase.
+        FOR_CYCLE = 3;
+    }
+    Filter filter = 1;
+    int32 cycle_index = 2;   // Used only when filter == FOR_CYCLE.
+}
+
+// Summary of a Proposal. The full Proposal protobuf is not exposed to keep the API stable;
+// most automation needs only these fields. The original Proposal proto is still available
+// via the daemon's persistence layer for power users.
+message ProposalInfo {
+    string tx_id = 1;                 // Tx id of the proposal transaction.
+    string proposal_type = 2;         // ProposalType enum name (COMPENSATION_REQUEST, CHANGE_PARAM, etc.).
+    string name = 3;                  // User-supplied proposal name.
+    string link = 4;                  // User-supplied proposal link (GitHub PR url, etc.).
+    int64 tx_block_height = 5;        // Block height the proposal tx was mined at; -1 if unconfirmed.
+    string version = 6;               // Proposal payload version.
+    int64 creation_date = 7;          // Wall-clock creation date in milliseconds since epoch.
+    // Proposal-type specific fields. Empty if not applicable.
+    int64 requested_bsq = 10;         // Compensation / Reimbursement: requested BSQ amount in sats.
+    string param = 11;                // ChangeParam: Param enum name.
+    string param_value = 12;          // ChangeParam: new value as string.
+    string bonded_role_type = 13;     // BondedRole: BondedRoleType enum name.
+    string lockup_tx_id = 14;         // ConfiscateBond: lockup tx id being confiscated.
+    string asset_code = 15;           // RemoveAsset: asset code being removed.
+    string burning_man_receiver_address = 16; // Compensation: optional receiver address.
+}
+
+message GetProposalsReply {
+    repeated ProposalInfo proposals = 1;
+}
+
+message GetBallotsRequest {
+}
+
+message BallotInfo {
+    ProposalInfo proposal = 1;
+    // Vote state: "accept", "reject", or "ignore". "ignore" indicates the ballot has no vote
+    // (the user has not set one, or the user explicitly removed their vote).
+    string vote = 2;
+    bool has_vote = 3;       // True when the ballot has any non-null vote object.
+    bool vote_accept = 4;    // Meaningful only when has_vote is true.
+}
+
+message GetBallotsReply {
+    repeated BallotInfo ballots = 1;
+}
+
+message GetMyVotesRequest {
+}
+
+message MyVoteInfo {
+    int64 date = 1;                  // Creation timestamp of the blind vote (millis since epoch).
+    string blind_vote_tx_id = 2;     // Blind vote tx id.
+    string reveal_tx_id = 3;         // Reveal tx id; empty until the reveal phase completes.
+    int64 stake = 4;                 // Vote stake in BSQ sats.
+    int32 cycle_index = 5;           // Index of the cycle the vote belongs to.
+}
+
+message GetMyVotesReply {
+    repeated MyVoteInfo votes = 1;
+}
+
+message GetVoteResultsRequest {
+    int32 cycle_index = 1; // Negative value selects the most recent completed cycle.
+}
+
+message EvaluatedProposalInfo {
+    ProposalInfo proposal = 1;
+    bool is_accepted = 2;            // Whether the proposal passed quorum and threshold.
+    int64 required_quorum = 3;       // Required BSQ quorum in sats.
+    int64 required_threshold = 4;    // Required threshold in basis points (e.g. 5000 = 50%).
+    int64 stake_of_all_votes = 5;    // Total stake (BSQ sats) of votes counted for this proposal.
+    int64 num_accepted_votes = 6;    // Count of accept votes.
+    int64 num_rejected_votes = 7;    // Count of reject votes.
+    int64 num_ignored_votes = 8;     // Count of ignored (abstain) votes.
+}
+
+message GetVoteResultsReply {
+    repeated EvaluatedProposalInfo evaluated_proposals = 1;
+}
+
+message GetBondedRolesRequest {
+}
+
+message BondedRoleInfo {
+    string bonded_role_type = 1;     // BondedRoleType enum name.
+    string name = 2;                 // Role name.
+    string link = 3;                 // Role link.
+    // Deprecated. It is true only while this lockup lifecycle is active, so it is false for a READY_FOR_LOCKUP,
+    // UNLOCKED, ILLEGALLY_SPENT or CONFISCATED entry of a role the DAO did accept. Use bond_state instead.
+    bool is_accepted = 4;
+    int64 required_bond = 5;         // Required BSQ bond in sats.
+    string role_uid = 6;             // Stable role uid; several entries can share it.
+    optional string lockup_tx_id = 7; // Exact lockup represented by this entry, absent for READY_FOR_LOCKUP.
+    string bond_state = 8;           // BondState enum name for this exact lockup lifecycle.
+}
+
+message GetBondedRolesReply {
+    repeated BondedRoleInfo roles = 1;
+}
+
+message GetDaoParamValueRequest {
+    string param = 1;     // Param enum name.
+}
+
+message GetDaoParamValueReply {
+    string value = 1;
+}
+
+message CreateCompensationProposalRequest {
+    string name = 1;
+    string link = 2;
+    int64 requested_bsq = 3;                  // Requested BSQ in sats.
+    string burning_man_receiver_address = 4;  // Optional; empty for not set.
+}
+
+message CreateReimbursementProposalRequest {
+    string name = 1;
+    string link = 2;
+    int64 requested_bsq = 3;
+}
+
+message CreateChangeParamProposalRequest {
+    string name = 1;
+    string link = 2;
+    string param = 3;        // Param enum name.
+    string param_value = 4;  // New value (as string; format depends on Param).
+}
+
+message CreateBondedRoleProposalRequest {
+    string bonded_role_type = 1;   // BondedRoleType enum name.
+    string name = 2;
+    string link = 3;
+}
+
+message CreateConfiscateBondProposalRequest {
+    string name = 1;
+    string link = 2;
+    string lockup_tx_id = 3;
+}
+
+message CreateGenericProposalRequest {
+    string name = 1;
+    string link = 2;
+}
+
+message CreateRemoveAssetProposalRequest {
+    string name = 1;
+    string link = 2;
+    string asset_code = 3;
+}
+
+message CreateProposalReply {
+    ProposalInfo proposal = 1;     // The newly created proposal.
+}
+
+message SetVoteRequest {
+    string proposal_tx_id = 1;
+    // One of: "accept", "reject", "ignore". "ignore" clears the ballot's vote.
+    string vote = 2;
+}
+
+message SetVoteReply {
+}
+
+message PublishBlindVoteRequest {
+    int64 stake = 1;   // BSQ stake in sats.
+}
+
+message PublishBlindVoteReply {
+    string blind_vote_tx_id = 1;
+}
+
+message GetRawTransactionRequest {
+    string tx_id = 1;
+}
+
+message GetRawTransactionReply {
+    // Hex-encoded serialized transaction. Empty if the local wallet does not know the tx.
+    string raw_tx_hex = 1;
+}

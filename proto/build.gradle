@@ -1,0 +1,31 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
+plugins {
+    id 'bisq.java-conventions'
+    id 'idea'
+    alias(libs.plugins.protobuf)
+}
+
+def versionCatalog = extensions.getByType(VersionCatalogsExtension).named("libs")
+def getStrictVersion = { versionAlias ->
+    def version = versionCatalog.findVersion(versionAlias).get()
+    version.strictVersion ?: version.requiredVersion
+}
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    annotationProcessor libs.lombok
+    compileOnly libs.javax.annotation
+    compileOnly libs.lombok
+    implementation libs.logback.classic
+    implementation libs.logback.core
+    implementation libs.google.guava
+    implementation libs.protobuf.java
+    implementation libs.slf4j.api
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${getStrictVersion("protobuf")}"
+    }
+}

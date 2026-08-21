@@ -1,0 +1,6 @@
+# Approved Gradle wrapper file checksums.
+# Update this file only after reviewing Gradle wrapper changes.
+638c2862d623c302f3029f5bd1441276be484c5b79909b706a614ebe8e7a409b  gradlew
+8e327fcb99d29ce0fe3ee2fec6e6a25de815a2df83a6a44a553dea89ffc92955  gradlew.bat
+14dfa961b6704bb3decdea06502781edaa796a82e6da41cd2e1962b14fbe21a3  gradle/wrapper/gradle-wrapper.jar
+a5ab372a799dab4371be4ebd612e4e517f24f0d8506b006c8cdc53757a9a083e  gradle/wrapper/gradle-wrapper.properties

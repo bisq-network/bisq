@@ -1,0 +1,118 @@
+name: Linux Release Builder
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-builder-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  linux-release-builder:
+    name: Linux release-builder evidence, Java 21.0.6
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+          submodules: 'true'
+          persist-credentials: false
+
+    - name: Verify Gradle wrapper checksums
+      shell: bash
+      run: |
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+        else
+          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+        fi
+
+    - name: Build Linux release-builder image
+      shell: bash
+      run: docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+
+    - name: Prepare clean release-builder worktrees
+      shell: bash
+      run: |
+        mkdir -p build/release-builder-worktrees
+        git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"
+        git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"
+        git -C build/release-builder-worktrees/a submodule update --init --recursive
+        git -C build/release-builder-worktrees/b submodule update --init --recursive
+
+    - name: Generate Linux evidence in release-builder worktree A
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD/.git:$PWD/.git" \
+          -v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a" \
+          -w "$PWD/build/release-builder-worktrees/a" \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
+
+    - name: Generate Linux evidence in release-builder worktree B
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD/.git:$PWD/.git" \
+          -v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b" \
+          -w "$PWD/build/release-builder-worktrees/b" \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
+
+    - name: Compare release-builder Java evidence
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD/.git:$PWD/.git" \
+          -v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a" \
+          -v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro" \
+          -w "$PWD/build/release-builder-worktrees/a" \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew compareReleaseEvidenceBundles \
+            -PleftReleaseEvidence=build/reports/release/release-evidence.zip \
+            -PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"
+
+    - name: Compare release-builder installer evidence
+      shell: bash
+      run: |
+        docker run --rm --platform linux/amd64 \
+          --user "$(id -u):$(id -g)" \
+          -v "$PWD/.git:$PWD/.git" \
+          -v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a" \
+          -v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro" \
+          -w "$PWD/build/release-builder-worktrees/a" \
+          bisq-release-builder-linux:java-21.0.6 \
+          ./gradlew compareInstallerEvidenceBundles \
+            -PleftInstallerEvidence=build/reports/release/installer-evidence.zip \
+            -PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"
+
+    - name: Upload release-builder evidence
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: release-builder-linux-java-21.0.6
+        path: |
+          build/release-builder-worktrees/a/build/reports/release/SHA256SUMS
+          build/release-builder-worktrees/a/build/reports/release/release-manifest.tsv
+          build/release-builder-worktrees/a/build/reports/release/build-info.json
+          build/release-builder-worktrees/a/build/reports/release/release-evidence.zip
+        if-no-files-found: error
+
+    - name: Upload release-builder installer evidence
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: release-builder-linux-installers-java-21.0.6
+        path: |
+          build/release-builder-worktrees/a/build/reports/release/INSTALLER-SHA256SUMS
+          build/release-builder-worktrees/a/build/reports/release/installer-manifest.tsv
+          build/release-builder-worktrees/a/build/reports/release/installer-build-info.json
+          build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt
+          build/release-builder-worktrees/a/build/reports/release/installer-structure-report.tsv
+          build/release-builder-worktrees/a/build/reports/release/installer-structure/**
+          build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip
+        if-no-files-found: error

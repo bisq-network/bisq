@@ -1,0 +1,115 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.dao.state.model.blockchain;
+
+import bisq.common.encoding.canonical.CanonicalEnum;
+import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
+import bisq.common.proto.ProtoUtil;
+
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public enum TxOutputType implements ImmutableDaoStateModel, CanonicalEnum {
+    UNDEFINED, // only fallback for backward compatibility in case we add a new value and old clients fall back to UNDEFINED
+    UNDEFINED_OUTPUT,
+    GENESIS_OUTPUT,
+    BSQ_OUTPUT,
+    BTC_OUTPUT,
+    PROPOSAL_OP_RETURN_OUTPUT,
+    COMP_REQ_OP_RETURN_OUTPUT,
+    REIMBURSEMENT_OP_RETURN_OUTPUT,
+    CONFISCATE_BOND_OP_RETURN_OUTPUT,
+    ISSUANCE_CANDIDATE_OUTPUT,
+    BLIND_VOTE_LOCK_STAKE_OUTPUT,
+    BLIND_VOTE_OP_RETURN_OUTPUT,
+    VOTE_REVEAL_UNLOCK_STAKE_OUTPUT,
+    VOTE_REVEAL_OP_RETURN_OUTPUT,
+    ASSET_LISTING_FEE_OP_RETURN_OUTPUT,
+    PROOF_OF_BURN_OP_RETURN_OUTPUT,
+    LOCKUP_OUTPUT,
+    LOCKUP_OP_RETURN_OUTPUT,
+    UNLOCK_OUTPUT,
+    INVALID_OUTPUT;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static TxOutputType fromProto(protobuf.TxOutputType txOutputType) {
+        return ProtoUtil.enumFromProto(TxOutputType.class, txOutputType.name());
+    }
+
+    public protobuf.TxOutputType toProtoMessage() {
+        return protobuf.TxOutputType.valueOf(name());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // CanonicalEnum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public int getCode() {
+        switch (this) {
+            case UNDEFINED:
+                return 0;
+            case UNDEFINED_OUTPUT:
+                return 1;
+            case GENESIS_OUTPUT:
+                return 2;
+            case BSQ_OUTPUT:
+                return 3;
+            case BTC_OUTPUT:
+                return 4;
+            case PROPOSAL_OP_RETURN_OUTPUT:
+                return 5;
+            case COMP_REQ_OP_RETURN_OUTPUT:
+                return 6;
+            case REIMBURSEMENT_OP_RETURN_OUTPUT:
+                return 7;
+            case CONFISCATE_BOND_OP_RETURN_OUTPUT:
+                return 8;
+            case ISSUANCE_CANDIDATE_OUTPUT:
+                return 9;
+            case BLIND_VOTE_LOCK_STAKE_OUTPUT:
+                return 10;
+            case BLIND_VOTE_OP_RETURN_OUTPUT:
+                return 11;
+            case VOTE_REVEAL_UNLOCK_STAKE_OUTPUT:
+                return 12;
+            case VOTE_REVEAL_OP_RETURN_OUTPUT:
+                return 13;
+            case ASSET_LISTING_FEE_OP_RETURN_OUTPUT:
+                return 14;
+            case PROOF_OF_BURN_OP_RETURN_OUTPUT:
+                return 15;
+            case LOCKUP_OUTPUT:
+                return 16;
+            case LOCKUP_OP_RETURN_OUTPUT:
+                return 17;
+            case UNLOCK_OUTPUT:
+                return 18;
+            case INVALID_OUTPUT:
+                return 19;
+            default:
+                throw new IllegalStateException("Unhandled tx output type " + this);
+        }
+    }
+}

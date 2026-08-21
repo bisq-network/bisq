@@ -1,0 +1,31 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+    includeBuild('build-logic')
+}
+
+include 'proto'
+include 'proto-grpc'
+include 'assets'
+include 'bridge'
+include 'btcnodemonitor'
+include 'common'
+include 'p2p'
+include 'core'
+include 'cli'
+include 'daemon'
+include 'desktop'
+include 'inventory'
+include 'persistence'
+include 'restapi'
+include 'seednode'
+include 'statsnode'
+include 'apitest'
+include 'platform'
+include 'code-coverage-report'
+include 'updater'
+
+includeBuild 'bitcoind'
+
+rootProject.name = 'bisq'

@@ -1,0 +1,3 @@
+# nodeaddress.onion:port [(@owner,@backup)]
+localhost:2002 (@devtest1)
+localhost:3002 (@devtest2)

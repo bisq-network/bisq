@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+
+absolute_script_path=$(realpath "$0")
+scripts_dir_path=$(dirname "$absolute_script_path")
+
+java "${scripts_dir_path}/DumpSignaturePubKey.java" "$@"

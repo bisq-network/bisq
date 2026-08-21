@@ -1,0 +1,2886 @@
+@font-face {
+    src: url("/fonts/IBMPlexSans-Regular.ttf");
+}
+
+@font-face {
+    src: url("/fonts/IBMPlexSans-Bold.ttf");
+}
+
+@font-face {
+    src: url("/fonts/IBMPlexSans-Medium.ttf");
+}
+
+@font-face {
+    src: url("/fonts/IBMPlexSans-Light.ttf");
+}
+
+@font-face {
+    src: url("/fonts/IBMPlexMono-Regular.ttf");
+}
+
+.root {
+    -fx-font-size: 13;
+}
+
+.root:dir(ltr) {
+    -fx-font-family: "IBM Plex Sans";
+}
+
+/* Avoid color artefacts at antialias */
+.text {
+    -fx-font-smoothing-type: gray;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * General                                                                                                          *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+/* Text */
+.error-text {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.error {
+    -fx-accent: -bs-rd-error-red;
+}
+
+.success-text {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.highlight, .highlight-static {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+}
+
+.highlight:hover {
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
+}
+
+.info {
+    -fx-text-fill: -bs-color-primary;
+    -fx-fill: -bs-color-primary;
+}
+
+.info:hover {
+    -fx-text-fill: -bs-color-gray-6;
+    -fx-fill: -bs-color-gray-6;
+}
+
+.sub-info {
+    -fx-text-fill: -bs-color-gray-4;
+    -fx-fill: -bs-color-gray-4;
+}
+
+.headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.692em;
+}
+
+.warning-box {
+    -fx-background-color: -bs-yellow-light;
+    -fx-spacing: 6;
+    -fx-alignment: center;
+}
+
+.warning {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warning:hover {
+    -fx-text-fill: -bs-color-gray-6;
+    -fx-fill: -bs-color-gray-6;
+}
+
+.zero-decimals {
+    -fx-text-fill: -bs-color-gray-3;
+}
+
+.confirmation-label {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-confirmation-label;
+}
+
+.confirmation-value {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+.confirmation-text-field-as-label:readonly {
+    -fx-background-color: transparent !important;
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Mono";
+    -fx-padding: 0 !important;
+}
+
+/* Other UI Elements */
+.separator *.line {
+    -fx-border-style: solid;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-separator-dark;
+}
+
+.separator:vertical *.line {
+    -fx-border-width: 0 1 0 0;
+}
+
+.jfx-progress-bar > .bar,
+.jfx-progress-bar:indeterminate > .bar {
+    -fx-background-color: -bs-color-primary;
+}
+
+.jfx-progress-bar.error > .bar,
+.jfx-progress-bar:indeterminate.error > .bar {
+    -fx-background-color: -bs-rd-error-red;
+}
+
+.jfx-progress-bar > .track {
+    -fx-background-color: -bs-progress-bar-track;
+}
+
+.jfx-spinner {
+    -jfx-radius: 10;
+}
+
+.jfx-spinner:indeterminate .arc,
+.jfx-spinner:determinate .arc {
+    -fx-stroke: -bs-color-primary;
+}
+
+.busyanimation .text.percentage {
+    -fx-fill: null;
+}
+
+.jfx-button, .action-button {
+    -fx-background-color: -bs-color-gray-bbb;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-size: 0.923em;
+    -fx-font-weight: normal;
+    -fx-background-radius: 2px;
+    -fx-pref-height: 32;
+    -fx-min-height: -fx-pref-height;
+    -fx-padding: 0 40 0 40;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 2, 0, 0, 0, 1);
+    -fx-cursor: hand;
+}
+
+.jfx-button:hover, .jfx-button:focused {
+    -fx-background-color: derive(-bs-color-gray-2, -10%);
+}
+
+.action-button:hover, .action-button:focused {
+    -fx-background-color: derive(-bs-color-primary-dark, -10%);
+}
+
+.action-button {
+    -fx-background-color: -bs-color-primary-dark;
+    -fx-text-fill: -bs-background-color;
+}
+
+.compact-button, .table-cell .jfx-button, .action-button.compact-button {
+    -fx-padding: 0 10 0 10;
+}
+
+.tiny-button,
+.action-button.tiny-button {
+    -fx-font-size: 0.769em;
+    -fx-pref-height: 20;
+    -fx-padding: 3 8 3 8;
+    -fx-border-radius: 5;
+}
+
+.text-button {
+    -fx-background-color: transparent;
+    -fx-underline: true;
+    -fx-padding: 0 10 0 10;
+    -fx-pref-height: 28;
+    -fx-min-height: -fx-pref-height;
+}
+
+.text-button:hover {
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: transparent;
+    -fx-underline: false;
+}
+
+.jfx-check-box .box,
+.jfx-check-box:indeterminate .box,
+.jfx-check-box:indeterminate:selected .box {
+    -fx-border-radius: 0;
+    -fx-border-width: 1;
+    -fx-pref-width: 12;
+    -fx-pref-height: 12;
+}
+
+.jfx-check-box .mark,
+.jfx-check-box .indeterminate-mark {
+    -fx-border-radius: 0;
+    -fx-border-width: 1;
+}
+
+.jfx-combo-box {
+    -jfx-focus-color: -bs-color-primary;
+    -jfx-unfocus-color: -bs-color-gray-line;
+    -fx-background-color: -bs-background-color;
+}
+
+.jfx-combo-box > .list-cell {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.jfx-combo-box > .arrow-button > .arrow {
+    -fx-background-color: null;
+    -fx-border-color: -jfx-unfocus-color;
+    -fx-shape: "M 0 0 l 3.5 4 l 3.5 -4";
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background: -fx-selection-bar;
+    -fx-background-color: -fx-selection-bar;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected:hover {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+}
+
+
+/* list view */
+.list-view .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.list-view .list-cell:odd {
+    -fx-background-color: derive(-bs-background-color, -5%);
+}
+
+.list-view .list-cell:even {
+    -fx-background-color: derive(-bs-background-color, 5%);
+}
+
+.list-view .list-cell:hover,
+.list-view .list-cell:selected,
+.table-view .table-cell:hover,
+.table-view .table-cell:selected {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+
+.number-column.table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.list-view:focused,
+.tree-view:focused,
+.table-view:focused,
+.tree-table-view:focused,
+.table-view:focused,
+tree-table-view:focused {
+    -fx-background-insets: 0;
+}
+
+.list-view:focused {
+    -fx-background-color: -bs-color-primary;
+    -fx-background-insets: 0;
+}
+
+/* Selected rows */
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
+.tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:filled:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell .table-cell:selected,
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell .tree-table-cell:selected {
+    -fx-background-insets: 0;
+}
+
+/* Selected when control is not focused */
+.list-cell:filled:selected,
+.tree-cell:filled:selected,
+.table-row-cell:filled:selected,
+.tree-table-row-cell:filled:selected,
+.table-row-cell:filled > .table-cell:selected,
+.tree-table-row-cell:filled > .tree-table-cell:selected {
+    -fx-background-insets: 0;
+}
+
+.jfx-text-field {
+    -jfx-focus-color: -bs-color-primary;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 3 3 0 0;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field-top-label {
+    -fx-text-fill: -bs-color-gray-dim;
+}
+
+.jfx-text-field:readonly, .hyperlink-with-icon {
+    -fx-background-color: -bs-color-gray-1;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-field:readonly > .input-line {
+    -fx-background-color: transparent;
+}
+
+.jfx-text-field:readonly > .input-focused-line {
+    -fx-background-color: transparent;
+}
+
+.jfx-text-field:disabled > .input-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.jfx-text-field:disabled > .input-focused-line {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+#info-field {
+    -fx-prompt-text-fill: -bs-text-color;
+}
+
+.jfx-password-field {
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 3 3 0 0;
+    -jfx-focus-color: -bs-color-primary;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-password-field > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-password-field > .input-focused-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-field:error, .jfx-password-field:error, .jfx-text-area:error {
+    -jfx-focus-color: -bs-rd-error-red;
+    -jfx-unfocus-color: -bs-rd-error-red;
+}
+
+.jfx-text-field .error-label, .jfx-password-field .error-label, .jfx-text-area .error-label,
+.jfx-combo-box .error-label {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-font-size: 0.692em;
+    -fx-padding: -0.5em 0 0 0;
+}
+
+.jfx-text-field .error-icon, .jfx-password-field .error-icon, .jfx-text-area .error-icon {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-font-size: 1em;
+}
+
+.input-with-border {
+    -fx-background-color: -bs-background-color;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-background-gray;
+    -fx-border-radius: 3;
+    -fx-pref-height: 43;
+    -fx-pref-width: 310;
+    -fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);
+}
+
+.input-with-border .text-field {
+    -fx-alignment: center-right;
+    -fx-pref-height: 43;
+    -fx-font-size: 1.385em;
+}
+
+.input-with-border > .input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 60;
+    -fx-padding: 16;
+    -fx-alignment: center;
+}
+
+.input-with-border .icon {
+    -fx-padding: 10;
+}
+
+.input-with-border-readonly {
+    -fx-background-color: -bs-color-gray-1;
+    -fx-border-width: 0;
+    -fx-pref-width: 300;
+}
+
+.input-with-border-readonly .text-field {
+    -fx-alignment: center-right;
+    -fx-font-size: 1em;
+    -fx-background-color: -bs-color-gray-1;
+}
+
+.input-with-border-readonly .text-field > .input-line {
+    -fx-background-color: transparent;
+}
+
+.input-with-border-readonly > .input-label {
+    -fx-font-size: 0.692em;
+    -fx-min-width: 30;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+
+.input-with-border-readonly .icon {
+    -fx-padding: 2;
+}
+
+.jfx-badge .badge-pane {
+    -fx-background-color: -bs-red;
+    -fx-background-radius: 15;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+}
+
+.jfx-badge.new .badge-pane {
+    -fx-pref-width: 30;
+}
+
+.jfx-badge.auto-conf .badge-pane {
+    -fx-background-color: -xmr-orange;
+    -fx-pref-width: -1;
+    -fx-padding: -1 10 0 10;
+}
+
+.jfx-badge .badge-pane .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.692em;
+    /* Badge background is always red/orange in both themes, so keep the text
+       white for contrast. -bs-background-color is dark in the dark theme and
+       would make the count unreadable. */
+    -fx-text-fill: -bs-white;
+}
+
+.jfx-badge {
+    -fx-padding: -3 0 0 0;
+}
+
+.jfx-toggle-button,
+.jfx-toggle-button:armed,
+.jfx-toggle-button:hover,
+.jfx-toggle-button:focused,
+.jfx-toggle-button:selected,
+.jfx-toggle-button:focused:selected {
+    -jfx-toggle-color: -bs-color-primary-dark;
+    -jfx-size: 8;
+}
+
+.jfx-text-area {
+    -jfx-focus-color: -bs-color-primary;
+    -jfx-unfocus-color: -bs-color-gray-line;
+    -fx-background-color: -bs-background-color;
+    -fx-padding: 0.333333em 0.333333em 0.333333em 0.333333em;
+}
+
+.jfx-text-area:readonly {
+    -fx-background-color: transparent;
+}
+
+.jfx-text-area > .input-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.jfx-text-area > .input-focused-line {
+    -fx-translate-x: -0.333333em;
+}
+
+.wallet-seed-words {
+    -fx-font-family: "IBM Plex Mono";
+}
+
+.wallet-seed-words .content,
+.wallet-seed-words:focused .content {
+    -fx-padding: 12 12 0 12;
+}
+
+.jfx-date-picker {
+    -jfx-default-color: -bs-color-primary;
+}
+
+.jfx-date-picker .jfx-text-field {
+    -fx-padding: 0.333333em 0em 0.333333em 0em;
+}
+
+.jfx-date-picker .jfx-text-field > .input-line {
+    -fx-translate-x: 0em;
+}
+
+.jfx-date-picker .jfx-text-field > .input-focused-line {
+    -fx-translate-x: 0em;
+}
+
+.jfx-date-picker > .arrow-button > .arrow {
+    -fx-shape: "M320 384h128v128h-128zM512 384h128v128h-128zM704 384h128v128h-128zM128 768h128v128h-128zM320 768h128v128h-128zM512 768h128v128h-128zM320 576h128v128h-128zM512 576h128v128h-128zM704 576h128v128h-128zM128 576h128v128h-128zM832 0v64h-128v-64h-448v64h-128v-64h-128v1024h960v-1024h-128zM896 960h-832v-704h832v704z";
+    -fx-background-color: -jfx-default-color;
+    -fx-background-insets: 0;
+    -fx-padding: 10;
+}
+
+.jfx-date-picker > .arrow-button > .jfx-svg-glyph {
+    -fx-background-color: -jfx-default-color;
+}
+
+.date-picker-popup .month-year-pane {
+    -fx-background-color: -bs-color-primary-dark;
+}
+
+.scroll-bar {
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+    -fx-background-color: -bs-background-color;
+    -fx-border-color: -bs-background-color;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:vertical .track-background,
+.scroll-bar:horizontal .track-background {
+    -fx-background-color: -bs-background-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-background-insets: 2 0 2 0;
+    -fx-background-radius: 3;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-background-insets: 0 2 0 2;
+    -fx-background-radius: 3;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bs-color-gray-ccc;
+}
+
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bs-color-gray-ddd;
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button,
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-background-color: -bs-background-color;
+    -fx-padding: 1;
+}
+
+.scroll-bar:horizontal .increment-arrow,
+.scroll-bar:vertical .increment-arrow,
+.scroll-bar:horizontal .decrement-arrow,
+.scroll-bar:vertical .decrement-arrow {
+    -fx-shape: null;
+    -fx-background-color: -bs-background-color;
+}
+
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: -bs-background-color, -bs-color-gray-ccc, -bs-color-gray-ddd;
+}
+
+/* Behavior */
+.show-hand {
+    -fx-cursor: hand;
+}
+
+.hide-focus {
+    -fx-focus-color: transparent;
+}
+
+/* Font */
+.very-small-text {
+    -fx-font-size: 0.692em;
+}
+
+.small-text {
+    -fx-font-size: 0.769em;
+}
+
+.medium-text {
+    -fx-font-size: 0.846em;
+}
+
+.normal-text {
+    -fx-font-size: 0.923em;
+}
+
+.default-text {
+    -fx-font-size: 13;
+}
+
+.bold-text,
+.bold-text .text {
+    -fx-font-weight: bold;
+}
+
+/* Splash */
+#splash {
+    -fx-background-color: -bs-background-color;
+}
+
+/* Main UI */
+#base-content-container {
+    -fx-background-color: -bs-background-gray;
+}
+
+.content-pane {
+    -fx-background-color: linear-gradient(-bs-content-pane-bg-top 0%, -bs-content-pane-bg-bottom 100%);
+}
+
+#footer-pane {
+    -fx-background-color: -bs-footer-pane-background;
+    -fx-font-size: 0.923em;
+    -fx-text-fill: -bs-footer-pane-text;
+}
+
+#footer-pane-line {
+    -fx-background: -bs-footer-pane-line;
+}
+
+#headline-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.385em;
+}
+
+/* Main navigation */
+.top-navigation {
+    -fx-background-color: -bs-rd-nav-background;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-nav-primary-border;
+    -fx-pref-height: 57;
+    -fx-padding: 0 11 0 0;
+}
+
+.top-navigation .separator:vertical .line {
+    -fx-border-color: transparent transparent transparent transparent;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 1;
+}
+
+.nav-primary {
+    -fx-background-color: -bs-rd-nav-primary-background;
+    -fx-padding: 0 11 0 11;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: -bs-rd-nav-primary-border;
+    -fx-min-width: 410;
+}
+
+.nav-secondary {
+    -fx-padding: 0 11 0 11;
+    -fx-min-width: 296;
+}
+
+.nav-price-balance {
+    -fx-background-color: -bs-color-gray-background;
+    -fx-background-radius: 3;
+    -fx-effect: innershadow(gaussian, -bs-text-color-transparent, 3, 0, 0, 1);
+    -fx-pref-height: 41;
+    -fx-padding: 0 10 0 0;
+}
+
+.nav-price-balance .separator:vertical .line {
+    -fx-border-color: transparent transparent transparent -bs-rd-separator-dark;
+    -fx-border-width: 1;
+    -fx-border-insets: 0 0 0 1;
+}
+
+.nav-price-balance .jfx-combo-box > .input-line {
+    -fx-pref-height: 0px;
+}
+
+.jfx-badge > .nav-button {
+    -fx-translate-y: 1;
+}
+
+.nav-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-padding: 11;
+}
+
+.nav-button .text {
+    -fx-font-size: 0.769em;
+    -fx-font-weight: bold;
+    -fx-fill: -bs-rd-nav-deselected;
+}
+
+.nav-button-japanese .text {
+    -fx-font-size: 1em;
+}
+
+.nav-button:selected {
+    -fx-background-color: -bs-background-color;
+    -fx-border-radius: 4;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+.nav-button:selected .text {
+    -fx-fill: -bs-rd-nav-selected;
+}
+
+.nav-balance-display {
+    -fx-alignment: center-left;
+    -fx-text-fill: -bs-rd-font-balance;
+}
+
+.nav-balance-label {
+    -fx-font-size: 0.769em;
+    -fx-alignment: center-left;
+    -fx-text-fill: -bs-rd-font-balance-label;
+}
+
+#nav-alert-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 0.846em;
+    -fx-text-fill: -bs-background-color;
+}
+
+.text-field {
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
+}
+
+.text-area {
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
+}
+
+#label-url {
+    -fx-cursor: hand;
+    -fx-text-fill: -bs-color-blue-0;
+    -fx-underline: true;
+}
+
+/** Confirmation Indicator */
+.progress-indicator > .determinate-indicator > .indicator {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-border-color: -fx-box-border;
+    -fx-border-width: 1;
+    -fx-padding: 0.166667em; /* 2px */
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Icons                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+.icon, .icon:hover {
+    -fx-cursor: hand;
+}
+
+.hidden-icon-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+#icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.copy-icon-disputes {
+    -fx-text-fill: -bs-background-color;
+}
+
+.copy-icon:hover {
+    -fx-text-fill: -bs-text-color;
+}
+
+.received-funds-icon {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.sent-funds-icon {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.version {
+    -fx-text-fill: -bs-text-color;
+    -fx-underline: false;
+    -fx-cursor: null;
+}
+
+.version-new {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-underline: true;
+    -fx-cursor: hand;
+}
+
+.alert {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.icon {
+    -fx-fill: -bs-text-color;
+}
+
+.opaque-icon {
+    -fx-fill: -bs-color-gray-bbb;
+    -fx-opacity: 1;
+}
+
+.opaque-icon-character {
+    -fx-font-size: 3em;
+    -fx-text-fill: -bs-color-gray-bbb;
+    -fx-padding: 24 2 0 2;
+}
+
+.opaque-icon-character.small {
+    -fx-font-size: 1em;
+    -fx-padding: 27 2 0 2;
+}
+
+.alert-icon {
+    -fx-fill: -bs-rd-error-red;
+    -fx-cursor: hand;
+}
+
+.close-icon {
+    -fx-fill: -bs-text-color;
+}
+
+.close-icon:hover {
+    -fx-fill: -fx-accent;
+}
+
+.tooltip-icon {
+    -fx-fill: -bs-text-color;
+}
+
+.link-icon {
+    -fx-fill: -bs-color-gray-ccc;
+}
+
+.link-icon:hover {
+    -fx-fill: -fx-accent;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tooltip                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+.tooltip {
+    -fx-background: -bs-background-color;
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
+    -fx-effect: dropshadow(three-pass-box, -bs-text-color-transparent, 10, 0, 0, 3);
+    -fx-font-size: 0.85em;
+}
+
+/* Same style like non editable textfield. But textfield spans a whole column in a grid, so we use generally
+textfield */
+#label-with-background {
+    -fx-background-color: -bs-color-gray-fafa;
+    -fx-border-radius: 4;
+    -fx-padding: 4 4 4 4;
+}
+
+#funds-confidence {
+    -fx-progress-color: -bs-color-gray-dim;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+}
+
+#xmr-confidence {
+    -fx-progress-color: -xmr-orange;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+}
+
+.hyperlink,
+.hyperlink.force-underline .text,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    -fx-underline: true;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-fill: -bs-rd-font-dark;
+}
+
+.hyperlink.no-underline {
+    -fx-underline: false;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
+}
+
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited {
+    -fx-underline: false;
+}
+
+.hyperlink.highlight,
+.hyperlink.highlight .text.hyperlink.no-underline {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+}
+
+.hyperlink.error {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Table                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: derive(-bs-background-color, 5%);
+    -fx-border-color: derive(-bs-background-color, 5%);
+}
+
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color, -5%);
+    -fx-border-color: derive(-bs-background-color, -5%);
+}
+
+.table-view .table-row-cell:hover .table-cell,
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+
+.table-row-cell {
+    -fx-border-color: -bs-background-color;
+}
+
+.table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
+    -fx-background-color: -bs-background-color;
+    -fx-min-height: 36;
+}
+
+.offer-table .table-row-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.table-view .table-cell {
+    -fx-alignment: center-left;
+    -fx-padding: 2 0 2 0;
+    /*-fx-padding: 3 0 2 0;*/
+}
+
+.table-view .table-cell.last-column {
+    -fx-alignment: center-right;
+    -fx-padding: 2 10 2 0;
+}
+
+.table-view .table-cell.last-column.avatar-column {
+    -fx-alignment: center;
+    -fx-padding: 2 0 2 0;
+}
+
+.table-view .column-header.last-column {
+    -fx-padding: 0 10 0 0;
+}
+
+.table-view .column-header.last-column .label {
+    -fx-alignment: center-right;
+}
+
+.table-view .column-header.last-column.avatar-column {
+    -fx-padding: 0;
+}
+
+.table-view .column-header.last-column.avatar-column .label {
+    -fx-alignment: center;
+}
+
+.table-view .table-cell.first-column {
+    -fx-padding: 2 0 2 10;
+}
+
+.table-view .column-header.first-column {
+    -fx-padding: 0 0 0 10;
+}
+
+.number-column.table-cell {
+    -fx-font-size: 1em;
+    -fx-padding: 0 0 0 0;
+}
+
+.table-view .filler {
+    -fx-background-color: -bs-color-gray-0;
+}
+
+.table-view {
+    -fx-control-inner-background-alt: -fx-control-inner-background;
+}
+
+.table-view .column-header .label {
+    -fx-alignment: center-left;
+    -fx-font-weight: normal;
+    -fx-font-size: 0.923em;
+    -fx-padding: 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-padding: 0;
+}
+
+.table-view .focus {
+    -fx-alignment: center-left;
+}
+
+.table-view .text {
+    -fx-fill: -bs-text-color;
+}
+
+/* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
+.table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+
+.table-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+.table-view:focused .table-row-cell:focused {
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+
+.offer-table .table-row-cell {
+    -fx-border-color: -bs-background-color;
+    -fx-table-cell-border-color: -bs-background-color;
+}
+
+.table-row-cell {
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-color-gray-0;
+    -fx-table-cell-border-color: -bs-background-color;
+}
+
+.table-row-cell:selected {
+    -fx-border-width: 0 0 1 0;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-row-cell:empty {
+    -fx-border-width: 0;
+    -fx-background-color: -bs-background-color;
+    -fx-table-cell-border-color: transparent;
+}
+
+.table-view .table-row-cell:selected .table-row-cell:row-selection .table-row-cell:cell-selection .text {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell:selected .button .text {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell .copy-icon .text,
+.table-view .table-row-cell .copy-icon .text:hover {
+    -fx-fill: -fx-accent;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell:selected .copy-icon .text:hover {
+    -fx-fill: -bs-text-color;
+}
+
+.table-view .table-row-cell:selected .hyperlink .text {
+    -fx-fill: -bs-text-color;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text {
+    -fx-fill: -bs-rd-font-dark;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink .text:hover,
+.table-view .table-row-cell:selected .hyperlink .text:hover {
+    -fx-fill: -bs-text-color;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:hover,
+.table-view .table-row-cell .hyperlink:visited,
+.table-view .table-row-cell .hyperlink:hover:visited {
+    -fx-underline: false;
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view .table-row-cell .hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+}
+
+.table-view.large-rows .table-row-cell {
+    -fx-cell-size: 47px;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Icons                                                                       *
+ *                                                                             *
+ ******************************************************************************/
+
+#non-clickable-icon {
+    -fx-text-fill: -bs-color-gray-4;
+}
+
+.delete-icon {
+    -fx-fill: -bs-red;
+}
+
+.delete {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+.delete:hover {
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
+}
+
+.warn-icon {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.warn-icon:hover {
+    -fx-text-fill: -bs-yellow;
+    -fx-fill: -bs-yellow;
+}
+
+.error-icon {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+.error-icon:hover {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Images                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+.qr-code {
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Textarea                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+.text-area {
+    -fx-border-color: -bs-background-gray;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Tab pane                                                                    *
+ *                                                                             *
+ ******************************************************************************/
+.jfx-tab-pane {
+    -fx-padding: 0;
+    -jfx-disable-animation: true;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button {
+    -fx-background-color: transparent;
+    -fx-pref-width: 20;
+    -fx-pref-height: 20;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button > .jfx-svg-glyph {
+    -fx-shape: "M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z";
+    -jfx-size: 9;
+    -fx-background-color: -bs-rd-font-light;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-close-button {
+    -fx-padding: 0 0 2 0;
+}
+
+.jfx-tab-pane .headers-region .tab:selected .tab-container .tab-close-button > .jfx-svg-glyph {
+    -fx-background-color: -fx-accent;
+}
+
+.jfx-tab-pane .tab-header-background {
+    -fx-background-color: -bs-color-gray-background;
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: -bs-rd-tab-border;
+}
+
+.jfx-tab-pane .headers-region .tab-selected-line {
+    -fx-background-color: -fx-accent;
+    -fx-pref-height: 1;
+}
+
+.jfx-tab-pane .headers-region .tab .tab-container .tab-label {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-padding: 14;
+    -fx-font-size: 0.769em;
+    -fx-font-weight: normal;
+}
+
+.jfx-tab-pane .depth-container {
+    -fx-effect: none;
+}
+
+.jfx-tab-pane .headers-region .tab:selected .tab-container .tab-label {
+    -fx-text-fill: -fx-accent;
+}
+
+.jfx-tab-pane .headers-region > .tab > .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
+}
+
+.jfx-tab-pane .headers-region .tab:closable {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-style: none;
+    -fx-border-insets: 0;
+    -fx-padding: 9;
+}
+
+.jfx-tab-pane .headers-region .tab:closable .tab-container .tab-label {
+    -fx-padding: 5;
+}
+
+#form-header-text {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+}
+
+#form-title {
+    -fx-font-weight: bold;
+}
+
+/* scroll-pane */
+.scroll-pane {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane:focused {
+    -fx-background-insets: 0;
+}
+
+.scroll-pane .corner {
+    -fx-background-insets: 0;
+}
+
+/* validation */
+.validation-error {
+    -fx-text-fill: -bs-red;
+}
+
+/* Account */
+#content-pane-top {
+    -fx-background-color: -bs-color-gray-2,
+    linear-gradient(-bs-color-gray-2 0%, -bs-color-gray-3 100%),
+    linear-gradient(-bs-color-gray-2 0%, -bs-background-gray 100%);
+    -fx-background-insets: 0 0 0 0, 0, 1;
+}
+
+#info-icon-label {
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-color-gray-13;
+}
+
+/* OfferPayload book */
+#num-offers {
+    -fx-font-size: 0.923em;
+}
+
+/* Create offer */
+#direction-icon-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-color-gray-6;
+}
+
+#input-description-label {
+    -fx-font-size: 0.846em;
+    -fx-alignment: center-left;
+}
+
+#create-offer-calc-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.538em;
+    -fx-padding: 15 5 0 5;
+}
+
+#toggle-price-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-color-gray-4;
+    -fx-border-style: solid none solid solid;
+    -fx-border-insets: 0 -2 0 0;
+    -fx-background-insets: 0 -2 0 0;
+    -fx-background-radius: 4 0 0 4;
+}
+
+#toggle-price-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-padding: 4 4 4 4;
+    -fx-border-color: -bs-color-gray-4;
+    -fx-border-style: solid solid solid none;
+    -fx-border-insets: 0 0 0 -2;
+    -fx-background-insets: 0 0 0 -2;
+    -fx-background-radius: 0 4 4 0;
+}
+
+#totals-separator {
+    -fx-background: -bs-color-gray-4;
+}
+
+#payment-info {
+    -fx-background-color: -bs-content-background-gray;
+}
+
+.toggle-button-active {
+    -fx-background-color: -bs-blue-transparent;
+}
+
+.toggle-button-inactive {
+    -fx-background-color: -bs-color-gray-1;
+}
+
+#trade-fee-textfield {
+    -fx-font-size: 0.9em;
+    -fx-alignment: center-right;
+}
+
+/* Open Offer */
+.offer-disabled .label {
+    -fx-text-fill: -bs-color-gray-3;
+}
+
+/* OfferBook */
+.table-title {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-alignment: center-left;
+}
+
+.combo-box-editor-bold {
+    -fx-font-weight: bold;
+    -fx-padding: 5 8 5 8 !important;
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.currency-label-small {
+    -fx-font-size: 0.692em;
+    -fx-text-fill: -bs-rd-font-lighter;
+    -fx-alignment: center;
+    -fx-pref-height: 35px;
+    -fx-pref-width: 45px;
+}
+
+.offer-label-small {
+    -fx-font-size: 0.692em;
+    -fx-alignment: center-right;
+    -fx-text-fill: -bs-text-color;
+}
+
+.currency-label-selected {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.currency-label {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-alignment: center-left;
+    -fx-pref-height: 35px;
+}
+
+/* Offer */
+.percentage-label {
+    -fx-alignment: center;
+}
+
+.offer-separator {
+    -fx-background: -bs-color-gray-6;
+}
+
+#address-text-field {
+    -fx-cursor: hand;
+    -fx-text-fill: -fx-accent;
+    -fx-prompt-text-fill: -bs-text-color;
+}
+
+#address-text-field:hover {
+    -fx-text-fill: -bs-text-color;
+}
+
+#address-text-field-error {
+    -fx-cursor: hand;
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-prompt-text-fill: -bs-text-color;
+}
+
+/* Account setup */
+#wizard-item-background-deactivated {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-aaa);
+    -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-gray-5, -bs-color-gray-6);
+    -fx-outer-border: linear-gradient(to bottom, -bs-color-blue-1, -bs-color-blue-2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#wizard-item-background-completed {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-aaa);
+    -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-color-green-2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Account settings */
+#account-settings-item-background-disabled {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-active {
+    -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+#account-settings-item-background-selected {
+    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-5, -bs-color-gray-1);
+    -fx-outer-border: linear-gradient(to bottom, -bs-color-blue-1, -bs-color-blue-2);
+    -fx-background-color: -fx-shadow-highlight-color,
+    -fx-outer-border,
+    -fx-inner-border,
+    -fx-body-color;
+    -fx-background-insets: 0 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* Pending trades */
+#trade-wizard-item-background-disabled {
+    -fx-text-fill: -bs-rd-font-light;
+}
+
+#trade-wizard-item-background-active {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.trade-step-label {
+    -fx-text-fill: -bs-background-color;
+}
+
+.trade-step-disabled-bg {
+    -fx-fill: -bs-color-gray-ccc;
+}
+
+.trade-step-active-bg {
+    -fx-fill: -bs-color-primary-dark;
+}
+
+.trade-msg-state-undefined {
+    -fx-text-fill: -bs-yellow;
+}
+
+.trade-msg-state-sent {
+    -fx-text-fill: -bs-yellow-light;
+}
+
+.trade-msg-state-arrived {
+    -fx-text-fill: -bs-turquoise;
+}
+
+.trade-msg-state-stored {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.trade-msg-state-acknowledged {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.trade-msg-state-failed {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+#open-support-button {
+    -fx-font-weight: bold;
+    -fx-font-size: 1.077em;
+    -fx-background-color: -bs-warning;
+}
+
+#open-dispute-button {
+    -fx-font-weight: bold;
+    -fx-text-fill: -bs-background-color;
+    -fx-font-size: 1.077em;
+    -fx-background-color: -bs-rd-error-red;
+}
+
+/* TitledGroupBg */
+.titled-group-bg-label, .titled-group-bg-label-active {
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-text-color;
+    -fx-background-color: transparent;
+}
+
+.titled-group-bg, .titled-group-bg-active {
+    -fx-body-color: -bs-color-gray-background;
+    -fx-border-color: -bs-rd-separator;
+    -fx-border-width: 0 0 1 0;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.titled-group-bg.last, .titled-group-bg-active.last {
+    -fx-border-width: 0;
+}
+
+/* TableGroupHeadline */
+#table-group-headline {
+    -fx-background-color: -bs-content-background-gray;
+    -fx-background-insets: 10 0 -1 0, 0, 1, 2;
+    -fx-background-radius: 3px, 3px, 2px, 1px;
+}
+
+/* copied form modena.css text-input */
+#flow-pane-checkboxes-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -fx-control-inner-background);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+#flow-pane-checkboxes-non-editable-bg {
+    -fx-text-fill: -fx-text-inner-color;
+    -fx-highlight-fill: derive(-fx-control-inner-background, -20%);
+    -fx-highlight-text-fill: -fx-text-inner-color;
+    -fx-prompt-text-fill: derive(-bs-prompt-text, -30%);
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-text-box-border, -10%), -fx-text-box-border),
+    linear-gradient(from 0px 0px to 0px 5px, derive(-fx-control-inner-background, -9%), -bs-color-gray-1);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0.333333em 0.583em 0.333333em 0.583em; /* 4 7 4 7 */
+}
+
+/* message-list-view*/
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+#message-list-view.list-cell {
+    -fx-padding: 0.25em 0.583em 0.25em 0.583em;
+}
+
+#message-list-view.list-view {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+#message-list-view.list-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+}
+
+/* bubble */
+#message-bubble-green {
+    -fx-background-color: -bs-color-primary;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-blue {
+    -fx-background-color: -bs-rd-message-bubble;
+    -fx-background-radius: 10 10 10 10;
+}
+
+#message-bubble-grey {
+    -fx-background-color: -bs-color-gray-3;
+    -fx-background-radius: 10 10 10 10;
+}
+
+.attachment-icon {
+    -fx-text-fill: -bs-background-color;
+    -fx-cursor: hand;
+}
+
+.attachment-icon-black {
+    -fx-text-fill: -bs-text-color;
+    -fx-cursor: hand;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Grid pane                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+.grid-pane {
+    -fx-background-color: -bs-content-background-gray;
+    -fx-background-radius: 5;
+    -fx-effect: null;
+    -fx-effect: dropshadow(gaussian, -bs-color-gray-10, 10, 0, 0, 0);
+    -fx-background-insets: 10;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Market overview                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+.chart-pane {
+    -fx-background-color: -bs-background-color;
+}
+
+#charts .chart-legend, #charts-dao .chart-legend {
+    -fx-font-size: 1.077em;
+    -fx-alignment: center;
+}
+
+#charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
+    -fx-tick-label-fill: -bs-rd-font-lighter;
+    -fx-tick-label-font-size: 0.769em;
+    -fx-font-size: 0.880em;
+}
+
+#price-chart .axis-tick-mark-text-node,
+#volume-chart .axis-tick-mark-text-node,
+#charts-dao .axis-tick-mark-text-node {
+    -fx-text-alignment: center;
+}
+
+#charts .chart-plot-background, #charts-dao .chart-plot-background {
+    -fx-background-color: -bs-background-color;
+}
+
+#charts .default-color0.chart-area-symbol {
+    -fx-background-color: -bs-sell, -bs-background-color;
+}
+
+#charts .default-color1.chart-area-symbol, #charts-dao .default-color0.chart-area-symbol {
+    -fx-background-color: -bs-buy, -bs-background-color;
+}
+
+#charts .default-color0.chart-series-area-line {
+    -fx-stroke: -bs-sell;
+}
+
+#charts .default-color1.chart-series-area-line, #charts-dao .default-color0.chart-series-area-line {
+    -fx-stroke: -bs-buy;
+}
+
+/* The .chart-line-symbol rules change the color of the legend symbol */
+#charts-dao .default-color0.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line1;
+}
+
+#charts-dao .default-color0.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line1, -bs-chart-dao-line1;
+}
+
+#charts-dao .default-color1.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line2;
+}
+
+#charts-dao .default-color1.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2;
+}
+
+#charts-dao .default-color2.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line3;
+}
+
+#charts-dao .default-color2.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line3, -bs-chart-dao-line3;
+}
+
+#charts-dao .default-color3.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line4;
+}
+
+#charts-dao .default-color3.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line4, -bs-chart-dao-line4;
+}
+
+#charts-dao .default-color4.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line5;
+}
+
+#charts-dao .default-color4.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line5, -bs-chart-dao-line5;
+}
+
+#charts-dao .default-color5.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line6;
+}
+
+#charts-dao .default-color5.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line6, -bs-chart-dao-line6;
+}
+
+#charts-dao .default-color6.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line7;
+}
+
+#charts-dao .default-color6.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line7, -bs-chart-dao-line7;
+}
+
+#charts-dao .default-color7.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line8;
+}
+
+#charts-dao .default-color7.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line8, -bs-chart-dao-line8;
+}
+
+#charts-dao .default-color8.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line9;
+}
+
+#charts-dao .default-color8.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line9, -bs-chart-dao-line9;
+}
+
+#charts-dao .default-color9.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line10;
+}
+
+#charts-dao .default-color9.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line10, -bs-chart-dao-line10;
+}
+
+
+#charts-dao .default-color10.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line11;
+}
+
+#charts-dao .default-color10.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line11, -bs-chart-dao-line11;
+}
+
+#charts-dao .default-color11.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line12;
+}
+
+#charts-dao .default-color11.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line12, -bs-chart-dao-line12;
+}
+
+#charts-dao .default-color12.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line13;
+}
+
+#charts-dao .default-color12.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line13, -bs-chart-dao-line13;
+}
+
+
+#charts-dao .default-color13.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line14;
+}
+
+#charts-dao .default-color13.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line14, -bs-chart-dao-line14;
+}
+
+#charts-dao .default-color14.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line15;
+}
+
+#charts-dao .default-color14.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line15, -bs-chart-dao-line15;
+}
+
+
+#charts-legend-toggle0 {
+    -jfx-toggle-color: -bs-chart-dao-line1
+}
+
+#charts-legend-toggle1 {
+    -jfx-toggle-color: -bs-chart-dao-line2;
+}
+
+#charts-legend-toggle2 {
+    -jfx-toggle-color: -bs-chart-dao-line3;
+}
+
+#charts-legend-toggle3 {
+    -jfx-toggle-color: -bs-chart-dao-line4;
+}
+
+#charts-legend-toggle4 {
+    -jfx-toggle-color: -bs-chart-dao-line5;
+}
+
+#charts-legend-toggle5 {
+    -jfx-toggle-color: -bs-chart-dao-line6;
+}
+
+#charts-legend-toggle6 {
+    -jfx-toggle-color: -bs-chart-dao-line7;
+}
+
+#charts-legend-toggle7 {
+    -jfx-toggle-color: -bs-chart-dao-line8;
+}
+
+#charts-legend-toggle8 {
+    -jfx-toggle-color: -bs-chart-dao-line9;
+}
+
+#charts-legend-toggle9 {
+    -jfx-toggle-color: -bs-chart-dao-line10;
+}
+
+#charts-legend-toggle10 {
+    -jfx-toggle-color: -bs-chart-dao-line11;
+}
+
+#charts-legend-toggle11 {
+    -jfx-toggle-color: -bs-chart-dao-line12;
+}
+
+#charts-legend-toggle12 {
+    -jfx-toggle-color: -bs-chart-dao-line13;
+}
+
+#charts-legend-toggle13 {
+    -jfx-toggle-color: -bs-chart-dao-line14;
+}
+
+#charts-legend-toggle14 {
+    -jfx-toggle-color: -bs-chart-dao-line15;
+}
+
+#charts-dao .chart-series-line {
+    -fx-stroke-width: 2px;
+}
+
+#charts .default-color0.chart-series-area-fill {
+    -fx-fill: -bs-sell-transparent;
+}
+
+#charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
+    -fx-fill: -bs-buy-transparent;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+#charts .axis-label {
+    -fx-font-size: 0.769em;
+    -fx-alignment: center-left;
+}
+
+#charts .axisy .axis-label {
+    -fx-alignment: center;
+}
+
+#chart-navigation-label {
+    -fx-text-fill: -bs-rd-font-lighter;
+    -fx-font-size: 0.769em;
+    -fx-alignment: center;
+}
+
+#chart-navigation-center-pane {
+    -fx-background-color: -bs-progress-bar-track;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Highlight buttons                                                                                                  *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+#buy-button-big {
+    -fx-font-size: 1em;
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: -bs-white;
+}
+
+#buy-button {
+    -fx-background-color: -bs-buy;
+    -fx-text-fill: -bs-white;
+}
+
+#buy-button-big:hover, #buy-button:hover,
+#buy-button-big:focused, #buy-button:focused {
+    -fx-background-color: derive(-bs-buy, -10%);
+}
+
+#sell-button-big {
+    -fx-background-color: -bs-sell;
+    -fx-text-fill: -bs-white;
+    -fx-font-size: 1em;
+}
+
+#sell-button {
+    -fx-background-color: -bs-sell;
+    -fx-text-fill: -bs-white;
+}
+
+#sell-button-big:hover, #sell-button:hover,
+#sell-button-big:focused, #sell-button:focused {
+    -fx-background-color: derive(-bs-sell, -10%);
+}
+
+#sell-button-big.grey-style, #buy-button-big.grey-style,
+#sell-button.grey-style, #buy-button.grey-style {
+    -fx-background-color: -bs-color-gray-bbb;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+.action-button:disabled, #sell-button:disabled, #buy-button:disabled {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Popups                                                                                                           *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+.popup-headline {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.popup-headline-information {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-color-primary;
+}
+
+.popup-headline-warning {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.popup-icon-information {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.popup-icon-warning {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.popup-bg, .notification-popup-bg, .peer-info-popup-bg {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 0;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, 0, 0);
+}
+
+.popup-bg-top {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 0;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, 0, 0);
+}
+
+.notification-popup-headline, peer-info-popup-headline {
+    -fx-font-size: 1.077em;
+    /*-fx-font-weight: bold;*/
+    -fx-text-fill: -bs-color-primary;
+}
+
+.notification-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, -1, 3);
+}
+
+.peer-info-popup-bg {
+    -fx-font-size: 0.846em;
+    -fx-background-insets: 44;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 44, 0, -1, 3);
+}
+
+.account-status-title {
+    -fx-font-size: 0.769em;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.account-status-inactive-info-item {
+    -fx-text-fill: -bs-color-gray-dim;
+    -fx-fill: -bs-color-gray-dim;
+}
+
+.account-status-active-info-item {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+}
+
+#price-feed-combo {
+    -fx-background-color: none;
+}
+
+#price-feed-combo > .list-cell {
+    -fx-text-fill: -bs-text-color;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+#invert-market-price {
+    -fx-text-fill: -bs-color-gray-11;
+}
+
+#popup-qr-code-info {
+    -fx-font-size: 0.846em;
+}
+
+#ident-num-label {
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 0.769em;
+    -fx-text-fill: -bs-background-color;
+}
+
+#toggle-left {
+    -fx-border-radius: 4 0 0 4;
+    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-background-radius: 4 0 0 4;
+    -fx-background-color: -bs-background-color;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-center {
+    -fx-border-radius: 0;
+    -fx-border-color: -bs-rd-separator-dark;
+    -fx-border-style: solid;
+    -fx-border-width: 0 1 0 0;
+    -fx-border-insets: 0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-background-color: -bs-background-color;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-center:selected, #toggle-left:selected, #toggle-right:selected {
+    -fx-text-fill: -bs-background-color;
+    -fx-background-color: -bs-toggle-selected;
+}
+
+#toggle-right {
+    -fx-border-radius: 0 4 4 0;
+    -fx-border-width: 0;
+    -fx-background-radius: 0 4 4 0;
+    -fx-background-color: -bs-background-color;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent, 4, 0, 0, 0, 2);
+}
+
+#toggle-left:hover, #toggle-right:hover, #toggle-center:hover {
+    -fx-background-color: -bs-toggle-selected;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Arbitration                                                                                                      *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+.message {
+    -fx-text-fill: -bs-text-color;
+}
+
+.my-message {
+    -fx-text-fill: -bs-background-color;
+}
+
+.message-header {
+    -fx-text-fill: -bs-color-gray-3;
+    -fx-font-size: 0.846em;
+}
+
+.my-message-header {
+    -fx-text-fill: -bs-rd-message-bubble;
+    -fx-fill: -bs-rd-message-bubble;
+    -fx-font-size: 0.846em;
+}
+
+.dispute-chat-border {
+    -fx-background-color: -bs-support-chat-background;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * DAO                                                                                                              *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+.dao-tx-type-trade-fee-icon,
+.dao-tx-type-trade-fee-icon:hover {
+    -fx-text-fill: -bs-color-green-2;
+}
+
+.dao-tx-type-unverified-icon,
+.dao-tx-type-unverified-icon:hover {
+    -fx-text-fill: -bs-yellow;
+}
+
+.dao-tx-type-invalid-icon,
+.dao-tx-type-invalid-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.dao-tx-type-self-icon,
+.dao-tx-type-self-icon:hover {
+    -fx-text-fill: -bs-color-gray-2;
+}
+
+.dao-tx-type-proposal-fee-icon,
+.dao-tx-type-proposal-fee-icon:hover {
+    -fx-text-fill: -bs-color-green-4;
+}
+
+.dao-tx-type-genesis-icon,
+.dao-tx-type-genesis-icon:hover {
+    -fx-text-fill: -fx-accent;
+}
+
+.dao-tx-type-received-funds-icon,
+.dao-tx-type-received-funds-icon:hover {
+    -fx-text-fill: -bs-green-soft;
+}
+
+.dao-tx-type-sent-funds-icon,
+.dao-tx-type-sent-funds-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+}
+
+.dao-tx-type-vote-icon,
+.dao-tx-type-vote-icon:hover {
+    -fx-text-fill: -bs-color-blue-5;
+}
+
+.dao-tx-type-vote-reveal-icon,
+.dao-tx-type-vote-reveal-icon:hover {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.dao-tx-type-issuance-icon,
+.dao-tx-type-issuance-icon:hover {
+    -fx-text-fill: -bs-color-green-3;
+}
+
+.dao-tx-type-lockup-icon,
+.dao-tx-type-lockup-icon:hover {
+    -fx-text-fill: -bs-color-blue-5;
+}
+
+.dao-tx-type-unlock-icon,
+.dao-tx-type-unlock-icon:hover {
+    -fx-text-fill: -bs-color-green-3;
+}
+
+.dao-tx-type-bsq-swap-icon,
+.dao-tx-type-bsq-swap-icon:hover {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.dao-accepted-icon {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.dao-rejected-icon {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.dao-ignored-icon {
+    -fx-text-fill: -bs-color-gray-4;
+}
+
+.compensation-root {
+    -fx-background-insets: 0, 0 0 0 0;
+}
+
+.info-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+.info-icon-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+}
+
+.dao-remove-proposal-icon {
+    -fx-text-fill: -fx-accent;
+}
+
+.dao-news-titled-group .titled-group-bg-label-active {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-teaser {
+    -fx-font-size: 1.538em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-header {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-green-dark;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-content, .dao-news-content, .dao-news-section-link {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-section-content {
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-fill: -bs-rd-font-light;
+}
+
+.dao-news-link {
+    -fx-text-fill: -fx-accent;
+    -fx-padding: 16 0 0 0;
+}
+
+.dao-news-link .hyperlink {
+    -fx-fill: -fx-accent;
+}
+
+.dao-inSync {
+    -fx-text-fill: -bs-rd-green;
+}
+
+.dao-inConflict {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
+.dao-kpi-big {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-kpi-subtext {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-font-size: 0.923em;
+}
+
+.price-trend-up {
+    -fx-text-fill: -bs-color-primary;
+    -fx-padding: 2 0 0 0;
+}
+
+.price-trend-down {
+    -fx-text-fill: -bs-red;
+    -fx-padding: 2 0 0 0;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * News                                                                                                             *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.news-version {
+    -fx-alignment: center-left;
+    -fx-font-size: 1em;
+}
+
+.news-feature-headline {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.news-feature-description {
+    -fx-font-size: 1em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+.news-feature-image {
+    -fx-border-style: solid;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-rd-separator-dark;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Notifications                                                                                                    *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+#notification-erase-button {
+    -fx-background-color: -bs-red-soft;
+    -fx-text-fill: -bs-background-color;
+}
+
+.status-icon {
+    -fx-text-fill: -fx-faint-focus-color;
+}
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Popover                                                                                                    *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+.popover > .content {
+    -fx-padding: 10;
+}
+
+.popover > .content .default-text {
+    -fx-text-fill: -bs-text-color;
+}
+
+.popover > .border {
+    -fx-stroke: linear-gradient(to bottom, -bs-text-color-transparent, -bs-text-color-transparent-dark) !important;
+    -fx-fill: -bs-background-color !important;
+}
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Tac                                                                                                             *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.tac-agreement-root {
+    -fx-background-color: transparent;
+}
+
+.tac-agreement-window {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(gaussian, -bs-text-color-transparent-dark, 18, 0, 0, 0);
+}
+
+.tac-agreement-title-bar {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-background-radius: 6 6 0 0;
+    -fx-min-height: 40;
+    -fx-pref-height: 40;
+    -fx-padding: 0 12 0 12;
+    -fx-border-color: transparent transparent -bs-rd-separator transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tac-agreement-title {
+    -fx-font-size: 1.28em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-content {
+    -fx-background-color: transparent;
+}
+
+.tac-agreement-page-container {
+    -fx-background-color: transparent;
+}
+
+.tac-agreement-page {
+    -fx-padding: 0;
+}
+
+.tac-agreement-risk-page,
+.tac-agreement-legal-page {
+    -fx-padding: 2 0 0 0;
+}
+
+.tac-agreement-risk-overview {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.tac-agreement-header-section {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.tac-agreement-page-header {
+    -fx-padding: 0;
+}
+
+.tac-agreement-header-title-box {
+    -fx-alignment: center-left;
+}
+
+.tac-agreement-header-icon-box {
+    -fx-min-height: 54;
+    -fx-pref-height: 54;
+    -fx-max-height: 54;
+}
+
+.tac-agreement-header-title {
+    -fx-font-size: 1.18em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-color-primary;
+}
+
+.tac-agreement-header-subtitle {
+    -fx-font-size: 0.92em;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-header-divider {
+    -fx-background-color: -bs-color-primary;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.tac-agreement-risk-detail-row {
+    -fx-padding: 3 24 3 24;
+}
+
+.tac-agreement-risk-detail-icon-box {
+    -fx-background-color: rgba(37, 177, 53, 0.08);
+    -fx-background-radius: 22;
+    -fx-min-width: 44;
+    -fx-pref-width: 44;
+    -fx-max-width: 44;
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-max-height: 44;
+}
+
+.tac-agreement-risk-detail-title {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-risk-detail-body {
+    -fx-font-size: 0.94em;
+    -fx-line-spacing: 0;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-risk-separator {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.tac-agreement-important-callout {
+    -fx-background-color: rgba(248, 178, 73, 0.10);
+    -fx-background-radius: 4;
+    -fx-border-color: rgba(248, 178, 73, 0.30);
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+    -fx-padding: 5 14 5 14;
+}
+
+.tac-agreement-important-icon-box {
+    -fx-min-width: 64;
+    -fx-pref-width: 64;
+}
+
+.tac-agreement-important-divider {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-width: 1;
+    -fx-pref-width: 1;
+    -fx-max-width: 1;
+    -fx-min-height: 30;
+}
+
+.tac-agreement-important-bullets {
+    -fx-alignment: center-left;
+}
+
+.tac-agreement-important-bullet {
+    -fx-font-size: 0.92em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-confirm-panel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 9 0 0 0;
+}
+
+.tac-agreement-confirm-headline {
+    -fx-font-size: 0.98em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-color-primary;
+}
+
+.tac-agreement-check-box {
+    -fx-font-size: 0.92em;
+    -fx-text-fill: -bs-rd-font-dark;
+    -jfx-checked-color: -bs-color-primary;
+}
+
+.tac-agreement-check-box:error {
+    -fx-text-fill: -bs-rd-error-red;
+    -jfx-unchecked-color: -bs-rd-error-red;
+}
+
+.tac-agreement-check-box:error .text {
+    -fx-fill: -bs-rd-error-red;
+}
+
+.tac-agreement-check-box .box {
+    -fx-border-color: -bs-color-gray-6;
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-pref-width: 15;
+    -fx-pref-height: 15;
+}
+
+.tac-agreement-check-box:error .box {
+    -fx-border-color: -bs-rd-error-red;
+    -fx-border-width: 1.5;
+}
+
+.tac-agreement-check-row-container {
+    -fx-padding: 0;
+}
+
+.tac-agreement-check-row {
+    -fx-alignment: center-left;
+    -fx-padding: 0;
+}
+
+.tac-agreement-legal-panel {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+}
+
+.tac-agreement-legal-scroll-pane {
+    -fx-font-size: 0.9em;
+    -fx-background-color: -bs-color-gray-0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
+    -fx-border-radius: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-padding: 0;
+}
+
+.tac-agreement-legal-scroll-pane .viewport {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+.tac-agreement-legal-scroll-content {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-padding: 14 16 14 16;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar,
+.tac-agreement-legal-scroll-pane .scroll-bar .track,
+.tac-agreement-legal-scroll-pane .scroll-bar .track-background,
+.tac-agreement-legal-scroll-pane .scroll-bar .increment-button,
+.tac-agreement-legal-scroll-pane .scroll-bar .decrement-button {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-border-color: -bs-color-gray-0;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: -bs-color-gray-3;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: -bs-color-gray-4;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.tac-agreement-legal-scroll-pane .scroll-bar .increment-arrow,
+.tac-agreement-legal-scroll-pane .scroll-bar .decrement-arrow {
+    -fx-background-color: -bs-color-gray-0;
+}
+
+.tac-agreement-legal-section-number,
+.tac-agreement-legal-section-title {
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-legal-section-number {
+    -fx-min-width: 18;
+    -fx-pref-width: 18;
+    -fx-font-size: 1em;
+}
+
+.tac-agreement-legal-section-title {
+    -fx-font-size: 1em;
+}
+
+.tac-agreement-legal-section-body {
+    -fx-font-size: 1em;
+    -fx-line-spacing: 1;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-legal-acknowledgment {
+    -fx-background-color: rgba(37, 177, 53, 0.07);
+    -fx-background-radius: 4;
+    -fx-padding: 10 16 10 16;
+}
+
+.tac-agreement-legal-acknowledgment-text {
+    -fx-font-size: 1em;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.tac-agreement-legal-check-box {
+    -fx-padding: 0 0 0 8;
+    -fx-label-padding: 0 0 0 8;
+}
+
+.tac-agreement-legal-check-row {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0 0 16 0;
+}
+
+.trade-rules-page {
+    -fx-padding: 2 0 0 0;
+}
+
+.trade-rules-list {
+    -fx-background-color: -bs-background-color;
+    -fx-padding: 2 16 2 0;
+}
+
+.trade-rules-header-title {
+    -fx-font-size: 1.8em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-color-primary;
+}
+
+
+.trade-rules-scroll-pane .scroll-bar,
+.trade-rules-scroll-pane .scroll-bar .track,
+.trade-rules-scroll-pane .scroll-bar .track-background,
+.trade-rules-scroll-pane .scroll-bar .increment-button,
+.trade-rules-scroll-pane .scroll-bar .decrement-button {
+    -fx-background-color: -bs-background-color;
+    -fx-border-color: -bs-background-color;
+}
+
+.trade-rules-scroll-pane .scroll-bar:vertical {
+    -fx-pref-width: 12;
+}
+
+.trade-rules-scroll-pane .scroll-bar .thumb {
+    -fx-background-color: -bs-color-gray-3;
+    -fx-background-radius: 5;
+}
+
+.trade-rules-scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: -bs-color-gray-4;
+}
+
+.trade-rules-scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: -bs-color-gray-6;
+}
+
+.trade-rules-scroll-pane .scroll-bar .increment-arrow,
+.trade-rules-scroll-pane .scroll-bar .decrement-arrow {
+    -fx-background-color: -bs-background-color;
+}
+
+.trade-rules-row {
+    -fx-padding: 7 22 7 24;
+}
+
+.trade-rules-row-title {
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.trade-rules-row-body {
+    -fx-font-size: 1em;
+    -fx-line-spacing: 0;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+
+.trade-rules-separator {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.trade-rules-check-row {
+    -fx-padding: 0 0 8 0;
+}
+
+.tac-agreement-footer-separator {
+    -fx-background-color: -bs-rd-separator;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.tac-agreement-footer {
+    -fx-padding: 6 0 8 0;
+}
+
+.tac-agreement-secondary-button {
+    -fx-font-size: 0.9em;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: -bs-color-gray-3;
+    -fx-border-width: 1;
+    -fx-padding: 0 18 0 18;
+    -jfx-rippler-fill: transparent;
+}
+
+.tac-agreement-secondary-button.tac-agreement-reject-button,
+.tac-agreement-secondary-button.tac-agreement-reject-button:hover,
+.tac-agreement-secondary-button.tac-agreement-reject-button:focused,
+.tac-agreement-secondary-button.tac-agreement-reject-button:armed,
+.tac-agreement-secondary-button.tac-agreement-reject-button:pressed {
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-border-color: -bs-rd-error-red;
+    -fx-background-color: -bs-background-color;
+}
+
+.tac-agreement-secondary-button.tac-agreement-back-button {
+    -fx-text-fill: -bs-rd-font-dark;
+    -fx-background-color: -bs-background-color;
+}
+
+.action-button.tac-agreement-action-button {
+    -fx-font-size: 0.9em;
+    -fx-pref-height: 34;
+    -fx-min-height: 34;
+    -fx-background-radius: 6;
+    -fx-padding: 0 28 0 28;
+}
+
+.action-button.tac-agreement-action-button:disabled {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-text-fill: -bs-rd-font-light;
+}

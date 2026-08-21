@@ -1,0 +1,54 @@
+name: Build Bisq
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+            os: [ubuntu-24.04, macos-15, windows-2025]
+            java: [ '21.0.6' ]
+    name: Test Java ${{ matrix.java }}, ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+          submodules: 'true'
+          persist-credentials: false
+
+    - name: Verify Gradle wrapper checksums
+      shell: bash
+      run: |
+        if command -v sha256sum >/dev/null 2>&1; then
+          sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+        else
+          shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
+        fi
+
+    - name: Set up JDK
+      uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'zulu'
+        check-latest: false
+
+    - name: Build with Gradle
+      uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+      with:
+        arguments: verifyReleaseBuild --scan
+
+    - name: Upload release manifests
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: release-manifests-${{ matrix.os }}-java-${{ matrix.java }}
+        path: |
+          build/reports/release/SHA256SUMS
+          build/reports/release/release-manifest.tsv
+          build/reports/release/build-info.json
+          build/reports/release/release-evidence.zip
+        if-no-files-found: error

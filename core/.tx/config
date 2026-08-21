@@ -1,0 +1,9 @@
+[main]
+host = https://www.transifex.com
+
+[o:bisq:p:bisq-desktop:r:displaystringsproperties]
+file_filter = translations/bisq-desktop.displaystringsproperties/<lang>.properties
+source_file = translations/bisq-desktop.displaystringsproperties/en.properties
+source_lang = en
+type        = UNICODEPROPERTIES
+

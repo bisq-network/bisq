@@ -1,0 +1,82 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.restapi.endpoints;
+
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
+
+import java.util.Date;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+
+
+import bisq.restapi.RestApi;
+import bisq.restapi.RestApiMain;
+import bisq.restapi.dto.ProofOfBurnDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Application;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+
+/**
+ * Endpoint for getting the account age date from a given hash as hex string.
+ * Used for reputation system in Bisq 2.
+ * <a href="http://localhost:8082/api/v1/account-age/get-date/dd75a7175c7c83fe9a4729e36b85f5fbc44e29ae">Request with hash</a>
+ */
+@Slf4j
+@Path("/account-age")
+@Produces(MediaType.TEXT_PLAIN)
+@Tag(name = "Account age API")
+public class AccountAgeApi {
+    private static final String DESC_HASH = "The hash of the account age witness as hex string";
+    private final AccountAgeWitnessService accountAgeWitnessService;
+
+    public AccountAgeApi(@Context Application application) {
+        RestApi restApi = ((RestApiMain) application).getRestApi();
+        accountAgeWitnessService = checkNotNull(restApi.getAccountAgeWitnessService());
+    }
+
+    @Operation(description = "Request the account age date")
+    @ApiResponse(responseCode = "200", description = "The account age date",
+            content = {@Content(mediaType = MediaType.TEXT_PLAIN,
+                    schema = @Schema(allOf = ProofOfBurnDto.class))}
+    )
+    @GET
+    @Path("get-date/{hash}")
+    public Long getDate(@Parameter(description = DESC_HASH)
+                        @PathParam("hash")
+                        String hash) {
+        long result = accountAgeWitnessService.getWitnessByHashAsHex(hash)
+                .map(AccountAgeWitness::getDate)
+                .orElse(-1L);
+        log.info("Account age for hash {}: {} ({})", hash, result, new Date(result));
+        return result;
+    }
+}

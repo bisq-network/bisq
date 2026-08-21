@@ -1,0 +1,116 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.dao.burningman.accounting.blockchain;
+
+import bisq.core.dao.burningman.BurningManPresentationService;
+
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.proto.network.NetworkPayload;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+// Outputs get pruned to required number of outputs depending on tx type.
+// We store value as integer in protobuf as we do not support larger amounts than 21.47483647 BTC for our tx types.
+// Name is burningman candidate name. For legacy Burningman we shorten to safe space.
+@Slf4j
+@EqualsAndHashCode
+public final class AccountingTxOutput implements NetworkPayload, Canonical {
+    private static final String LEGACY_BM_FEES_SHORT = "LBMF";
+    private static final String LEGACY_BM_DPT_SHORT = "LBMD";
+    private static final long UINT32_MAX_VALUE = 0xFFFF_FFFFL;
+
+    @Getter
+    private final long value;
+    private final String name;
+
+    public AccountingTxOutput(long value, String name) {
+        this.value = value;
+        this.name = maybeShortenLBM(name);
+    }
+
+    private String maybeShortenLBM(String name) {
+        return name.equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME) ?
+                LEGACY_BM_FEES_SHORT :
+                name.equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) ?
+                        LEGACY_BM_DPT_SHORT :
+                        name;
+    }
+
+    public String getName() {
+        return name.equals(LEGACY_BM_FEES_SHORT) ?
+                BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME :
+                name.equals(LEGACY_BM_DPT_SHORT) ?
+                        BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME :
+                        name;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public protobuf.AccountingTxOutput toProtoMessage() {
+        int intValue = getProtoValue();
+        return protobuf.AccountingTxOutput.newBuilder()
+                .setValue(intValue)
+                .setName(name).build();
+    }
+
+    public static AccountingTxOutput fromProto(protobuf.AccountingTxOutput proto) {
+        long value = Integer.toUnsignedLong(proto.getValue());
+        checkArgument(value >= 0 && value <= UINT32_MAX_VALUE, "Value must be in uint32 range 0..4294967295");
+        return new AccountingTxOutput(value, proto.getName());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<AccountingTxOutput> SCHEMA =
+            CanonicalSchema.<AccountingTxOutput>newBuilder()
+                    .uint32(1, AccountingTxOutput::getProtoValue)
+                    .string(2, output -> output.name)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+    private int getProtoValue() {
+        checkArgument(value >= 0 && value <= UINT32_MAX_VALUE,
+                "Value must be in uint32 range 0..4294967295");
+        return (int) value;
+    }
+
+    @Override
+    public String toString() {
+        return "AccountingTxOutput{" +
+                ",\r\n                    value=" + value +
+                ",\r\n                    name='" + name + '\'' +
+                "\r\n}";
+    }
+}

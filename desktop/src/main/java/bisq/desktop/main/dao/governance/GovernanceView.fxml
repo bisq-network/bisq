@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bisq.
+  ~
+  ~ Bisq is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import bisq.desktop.components.BisqScrollPane?>
+<AnchorPane fx:id="root" fx:controller="bisq.desktop.main.dao.governance.GovernanceView"
+            xmlns:fx="http://javafx.com/fxml">
+
+    <VBox fx:id="leftVBox" prefWidth="240" spacing="5" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="15"
+          AnchorPane.topAnchor="15"/>
+
+    <BisqScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="270.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <AnchorPane fx:id="content" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+    </BisqScrollPane>
+
+</AnchorPane>

@@ -1,0 +1,48 @@
+# install in /etc/systemd/system/bisq.service
+
+[Unit]
+Description=Bisq Node
+After=network.target
+#Requires=bitcoin.service
+#BindsTo=bitcoin.service
+
+[Service]
+SyslogIdentifier=bisq
+EnvironmentFile=/etc/default/bisq.env
+
+ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
+          --fullDaoNode=${BISQ_DAO_FULLNODE} \
+          --useFullModeDaoMonitor=${BISQ_DAO_FULLNODE} \
+          --userDataDir=${BISQ_HOME} \
+          --appName=${BISQ_APP_NAME} \
+          --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
+          --maxConnections=${BISQ_MAX_CONNECTIONS} \
+          --maxMemory=${BISQ_MAX_MEMORY} \
+          --nodePort=${BISQ_NODE_PORT} \
+          --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT} \
+          --rpcBlockNotificationHost=${BITCOIN_RPC_BLOCKNOTIFY_HOST} \
+          --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT} \
+          --rpcHost=${BITCOIN_RPC_HOST} \
+          --rpcPort=${BITCOIN_RPC_PORT} \
+          --rpcUser=${BITCOIN_RPC_USER} \
+          --rpcPassword=${BITCOIN_RPC_PASS} \
+          --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
+          --dumpStatistics=${BISQ_DUMP_STATISTICS} \
+          --torControlPort=${BISQ_EXTERNAL_TOR_PORT} \
+          --torControlUseSafeCookieAuth=${BISQ_EXTERNAL_TOR_CONTROL_USE_COOKIE} \
+          --torControlCookieFile=${BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE} \
+          --isBmFullNode=${BISQ_BM_FULLNODE} \
+          --bmOracleNodePubKey=${BISQ_BM_ORACLE_NODE_PUBKEY} \
+          --bmOracleNodePrivKey=${BISQ_BM_ORACLE_NODE_PRIVKEY} \
+
+ExecStop=/bin/kill ${MAINPID} ; sleep 5
+Restart=on-failure
+
+ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+ExecStopPost=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+
+User=bisq
+Group=bisq
+
+[Install]
+WantedBy=multi-user.target

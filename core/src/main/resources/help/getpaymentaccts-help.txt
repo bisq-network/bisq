@@ -1,0 +1,17 @@
+getpaymentaccts
+
+NAME
+----
+getpaymentaccts - list user payment accounts
+
+SYNOPSIS
+--------
+getpaymentaccts
+
+DESCRIPTION
+-----------
+Returns the list of user payment accounts.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getpaymentaccts

@@ -1,0 +1,33 @@
+getmyoffers
+
+NAME
+----
+getmyoffers - get your own buy or sell BTC offers for a fiat currency
+
+SYNOPSIS
+--------
+getmyoffers
+		--direction=<buy|sell>
+		--currency-code=<eur|usd>
+
+DESCRIPTION
+-----------
+List your existing offers for a direction (SELL|BUY) and currency (EUR|GBP|USD|BRL|...).
+
+OPTIONS
+-------
+--direction
+		The direction of the offer (BUY or SELL).
+
+--currency-code
+		The three letter code for the fiat used to buy or sell BTC, e.g., EUR, USD, BRL, ...
+
+EXAMPLES
+--------
+List all of your existing BUY offers for BRL:
+$ ./bisq-cli --password=xyz --port=9998 getmyoffers --direction=buy --currency-code=brl
+
+List all of your existing SELL offers for EUR:
+$ ./bisq-cli --password=xyz --port=9998 getmyoffers --direction=sell --currency-code=eur
+
+

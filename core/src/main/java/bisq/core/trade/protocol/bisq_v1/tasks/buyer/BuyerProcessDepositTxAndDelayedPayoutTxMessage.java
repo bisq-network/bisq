@@ -1,0 +1,159 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
+
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.validation.DelayedPayoutTxValidation;
+import bisq.core.trade.validation.DepositTxValidation;
+import bisq.core.util.JsonUtil;
+
+import bisq.common.crypto.Hash;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.wallet.Wallet;
+
+import java.security.PrivateKey;
+
+import java.util.Arrays;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
+import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
+import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxFields;
+import static bisq.core.trade.validation.TransactionValidation.checkSerializedTransaction;
+import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+@Slf4j
+public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
+    public BuyerProcessDepositTxAndDelayedPayoutTxMessage(TaskRunner<Trade> taskHandler, Trade trade) {
+        super(taskHandler, trade);
+    }
+
+    @Override
+    protected void run() {
+        try {
+            runInterceptHook();
+
+            var message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
+            checkNotNull(message);
+
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Wallet wallet = btcWalletService.getWallet();
+            TradingPeer tradePeer = processModel.getTradePeer();
+            PubKeyRing pubKeyRing = processModel.getPubKeyRing();
+
+            Transaction myDepositTx;
+            if (trade instanceof BuyerAsMakerTrade) {
+                // Maker has no depositTx set
+                byte[] myPreparedDepositTx = checkNotNull(processModel.getPreparedDepositTx(),
+                        "My prepared deposit tx must not be null");
+                myDepositTx = toVerifiedTransaction(myPreparedDepositTx, btcWalletService);
+            } else {
+                // As Taker the depositTx has been already set
+                myDepositTx = checkNotNull(processModel.getDepositTx(), "My deposit tx must not be null");
+            }
+
+            byte[] rawDelayedPayoutTx = message.getDelayedPayoutTx();
+            byte[] peersDelayedPayoutTxBytes = checkSerializedTransaction(rawDelayedPayoutTx, btcWalletService);
+            byte[] myDelayedPayoutTxBytes = checkNotNull(trade.getDelayedPayoutTxBytes(),
+                    "trade.getDelayedPayoutTxBytes() must not be null");
+            checkArgument(Arrays.equals(peersDelayedPayoutTxBytes, myDelayedPayoutTxBytes),
+                    "peersDelayedPayoutTx and myDelayedPayoutTx must be the same" +
+                            "\n myDelayedPayoutTx: " + Utilities.bytesAsHexString(myDelayedPayoutTxBytes) +
+                            "\n peersDelayedPayoutTx: " + Utilities.bytesAsHexString(peersDelayedPayoutTxBytes));
+
+            Transaction peersDepositTx = checkCanonicalDepositTxFields(toVerifiedTransaction(message.getDepositTx(),
+                    btcWalletService));
+
+            Transaction peersDelayedPayoutTx = toVerifiedTransaction(rawDelayedPayoutTx, btcWalletService);
+            DelayedPayoutTxValidation.checkDelayedPayoutTxInput(peersDelayedPayoutTx, peersDepositTx);
+
+            DepositTxValidation.checkDepositTxMatchesIgnoringWitnessesAndScriptSigs(peersDepositTx, myDepositTx, btcWalletService);
+
+            // To access tx confidence we need to add that tx into our wallet.
+            Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(peersDepositTx, wallet);
+            BtcWalletService.printTx("peersDepositTx received from peer", committedDepositTx);
+
+            // update with full tx
+            trade.applyDepositTx(committedDepositTx);
+            trade.applyDelayedPayoutTxBytes(peersDelayedPayoutTxBytes);
+
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+
+            PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
+            if (sellerPaymentAccountPayload != null) {
+                byte[] sellerPaymentAccountPayloadHash = sellerPaymentAccountPayload.getHashForContract();
+                Contract contract = checkNotNull(trade.getContract());
+
+                byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(pubKeyRing);
+                checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
+                        "Hash of payment account is invalid");
+
+                tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
+                PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                        "Payment account payload cannot be null for trade: " + trade.getId());
+                contract.setPaymentAccountPayloads(sellerPaymentAccountPayload, paymentAccountPayload, pubKeyRing);
+
+                // As we have added the payment accounts we need to update the json. We also update the signature
+                // thought that has less relevance with the changes of 1.7.0
+                String contractAsJson = checkNotNull(JsonUtil.objectToJson(contract));
+                PrivateKey privateKey = processModel.getKeyRing().getSignatureKeyPair().getPrivate();
+                String signature = Sig.sign(privateKey, contractAsJson);
+                trade.setContractAsJson(contractAsJson);
+                if (contract.isBuyerMakerAndSellerTaker()) {
+                    trade.setMakerContractSignature(signature);
+                } else {
+                    trade.setTakerContractSignature(signature);
+                }
+
+                byte[] contractHash = Hash.getSha256Hash(contractAsJson);
+                trade.setContractHash(contractHash);
+            }
+
+            // If we got already the confirmation we don't want to apply an earlier state
+            if (trade.getTradeState().ordinal() < BUYER_SAW_DEPOSIT_TX_IN_NETWORK.ordinal()) {
+                trade.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+            }
+
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(),
+                    AddressEntry.Context.RESERVED_FOR_TRADE);
+
+            processModel.getTradeManager().requestPersistence();
+
+            complete();
+        } catch (Throwable t) {
+            failed(t);
+        }
+    }
+}

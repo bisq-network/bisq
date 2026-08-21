@@ -1,0 +1,21 @@
+gettransactions
+
+NAME
+----
+gettransactions - get transactions
+
+SYNOPSIS
+--------
+gettransactions
+
+DESCRIPTION
+-----------
+Returns list of a BTC transaction created by the Bisq server.
+
+To see full transaction details, use a bitcoin-core client or an online block explorer.
+
+
+EXAMPLES
+--------
+To see all of the transactions:
+$ ./bisq-cli --password=xyz --port=9998 gettransactions

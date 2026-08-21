@@ -1,0 +1,79 @@
+version: '3.7'
+
+services:
+    bisq-bitcoind:
+        image: bisq/bitcoind:latest
+        volumes:
+            - ./bitcoind_data_dir:/root/.bitcoin
+            - ./blocknotify.sh:/blocknotify.sh
+        command:
+            - -regtest
+            - -server=1
+            - -listen=1
+            - -discover=1
+            - -txindex=1
+            - -dbcache=1337
+            - -maxconnections=1337
+            - -peerbloomfilters=1
+            - -rpcallowip=127.0.0.1
+            - -rpcallowip=172.0.0.1/8 # Docker IP range
+            - -rpcuser=bisqdao
+            - -rpcpassword=bsq
+            - -blocknotify=/blocknotify.sh %s
+            - -bind=0.0.0.0:18443
+            - -rpcbind=0.0.0.0:18443
+
+    bisq-seednode-1:
+        image: bisq/seednode:latest
+        environment:
+            - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
+        configs:
+            - bisq_seednode_1_config
+        depends_on:
+            - bisq-bitcoind
+        ports:
+            - 2002:2002 # bisq node port
+            - 5120:5120 # bitcoind rpc block notifications
+        volumes:
+            - bisq_seednode_1_data:/bisq/bisq-seednode
+        command:
+            - --configFile=/bisq_seednode_1_config
+
+    bisq-seednode-2:
+        image: bisq/seednode:latest
+        environment:
+            - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
+        configs:
+            - bisq_seednode_2_config
+        depends_on:
+            - bisq-bitcoind
+        ports:
+            - 3002:3002 # bisq node port
+            - 5121:5121 # bitcoind rpc block notifications
+        volumes:
+            - bisq_seednode_2_data:/bisq/bisq-seednode
+        command:
+            - --configFile=/bisq_seednode_2_config
+
+    bisq-tor:
+        image: bisq/tor:latest
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        command: [ "--allow-missing-torrc",
+                   "--SOCKSPort", "0.0.0.0:9050",
+                   "--ControlPort", "0.0.0.0:9051",
+                   "--HashedControlPassword", "16:ED08CEBE4E91EA126089506E2880119E20A39054754D3916EAFF774046", # password: bisq
+                   "--Log", "notice",
+                   "--SafeSocks", "0",
+                   "--HiddenServiceStatistics", "0",
+                   "--AvoidDiskWrites", "1" ]
+
+configs:
+    bisq_seednode_1_config:
+        file: ./seednode_1_config
+    bisq_seednode_2_config:
+        file: ./seednode_2_config
+
+volumes:
+    bisq_seednode_1_data:
+    bisq_seednode_2_data:

@@ -1,0 +1,112 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.trade.bsq_swap;
+
+import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
+import bisq.core.trade.validation.MinerFeeValidation;
+import bisq.core.util.Validator;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.crypto.KeyRing;
+import bisq.common.util.DateUtil;
+
+import org.bitcoinj.core.Coin;
+
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.trade.validation.TradeFeeValidation.checkBsqTradeFee;
+import static bisq.core.trade.validation.TradeFeeValidation.checkMakerFee;
+import static bisq.core.trade.validation.TradeFeeValidation.checkTakerFee;
+import static bisq.core.trade.validation.TradeValidation.checkTradeId;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+@Slf4j
+public class BsqSwapTakeOfferRequestVerification {
+
+    public static boolean isValid(OpenOfferManager openOfferManager,
+                                  FeeService feeService,
+                                  KeyRing keyRing,
+                                  NodeAddress peer,
+                                  BsqSwapRequest request) {
+        try {
+            log.info("Received {} from {} with tradeId {} and uid {}",
+                    request.getClass().getSimpleName(), peer, request.getTradeId(), request.getUid());
+
+            checkNotNull(request);
+            Validator.nonEmptyStringOf(request.getTradeId());
+
+            checkArgument(request.getSenderNodeAddress().equals(peer), "Node address not matching");
+
+            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(request.getTradeId());
+            checkArgument(openOfferOptional.isPresent(), "Offer not found in open offers");
+
+            OpenOffer openOffer = openOfferOptional.get();
+            checkArgument(openOffer.getState() == OpenOffer.State.AVAILABLE, "Offer not available");
+
+            Offer offer = openOffer.getOffer();
+            checkTradeId(offer.getId(), request);
+            checkArgument(offer.isMyOffer(keyRing), "Offer must be mine");
+
+            long tradeAmount = request.getTradeAmount();
+            Coin amountAsCoin = Coin.valueOf(request.getTradeAmount());
+
+            checkArgument(tradeAmount >= offer.getMinAmount().getValue() &&
+                    tradeAmount <= offer.getAmount().getValue(), "TradeAmount not within offers amount range");
+            checkArgument(isDateInTolerance(request), "Trade date is out of tolerance");
+
+            long peersMinerFeeRate = request.getTxFeePerVbyte();
+            long expectedMinerFeeRate = feeService.getTxFeePerVbyte().getValue();
+
+            long minMinerFeeRate = feeService.getMinFeePerVByte();
+            Validator.checkIsPositive(minMinerFeeRate, "minMinerFeeRate");
+
+            // To not break backward compatibility, we do not apply that strict check but rely on the tolerance only.
+            // Once trade version has enforces > v1.10.0 we can use the strict check again.
+            /* checkArgument(peersMinerFeeRate >= minMinerFeeRate,
+                    "Peer miner fee rate is below minimum. peer=%s, min=%s", peersMinerFeeRate, minMinerFeeRate);
+            */
+
+            MinerFeeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
+
+            checkMakerFee(request.getMakerFee(), false, amountAsCoin);
+            checkTakerFee(request.getTakerFee(), false, amountAsCoin);
+            checkBsqTradeFee(request.getMakerFee());
+            checkBsqTradeFee(request.getTakerFee());
+        } catch (Exception e) {
+            log.error("BsqSwapTakeOfferRequestVerification failed. Request={}, peer={}, error={}", request, peer, e.toString());
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean isDateInTolerance(BsqSwapRequest request) {
+        long now = System.currentTimeMillis();
+        long tolerance = TimeUnit.MINUTES.toMillis(10);
+        return DateUtil.isWithinTolerance(request.getTradeDate(), now, tolerance);
+    }
+}

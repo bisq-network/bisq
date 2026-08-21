@@ -1,0 +1,47 @@
+createcryptopaymentacct
+
+NAME
+----
+createcryptopaymentacct - create a cryptocurrency payment account
+
+SYNOPSIS
+--------
+createcryptopaymentacct
+		--account-name=<account-name>
+		--currency-code=<bsq>
+		--address=<unused-bsq-address>
+		[--trade-instant=<true|false default=false>]
+
+DESCRIPTION
+-----------
+Create an cryptocurrency (altcoin) payment account.  Only BSQ payment accounts are currently supported.
+
+OPTIONS
+-------
+--account-name
+		The name of the cryptocurrency payment account used to create and take altcoin offers.
+
+--currency-code
+		The three letter code for the altcoin, e.g., BSQ.
+
+--address
+		The altcoin address to be used receive cryptocurrency payment when selling BTC.
+
+--trade-instant
+		True for creating an instant cryptocurrency payment account, false otherwise.
+		Default is false.
+
+EXAMPLES
+--------
+
+To create a BSQ Altcoin payment account:
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My BSQ Account" \
+    --currency-code=bsq \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+    --trade-instant=false
+
+To create a BSQ Instant Altcoin payment account:
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My Instant BSQ Account" \
+    --currency-code=bsq \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+    --trade-instant=true

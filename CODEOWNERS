@@ -1,0 +1,14 @@
+# This doc specifies who gets requested to review GitHub pull requests.
+# See https://help.github.com/articles/about-codeowners/.
+
+/core/main/java/bisq/core/dao/ @ManfredKarrer
+
+# For seednode configuration changes
+/seednode/bisq-seednode.env @wiz
+/seednode/bisq-seednode.service @wiz
+/seednode/bitcoin.conf @wiz
+/seednode/bitcoin.service @wiz
+/seednode/docker-compose.yml @wiz
+/seednode/install_seednode_debian.sh @wiz
+/seednode/torrc @wiz
+/seednode/uninstall_seednode_debian.sh @wiz

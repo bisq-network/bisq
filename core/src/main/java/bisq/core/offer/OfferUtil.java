@@ -1,0 +1,556 @@
+/*
+ * This file is part of Bisq.
+ *
+ * bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.offer;
+
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.filter.FilterPolicyService;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
+import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
+import bisq.core.payment.CashByMailAccount;
+import bisq.core.payment.F2FAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.SameBankAccount;
+import bisq.core.payment.SpecificBanksAccount;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.TradeFeeFactory;
+import bisq.core.trade.statistics.ReferralIdService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.AutoConfirmSettings;
+import bisq.core.user.Preferences;
+import bisq.core.util.AveragePriceUtil;
+import bisq.core.util.Validator;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
+
+import bisq.network.p2p.P2PService;
+
+import bisq.common.app.Capabilities;
+import bisq.common.app.Version;
+import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.utils.Fiat;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Predicate;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+import static bisq.common.util.MathUtils.roundDoubleToLong;
+import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+import static bisq.core.btc.wallet.Restrictions.getMaxBuyerSecurityDepositAsPercent;
+import static bisq.core.btc.wallet.Restrictions.getMinBuyerSecurityDepositAsPercent;
+import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
+import static bisq.core.btc.wallet.Restrictions.isDust;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
+import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Values.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
+
+/**
+ * This class holds utility methods for creating, editing and taking an Offer.
+ */
+@Slf4j
+@Singleton
+public class OfferUtil {
+
+    private final AccountAgeWitnessService accountAgeWitnessService;
+    private final BsqWalletService bsqWalletService;
+    private final FilterPolicyService filterPolicyService;
+    private final Preferences preferences;
+    private final PriceFeedService priceFeedService;
+    private final P2PService p2PService;
+    private final ReferralIdService referralIdService;
+    private final TradeStatisticsManager tradeStatisticsManager;
+
+    private final Predicate<String> isValidFeePaymentCurrencyCode = (c) ->
+            c.equalsIgnoreCase("BSQ") || c.equalsIgnoreCase("BTC");
+
+    @Inject
+    public OfferUtil(AccountAgeWitnessService accountAgeWitnessService,
+                     BsqWalletService bsqWalletService,
+                     FilterPolicyService filterPolicyService,
+                     Preferences preferences,
+                     PriceFeedService priceFeedService,
+                     P2PService p2PService,
+                     ReferralIdService referralIdService,
+                     TradeStatisticsManager tradeStatisticsManager) {
+        this.accountAgeWitnessService = accountAgeWitnessService;
+        this.bsqWalletService = bsqWalletService;
+        this.filterPolicyService = filterPolicyService;
+        this.preferences = preferences;
+        this.priceFeedService = priceFeedService;
+        this.p2PService = p2PService;
+        this.referralIdService = referralIdService;
+        this.tradeStatisticsManager = tradeStatisticsManager;
+    }
+
+    public static String getRandomOfferId() {
+        return Utilities.getRandomPrefix(5, 8) + "-" +
+                UUID.randomUUID() + "-" +
+                getStrippedVersion();
+    }
+
+    public static String getStrippedVersion() {
+        return Version.VERSION.replace(".", "");
+    }
+
+    // We add a counter at the end of the offer id signalling the number of times that offer has
+    // been mutated ether due edit or due pow adjustments.
+    public static String getOfferIdWithMutationCounter(String id) {
+        String[] split = id.split("-");
+        String base = id;
+        int counter = 0;
+        if (split.length > 7) {
+            String counterString = split[7];
+            int endIndex = id.length() - counterString.length() - 1;
+            base = id.substring(0, endIndex);
+            try {
+                counter = Integer.parseInt(counterString);
+            } catch (Exception ignore) {
+            }
+        }
+        counter++;
+        return base + "-" + counter;
+    }
+
+    public static String getVersionFromId(String id) {
+        String[] split = id.split("-");
+        return split[6];
+    }
+
+    public void maybeSetFeePaymentCurrencyPreference(String feeCurrencyCode) {
+        if (!feeCurrencyCode.isEmpty()) {
+            if (!isValidFeePaymentCurrencyCode.test(feeCurrencyCode))
+                throw new IllegalStateException(format("%s cannot be used to pay trade fees",
+                        feeCurrencyCode.toUpperCase()));
+
+            if (feeCurrencyCode.equalsIgnoreCase("BSQ") && preferences.isPayFeeInBtc())
+                preferences.setPayFeeInBtc(false);
+            else if (feeCurrencyCode.equalsIgnoreCase("BTC") && !preferences.isPayFeeInBtc())
+                preferences.setPayFeeInBtc(true);
+        }
+    }
+
+    /**
+     * Given the direction, is this a BUY?
+     *
+     * @param direction the offer direction
+     * @return {@code true} for an offer to buy BTC from the taker, {@code false} for an
+     * offer to sell BTC to the taker
+     */
+    public boolean isBuyOffer(OfferDirection direction) {
+        return direction == OfferDirection.BUY;
+    }
+
+    public long getMaxTradeLimit(PaymentAccount paymentAccount,
+                                 String currencyCode,
+                                 OfferDirection direction) {
+        return paymentAccount != null
+                ? accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction)
+                : 0;
+    }
+
+    /**
+     * Return true if a balance can cover a cost.
+     *
+     * @param cost the cost of a trade
+     * @param balance a wallet balance
+     * @return true if balance >= cost
+     */
+    public boolean isBalanceSufficient(Coin cost, Coin balance) {
+        return cost != null && balance.compareTo(cost) >= 0;
+    }
+
+    /**
+     * Return the wallet balance shortage for a given trade cost, or zero if there is
+     * no shortage.
+     *
+     * @param cost the cost of a trade
+     * @param balance a wallet balance
+     * @return the wallet balance shortage for the given cost, else zero.
+     */
+    public Coin getBalanceShortage(Coin cost, Coin balance) {
+        if (cost != null) {
+            Coin shortage = cost.subtract(balance);
+            return shortage.isNegative() ? Coin.ZERO : shortage;
+        } else {
+            return Coin.ZERO;
+        }
+    }
+
+    /**
+     * Returns the usable BSQ balance.
+     *
+     * @return Coin the usable BSQ balance
+     */
+    public Coin getUsableBsqBalance() {
+        // We have to keep a minimum amount of BSQ == bitcoin dust limit, otherwise there
+        // would be dust violations for change UTXOs; essentially means the minimum usable
+        // balance of BSQ is 5.46.
+        Coin usableBsqBalance = bsqWalletService.getAvailableBalance().subtract(getMinNonDustOutput());
+        return usableBsqBalance.isNegative() ? Coin.ZERO : usableBsqBalance;
+    }
+
+    public double calculateManualPrice(double volumeAsDouble, double amountAsDouble) {
+        return volumeAsDouble / amountAsDouble;
+    }
+
+    public double calculateMarketPriceMargin(double manualPrice, double marketPrice) {
+        return MathUtils.roundDouble(manualPrice / marketPrice, 4);
+    }
+
+    /**
+     * Returns the makerFee as Coin, this can be priced in BTC or BSQ.
+     *
+     * @param amount           the amount of BTC to trade
+     * @return the maker fee for the given trade amount, or {@code null} if the amount
+     * is {@code null}
+     */
+    @Nullable
+    public Coin getMakerFee(@Nullable Coin amount) {
+        boolean isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc(amount);
+        return amount == null ? null : TradeFeeFactory.getMakerFee(isCurrencyForMakerFeeBtc, amount);
+    }
+
+    public Coin getTxFeeByVsize(Coin txFeePerVbyteFromFeeService, int vsizeInVbytes) {
+        Validator.checkIsPositive(vsizeInVbytes, "vsizeInVbytes");
+        int average = (vsizeInVbytes + TradeFeeFactory.DEPOSIT_TX_VSIZE) / 2;
+        return TradeFeeFactory.getMinerFeeByVsize(txFeePerVbyteFromFeeService, average);
+    }
+
+    /**
+     * Checks if the maker fee should be paid in BTC, this can be the case due to user
+     * preference or because the user doesn't have enough BSQ.
+     *
+     * @param amount           the amount of BTC to trade
+     * @return {@code true} if BTC is preferred or the trade amount is nonnull and there
+     * isn't enough BSQ for it.
+     */
+    public boolean isCurrencyForMakerFeeBtc(@Nullable Coin amount) {
+        boolean payFeeInBtc = preferences.getPayFeeInBtc();
+        boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(amount);
+        return payFeeInBtc || !bsqForFeeAvailable;
+    }
+
+    /**
+     * Checks if the available BSQ balance is sufficient to pay for the offer's maker fee.
+     *
+     * @param amount           the amount of BTC to trade
+     * @return {@code true} if the balance is sufficient, {@code false} otherwise
+     */
+    public boolean isBsqForMakerFeeAvailable(@Nullable Coin amount) {
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin makerFee = CoinUtil.getMakerFee(false, amount);
+
+        // If we don't know yet the maker fee (amount is not set) we return true,
+        // otherwise we would disable BSQ fee each time we open the create offer screen
+        // as there the amount is not set.
+        if (makerFee == null)
+            return true;
+
+        Coin surplusFunds = availableBalance.subtract(makerFee);
+        if (isDust(surplusFunds)) {
+            return false; // we can't be left with dust
+        }
+        return !availableBalance.subtract(makerFee).isNegative();
+    }
+
+
+    @Nullable
+    public Coin getTakerFee(boolean isCurrencyForTakerFeeBtc, @Nullable Coin amount) {
+        return amount == null ? null : TradeFeeFactory.getTakerFee(isCurrencyForTakerFeeBtc, amount);
+    }
+
+    public boolean isCurrencyForTakerFeeBtc(Coin amount) {
+        boolean payFeeInBtc = preferences.getPayFeeInBtc();
+        boolean bsqForFeeAvailable = isBsqForTakerFeeAvailable(amount);
+        return payFeeInBtc || !bsqForFeeAvailable;
+    }
+
+    public boolean isBsqForTakerFeeAvailable(@Nullable Coin amount) {
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin takerFee = getTakerFee(false, amount);
+
+        // If we don't know yet the maker fee (amount is not set) we return true,
+        // otherwise we would disable BSQ fee each time we open the create offer screen
+        // as there the amount is not set.
+        if (takerFee == null)
+            return true;
+
+        Coin surplusFunds = availableBalance.subtract(takerFee);
+        if (isDust(surplusFunds)) {
+            return false; // we can't be left with dust
+        }
+        return !availableBalance.subtract(takerFee).isNegative();
+    }
+
+    public boolean isBlockChainPaymentMethod(Offer offer) {
+        return offer != null && offer.getPaymentMethod().isBlockchain();
+    }
+
+    public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
+                                                     boolean isCurrencyForMakerFeeBtc,
+                                                     CoinFormatter bsqFormatter) {
+        String userCurrencyCode = preferences.getPreferredTradeCurrency().getCode();
+        if (CurrencyUtil.isCryptoCurrency(userCurrencyCode)) {
+            // In case the user has selected a altcoin as preferredTradeCurrency
+            // we derive the fiat currency from the user country
+            String countryCode = preferences.getUserCountry().code;
+            userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        }
+
+        return getFeeInUserFiatCurrency(makerFee,
+                isCurrencyForMakerFeeBtc,
+                userCurrencyCode,
+                bsqFormatter);
+    }
+
+    @Nullable
+    public OfferPayloadExtraDataMap getOfferPayloadExtraDataMap(PaymentAccount paymentAccount,
+                                                                String currencyCode,
+                                                                OfferDirection direction) {
+        OfferPayloadExtraDataMap offerPayloadExtraDataMap = new OfferPayloadExtraDataMap();
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String myWitnessHashAsHex = accountAgeWitnessService
+                    .getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            offerPayloadExtraDataMap.put(ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
+        }
+
+        if (referralIdService.getOptionalReferralId().isPresent()) {
+            offerPayloadExtraDataMap.put(REFERRAL_ID, referralIdService.getOptionalReferralId().get());
+        }
+
+        if (paymentAccount instanceof F2FAccount) {
+            offerPayloadExtraDataMap.put(F2F_CITY, ((F2FAccount) paymentAccount).getCity());
+            offerPayloadExtraDataMap.put(F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
+        }
+
+        if (paymentAccount instanceof CashByMailAccount) {
+            offerPayloadExtraDataMap.put(CASH_BY_MAIL_EXTRA_INFO, ((CashByMailAccount) paymentAccount).getExtraInfo());
+        }
+
+        offerPayloadExtraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
+
+        if (currencyCode.equals("XMR") && direction == OfferDirection.SELL) {
+            preferences.getAutoConfirmSettingsList().stream()
+                    .filter(e -> e.getCurrencyCode().equals("XMR"))
+                    .filter(AutoConfirmSettings::isEnabled)
+                    .forEach(e -> offerPayloadExtraDataMap.put(XMR_AUTO_CONF, XMR_AUTO_CONF_ENABLED_VALUE));
+        }
+
+        return offerPayloadExtraDataMap.isEmpty() ? null : offerPayloadExtraDataMap;
+    }
+
+    public void validateOfferData(double buyerSecurityDeposit,
+                                  PaymentAccount paymentAccount,
+                                  String currencyCode,
+                                  Coin makerFeeAsCoin,
+                                  List<String> acceptedBanks) {
+        validateBasicOfferData(paymentAccount.getPaymentMethod(), currencyCode);
+        checkNotNull(makerFeeAsCoin, "makerFee must not be null");
+        checkArgument(buyerSecurityDeposit <= getMaxBuyerSecurityDepositAsPercent(),
+                "securityDeposit must not exceed " +
+                        getMaxBuyerSecurityDepositAsPercent());
+        checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
+                "securityDeposit must not be less than " +
+                        getMinBuyerSecurityDepositAsPercent());
+        if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount)) {
+            checkArgument(!acceptedBanks.contains(null), "acceptedBanks must not be null for SAME_BANK or SPECIFIC_BANKS accounts");
+        }
+    }
+
+    public void validateBasicOfferData(PaymentMethod paymentMethod, String currencyCode) {
+        checkNotNull(p2PService.getAddress(), "Address must not be null");
+        checkArgument(!filterPolicyService.isCurrencyBanned(currencyCode),
+                Res.get("offerbook.warning.currencyBanned"));
+        checkArgument(!filterPolicyService.isPaymentMethodBanned(paymentMethod),
+                Res.get("offerbook.warning.paymentMethodBanned"));
+        checkArgument(!PaymentMethod.BSQ_SWAP.equals(paymentMethod) || !filterPolicyService.isBsqSwapDisabled(),
+                Res.get("offerbook.warning.bsqSwapDisabled"));
+    }
+
+    // Returns an edited payload: a merge of the original offerPayload and
+    // editedOfferPayload fields.  Mutable fields are sourced from
+    // mutableOfferPayloadFields param, e.g., payment account details, price, etc.
+    // Immutable fields are sourced from the original openOffer param.
+    @SuppressWarnings("deprecation")
+    public OfferPayload getMergedOfferPayload(OpenOffer openOffer,
+                                              MutableOfferPayloadFields mutableOfferPayloadFields) {
+        OfferPayload original = openOffer.getOffer().getOfferPayload().orElseThrow();
+        return new OfferPayload(original.getId(),
+                original.getDate(),
+                original.getOwnerNodeAddress(),
+                original.getPubKeyRing(),
+                original.getDirection(),
+                mutableOfferPayloadFields.getFixedPrice(),
+                mutableOfferPayloadFields.getMarketPriceMargin(),
+                mutableOfferPayloadFields.isUseMarketBasedPrice(),
+                original.getAmount(),
+                original.getMinAmount(),
+                mutableOfferPayloadFields.getBaseCurrencyCode(),
+                mutableOfferPayloadFields.getCounterCurrencyCode(),
+                original.getArbitratorNodeAddresses(),
+                original.getMediatorNodeAddresses(),
+                mutableOfferPayloadFields.getPaymentMethodId(),
+                mutableOfferPayloadFields.getMakerPaymentAccountId(),
+                original.getOfferFeePaymentTxId(),
+                mutableOfferPayloadFields.getCountryCode(),
+                mutableOfferPayloadFields.getAcceptedCountryCodes(),
+                mutableOfferPayloadFields.getBankId(),
+                mutableOfferPayloadFields.getAcceptedBankIds(),
+                original.getVersionNr(),
+                original.getBlockHeightAtOfferCreation(),
+                original.getTxFee(),
+                original.getMakerFee(),
+                original.isCurrencyForMakerFeeBtc(),
+                original.getBuyerSecurityDeposit(),
+                original.getSellerSecurityDeposit(),
+                mutableOfferPayloadFields.getMaxTradeLimit(),
+                mutableOfferPayloadFields.getMaxTradePeriod(),
+                original.isUseAutoClose(),
+                original.isUseReOpenAfterAutoClose(),
+                original.getLowerClosePrice(),
+                original.getUpperClosePrice(),
+                original.isPrivateOffer(),
+                original.getHashOfChallenge(),
+                mutableOfferPayloadFields.getExtraDataMap(),
+                original.getProtocolVersion());
+    }
+
+    private Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
+                                                      boolean isCurrencyForMakerFeeBtc,
+                                                      String userCurrencyCode,
+                                                      CoinFormatter bsqFormatter) {
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
+        if (marketPrice != null && makerFee != null) {
+            long marketPriceAsLong = roundDoubleToLong(
+                    scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
+            Price userCurrencyPrice = Price.valueOf(userCurrencyCode, marketPriceAsLong);
+
+            if (isCurrencyForMakerFeeBtc) {
+                return Optional.of(userCurrencyPrice.getVolumeByAmount(makerFee));
+            } else {
+                // We use the current market price for the fiat currency and the 30 day average BSQ price
+                Tuple2<Price, Price> tuple = AveragePriceUtil.getAveragePriceTuple(preferences,
+                        tradeStatisticsManager,
+                        30);
+                Price bsqPrice = tuple.second;
+                if (bsqPrice.isPositive()) {
+                    String inputValue = bsqFormatter.formatCoin(makerFee);
+                    Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
+                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                    Volume volumeByAmount = userCurrencyPrice.getVolumeByAmount(requiredBtc);
+                    return Optional.of(volumeByAmount);
+                } else {
+                    return Optional.empty();
+                }
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    public static boolean isFiatOffer(Offer offer) {
+        return offer.getBaseCurrencyCode().equals("BTC") && !offer.isBsqSwapOffer();
+    }
+
+    public static boolean isAltcoinOffer(Offer offer) {
+        return offer.getCounterCurrencyCode().equals("BTC") && !offer.isBsqSwapOffer();
+    }
+
+    public static boolean doesOfferAmountExceedTradeLimit(Offer offer) {
+        return offer.getAmount().isGreaterThan(offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()));
+    }
+
+    public static Optional<String> getInvalidMakerFeeTxErrorMessage(Offer offer, BtcWalletService btcWalletService) {
+        String offerFeePaymentTxId = offer.getOfferFeePaymentTxId();
+        if (offerFeePaymentTxId == null) {
+            return Optional.empty();
+        }
+
+        Transaction makerFeeTx = btcWalletService.getTransaction(offerFeePaymentTxId);
+        if (makerFeeTx == null) {
+            return Optional.empty();
+        }
+
+        String errorMsg = null;
+        String header = "The offer with offer ID '" + offer.getShortId() +
+                "' has an invalid maker fee transaction.\n\n";
+        String spendingTransaction = null;
+        String extraString = "\nYou have to remove that offer to avoid failed trades.\n" +
+                "If this happened because of a bug please contact the Bisq developers " +
+                "and you can request reimbursement for the lost maker fee.";
+        if (makerFeeTx.getOutputs().size() > 1) {
+            // Our output to fund the deposit tx is at index 1
+            TransactionOutput output = makerFeeTx.getOutput(1);
+            TransactionInput spentByTransactionInput = output.getSpentBy();
+            if (spentByTransactionInput != null) {
+                spendingTransaction = spentByTransactionInput.getConnectedTransaction() != null ?
+                        spentByTransactionInput.getConnectedTransaction().toString() :
+                        "null";
+                // We this is an exceptional case we do not translate that error msg.
+                errorMsg = "The output of the maker fee tx is already spent.\n" +
+                        extraString +
+                        "\n\nTransaction input which spent the reserved funds for that offer: '" +
+                        spentByTransactionInput.getConnectedTransaction().getTxId().toString() + ":" +
+                        (spentByTransactionInput.getConnectedOutput() != null ?
+                                spentByTransactionInput.getConnectedOutput().getIndex() + "'" :
+                                "null'");
+                log.error("spentByTransactionInput {}", spentByTransactionInput);
+            }
+        } else {
+            errorMsg = "The maker fee tx is invalid as it does not has at least 2 outputs." + extraString +
+                    "\nMakerFeeTx=" + makerFeeTx;
+        }
+
+        if (errorMsg == null) {
+            return Optional.empty();
+        }
+
+        errorMsg = header + errorMsg;
+        log.error(errorMsg);
+        if (spendingTransaction != null) {
+            log.error("Spending transaction: {}", spendingTransaction);
+        }
+
+        return Optional.of(errorMsg);
+    }
+}

@@ -1,0 +1,12 @@
+plugins {
+    id 'bisq.java-conventions'
+    id 'java-library'
+}
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.logback.classic
+    implementation libs.logback.core
+}

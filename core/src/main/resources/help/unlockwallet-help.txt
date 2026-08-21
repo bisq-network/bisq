@@ -1,0 +1,21 @@
+unlockwallet
+
+NAME
+----
+unlockwallet - unlock an encrypted Bisq wallet
+
+SYNOPSIS
+--------
+unlockwallet
+        --wallet-password=<wallet-password>
+        --timeout=<seconds>
+
+DESCRIPTION
+-----------
+Unlocks an encrypted Bisq wallet for a specified number of seconds.
+The timeout can be manually overridden with the lockwallet command.
+
+EXAMPLES
+--------
+Unlock a wallet encrypted with the wallet-password "mypassword" for 30 seconds:
+$ ./bisq-cli --password=xyz --port=9998 unlockwallet --wallet-password=mypassword --timeout=30

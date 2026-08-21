@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1.6
+#
+# Compatibility image for the dispatch-only e2e compat test. Keeps the master
+# test harness intact — entrypoint, dao-setup app dirs, javafx jars are all
+# inherited from bisq-daemon:ci — and swaps ONLY the Bisq application binaries
+# (seednode/daemon/cli) for a build of a tagged release. One peer runs this
+# image so the suite exercises release<->master P2P/DAO/trade compatibility.
+#
+# The release install dists must be staged under ${RELEASE_DIST} in the build
+# context before building (the compat workflow checks out the tag into a git
+# worktree, runs installDist there, and copies the output here).
+
+ARG BASE_IMAGE=bisq-daemon:ci
+FROM ${BASE_IMAGE}
+
+# Path (relative to build context = repo root) where the release install dists
+# have been staged: ${RELEASE_DIST}/{seednode,daemon,cli}/{bin,lib}.
+ARG RELEASE_DIST=apitest/docker/.release-dist
+
+# Swap the master app binaries for the release ones. Everything else baked into
+# the base image (entrypoint, /opt/dao-setup, /opt/openjfx, PATH/env) is reused.
+RUN rm -rf /bisq/seednode /bisq/daemon /bisq/cli
+COPY ${RELEASE_DIST}/seednode /bisq/seednode
+COPY ${RELEASE_DIST}/daemon   /bisq/daemon
+COPY ${RELEASE_DIST}/cli      /bisq/cli
+
+# Re-apply the same fix-ups Dockerfile.bisq does to a fresh install dist: exec bits
+# + replace the empty placeholder javafx jars with the real linux jars prefetched
+# into /opt/openjfx by the base image. Version-agnostic: a release dist may ship a
+# different javafx version than master, so match by glob rather than a hard-coded
+# version. Copy only when a matching prefetched jar exists (daemon/cli/seednode are
+# headless and run fine with the placeholder otherwise), but do not mask a cp that
+# actually fails.
+RUN set -eux; \
+    chmod +x /bisq/seednode/bin/* /bisq/daemon/bin/* /bisq/cli/bin/*; \
+    for app in seednode daemon cli; do \
+      for mod in javafx-base javafx-graphics; do \
+        for target in /bisq/${app}/lib/${mod}-*.jar; do \
+          [ -e "${target}" ] || continue; \
+          src="/opt/openjfx/$(basename "${target}")"; \
+          if [ -e "${src}" ]; then \
+            cp "${src}" "${target}"; \
+          else \
+            echo "WARN: no prefetched OpenJFX jar for $(basename "${target}"); leaving placeholder" >&2; \
+          fi; \
+        done; \
+      done; \
+    done

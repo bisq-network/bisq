@@ -1,0 +1,121 @@
+[versions]
+apache-commons-lang3 = { strictly = '3.20.0' }
+apache-httpclient = { strictly = '4.5.14' }
+
+bitcoinj = { strictly = '6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a' }
+bouncycastle = { strictly = '1.84' }
+
+checker-qual = { strictly = '4.1.0' }
+commons-codec = { strictly = '1.22.0' }
+commons-io = { strictly = '2.22.0' }
+
+cowwoc-diff-match-patch = { strictly = '1.2' }
+
+fxmisc-easybind = { strictly = '1.0.3' }
+
+glassfish-jaxb-lib = { strictly = '4.0.8' }
+google-findbugs = { strictly = '3.0.2' }
+google-gson = { strictly = '2.14.0' }
+google-guava = { strictly = '33.6.0-jre' }
+google-guice = { strictly = '6.0.0' }
+
+grpc = { strictly = '1.81.0' }
+hamcrest = { strictly = '3.0' }
+
+jackson-annotations = { strictly = '2.21' }
+jackson-core = { strictly = '2.21.2' }
+javax-annotation = { strictly = '1.3.2' }
+jcsv = { strictly = '1.4.0' }
+jersey-lib = { strictly = '4.0.2' }
+jetbrains-annotations = { strictly = '26.1.0' }
+jopt = { strictly = '5.0.4' }
+jsonrpc4j = { strictly = '1.6.0.bisq.1' }
+
+junit-jupiter = { strictly = '6.0.3' }
+
+kotlin = { strictly = '2.3.21' }
+logback = { strictly = '1.5.32' }
+lombok = { strictly = '1.18.46' }
+mockito = { strictly = '5.23.0' }
+natpryce-make-it-easy = { strictly = '4.0.1' }
+netlayer = { strictly = '09c287b4573020a19f84507cb4fbbc9e78001383' }
+javafx = { strictly = '21.0.10' }
+openjfx-javafx-plugin = { strictly = '0.1.0' }
+protobuf = { strictly = '3.25.8' }
+protobuf-plugin = { strictly = '0.9.5' }
+slf4j = { strictly = '2.0.17' }
+spark = { strictly = '2.9.4' }
+swagger-lib = { strictly = '2.2.49' }
+zxing = { strictly = '3.5.4' }
+
+[libraries]
+apache-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache-httpclient" }
+apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "apache-commons-lang3" }
+
+bitcoinj = { module = "com.github.bisq-network:bitcoinj", version.ref = "bitcoinj" }
+bouncycastle-bcpg-jdk18on = { module = "org.bouncycastle:bcpg-jdk18on", version.ref = "bouncycastle" }
+
+checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checker-qual" }
+commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
+
+cowwoc-diff-match-patch = { module = "org.bitbucket.cowwoc:diff-match-patch", version.ref = "cowwoc-diff-match-patch" }
+
+fxmisc-easybind = { module = "org.fxmisc.easybind:easybind", version.ref = "fxmisc-easybind" }
+
+glassfish-jaxb = { module = 'org.glassfish.jaxb:jaxb-runtime', version.ref = 'glassfish-jaxb-lib' }
+google-findbugs = { module = "com.google.code.findbugs:jsr305", version.ref = "google-findbugs" }
+google-gson = { module = "com.google.code.gson:gson", version.ref = "google-gson" }
+google-guava = { module = "com.google.guava:guava", version.ref = "google-guava" }
+google-guice = { module = "com.google.inject:guice", version.ref = "google-guice" }
+
+grpc-core = { module = "io.grpc:grpc-core", version.ref = "grpc" }
+grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }
+grpc-protobuf = { module = "io.grpc:grpc-protobuf", version.ref = "grpc" }
+grpc-stub = { module = "io.grpc:grpc-stub", version.ref = "grpc" }
+
+hamcrest = { module = "org.hamcrest:hamcrest", version.ref = "hamcrest" }
+
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-annotations" }
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson-core" }
+
+javax-annotation = { module = "javax.annotation:javax.annotation-api", version.ref = "javax-annotation" }
+jcsv = { module = "com.googlecode.jcsv:jcsv", version.ref = "jcsv" }
+jersey-container-jdk-http = { module = 'org.glassfish.jersey.containers:jersey-container-jdk-http', version.ref = 'jersey-lib' }
+jersey-media-json-jackson = { module = 'org.glassfish.jersey.media:jersey-media-json-jackson', version.ref = 'jersey-lib' }
+jersey-inject-jersey-hk2 = { module = 'org.glassfish.jersey.inject:jersey-hk2', version.ref = 'jersey-lib' }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+jopt = { module = "net.sf.jopt-simple:jopt-simple", version.ref = "jopt" }
+jsonrpc4j = { module = "com.github.bisq-network:jsonrpc4j", version.ref = "jsonrpc4j" }
+
+junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'junit-jupiter' }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-jupiter" }
+
+kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+
+logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+natpryce-make-it-easy = { module = "com.natpryce:make-it-easy", version.ref = "natpryce-make-it-easy" }
+
+netlayer-tor-external = { module = "com.github.bisq-network.netlayer:tor.external", version.ref = "netlayer" }
+netlayer-tor-native = { module = "com.github.bisq-network.netlayer:tor.native", version.ref = "netlayer" }
+
+openjfx-javafx-plugin = { module = "org.openjfx:javafx-plugin", version.ref = "openjfx-javafx-plugin" }
+protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+spark-core = { module = "com.sparkjava:spark-core", version.ref = "spark" }
+swagger = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-lib' }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+
+[bundles]
+jersey-libs = ['jersey-container-jdk-http', 'jersey-media-json-jackson', 'jersey-inject-jersey-hk2']
+
+[plugins]
+protobuf = { id = "com.google.protobuf", version.ref = "protobuf-plugin" }

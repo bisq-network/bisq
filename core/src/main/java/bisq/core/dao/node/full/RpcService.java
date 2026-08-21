@@ -1,0 +1,547 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.dao.node.full;
+
+import bisq.core.dao.node.full.rpc.BitcoindClient;
+import bisq.core.dao.node.full.rpc.BitcoindDaemon;
+import bisq.core.dao.node.full.rpc.DtoPubKeyScript;
+import bisq.core.dao.state.model.blockchain.PubKeyScript;
+import bisq.core.dao.state.model.blockchain.ScriptType;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.user.Preferences;
+
+import bisq.common.UserThread;
+import bisq.common.config.Config;
+import bisq.common.handlers.ResultHandler;
+import bisq.common.util.SingleThreadExecutorUtils;
+
+import org.bitcoinj.core.Utils;
+
+import com.google.inject.Inject;
+
+import javax.inject.Named;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.primitives.Chars;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import java.math.BigDecimal;
+
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
+
+
+
+import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetBlockResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetNetworkInfoResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindScriptPubKey;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindTransaction;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindVin;
+import bisq.wallets.json_rpc.RpcConfig;
+
+/**
+ * Request blockchain data via RPC from Bitcoin Core for a FullNode.
+ * Runs in a custom thread.
+ * See the rpc.md file in the doc directory for more info about the setup.
+ */
+@Slf4j
+public class RpcService {
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET = 680300;
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET = 1943000;
+    private static final int ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST = 1;
+    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 220100);
+
+    private final String rpcUser;
+    private final String rpcPassword;
+    private final String rpcHost;
+    private final int rpcPort;
+    private final int rpcBlockPort;
+    private final String rpcBlockHost;
+
+    private BitcoindClient client;
+    private BitcoindDaemon daemon;
+
+    // We could use multiple threads, but then we need to support ordering of results in a queue
+    // Keep that for optimization after measuring performance differences
+    private final ListeningExecutorService executor = SingleThreadExecutorUtils.getSingleThreadListeningExecutor("RpcService");
+    private volatile boolean shutdownInProgress;
+    private final Set<ResultHandler> setupResultHandlers = new CopyOnWriteArraySet<>();
+    private final Set<Consumer<Throwable>> setupErrorHandlers = new CopyOnWriteArraySet<>();
+    private volatile boolean setupComplete;
+    private Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>> rawDtoBlockHandler;
+    private Consumer<Throwable> rawDtoBlockErrorHandler;
+    private Consumer<RawBlock> rawBlockHandler;
+    private Consumer<Throwable> rawBlockErrorHandler;
+    private volatile boolean isBlockHandlerSet;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Inject
+    private RpcService(Preferences preferences,
+                       @Named(Config.RPC_HOST) String rpcHost,
+                       @Named(Config.RPC_PORT) int rpcPort,
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockPort,
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
+        this.rpcUser = preferences.getRpcUser();
+        this.rpcPassword = preferences.getRpcPw();
+
+        // mainnet is 8332, testnet 18332, regtest 18443
+        boolean isHostSet = !rpcHost.isEmpty();
+        boolean isPortSet = rpcPort != Config.UNSPECIFIED_PORT;
+        boolean isMainnet = Config.baseCurrencyNetwork().isMainnet();
+        boolean isTestnet = Config.baseCurrencyNetwork().isTestnet();
+        boolean isDaoBetaNet = Config.baseCurrencyNetwork().isDaoBetaNet();
+        this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
+        this.rpcPort = isPortSet ? rpcPort :
+                isMainnet || isDaoBetaNet ? 8332 :
+                        isTestnet ? 18332 :
+                                18443; // regtest
+        boolean isBlockPortSet = rpcBlockPort != Config.UNSPECIFIED_PORT;
+        boolean isBlockHostSet = !rpcBlockHost.isEmpty();
+        this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : 5125;
+        this.rpcBlockHost = isBlockHostSet ? rpcBlockHost : "127.0.0.1";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void shutDown() {
+        if (shutdownInProgress) {
+            return;
+        }
+        shutdownInProgress = true;
+        if (daemon != null) {
+            daemon.shutdown();
+            log.info("daemon shut down");
+        }
+
+        // A hard shutdown is justified for the RPC service.
+        executor.shutdownNow();
+    }
+
+    public void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
+        if (setupComplete) {
+            // Setup got already called and has finished.
+            resultHandler.handleResult();
+            return;
+        } else {
+            setupResultHandlers.add(resultHandler);
+            setupErrorHandlers.add(errorHandler);
+            if (setupResultHandlers.size() > 1) {
+                // Setup got already called but has not finished yet.
+                return;
+            }
+        }
+
+        try {
+            ListenableFuture<Void> future = executor.submit(() -> {
+                try {
+                    log.info("Starting RpcService on {}:{} with user {}, listening for blocknotify on port {} from {}",
+                            this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort, this.rpcBlockHost);
+
+                    long startTs = System.currentTimeMillis();
+
+                    var rpcConfig = RpcConfig.builder()
+                            .hostname(rpcHost)
+                            .port(rpcPort)
+                            .user(rpcUser)
+                            .password(rpcPassword)
+                            .build();
+                    client = new BitcoindClient(rpcConfig);
+
+                    checkNodeVersionAndHealth();
+
+                    daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
+                        log.error(throwable.toString());
+                        throwable.printStackTrace();
+                        UserThread.execute(() -> {
+                            setupErrorHandlers.forEach(handler -> handler.accept(new RpcException(throwable)));
+                            setupErrorHandlers.clear();
+                            setupResultHandlers.clear();
+                        });
+                    });
+
+                    log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
+                } catch (Throwable e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    throw new RpcException(e.toString(), e);
+                }
+                return null;
+            });
+
+            Futures.addCallback(future, new FutureCallback<>() {
+                public void onSuccess(Void ignore) {
+                    setupComplete = true;
+                    UserThread.execute(() -> {
+                        setupResultHandlers.forEach(ResultHandler::handleResult);
+                        setupResultHandlers.clear();
+                        setupErrorHandlers.clear();
+                    });
+                }
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    UserThread.execute(() -> {
+                        setupErrorHandlers.forEach(handler -> handler.accept(throwable));
+                        setupErrorHandlers.clear();
+                        setupResultHandlers.clear();
+                    });
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error(e.toString(), e);
+                throw e;
+            }
+        } catch (Exception e) {
+            log.error(e.toString(), e);
+            throw e;
+        }
+    }
+
+    private String decodeNodeVersion(Integer encodedVersion) {
+        var paddedEncodedVersion = Strings.padStart(encodedVersion.toString(), 8, '0');
+
+        return Lists.partition(Chars.asList(paddedEncodedVersion.toCharArray()), 2).stream()
+                .map(chars -> new String(Chars.toArray(chars)).replaceAll("^0", ""))
+                .collect(Collectors.joining("."))
+                .replaceAll("\\.0$", "");
+    }
+
+    private void checkNodeVersionAndHealth() {
+        BitcoindGetNetworkInfoResponse.Result networkInfo = client.getNetworkInfo();
+        var nodeVersion = decodeNodeVersion(networkInfo.getVersion());
+
+        if (SUPPORTED_NODE_VERSION_RANGE.contains(networkInfo.getVersion())) {
+            log.info("Got Bitcoin Core version: {}", nodeVersion);
+        } else {
+            log.warn("Server version mismatch - client optimized for '[{} .. {})', node responded with '{}'",
+                    decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.lowerEndpoint()),
+                    decodeNodeVersion(SUPPORTED_NODE_VERSION_RANGE.upperEndpoint()), nodeVersion);
+        }
+
+        var bestRawBlock = client.getBlockVerbosityOne(client.getBestBlockHash());
+        long currentTime = System.currentTimeMillis() / 1000;
+        if ((currentTime - bestRawBlock.getTime()) > TimeUnit.HOURS.toSeconds(6)) {
+            log.warn("Last available block was mined >{} hours ago; please check your network connection",
+                    ((currentTime - bestRawBlock.getTime()) / 3600));
+        }
+    }
+
+    void addNewDtoBlockHandler(Consumer<RawBlock> dtoBlockHandler,
+                               Consumer<Throwable> errorHandler) {
+        this.rawBlockHandler = dtoBlockHandler;
+        this.rawBlockErrorHandler = errorHandler;
+        if (!isBlockHandlerSet) {
+            setupBlockHandler();
+        }
+    }
+
+    public void addNewRawDtoBlockHandler(Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+                                                 rawDtoBlockHandler,
+                                         Consumer<Throwable> errorHandler) {
+        this.rawDtoBlockHandler = rawDtoBlockHandler;
+        this.rawDtoBlockErrorHandler = errorHandler;
+        if (!isBlockHandlerSet) {
+            setupBlockHandler();
+        }
+    }
+
+    private void setupBlockHandler() {
+        isBlockHandlerSet = true;
+        daemon.setBlockListener(blockHash -> {
+            try {
+                BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock =
+                        client.getBlockVerbosityTwo(blockHash);
+                log.info("New rawDtoBlock received: height={}, hash={}", rawDtoBlock.getHeight(), rawDtoBlock.getHash());
+
+                if (rawBlockHandler != null) {
+                    RawBlock rawBlock = getRawBlockFromRawDtoBlock(rawDtoBlock);
+                    UserThread.execute(() -> rawBlockHandler.accept(rawBlock));
+                }
+                if (rawDtoBlockHandler != null) {
+                    UserThread.execute(() -> rawDtoBlockHandler.accept(rawDtoBlock));
+                }
+            } catch (Throwable throwable) {
+                log.error("Error at BlockHandler", throwable);
+                if (rawBlockErrorHandler != null) {
+                    rawBlockErrorHandler.accept(throwable);
+                }
+                if (rawDtoBlockErrorHandler != null) {
+                    rawDtoBlockErrorHandler.accept(throwable);
+                }
+            }
+        });
+    }
+
+    public void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
+        try {
+            ListenableFuture<Integer> future = executor.submit(client::getBlockCount);
+            Futures.addCallback(future, new FutureCallback<>() {
+                public void onSuccess(Integer chainHeight) {
+                    UserThread.execute(() -> resultHandler.accept(chainHeight));
+                }
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    if (!shutdownInProgress) {
+                        log.error("Error at requestChainHeadHeight", throwable);
+                        UserThread.execute(() -> errorHandler.accept(throwable));
+                    }
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error("Exception at requestChainHeadHeight", e);
+                throw e;
+            }
+        } catch (Exception e) {
+            log.error("Exception at requestChainHeadHeight", e);
+            throw e;
+        }
+    }
+
+    void requestDtoBlock(int blockHeight,
+                         Consumer<RawBlock> resultHandler,
+                         Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
+        try {
+            ListenableFuture<RawBlock> future = executor.submit(() -> {
+                long startTs = System.currentTimeMillis();
+                String blockHash = client.getBlockHash(blockHeight);
+                var rawDtoBlock = client.getBlockVerbosityTwo(blockHash);
+                var block = getRawBlockFromRawDtoBlock(rawDtoBlock);
+                log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
+                        blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
+                return block;
+            });
+
+            Futures.addCallback(future, new FutureCallback<>() {
+                @Override
+                public void onSuccess(RawBlock block) {
+                    UserThread.execute(() -> resultHandler.accept(block));
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable throwable) {
+                    if (!shutdownInProgress) {
+                        log.error("Error at requestDtoBlock: blockHeight={}, error={}", blockHeight, throwable);
+                        UserThread.execute(() -> errorHandler.accept(throwable));
+                    }
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error("Exception at requestDtoBlock", e);
+                throw e;
+            }
+        } catch (Exception e) {
+            log.error("Exception at requestDtoBlock", e);
+            throw e;
+        }
+    }
+
+    public void requestRawDtoBlock(int blockHeight,
+                                   Consumer<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+                                           rawDtoBlockHandler,
+                                   Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
+        try {
+            ListenableFuture<BitcoindGetBlockResponse.Result<BitcoindTransaction>>
+                    future = executor.submit(() -> {
+                long startTs = System.currentTimeMillis();
+                String blockHash = client.getBlockHash(blockHeight);
+
+                // getBlock with about 2000 tx takes about 500 ms on a 4GHz Intel Core i7 CPU.
+                var rawDtoBlock = client.getBlockVerbosityTwo(blockHash);
+                log.info("requestRawDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
+                        blockHeight, rawDtoBlock.getTxs().size(), System.currentTimeMillis() - startTs);
+                return rawDtoBlock;
+            });
+
+            Futures.addCallback(future, new FutureCallback<>() {
+                @Override
+                public void onSuccess(BitcoindGetBlockResponse.Result<BitcoindTransaction>
+                                              rawDtoBlock) {
+                    UserThread.execute(() -> rawDtoBlockHandler.accept(rawDtoBlock));
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable throwable) {
+                    if (!shutdownInProgress) {
+                        log.error("Error at requestRawDtoBlock: blockHeight={}", blockHeight, throwable);
+                        UserThread.execute(() -> errorHandler.accept(throwable));
+                    }
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error(e.toString(), e);
+                throw e;
+            }
+        } catch (Exception e) {
+            log.error(e.toString(), e);
+            throw e;
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private static RawBlock getRawBlockFromRawDtoBlock(BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock) {
+        List<RawTx> txList = rawDtoBlock.getTxs().stream()
+                .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
+                .collect(Collectors.toList());
+        return new RawBlock(rawDtoBlock.getHeight(),
+                rawDtoBlock.getTime() * 1000, // rawDtoBlock.getTime() is in sec but we want ms
+                rawDtoBlock.getHash(),
+                rawDtoBlock.getPreviousBlockHash(),
+                ImmutableList.copyOf(txList));
+    }
+
+    private static RawTx getTxFromRawTransaction(BitcoindDecodeRawTransactionResponse.Result rawDtoTx,
+                                                 BitcoindGetBlockResponse.Result<BitcoindTransaction> rawDtoBlock) {
+        String txId = rawDtoTx.getTxId();
+        long blockTime = rawDtoBlock.getTime() * 1000; // We convert block time from sec to ms
+        int blockHeight = rawDtoBlock.getHeight();
+        String blockHash = rawDtoBlock.getHash();
+
+        // Extracting pubKeys for segwit (P2WPKH) inputs, instead of just P2PKH inputs as
+        // originally, changes the DAO state and thus represents a hard fork. We disallow
+        // it until the fork activates, which is determined by block height.
+        boolean allowSegwit = blockHeight >= getActivateHardFork2Height();
+
+        final List<TxInput> txInputs = rawDtoTx.getVin()
+                .stream()
+                .filter(rawInput -> rawInput != null && rawInput.getTxId() != null)
+                .map(rawInput -> {
+                    String pubKeyAsHex = extractPubKeyAsHex(rawInput, allowSegwit);
+                    if (pubKeyAsHex == null) {
+                        log.debug("pubKeyAsHex is not set as we received a not supported sigScript. " +
+                                        "txId={}, asm={}, txInWitness={}",
+                                rawDtoTx.getTxId(), rawInput.getScriptSig().getAsm(), rawInput.getTxInWitness());
+                    }
+                    return new TxInput(rawInput.getTxId(), rawInput.getVout(), pubKeyAsHex);
+                })
+                .collect(Collectors.toList());
+
+        final List<RawTxOutput> txOutputs = rawDtoTx.getVout()
+                .stream()
+                .filter(e -> e != null && e.getScriptPubKey() != null)
+                .map(rawDtoTxOutput -> {
+                            byte[] opReturnData = null;
+                            BitcoindScriptPubKey bitcoindScriptPubKey = rawDtoTxOutput.getScriptPubKey();
+                            DtoPubKeyScript scriptPubKey = new DtoPubKeyScript(bitcoindScriptPubKey);
+                            if (ScriptType.NULL_DATA.equals(scriptPubKey.getType()) && scriptPubKey.getAsm() != null) {
+                                String[] chunks = scriptPubKey.getAsm().split(" ");
+                                // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
+                                if (chunks.length == 2 && "OP_RETURN".equals(chunks[0]) && !"0".equals(chunks[1])) {
+                                    try {
+                                        opReturnData = Utils.HEX.decode(chunks[1]);
+                                    } catch (Throwable t) {
+                                        log.debug("Error at Utils.HEX.decode(chunks[1]): " + t.toString() +
+                                                " / chunks[1]=" + chunks[1] +
+                                                "\nWe get sometimes exceptions with opReturn data, seems BitcoinJ " +
+                                                "cannot handle all " +
+                                                "existing OP_RETURN data, but we ignore them anyway as the OP_RETURN " +
+                                                "data used for DAO transactions are all valid in BitcoinJ");
+                                    }
+                                }
+                            }
+                            // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
+                            String address = scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
+                            PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
+                            return new RawTxOutput(rawDtoTxOutput.getN(),
+                                    BigDecimal.valueOf(rawDtoTxOutput.getValue()).movePointRight(8).longValueExact(),
+                                    rawDtoTx.getTxId(),
+                                    pubKeyScript,
+                                    address,
+                                    opReturnData,
+                                    blockHeight);
+                        }
+                )
+                .collect(Collectors.toList());
+
+        return new RawTx(txId,
+                blockHeight,
+                blockHash,
+                blockTime,
+                ImmutableList.copyOf(txInputs),
+                ImmutableList.copyOf(txOutputs));
+    }
+
+    private static int getActivateHardFork2Height() {
+        return Config.baseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET :
+                Config.baseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET :
+                        ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST;
+    }
+
+    @VisibleForTesting
+    static String extractPubKeyAsHex(BitcoindVin rawInput, boolean allowSegwit) {
+        // We only allow inputs with a single SIGHASH_ALL signature. That is, multisig or
+        // signing of only some of the tx inputs/outputs is intentionally disallowed...
+        if (rawInput.getScriptSig() == null) {
+            // coinbase input - no pubKey to extract
+            return null;
+        }
+        String[] split = rawInput.getScriptSig().getAsm().split(" ");
+        if (split.length == 2 && split[0].endsWith("[ALL]")) {
+            // P2PKH input
+            return split[1];
+        }
+        List<String> txInWitness = rawInput.getTxInWitness() != null ? rawInput.getTxInWitness() : List.of();
+        if (allowSegwit && split.length < 2 && txInWitness.size() == 2 && txInWitness.get(0).endsWith("01")) {
+            // P2WPKH or P2SH-P2WPKH input
+            return txInWitness.get(1);
+        }
+        // If we receive a pay to pubkey tx, the pubKey is not included as it is in the
+        // output already.
+        return null;
+    }
+}

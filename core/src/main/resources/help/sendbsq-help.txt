@@ -1,0 +1,38 @@
+sendbsq
+
+NAME
+----
+sendbsq - send BSQ to an external wallet
+
+SYNOPSIS
+--------
+sendbsq
+		--address=<bsq-address>
+		--amount=<bsq-amount>
+		[--tx-fee-rate=<sats/byte>]
+
+DESCRIPTION
+-----------
+Send BSQ from your Bisq wallet to an external BSQ address.
+
+OPTIONS
+-------
+--address
+        The destination BSQ address for the send transaction.
+
+--amount
+		The amount of BSQ to send.
+
+--tx-fee-rate
+        An optional transaction fee rate (sats/byte) for the transaction.  The user is
+        responsible for choosing a fee rate that will be accepted by the network in a
+        reasonable amount of time, and the fee rate must be greater than 1 (sats/byte).
+
+EXAMPLES
+--------
+Send 500 BSQ to address Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne with a default transaction fee rate:
+$ ./bisq-cli --password=xyz --port=9998 sendbsq --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne --amount=500.00
+
+Send 3000 BSQ to address Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne with transaction fee rate of 40 sats/byte:
+$ ./bisq-cli --password=xyz --port=9998 sendbsq --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne --amount=3000.00 \
+    --tx-fee-rate=40

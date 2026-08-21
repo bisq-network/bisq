@@ -1,0 +1,18 @@
+getnetwork
+
+NAME
+----
+getnetwork - get BTC network name
+
+SYNOPSIS
+--------
+getnetwork
+
+DESCRIPTION
+-----------
+Returns the name of the BTC network the API daemon is connected to:
+mainnet, testnet3, or regtest.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getnetwork

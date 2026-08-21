@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ This file is part of Bisq.
+  ~
+  ~ Bisq is free software: you can redistribute it and/or modify it
+  ~ under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or (at
+  ~ your option) any later version.
+  ~
+  ~ Bisq is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<?import bisq.desktop.components.AutoTooltipButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+<?import bisq.desktop.components.list.FilterBox?>
+<VBox fx:id="root" fx:controller="bisq.desktop.main.funds.reserved.ReservedView"
+      spacing="10" xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
+    </padding>
+    <FilterBox fx:id="filterBox" />
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="dateColumn" minWidth="180" maxWidth="180"/>
+            <TableColumn fx:id="offerIdColumn" minWidth="280"/>
+            <TableColumn fx:id="detailsColumn" minWidth="180"/>
+            <TableColumn fx:id="addressColumn" minWidth="280"/>
+            <TableColumn fx:id="balanceColumn" minWidth="110"/>
+        </columns>
+    </TableView>
+    <HBox spacing="10">
+        <Label fx:id="numItems"/>
+        <Region fx:id="spacer"/>
+        <AutoTooltipButton fx:id="exportButton"/>
+    </HBox>
+</VBox>

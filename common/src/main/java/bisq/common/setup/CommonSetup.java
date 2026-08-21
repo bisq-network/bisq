@@ -1,0 +1,187 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.common.setup;
+
+import bisq.common.UserThread;
+import bisq.common.app.AsciiLogo;
+import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
+import bisq.common.app.Version;
+import bisq.common.config.Config;
+import bisq.common.util.GcUtil;
+import bisq.common.util.Profiler;
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.store.BlockStoreException;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import java.net.URISyntaxException;
+
+import java.nio.file.Paths;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import ch.qos.logback.classic.Level;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class CommonSetup {
+    private static final AtomicBoolean exitScheduled = new AtomicBoolean();
+    private static volatile Thread shutdownHook;
+
+    public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
+        setupLog(config);
+        AsciiLogo.showAsciiLogo();
+        Version.setBaseCryptoNetworkId(config.getBaseCurrencyNetwork().ordinal());
+        Version.printVersion();
+        if (config.allowClearnetHttpRequests && config.getBaseCurrencyNetwork().isMainnet()) {
+            log.warn("allowClearnetHttpRequests is enabled on mainnet — HTTP requests may bypass Tor and leak your IP address.");
+        }
+        maybePrintPathOfCodeSource();
+        Profiler.printSystemLoad();
+
+        // Full DAO nodes (like seed nodes) do not use the GC triggers as it is expected they have sufficient RAM allocated.
+        GcUtil.setDISABLE_GC_CALLS(config.fullDaoNode);
+
+        setSystemProperties();
+        setupShutdownHandler(gracefulShutDownHandler);
+
+        DevEnv.setup(config);
+    }
+
+    public static void startPeriodicTasks() {
+        Profiler.printSystemLoadPeriodically(10, TimeUnit.MINUTES);
+        GcUtil.autoReleaseMemory();
+    }
+
+    public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
+        Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
+            if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
+                    throwable.getCause().getCause() instanceof BlockStoreException) {
+                log.error("Uncaught BlockStoreException ", throwable);
+            } else if (throwable instanceof OutOfMemoryError) {
+                Profiler.printSystemLoad();
+                log.error("OutOfMemoryError occurred. We shut down.", throwable);
+                // Leave it to the handleUncaughtException to shut down or not.
+                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
+            } else if (throwable instanceof ClassCastException &&
+                    "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
+                log.warn(throwable.getMessage());
+            } else if (throwable instanceof RejectedExecutionException) {
+                log.error("Uncaught RejectedExecutionException ", throwable);
+            } else if (throwable instanceof UnsupportedOperationException &&
+                    "The system tray is not supported on the current platform.".equals(throwable.getMessage())) {
+                log.warn(throwable.getMessage());
+            } else {
+                log.error("Uncaught Exception from thread " + Thread.currentThread().getName());
+                log.error("throwableMessage= " + throwable.getMessage());
+                log.error("throwableClass= " + throwable.getClass());
+                log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
+                throwable.printStackTrace();
+                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
+            }
+        };
+        Thread.setDefaultUncaughtExceptionHandler(handler);
+        Thread.currentThread().setUncaughtExceptionHandler(handler);
+    }
+
+    private static void setupLog(Config config) {
+        String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
+        Log.setup(logPath);
+        log.info("Log file at: {}.log", logPath);
+        Utilities.printSysInfo();
+        Log.setLevel(Level.toLevel(config.logLevel));
+    }
+
+    protected static void setSystemProperties() {
+    }
+
+    protected static void setupShutdownHandler(GracefulShutDownHandler gracefulShutDownHandler) {
+        Thread hook = new Thread(() -> {
+            try {
+                var countDownLatch = new CountDownLatch(1);
+                UserThread.execute(() ->
+                        gracefulShutDownHandler.gracefulShutDown(countDownLatch::countDown));
+                //noinspection ResultOfMethodCallIgnored
+                countDownLatch.await(2, TimeUnit.MINUTES);
+
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }, "BisqShutdownHook");
+        Runtime.getRuntime().addShutdownHook(hook);
+        shutdownHook = hook;
+    }
+
+    /**
+     * Terminates the process after an application-initiated graceful shutdown has completed.
+     * <p>
+     * The shutdown hook is a backstop for termination initiated outside the application. Running it
+     * again for our own controlled exit would re-enter the graceful shutdown and can deadlock: the
+     * hook waits for work posted to the UserThread while {@link System#exit(int)} waits for the hook.
+     * The exit therefore also runs outside the UserThread.
+     */
+    public static void exitAfter(int status, long delay, TimeUnit timeUnit) {
+        if (!exitScheduled.compareAndSet(false, true)) {
+            return;
+        }
+
+        removeShutdownHook();
+        Thread exitThread = new Thread(() -> {
+            try {
+                timeUnit.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            System.exit(status);
+        }, "BisqExit");
+        exitThread.setDaemon(false);
+        exitThread.start();
+    }
+
+    static boolean removeShutdownHook() {
+        Thread hook = shutdownHook;
+        shutdownHook = null;
+        if (hook == null) {
+            return false;
+        }
+
+        try {
+            return Runtime.getRuntime().removeShutdownHook(hook);
+        } catch (IllegalStateException | SecurityException ignored) {
+            // The JVM is already shutting down, or its security policy does not permit removal.
+            return false;
+        }
+    }
+
+    protected static void maybePrintPathOfCodeSource() {
+        try {
+            final String pathOfCodeSource = Utilities.getPathOfCodeSource();
+            if (!pathOfCodeSource.endsWith("classes"))
+                log.info("Path to Bisq jar file: " + pathOfCodeSource);
+        } catch (URISyntaxException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+        }
+    }
+}

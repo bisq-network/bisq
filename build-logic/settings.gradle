@@ -1,0 +1,15 @@
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
+}
+
+include 'app-start-plugin'
+include 'commons'
+include 'docker-image-builder'
+include 'gradle-tasks'
+include 'packaging'
+include 'regtest'
+include 'tor-binary'

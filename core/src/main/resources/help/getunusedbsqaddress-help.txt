@@ -1,0 +1,17 @@
+getunusedbsqaddress
+
+NAME
+----
+getunusedbsqaddress - get BSQ receiving address
+
+SYNOPSIS
+--------
+getunusedbsqaddress
+
+DESCRIPTION
+-----------
+Returns an unused BSQ receiving address.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getunusedbsqaddress

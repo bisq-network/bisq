@@ -1,0 +1,39 @@
+getoffers
+
+NAME
+----
+getoffers - get available buy or sell BTC offers for a fiat currency
+
+SYNOPSIS
+--------
+getoffers
+		--direction=<buy|sell>
+		--currency-code=<eur|usd>
+
+DESCRIPTION
+-----------
+List existing offers for a direction (SELL|BUY) and currency (EUR|GBP|USD|BRL|...).
+All of the listed offers will be available for the taking because you have a
+matching payment account, and none of the offers listed will be one of yours.
+
+OPTIONS
+-------
+--direction
+		The direction of the offer (BUY or SELL).
+
+--currency-code
+		The three letter code for the fiat used to buy or sell BTC, e.g., EUR, USD, BRL, ...
+
+EXAMPLES
+--------
+You have one Brazilian Real payment account with a face-to-face payment method type.
+To view available offers to BUY BTC with BRL, created by other users with the same
+face-to-fact account type:
+$ ./bisq-cli --password=xyz --port=9998 getoffers --direction=buy --currency-code=brl
+
+You have several EUR payment accounts, each with a different payment method type.
+To view available offers to SELL BTC with EUR, created by other users having at
+least one payment account that matches any of your own:
+$ ./bisq-cli --password=xyz --port=9998 getoffers --direction=sell --currency-code=eur
+
+

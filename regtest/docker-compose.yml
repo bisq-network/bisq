@@ -1,0 +1,68 @@
+version: '3.7'
+
+services:
+    electrumx:
+        image: bisq/electrumx
+        build: ./electrumx
+        volumes:
+            - ./data_dirs/electrumx:/root/electrumx/db_directory
+        environment:
+            - ALLOW_ROOT=yes
+            - SERVICES=tcp://:50001,rpc://
+            - COIN=Bitcoin
+            - NET=regtest
+            - DAEMON_URL=http://bisqdao:bsq@127.0.0.1:18443
+            - DB_DIRECTORY=/root/electrumx/db_directory
+        entrypoint: ./electrumx_server
+        network_mode: "host"
+
+    mempool-web:
+        environment:
+            FRONTEND_HTTP_PORT: "8080"
+            BACKEND_MAINNET_HTTP_HOST: "127.0.0.1"
+        image: mempool/frontend:latest
+        user: "1000:1000"
+        restart: on-failure
+        stop_grace_period: 1m
+        command: "./wait-for 127.0.0.1:3306 --timeout=720 -- nginx -g 'daemon off;'"
+        network_mode: "host"
+
+    mempool-api:
+        depends_on:
+            - electrumx
+        environment:
+            MEMPOOL_BACKEND: "electrum"
+            CORE_RPC_HOST: "127.0.0.1"
+            CORE_RPC_PORT: "18443"
+            CORE_RPC_USERNAME: "bisqdao"
+            CORE_RPC_PASSWORD: "bsq"
+            ELECTRUM_HOST: "127.0.0.1"
+            ELECTRUM_PORT: "50001"
+            ELECTRUM_TLS_ENABLED: "false"
+            DATABASE_ENABLED: "true"
+            DATABASE_HOST: "127.0.0.1"
+            DATABASE_DATABASE: "mempool"
+            DATABASE_USERNAME: "mempool"
+            DATABASE_PASSWORD: "mempool"
+            STATISTICS_ENABLED: "true"
+        image: mempool/backend:latest
+        user: "1000:1000"
+        restart: on-failure
+        stop_grace_period: 1m
+        command: "./wait-for-it.sh 127.0.0.1:3306 --timeout=720 --strict -- ./start.sh"
+        volumes:
+            - ./data_dirs/mempool-api:/backend/cache
+        network_mode: "host"
+
+    mempool-db:
+        environment:
+            MYSQL_DATABASE: "mempool"
+            MYSQL_USER: "mempool"
+            MYSQL_PASSWORD: "mempool"
+            MYSQL_ROOT_PASSWORD: "admin"
+        image: mariadb:10.5.8
+        restart: on-failure
+        stop_grace_period: 1m
+        volumes:
+            - ./data_dirs/mempool-mysql:/var/lib/mysql
+        network_mode: "host"

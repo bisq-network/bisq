@@ -1,0 +1,14 @@
+Font: fontawesome-webfont.ttf
+Source: Font Awesome 3.2.1 by Dave Gandy — http://fontawesome.io
+Licenses:
+  - Font (TTF / OTF / WOFF): SIL Open Font License 1.1
+    http://scripts.sil.org/OFL
+  - CSS, LESS, and SASS files: MIT License
+    http://opensource.org/licenses/mit-license.html
+  - Font Awesome documentation: CC BY 3.0
+    http://creativecommons.org/licenses/by/3.0/
+
+Attribution required by the OFL: this software (Font Awesome) is licensed
+under the SIL Open Font License, Version 1.1; you may not use this file
+except in compliance with the OFL. You may obtain a copy of the OFL at:
+http://scripts.sil.org/OFL

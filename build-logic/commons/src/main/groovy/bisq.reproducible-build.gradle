@@ -1,0 +1,70 @@
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.bundling.Zip
+
+import java.util.zip.ZipFile
+
+def verifyZipArchive = { AbstractArchiveTask archiveTask, File archiveFile ->
+    def entryTimes = new LinkedHashSet<Long>()
+    def duplicateEntryNames = []
+    def seenEntryNames = new HashSet<String>()
+
+    new ZipFile(archiveFile).withCloseable { zip ->
+        zip.entries().each { entry ->
+            entryTimes.add(entry.time)
+
+            if (!seenEntryNames.add(entry.name)) {
+                duplicateEntryNames.add(entry.name)
+            }
+        }
+    }
+
+    if (!duplicateEntryNames.isEmpty()) {
+        throw new GradleException(
+                "${archiveTask.path} produced duplicate archive entries: ${duplicateEntryNames.unique().join(', ')}"
+        )
+    }
+
+    if (entryTimes.size() > 1) {
+        throw new GradleException(
+                "${archiveTask.path} produced ${archiveFile.name} with non-uniform entry timestamps: ${entryTimes.join(', ')}"
+        )
+    }
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.register('verifyReproducibleArchives') {
+    group = 'verification'
+    description = 'Builds archive outputs and verifies reproducible archive configuration and ZIP/JAR metadata.'
+
+    def archiveTasks = tasks.withType(AbstractArchiveTask)
+    dependsOn archiveTasks
+
+    doLast {
+        for (def archiveTask : archiveTasks) {
+            if (!archiveTask.enabled) {
+                continue
+            }
+
+            if (archiveTask.preserveFileTimestamps) {
+                throw new GradleException("${archiveTask.path} preserves file timestamps")
+            }
+
+            if (!archiveTask.reproducibleFileOrder) {
+                throw new GradleException("${archiveTask.path} does not use reproducible file order")
+            }
+
+            def archiveFile = archiveTask.archiveFile.get().asFile
+            if (!archiveFile.exists()) {
+                continue
+            }
+
+            if (archiveTask instanceof Zip) {
+                verifyZipArchive(archiveTask, archiveFile)
+            }
+        }
+    }
+}

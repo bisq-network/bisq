@@ -1,0 +1,110 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.dao.state.model.governance;
+
+import bisq.core.dao.governance.ConsensusCritical;
+import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.proto.network.NetworkPayload;
+import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.Utilities;
+
+import com.google.protobuf.ByteString;
+
+import java.util.Arrays;
+import java.util.Objects;
+
+import lombok.Getter;
+
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public class Merit implements PersistablePayload, NetworkPayload, ConsensusCritical, ImmutableDaoStateModel, Canonical {
+    @Getter
+    private final Issuance issuance;
+    private final byte[] signature;
+
+    public Merit(Issuance issuance, byte[] signature) {
+        this.issuance = issuance;
+        this.signature = Arrays.copyOf(signature, signature.length);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public protobuf.Merit toProtoMessage() {
+        final protobuf.Merit.Builder builder = protobuf.Merit.newBuilder()
+                .setIssuance(issuance.toProtoMessage())
+                .setSignature(ByteString.copyFrom(signature));
+        return builder.build();
+    }
+
+    public static Merit fromProto(protobuf.Merit proto) {
+        return new Merit(Issuance.fromProto(proto.getIssuance()),
+                proto.getSignature().toByteArray());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Canonical
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static final CanonicalSchema<Merit> SCHEMA = CanonicalSchema.<Merit>newBuilder()
+            .compose(1, Merit::getIssuance, Issuance.SCHEMA)
+            .bytes(2, Merit::getSignature)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        return canonicalEncoder.encode(this, SCHEMA);
+    }
+
+
+    public String getIssuanceTxId() {
+        return issuance.getTxId();
+    }
+
+    public byte[] getSignature() {
+        return Arrays.copyOf(signature, signature.length);
+    }
+
+    @Override
+    public String toString() {
+        return "Merit{" +
+                "\n     issuance=" + issuance +
+                ",\n     signature=" + Utilities.bytesAsHexString(signature) +
+                "\n}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Merit merit)) return false;
+        return Objects.equals(issuance, merit.issuance) && Objects.deepEquals(signature, merit.signature);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(issuance, Arrays.hashCode(signature));
+    }
+}

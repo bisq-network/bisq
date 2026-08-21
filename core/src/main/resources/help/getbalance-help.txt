@@ -1,0 +1,30 @@
+getbalance
+
+NAME
+----
+getbalance - get wallet balance(s)
+
+SYNOPSIS
+--------
+getbalance
+		[--currency-code=<bsq|btc>]
+
+DESCRIPTION
+-----------
+Returns full balance information for Bisq BSQ and/or BTC wallets.
+
+OPTIONS
+-------
+--currency-code=<bsq|btc>
+		The three letter Bisq wallet crypto currency code.
+
+EXAMPLES
+--------
+Show full BSQ and BTC wallet balance information:
+$ ./bisq-cli --password=xyz --port=9998 getbalance
+
+Show full BSQ wallet balance information:
+$ ./bisq-cli --password=xyz --port=9998 getbalance --currency-code=bsq
+
+Show full BTC wallet balance information:
+$ ./bisq-cli --password=xyz --port=9998 getbalance --currency-code=btc

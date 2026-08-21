@@ -1,0 +1,23 @@
+getaddressbalance
+
+NAME
+----
+getaddressbalance - get btc address balance
+
+SYNOPSIS
+--------
+getaddressbalance
+		--address=<btc-address>
+
+DESCRIPTION
+-----------
+Returns the balance of a BTC address in the Bisq server's wallet.
+
+OPTIONS
+-------
+--address=<btc-address>
+		The BTC address.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getaddressbalance --address=bcrt1qygvsqmyt8jyhtp7l3zwqm7s7v3nar6vkc2luz3

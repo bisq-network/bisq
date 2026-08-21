@@ -1,0 +1,693 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.api;
+
+import bisq.core.api.exception.AlreadyExistsException;
+import bisq.core.api.exception.FailedPreconditionException;
+import bisq.core.api.exception.NotAvailableException;
+import bisq.core.api.exception.NotFoundException;
+import bisq.core.api.model.AddressBalanceInfo;
+import bisq.core.api.model.BalancesInfo;
+import bisq.core.api.model.BsqBalanceInfo;
+import bisq.core.api.model.BtcBalanceInfo;
+import bisq.core.api.model.TxFeeRateInfo;
+import bisq.core.app.AppStartupState;
+import bisq.core.btc.Balances;
+import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.BsqChangeBelowDustException;
+import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.exceptions.WalletException;
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.BsqTransferModel;
+import bisq.core.btc.wallet.BsqTransferService;
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.dao.DaoFacade;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
+
+import bisq.common.Timer;
+import bisq.common.UserThread;
+import bisq.common.util.SingleThreadExecutorUtils;
+
+import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.KeyCrypterScrypt;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import org.bouncycastle.crypto.params.KeyParameter;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
+import static bisq.core.util.ParsingUtils.parseToCoin;
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_REGTEST;
+import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_TESTNET;
+
+@Singleton
+@Slf4j
+class CoreWalletsService {
+
+    private final AppStartupState appStartupState;
+    private final CoreContext coreContext;
+    private final Balances balances;
+    private final WalletsManager walletsManager;
+    private final BsqWalletService bsqWalletService;
+    private final BsqTransferService bsqTransferService;
+    private final BsqFormatter bsqFormatter;
+    private final BtcWalletService btcWalletService;
+    private final CoinFormatter btcFormatter;
+    private final FeeService feeService;
+    private final DaoFacade daoFacade;
+    private final Preferences preferences;
+
+    @Nullable
+    private Timer lockTimer;
+
+    @Nullable
+    private KeyParameter tempAesKey;
+
+    private final ListeningExecutorService executor = SingleThreadExecutorUtils.getSingleThreadListeningExecutor("CoreWalletsService");
+
+    @Inject
+    public CoreWalletsService(AppStartupState appStartupState,
+                              CoreContext coreContext,
+                              Balances balances,
+                              WalletsManager walletsManager,
+                              BsqWalletService bsqWalletService,
+                              BsqTransferService bsqTransferService,
+                              BsqFormatter bsqFormatter,
+                              BtcWalletService btcWalletService,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                              FeeService feeService,
+                              DaoFacade daoFacade,
+                              Preferences preferences) {
+        this.appStartupState = appStartupState;
+        this.coreContext = coreContext;
+        this.balances = balances;
+        this.walletsManager = walletsManager;
+        this.bsqWalletService = bsqWalletService;
+        this.bsqTransferService = bsqTransferService;
+        this.bsqFormatter = bsqFormatter;
+        this.btcWalletService = btcWalletService;
+        this.btcFormatter = btcFormatter;
+        this.feeService = feeService;
+        this.daoFacade = daoFacade;
+        this.preferences = preferences;
+    }
+
+    @Nullable
+    KeyParameter getKey() {
+        verifyEncryptedWalletIsUnlocked();
+        return tempAesKey;
+    }
+
+    NetworkParameters getNetworkParameters() {
+        return btcWalletService.getWallet().getContext().getParams();
+    }
+
+    String getNetworkName() {
+        var networkParameters = getNetworkParameters();
+        switch (networkParameters.getPaymentProtocolId()) {
+            case PAYMENT_PROTOCOL_ID_TESTNET:
+                return "testnet3";
+            case PAYMENT_PROTOCOL_ID_REGTEST:
+                return "regtest";
+            default:
+                return "mainnet";
+        }
+    }
+
+    boolean isDaoStateReadyAndInSync() {
+        return daoFacade.isDaoStateReadyAndInSync();
+    }
+
+    boolean isChainHeightSyncedWithinTolerance() {
+        return btcWalletService.isChainHeightSyncedWithinTolerance();
+    }
+
+    int getBestChainHeight() {
+        return btcWalletService.getBestChainHeight();
+    }
+
+    BalancesInfo getBalances(String currencyCode) {
+        verifyWalletCurrencyCodeIsValid(currencyCode);
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+        if (balances.getAvailableBalance().get() == null)
+            throw new NotAvailableException("balance is not yet available");
+
+        switch (currencyCode.trim().toUpperCase()) {
+            case "BSQ":
+                return new BalancesInfo(getBsqBalances(), BtcBalanceInfo.EMPTY);
+            case "BTC":
+                return new BalancesInfo(BsqBalanceInfo.EMPTY, getBtcBalances());
+            default:
+                return new BalancesInfo(getBsqBalances(), getBtcBalances());
+        }
+    }
+
+    long getAddressBalance(String addressString) {
+        Address address = getAddressEntry(addressString).getAddress();
+        return btcWalletService.getBalanceForAddress(address).value;
+    }
+
+    AddressBalanceInfo getAddressBalanceInfo(String addressString) {
+        var satoshiBalance = getAddressBalance(addressString);
+        var numConfirmations = getNumConfirmationsForMostRecentTransaction(addressString);
+        Address address = getAddressEntry(addressString).getAddress();
+        return new AddressBalanceInfo(addressString,
+                satoshiBalance,
+                numConfirmations,
+                btcWalletService.isAddressUnused(address));
+    }
+
+    List<AddressBalanceInfo> getFundingAddresses(boolean onlyFunded) {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        // Create a new  unused funding address if none exists.
+        boolean unusedAddressExists = btcWalletService.getAvailableAddressEntries()
+                .stream()
+                .anyMatch(a -> btcWalletService.isAddressUnused(a.getAddress()));
+        if (!unusedAddressExists)
+            btcWalletService.getFreshAddressEntry();
+
+        List<String> addressStrings = btcWalletService
+                .getAvailableAddressEntries()
+                .stream()
+                .map(AddressEntry::getAddressString)
+                .collect(Collectors.toList());
+
+        // getAddressBalance is memoized, because we'll map it over addresses twice.
+        // To get the balances, we'll be using .getUnchecked, because we know that
+        // this::getAddressBalance cannot return null.
+        var balances = memoize(this::getAddressBalance);
+
+        boolean noAddressHasZeroBalance = addressStrings.stream()
+                .allMatch(addressString -> balances.getUnchecked(addressString) != 0);
+
+        if (noAddressHasZeroBalance) {
+            var newZeroBalanceAddress = btcWalletService.getFreshAddressEntry();
+            addressStrings.add(newZeroBalanceAddress.getAddressString());
+        }
+
+        Stream<String> resultStream = addressStrings.stream();
+        if (onlyFunded) {
+            resultStream = resultStream.filter(address -> balances.getUnchecked(address) > 0);
+        }
+
+        return resultStream.map(address ->
+                        new AddressBalanceInfo(address,
+                                balances.getUnchecked(address),
+                                getNumConfirmationsForMostRecentTransaction(address),
+                                btcWalletService.isAddressUnused(getAddressEntry(address).getAddress())))
+                .collect(Collectors.toList());
+    }
+
+    String getUnusedBsqAddress() {
+        return bsqWalletService.getUnusedBsqAddressAsString();
+    }
+
+    void sendBsq(String addressStr,
+                 String amount,
+                 String txFeeRate,
+                 TxBroadcaster.Callback callback) {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        try {
+            Address address = getValidBsqAddress(addressStr);
+            Coin receiverAmount = getValidTransferAmount(amount, bsqFormatter);
+            Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+            BsqTransferModel model = bsqTransferService.getBsqTransferModel(address,
+                    receiverAmount,
+                    txFeePerVbyte);
+            log.info("Sending {} BSQ to {} with tx fee rate {} sats/byte.",
+                    amount,
+                    address,
+                    txFeePerVbyte.value);
+            bsqTransferService.sendFunds(model, callback);
+        } catch (InsufficientMoneyException ex) {
+            log.error(ex.toString());
+            throw new NotAvailableException("cannot send bsq due to insufficient funds", ex);
+        } catch (NumberFormatException
+                | BsqChangeBelowDustException
+                | TransactionVerificationException
+                | WalletException ex) {
+            log.error(ex.toString());
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    void sendBtc(String address,
+                 String amount,
+                 String txFeeRate,
+                 String memo,
+                 FutureCallback<Transaction> callback) {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        try {
+            Set<String> fromAddresses = btcWalletService.getAddressEntriesForAvailableBalanceStream()
+                    .map(AddressEntry::getAddressString)
+                    .collect(Collectors.toSet());
+            Coin receiverAmount = getValidTransferAmount(amount, btcFormatter);
+            Coin txFeePerVbyte = getTxFeeRateFromParamOrPreferenceOrFeeService(txFeeRate);
+
+            // TODO Support feeExcluded (or included), default is fee included.
+            //  See WithdrawalView # onWithdraw (and refactor).
+            Transaction feeEstimationTransaction =
+                    btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
+                            address,
+                            receiverAmount,
+                            txFeePerVbyte);
+            if (feeEstimationTransaction == null)
+                throw new IllegalStateException("could not estimate the transaction fee");
+
+            Coin dust = btcWalletService.getDust(feeEstimationTransaction);
+            Coin fee = feeEstimationTransaction.getFee().add(dust);
+            if (dust.isPositive()) {
+                fee = feeEstimationTransaction.getFee().add(dust);
+                log.info("Dust txo ({} sats) was detected, the dust amount has been added to the fee (was {}, now {})",
+                        dust.value,
+                        feeEstimationTransaction.getFee(),
+                        fee.value);
+            }
+            log.info("Sending {} BTC to {} with tx fee of {} sats (fee rate {} sats/byte).",
+                    amount,
+                    address,
+                    fee.value,
+                    txFeePerVbyte.value);
+            btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
+                    address,
+                    receiverAmount,
+                    fee,
+                    null,
+                    tempAesKey,
+                    memo.isEmpty() ? null : memo,
+                    callback);
+        } catch (AddressEntryException ex) {
+            log.error(ex.toString());
+            throw new IllegalStateException("cannot send btc from any addresses in wallet", ex);
+        } catch (InsufficientFundsException | InsufficientMoneyException ex) {
+            log.error(ex.toString());
+            throw new NotAvailableException("cannot send btc due to insufficient funds", ex);
+        }
+    }
+
+    boolean verifyBsqSentToAddress(String address, String amount) {
+        Address receiverAddress = getValidBsqAddress(address);
+        NetworkParameters networkParameters = getNetworkParameters();
+        Predicate<TransactionOutput> isTxOutputAddressMatch = (txOut) ->
+                txOut.getScriptPubKey().getToAddress(networkParameters).equals(receiverAddress);
+        Coin coinValue = parseToCoin(amount, bsqFormatter);
+        Predicate<TransactionOutput> isTxOutputValueMatch = (txOut) ->
+                txOut.getValue().longValue() == coinValue.longValue();
+        List<TransactionOutput> spendableBsqTxOutputs = bsqWalletService.getSpendableBsqTransactionOutputs();
+
+        log.info("Searching {} spendable tx outputs for matching address {} and value {}:",
+                spendableBsqTxOutputs.size(),
+                address,
+                coinValue.toPlainString());
+        long numMatches = 0;
+        for (TransactionOutput txOut : spendableBsqTxOutputs) {
+            if (isTxOutputAddressMatch.test(txOut) && isTxOutputValueMatch.test(txOut)) {
+                log.info("\t\tTx {} output has matching address {} and value {}.",
+                        requireNonNull(txOut.getParentTransaction()).getTxId(),
+                        address,
+                        txOut.getValue().toPlainString());
+                numMatches++;
+            }
+        }
+        if (numMatches > 1) {
+            log.warn("{} tx outputs matched address {} and value {}, could be a"
+                            + " false positive BSQ payment verification result.",
+                    numMatches,
+                    address,
+                    coinValue.toPlainString());
+
+        }
+        return numMatches > 0;
+    }
+
+    void setTxFeeRatePreference(long txFeeRate) {
+        long minFeePerVbyte = feeService.getMinFeePerVByte();
+        if (txFeeRate < minFeePerVbyte)
+            throw new IllegalArgumentException(
+                    format("tx fee rate preference must be >= %d sats/byte", minFeePerVbyte));
+
+        preferences.setUseCustomWithdrawalTxFee(true);
+        Coin satsPerByte = Coin.valueOf(txFeeRate);
+        preferences.setWithdrawalTxFeeInVbytes(satsPerByte.value);
+    }
+
+    void unsetTxFeeRatePreference() {
+        preferences.setUseCustomWithdrawalTxFee(false);
+    }
+
+    TxFeeRateInfo getMostRecentTxFeeRateInfo() {
+        return new TxFeeRateInfo(
+                preferences.isUseCustomWithdrawalTxFee(),
+                preferences.getWithdrawalTxFeeInVbytes(),
+                feeService.getMinFeePerVByte(),
+                feeService.getTxFeePerVbyte().value,
+                feeService.getLastRequest());
+    }
+
+    Set<Transaction> getTransactions() {
+        return btcWalletService.getTransactions(false);
+    }
+
+    Transaction getTransaction(String txId) {
+        return getTransactionWithId(txId);
+    }
+
+    int getTransactionConfirmations(String txId) {
+        return getTransactionWithId(txId).getConfidence().getDepthInBlocks();
+    }
+
+    int getNumConfirmationsForMostRecentTransaction(String addressString) {
+        Address address = getAddressEntry(addressString).getAddress();
+        TransactionConfidence confidence = btcWalletService.getConfidenceForAddress(address);
+        return confidence == null ? 0 : confidence.getDepthInBlocks();
+    }
+
+    void setWalletPassword(String password, String newPassword) {
+        verifyWalletsAreAvailable();
+
+        KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
+
+        if (newPassword != null && !newPassword.isEmpty()) {
+            // TODO Validate new password before replacing old password.
+            if (!walletsManager.areWalletsEncrypted())
+                throw new FailedPreconditionException("wallet is not encrypted with a password");
+
+            KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+            if (!walletsManager.checkAESKey(aesKey))
+                throw new IllegalArgumentException("incorrect old password");
+
+            walletsManager.decryptWallets(aesKey);
+            aesKey = keyCrypterScrypt.deriveKey(newPassword);
+            walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+            walletsManager.backupWallets();
+            return;
+        }
+
+        if (walletsManager.areWalletsEncrypted())
+            throw new AlreadyExistsException("wallet is already encrypted with a password");
+
+        // TODO Validate new password.
+        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+        walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
+        walletsManager.backupWallets();
+    }
+
+    void lockWallet() {
+        if (!walletsManager.areWalletsEncrypted())
+            throw new FailedPreconditionException("wallet is not encrypted with a password");
+
+        if (tempAesKey == null)
+            throw new AlreadyExistsException("wallet is already locked");
+
+        tempAesKey = null;
+    }
+
+    void unlockWallet(String password, long timeout) {
+        verifyWalletIsAvailableAndEncrypted();
+
+        KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
+        // The aesKey is also cached for timeout (secs) after being used to decrypt the
+        // wallet, in case the user wants to manually lock the wallet before the timeout.
+        tempAesKey = keyCrypterScrypt.deriveKey(password);
+
+        if (!walletsManager.checkAESKey(tempAesKey))
+            throw new IllegalArgumentException("incorrect password");
+
+        if (lockTimer != null) {
+            // The user has called unlockwallet again, before the prior unlockwallet
+            // timeout has expired.  He's overriding it with a new timeout value.
+            // Remove the existing lock timer to prevent it from calling lockwallet
+            // before or after the new one does.
+            lockTimer.stop();
+            lockTimer = null;
+        }
+
+        if (coreContext.isApiUser())
+            maybeSetWalletsManagerKey();
+
+        lockTimer = UserThread.runAfter(() -> {
+            if (tempAesKey != null) {
+                // The unlockwallet timeout has expired;  re-lock the wallet.
+                log.info("Locking wallet after {} second timeout expired.", timeout);
+                tempAesKey = null;
+            }
+        }, timeout, SECONDS);
+    }
+
+    // Provided for automated wallet protection method testing, despite the
+    // security risks exposed by providing users the ability to decrypt their wallets.
+    void removeWalletPassword(String password) {
+        verifyWalletIsAvailableAndEncrypted();
+        KeyCrypterScrypt keyCrypterScrypt = getKeyCrypterScrypt();
+
+        KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
+        if (!walletsManager.checkAESKey(aesKey))
+            throw new IllegalArgumentException("incorrect password");
+
+        walletsManager.decryptWallets(aesKey);
+        walletsManager.backupWallets();
+    }
+
+    // Throws a RuntimeException if wallets are not available (encrypted or not).
+    void verifyWalletsAreAvailable() {
+        verifyWalletAndNetworkIsReady();
+
+        // TODO This check may be redundant, but the AppStartupState is new and unused
+        //  prior to commit 838595cb03886c3980c40df9cfe5f19e9f8a0e39.  I would prefer
+        //  to leave this check in place until certain AppStartupState will always work
+        //  as expected.
+        if (!walletsManager.areWalletsAvailable())
+            throw new NotAvailableException("wallet is not yet available");
+    }
+
+    // Throws a RuntimeException if wallets are not available or not encrypted.
+    void verifyWalletIsAvailableAndEncrypted() {
+        verifyWalletAndNetworkIsReady();
+
+        if (!walletsManager.areWalletsAvailable())
+            throw new NotAvailableException("wallet is not yet available");
+
+        if (!walletsManager.areWalletsEncrypted())
+            throw new FailedPreconditionException("wallet is not encrypted with a password");
+    }
+
+    // Throws a RuntimeException if wallets are encrypted and locked.
+    void verifyEncryptedWalletIsUnlocked() {
+        if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
+            throw new FailedPreconditionException("wallet is locked");
+    }
+
+    // Throws a RuntimeException if wallets and network are not ready.
+    void verifyWalletAndNetworkIsReady() {
+        if (!appStartupState.isWalletAndNetworkReady())
+            throw new NotAvailableException("wallet and network are not yet initialized");
+    }
+
+    // Throws a RuntimeException if application is not fully initialized.
+    void verifyApplicationIsFullyInitialized() {
+        if (!appStartupState.isApplicationFullyInitialized())
+            throw new NotAvailableException("server is not fully initialized");
+    }
+
+    // Returns an Address for the string, or a RuntimeException if invalid.
+    Address getValidBsqAddress(String address) {
+        try {
+            return bsqFormatter.getAddressFromBsqAddress(address);
+        } catch (RuntimeException e) {
+            log.error("", e);
+            throw new IllegalArgumentException(format("%s is not a valid bsq address", address));
+        }
+    }
+
+    // Throws a RuntimeException if wallet currency code is not BSQ or BTC.
+    private void verifyWalletCurrencyCodeIsValid(String currencyCode) {
+        if (currencyCode == null || currencyCode.isEmpty())
+            return;
+
+        if (!currencyCode.equalsIgnoreCase("BSQ")
+                && !currencyCode.equalsIgnoreCase("BTC"))
+            throw new UnsupportedOperationException(format("wallet does not support %s", currencyCode));
+    }
+
+    private void maybeSetWalletsManagerKey() {
+        // Unlike the UI, a daemon cannot capture the user's wallet encryption password
+        // during startup.  This method will set the wallet service's aesKey if necessary.
+        if (tempAesKey == null)
+            throw new IllegalStateException("cannot use null key, unlockwallet timeout may have expired");
+
+        if (btcWalletService.getAesKey() == null || bsqWalletService.getAesKey() == null) {
+            KeyParameter aesKey = new KeyParameter(tempAesKey.getKey());
+            walletsManager.setAesKey(aesKey);
+            walletsManager.maybeAddSegwitKeychains(aesKey);
+        }
+    }
+
+    private BsqBalanceInfo getBsqBalances() {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        var availableBalance = bsqWalletService.getAvailableBalance();
+        var unverifiedBalance = bsqWalletService.getUnverifiedBalance();
+        var unconfirmedChangeBalance = bsqWalletService.getUnconfirmedChangeBalance();
+        var lockedForVotingBalance = bsqWalletService.getLockedForVotingBalance();
+        var lockupBondsBalance = bsqWalletService.getLockupBondsBalance();
+        var unlockingBondsBalance = bsqWalletService.getUnlockingBondsBalance();
+
+        return new BsqBalanceInfo(availableBalance.value,
+                unverifiedBalance.value,
+                unconfirmedChangeBalance.value,
+                lockedForVotingBalance.value,
+                lockupBondsBalance.value,
+                unlockingBondsBalance.value);
+    }
+
+    private BtcBalanceInfo getBtcBalances() {
+        verifyWalletsAreAvailable();
+        verifyEncryptedWalletIsUnlocked();
+
+        var availableBalance = balances.getAvailableBalance().get();
+        if (availableBalance == null)
+            throw new NotAvailableException("balance is not yet available");
+
+        var reservedBalance = balances.getReservedBalance().get();
+        if (reservedBalance == null)
+            throw new NotAvailableException("reserved balance is not yet available");
+
+        var lockedBalance = balances.getLockedBalance().get();
+        if (lockedBalance == null)
+            throw new NotAvailableException("locked balance is not yet available");
+
+        return new BtcBalanceInfo(availableBalance.value,
+                reservedBalance.value,
+                availableBalance.add(reservedBalance).value,
+                lockedBalance.value);
+    }
+
+    // Returns a Coin for the transfer amount string, or a RuntimeException if invalid.
+    private Coin getValidTransferAmount(String amount, CoinFormatter coinFormatter) {
+        Coin amountAsCoin = parseToCoin(amount, coinFormatter);
+        if (amountAsCoin.isLessThan(getMinNonDustOutput()))
+            throw new IllegalArgumentException(format("%s is an invalid transfer amount", amount));
+
+        return amountAsCoin;
+    }
+
+    private Coin getTxFeeRateFromParamOrPreferenceOrFeeService(String txFeeRate) {
+        // A non txFeeRate String value overrides the fee service and custom fee.
+        return txFeeRate.isEmpty()
+                ? btcWalletService.getTxFeeForWithdrawalPerVbyte()
+                : Coin.valueOf(Long.parseLong(txFeeRate));
+    }
+
+    private KeyCrypterScrypt getKeyCrypterScrypt() {
+        KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
+        if (keyCrypterScrypt == null)
+            throw new IllegalStateException("wallet encrypter is not available");
+        return keyCrypterScrypt;
+    }
+
+    private AddressEntry getAddressEntry(String addressString) {
+        Optional<AddressEntry> addressEntry =
+                btcWalletService.getAddressEntryListAsImmutableList().stream()
+                        .filter(e -> addressString.equals(e.getAddressString()))
+                        .findFirst();
+
+        if (addressEntry.isEmpty())
+            throw new NotFoundException(format("address %s not found in wallet", addressString));
+
+        return addressEntry.get();
+    }
+
+    private Transaction getTransactionWithId(String txId) {
+        if (txId.length() != 64)
+            throw new IllegalArgumentException(format("%s is not a transaction id", txId));
+
+        try {
+            Transaction tx = btcWalletService.getTransaction(txId);
+            if (tx == null)
+                throw new NotFoundException(format("tx with id %s not found", txId));
+            else
+                return tx;
+
+        } catch (IllegalArgumentException ex) {
+            log.error(ex.toString());
+            throw new IllegalStateException(
+                    format("could not get transaction with id %s%ncause: %s",
+                            txId,
+                            ex.getMessage().toLowerCase()));
+        }
+    }
+
+    /**
+     * Memoization stores the results of expensive function calls and returns
+     * the cached result when the same input occurs again.
+     *
+     * Resulting LoadingCache is used by calling `.get(input I)` or
+     * `.getUnchecked(input I)`, depending on whether `f` can return null.
+     * That's because CacheLoader throws an exception on null output from `f`.
+     */
+    private static <I, O> LoadingCache<I, O> memoize(Function<I, O> f) {
+        // f::apply is used, because Guava 20.0 Function doesn't yet extend
+        // Java Function.
+        return CacheBuilder.newBuilder().build(CacheLoader.from(f::apply));
+    }
+}

@@ -1,0 +1,34 @@
+plugins {
+    id 'bisq.application'
+    id 'bisq.javafx'
+    id 'bisq.gradle.app_start_plugin.AppStartPlugin'
+    id 'bisq.gradle.docker.image_builder.DockerImageBuilderPlugin'
+}
+
+application {
+    mainClass = 'bisq.seednode.SeedNodeMain'
+    applicationDefaultJvmArgs = ['-XX:+ExitOnOutOfMemoryError', '-Xms4096M', '-Xmx4096M',
+                                 '-Djava.net.preferIPv4Stack=true']
+}
+
+javafx {
+    modules = ['javafx.base']
+}
+
+distTar.enabled = true
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':common')
+    implementation project(':proto')
+    implementation project(':assets')
+    implementation project(':p2p')
+    implementation project(':core')
+    implementation libs.protobuf.java
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.slf4j.api
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+}

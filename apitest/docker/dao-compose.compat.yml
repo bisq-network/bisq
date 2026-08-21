@@ -1,0 +1,15 @@
+# Compatibility override for dao-compose.yml. Points one peer (bob) at the
+# release-built image so the e2e suite runs against a mixed-version stack:
+# seednode + arb + alice on master, bob on the latest tagged release.
+#
+# Layer on top of the base compose file:
+#   docker compose -f dao-compose.yml -f dao-compose.compat.yml up
+# run-e2e-tests.sh does this automatically when COMPOSE_OVERRIDE_FILE points here.
+#
+# bisq-daemon:release must be built beforehand (see Dockerfile.bisq-release and
+# .github/workflows/e2e-tests-compat.yml); it has no build: stanza on purpose so
+# `docker compose build` never tries to rebuild it from the master context.
+
+services:
+  bob:
+    image: bisq-daemon:release

@@ -1,0 +1,118 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.dao;
+
+import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.crypto.LowRSigningKey;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxInput;
+
+import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.ECKey;
+
+import javax.inject.Inject;
+
+import java.security.SignatureException;
+
+import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.bitcoinj.core.Utils.HEX;
+
+@Slf4j
+public class SignVerifyService {
+    private final BsqWalletService bsqWalletService;
+    private final DaoStateService daoStateService;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Inject
+    public SignVerifyService(BsqWalletService bsqWalletService,
+                             DaoStateService daoStateService) {
+        this.bsqWalletService = bsqWalletService;
+        this.daoStateService = daoStateService;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<Tx> getTx(String txId) {
+        return daoStateService.getTx(txId);
+    }
+
+    // Of connected output of first input. Used for signing and verification.
+    // Proofs ownership of the proof of burn tx.
+    public byte[] getPubKey(String txId) {
+        return daoStateService.getTx(txId)
+                .filter(tx -> !tx.getTxInputs().isEmpty())
+                .map(tx -> tx.getTxInputs().getFirst())
+                .map(TxInput::getPubKey)
+                // Not set for input types from which we cannot extract the pub key. decodeFromHex would throw on null.
+                .filter(pubKey -> pubKey != null && !pubKey.isEmpty())
+                .map(Utilities::decodeFromHex)
+                .orElse(new byte[0]);
+    }
+
+    public String getPubKeyAsHex(String txId) {
+        return Utilities.bytesAsHexString(getPubKey(txId));
+    }
+
+    public Optional<String> sign(String txId, String message) {
+        byte[] pubKey = getPubKey(txId);
+        ECKey key = LowRSigningKey.from(bsqWalletService.findKeyFromPubKey(pubKey));
+        if (key == null)
+            return Optional.empty();
+
+        try {
+            String signatureBase64 = bsqWalletService.isEncrypted()
+                    ? key.signMessage(message, bsqWalletService.getAesKey())
+                    : key.signMessage(message);
+            return Optional.of(signatureBase64);
+        } catch (Throwable t) {
+            log.error(t.toString());
+            t.printStackTrace();
+            return Optional.empty();
+        }
+    }
+
+    public void verify(String message, String pubKey, String signatureBase64) throws SignatureException {
+        ECKey key = ECKey.fromPublicOnly(HEX.decode(pubKey));
+        checkNotNull(key, "ECKey must not be null");
+        key.verifyMessage(message, signatureBase64);
+    }
+
+    // Beside a failed signature verification a malformed pubKey or signature would throw as well, so we
+    // catch any exception here to let callers check multiple candidate keys without special casing those.
+    public boolean isValidSignature(String message, String pubKey, String signatureBase64) {
+        try {
+            verify(message, pubKey, signatureBase64);
+            return true;
+        } catch (Exception e) {
+            log.debug("Signature verification failed. error={}", e.toString());
+            return false;
+        }
+    }
+}

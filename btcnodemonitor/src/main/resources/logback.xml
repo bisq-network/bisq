@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="CONSOLE_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight(%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{40}: %msg %xEx%n)</pattern>
+        </encoder>
+    </appender>
+
+    <root level="TRACE">
+        <appender-ref ref="CONSOLE_APPENDER"/>
+    </root>
+
+    <logger name="org.bitcoinj" level="INFO"/>
+    <logger name="spark.embeddedserver" level="WARN"/>
+    <logger name="org.eclipse.jetty.server" level="WARN"/>
+    <logger name="org.berndpruenster.netlayer.tor.Tor" level="WARN"/>
+</configuration>
