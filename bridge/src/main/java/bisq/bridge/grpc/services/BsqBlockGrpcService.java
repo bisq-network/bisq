@@ -125,6 +125,10 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
                     .setBsqBlock(responseProto)
                     .build();
             snapshotObservers.forEach(observer -> {
+                // Deregistered between the capture and now, e.g. after its readiness event failed.
+                if (!snapshotStreamObservers.contains(observer)) {
+                    return;
+                }
                 try {
                     observer.onNext(snapshotStreamResponse);
                 } catch (Exception e) {
@@ -135,7 +139,9 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         } catch (Exception e) {
             log.error("Error at processing new bsqBlockDto", e);
             streamObservers.forEach(observer -> notifyOnError(observer, e));
-            snapshotObservers.forEach(observer -> notifyOnError(observer, e));
+            snapshotObservers.stream()
+                    .filter(snapshotStreamObservers::contains)
+                    .forEach(observer -> notifyOnError(observer, e));
         }
     }
 
@@ -160,17 +166,23 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
             // stream and is also covered by the height, which is a duplicate rather than a gap. The event is sent
             // via notifyObserversExecutor so that it precedes any block queued after this registration.
             snapshotStreamObservers.add(managedStreamObserver);
-            int subscriptionReadyHeight = daoStateService.getChainHeight();
-            CompletableFuture.runAsync(() -> {
-                try {
-                    managedStreamObserver.onNext(bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
-                            .setSubscriptionReadyHeight(subscriptionReadyHeight)
-                            .build());
-                } catch (Exception e) {
-                    log.error("Failed to establish snapshot stream observer", e);
-                    notifyOnError(managedStreamObserver, e);
-                }
-            }, notifyObserversExecutor);
+            try {
+                int subscriptionReadyHeight = daoStateService.getChainHeight();
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        managedStreamObserver.onNext(bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
+                                .setSubscriptionReadyHeight(subscriptionReadyHeight)
+                                .build());
+                    } catch (Exception e) {
+                        log.error("Failed to establish snapshot stream observer", e);
+                        notifyOnError(managedStreamObserver, e);
+                    }
+                }, notifyObserversExecutor);
+            } catch (Exception e) {
+                // Registered but never armed, so deregister it. notifyOnError does that via ManagedStreamObserver.
+                log.error("Failed to set up snapshot subscription", e);
+                notifyOnError(managedStreamObserver, e);
+            }
         }
     }
 

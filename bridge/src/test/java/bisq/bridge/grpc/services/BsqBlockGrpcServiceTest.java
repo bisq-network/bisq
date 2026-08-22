@@ -39,8 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -109,6 +111,7 @@ public class BsqBlockGrpcServiceTest {
 
         service.onParseBlockCompleteAfterBatchProcessing(block);
         verify(healthy, timeout(2_000)).onNext(any());
+        verify(failing, times(1)).onError(any());
 
         // The failing observer was deregistered even though its onError threw, so a second block skips it.
         service.onParseBlockCompleteAfterBatchProcessing(block);
@@ -136,6 +139,64 @@ public class BsqBlockGrpcServiceTest {
         assertEquals(941_122, events.get(0).getSubscriptionReadyHeight());
         assertEquals(BsqBlockSubscriptionEvent.PayloadCase.BSQBLOCK, events.get(1).getPayloadCase());
         assertEquals(941_123, events.get(1).getBsqBlock().getHeight());
+    }
+
+    @Test
+    public void snapshotSubscriptionSetupFailureDeregistersTheObserver() {
+        when(daoStateService.getChainHeight())
+                .thenThrow(new IllegalStateException("dao state unavailable"))
+                .thenReturn(941_122);
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> failedSetup = mock(StreamObserver.class);
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> healthy = mock(StreamObserver.class);
+
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), failedSetup);
+        verify(failedSetup).onError(any());
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), healthy);
+
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+
+        // The healthy observer receiving both events proves the publication ran, so the failed one was skipped.
+        verify(healthy, timeout(2_000).times(2)).onNext(any());
+        verify(failedSetup, never()).onNext(any());
+    }
+
+    @Test
+    public void snapshotObserverRemovedByFailedReadinessEventIsSkippedByQueuedBlock() throws Exception {
+        when(daoStateService.getChainHeight()).thenReturn(941_122);
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        CountDownLatch readinessEventEntered = new CountDownLatch(1);
+        CountDownLatch releaseReadinessEvent = new CountDownLatch(1);
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> failing = mock(StreamObserver.class);
+        doAnswer(invocation -> {
+            readinessEventEntered.countDown();
+            if (!releaseReadinessEvent.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Readiness event was never released");
+            }
+            throw new IllegalStateException("stream broken");
+        }).when(failing).onNext(any());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> healthy = mock(StreamObserver.class);
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), failing);
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), healthy);
+
+        // Hold the executor inside the failing readiness event so the block is captured while it is still
+        // registered, and only then let that event fail and deregister it.
+        assertTrue(readinessEventEntered.await(5, TimeUnit.SECONDS));
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+        releaseReadinessEvent.countDown();
+
+        verify(healthy, timeout(2_000).times(2)).onNext(any());
+        verify(failing, times(1)).onNext(any());
     }
 
     @Test
