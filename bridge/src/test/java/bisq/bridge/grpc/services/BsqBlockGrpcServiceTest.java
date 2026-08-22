@@ -24,6 +24,8 @@ import bisq.core.dao.state.model.blockchain.Block;
 import io.grpc.stub.StreamObserver;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.mockito.ArgumentCaptor;
@@ -104,6 +106,59 @@ public class BsqBlockGrpcServiceTest {
         assertEquals(941_122, events.get(0).getSubscriptionReadyHeight());
         assertEquals(BsqBlockSubscriptionEvent.PayloadCase.BSQBLOCK, events.get(1).getPayloadCase());
         assertEquals(941_123, events.get(1).getBsqBlock().getHeight());
+    }
+
+    @Test
+    public void snapshotSubscriptionQueuesReadyEventBeforeConcurrentBlockPublication() throws Exception {
+        CountDownLatch registeredButReadyEventNotQueued = new CountDownLatch(1);
+        CountDownLatch releaseChainHeightRead = new CountDownLatch(1);
+        when(daoStateService.getChainHeight()).thenAnswer(invocation -> {
+            registeredButReadyEventNotQueued.countDown();
+            if (!releaseChainHeightRead.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Chain height read was never released");
+            }
+            return 941_122;
+        });
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> streamObserver = mock(StreamObserver.class);
+
+        Thread subscriber = new Thread(() ->
+                service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), streamObserver));
+        subscriber.start();
+        assertTrue(registeredButReadyEventNotQueued.await(5, TimeUnit.SECONDS));
+
+        // The observer is registered but its ready event is not queued yet, which is the window in which a block
+        // must not be queued ahead of it.
+        Thread publisher = new Thread(() -> service.onParseBlockCompleteAfterBatchProcessing(block));
+        publisher.start();
+        awaitContendedOrDone(publisher);
+        releaseChainHeightRead.countDown();
+        subscriber.join(5_000);
+        publisher.join(5_000);
+
+        ArgumentCaptor<BsqBlockSubscriptionEvent> eventCaptor = ArgumentCaptor.forClass(BsqBlockSubscriptionEvent.class);
+        verify(streamObserver, timeout(2_000).times(2)).onNext(eventCaptor.capture());
+        List<BsqBlockSubscriptionEvent> events = eventCaptor.getAllValues();
+        assertEquals(BsqBlockSubscriptionEvent.PayloadCase.SUBSCRIPTIONREADYHEIGHT, events.get(0).getPayloadCase());
+        assertEquals(BsqBlockSubscriptionEvent.PayloadCase.BSQBLOCK, events.get(1).getPayloadCase());
+    }
+
+    // The publisher either contends on the subscription lock or, if that ordering is not enforced, runs to
+    // completion. Both are terminal for this test, so we gate on the state instead of timing the handover.
+    private static void awaitContendedOrDone(Thread thread) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            Thread.State state = thread.getState();
+            if (state == Thread.State.BLOCKED || state == Thread.State.TERMINATED) {
+                return;
+            }
+            Thread.onSpinWait();
+        }
+        throw new IllegalStateException("Publisher thread neither blocked nor completed");
     }
 
     @Test

@@ -69,6 +69,10 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
     private final Set<ManagedStreamObserver<bisq.bridge.protobuf.BsqBlockDto>> streamObservers = new CopyOnWriteArraySet<>();
     private final Set<ManagedStreamObserver<bisq.bridge.protobuf.BsqBlockSubscriptionEvent>> snapshotStreamObservers =
             new CopyOnWriteArraySet<>();
+    // Serializes snapshot subscription setup against block publication, so that registering an observer and
+    // queueing its subscriptionReadyHeight event cannot be interleaved with capturing observers and queueing a
+    // block event. Without that, a block captured between the two would reach the executor first.
+    private final Object snapshotSubscriptionLock = new Object();
 
     @Inject
     public BsqBlockGrpcService(DaoStateService daoStateService,
@@ -85,43 +89,54 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         log.info("onParseBlockCompleteAfterBatchProcessing");
-        if (streamObservers.isEmpty() && snapshotStreamObservers.isEmpty()) {
-            return;
-        }
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
-                Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
-                BsqBlockDto bsqBlockDto = toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId);
-                // Empty live blocks provide the clock for bonded-role revalidation. Historical requests stay sparse.
-                log.info("Notify observers of new bsqBlockDto: {}", bsqBlockDto);
-                var responseProto = bsqBlockDto.toProtoMessage();
-                streamObservers.forEach(observer -> {
-                    try {
-                        observer.onNext(responseProto);
-                    } catch (Exception e) {
-                        log.error("Failed to notify observer", e);
-                        notifyOnError(observer, e);
-                    }
-                });
-                var snapshotStreamResponse = bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
-                        .setBsqBlock(responseProto)
-                        .build();
-                snapshotStreamObservers.forEach(observer -> {
-                    try {
-                        observer.onNext(snapshotStreamResponse);
-                    } catch (Exception e) {
-                        log.error("Failed to notify snapshot observer", e);
-                        notifyOnError(observer, e);
-                    }
-                });
-            } catch (Exception e) {
-                log.error("Error at processing new bsqBlockDto", e);
-                streamObservers.forEach(observer -> notifyOnError(observer, e));
-                snapshotStreamObservers.forEach(observer -> notifyOnError(observer, e));
+        synchronized (snapshotSubscriptionLock) {
+            // A snapshot observer visible here already has its subscriptionReadyHeight queued, so the single
+            // threaded notifyObserversExecutor delivers that event before this block. A client subscribing later
+            // is absent from the capture and backfills via requestBsqBlocks, as the height it receives already
+            // covers this block. Plain subscribers have no such handshake and no backfill signal, so they are
+            // notified from the live set at delivery time rather than risk dropping a block.
+            List<ManagedStreamObserver<bisq.bridge.protobuf.BsqBlockSubscriptionEvent>> snapshotObservers =
+                    List.copyOf(snapshotStreamObservers);
+            if (streamObservers.isEmpty() && snapshotObservers.isEmpty()) {
+                return;
             }
-        }, notifyObserversExecutor);
+            CompletableFuture.runAsync(() -> publishBlock(block, snapshotObservers), notifyObserversExecutor);
+        }
+    }
+
+    private void publishBlock(Block block,
+                              List<ManagedStreamObserver<bisq.bridge.protobuf.BsqBlockSubscriptionEvent>> snapshotObservers) {
+        try {
+            Map<String, BondedReputation> bondedReputationByLockupTxId = getBondedReputationByLockupTxId();
+            Map<String, BondedReputation> bondedReputationByUnlockTxId = getBondedReputationByUnlockTxId();
+            BsqBlockDto bsqBlockDto = toBlockDto(block, bondedReputationByLockupTxId, bondedReputationByUnlockTxId);
+            // Empty live blocks provide the clock for bonded-role revalidation. Historical requests stay sparse.
+            log.info("Notify observers of new bsqBlockDto: {}", bsqBlockDto);
+            var responseProto = bsqBlockDto.toProtoMessage();
+            streamObservers.forEach(observer -> {
+                try {
+                    observer.onNext(responseProto);
+                } catch (Exception e) {
+                    log.error("Failed to notify observer", e);
+                    notifyOnError(observer, e);
+                }
+            });
+            var snapshotStreamResponse = bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
+                    .setBsqBlock(responseProto)
+                    .build();
+            snapshotObservers.forEach(observer -> {
+                try {
+                    observer.onNext(snapshotStreamResponse);
+                } catch (Exception e) {
+                    log.error("Failed to notify snapshot observer", e);
+                    notifyOnError(observer, e);
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error at processing new bsqBlockDto", e);
+            streamObservers.forEach(observer -> notifyOnError(observer, e));
+            snapshotObservers.forEach(observer -> notifyOnError(observer, e));
+        }
     }
 
 
@@ -140,17 +155,23 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         var managedStreamObserver = new ManagedStreamObserver<>(streamObserver,
                 snapshotStreamObservers::remove,
                 snapshotStreamObservers::remove);
-        CompletableFuture.runAsync(() -> {
-            try {
-                snapshotStreamObservers.add(managedStreamObserver);
-                managedStreamObserver.onNext(bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
-                        .setSubscriptionReadyHeight(daoStateService.getChainHeight())
-                        .build());
-            } catch (Exception e) {
-                log.error("Failed to establish snapshot stream observer", e);
-                notifyOnError(managedStreamObserver, e);
-            }
-        }, notifyObserversExecutor);
+        synchronized (snapshotSubscriptionLock) {
+            // We register before reading the chain height so that a block parsed in between is delivered on the
+            // stream and is also covered by the height, which is a duplicate rather than a gap. The event is sent
+            // via notifyObserversExecutor so that it precedes any block queued after this registration.
+            snapshotStreamObservers.add(managedStreamObserver);
+            int subscriptionReadyHeight = daoStateService.getChainHeight();
+            CompletableFuture.runAsync(() -> {
+                try {
+                    managedStreamObserver.onNext(bisq.bridge.protobuf.BsqBlockSubscriptionEvent.newBuilder()
+                            .setSubscriptionReadyHeight(subscriptionReadyHeight)
+                            .build());
+                } catch (Exception e) {
+                    log.error("Failed to establish snapshot stream observer", e);
+                    notifyOnError(managedStreamObserver, e);
+                }
+            }, notifyObserversExecutor);
+        }
     }
 
     @Override
