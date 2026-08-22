@@ -329,12 +329,17 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         }
     }
 
+    // Best effort: signalling one observer must not prevent signalling the remaining ones.
     private void notifyOnError(StreamObserver<?> observer,
                                Exception exception) {
-        observer.onError(Status.INTERNAL
-                .withDescription("Error processing bsqBlock data")
-                .withCause(exception)
-                .asRuntimeException());
+        try {
+            observer.onError(Status.INTERNAL
+                    .withDescription("Error processing bsqBlock data")
+                    .withCause(exception)
+                    .asRuntimeException());
+        } catch (Exception e) {
+            log.warn("Failed to signal error to observer {}", observer, e);
+        }
     }
 
 }

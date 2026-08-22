@@ -26,6 +26,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.mockito.ArgumentCaptor;
@@ -35,9 +36,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,6 +92,31 @@ public class BsqBlockGrpcServiceTest {
     }
 
     @Test
+    public void failingObserverIsDeregisteredAndDoesNotBlockRemainingObservers() {
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockDto> failing = mock(StreamObserver.class);
+        doThrow(new IllegalStateException("stream broken")).when(failing).onNext(any());
+        doThrow(new IllegalStateException("call already closed")).when(failing).onError(any());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockDto> healthy = mock(StreamObserver.class);
+        // Registration order matters: the failing observer is notified first.
+        service.subscribe(BsqBlockSubscription.getDefaultInstance(), failing);
+        service.subscribe(BsqBlockSubscription.getDefaultInstance(), healthy);
+
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+        verify(healthy, timeout(2_000)).onNext(any());
+
+        // The failing observer was deregistered even though its onError threw, so a second block skips it.
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+        verify(healthy, timeout(2_000).times(2)).onNext(any());
+        verify(failing, times(1)).onNext(any());
+    }
+
+    @Test
     public void snapshotSubscriptionAcknowledgesRegistrationBeforePublishingBlocks() {
         when(daoStateService.getChainHeight()).thenReturn(941_122);
         Block block = mock(Block.class);
@@ -126,19 +156,25 @@ public class BsqBlockGrpcServiceTest {
         @SuppressWarnings("unchecked")
         StreamObserver<BsqBlockSubscriptionEvent> streamObserver = mock(StreamObserver.class);
 
+        AtomicReference<Throwable> subscriberFailure = new AtomicReference<>();
+        AtomicReference<Throwable> publisherFailure = new AtomicReference<>();
         Thread subscriber = new Thread(() ->
                 service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), streamObserver));
+        subscriber.setUncaughtExceptionHandler((thread, throwable) -> subscriberFailure.set(throwable));
         subscriber.start();
         assertTrue(registeredButReadyEventNotQueued.await(5, TimeUnit.SECONDS));
 
         // The observer is registered but its ready event is not queued yet, which is the window in which a block
         // must not be queued ahead of it.
         Thread publisher = new Thread(() -> service.onParseBlockCompleteAfterBatchProcessing(block));
+        publisher.setUncaughtExceptionHandler((thread, throwable) -> publisherFailure.set(throwable));
         publisher.start();
         awaitContendedOrDone(publisher);
         releaseChainHeightRead.countDown();
         subscriber.join(5_000);
         publisher.join(5_000);
+        assertNull(subscriberFailure.get());
+        assertNull(publisherFailure.get());
 
         ArgumentCaptor<BsqBlockSubscriptionEvent> eventCaptor = ArgumentCaptor.forClass(BsqBlockSubscriptionEvent.class);
         verify(streamObserver, timeout(2_000).times(2)).onNext(eventCaptor.capture());
