@@ -440,7 +440,9 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = SbpForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
-                log.error("Not supported PaymentMethod: " + paymentMethodId);
+                if (paymentAccountPayload != null) {
+                    log.error("Not supported PaymentMethod: " + paymentMethodId);
+                }
         }
 
         Trade trade = model.getTrade();
@@ -461,7 +463,16 @@ public class BuyerStep2View extends TradeStepView {
             }
         }
 
-        if (paymentAccountPayload.showRefTextWarning()) {
+        if (paymentAccountPayload == null) {
+            // The seller's payment account payload never arrived (e.g. the mailbox
+            // DepositTxAndDelayedPayoutTxMessage was missed), so there are no payment
+            // details to show. Render a warning instead of dereferencing null here,
+            // which used to throw an NPE and leave the whole trade step pane blank.
+            SimpleMarkdownLabel missingLabel = addSimpleMarkdownLabel(gridPane, ++gridRow,
+                    Res.get("portfolio.pending.step2_buyer.paymentAccountPayloadMissing"), 10);
+            missingLabel.getStyleClass().add("medium-text");
+            GridPane.setColumnSpan(missingLabel, 2);
+        } else if (paymentAccountPayload.showRefTextWarning()) {
             SimpleMarkdownLabel footerLabel = addSimpleMarkdownLabel(gridPane, ++gridRow, Res.get("portfolio.pending.step2_buyer.refTextWarn"), 10);
             footerLabel.getStyleClass().add("medium-text");
             GridPane.setColumnSpan(footerLabel, 2);
@@ -476,6 +487,7 @@ public class BuyerStep2View extends TradeStepView {
         GridPane.setColumnSpan(hBox, 2);
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
+        confirmButton.setDisable(paymentAccountPayload == null || !trade.confirmPermitted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
 
@@ -484,7 +496,7 @@ public class BuyerStep2View extends TradeStepView {
             gridPane.setMinHeight(600); // make the scrollpane parent node activate its scrollbar
         }
 
-        if (trade.getOffer().getCurrencyCode().equals("BSQ")) {
+        if (paymentAccountPayload != null && trade.getOffer().getCurrencyCode().equals("BSQ")) {
             fillBsqButton = new AutoTooltipButton(Res.get("portfolio.pending.step2_buyer.fillInBsqWallet"));
             hBox.getChildren().add(1, fillBsqButton);
             fillBsqButton.setOnAction(e -> {
@@ -526,7 +538,8 @@ public class BuyerStep2View extends TradeStepView {
     protected void updateDisputeState(Trade.DisputeState disputeState) {
         super.updateDisputeState(disputeState);
 
-        confirmButton.setDisable(!trade.confirmPermitted());
+        confirmButton.setDisable(model.dataModel.getSellersPaymentAccountPayload() == null
+                || !trade.confirmPermitted());
     }
 
 
