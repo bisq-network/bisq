@@ -48,8 +48,12 @@ public class ManagedStreamObserver<T> implements StreamObserver<T> {
 
     @Override
     public void onError(Throwable throwable) {
-        delegate.onError(throwable);
-        onErrorCallback.accept(this);
+        // An already closed stream rejects onError, so we deregister in a finally to not leak a dead observer.
+        try {
+            delegate.onError(throwable);
+        } finally {
+            onErrorCallback.accept(this);
+        }
     }
 
     @Override

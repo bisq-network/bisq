@@ -24,6 +24,9 @@ import bisq.core.dao.state.model.blockchain.Block;
 import io.grpc.stub.StreamObserver;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.mockito.ArgumentCaptor;
@@ -33,9 +36,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -85,6 +94,32 @@ public class BsqBlockGrpcServiceTest {
     }
 
     @Test
+    public void failingObserverIsDeregisteredAndDoesNotBlockRemainingObservers() {
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockDto> failing = mock(StreamObserver.class);
+        doThrow(new IllegalStateException("stream broken")).when(failing).onNext(any());
+        doThrow(new IllegalStateException("call already closed")).when(failing).onError(any());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockDto> healthy = mock(StreamObserver.class);
+        // Registration order matters: the failing observer is notified first.
+        service.subscribe(BsqBlockSubscription.getDefaultInstance(), failing);
+        service.subscribe(BsqBlockSubscription.getDefaultInstance(), healthy);
+
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+        verify(healthy, timeout(2_000)).onNext(any());
+        verify(failing, times(1)).onError(any());
+
+        // The failing observer was deregistered even though its onError threw, so a second block skips it.
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+        verify(healthy, timeout(2_000).times(2)).onNext(any());
+        verify(failing, times(1)).onNext(any());
+    }
+
+    @Test
     public void snapshotSubscriptionAcknowledgesRegistrationBeforePublishingBlocks() {
         when(daoStateService.getChainHeight()).thenReturn(941_122);
         Block block = mock(Block.class);
@@ -104,6 +139,123 @@ public class BsqBlockGrpcServiceTest {
         assertEquals(941_122, events.get(0).getSubscriptionReadyHeight());
         assertEquals(BsqBlockSubscriptionEvent.PayloadCase.BSQBLOCK, events.get(1).getPayloadCase());
         assertEquals(941_123, events.get(1).getBsqBlock().getHeight());
+    }
+
+    @Test
+    public void snapshotSubscriptionSetupFailureDeregistersTheObserver() {
+        when(daoStateService.getChainHeight())
+                .thenThrow(new IllegalStateException("dao state unavailable"))
+                .thenReturn(941_122);
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> failedSetup = mock(StreamObserver.class);
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> healthy = mock(StreamObserver.class);
+
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), failedSetup);
+        verify(failedSetup).onError(any());
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), healthy);
+
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+
+        // The healthy observer receiving both events proves the publication ran, so the failed one was skipped.
+        verify(healthy, timeout(2_000).times(2)).onNext(any());
+        verify(failedSetup, never()).onNext(any());
+    }
+
+    @Test
+    public void snapshotObserverRemovedByFailedReadinessEventIsSkippedByQueuedBlock() throws Exception {
+        when(daoStateService.getChainHeight()).thenReturn(941_122);
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        CountDownLatch readinessEventEntered = new CountDownLatch(1);
+        CountDownLatch releaseReadinessEvent = new CountDownLatch(1);
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> failing = mock(StreamObserver.class);
+        doAnswer(invocation -> {
+            readinessEventEntered.countDown();
+            if (!releaseReadinessEvent.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Readiness event was never released");
+            }
+            throw new IllegalStateException("stream broken");
+        }).when(failing).onNext(any());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> healthy = mock(StreamObserver.class);
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), failing);
+        service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), healthy);
+
+        // Hold the executor inside the failing readiness event so the block is captured while it is still
+        // registered, and only then let that event fail and deregister it.
+        assertTrue(readinessEventEntered.await(5, TimeUnit.SECONDS));
+        service.onParseBlockCompleteAfterBatchProcessing(block);
+        releaseReadinessEvent.countDown();
+
+        verify(healthy, timeout(2_000).times(2)).onNext(any());
+        verify(failing, times(1)).onNext(any());
+    }
+
+    @Test
+    public void snapshotSubscriptionQueuesReadyEventBeforeConcurrentBlockPublication() throws Exception {
+        CountDownLatch registeredButReadyEventNotQueued = new CountDownLatch(1);
+        CountDownLatch releaseChainHeightRead = new CountDownLatch(1);
+        when(daoStateService.getChainHeight()).thenAnswer(invocation -> {
+            registeredButReadyEventNotQueued.countDown();
+            if (!releaseChainHeightRead.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Chain height read was never released");
+            }
+            return 941_122;
+        });
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(941_123);
+        when(block.getTime()).thenReturn(1_723_000_000L);
+        when(block.getTxs()).thenReturn(List.of());
+        @SuppressWarnings("unchecked")
+        StreamObserver<BsqBlockSubscriptionEvent> streamObserver = mock(StreamObserver.class);
+
+        AtomicReference<Throwable> subscriberFailure = new AtomicReference<>();
+        AtomicReference<Throwable> publisherFailure = new AtomicReference<>();
+        Thread subscriber = new Thread(() ->
+                service.subscribeWithSnapshot(BsqBlockSubscription.getDefaultInstance(), streamObserver));
+        subscriber.setUncaughtExceptionHandler((thread, throwable) -> subscriberFailure.set(throwable));
+        subscriber.start();
+        assertTrue(registeredButReadyEventNotQueued.await(5, TimeUnit.SECONDS));
+
+        // The observer is registered but its ready event is not queued yet, which is the window in which a block
+        // must not be queued ahead of it.
+        Thread publisher = new Thread(() -> service.onParseBlockCompleteAfterBatchProcessing(block));
+        publisher.setUncaughtExceptionHandler((thread, throwable) -> publisherFailure.set(throwable));
+        publisher.start();
+        awaitContendedOrDone(publisher);
+        releaseChainHeightRead.countDown();
+        subscriber.join(5_000);
+        publisher.join(5_000);
+        assertNull(subscriberFailure.get());
+        assertNull(publisherFailure.get());
+
+        ArgumentCaptor<BsqBlockSubscriptionEvent> eventCaptor = ArgumentCaptor.forClass(BsqBlockSubscriptionEvent.class);
+        verify(streamObserver, timeout(2_000).times(2)).onNext(eventCaptor.capture());
+        List<BsqBlockSubscriptionEvent> events = eventCaptor.getAllValues();
+        assertEquals(BsqBlockSubscriptionEvent.PayloadCase.SUBSCRIPTIONREADYHEIGHT, events.get(0).getPayloadCase());
+        assertEquals(BsqBlockSubscriptionEvent.PayloadCase.BSQBLOCK, events.get(1).getPayloadCase());
+    }
+
+    // The publisher either contends on the subscription lock or, if that ordering is not enforced, runs to
+    // completion. Both are terminal for this test, so we gate on the state instead of timing the handover.
+    private static void awaitContendedOrDone(Thread thread) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            Thread.State state = thread.getState();
+            if (state == Thread.State.BLOCKED || state == Thread.State.TERMINATED) {
+                return;
+            }
+            Thread.onSpinWait();
+        }
+        throw new IllegalStateException("Publisher thread neither blocked nor completed");
     }
 
     @Test
