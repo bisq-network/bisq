@@ -69,6 +69,22 @@ public abstract class BuyerProtocol extends DisputeProtocol {
             Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG
     };
 
+    // Phases in which the buyer accepts the DepositTxAndDelayedPayoutTxMessage.
+    // DEPOSIT_CONFIRMED is included because the deposit can confirm through the
+    // wallet listener before the (mailbox) message is processed. A message
+    // arriving after the first confirmation must still be accepted, otherwise the
+    // seller's payment account payload is never stored, the contract stays
+    // hash-only and the trade is permanently stuck. The symmetric seller handler
+    // for ShareBuyerPaymentAccountMessage accepts the same set.
+    // Shared with BuyerDepositTxMessagePhaseTest so the regression test exercises
+    // the same phase list production uses.
+    @VisibleForTesting
+    public static final Trade.Phase[] DEPOSIT_TX_AND_DELAYED_PAYOUT_TX_MSG_PHASES = {
+            Trade.Phase.TAKER_FEE_PUBLISHED,
+            Trade.Phase.DEPOSIT_PUBLISHED,
+            Trade.Phase.DEPOSIT_CONFIRMED
+    };
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +138,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
     // in the hope to reach the buyer directly in case of network issues.
     protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
+        expect(anyPhase(DEPOSIT_TX_AND_DELAYED_PAYOUT_TX_MSG_PHASES)
                 .with(message)
                 .from(peer)
                 .preCondition(trade.getDepositTx() == null || processModel.getTradePeer().getPaymentAccountPayload() == null,
