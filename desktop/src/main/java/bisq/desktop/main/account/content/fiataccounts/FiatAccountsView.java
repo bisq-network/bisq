@@ -455,7 +455,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.selectPaymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
-        List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
+        @SuppressWarnings("deprecation") List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(PaymentMethod::isFiat)
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VERSE_ID)) // Verse not existing anymore
                 .sorted()

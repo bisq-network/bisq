@@ -37,8 +37,10 @@ import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
 public class VerseForm extends PaymentMethodForm {
+    @SuppressWarnings("deprecation")
     private final VerseAccount account;
 
+    @SuppressWarnings("deprecation")
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.userName"),
@@ -46,9 +48,10 @@ public class VerseForm extends PaymentMethodForm {
         return gridRow;
     }
 
+    @SuppressWarnings("deprecation")
     public VerseForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
-                      InputValidator inputValidator, GridPane gridPane,
-                      int gridRow, CoinFormatter formatter) {
+                     InputValidator inputValidator, GridPane gridPane,
+                     int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.account = (VerseAccount) paymentAccount;
     }
