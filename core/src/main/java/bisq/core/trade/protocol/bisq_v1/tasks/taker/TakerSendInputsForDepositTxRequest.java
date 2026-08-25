@@ -37,6 +37,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.base.Charsets;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -101,7 +103,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             // protocol for passing the nonce we want to get signed)
             // This is used for verifying the peers account age witness
             byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
-                    offerId.getBytes(Charsets.UTF_8));
+                    offerId.getBytes(StandardCharsets.UTF_8));
 
             int burningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
             processModel.setBurningManSelectionHeight(burningManSelectionHeight);

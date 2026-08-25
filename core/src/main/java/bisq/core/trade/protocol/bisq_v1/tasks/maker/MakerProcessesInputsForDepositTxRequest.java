@@ -47,6 +47,8 @@ import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -128,7 +130,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for
             // passing the nonce we want to get signed)
-            byte[] accountAgeWitnessNonce = trade.getId().getBytes(Charsets.UTF_8);
+            byte[] accountAgeWitnessNonce = trade.getId().getBytes(StandardCharsets.UTF_8);
             PublicKey takerSignatureKey = takerPubKeyRing.getSignaturePubKey();
             byte[] accountAgeWitnessSignature = checkDSASignature(request.getAccountAgeWitnessSignatureOfOfferId(),
                     accountAgeWitnessNonce,

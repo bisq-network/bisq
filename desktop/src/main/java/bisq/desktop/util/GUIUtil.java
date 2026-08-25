@@ -137,6 +137,7 @@ import java.security.KeyPair;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -418,7 +419,7 @@ public class GUIUtil {
         fileChooser.setInitialFileName(fileName);
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
-            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
+            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8)) {
                 CSVWriter<T> headerWriter = new CSVWriterBuilder<T>(outputStreamWriter)
                         .strategy(CSVStrategy.UK_DEFAULT)
                         .entryConverter(headerConverter)
@@ -443,7 +444,7 @@ public class GUIUtil {
         fileChooser.setInitialFileName(fileName);
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
-            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
+            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8)) {
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 outputStreamWriter.write(gson.toJson(data));
             } catch (RuntimeException | IOException e) {

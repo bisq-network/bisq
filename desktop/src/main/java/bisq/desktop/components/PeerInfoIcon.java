@@ -48,6 +48,8 @@ import javafx.beans.property.StringProperty;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +89,7 @@ public class PeerInfoIcon extends Group {
         int intValue = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] bytes = md.digest(fullAddress.getBytes(Charsets.UTF_8));
+            byte[] bytes = md.digest(fullAddress.getBytes(StandardCharsets.UTF_8));
             intValue = Math.abs(((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16)
                     | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 

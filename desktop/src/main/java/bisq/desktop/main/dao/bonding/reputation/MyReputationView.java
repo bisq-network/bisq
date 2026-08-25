@@ -69,6 +69,8 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.Comparator;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -264,7 +266,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
     }
 
     private void setNewRandomSalt() {
-        byte[] randomBytes = UUID.randomUUID().toString().getBytes(Charsets.UTF_8);
+        byte[] randomBytes = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
         // We want to limit it to 20 bytes
         byte[] hashOfRandomBytes = Hash.getSha256Ripemd160hash(randomBytes);
         // bytesAsHexString results in 40 chars
