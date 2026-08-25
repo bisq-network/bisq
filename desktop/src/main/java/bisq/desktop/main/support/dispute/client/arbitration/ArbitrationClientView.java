@@ -49,7 +49,7 @@ import javax.inject.Named;
 @FxmlView
 public class ArbitrationClientView extends DisputeClientView {
     @Inject
-    public ArbitrationClientView(ArbitrationManager arbitrationManager,
+    public ArbitrationClientView(@SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                                  KeyRing keyRing,
                                  P2PService p2PService,
                                  TradeManager tradeManager,

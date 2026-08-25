@@ -128,6 +128,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final WalletsSetup walletsSetup;
     private final Preferences preferences;
     private final TradableRepository tradableRepository;
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
     private final RefundManager refundManager;
     private final PubKeyRing pubKeyRing;
@@ -153,7 +154,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                              WalletsSetup walletsSetup,
                              Preferences preferences,
                              TradableRepository tradableRepository,
-                             ArbitrationManager arbitrationManager,
+                             @SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                              RefundManager refundManager,
                              PubKeyRing pubKeyRing,
                              TradeDetailsWindow tradeDetailsWindow,
