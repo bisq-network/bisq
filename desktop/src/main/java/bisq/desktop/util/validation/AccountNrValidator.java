@@ -21,6 +21,7 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 public final class AccountNrValidator extends BankValidator {
     public AccountNrValidator(String countryCode) {
@@ -89,8 +90,8 @@ public final class AccountNrValidator extends BankValidator {
                     // MOD11 with weights 2,3,4,5,6,7,2,3,4,5 right to left.
                     // First remove whitespace and periods.  Normal formatting is:
                     // 1234.56.78903
-                    input2 = StringUtils.remove(input, " ");
-                    input2 = StringUtils.remove(input2, ".");
+                    input2 = Strings.CS.remove(input, " ");
+                    input2 = Strings.CS.remove(input2, ".");
                     // 11 digits, numbers only
                     if (input2.length() != length || !StringUtils.isNumeric(input2))
                         return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
