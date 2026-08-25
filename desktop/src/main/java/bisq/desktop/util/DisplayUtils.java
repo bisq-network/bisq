@@ -22,6 +22,7 @@ import bisq.common.crypto.PubKeyRing;
 import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
@@ -109,7 +110,7 @@ public class DisplayUtils {
         String day = Res.get("time.day").toLowerCase();
         String days = Res.get("time.days");
         String format = " d' " + days + "'";
-        return StringUtils.strip(StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), " 1 " + days, " 1 " + day));
+        return StringUtils.strip(Strings.CS.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), " 1 " + days, " 1 " + day));
     }
 
     public static String booleanToYesNo(boolean value) {
