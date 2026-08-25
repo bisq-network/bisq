@@ -93,7 +93,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         tableView.getColumns().add(totalAmountColumn);
         TableColumn<SpreadItem, SpreadItem> spreadColumn = getSpreadColumn();
         tableView.getColumns().add(spreadColumn);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         currencyColumn.setComparator(Comparator.comparing(o ->
                 model.isIncludePaymentMethod() ? o.currencyCode : CurrencyUtil.getNameByCode(o.currencyCode)));

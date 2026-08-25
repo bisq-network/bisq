@@ -162,7 +162,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
         confidenceColumn.setGraphic(new AutoTooltipLabel(ColumnNames.CONF.toString()));
         avatarColumn.setText("");
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
         setTradeIdColumnCellFactory();

@@ -513,7 +513,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         GridPane.setMargin(balanceEntryTableView, new Insets(60, -10, 5, -10));
         gridPane.getChildren().add(balanceEntryTableView);
         balanceEntryTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        balanceEntryTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        balanceEntryTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         createBalanceEntryColumns();
         balanceEntryTableView.setItems(balanceEntrySortedList);
         balanceEntryTableView.setVisible(false);

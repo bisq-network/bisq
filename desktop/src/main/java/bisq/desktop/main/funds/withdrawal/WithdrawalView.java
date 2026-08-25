@@ -288,7 +288,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
         selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableView.setMaxHeight(Double.MAX_VALUE);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.withdrawal.noFundsAvailable")));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);

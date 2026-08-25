@@ -969,7 +969,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         paymentMethodColumn.setComparator(Comparator.comparing(TradeStatistics3ListItem::getPaymentMethodString));
         tableView.getColumns().add(paymentMethodColumn);
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noData"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);

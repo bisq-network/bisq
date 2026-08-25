@@ -89,7 +89,7 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         tableView.setPrefHeight(300);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         setColumns(tableView);
         tableView.setItems(FXCollections.observableArrayList(marketAlerts.getMarketAlertFilters()));

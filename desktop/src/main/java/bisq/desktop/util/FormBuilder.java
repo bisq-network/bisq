@@ -2431,7 +2431,7 @@ public class FormBuilder {
         GridPane.setMargin(tableView, new Insets(top + 30, -10, 5, -10));
         gridPane.getChildren().add(tableView);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         return new Tuple2<>(tableView, titledGroupBg);
     }
 
@@ -2464,7 +2464,7 @@ public class FormBuilder {
         GridPane.setMargin(tableView, new Insets(top + 30, -10, 5, -10));
         gridPane.getChildren().add(tableView);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         return new Tuple3<>(filterField, tableView, hBox);
     }
 }

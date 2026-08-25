@@ -148,7 +148,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         tableView = new TableView<>();
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         addDateColumn();
         addTxIdColumn();

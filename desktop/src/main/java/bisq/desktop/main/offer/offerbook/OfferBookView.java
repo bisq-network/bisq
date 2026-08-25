@@ -269,7 +269,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         tableView.getColumns().add(avatarColumn);
 
         tableView.getSortOrder().add(priceColumn);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         Label placeholder = new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.multipleOffers")));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);

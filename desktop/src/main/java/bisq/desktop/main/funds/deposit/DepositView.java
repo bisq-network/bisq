@@ -150,7 +150,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         // trigger creation of at least 1 savings address
         walletService.getFreshAddressEntry();
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.deposit.noAddresses")));
         tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null) {

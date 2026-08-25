@@ -446,7 +446,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         cyclesTableView = new TableView<>();
         cyclesTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.processingData")));
-        cyclesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        cyclesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         createCycleColumns(cyclesTableView);
 
@@ -474,7 +474,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         proposalsTableView = new TableView<>();
         proposalsTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        proposalsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        proposalsTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         createProposalsColumns(proposalsTableView);
 
