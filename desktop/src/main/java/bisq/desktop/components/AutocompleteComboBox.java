@@ -19,7 +19,7 @@ package bisq.desktop.components;
 
 import bisq.common.UserThread;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import bisq.desktop.components.controls.BisqJfxComboBox;
 import bisq.desktop.components.controls.skin.BisqComboBoxSkin;
@@ -164,7 +164,7 @@ public class AutocompleteComboBox<T> extends BisqJfxComboBox<T> {
     private void filterBy(String query) {
         matchingList = (extendedList != null && query.length() > 0 ? extendedList : list)
                 .stream()
-                .filter(item -> StringUtils.containsIgnoreCase(asString(item), query))
+                .filter(item -> Strings.CI.contains(asString(item), query))
                 .collect(Collectors.toList());
 
         setValue(null);
