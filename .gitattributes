@@ -8,6 +8,13 @@ p2p/src/main/resources/BsqBlocks_BTC_MAINNET/** binary
  # Serialized persisted stores
 p2p/src/main/resources/*Store* binary
 
+*.aiff binary
+*.ttf  binary
+*.gpg  binary
+*.tiff binary
+*.zip  binary
+*.dat binary
+
 # These text files should retain Windows line endings (CRLF)
 *.bat           text eol=crlf
 gradlew         text eol=lf
