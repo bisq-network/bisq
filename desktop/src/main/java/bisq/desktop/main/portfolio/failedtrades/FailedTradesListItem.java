@@ -31,7 +31,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import lombok.Getter;
 
@@ -82,22 +82,22 @@ class FailedTradesListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
+        if (Strings.CI.contains(getDateAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getMarketLabel(), filterString)) {
+        if (Strings.CI.contains(getMarketLabel(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getPriceAsString(), filterString)) {
+        if (Strings.CI.contains(getPriceAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getVolumeAsString(), filterString)) {
+        if (Strings.CI.contains(getVolumeAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
+        if (Strings.CI.contains(getAmountAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getDirectionLabel(), filterString)) {
+        if (Strings.CI.contains(getDirectionLabel(), filterString)) {
             return true;
         }
         if (FilteringUtils.match(getTrade().getOffer(), filterString)) {

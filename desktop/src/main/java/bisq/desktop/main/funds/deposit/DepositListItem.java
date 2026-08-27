@@ -36,6 +36,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import com.google.common.base.Suppliers;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import javafx.scene.control.Tooltip;
 
@@ -166,10 +167,10 @@ class DepositListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getAddressString(), filterString)) {
+        if (Strings.CI.contains(getAddressString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getUsage(), filterString)) {
+        if (Strings.CI.contains(getUsage(), filterString)) {
             return true;
         }
         return getBalance().contains(filterString);

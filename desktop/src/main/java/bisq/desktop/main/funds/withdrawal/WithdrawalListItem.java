@@ -31,6 +31,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import javafx.scene.control.Label;
 
@@ -134,10 +135,10 @@ class WithdrawalListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getBalanceAsString(), filterString)) {
+        if (Strings.CI.contains(getBalanceAsString(), filterString)) {
             return true;
         }
-        return StringUtils.containsIgnoreCase(getAddressString(), filterString);
+        return Strings.CI.contains(getAddressString(), filterString);
 
     }
 }

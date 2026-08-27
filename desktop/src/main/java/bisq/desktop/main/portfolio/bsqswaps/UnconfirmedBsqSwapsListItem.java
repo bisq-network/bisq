@@ -40,7 +40,7 @@ import bisq.core.util.coin.CoinFormatter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import javafx.scene.control.Tooltip;
 
@@ -173,31 +173,31 @@ class UnconfirmedBsqSwapsListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
+        if (Strings.CI.contains(getDateAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getMarketLabel(), filterString)) {
+        if (Strings.CI.contains(getMarketLabel(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getPriceAsString(), filterString)) {
+        if (Strings.CI.contains(getPriceAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getVolumeAsString(), filterString)) {
+        if (Strings.CI.contains(getVolumeAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
+        if (Strings.CI.contains(getAmountAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getTradeFeeAsString(), filterString)) {
+        if (Strings.CI.contains(getTradeFeeAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getTxFeeAsString(), filterString)) {
+        if (Strings.CI.contains(getTxFeeAsString(), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(String.valueOf(getConfidence()), filterString)) {
+        if (Strings.CI.contains(String.valueOf(getConfidence()), filterString)) {
             return true;
         }
-        if (StringUtils.containsIgnoreCase(getDirectionLabel(), filterString)) {
+        if (Strings.CI.contains(getDirectionLabel(), filterString)) {
             return true;
         }
         if (FilteringUtils.match(getBsqSwapTrade(), filterString)) {
