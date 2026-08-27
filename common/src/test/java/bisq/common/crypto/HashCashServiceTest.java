@@ -72,7 +72,7 @@ public class HashCashServiceTest {
     private void run(int log2Difficulty, StringBuilder stringBuilder) throws ExecutionException, InterruptedException {
         double difficulty = Math.scalb(1.0, log2Difficulty);
         int numTokens = 1000;
-        byte[] payload = RandomStringUtils.random(50, true, true).getBytes(StandardCharsets.UTF_8);
+        byte[] payload = RandomStringUtils.secure().next(50, true, true).getBytes(StandardCharsets.UTF_8);
         long ts = System.currentTimeMillis();
         List<ProofOfWork> tokens = new ArrayList<>();
         for (int i = 0; i < numTokens; i++) {
