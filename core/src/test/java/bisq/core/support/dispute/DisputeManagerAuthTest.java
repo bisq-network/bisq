@@ -65,6 +65,7 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -498,6 +499,20 @@ class DisputeManagerAuthTest {
     }
 
     @Test
+    void openNewDisputeWithEmbeddedResultDoesNotMutateDisputeList() {
+        assertOpenNewDisputePayloadStateRejected(
+                dispute -> dispute.setDisputeResult(new DisputeResult(dispute.getTradeId(), dispute.getTraderId())),
+                "Dispute result must be absent at opening dispute");
+    }
+
+    @Test
+    void openNewDisputeWithEmbeddedPayoutTxIdDoesNotMutateDisputeList() {
+        assertOpenNewDisputePayloadStateRejected(
+                dispute -> dispute.setDisputePayoutTxId("ab".repeat(32)),
+                "Dispute payout transaction ID must be absent at opening dispute");
+    }
+
+    @Test
     void peerOpenedDisputeWithMismatchedAgentKeyDoesNotMutateDisputeList() {
         TestDisputeList disputeList = new TestDisputeList();
         DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
@@ -530,6 +545,44 @@ class DisputeManagerAuthTest {
         when(trade.getId()).thenReturn(tradeId);
         when(trade.getMediatorPubKeyRing()).thenReturn(mediatorPubKeyRing);
         return trade;
+    }
+
+    private void assertOpenNewDisputePayloadStateRejected(Consumer<Dispute> payloadMutation,
+                                                          String expectedMessage) {
+        TestDisputeList disputeList = new TestDisputeList();
+        DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
+        TestDisputeManager manager = new TestDisputeManager(mockP2PService(),
+                tradeManager,
+                closedTradableManager,
+                failedTradesManager,
+                keyStorageDir,
+                disputeListService,
+                mock(DaoFacade.class),
+                localP2PConfig());
+
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing agentPubKeyRing = manager.getPubKeyRing();
+        Dispute dispute = validDispute(TRADE_ID,
+                0,
+                buyerPubKeyRing,
+                agentPubKeyRing,
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing));
+        dispute.setBurningManSelectionHeight(1);
+        payloadMutation.accept(dispute);
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                BUYER_NODE_ADDRESS,
+                "open-dispute-uid",
+                SupportType.MEDIATION);
+
+        manager.onOpenNewDispute(message, buyerPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeList.isEmpty());
+        assertEquals(1, manager.getValidationExceptions().size());
+        DisputeValidation.ValidationException validationException =
+                assertInstanceOf(DisputeValidation.ValidationException.class, manager.getValidationExceptions().get(0));
+        assertEquals(expectedMessage, validationException.getMessage());
+        verify(disputeListService, never()).requestPersistence();
     }
 
     private static Dispute dispute(String tradeId, PubKeyRing agentPubKeyRing) {

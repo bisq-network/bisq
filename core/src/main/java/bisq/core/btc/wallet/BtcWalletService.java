@@ -54,6 +54,7 @@ import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -1321,13 +1322,14 @@ public class BtcWalletService extends WalletService {
 
     public Transaction createRefundPayoutTx(Coin buyerAmount,
                                             Coin sellerAmount,
+                                            Coin maximumPayoutAmount,
                                             Coin fee,
                                             String buyerAddressString,
                                             String sellerAddressString)
             throws AddressFormatException, InsufficientMoneyException, WalletException, TransactionVerificationException {
+        validateRefundPayoutAmounts(buyerAmount, sellerAmount, maximumPayoutAmount, fee);
+
         Transaction tx = new Transaction(params);
-        Preconditions.checkArgument(buyerAmount.add(sellerAmount).isPositive(),
-                "The sellerAmount + buyerAmount must be positive.");
         // buyerAmount can be 0
         if (buyerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
@@ -1363,6 +1365,27 @@ public class BtcWalletService extends WalletService {
         WalletService.printTx("createRefundPayoutTx", resultTx);
 
         return resultTx;
+    }
+
+    @VisibleForTesting
+    static void validateRefundPayoutAmounts(Coin buyerAmount,
+                                            Coin sellerAmount,
+                                            Coin maximumPayoutAmount,
+                                            Coin fee) {
+        checkArgument(!buyerAmount.isNegative(), "The buyerAmount must not be negative.");
+        checkArgument(!sellerAmount.isNegative(), "The sellerAmount must not be negative.");
+        checkArgument(!maximumPayoutAmount.isNegative(), "The maximumPayoutAmount must not be negative.");
+        checkArgument(!fee.isNegative(), "The fee must not be negative.");
+
+        Coin payoutAmount;
+        try {
+            payoutAmount = buyerAmount.add(sellerAmount);
+        } catch (ArithmeticException exception) {
+            throw new IllegalArgumentException("The sellerAmount + buyerAmount must not overflow.", exception);
+        }
+        checkArgument(payoutAmount.isPositive(), "The sellerAmount + buyerAmount must be positive.");
+        checkArgument(payoutAmount.compareTo(maximumPayoutAmount) <= 0,
+                "The sellerAmount + buyerAmount must not exceed the maximum payout amount.");
     }
 
 

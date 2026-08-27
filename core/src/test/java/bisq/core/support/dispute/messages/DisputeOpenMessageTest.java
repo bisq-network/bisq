@@ -38,9 +38,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class DisputeOpenMessageTest {
@@ -113,6 +115,24 @@ public class DisputeOpenMessageTest {
         PeerOpenedDisputeMessage fromProto = PeerOpenedDisputeMessage.fromProto(proto, mock(CoreProtoResolver.class), 1);
 
         assertNull(fromProto.getSenderSignaturePubKey());
+    }
+
+    @Test
+    public void persistedDisputePayoutTxIdRestoresPayoutDoneLatch() {
+        String payoutTxId = "ab".repeat(32);
+        Dispute dispute = dispute(pubKeyRing(), pubKeyRing(), pubKeyRing());
+        dispute.setDisputePayoutTxId(payoutTxId);
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                SENDER_NODE_ADDRESS,
+                "uid",
+                SupportType.MEDIATION);
+
+        protobuf.OpenNewDisputeMessage proto = message.toProtoNetworkEnvelope().getOpenNewDisputeMessage();
+        Dispute restoredDispute = OpenNewDisputeMessage.fromProto(proto, mock(CoreProtoResolver.class), 1)
+                .getDispute();
+
+        assertEquals(payoutTxId, restoredDispute.getDisputePayoutTxId());
+        assertTrue(restoredDispute.isPayoutDone());
     }
 
     private static Dispute dispute(PubKeyRing buyerPubKeyRing,

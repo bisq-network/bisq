@@ -297,6 +297,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         if (proto.hasDisputeResult())
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
         dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
+        dispute.payoutDone = dispute.disputePayoutTxId != null;
 
         String mediatorsDisputeResult = proto.getMediatorsDisputeResult();
         if (!mediatorsDisputeResult.isEmpty()) {
