@@ -109,7 +109,7 @@ public class TxInputSelectionWindow extends Overlay<TxInputSelectionWindow> {
     protected void addContent() {
         tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         GridPane.setRowIndex(tableView, rowIndex++);
         GridPane.setMargin(tableView, new Insets(Layout.GROUP_DISTANCE, 0, 0, 0));
         GridPane.setColumnSpan(tableView, 2);

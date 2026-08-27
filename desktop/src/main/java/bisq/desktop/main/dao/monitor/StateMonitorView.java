@@ -207,7 +207,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableView.setPrefHeight(100);
 
         createColumns();
@@ -228,7 +228,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         conflictTableView = new TableView<>();
         conflictTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        conflictTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        conflictTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         conflictTableView.setPrefHeight(100);
 
         createConflictColumns();

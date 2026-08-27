@@ -198,7 +198,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
 
         TableView<VoteListItem> votesTableView = new TableView<>();
         votesTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        votesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        votesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         createColumns(votesTableView);
         GridPane.setRowIndex(votesTableView, gridRow);

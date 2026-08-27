@@ -940,7 +940,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void setupTable() {
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         Label placeholder = new AutoTooltipLabel(Res.get("support.noTickets"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);

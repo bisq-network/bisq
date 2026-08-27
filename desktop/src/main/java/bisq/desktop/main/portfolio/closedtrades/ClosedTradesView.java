@@ -204,7 +204,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         duplicateColumn.setGraphic(new AutoTooltipLabel(""));
         avatarColumn.setText("");
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
         setTradeIdColumnCellFactory();

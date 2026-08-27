@@ -203,7 +203,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
         bitcoinPeersTableView.setMinHeight(180);
         bitcoinPeersTableView.setPrefHeight(180);
-        bitcoinPeersTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        bitcoinPeersTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         bitcoinPeersTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         bitcoinPeersTableView.getSortOrder().add(bitcoinPeerAddressColumn);
         bitcoinPeerAddressColumn.setSortType(TableColumn.SortType.ASCENDING);
@@ -211,7 +211,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
         p2pPeersTableView.setMinHeight(180);
         p2pPeersTableView.setPrefHeight(180);
-        p2pPeersTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        p2pPeersTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         p2pPeersTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         p2pPeersTableView.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);

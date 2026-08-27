@@ -200,7 +200,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setCloneColumnCellFactory();
         setRemoveColumnCellFactory();
 
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openOffers"))));
 
         offerIdColumn.setComparator(Comparator.comparing(o -> o.getOffer().getId()));

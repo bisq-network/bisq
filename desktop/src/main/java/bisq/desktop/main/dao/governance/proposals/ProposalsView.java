@@ -659,7 +659,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         tableView = new TableView<>();
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         createProposalColumns();
         GridPane.setRowIndex(tableView, gridRow);
