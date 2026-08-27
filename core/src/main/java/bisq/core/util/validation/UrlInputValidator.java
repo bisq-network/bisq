@@ -19,7 +19,7 @@ package bisq.core.util.validation;
 
 import bisq.core.locale.Res;
 
-import java.net.URL;
+import java.net.URI;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -34,7 +34,7 @@ public class UrlInputValidator extends InputValidator {
             return validationResult;
 
         try {
-            new URL(input); // does not cover all invalid urls, so we use a regex as well
+            new URI(input).toURL(); // does not cover all invalid urls, so we use a regex as well
             String regex = "^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
             checkArgument(input.matches(regex), "URL does not match regex");
             return validationResult;

@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -99,7 +100,7 @@ public class DownloadTask extends Task<List<BisqInstaller.FileDescriptor>> {
                     log.info("Downloading {}", fileDescriptor.getLoadUrl());
                     try {
                         updateMessage(fileDescriptor.getFileName());
-                        download(new URL(fileDescriptor.getLoadUrl()), fileDescriptor.getSaveFile());
+                        download(new URI(fileDescriptor.getLoadUrl()).toURL(), fileDescriptor.getSaveFile());
                         log.info("Download for {} done", fileDescriptor.getLoadUrl());
                         fileDescriptor.setDownloadStatus(BisqInstaller.DownloadStatusEnum.OK);
                     } catch (Exception e) {
