@@ -63,9 +63,10 @@ public class VolumeUtilTest {
     public void testGetAdjustedAltcoinVolumeRoundsToZeroBelowHalfUnit() {
         // A volume below half of one on-chain unit rounds to ZERO instead of being inflated:
         // raising 0.4 of a 0-decimal coin to a whole coin would change the agreed rate by 150%.
-        // Callers must reject such an amount as below the coin's minimum.
+        // Callers must reject such an amount as below the coin's minimum. XYZ is synthetic:
+        // no registered asset declares 0 decimals (indivisible ones keep the default).
         assertEquals(0L,
-                VolumeUtil.getAdjustedAltcoinVolume(altcoin("SF", 40_000_000L), 0).getValue(),
+                VolumeUtil.getAdjustedAltcoinVolume(altcoin("XYZ", 40_000_000L), 0).getValue(),
                 "A volume below half of one on-chain unit must round to zero, not be inflated.");
         assertEquals(0L,
                 VolumeUtil.getAdjustedAltcoinVolume(altcoin("USDC", 40L), 6).getValue(),
@@ -73,7 +74,7 @@ public class VolumeUtilTest {
 
         // From half of one unit upwards normal half-up rounding applies.
         assertEquals(100_000_000L,
-                VolumeUtil.getAdjustedAltcoinVolume(altcoin("SF", 50_000_000L), 0).getValue(),
+                VolumeUtil.getAdjustedAltcoinVolume(altcoin("XYZ", 50_000_000L), 0).getValue(),
                 "Half of one on-chain unit must round up to one unit.");
 
         // Same boundary at precision 2, the coarsest precision among the sub-8 assets

@@ -27,8 +27,10 @@ import bisq.common.config.BaseCurrencyNetwork;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -133,6 +135,34 @@ public class CurrencyUtilTest {
     public void testGetNameAndCodeOfRemovedAsset() {
         assertEquals("Bitcoin Cash (BCH)", CurrencyUtil.getNameAndCode("BCH"));
         assertEquals("N/A (XYZ)", CurrencyUtil.getNameAndCode("XYZ"));
+    }
+
+    @Test
+    public void testGetCryptoPrecisionOfSub8DecimalAssets() {
+        // Derived from the registry so that adding, removing or changing a sub-8
+        // asset shows up as an explicit test change; a precision metadata omission
+        // would silently disable volume rounding for the affected asset.
+        Map<String, Integer> expected = Map.ofEntries(
+                Map.entry("AEUR", 2), Map.entry("TRTL", 2), Map.entry("UPX", 2), Map.entry("WRKZ", 2),
+                Map.entry("ANI", 5), Map.entry("MILE", 5),
+                Map.entry("CLOAK", 6), Map.entry("EMC", 6), Map.entry("LCP", 6),
+                Map.entry("USDC", 6), Map.entry("USDT-E", 6),
+                Map.entry("DRGL", 7));
+        Map<String, Integer> actual = new AssetRegistry().stream()
+                .filter(asset -> asset.getPrecision() < Asset.DEFAULT_PRECISION)
+                .collect(Collectors.toMap(Asset::getTickerSymbol, Asset::getPrecision, (a, b) -> a));
+        assertEquals(expected, actual);
+
+        // The precision lookup resolves from the registry.
+        assertEquals(2, CurrencyUtil.getCryptoPrecision("TRTL"));
+        assertEquals(6, CurrencyUtil.getCryptoPrecision("USDC"));
+
+        // Indivisible assets deliberately keep the default precision: half of one
+        // on-chain unit is a whole coin there, so half-up rounding would silently
+        // move real value. Asserted via the registry, because getCryptoPrecision
+        // would also return the default for an asset that is not registered at all.
+        assertEquals(Asset.DEFAULT_PRECISION, CurrencyUtil.findAsset("SF").orElseThrow().getPrecision());
+        assertEquals(Asset.DEFAULT_PRECISION, CurrencyUtil.findAsset("ASK").orElseThrow().getPrecision());
     }
 
     class MockAssetRegistry extends AssetRegistry {
