@@ -17,6 +17,8 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Volume;
 import bisq.core.payment.TradeLimits;
 
 import org.bitcoinj.core.Coin;
@@ -145,6 +147,26 @@ class TradeAmountValidationTest {
                 () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), Coin.ZERO, OFFER_MAX_AMOUNT));
         assertThrows(IllegalArgumentException.class,
                 () -> TradeAmountValidation.checkTradeAmount(Coin.valueOf(3_000), OFFER_MIN_AMOUNT, Coin.ZERO));
+    }
+
+    @Test
+    void checkTradeVolumeAcceptsPositiveVolume() {
+        // One on-chain unit of the 6-decimal coin, the smallest volume the
+        // rounding can produce.
+        Volume volume = new Volume(Altcoin.valueOf("USDC", 100L));
+
+        assertSame(volume, TradeAmountValidation.checkTradeVolume(volume));
+    }
+
+    @Test
+    void checkTradeVolumeRejectsNullAndZeroVolume() {
+        assertThrows(NullPointerException.class,
+                () -> TradeAmountValidation.checkTradeVolume(null));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeVolume(new Volume(Altcoin.valueOf("USDC", 0L))));
+
+        assertEquals("Trade volume must not be zero. currencyCode=USDC", exception.getMessage());
     }
 
 }

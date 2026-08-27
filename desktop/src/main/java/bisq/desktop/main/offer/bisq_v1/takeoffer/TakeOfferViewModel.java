@@ -192,7 +192,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         updateButtonDisableState();
 
+        // The default amount can already produce a zero volume; explain the
+        // disabled button before the user ever edits the amount field.
+        applyRoundedVolumeZeroValidation();
+
         updateSpinnerInfo();
+    }
+
+    private void applyRoundedVolumeZeroValidation() {
+        if (dataModel.isRoundedVolumeZero())
+            amountValidationResult.set(new InputValidator.ValidationResult(false,
+                    Res.get("takeOffer.validation.amountRoundsToZeroVolume",
+                            dataModel.getCurrencyCode())));
     }
 
     @Override
@@ -365,6 +376,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
+
+                applyRoundedVolumeZeroValidation();
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 if (dataModel.getDirection() == OfferDirection.BUY) {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
@@ -484,7 +497,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 && !dataModel.isAmountLargerThanOfferAmount()
                 && dataModel.feeValidationStatus.get() != FeeValidationStatus.NOT_CHECKED_YET
                 && isOfferAvailable.get()
-                && !dataModel.wouldCreateDustForMaker();
+                && !dataModel.wouldCreateDustForMaker()
+                && !dataModel.isRoundedVolumeZero();
         isNextButtonDisabled.set(!inputDataValid);
         isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || !dataModel.getIsBtcWalletFunded().get());
     }

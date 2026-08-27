@@ -18,6 +18,7 @@
 package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
 import bisq.core.locale.Res;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.bisq_v1.OfferPayload;
@@ -77,6 +78,12 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkArgument(offer.getPrice().isPositive(),
                     "Price must be positive. price=" + offer.getPrice().toFriendlyString());
 
+            // An altcoin volume below half of one on-chain unit rounds to zero
+            // (see VolumeUtil.getAdjustedAltcoinVolume), which would create an offer
+            // with no payment obligation.
+            checkVolumeNotNullOrZero(offer.getVolume(), "Volume");
+            checkVolumeNotNullOrZero(offer.getMinVolume(), "MinVolume");
+
             checkArgument(offer.getDate().getTime() > 0,
                     "Date must not be 0. date=" + offer.getDate().toString());
 
@@ -119,6 +126,12 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
         checkNotNull(value, name + " is null");
         checkArgument(value.isPositive(),
                 name + " must be positive. " + name + "=" + value.toFriendlyString());
+    }
+
+    public static void checkVolumeNotNullOrZero(Volume value, String name) {
+        checkNotNull(value, name + " is null");
+        checkArgument(value.getValue() > 0,
+                name + " must be positive. " + name + "=" + value.toPlainString());
     }
 
     public static String nonEmptyStringOf(String value) {

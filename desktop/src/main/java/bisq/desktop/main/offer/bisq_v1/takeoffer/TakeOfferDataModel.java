@@ -586,6 +586,14 @@ class TakeOfferDataModel extends OfferDataModel {
         return true;
     }
 
+    boolean isRoundedVolumeZero() {
+        // An altcoin volume below half of one on-chain unit rounds to zero, so there
+        // would be nothing to pay. See docs/specifications/trade/altcoin-volume-precision.md
+        // for the offers that can reach this.
+        Volume volume = this.volume.get();
+        return volume != null && volume.isZero();
+    }
+
     boolean wouldCreateDustForMaker() {
         boolean result;
         if (amount.get() != null && offer != null) {

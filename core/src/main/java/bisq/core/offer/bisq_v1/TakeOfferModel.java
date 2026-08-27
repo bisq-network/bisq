@@ -29,6 +29,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.validation.TradeAmountValidation;
 
 import bisq.common.taskrunner.Model;
 
@@ -198,7 +199,7 @@ public class TakeOfferModel implements Model {
             volumeByAmount = getAdjustedAltcoinVolume(volumeByAmount,
                     CurrencyUtil.getCryptoPrecision(offer.getCurrencyCode()));
 
-        volume = volumeByAmount;
+        volume = TradeAmountValidation.checkTradeVolume(volumeByAmount);
 
         updateBalance();
     }

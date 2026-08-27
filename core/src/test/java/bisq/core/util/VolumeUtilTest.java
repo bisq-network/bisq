@@ -76,6 +76,15 @@ public class VolumeUtilTest {
                 VolumeUtil.getAdjustedAltcoinVolume(altcoin("SF", 50_000_000L), 0).getValue(),
                 "Half of one on-chain unit must round up to one unit.");
 
+        // Same boundary at precision 2, the coarsest precision among the sub-8 assets
+        // (step 10^6): 0.00499999 -> zero, 0.005 -> 0.01.
+        assertEquals(0L,
+                VolumeUtil.getAdjustedAltcoinVolume(altcoin("TRTL", 499_999L), 2).getValue(),
+                "A volume below half of one on-chain unit must round to zero, not be inflated.");
+        assertEquals(1_000_000L,
+                VolumeUtil.getAdjustedAltcoinVolume(altcoin("TRTL", 500_000L), 2).getValue(),
+                "Half of one on-chain unit must round up to one unit.");
+
         // Zero stays zero at every precision, also at 8 where step == 1. A floor clamp here
         // would turn zero into one atom and silently break the no-op invariant for
         // default-precision coins, BSQ included.
