@@ -88,6 +88,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -217,6 +218,7 @@ public class BisqSetup {
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
     private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
     boolean hasShownStorageWarning = false;
+    private final Set<String> shownUpdateAlertKeys = new HashSet<>();
 
     @Inject
     public BisqSetup(DomainInitialisation domainInitialisation,
@@ -285,7 +287,16 @@ public class BisqSetup {
                 user.setDisplayedAlert(alert);          // save context to compare later
                 newVersionAvailableProperty.set(true);  // shows link in footer bar
                 if ((alert.canShowPopup(preferences) || openNewVersionPopup) && displayUpdateHandler != null) {
-                    displayUpdateHandler.accept(alert, alert.showAgainKey());
+                    // The alert can be delivered again during a session, e.g. re-added
+                    // after its storage entry expired or was removed, or re-published
+                    // with an updated message. The alertMessageProperty listener then
+                    // fires again and would queue another popup for an update we have
+                    // already shown. We show the popup only once per session per
+                    // version, except when the user requests it via the footer link.
+                    boolean alreadyShown = !shownUpdateAlertKeys.add(alert.showAgainKey());
+                    if (openNewVersionPopup || !alreadyShown) {
+                        displayUpdateHandler.accept(alert, alert.showAgainKey());
+                    }
                 }
             }
         } else {
