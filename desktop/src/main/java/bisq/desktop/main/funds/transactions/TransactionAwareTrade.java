@@ -51,6 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 class TransactionAwareTrade implements TransactionAwareTradable {
     private final TradeModel tradeModel;
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
     private final RefundManager refundManager;
     private final BtcWalletService btcWalletService;
@@ -62,7 +63,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     private static Tuple2<String, Set<String>> lastReceiverAddressStringsTuple;
 
     TransactionAwareTrade(TradeModel tradeModel,
-                          ArbitrationManager arbitrationManager,
+                          @SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                           RefundManager refundManager,
                           BtcWalletService btcWalletService,
                           PubKeyRing pubKeyRing) {

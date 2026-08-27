@@ -83,6 +83,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(TradeDetailsWindow.class);
 
     private final CoinFormatter formatter;
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
     private final TradeManager tradeManager;
     private final BtcWalletService btcWalletService;
@@ -100,7 +101,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
     @Inject
     public TradeDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
-                              ArbitrationManager arbitrationManager,
+                              @SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                               TradeManager tradeManager,
                               BtcWalletService btcWalletService,
                               AccountAgeWitnessService accountAgeWitnessService) {

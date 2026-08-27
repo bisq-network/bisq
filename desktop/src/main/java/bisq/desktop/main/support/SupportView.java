@@ -68,6 +68,7 @@ public class SupportView extends ActivatableView<TabPane, Void> {
     private final Navigation navigation;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
@@ -85,7 +86,7 @@ public class SupportView extends ActivatableView<TabPane, Void> {
                        Navigation navigation,
                        MediatorManager mediatorManager,
                        RefundAgentManager refundAgentManager,
-                       ArbitrationManager arbitrationManager,
+                       @SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                        MediationManager mediationManager,
                        RefundManager refundManager,
                        KeyRing keyRing) {

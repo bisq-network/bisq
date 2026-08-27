@@ -77,6 +77,7 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
+    @SuppressWarnings("deprecation")
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
@@ -90,7 +91,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(ArbitrationManager arbitrationManager,
+    public ContractWindow(@SuppressWarnings("deprecation") ArbitrationManager arbitrationManager,
                           MediationManager mediationManager,
                           RefundManager refundManager,
                           AccountAgeWitnessService accountAgeWitnessService,
