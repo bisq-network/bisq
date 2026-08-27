@@ -118,7 +118,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public final StringProperty amount = new SimpleStringProperty();
     public final StringProperty minAmount = new SimpleStringProperty();
-    protected final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
+    public final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositInBTC = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositLabel = new SimpleStringProperty();
 
@@ -156,7 +156,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
     private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
-    final BooleanProperty isMinBuyerSecurityDeposit = new SimpleBooleanProperty();
+    public final BooleanProperty isMinBuyerSecurityDeposit = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
@@ -253,6 +253,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
         addBindings();
         addListeners();
+
+        updateBuyerSecurityDeposit();
 
         updateButtonDisableState();
 
@@ -435,7 +437,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         };
         securityDepositStringListener = (ov, oldValue, newValue) -> {
             if (!ignoreSecurityDepositStringListener) {
-                if (securityDepositValidator.validate(newValue).isValid) {
+                InputValidator.ValidationResult result = securityDepositValidator.validate(newValue);
+                if (!isMinBuyerSecurityDeposit.get())
+                    buyerSecurityDepositValidationResult.set(result);
+                if (result.isValid) {
                     setBuyerSecurityDepositToModel();
                     dataModel.calculateTotalToPay();
                 }
@@ -1327,15 +1332,27 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());
     }
 
-    private void updateBuyerSecurityDeposit() {
-        isMinBuyerSecurityDeposit.set(dataModel.isMinBuyerSecurityDeposit());
-
-        if (dataModel.isMinBuyerSecurityDeposit()) {
+    protected void updateBuyerSecurityDeposit() {
+        String amountText = amount.get();
+        Coin amountAsCoin = amountText != null && amountText.isEmpty() ? null : dataModel.getAmount().get();
+        double floorAsPercent = amountAsCoin != null && amountAsCoin.isPositive()
+                ? CoinUtil.getAsPercentPerBtc(Restrictions.getMinBuyerSecurityDepositAsCoin(), amountAsCoin)
+                : Double.MAX_VALUE;
+        // >= not >: at exactly the 50% max there is no editable room above the floor, so lock.
+        boolean percentIrrelevant = floorAsPercent >= Restrictions.getMaxBuyerSecurityDepositAsPercent();
+        isMinBuyerSecurityDeposit.set(percentIrrelevant);
+        if (percentIrrelevant) {
             buyerSecurityDepositLabel.set(Res.get("createOffer.minSecurityDepositUsed"));
             buyerSecurityDeposit.set(btcFormatter.formatCoin(Restrictions.getMinBuyerSecurityDepositAsCoin()));
+            buyerSecurityDepositValidationResult.set(new InputValidator.ValidationResult(true));
         } else {
-            buyerSecurityDepositLabel.set(getSecurityDepositLabel());
+            // Percents between the 15% min and the BTC-derived floor stay valid; the data model
+            // floors the actual deposit at the minimum BTC amount, shown via buyerSecurityDepositInBTC.
             buyerSecurityDeposit.set(FormattingUtils.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+            buyerSecurityDepositLabel.set(dataModel.isMinBuyerSecurityDeposit()
+                    ? Res.get("createOffer.minSecurityDepositUsed")
+                    : getSecurityDepositLabel());
+            buyerSecurityDepositValidationResult.set(securityDepositValidator.validate(buyerSecurityDeposit.get()));
         }
     }
 
@@ -1353,8 +1370,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             inputDataValid = inputDataValid && triggerPriceValidationResult.get().isValid;
         }
 
-        // validating the percentage deposit value only makes sense if it is actually used
-        if (!dataModel.isMinBuyerSecurityDeposit()) {
+        // validating the percentage deposit value only makes sense while the field holds a percentage
+        if (!isMinBuyerSecurityDeposit.get()) {
             inputDataValid = inputDataValid && securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid;
         }
 

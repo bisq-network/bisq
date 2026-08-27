@@ -61,7 +61,9 @@ import org.junit.jupiter.api.Test;
 
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -236,5 +238,48 @@ public class CreateOfferViewModelTest {
         assertEquals("0.00", model.marketPriceMargin.get());
         assertEquals("0.00000078", model.volume.get());
         assertEquals("12684.04500000", model.price.get());
+    }
+
+    @Test
+    public void testClearedAmountLocksSecurityDepositAtMin() {
+        assertTrue(model.isMinBuyerSecurityDeposit.get());
+
+        model.amount.set("0.01");
+        assertFalse(model.isMinBuyerSecurityDeposit.get());
+
+        model.amount.set("");
+        assertTrue(model.isMinBuyerSecurityDeposit.get());
+    }
+
+    @Test
+    public void testSecurityDepositLocksOnlyWhenPercentIsIrrelevant() {
+        model.amount.set("0.0005");
+        assertTrue(model.isMinBuyerSecurityDeposit.get());
+
+        model.amount.set("0.01");
+        assertFalse(model.isMinBuyerSecurityDeposit.get());
+    }
+
+    @Test
+    public void testSecurityDepositKeepsPercentWhenFloorApplies() {
+        // Floor well below the min percent: standard 15% shown, editable.
+        model.amount.set("0.01");
+        assertFalse(model.isMinBuyerSecurityDeposit.get());
+        assertEquals("15.00", model.buyerSecurityDeposit.get());
+
+        // Floor works out above the min percent, but the data model floors the actual deposit,
+        // so the displayed percent stays standard instead of being raised to an odd value.
+        model.amount.set("0.001");
+        assertFalse(model.isMinBuyerSecurityDeposit.get());
+        assertEquals("15.00", model.buyerSecurityDeposit.get());
+
+        // Just above the boundary (amounts round to 4 decimals) the floor stays under 50%,
+        // so the field is still editable.
+        model.amount.set("0.0007");
+        assertFalse(model.isMinBuyerSecurityDeposit.get());
+
+        // Floor reaches the 50% max: no editable room left, so the field locks to the min amount.
+        model.amount.set("0.0006");
+        assertTrue(model.isMinBuyerSecurityDeposit.get());
     }
 }

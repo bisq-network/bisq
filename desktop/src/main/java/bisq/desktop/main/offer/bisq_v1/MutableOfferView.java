@@ -928,16 +928,20 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         };
 
         isMinBuyerSecurityDepositListener = ((observable, oldValue, newValue) -> {
-            if (newValue) {
-                // show BTC
-                buyerSecurityDepositPercentageLabel.setText(Res.getBaseCurrencyCode());
-                buyerSecurityDepositInputTextField.setDisable(true);
-            } else {
-                // show %
-                buyerSecurityDepositPercentageLabel.setText("%");
-                buyerSecurityDepositInputTextField.setDisable(false);
-            }
+            updateSecurityDepositLabels();
         });
+    }
+
+    private void updateSecurityDepositLabels() {
+        if (model.isMinBuyerSecurityDeposit.get()) {
+            // show BTC
+            buyerSecurityDepositPercentageLabel.setText(Res.getBaseCurrencyCode());
+            buyerSecurityDepositInputTextField.setDisable(true);
+        } else {
+            // show %
+            buyerSecurityDepositPercentageLabel.setText("%");
+            buyerSecurityDepositInputTextField.setDisable(false);
+        }
     }
 
     private void closeAndGoToOpenOffers() {
@@ -976,6 +980,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
         model.buyerSecurityDepositInBTC.addListener(buyerSecurityDepositInBTCListener);
         model.isMinBuyerSecurityDeposit.addListener(isMinBuyerSecurityDepositListener);
+        updateSecurityDepositLabels();
 
         tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
