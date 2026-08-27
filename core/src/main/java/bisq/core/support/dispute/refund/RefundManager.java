@@ -59,7 +59,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
 import com.google.inject.Inject;
@@ -76,6 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInput;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -334,12 +334,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         checkArgument(takerFeeTxFoundAtInputs, "takerFeeTx not found at depositTx inputs");
         checkArgument(depositTx.getInputs().size() >= 2,
                 "DepositTx must have at least 2 inputs");
-        checkArgument(delayedPayoutTx.getInputs().size() == 1,
-                "DelayedPayoutTx must have 1 input");
-        TransactionOutPoint delayedPayoutTxInputOutpoint = delayedPayoutTx.getInputs().get(0).getOutpoint();
-        String fundingTxId = delayedPayoutTxInputOutpoint.getHash().toString();
-        checkArgument(fundingTxId.equals(depositTx.getTxId().toString()),
-                "First input at delayedPayoutTx does not connect to depositTx");
+        checkDelayedPayoutTxInput(delayedPayoutTx, depositTx);
     }
 
     public void verifyDelayedPayoutTxReceivers(Transaction delayedPayoutTx, Dispute dispute) {
