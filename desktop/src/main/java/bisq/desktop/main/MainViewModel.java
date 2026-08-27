@@ -112,6 +112,8 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -421,7 +423,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         });
         bisqSetup.setLockedUpFundsHandler(msg -> {
             // repeated popups of the same message text can be stopped by selecting the "Dont show again" checkbox
-            String key = Hex.encode(Hash.getSha256Ripemd160hash(msg.getBytes(Charsets.UTF_8)));
+            String key = Hex.encode(Hash.getSha256Ripemd160hash(msg.getBytes(StandardCharsets.UTF_8)));
             if (preferences.showAgain(key)) {
                 new Popup().width(850).warning(msg)
                         .dontShowAgainId(key)

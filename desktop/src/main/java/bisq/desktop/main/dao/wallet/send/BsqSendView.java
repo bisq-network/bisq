@@ -85,6 +85,8 @@ import javafx.scene.layout.VBox;
 
 import javafx.beans.value.ChangeListener;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -517,7 +519,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
             // If preImage is hex encoded we use it directly
             opReturnData = Hex.decode(preImageAsString);
         } catch (Throwable ignore) {
-            opReturnData = preImageAsString.getBytes(Charsets.UTF_8);
+            opReturnData = preImageAsString.getBytes(StandardCharsets.UTF_8);
         }
 
         // If too long for OpReturn we hash it
