@@ -35,6 +35,7 @@ import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.TradeUtil;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.DontShowAgainLookup;
@@ -52,6 +53,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
 
@@ -65,7 +67,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
+import javafx.collections.ObservableMap;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -74,6 +76,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -129,10 +132,17 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final ObjectProperty<MessageState> messageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     private Subscription tradeStateSubscription;
     private Subscription messageStateSubscription;
-    // Transient, UI-local marker: trades whose deposit tx every block explorer reported as unknown.
-    // Not persisted, so a restart re-evaluates the situation from scratch. Observable so the view can
-    // reveal the "move to failed trades" column as soon as the (asynchronous) lookup comes back.
-    private final ObservableSet<String> deadDepositTradeIds = FXCollections.observableSet(new HashSet<>());
+    // Transient, UI-local marker: trades whose deposit tx every block explorer reported as unknown,
+    // keyed to the time of the first such observation. Not persisted, so a restart re-evaluates the
+    // situation from scratch. Observable so the view can reveal the "move to failed trades" column
+    // as soon as the (asynchronous) lookup comes back.
+    private final ObservableMap<String, Instant> deadDepositUnknownSince = FXCollections.observableHashMap();
+    private final Set<String> deadDepositRechecksInFlight = new HashSet<>();
+
+    // A transaction broadcast moments ago may not have reached the explorers yet, so the move to
+    // failed trades is only authorized by a second unanimous not-found answer arriving at least
+    // this long after the first observation.
+    static final Duration DEAD_DEPOSIT_SAFETY_INTERVAL = Duration.ofMinutes(30);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -245,7 +255,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 if (confirms >= 0) {
                     // A provider returned a status for the tx, so it is not gone from the network,
                     // whatever its confirmation count. Drop an earlier unknown-to-all verdict.
-                    deadDepositTradeIds.remove(trade.getId());
+                    deadDepositUnknownSince.remove(trade.getId());
                 }
                 if (confirms >= 1) {
                     String key = "tradeUnconfirmedTooLong_" + trade.getShortId();
@@ -258,10 +268,22 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                 .show();
                     }
                 } else if (validator.getStatus() == FeeValidationStatus.NACK_BTC_TX_NOT_FOUND) {
+                    if (lacksDepositBroadcastEvidence(trade)) {
+                        // The seller sends DepositTxAndDelayedPayoutTxMessage before publishing the
+                        // deposit tx (fiat publication even waits for its delivery), so the buyer
+                        // can hold a signed deposit tx which was never broadcast. The explorers
+                        // truthfully not knowing it does not mean it is dead then; the seller can
+                        // still publish it later.
+                        log.info("Deposit tx of trade {} is unknown to all block explorers, but we have " +
+                                "no evidence it was ever broadcast, so no verdict is derived from that",
+                                trade.getShortId());
+                        return;
+                    }
                     // Every block explorer positively reported the deposit tx as unknown, which is what
                     // it looks like when one of its inputs has since been spent by another transaction.
-                    // Nodes will then neither relay nor mine it.
-                    deadDepositTradeIds.add(trade.getId());
+                    // Nodes will then neither relay nor mine it. Keep the first observation time: the
+                    // move to failed trades only unlocks after DEAD_DEPOSIT_SAFETY_INTERVAL.
+                    deadDepositUnknownSince.putIfAbsent(trade.getId(), Instant.now());
                     String key = "tradeDepositTxDead_" + trade.getShortId();
                     if (DontShowAgainLookup.showAgain(key)) {
                         new Popup().warning(Res.get("portfolio.pending.depositTxDead", trade.getShortId(), unconfirmedHours))
@@ -342,11 +364,70 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public boolean isDepositTxProvenDead(Trade trade) {
         // A tx which was only dropped from the mempools looks the same to us but can still confirm
         // later, so the marker never outlives an actual confirmation.
-        return trade != null && deadDepositTradeIds.contains(trade.getId()) && !trade.isDepositConfirmed();
+        return trade != null && deadDepositUnknownSince.containsKey(trade.getId()) && !trade.isDepositConfirmed();
     }
 
-    ObservableSet<String> getDeadDepositTradeIds() {
-        return deadDepositTradeIds;
+    ObservableMap<String, Instant> getDeadDepositUnknownSince() {
+        return deadDepositUnknownSince;
+    }
+
+    public enum DeadDepositRecheckResult {
+        STILL_DEAD, TOO_RECENT, FOUND, UNREACHABLE
+    }
+
+    // The dead verdict can be arbitrarily old by the time the user acts on it, so the move to
+    // failed trades re-checks the explorers and is only authorized by a fresh unanimous not-found
+    // answer arriving at least DEAD_DEPOSIT_SAFETY_INTERVAL after the first one. The handler is
+    // invoked on the UserThread, like all mempool lookup callbacks, and is not invoked at all
+    // when there is no recorded verdict for the trade or a re-check for it is already running.
+    public void recheckDeadDepositTx(Trade trade, Consumer<DeadDepositRecheckResult> resultHandler) {
+        String tradeId = trade.getId();
+        String depositTxId = trade.getDepositTxId();
+
+        if (depositTxId == null || !deadDepositUnknownSince.containsKey(tradeId)
+                || !deadDepositRechecksInFlight.add(tradeId)) {
+            return;
+        }
+        mempoolService.checkTxIsConfirmed(depositTxId, validator -> {
+            deadDepositRechecksInFlight.remove(tradeId);
+            Instant unknownSince = deadDepositUnknownSince.get(tradeId);
+            if (unknownSince == null) {
+                // A concurrent step 1 lookup revoked the verdict while this re-check was running.
+                resultHandler.accept(DeadDepositRecheckResult.FOUND);
+            } else if (validator.getStatus() == FeeValidationStatus.NACK_TX_LOOKUP_UNREACHABLE) {
+                resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
+            } else if (validator.parseJsonValidateTx() >= 0) {
+                // A provider returned a status for the tx, so it is not gone from the network.
+                deadDepositUnknownSince.remove(tradeId);
+                resultHandler.accept(DeadDepositRecheckResult.FOUND);
+            } else if (validator.getStatus() != FeeValidationStatus.NACK_BTC_TX_NOT_FOUND) {
+                // Whatever else came back is no positive evidence of death.
+                resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
+            } else if (Duration.between(unknownSince, Instant.now()).compareTo(DEAD_DEPOSIT_SAFETY_INTERVAL) < 0) {
+                resultHandler.accept(DeadDepositRecheckResult.TOO_RECENT);
+            } else {
+                resultHandler.accept(DeadDepositRecheckResult.STILL_DEAD);
+            }
+        });
+    }
+
+    private static boolean lacksDepositBroadcastEvidence(Trade trade) {
+        // The seller publishes the deposit tx himself, so his step 1 implies a broadcast. The
+        // buyer applies it from a message which the seller sends before publishing (fiat
+        // publication even waits for its delivery), so positive evidence is needed: either the
+        // wallet saw the network relay the tx before the message arrived (the confidence
+        // listener stops updating the state afterwards), or broadcast peers were seen on the
+        // committed tx. That evidence is persisted with the wallet but wiped by an SPV
+        // resync; without evidence no verdict is derived.
+        // See docs/specifications/trade/deposit-transaction-liveness.md.
+        if (!(trade instanceof BuyerTrade)) {
+            return false;
+        }
+        if (trade.getTradeState() == Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK) {
+            return false;
+        }
+        Transaction depositTx = trade.getDepositTx();
+        return depositTx == null || depositTx.getConfidence().numBroadcastPeers() == 0;
     }
 
     //
