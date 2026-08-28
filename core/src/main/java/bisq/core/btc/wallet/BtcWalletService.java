@@ -1198,7 +1198,8 @@ public class BtcWalletService extends WalletService {
         if (memo != null) {
             runPostCommitStep("Setting the memo", sendResult.tx, () -> sendResult.tx.setMemo(memo));
         }
-        printTx("sendFunds", sendResult.tx);
+        runPostCommitStep("Printing the transaction", sendResult.tx,
+                () -> printTx("sendFunds", sendResult.tx));
 
         // For better redundancy in case the broadcast via BitcoinJ fails we also
         // publish the tx via mempool nodes.
