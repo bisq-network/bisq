@@ -53,8 +53,10 @@ first unanimous not-found answer.
 
 ## Messaging
 
-A dead-deposit classification must never describe the trade funds as locked: nothing is locked
-while the deposit is unconfirmed. The messaging must state that the verdict comes from external
+A dead-deposit classification must never describe the trade funds as locked in the deposit: an
+unconfirmed deposit locks nothing in the escrow. The wallet inputs funding it remain reserved
+until it confirms or is removed, and the messaging must keep the two apart. The messaging must
+further state that the verdict comes from external
 services, that a transaction dropped from the mempools can still confirm later, that support
 options are not available while the trade is in failed trades, and that the trade can be moved
 back from there.
