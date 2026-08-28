@@ -1170,6 +1170,11 @@ public class BtcWalletService extends WalletService {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
+        // The callback is attached before the memo is set: an already completed broadcast
+        // future invokes it synchronously at attach time, and a reply built there must see
+        // the tx without the memo, which is only persisted with the confirmed tx.
+        runPostCommitStep("Attaching the broadcast callback", sendResult.tx,
+                () -> Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor()));
         if (memo != null) {
             runPostCommitStep("Setting the memo", sendResult.tx, () -> sendResult.tx.setMemo(memo));
         }
@@ -1177,8 +1182,6 @@ public class BtcWalletService extends WalletService {
         // publish the tx via mempool nodes.
         runPostCommitStep("The mempool publish", sendResult.tx,
                 () -> MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx));
-        runPostCommitStep("Attaching the broadcast callback", sendResult.tx,
-                () -> Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor()));
         return sendResult.tx.getTxId().toString();
     }
 
@@ -1195,6 +1198,11 @@ public class BtcWalletService extends WalletService {
         SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
+        // The callback is attached before the memo is set: an already completed broadcast
+        // future invokes it synchronously at attach time, and a reply built there must see
+        // the tx without the memo, which is only persisted with the confirmed tx.
+        runPostCommitStep("Attaching the broadcast callback", sendResult.tx,
+                () -> Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor()));
         if (memo != null) {
             runPostCommitStep("Setting the memo", sendResult.tx, () -> sendResult.tx.setMemo(memo));
         }
@@ -1205,8 +1213,6 @@ public class BtcWalletService extends WalletService {
         // publish the tx via mempool nodes.
         runPostCommitStep("The mempool publish", sendResult.tx,
                 () -> MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx));
-        runPostCommitStep("Attaching the broadcast callback", sendResult.tx,
-                () -> Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor()));
         return sendResult.tx;
     }
 
