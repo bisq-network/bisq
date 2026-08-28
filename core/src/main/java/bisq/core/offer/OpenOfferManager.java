@@ -90,6 +90,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -353,17 +354,38 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    public void removeAllOpenOffers(@Nullable Runnable completeHandler) {
-        removeOpenOffers(getObservableList(), completeHandler);
+    // The removal broadcasts are only enqueued here and the aggregated outcome is decided after
+    // a drain delay, reporting failure when any single removal reported one. Callers whose next action
+    // depends on the offers being gone (replacing or emptying the wallet) must abort on the
+    // error path, as a failed removal leaves the offer locally persisted and on the network.
+    public void removeAllOpenOffers(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        removeOpenOffers(getObservableList(), resultHandler, errorMessageHandler);
     }
 
-    private void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
+    private void removeOpenOffers(List<OpenOffer> openOffers,
+                                  ResultHandler resultHandler,
+                                  ErrorMessageHandler errorMessageHandler) {
+        checkNotNull(resultHandler, "resultHandler must not be null");
+        checkNotNull(errorMessageHandler, "errorMessageHandler must not be null");
         int size = openOffers.size();
         // Copy list as we remove in the loop
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
-        openOffersList.forEach(this::removeOpenOffer);
-        if (completeHandler != null)
-            UserThread.runAfter(completeHandler, size * 200L + 500, TimeUnit.MILLISECONDS);
+        List<String> failedOfferIds = Collections.synchronizedList(new ArrayList<>());
+        openOffersList.forEach(openOffer -> removeOpenOffer(openOffer,
+                () -> {
+                },
+                errorMessage -> {
+                    failedOfferIds.add(openOffer.getId());
+                    log.warn("Remove open offer failed, offerId={}, {}", openOffer.getId(), errorMessage);
+                }));
+        UserThread.runAfter(() -> {
+            if (failedOfferIds.isEmpty()) {
+                resultHandler.handleResult();
+            } else {
+                errorMessageHandler.handleErrorMessage("Offers that could not be removed: "
+                        + String.join(", ", failedOfferIds));
+            }
+        }, size * 200L + 500, TimeUnit.MILLISECONDS);
     }
 
 
@@ -598,11 +620,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     resultHandler.handleResult();
                 },
                 errorMessageHandler);
-    }
-
-    public void removeOpenOffer(OpenOffer openOffer) {
-        removeOpenOffer(openOffer, () -> {
-        }, errorMessage -> log.warn("Remove open offer failed, offerId={}, {}", openOffer.getId(), errorMessage));
     }
 
     public void removeOpenOffer(OpenOffer openOffer,

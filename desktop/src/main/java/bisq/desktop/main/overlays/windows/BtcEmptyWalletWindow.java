@@ -158,29 +158,36 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
 
     private void doEmptyWallet2(KeyParameter aesKey) {
         emptyWalletButton.setDisable(true);
-        openOfferManager.removeAllOpenOffers(() -> {
-            try {
-                btcWalletService.emptyBtcWallet(addressInputTextField.getText(),
-                        aesKey,
-                        () -> {
-                            closeButton.updateText(Res.get("shared.close"));
-                            balanceTextField.setText(btcFormatter.formatCoinWithCode(btcWalletService.getAvailableBalance()));
-                            emptyWalletButton.setDisable(true);
-                            log.debug("wallet empty successful");
-                            onClose(() -> UserThread.runAfter(() -> new Popup()
-                                    .feedback(Res.get("emptyWalletWindow.sent.success"))
-                                    .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS));
-                            doClose();
-                        },
-                        (errorMessage) -> {
-                            emptyWalletButton.setDisable(false);
-                            log.error("wallet empty failed {}", errorMessage);
-                        });
-            } catch (InsufficientMoneyException | AddressFormatException e1) {
-                e1.printStackTrace();
-                log.error(e1.getMessage());
-                emptyWalletButton.setDisable(false);
-            }
-        });
+        // Emptying the wallet is only safe once every open offer is gone; a failed removal
+        // leaves the offer locally persisted and on the network, so we abort in that case.
+        openOfferManager.removeAllOpenOffers(() -> doEmptyWallet3(aesKey),
+                errorMessage -> {
+                    emptyWalletButton.setDisable(false);
+                    new Popup().error(Res.get("emptyWalletWindow.openOffers.removalFailed", errorMessage)).show();
+                });
+    }
+
+    private void doEmptyWallet3(KeyParameter aesKey) {
+        try {
+            btcWalletService.emptyBtcWallet(addressInputTextField.getText(),
+                    aesKey,
+                    () -> {
+                        closeButton.updateText(Res.get("shared.close"));
+                        balanceTextField.setText(btcFormatter.formatCoinWithCode(btcWalletService.getAvailableBalance()));
+                        emptyWalletButton.setDisable(true);
+                        log.debug("wallet empty successful");
+                        onClose(() -> UserThread.runAfter(() -> new Popup()
+                                .feedback(Res.get("emptyWalletWindow.sent.success"))
+                                .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS));
+                        doClose();
+                    },
+                    (errorMessage) -> {
+                        emptyWalletButton.setDisable(false);
+                        log.error("wallet empty failed {}", errorMessage);
+                    });
+        } catch (InsufficientMoneyException | AddressFormatException e1) {
+            log.error("wallet empty failed", e1);
+            emptyWalletButton.setDisable(false);
+        }
     }
 }

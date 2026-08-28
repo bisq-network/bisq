@@ -51,9 +51,10 @@ public class SharedPresentation {
                     new Popup().warning(Res.get("seed.restore.openOffers.warn"))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
-                                openOfferManager.removeAllOpenOffers(() -> {
-                                    doRestoreSeedWords(walletsManager, seed, storageDir);
-                                });
+                                openOfferManager.removeAllOpenOffers(
+                                        () -> doRestoreSeedWords(walletsManager, seed, storageDir),
+                                        errorMessage -> new Popup().error(
+                                                Res.get("seed.restore.openOffers.removalFailed", errorMessage)).show());
                             })
                             .show(), 100, TimeUnit.MILLISECONDS);
         } else {
