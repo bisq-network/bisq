@@ -52,4 +52,5 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`trade/fiat-buyer-payment-account-validation.md`](trade/fiat-buyer-payment-account-validation.md) | Contract-bound buyer payment-account validation and the fiat deposit/settlement gates that depend on it. |
+| [`trade/withdrawal-completion.md`](trade/withdrawal-completion.md) | The completion invariant of a trade payout withdrawal: local wallet commit, one terminal outcome per request, and broadcast failure as a notification. |
 | [`trade/xmr-payment-proof-timestamp.md`](trade/xmr-payment-proof-timestamp.md) | The timestamp rule of the XMR payment proof used for automatic confirmation, and why it is one-sided. |
