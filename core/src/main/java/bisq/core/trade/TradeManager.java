@@ -717,14 +717,21 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // At most one of resultHandler and faultHandler is invoked, resultHandler once the withdraw
+    // tx is committed to the wallet, faultHandler when that commit failed with one of the checked
+    // exceptions; an unchecked failure before the commit propagates to the caller as the single
+    // outcome. A broadcast failure reported after the commit is a notification about an already
+    // completed withdrawal and goes to broadcastFailureHandler; the tx remains in the wallet as
+    // pending and is handed to the broadcaster again at startup.
     public void onWithdrawRequest(String toAddress,
                                   Coin amount,
                                   Coin fee,
-                                  KeyParameter aesKey,
+                                  @Nullable KeyParameter aesKey,
                                   Trade trade,
                                   @Nullable String memo,
                                   ResultHandler resultHandler,
-                                  FaultHandler faultHandler) {
+                                  FaultHandler faultHandler,
+                                  FaultHandler broadcastFailureHandler) {
         String fromAddress = btcWalletService.getOrCreateAddressEntry(trade.getId(),
                 AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<>() {
@@ -739,9 +746,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
             @Override
             public void onFailure(@NotNull Throwable t) {
-                t.printStackTrace();
-                log.error(t.getMessage());
-                faultHandler.handleFault("The withdraw tx could not be broadcast. The trade was " +
+                log.error("Withdraw tx broadcast failed for trade {}", trade.getShortId(), t);
+                broadcastFailureHandler.handleFault("The withdraw tx could not be broadcast. The trade was " +
                         "completed and the tx remains in the wallet as pending.", t);
             }
         };
@@ -749,8 +755,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             btcWalletService.sendFunds(fromAddress, toAddress, amount, fee, aesKey,
                     AddressEntry.Context.TRADE_PAYOUT, memo, callback);
         } catch (AddressFormatException | InsufficientMoneyException | AddressEntryException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
+            log.error("An exception occurred at requestWithdraw.", e);
             faultHandler.handleFault("An exception occurred at requestWithdraw.", e);
             return;
         }
