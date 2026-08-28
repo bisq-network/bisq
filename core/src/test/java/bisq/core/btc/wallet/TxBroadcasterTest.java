@@ -20,9 +20,9 @@ package bisq.core.btc.wallet;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
+import bisq.core.testutil.ManualTimer;
 
 import bisq.common.FrameRateTimer;
-import bisq.common.Timer;
 import bisq.common.UserThread;
 
 import org.bitcoinj.core.PeerGroup;
@@ -33,10 +33,6 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.time.Duration;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -118,14 +114,14 @@ class TxBroadcasterTest {
         ManualTimer secondTimer = ManualTimer.latest();
         firstFuture.set(tx);
 
-        assertFalse(secondTimer.stopped);
+        assertFalse(secondTimer.isStopped());
         assertNull(secondCallback.success.get());
         assertNull(secondCallback.failure.get());
         assertEquals(1, firstCallback.successCount.get());
 
         secondFuture.set(tx);
 
-        assertTrue(secondTimer.stopped);
+        assertTrue(secondTimer.isStopped());
         assertSame(tx, secondCallback.success.get());
         assertEquals(1, secondCallback.successCount.get());
         assertNull(secondCallback.failure.get());
@@ -172,7 +168,7 @@ class TxBroadcasterTest {
 
     private static void assertSynchronousFailureWasCleanedUp(Transaction tx, RecordingCallback failedCallback) {
         ManualTimer failedTimer = ManualTimer.latest();
-        assertTrue(failedTimer.stopped);
+        assertTrue(failedTimer.isStopped());
         failedTimer.fire();
         assertEquals(0, failedCallback.successCount.get());
         assertEquals(0, failedCallback.failureCount.get());
@@ -217,49 +213,4 @@ class TxBroadcasterTest {
         }
     }
 
-    public static class ManualTimer implements Timer {
-        private static final List<ManualTimer> timers = new ArrayList<>();
-
-        private Runnable action;
-        private boolean stopped;
-
-        public ManualTimer() {
-            timers.add(this);
-        }
-
-        @Override
-        public Timer runLater(Duration delay, Runnable action) {
-            this.action = action;
-            return this;
-        }
-
-        @Override
-        public Timer runPeriodically(Duration interval, Runnable action) {
-            this.action = action;
-            return this;
-        }
-
-        @Override
-        public void stop() {
-            stopped = true;
-        }
-
-        private void fire() {
-            if (!stopped) {
-                action.run();
-            }
-        }
-
-        private static ManualTimer latest() {
-            return timers.get(timers.size() - 1);
-        }
-
-        private static void firePendingTimers() {
-            List.copyOf(timers).forEach(ManualTimer::fire);
-        }
-
-        private static void clear() {
-            timers.clear();
-        }
-    }
 }
