@@ -299,7 +299,10 @@ class CoreTradesService {
                 (errorMessage, throwable) -> {
                     log.error(errorMessage, throwable);
                     throw new IllegalStateException(errorMessage, throwable);
-                });
+                },
+                (errorMessage, throwable) ->
+                        log.warn("Withdraw tx broadcast failed after trade {} was completed: {}",
+                                tradeId, errorMessage, throwable));
     }
 
     TradeModel getTradeModel(String tradeId) {

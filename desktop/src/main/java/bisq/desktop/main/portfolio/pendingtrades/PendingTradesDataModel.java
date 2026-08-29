@@ -66,6 +66,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.UserThread;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -243,6 +244,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     (errorMessage, throwable) -> {
                         log.error(errorMessage);
                         faultHandler.handleFault(errorMessage, throwable);
+                    },
+                    (errorMessage, throwable) -> {
+                        log.warn("Withdraw tx broadcast failed after the trade was completed: {}",
+                                errorMessage, throwable);
+                        // The broadcast callback can fire on a bitcoinj thread.
+                        UserThread.execute(() ->
+                                new Popup().warning(Res.get("portfolio.pending.withdrawBroadcastFailed")).show());
                     });
         } else {
             faultHandler.handleFault(Res.get("portfolio.pending.noReceiverAddressDefined"), null);

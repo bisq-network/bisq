@@ -1169,15 +1169,19 @@ public class BtcWalletService extends WalletService {
             AddressEntryException, InsufficientMoneyException {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
-        Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
+        // The wallet has committed the tx at this point; the remaining steps are best-effort.
+        // The callback is attached before the memo is set: an already completed broadcast
+        // future invokes it synchronously at attach time, and a reply built there must see
+        // the tx without the memo, which is only persisted with the confirmed tx.
+        runPostCommitStep("Attaching the broadcast callback", sendResult.tx,
+                () -> Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor()));
         if (memo != null) {
-            sendResult.tx.setMemo(memo);
+            runPostCommitStep("Setting the memo", sendResult.tx, () -> sendResult.tx.setMemo(memo));
         }
-
         // For better redundancy in case the broadcast via BitcoinJ fails we also
         // publish the tx via mempool nodes.
-        MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx);
-
+        runPostCommitStep("The mempool publish", sendResult.tx,
+                () -> MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx));
         return sendResult.tx.getTxId().toString();
     }
 
@@ -1193,17 +1197,34 @@ public class BtcWalletService extends WalletService {
 
         SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
-        Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
+        // The wallet has committed the tx at this point; the remaining steps are best-effort.
+        // The callback is attached before the memo is set: an already completed broadcast
+        // future invokes it synchronously at attach time, and a reply built there must see
+        // the tx without the memo, which is only persisted with the confirmed tx.
+        runPostCommitStep("Attaching the broadcast callback", sendResult.tx,
+                () -> Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor()));
         if (memo != null) {
-            sendResult.tx.setMemo(memo);
+            runPostCommitStep("Setting the memo", sendResult.tx, () -> sendResult.tx.setMemo(memo));
         }
-        printTx("sendFunds", sendResult.tx);
+        runPostCommitStep("Printing the transaction", sendResult.tx,
+                () -> printTx("sendFunds", sendResult.tx));
 
         // For better redundancy in case the broadcast via BitcoinJ fails we also
         // publish the tx via mempool nodes.
-        MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx);
-
+        runPostCommitStep("The mempool publish", sendResult.tx,
+                () -> MemPoolSpaceTxBroadcaster.broadcastTx(sendResult.tx));
         return sendResult.tx;
+    }
+
+    // Best-effort follow-up of an already committed send. The steps are independent: a failure
+    // must neither surface the committed state at the caller as a failure nor suppress another
+    // step, in particular not the registration of the broadcast callback.
+    private void runPostCommitStep(String description, Transaction tx, Runnable step) {
+        try {
+            step.run();
+        } catch (RuntimeException e) {
+            log.error("{} failed for tx {}", description, tx.getTxId(), e);
+        }
     }
 
     private SendRequest getSendRequest(String fromAddress,
