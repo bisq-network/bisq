@@ -34,6 +34,8 @@ import com.google.common.base.Charsets;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
+import java.nio.charset.StandardCharsets;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -189,7 +191,7 @@ public class AlertManagerTest {
     private Alert signedAlert(String message) {
         Alert alert = new Alert(message, false, false, "");
         ECKey signingKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(DevEnv.getDEV_PRIVILEGE_PRIV_KEY())));
-        String alertMessageAsHex = Utils.HEX.encode(message.getBytes(Charsets.UTF_8));
+        String alertMessageAsHex = Utils.HEX.encode(message.getBytes(StandardCharsets.UTF_8));
         String signatureAsBase64 = LowRSigningKey.from(signingKey).signMessage(alertMessageAsHex);
         alert.setSigAndPubKey(signatureAsBase64, Sig.generateKeyPair().getPublic());
         return alert;

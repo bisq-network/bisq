@@ -6,11 +6,11 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
-import com.google.common.base.Charsets;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,7 +36,7 @@ public class SignedWitnessTest {
         arbitrator1Key = new ECKey();
         witnessOwner1PubKey = Sig.getPublicKeyBytes(Sig.generateKeyPair().getPublic());
         witnessHash = Utils.sha256hash160(new byte[]{1});
-        witnessHashSignature = arbitrator1Key.signMessage(Utilities.encodeToHex(witnessHash)).getBytes(Charsets.UTF_8);
+        witnessHashSignature = arbitrator1Key.signMessage(Utilities.encodeToHex(witnessHash)).getBytes(StandardCharsets.UTF_8);
     }
 
     @Test
