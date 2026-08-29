@@ -42,10 +42,12 @@ public class TransactionAwareTradeTest {
     private static final Sha256Hash XID = Sha256Hash.wrap("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
 
     private Transaction transaction;
+    @SuppressWarnings("deprecation")
     private ArbitrationManager arbitrationManager;
     private Trade delegate;
     private TransactionAwareTradable trade;
 
+    @SuppressWarnings("deprecation")
     @BeforeEach
     public void setUp() {
         this.transaction = mock(Transaction.class);

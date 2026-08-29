@@ -98,7 +98,7 @@ public class SignedWitnessServiceTest {
     @BeforeEach
     public void setup() throws Exception {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
-        ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
+        @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         keyRing = mock(KeyRing.class);
         p2pService = mock(P2PService.class);
@@ -271,7 +271,7 @@ public class SignedWitnessServiceTest {
         // A cryptographically valid signature is present, but the signer key is NOT in the
         // arbitrator manager's accepted list. The account must not be treated as arbitrator-signed.
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
-        ArbitratorManager strictArbitratorManager = mock(ArbitratorManager.class);
+        @SuppressWarnings("deprecation") ArbitratorManager strictArbitratorManager = mock(ArbitratorManager.class);
         when(strictArbitratorManager.isPublicKeyInList(any())).thenReturn(false);
         SignedWitnessService strictService = new SignedWitnessService(keyRing, p2pService,
                 strictArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, false, clock);
