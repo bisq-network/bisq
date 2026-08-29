@@ -120,7 +120,7 @@ public class AccountAgeWitnessServiceTest {
         chargeBackRisk = mock(ChargeBackRisk.class);
         AppendOnlyDataStoreService dataStoreService = mock(AppendOnlyDataStoreService.class);
         P2PService p2pService = mock(P2PService.class);
-        ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
+        @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         filterPolicyService = mock(FilterPolicyService.class);
