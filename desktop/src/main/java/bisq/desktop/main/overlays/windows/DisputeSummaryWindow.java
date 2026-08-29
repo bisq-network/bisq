@@ -907,15 +907,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
-    // A payout found on a peer row or in the wallet is recorded on the selected row as well, so the restored paid
-    // state does not depend on which row was used for the payout.
+    // A payout found on another row or in the wallet is only reported, not written into the selected row. The
+    // selected row may share just one transaction with the paid receipt (see
+    // RefundPayoutReceiptService.persistPayoutReservation); marking it would turn it into a match source that blocks
+    // an unrelated ticket sharing its other transaction.
     private boolean isRefundReceiptAlreadyPaid() {
-        refundManager.findRefundPayoutTxId(dispute).ifPresent(txId -> {
-            dispute.setDisputePayoutTxId(txId);
-            dispute.setPayoutDone(true);
-            refundManager.requestPersistence();
-        });
-        return dispute.isPayoutDone();
+        return dispute.isPayoutDone() || refundManager.findRefundPayoutTxId(dispute).isPresent();
     }
 
     private void showAlreadyPaidPopup(CompletableFuture<Boolean> resultHandler) {

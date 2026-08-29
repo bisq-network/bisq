@@ -207,6 +207,38 @@ class RefundPayoutReceiptServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void marksOnlyRowsPresentingTheSameFundingChain() {
+        Dispute firstTrade = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);
+        // A crafted row that reuses the first trade's deposit and the second trade's delayed payout transaction
+        Dispute craftedRow = dispute(DEPOSIT_A, DELAYED_PAYOUT_B, null);
+        Dispute secondTrade = dispute(DEPOSIT_B, DELAYED_PAYOUT_B, null);
+        disputeList.add(firstTrade);
+        disputeList.add(craftedRow);
+        disputeList.add(secondTrade);
+        Transaction payoutTx = mock(Transaction.class);
+        when(payoutTx.getTxId()).thenReturn(Sha256Hash.wrap(PAYOUT_TX_ID));
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        }).when(persistenceManager).persistNow(any(Runnable.class), any(Consumer.class));
+
+        service.persistPayoutReservation(firstTrade,
+                payoutTx,
+                () -> {
+                },
+                throwable -> {
+                });
+
+        assertEquals(PAYOUT_TX_ID, firstTrade.getDisputePayoutTxId());
+        assertNull(craftedRow.getDisputePayoutTxId());
+        assertNull(secondTrade.getDisputePayoutTxId());
+        // The second trade stays payable, while the crafted row conflicts with the consumed receipt
+        assertTrue(service.findPayoutTxId(secondTrade).isEmpty());
+        assertEquals(PAYOUT_TX_ID, service.findPayoutTxId(craftedRow).orElseThrow());
+    }
+
+    @Test
     void refusesAnotherReservationAfterReceiptWasMarked() {
         Dispute paidDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, PAYOUT_TX_ID);
         Dispute replayDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);

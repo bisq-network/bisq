@@ -71,6 +71,10 @@ final class RefundPayoutReceipt {
         return depositTxId.equals(other.depositTxId) || delayedPayoutTxId.equals(other.delayedPayoutTxId);
     }
 
+    boolean isSameFundingChainAs(RefundPayoutReceipt other) {
+        return depositTxId.equals(other.depositTxId) && delayedPayoutTxId.equals(other.delayedPayoutTxId);
+    }
+
     boolean hasDepositTxId(String txId) {
         return depositTxId.equals(parseTxId(txId, "depositTxId"));
     }

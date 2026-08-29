@@ -105,8 +105,11 @@ public final class RefundPayoutReceiptService {
         String payoutTxId = checkedPayoutTx.getTxId().toString();
         checkedPayoutTx.setMemo(receipt.toMemo());
 
+        // Only rows presenting the same funding chain are marked. A row that shares just one of the two IDs may
+        // belong to a different trade; marking it would let a crafted record transfer the paid state to an unrelated
+        // ticket. Such rows stay blocked by the conflict check in findPayoutTxId as long as the paid record exists.
         for (Dispute storedDispute : disputeListService.getDisputeList().getList()) {
-            if (sharesFundingEvidence(receipt, storedDispute)) {
+            if (parseStoredReceipt(storedDispute).filter(receipt::isSameFundingChainAs).isPresent()) {
                 markPaid(storedDispute, payoutTxId);
             }
         }
@@ -154,15 +157,15 @@ public final class RefundPayoutReceiptService {
         }
     }
 
-    // A stored row whose funding transaction IDs cannot be parsed cannot be marked for this receipt. It is skipped so
-    // that it does not block payouts for unrelated receipts. The dispute selected for payout is always parsed strictly.
-    private static boolean sharesFundingEvidence(RefundPayoutReceipt receipt, Dispute storedDispute) {
+    // Marking requires both IDs to identify the same complete funding chain. A malformed stored row is not marked,
+    // while the selected dispute is always parsed strictly before a payout can be reserved.
+    private static Optional<RefundPayoutReceipt> parseStoredReceipt(Dispute storedDispute) {
         try {
-            return receipt.sharesFundingEvidenceWith(RefundPayoutReceipt.fromDispute(storedDispute));
+            return Optional.of(RefundPayoutReceipt.fromDispute(storedDispute));
         } catch (IllegalArgumentException exception) {
             log.warn("Ignoring stored refund dispute with unparseable funding transaction IDs. tradeId={}, {}",
                     storedDispute.getTradeId(), exception.getMessage());
-            return false;
+            return Optional.empty();
         }
     }
 
