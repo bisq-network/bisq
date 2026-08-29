@@ -19,13 +19,16 @@ package bisq.core.support.dispute.refund;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.utils.DepositTransactionUtils;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.mempool.MempoolService;
+import bisq.core.provider.mempool.MempoolTxStatus;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeValidation;
@@ -39,6 +42,7 @@ import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
@@ -46,7 +50,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
@@ -73,6 +79,11 @@ class RefundManagerTest {
     private static final int SELECTION_HEIGHT = 800_000;
     private static final long TRADE_TX_FEE = 5_000;
     private static final int ADDRESS_LIST_VERSION = 1;
+    private static final int TRADE_START_HEIGHT = 800_005;
+    private static final long LOCK_TIME = TRADE_START_HEIGHT + Restrictions.getLockTime(false);
+    private static final int DEPOSIT_BLOCK_HEIGHT = 800_010;
+    private static final int DELAYED_PAYOUT_BLOCK_HEIGHT = Math.toIntExact(LOCK_TIME + 1);
+    private static final int LOCAL_CHAIN_HEIGHT = DELAYED_PAYOUT_BLOCK_HEIGHT + 10;
     private static final ECKey BUYER_MULTISIG_KEY = new ECKey();
     private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
 
@@ -87,6 +98,11 @@ class RefundManagerTest {
     @BeforeEach
     void setUp() {
         when(btcWalletService.getParams()).thenReturn(PARAMS);
+        when(daoFacade.getChainHeight()).thenReturn(LOCAL_CHAIN_HEIGHT);
+        when(delayedPayoutTxReceiverService.getBurningManSelectionHeight(TRADE_START_HEIGHT))
+                .thenReturn(SELECTION_HEIGHT);
+        when(delayedPayoutTxReceiverService.getBurningManSelectionHeight(DEPOSIT_BLOCK_HEIGHT))
+                .thenReturn(SELECTION_HEIGHT);
     }
 
 
@@ -135,6 +151,186 @@ class RefundManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> refundManager.verifyTradeTxChain(
                 List.of(transactions.get(0), unrelatedTakerFeeTx, transactions.get(2), transactions.get(3))));
+    }
+
+    @Test
+    void parseRequestedTransactionAcceptsTransactionMatchingRequestedId() {
+        Transaction transaction = transactionWithOutput(Coin.valueOf(1_000));
+
+        assertDoesNotThrow(() -> RefundManager.parseRequestedTransaction(PARAMS,
+                transaction.getTxId().toString(),
+                Hex.encode(transaction.bitcoinSerialize())));
+    }
+
+    @Test
+    void parseRequestedTransactionRejectsTransactionNotMatchingRequestedId() {
+        Transaction transaction = transactionWithOutput(Coin.valueOf(1_000));
+        Transaction requestedTransaction = transactionWithOutput(Coin.valueOf(2_000));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> RefundManager.parseRequestedTransaction(PARAMS,
+                        requestedTransaction.getTxId().toString(),
+                        Hex.encode(transaction.bitcoinSerialize())));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // verifyTradeTxChain with confirmation and contract context
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void verifyTradeTxChainAcceptsConfirmedCanonicalTransactionsAtContractDerivedSnapshot() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+
+        assertDoesNotThrow(() -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsUnconfirmedDepositTransaction() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                false,
+                0,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsUnconfirmedDelayedPayoutTransaction() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                false,
+                0);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsDelayedPayoutConfirmingAtLockTime() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                LOCK_TIME);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsDelayedPayoutWithWrongLockTime() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME - 1,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsDelayedPayoutWithFinalSequence() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsSelectionHeightOutsideOneSnapshotGrid() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+        Dispute dispute = disputeFor(txChain);
+        when(dispute.getBurningManSelectionHeight()).thenReturn(SELECTION_HEIGHT - 20);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, dispute));
+    }
+
+    @Test
+    void verifyTradeTxChainAcceptsAdjacentSnapshotSelectedBeforeDepositConfirmation() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+        Dispute dispute = disputeFor(txChain);
+        when(dispute.getBurningManSelectionHeight()).thenReturn(
+                SELECTION_HEIGHT + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE);
+        when(delayedPayoutTxReceiverService.getBurningManSelectionHeight(DEPOSIT_BLOCK_HEIGHT))
+                .thenReturn(SELECTION_HEIGHT + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE);
+
+        assertDoesNotThrow(() -> refundManager.verifyTradeTxChain(txChain, dispute));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsDepositConfirmedAfterContractLockTime() {
+        long depositBlockHeight = LOCK_TIME + 1;
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                depositBlockHeight,
+                true,
+                LOCK_TIME + 2);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, disputeFor(txChain)));
+    }
+
+    @Test
+    void verifyTradeTxChainRejectsLegacyReceiverRuleForModernTrade() {
+        RefundTransactionChain txChain = refundTransactionChain(LOCK_TIME,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                DEPOSIT_BLOCK_HEIGHT,
+                true,
+                DELAYED_PAYOUT_BLOCK_HEIGHT);
+        Dispute dispute = disputeFor(txChain);
+        when(dispute.isUsingLegacyBurningMan()).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyTradeTxChain(txChain, dispute));
+    }
+
+    @Test
+    void verifyTradeTxChainAcceptsLegacyReceiverRuleForPreSnapshotTrade() {
+        int oldTradeStartHeight = DelayedPayoutTxReceiverService.MIN_SNAPSHOT_HEIGHT - 100;
+        long oldLockTime = oldTradeStartHeight + Restrictions.getLockTime(false);
+        RefundTransactionChain txChain = refundTransactionChain(oldLockTime,
+                TransactionInput.NO_SEQUENCE - 1,
+                true,
+                oldTradeStartHeight + 10,
+                true,
+                oldLockTime + 1);
+        Dispute dispute = disputeFor(txChain);
+        when(dispute.getContract().getLockTime()).thenReturn(oldLockTime);
+        when(dispute.isUsingLegacyBurningMan()).thenReturn(true);
+
+        assertDoesNotThrow(() -> refundManager.verifyTradeTxChain(txChain, dispute));
     }
 
 
@@ -375,6 +571,41 @@ class RefundManagerTest {
     // Fixtures
     /* --------------------------------------------------------------------- */
 
+    private RefundTransactionChain refundTransactionChain(long delayedPayoutLockTime,
+                                                           long delayedPayoutSequence,
+                                                           boolean depositConfirmed,
+                                                           long depositBlockHeight,
+                                                           boolean delayedPayoutConfirmed,
+                                                           long delayedPayoutBlockHeight) {
+        List<Transaction> transactions = tradeTxChain(0);
+        Transaction delayedPayoutTx = transactions.get(3);
+        delayedPayoutTx.getInput(0).setSequenceNumber(delayedPayoutSequence);
+        delayedPayoutTx.setLockTime(delayedPayoutLockTime);
+        return new RefundTransactionChain(
+                transactions.get(0),
+                transactions.get(1),
+                transactions.get(2),
+                delayedPayoutTx,
+                new MempoolTxStatus(transactions.get(2).getTxId().toString(),
+                        depositConfirmed,
+                        depositBlockHeight),
+                new MempoolTxStatus(delayedPayoutTx.getTxId().toString(),
+                        delayedPayoutConfirmed,
+                        delayedPayoutBlockHeight));
+    }
+
+    private Dispute disputeFor(RefundTransactionChain txChain) {
+        Dispute dispute = burningManDispute(txChain.depositTx(), List.of());
+        Contract contract = dispute.getContract();
+        when(contract.getOfferPayload().getOfferFeePaymentTxId())
+                .thenReturn(txChain.makerFeeTx().getTxId().toString());
+        when(contract.getTakerFeeTxID()).thenReturn(txChain.takerFeeTx().getTxId().toString());
+        when(contract.getLockTime()).thenReturn(LOCK_TIME);
+        when(contract.getPaymentMethodId()).thenReturn(PaymentMethod.SEPA_ID);
+        when(dispute.getDelayedPayoutTxId()).thenReturn(txChain.delayedPayoutTx().getTxId().toString());
+        return dispute;
+    }
+
     // Maker fee tx and taker fee tx fund the deposit tx, which has the escrow at output 0 and a change output at
     // index 1. The delayed payout tx spends the given deposit output.
     private static List<Transaction> tradeTxChain(int delayedPayoutInputIndex) {
@@ -392,6 +623,7 @@ class RefundManagerTest {
 
     private static Transaction transactionWithOutput(Coin value) {
         Transaction transaction = new Transaction(PARAMS);
+        transaction.addInput(Sha256Hash.ZERO_HASH, 0, ScriptBuilder.createEmpty());
         transaction.addOutput(value, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
         return transaction;
     }

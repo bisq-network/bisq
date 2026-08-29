@@ -55,7 +55,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public static final int SNAPSHOT_SELECTION_GRID_SIZE = 10;
 
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
-    static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
+    public static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
 
     // One part of the limit for the min. amount to be included in the DPT outputs.
     // The miner fee rate multiplied by 2 times the output size is the other factor.

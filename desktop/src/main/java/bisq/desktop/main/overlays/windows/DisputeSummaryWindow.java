@@ -877,15 +877,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     takerFeeTxId,
                     depositTxId,
                     delayedPayoutTxId
-            ).whenComplete((txList, throwable) -> {
+            ).whenComplete((txChain, throwable) -> {
                 UserThread.execute(() -> {
                     requestingTxsPopup.hide();
 
                     if (throwable == null) {
                         try {
-                            refundManager.verifyTradeTxChain(txList);
-                            Transaction depositTx = txList.get(2);
-                            Transaction delayedPayoutTx = txList.get(3);
+                            refundManager.verifyTradeTxChain(txChain, dispute);
+                            Transaction depositTx = txChain.depositTx();
+                            Transaction delayedPayoutTx = txChain.delayedPayoutTx();
                             if (dispute.isUsingLegacyBurningMan()) {
                                 refundManager.verifyDepositTx(depositTx, dispute);
                                 refundManager.verifyLegacyDelayedPayoutTx(delayedPayoutTx, dispute);

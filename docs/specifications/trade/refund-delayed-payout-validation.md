@@ -47,10 +47,16 @@ underfunded or differently scripted output is not valid refund evidence.
 
 The refund-agent transaction-chain validation must establish all of the following:
 
-1. The deposit transaction has at least two inputs, and its inputs are funded by both the maker-fee
+1. Each raw transaction returned by the explorer hashes to the exact maker-fee, taker-fee, deposit or
+   delayed-payout transaction ID for which it was requested. The parsed transactions must also match
+   the IDs in the contract and dispute before their relationships are checked.
+2. The deposit transaction has at least two inputs, and its inputs are funded by both the maker-fee
    transaction and the taker-fee transaction named in the contract.
-2. The delayed payout transaction has exactly one input.
-3. That input's previous outpoint is exactly output index `0` of the validated deposit transaction.
+3. The delayed payout transaction has exactly one input.
+4. That input's previous outpoint is exactly output index `0` of the validated deposit transaction.
+5. The delayed payout transaction passes normal transaction verification, has the contract locktime,
+   and its input sequence is exactly `0xfffffffe`, which activates that absolute locktime without
+   opting in to RBF.
 
 Both the deposit transaction ID and the output index are part of the binding. Matching only the
 deposit transaction ID is insufficient because a deposit transaction may contain another output,
@@ -58,6 +64,41 @@ such as maker change.
 
 Deposit output `0` is the escrow/multisig output defined by the trade protocol. No other deposit
 output may be accepted as proof that the delayed payout transaction spent the escrow.
+
+## Confirmation and finality
+
+The explorer status response for both the deposit and delayed payout transaction must contain the
+same transaction ID that was requested and report a confirmed block height. That block height must
+not be ahead of the locally parsed DAO chain height, and each transaction must have at least one
+confirmation relative to that local height. A confirmed deposit implies that its maker-fee and
+taker-fee ancestors are also confirmed.
+
+The contract-derived trade start height is:
+
+```text
+contract locktime - protocol locktime delay for the contract payment method
+```
+
+The confirmed deposit height must be at or after that start height and no later than the contract
+locktime. The delayed payout must confirm at or after the deposit and strictly after the contract
+locktime. A transaction merely known to the explorer's mempool is not confirmed evidence, and a DPT
+whose locktime was already mature before its deposit confirmed is not eligible for automatic refund
+authorization.
+
+The explorer remains the source of the transaction inclusion record; these rules bind its response
+to cryptographically identified transactions and a locally known chain height. They do not introduce
+a new Bitcoin merkle-proof protocol.
+
+## Burning Man selection height
+
+For a modern Burning Man trade, the expected receiver snapshot is calculated locally from the
+contract-derived trade start height. The dispute-carried selection height must equal that snapshot
+or one immediately adjacent snapshot grid, preserving the protocol's ten-block peer-height
+tolerance. It must also be no later than the snapshot available at the confirmed deposit block.
+
+The legacy selection value `0` is accepted only when the derived trade start predates the mainnet
+minimum Burning Man snapshot height (`767950`). A modern-height dispute cannot select the legacy
+output rule, and a dispute cannot choose an arbitrary historical DAO snapshot.
 
 ## Output validation
 
@@ -122,25 +163,20 @@ validation failure is displayed.
 
 These rules do not change transaction serialization or the trade protocol. Valid deposits already
 use the contract multisig script and protocol value equation, and valid delayed payout transactions
-already spend deposit output `0` and pay the protocol receivers. The rules reject only inconsistent
-evidence or a refund exceeding the value proved by that evidence.
+already spend deposit output `0` and pay the protocol receivers. The rules reject inconsistent
+evidence, a refund exceeding the proved value, and the unusual timing cases described below.
 
-## Known limitations
+Automatic validation also rejects a deposit that confirmed only after its DPT locktime matured and
+a legacy-selection trade derived to start at or after the Burning Man snapshot activation boundary.
+Those unusual historical cases require investigation rather than allowing opener-carried timing or
+the legacy selector to weaken the normal authorization rules.
 
-The following inputs of the validation are currently taken from the dispute or its contract as
-supplied by the dispute opener and are not recomputed or bounded locally. They do not allow the
-opener to redirect the escrow to an address of their choice, because the output rules above bind
-every output to DAO-derived addresses, but they are not authenticated facts about the trade:
+## Known limitation
 
-- The Burning Man selection height is accepted as carried in the dispute. It is not bound to the
-  block height of the deposit transaction, so any DAO snapshot may be selected for the receiver
-  schedule.
-- The transactions returned by the block explorer are trusted: they are not compared with the
-  requested transaction IDs, no confirmation depth is required, and the sequence number and lock
-  time of the delayed payout transaction are not checked.
+One authorization-path limitation remains:
+
 - When the transactions cannot be fetched at all, the application warns and lets the agent
   continue, without any of the validation above having run.
 
-Closing these gaps requires binding the deposit transaction and the receiver inputs to the contract
-and to local data, and a payout policy based on verified chain value. That work is tracked as a
-separate security fix.
+The fetch-failure action must be made terminal and clearly labelled so the interface does not imply
+that an unverified case can proceed through the normal authorization flow.

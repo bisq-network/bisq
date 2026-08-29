@@ -23,6 +23,8 @@ import bisq.network.http.HttpClientImpl;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 
+import org.bitcoinj.core.Sha256Hash;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -32,6 +34,8 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
 public class MempoolHttpClient extends HttpClientImpl {
@@ -45,21 +49,26 @@ public class MempoolHttpClient extends HttpClientImpl {
     // returns JSON of the transaction details
     public String getTxDetails(String txId) throws IOException {
         super.shutDown(); // close any prior incomplete request
-        String api = "/" + txId;
+        String api = "/" + validateTxId(txId);
         return get(api, "User-Agent", "bisq/" + Version.VERSION);
     }
 
 
     public CompletableFuture<String> requestTxAsHex(String txId) {
         super.shutDown(); // close any prior incomplete request
+        String validatedTxId = validateTxId(txId);
 
         return CompletableFuture.supplyAsync(() -> {
-            String api = "/" + txId + "/hex";
+            String api = "/" + validatedTxId + "/hex";
             try {
                 return get(api, "User-Agent", "bisq/" + Version.VERSION);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    private static String validateTxId(String txId) {
+        return Sha256Hash.wrap(checkNotNull(txId, "txId must not be null")).toString();
     }
 }

@@ -67,17 +67,10 @@ public final class DelayedPayoutTxValidation {
                                                    Trade trade,
                                                    BtcWalletService btcWalletService,
                                                    @Nullable Consumer<String> addressConsumer) {
-        Transaction checkedDelayedPayoutTx = checkTransaction(checkNotNull(delayedPayoutTx,
-                "delayedPayoutTx must not be null"));
         Trade checkedTrade = checkNotNull(trade, "trade must not be null");
         checkNotNull(btcWalletService, "btcWalletService must not be null");
-
-        checkArgument(checkedDelayedPayoutTx.getInputs().size() == 1,
-                "Number of delayedPayoutTx inputs must be 1");
-        checkArgument(checkedDelayedPayoutTx.getLockTime() == checkedTrade.getLockTime(),
-                "delayedPayoutTx.getLockTime() must match trade.getLockTime()");
-        checkArgument(checkedDelayedPayoutTx.getInput(0).getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1,
-                "Sequence number must be 0xFFFFFFFE");
+        Transaction checkedDelayedPayoutTx = checkDelayedPayoutTx(delayedPayoutTx,
+                checkedTrade.getLockTime());
 
         if (checkedTrade.isUsingLegacyBurningMan()) {
             checkLegacyDelayedPayoutTxOutput(checkedDelayedPayoutTx,
@@ -86,6 +79,19 @@ public final class DelayedPayoutTxValidation {
                     addressConsumer);
         }
 
+        return checkedDelayedPayoutTx;
+    }
+
+    public static Transaction checkDelayedPayoutTx(Transaction delayedPayoutTx, long expectedLockTime) {
+        Transaction checkedDelayedPayoutTx = checkTransaction(checkNotNull(delayedPayoutTx,
+                "delayedPayoutTx must not be null"));
+        long checkedExpectedLockTime = checkIsPositive(expectedLockTime, "expectedLockTime");
+        checkArgument(checkedDelayedPayoutTx.getInputs().size() == 1,
+                "Number of delayedPayoutTx inputs must be 1");
+        checkArgument(checkedDelayedPayoutTx.getLockTime() == checkedExpectedLockTime,
+                "delayedPayoutTx lock time must match the contract lock time");
+        checkArgument(checkedDelayedPayoutTx.getInput(0).getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1,
+                "Sequence number must be 0xFFFFFFFE");
         return checkedDelayedPayoutTx;
     }
 
