@@ -133,6 +133,12 @@ public class DisputeOpenMessageTest {
 
         assertEquals(payoutTxId, restoredDispute.getDisputePayoutTxId());
         assertTrue(restoredDispute.isPayoutDone());
+
+        // The persisted dispute list restores rows through Dispute.fromProto directly; the latch must survive that too
+        Dispute persistedDispute = Dispute.fromProto(dispute.toProtoMessage(), mock(CoreProtoResolver.class));
+
+        assertEquals(payoutTxId, persistedDispute.getDisputePayoutTxId());
+        assertTrue(persistedDispute.isPayoutDone());
     }
 
     private static Dispute dispute(PubKeyRing buyerPubKeyRing,

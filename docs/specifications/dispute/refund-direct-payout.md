@@ -32,15 +32,18 @@ itself carry both parseable IDs; otherwise no payout is authorized for it.
 ## Durable reservation and publication
 
 Before a direct payout is committed to the wallet or broadcast, its transaction ID must be bound to the receipt and
-the reservation must be durably persisted. Every locally stored refund row presenting the same funding chain, that is
-the same deposit and the same delayed-payout transaction, is marked with that payout transaction ID. A row that shares
-only one of the two transactions is not marked: it may belong to a different trade, and marking it would let a
-crafted record transfer the paid state to an unrelated ticket. Such a row remains blocked by the conflict rule above
-for as long as the paid record exists. For the same reason, a conflict found when a ticket is closed is reported to
-the operator but does not mark the conflicting record. Restoring a dispute with a payout transaction ID must also
-restore its already-paid state.
+the reservation must be durably persisted. Only one refund payout reservation may be awaiting persistence at a time;
+otherwise a later reservation's serialized snapshot could carry the temporary marks of an earlier reservation whose
+write subsequently fails. Every locally stored refund row presenting the same funding chain, that is the same deposit
+and the same delayed-payout transaction, is marked with that payout transaction ID. A row that shares only one of the
+two transactions is not marked: it may belong to a different trade, and marking it would let a crafted record transfer
+the paid state to an unrelated ticket. Such a row remains blocked by the conflict rule above for as long as the paid
+record exists. For the same reason, a conflict found when a ticket is closed is reported to the operator but does not
+mark the conflicting record. Restoring a dispute with a payout transaction ID must also restore its already-paid state.
 
-If durable reservation fails, the transaction must not be broadcast. Once reservation succeeds, timeout, ambiguous
+If durable reservation fails, the transaction must not be broadcast. Because nothing has been committed or broadcast
+at that point, the reservation marks are removed again and the receipt remains payable; a failed reservation must not
+leave a persisted paid state without a transaction. Once reservation succeeds, timeout, ambiguous
 broadcast status, restart, reopening, or a later close attempt must not create a replacement payout. These cases fail
 closed because the original transaction may already have propagated. Recovery may rebroadcast or inspect the original
 transaction, but it must not silently clear receipt consumption.

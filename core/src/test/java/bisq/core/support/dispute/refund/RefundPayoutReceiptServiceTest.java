@@ -30,13 +30,17 @@ import org.bitcoinj.core.Transaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,6 +58,7 @@ class RefundPayoutReceiptServiceTest {
     private static final String PAYOUT_TX_ID_B = "78".repeat(32);
 
     private RefundDisputeList disputeList;
+    private RefundDisputeListService disputeListService;
     private PersistenceManager<RefundDisputeList> persistenceManager;
     private BtcWalletService btcWalletService;
     private RefundPayoutReceiptService service;
@@ -62,7 +67,7 @@ class RefundPayoutReceiptServiceTest {
     @SuppressWarnings("unchecked")
     void setUp() {
         disputeList = new RefundDisputeList();
-        RefundDisputeListService disputeListService = mock(RefundDisputeListService.class);
+        disputeListService = mock(RefundDisputeListService.class);
         persistenceManager = mock(PersistenceManager.class);
         btcWalletService = mock(BtcWalletService.class);
 
@@ -236,6 +241,80 @@ class RefundPayoutReceiptServiceTest {
         // The second trade stays payable, while the crafted row conflicts with the consumed receipt
         assertTrue(service.findPayoutTxId(secondTrade).isEmpty());
         assertEquals(PAYOUT_TX_ID, service.findPayoutTxId(craftedRow).orElseThrow());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void clearsReservationMarksWhenPersistenceFails() {
+        Dispute selectedDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);
+        Dispute peerDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);
+        disputeList.add(selectedDispute);
+        disputeList.add(peerDispute);
+        Transaction payoutTx = mock(Transaction.class);
+        when(payoutTx.getTxId()).thenReturn(Sha256Hash.wrap(PAYOUT_TX_ID));
+        IOException writeFailure = new IOException("disk full");
+        doAnswer(invocation -> {
+            ((Consumer<Throwable>) invocation.getArgument(1)).accept(writeFailure);
+            return null;
+        }).when(persistenceManager).persistNow(any(Runnable.class), any(Consumer.class));
+        AtomicBoolean completed = new AtomicBoolean();
+        AtomicReference<Throwable> reportedFailure = new AtomicReference<>();
+
+        service.persistPayoutReservation(selectedDispute,
+                payoutTx,
+                () -> completed.set(true),
+                reportedFailure::set);
+
+        assertFalse(completed.get());
+        assertSame(writeFailure, reportedFailure.get());
+        assertNull(selectedDispute.getDisputePayoutTxId());
+        assertFalse(selectedDispute.isPayoutDone());
+        assertNull(peerDispute.getDisputePayoutTxId());
+        assertFalse(peerDispute.isPayoutDone());
+        assertTrue(service.findPayoutTxId(selectedDispute).isEmpty());
+        verify(disputeListService).requestPersistence();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refusesOverlappingReservationsWhilePersistenceIsPending() {
+        Dispute firstDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);
+        Dispute secondDispute = dispute(DEPOSIT_B, DELAYED_PAYOUT_B, null);
+        disputeList.add(firstDispute);
+        disputeList.add(secondDispute);
+        Transaction firstPayoutTx = mock(Transaction.class);
+        when(firstPayoutTx.getTxId()).thenReturn(Sha256Hash.wrap(PAYOUT_TX_ID));
+        Transaction secondPayoutTx = mock(Transaction.class);
+        when(secondPayoutTx.getTxId()).thenReturn(Sha256Hash.wrap(PAYOUT_TX_ID_B));
+        AtomicReference<Runnable> persistenceCompleteHandler = new AtomicReference<>();
+        doAnswer(invocation -> {
+            persistenceCompleteHandler.compareAndSet(null, invocation.getArgument(0));
+            return null;
+        }).when(persistenceManager).persistNow(any(Runnable.class), any(Consumer.class));
+
+        service.persistPayoutReservation(firstDispute,
+                firstPayoutTx,
+                () -> {
+                },
+                throwable -> {
+                });
+
+        assertThrows(IllegalStateException.class, () -> service.persistPayoutReservation(
+                secondDispute,
+                secondPayoutTx,
+                () -> {
+                },
+                throwable -> {
+                }));
+
+        persistenceCompleteHandler.get().run();
+        service.persistPayoutReservation(secondDispute,
+                secondPayoutTx,
+                () -> {
+                },
+                throwable -> {
+                });
+        assertEquals(PAYOUT_TX_ID_B, secondDispute.getDisputePayoutTxId());
     }
 
     @Test

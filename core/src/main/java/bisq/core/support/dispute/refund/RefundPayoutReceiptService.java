@@ -30,6 +30,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -38,12 +40,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 @Slf4j
 @Singleton
 public final class RefundPayoutReceiptService {
     private final RefundDisputeListService disputeListService;
     private final BtcWalletService btcWalletService;
+    private boolean payoutReservationInProgress;
 
     @Inject
     public RefundPayoutReceiptService(RefundDisputeListService disputeListService,
@@ -92,6 +96,8 @@ public final class RefundPayoutReceiptService {
                                                       Transaction payoutTx,
                                                       Runnable completeHandler,
                                                       Consumer<Throwable> errorHandler) {
+        checkState(!payoutReservationInProgress,
+                "Another refund payout reservation is still being persisted");
         checkArgument(findPayoutTxId(dispute).isEmpty(),
                 "A refund payout has already been created for this deposit or delayed payout transaction");
 
@@ -108,20 +114,46 @@ public final class RefundPayoutReceiptService {
         // Only rows presenting the same funding chain are marked. A row that shares just one of the two IDs may
         // belong to a different trade; marking it would let a crafted record transfer the paid state to an unrelated
         // ticket. Such rows stay blocked by the conflict check in findPayoutTxId as long as the paid record exists.
+        List<Dispute> reservedDisputes = new ArrayList<>();
         for (Dispute storedDispute : disputeListService.getDisputeList().getList()) {
             if (parseStoredReceipt(storedDispute).filter(receipt::isSameFundingChainAs).isPresent()) {
-                markPaid(storedDispute, payoutTxId);
+                reservedDisputes.add(storedDispute);
             }
         }
 
+        payoutReservationInProgress = true;
+        reservedDisputes.forEach(reservedDispute -> markPaid(reservedDispute, payoutTxId));
         disputeListService.getPersistenceManager().persistNow(
-                checkedCompleteHandler,
-                checkedErrorHandler);
+                () -> {
+                    finishReservation();
+                    checkedCompleteHandler.run();
+                },
+                throwable -> {
+                    // Nothing has been committed or broadcast at this point, so the receipt is not consumed. The
+                    // marks are removed again; keeping them would persist a paid state without any transaction.
+                    clearFailedReservation(reservedDisputes);
+                    disputeListService.requestPersistence();
+                    checkedErrorHandler.accept(throwable);
+                });
+    }
+
+    private synchronized void finishReservation() {
+        payoutReservationInProgress = false;
+    }
+
+    private synchronized void clearFailedReservation(List<Dispute> reservedDisputes) {
+        reservedDisputes.forEach(RefundPayoutReceiptService::clearReservation);
+        payoutReservationInProgress = false;
     }
 
     private static void markPaid(Dispute dispute, String payoutTxId) {
         dispute.setDisputePayoutTxId(payoutTxId);
         dispute.setPayoutDone(true);
+    }
+
+    private static void clearReservation(Dispute dispute) {
+        dispute.setDisputePayoutTxId(null);
+        dispute.setPayoutDone(false);
     }
 
     // A paid historical row can contain one malformed funding ID. Its other, parseable ID remains consumption
