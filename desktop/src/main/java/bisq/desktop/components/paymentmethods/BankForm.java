@@ -295,6 +295,8 @@ abstract class BankForm extends GeneralBankForm {
             accountNrInputTextField.setPromptText(BankUtil.getAccountNrLabel(countryCode));
             accountTypeComboBox.setPromptText(BankUtil.getAccountTypeLabel(countryCode));
 
+            validateInput(countryCode);
+
             bankNameInputTextField.setText("");
             bankIdInputTextField.setText("");
             branchIdInputTextField.setText("");
@@ -306,7 +308,6 @@ abstract class BankForm extends GeneralBankForm {
             accountTypeComboBox.getSelectionModel().clearSelection();
             accountTypeComboBox.setItems(FXCollections.observableArrayList(BankUtil.getAccountTypeValues(countryCode)));
 
-            validateInput(countryCode);
 
             holderNameInputTextField.resetValidation();
             holderNameInputTextField.validate();
