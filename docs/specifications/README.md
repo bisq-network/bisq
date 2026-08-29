@@ -47,6 +47,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`network/bisq2-bridge-block-continuity.md`](network/bisq2-bridge-block-continuity.md) | Snapshot and live-stream continuity for DAO block data exported to Bisq 2 oracle nodes. |
 | [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
 
+### `offer/`
+
+| Specification | Covers |
+|---|---|
+| [`offer/offer-edit-and-removal.md`](offer/offer-edit-and-removal.md) | The completion contracts of offer edit and removal, and the preconditions they impose on wallet restore, wallet emptying and BSQ swap republishing. |
+
 ### `trade/`
 
 | Specification | Covers |

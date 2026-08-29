@@ -400,9 +400,17 @@ public class OpenBsqSwapOfferService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void redoProofOfWorkAndRepublish(OpenOffer openOffer) {
-        // This triggers our onOpenOffersRemoved handler so we don't handle removal here
-        openOfferManager.removeOpenOffer(openOffer);
+        // The removal triggers our onOpenOffersRemoved handler, so we don't handle it here. The
+        // replacement is only minted once the removal succeeded; otherwise the old offer stays
+        // alive next to a mutated-id replacement, as a duplicate on the network. On failure the
+        // offer stays in our list and the next trigger retries the redo.
+        openOfferManager.removeOpenOffer(openOffer,
+                () -> mintAndPublishReplacement(openOffer),
+                errorMessage -> log.warn("Not republishing offer {} as removing it failed: {}",
+                        openOffer.getId(), errorMessage));
+    }
 
+    private void mintAndPublishReplacement(OpenOffer openOffer) {
         String newOfferId = OfferUtil.getOfferIdWithMutationCounter(openOffer.getId());
         NodeAddress nodeAddress = Objects.requireNonNull(openOffer.getOffer().getMakerNodeAddress());
         double difficulty = getPowDifficulty();
@@ -424,7 +432,7 @@ public class OpenBsqSwapOfferService {
                         newOffer.setState(Offer.State.AVAILABLE);
 
                         checkArgument(!openOffer.isDeactivated(),
-                                "We must not get called at redoProofOrWorkAndRepublish if offer was deactivated");
+                                "We must not get called at mintAndPublishReplacement if offer was deactivated");
                         OpenOffer newOpenOffer = new OpenOffer(newOffer);
                         if (!newOpenOffer.isDeactivated()) {
                             openOfferManager.maybeRepublishOffer(newOpenOffer);
