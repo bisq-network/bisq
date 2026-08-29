@@ -136,6 +136,36 @@ class DisputeValidationTest {
     }
 
     @Test
+    void validateDisputeDataAcceptsCanonicalTransactionIds() {
+        Dispute dispute = refundDisputeWithTxIds("ab".repeat(32), "cd".repeat(32));
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsNonHexDepositTxId() {
+        Dispute dispute = refundDisputeWithTxIds("deposit-tx-id", "cd".repeat(32));
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsNonCanonicalDelayedPayoutTxId() {
+        Dispute upperCase = refundDisputeWithTxIds("ab".repeat(32), "CD".repeat(32));
+        Dispute wrongLength = refundDisputeWithTxIds("ab".repeat(32), "cd".repeat(31));
+        Dispute blank = refundDisputeWithTxIds("ab".repeat(32), " ");
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(upperCase, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(wrongLength, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(blank, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
     void replayCheckAcceptsFirstDisputeNotYetInList() {
         // Regression: the fail-closed ingest path validates before the dispute is added to the list. The replay
         // check must interpret the stored count together with the dispute under test, otherwise the first legitimate
@@ -235,6 +265,36 @@ class DisputeValidationTest {
                 agentPubKeyRing,
                 false,
                 supportType);
+    }
+
+    private static Dispute refundDisputeWithTxIds(String depositTxId, String delayedPayoutTxId) {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, pubKeyRing(), pubKeyRing(), refundAgentPubKeyRing);
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Dispute dispute = new Dispute(
+                0,
+                TRADE_ID,
+                TRADER_ID,
+                true,
+                true,
+                buyerPubKeyRing,
+                POST_ACTIVATION_TRADE_DATE,
+                0,
+                contract,
+                Hash.getSha256Hash(contractAsJson),
+                null,
+                null,
+                depositTxId,
+                null,
+                contractAsJson,
+                null,
+                null,
+                refundAgentPubKeyRing,
+                false,
+                SupportType.REFUND);
+        dispute.setDelayedPayoutTxId(delayedPayoutTxId);
+        return dispute;
     }
 
     private static Contract contract(PubKeyRing buyerPubKeyRing,

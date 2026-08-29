@@ -85,7 +85,7 @@ class DisputeManagerAuthTest {
     private static final NodeAddress BUYER_NODE_ADDRESS = new NodeAddress("aaaaaaaaaaaaaaaa.onion", 9999);
     private static final NodeAddress SELLER_NODE_ADDRESS = new NodeAddress("bbbbbbbbbbbbbbbb.onion", 9999);
     private static final NodeAddress MEDIATOR_NODE_ADDRESS = new NodeAddress("cccccccccccccccc.onion", 9999);
-    private static final String DEPOSIT_TX_ID = "deposit-tx-id";
+    private static final String DEPOSIT_TX_ID = "ab".repeat(32);
 
     @TempDir
     private File keyStorageDir;
@@ -510,6 +510,13 @@ class DisputeManagerAuthTest {
         assertOpenNewDisputePayloadStateRejected(
                 dispute -> dispute.setDisputePayoutTxId("ab".repeat(32)),
                 "Dispute payout transaction ID must be absent at opening dispute");
+    }
+
+    @Test
+    void openNewDisputeWithNonCanonicalDelayedPayoutTxIdDoesNotMutateDisputeList() {
+        assertOpenNewDisputePayloadStateRejected(
+                dispute -> dispute.setDelayedPayoutTxId("not-a-tx-id"),
+                "delayedPayoutTxId must be a canonical 32-byte transaction ID");
     }
 
     @Test

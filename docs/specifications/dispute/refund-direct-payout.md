@@ -64,6 +64,10 @@ amounts or paid-state metadata.
 Locally persisted drafts are not inbound new-dispute messages and may retain a locally authored result according to
 the existing dispute workflow.
 
+The deposit transaction ID and, when present, the delayed-payout transaction ID of an inbound dispute must be
+canonical 32-byte transaction IDs. Replay detection and receipt consumption key on these IDs, so a dispute carrying
+any other value is rejected at intake instead of being stored.
+
 ## Compatibility and historical records
 
 The persisted dispute payout transaction ID is the compatibility-safe receipt marker; no serialized schema change is

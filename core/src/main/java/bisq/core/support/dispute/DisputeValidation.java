@@ -36,6 +36,7 @@ import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -92,6 +93,8 @@ public class DisputeValidation {
             checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
                     "Invalid contractHash");
             validateContractDisputeAgentPubKeys(dispute, contract, now, trustedTradeDate);
+            validateTxIdFormat(dispute.getDepositTxId(), "depositTxId");
+            validateTxIdFormat(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId");
 
             Optional<Transaction> depositTx = dispute.findDepositTx(btcWalletService);
             if (depositTx.isPresent()) {
@@ -157,6 +160,22 @@ public class DisputeValidation {
 
         // Legacy arbitration has no contract-bound dispute-agent pubKeyRing.
         return null;
+    }
+
+    // Replay detection and refund receipt accounting key on these IDs. Legitimate clients derive them from
+    // Transaction.getTxId().toString(), so any other spelling is rejected before the dispute can be stored.
+    private static void validateTxIdFormat(@Nullable String txId, String fieldName) {
+        if (txId == null) {
+            return;
+        }
+
+        boolean isCanonicalTxId;
+        try {
+            isCanonicalTxId = Sha256Hash.wrap(txId).toString().equals(txId);
+        } catch (IllegalArgumentException e) {
+            isCanonicalTxId = false;
+        }
+        checkArgument(isCanonicalTxId, "%s must be a canonical 32-byte transaction ID", fieldName);
     }
 
     public static void validateTradeAndDispute(Dispute dispute, Trade trade)
