@@ -48,7 +48,8 @@ reservation but before wallet commit or broadcast can require manual investigati
 
 Buyer and seller payout amounts must each be non-negative. At least one output must be positive when a payout
 transaction is created. Because both amounts are non-negative, their sum equals the value of the actual trader
-outputs; a negative amount must never offset a larger positive output.
+outputs; a negative amount must never offset a larger positive output. Closing a ticket with zero payout to both
+traders creates no transaction; it neither requires nor consumes a receipt.
 
 The trader-output sum must not exceed either:
 

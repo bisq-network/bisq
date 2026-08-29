@@ -418,13 +418,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             return false;
         }
 
-        Coin available;
-        try {
-            available = getMaximumPayoutAmount();
-        } catch (RuntimeException exception) {
-            log.error("Invalid payout data", exception);
-            return false;
-        }
         Coin totalAmount;
         try {
             totalAmount = buyerAmount.add(sellerAmount);
@@ -433,6 +426,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
 
         boolean isRefundAgent = getDisputeManager(dispute) instanceof RefundManager;
+        if (isRefundAgent && totalAmount.isZero()) {
+            // Closing without any payout creates no transaction, so it needs neither the refund receipt nor its limit
+            return true;
+        }
+
+        Coin available;
+        try {
+            available = getMaximumPayoutAmount();
+        } catch (RuntimeException exception) {
+            log.error("Invalid payout data", exception);
+            return false;
+        }
+
         if (isRefundAgent) {
             // We allow to spend less in case of RefundAgent or even zero to both, so in that case no payout tx will
             // be made
@@ -757,32 +763,29 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             return asyncStatus;
         }
 
-        try {
-            Optional<String> payoutTxId = refundManager.findRefundPayoutTxId(dispute);
-            if (dispute.isPayoutDone() || payoutTxId.isPresent()) {
-                payoutTxId.ifPresent(txId -> {
-                    dispute.setDisputePayoutTxId(txId);
-                    dispute.setPayoutDone(true);
-                    refundManager.requestPersistence();
-                });
-                showAlreadyPaidPopup(asyncStatus);
+        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
+        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
+        Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
+        if (outputAmount.isPositive()) {
+            // Only a payout consumes the refund receipt; closing without payout does not need it
+            try {
+                if (isRefundReceiptAlreadyPaid()) {
+                    showAlreadyPaidPopup(asyncStatus);
+                    return asyncStatus;
+                }
+            } catch (IllegalArgumentException exception) {
+                log.error("Invalid refund payout receipt", exception);
+                new Popup().error(exception.toString()).onClose(() -> asyncStatus.complete(false)).show();
                 return asyncStatus;
             }
-        } catch (IllegalArgumentException exception) {
-            log.error("Invalid refund payout receipt", exception);
-            new Popup().error(exception.toString()).onClose(() -> asyncStatus.complete(false)).show();
-            return asyncStatus;
         }
         if (payoutPromptOnDisplay != null) {
             log.warn("The payout prompt is already on display, we do not show another copy of it.");
             asyncStatus.complete(false);
             return asyncStatus;
         }
-        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         String buyerPayoutAddressString = dispute.getContract().getBuyerPayoutAddressString();
-        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         String sellerPayoutAddressString = dispute.getContract().getSellerPayoutAddressString();
-        Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
         Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, btcWalletService);
         Coin fee = feeTuple.first;
         Integer txVsize = feeTuple.second;
@@ -849,15 +852,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                           String sellerPayoutAddressString,
                           CompletableFuture<Boolean> resultHandler) {
         try {
-            Optional<String> payoutTxId = refundManager.findRefundPayoutTxId(dispute);
-            if (dispute.isPayoutDone() || payoutTxId.isPresent()) {
+            if (isRefundReceiptAlreadyPaid()) {
                 log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
                         dispute.getTradeId());
-                payoutTxId.ifPresent(txId -> {
-                    dispute.setDisputePayoutTxId(txId);
-                    dispute.setPayoutDone(true);
-                    refundManager.requestPersistence();
-                });
                 showAlreadyPaidPopup(resultHandler);
                 return;
             }
@@ -910,11 +907,22 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
+    // A payout found on a peer row or in the wallet is recorded on the selected row as well, so the restored paid
+    // state does not depend on which row was used for the payout.
+    private boolean isRefundReceiptAlreadyPaid() {
+        refundManager.findRefundPayoutTxId(dispute).ifPresent(txId -> {
+            dispute.setDisputePayoutTxId(txId);
+            dispute.setPayoutDone(true);
+            refundManager.requestPersistence();
+        });
+        return dispute.isPayoutDone();
+    }
+
     private void showAlreadyPaidPopup(CompletableFuture<Boolean> resultHandler) {
         new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
                 .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
                 .closeButtonText(Res.get("shared.cancel"))
-                .actionButtonText("Close ticket")
+                .actionButtonText(Res.get("support.closeTicket"))
                 .onAction(() -> resultHandler.complete(true))
                 .onClose(() -> resultHandler.complete(false))
                 .show();
