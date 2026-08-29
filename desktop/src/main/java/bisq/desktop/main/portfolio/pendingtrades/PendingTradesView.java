@@ -101,15 +101,19 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.time.Instant;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -143,6 +147,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedItemSubscription;
     private Stage chatPopupStage;
     private ListChangeListener<PendingTradesListItem> tradesListChangeListener;
+    private MapChangeListener<String, Instant> deadDepositTradesListener;
     private final Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
     private String tradeIdOfOpenChat;
     private double chatPopupStageXPosition = -1;
@@ -273,6 +278,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         tradesListChangeListener = c -> onListChanged();
+
+        deadDepositTradesListener = c -> {
+            updateMoveTradeToFailedColumnState();
+            // The cells only redraw on a trade state change, which does not happen here, so the
+            // icons of an already visible column would otherwise stay empty until the view is reopened.
+            tableView.refresh();
+        };
     }
 
     @Override
@@ -287,6 +299,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         filterBox.activate();
 
         updateMoveTradeToFailedColumnState();
+        model.getDeadDepositUnknownSince().addListener(deadDepositTradesListener);
 
         scene = root.getScene();
         if (scene != null) {
@@ -348,6 +361,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         removeSelectedSubView();
 
         model.dataModel.list.removeListener(tradesListChangeListener);
+        model.getDeadDepositUnknownSince().removeListener(deadDepositTradesListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -369,17 +383,59 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private boolean isMaybeInvalidTrade(Trade trade) {
         return trade.hasErrorMessage() ||
-                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getTradePhase().ordinal() && trade.isTxChainInvalid());
+                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getTradePhase().ordinal() && trade.isTxChainInvalid()) ||
+                model.isDepositTxProvenDead(trade);
     }
 
     private void onMoveInvalidTradeToFailedTrades(Trade trade) {
+        if (model.isDepositTxProvenDead(trade)) {
+            // The verdict can be arbitrarily old by now; only a fresh unanimous not-found
+            // answer from the explorers authorizes the move.
+            model.recheckDeadDepositTx(trade, result -> {
+                switch (result) {
+                    case STILL_DEAD:
+                        // The deposit can confirm while the confirmation popup is open; the
+                        // wallet observes that locally, so the verdict is re-checked on confirm.
+                        showMoveInvalidTradeToFailedTradesPopup(trade,
+                                Res.get("portfolio.pending.failedTrade.depositTxDead.moveToFailed",
+                                        getInvalidTradeDetails(trade)),
+                                () -> model.isDepositTxProvenDead(trade));
+                        break;
+                    case TOO_RECENT:
+                        new Popup().information(
+                                Res.get("portfolio.pending.failedTrade.depositTxDead.recheckTooRecent",
+                                        PendingTradesViewModel.DEAD_DEPOSIT_SAFETY_INTERVAL.toMinutes())).show();
+                        break;
+                    case FOUND:
+                        new Popup().information(
+                                Res.get("portfolio.pending.failedTrade.depositTxDead.recheckFound")).show();
+                        break;
+                    case UNREACHABLE:
+                        new Popup().warning(
+                                Res.get("portfolio.pending.failedTrade.depositTxDead.recheckUnreachable")).show();
+                        break;
+                    default:
+                        log.error("Unhandled dead-deposit recheck result {}", result);
+                }
+            });
+            return;
+        }
         String msg = trade.isTxChainInvalid() ?
                 Res.get("portfolio.pending.failedTrade.txChainInvalid.moveToFailed",
                         getInvalidTradeDetails(trade)) :
                 Res.get("portfolio.pending.failedTrade.txChainValid.moveToFailed",
                         getInvalidTradeDetails(trade));
+        showMoveInvalidTradeToFailedTradesPopup(trade, msg, () -> true);
+    }
+
+    private void showMoveInvalidTradeToFailedTradesPopup(Trade trade, String msg, BooleanSupplier stillApplies) {
         new Popup().width(900).attention(msg)
                 .onAction(() -> {
+                    if (!stillApplies.getAsBoolean()) {
+                        new Popup().information(
+                                Res.get("portfolio.pending.failedTrade.moveToFailed.stateChanged")).show();
+                        return;
+                    }
                     model.dataModel.onMoveInvalidTradeToFailedTrades(trade);
                     updateMoveTradeToFailedColumnState();
                 })
@@ -412,6 +468,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (trade.getDepositTx() == null) {
             return Res.get("portfolio.pending.failedTrade.missingDepositTx");
+        }
+
+        if (model.isDepositTxProvenDead(trade)) {
+            return Res.get("portfolio.pending.failedTrade.depositTxDead");
         }
 
         if (trade.getDelayedPayoutTx() == null) {
@@ -613,6 +673,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
+                                // updateItem runs again for the same item on every table refresh, so
+                                // the previous listener must go before a new one is added.
+                                removeStateListener();
                                 if (item != null && !empty) {
                                     trade = item.getTrade();
                                     listener = (observable, oldValue, newValue) -> update();
@@ -620,12 +683,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     update();
                                 } else {
                                     setGraphic(null);
-                                    if (trade != null && listener != null) {
-                                        trade.stateProperty().removeListener(listener);
-                                        trade = null;
-                                        listener = null;
-                                    }
                                 }
+                            }
+
+                            private void removeStateListener() {
+                                if (trade != null && listener != null) {
+                                    trade.stateProperty().removeListener(listener);
+                                }
+                                trade = null;
+                                listener = null;
                             }
 
                             private void update() {
@@ -934,6 +1000,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
+                                // updateItem runs again for the same item on every table refresh, so
+                                // the previous listener must go before a new one is added.
+                                removeStateListener();
                                 if (!empty && newItem != null) {
                                     trade = newItem.getTrade();
                                     listener = (observable, oldValue, newValue) -> update();
@@ -942,6 +1011,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 } else {
                                     cleanup();
                                 }
+                            }
+
+                            private void removeStateListener() {
+                                if (listener != null && trade != null) {
+                                    trade.stateProperty().removeListener(listener);
+                                }
+                                listener = null;
                             }
 
                             private void update() {
@@ -984,9 +1060,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 if (trashIconButton != null) {
                                     trashIconButton.setOnAction(null);
                                 }
-                                if (listener != null && trade != null) {
-                                    trade.stateProperty().removeListener(listener);
-                                }
+                                removeStateListener();
                                 setGraphic(null);
                             }
                         };

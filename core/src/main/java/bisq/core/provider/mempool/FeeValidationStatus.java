@@ -25,6 +25,7 @@ public enum FeeValidationStatus {
     ACK_BSQ_TX_IS_NEW("fee.validation.ack.bsqTxIsNew"),
     ACK_CHECK_BYPASSED("fee.validation.ack.checkBypassed"),
     NACK_BTC_TX_NOT_FOUND("fee.validation.error.btcTxNotFound"),
+    NACK_TX_LOOKUP_UNREACHABLE("fee.validation.error.txLookupUnreachable"),
     NACK_BSQ_FEE_NOT_FOUND("fee.validation.error.bsqTxNotFound"),
     NACK_MAKER_FEE_TOO_LOW("fee.validation.error.makerFeeTooLow"),
     NACK_TAKER_FEE_TOO_LOW("fee.validation.error.takerFeeTooLow"),

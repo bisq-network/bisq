@@ -26,8 +26,13 @@ import bisq.core.filter.FilterPolicyService;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.http.HttpException;
 
 import bisq.common.config.Config;
+
+import java.io.IOException;
+
+import java.net.SocketTimeoutException;
 
 import java.util.List;
 import java.util.Map;
@@ -85,6 +90,52 @@ class MempoolServiceTest {
                 mock(DaoStateService.class),
                 burningManAddressListService,
                 burningManPresentationService);
+    }
+
+    @Test
+    void isTxUnknownResponseDetectsWrapped404() {
+        // The shape the http client actually produces: HttpException rewrapped into an IOException.
+        Throwable wrapped = new IOException("Direct request failed", new HttpException("Transaction not found", 404));
+
+        assertTrue(MempoolService.isTxUnknownResponse(wrapped));
+    }
+
+    @Test
+    void isTxUnknownResponseDetects404AtAnyDepth() {
+        Throwable nested = new RuntimeException("outer",
+                new IOException("middle", new HttpException("Transaction not found", 404)));
+
+        assertTrue(MempoolService.isTxUnknownResponse(nested));
+    }
+
+    @Test
+    void isTxUnknownResponseRejectsTransportFailure() {
+        // No HttpException in the chain means we never got an answer, so the tx state stays unknown.
+        Throwable connectionFailure = new IOException("Request via SOCKS proxy failed", new SocketTimeoutException());
+
+        assertFalse(MempoolService.isTxUnknownResponse(connectionFailure));
+    }
+
+    @Test
+    void isTxUnknownResponseRejectsOtherResponseCodes() {
+        Throwable serverError = new IOException("Request failed", new HttpException("Request failed", 500));
+
+        assertFalse(MempoolService.isTxUnknownResponse(serverError));
+    }
+
+    @Test
+    void isTxUnknownResponseHandlesNull() {
+        assertFalse(MempoolService.isTxUnknownResponse(null));
+    }
+
+    @Test
+    void isTxUnknownResponseTerminatesOnCyclicCauseChain() {
+        // A cyclic chain must not spin the calling thread, and must not be read as a 404.
+        Throwable first = new IOException("first");
+        Throwable second = new IOException("second", first);
+        first.initCause(second);
+
+        assertFalse(MempoolService.isTxUnknownResponse(first));
     }
 
     private static BurningManAddressList addressList(String network) {
