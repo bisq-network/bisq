@@ -113,6 +113,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -393,9 +394,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             model.recheckDeadDepositTx(trade, result -> {
                 switch (result) {
                     case STILL_DEAD:
+                        // The deposit can confirm while the confirmation popup is open; the
+                        // wallet observes that locally, so the verdict is re-checked on confirm.
                         showMoveInvalidTradeToFailedTradesPopup(trade,
                                 Res.get("portfolio.pending.failedTrade.depositTxDead.moveToFailed",
-                                        getInvalidTradeDetails(trade)));
+                                        getInvalidTradeDetails(trade)),
+                                () -> model.isDepositTxProvenDead(trade));
                         break;
                     case TOO_RECENT:
                         new Popup().information(
@@ -421,12 +425,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         getInvalidTradeDetails(trade)) :
                 Res.get("portfolio.pending.failedTrade.txChainValid.moveToFailed",
                         getInvalidTradeDetails(trade));
-        showMoveInvalidTradeToFailedTradesPopup(trade, msg);
+        showMoveInvalidTradeToFailedTradesPopup(trade, msg, () -> true);
     }
 
-    private void showMoveInvalidTradeToFailedTradesPopup(Trade trade, String msg) {
+    private void showMoveInvalidTradeToFailedTradesPopup(Trade trade, String msg, BooleanSupplier stillApplies) {
         new Popup().width(900).attention(msg)
                 .onAction(() -> {
+                    if (!stillApplies.getAsBoolean()) {
+                        new Popup().information(
+                                Res.get("portfolio.pending.failedTrade.moveToFailed.stateChanged")).show();
+                        return;
+                    }
                     model.dataModel.onMoveInvalidTradeToFailedTrades(trade);
                     updateMoveTradeToFailedColumnState();
                 })

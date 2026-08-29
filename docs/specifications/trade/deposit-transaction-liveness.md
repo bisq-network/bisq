@@ -43,6 +43,9 @@ arriving at least 30 minutes after the first observation. A transport failure du
 re-validation blocks the action instead of falling back to the earlier verdict, and a provider
 returning a status for the transaction cancels the verdict entirely.
 
+The confirmation of the move re-checks the local verdict once more, so a deposit which confirmed
+while the confirmation was open is not moved.
+
 ## Verdict lifecycle
 
 The verdict is transient and local to the user interface. It is not persisted; a restart
