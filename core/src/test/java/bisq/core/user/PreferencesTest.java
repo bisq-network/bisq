@@ -59,7 +59,7 @@ public class PreferencesTest {
 
     @BeforeEach
     public void setUp() {
-        Locale en_US = new Locale("en", "US");
+        Locale en_US = Locale.of("en", "US");
         Locale.setDefault(en_US);
         GlobalSettings.setLocale(en_US);
         Res.setBaseCurrencyCode("BTC");
@@ -142,7 +142,7 @@ public class PreferencesTest {
         PreferencesPayload payload = mock(PreferencesPayload.class);
 
         List<FiatCurrency> fiatCurrencies = new ArrayList<>();
-        FiatCurrency usd = new FiatCurrency(Currency.getInstance("USD"), new Locale("de", "AT"));
+        FiatCurrency usd = new FiatCurrency(Currency.getInstance("USD"), Locale.of("de", "AT"));
         fiatCurrencies.add(usd);
 
         assertEquals("US-Dollar (USD)", usd.getNameAndCode());

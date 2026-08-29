@@ -28,7 +28,7 @@ public class FormattingUtilsTest {
 
     @BeforeEach
     public void setUp() {
-        Locale.setDefault(new Locale("en", "US"));
+        Locale.setDefault(Locale.of("en", "US"));
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
     }

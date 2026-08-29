@@ -37,7 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class CurrencyListTest {
-    private static final Locale locale = new Locale("en", "US");
+    private static final Locale locale = Locale.of("en", "US");
 
     private static final TradeCurrency USD = new FiatCurrency(Currency.getInstance("USD"), locale);
     private static final TradeCurrency RUR = new FiatCurrency(Currency.getInstance("RUR"), locale);

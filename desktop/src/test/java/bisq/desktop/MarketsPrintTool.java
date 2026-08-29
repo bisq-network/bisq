@@ -32,7 +32,7 @@ public class MarketsPrintTool {
         // Prints out all coins in the format used in the market_currency_selector.html.
         // Run that and copy paste the result to the market_currency_selector.html at new releases.
         StringBuilder sb = new StringBuilder();
-        Locale.setDefault(new Locale("en", "US"));
+        Locale.setDefault(Locale.of("en", "US"));
 
         // <option value="onion_btc">DeepOnion (ONION)</option>
         // <option value="btc_bhd">Bahraini Dinar (BHD)</option>
