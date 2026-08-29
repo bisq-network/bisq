@@ -35,8 +35,8 @@ public class RegexValidatorTest {
 
     @BeforeEach
     public void setup() {
-        Locale.setDefault(new Locale("en", "US"));
-        GlobalSettings.setLocale(new Locale("en", "US"));
+        Locale.setDefault(Locale.of("en", "US"));
+        GlobalSettings.setLocale(Locale.of("en", "US"));
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
     }
