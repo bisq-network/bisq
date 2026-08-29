@@ -35,14 +35,14 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 
-import com.google.common.base.Charsets;
-
 import java.security.KeyPair;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Date;
 import java.util.List;
@@ -118,7 +118,7 @@ public class SignedWitnessServiceTest {
         peer1KeyPair = Sig.generateKeyPair();
         peer2KeyPair = Sig.generateKeyPair();
         peer3KeyPair = Sig.generateKeyPair();
-        signature1 = arbitrator1Key.signMessage(Utilities.encodeToHex(account1DataHash)).getBytes(Charsets.UTF_8);
+        signature1 = arbitrator1Key.signMessage(Utilities.encodeToHex(account1DataHash)).getBytes(StandardCharsets.UTF_8);
         signature2 = Sig.sign(peer1KeyPair.getPrivate(), account2DataHash);
         signature3 = Sig.sign(peer2KeyPair.getPrivate(), account3DataHash);
         date1 = getTodayMinusNDays(SIGN_AGE_1);
@@ -254,7 +254,7 @@ public class SignedWitnessServiceTest {
     public void testInvalidArbitratorSignatureDoesNotCountAsSignedByArbitrator() {
         SignedWitness sw1 = new SignedWitness(ARBITRATOR,
                 account1DataHash,
-                "invalid-arbitrator-signature".getBytes(Charsets.UTF_8),
+                "invalid-arbitrator-signature".getBytes(StandardCharsets.UTF_8),
                 signer1PubKey,
                 witnessOwner1PubKey,
                 date1,
@@ -323,11 +323,11 @@ public class SignedWitnessServiceTest {
         // for the same account. The valid one must still lift the account to arbitrator-signed.
         ECKey secondArbitratorKey = LowRSigningKey.from(new ECKey());
         byte[] validSignature = secondArbitratorKey.signMessage(Utilities.encodeToHex(account1DataHash))
-                .getBytes(Charsets.UTF_8);
+                .getBytes(StandardCharsets.UTF_8);
 
         SignedWitness forged = new SignedWitness(ARBITRATOR,
                 account1DataHash,
-                "invalid-arbitrator-signature".getBytes(Charsets.UTF_8),
+                "invalid-arbitrator-signature".getBytes(StandardCharsets.UTF_8),
                 signer1PubKey,
                 witnessOwner1PubKey,
                 date1,
@@ -384,7 +384,7 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testInvalidPeerSignatureDoesNotVerify() throws Exception {
-        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(Charsets.UTF_8));
+        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(StandardCharsets.UTF_8));
         SignedWitness signedWitness = new SignedWitness(TRADE,
                 account2DataHash,
                 invalidSignature,
@@ -405,7 +405,7 @@ public class SignedWitnessServiceTest {
                 witnessOwner2PubKey,
                 date2,
                 tradeAmount2);
-        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(Charsets.UTF_8));
+        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(StandardCharsets.UTF_8));
         SignedWitness invalidSignedWitness = new SignedWitness(TRADE,
                 account2DataHash,
                 invalidSignature,
@@ -553,7 +553,7 @@ public class SignedWitnessServiceTest {
         KeyPair signedKeyPair = Sig.generateKeyPair();
         int iterations = 1002;
         for (int i = 0; i < iterations; i++) {
-            byte[] accountDataHash = org.bitcoinj.core.Utils.sha256hash160(String.valueOf(i).getBytes(Charsets.UTF_8));
+            byte[] accountDataHash = org.bitcoinj.core.Utils.sha256hash160(String.valueOf(i).getBytes(StandardCharsets.UTF_8));
             long accountCreationTime = getTodayMinusNDays((iterations - i) * (SignedWitnessService.SIGNER_AGE_DAYS + 1));
             aew = new AccountAgeWitness(accountDataHash, accountCreationTime);
             String accountDataHashAsHexString = Utilities.encodeToHex(accountDataHash);
@@ -564,7 +564,7 @@ public class SignedWitnessServiceTest {
                 ECKey arbitratorKey = LowRSigningKey.from(new ECKey());
                 signedKeyPair = Sig.generateKeyPair();
                 String signature1String = arbitratorKey.signMessage(accountDataHashAsHexString);
-                signature = signature1String.getBytes(Charsets.UTF_8);
+                signature = signature1String.getBytes(StandardCharsets.UTF_8);
                 signerPubKey = arbitratorKey.getPubKey();
             } else {
                 signerKeyPair = signedKeyPair;
@@ -798,7 +798,7 @@ public class SignedWitnessServiceTest {
     public void testBanFilterTwoTrees() {
         // Signer 2 is signed by arbitrator
         signer2PubKey = arbitrator1Key.getPubKey();
-        signature2 = arbitrator1Key.signMessage(Utilities.encodeToHex(account2DataHash)).getBytes(Charsets.UTF_8);
+        signature2 = arbitrator1Key.signMessage(Utilities.encodeToHex(account2DataHash)).getBytes(StandardCharsets.UTF_8);
 
         SignedWitness sw1 = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
         SignedWitness sw2 = new SignedWitness(ARBITRATOR, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
@@ -835,7 +835,7 @@ public class SignedWitnessServiceTest {
     public void testBanFilterJoinedTrees() throws Exception {
         // Signer 2 is signed by arbitrator
         signer2PubKey = arbitrator1Key.getPubKey();
-        signature2 = arbitrator1Key.signMessage(Utilities.encodeToHex(account2DataHash)).getBytes(Charsets.UTF_8);
+        signature2 = arbitrator1Key.signMessage(Utilities.encodeToHex(account2DataHash)).getBytes(StandardCharsets.UTF_8);
 
         // Peer1 owns both account1 and account2
 //        witnessOwner2PubKey = witnessOwner1PubKey;
