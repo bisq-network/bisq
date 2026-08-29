@@ -22,6 +22,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.DepositTxValidation;
 import bisq.core.util.JsonUtil;
 import bisq.core.util.validation.RegexValidatorFactory;
 
@@ -35,6 +36,7 @@ import bisq.common.crypto.Sig;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
@@ -94,9 +96,15 @@ public class DisputeValidation {
             validateContractDisputeAgentPubKeys(dispute, contract, now, trustedTradeDate);
 
             Optional<Transaction> depositTx = dispute.findDepositTx(btcWalletService);
+            if (dispute.getSupportType() == SupportType.REFUND) {
+                checkArgument(depositTx.isPresent(), "Refund dispute must include the serialized deposit tx");
+            }
             if (depositTx.isPresent()) {
                 checkArgument(depositTx.get().getTxId().toString().equals(dispute.getDepositTxId()), "Invalid depositTxId");
                 checkArgument(depositTx.get().getInputs().size() >= 2, "DepositTx must have at least 2 inputs");
+                if (dispute.getSupportType() == SupportType.REFUND) {
+                    validateRefundDepositTx(dispute, depositTx.get());
+                }
             }
 
             try {
@@ -119,6 +127,22 @@ public class DisputeValidation {
         } catch (Throwable t) {
             throw new ValidationException(dispute, t.getMessage());
         }
+    }
+
+    public static Transaction validateRefundDepositTx(Dispute dispute, Transaction depositTx) {
+        Dispute checkedDispute = checkNotNull(dispute, "dispute must not be null");
+        Contract contract = checkNotNull(checkedDispute.getContract(), "dispute contract must not be null");
+        long tradeTxFee = checkedDispute.getTradeTxFee();
+        checkArgument(tradeTxFee > 0, "tradeTxFee must be positive");
+
+        return DepositTxValidation.checkDepositTxMultisigOutput(
+                depositTx,
+                contract.getTradeAmount(),
+                Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()),
+                Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()),
+                Coin.valueOf(tradeTxFee),
+                contract.getBuyerMultiSigPubKey(),
+                contract.getSellerMultiSigPubKey());
     }
 
     private static void validateContractDisputeAgentPubKeys(Dispute dispute,

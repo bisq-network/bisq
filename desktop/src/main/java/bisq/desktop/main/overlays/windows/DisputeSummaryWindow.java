@@ -46,6 +46,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.support.dispute.refund.RefundValidationResult;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -133,6 +134,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ChangeListener<String> compensationOrPenaltyListener;
     private boolean updatingUi = false;
     private Popup payoutPromptOnDisplay = null;
+    private RefundValidationResult refundValidationResult;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -162,6 +164,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     public void show(Dispute dispute) {
         this.dispute = dispute;
+        refundValidationResult = null;
 
         rowIndex = -1;
         width = 1150;
@@ -699,23 +702,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                         return;
                     }
 
-                    if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
-                        applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
-                    } else {
-                        maybeCheckTransactions().thenAccept(continue1 -> {
-                            if (continue1) {
-                                checkGeneralValidity().thenAccept(continue2 -> {
-                                    if (continue2) {
-                                        maybeMakePayout().thenAccept(continue3 -> {
-                                            if (continue3) {
-                                                applyDisputeResult(closeTicketButton);
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
+                    maybeCheckTransactions().thenAccept(continue1 -> {
+                        if (continue1) {
+                            checkGeneralValidity().thenAccept(continue2 -> {
+                                if (continue2) {
+                                    maybeMakePayout().thenAccept(continue3 -> {
+                                        if (continue3) {
+                                            applyDisputeResult(closeTicketButton);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
                 });
 
         cancelButton.setOnAction(e -> {
@@ -727,6 +726,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private CompletableFuture<Boolean> maybeMakePayout() {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
+
+        if (dispute.getSupportType() == SupportType.REFUND && !isRefundValidationCurrent()) {
+            asyncStatus.complete(false);
+            return asyncStatus;
+        }
 
         // bypass for mediation tickets, or when the peer's ticket is already closed
         if (dispute.getSupportType() == SupportType.MEDIATION ||
@@ -819,6 +823,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                           String buyerPayoutAddressString,
                           String sellerPayoutAddressString,
                           CompletableFuture<Boolean> resultHandler) {
+        if (!isRefundValidationCurrent() ||
+                !isRefundValidationCurrent(buyerPayoutAmount, sellerPayoutAmount)) {
+            resultHandler.complete(false);
+            return;
+        }
         if (dispute.isPayoutDone()) {
             log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
                     dispute.getTradeId());
@@ -856,6 +865,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         // Only RefundAgent need to verify transactions to ensure payout is safe
         if (disputeManager instanceof RefundManager) {
             RefundManager refundManager = (RefundManager) disputeManager;
+            refundValidationResult = null;
             Contract contract = dispute.getContract();
             String makerFeeTxId = contract.getOfferPayload().getOfferFeePaymentTxId();
             String takerFeeTxId = contract.getTakerFeeTxID();
@@ -874,12 +884,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     if (throwable == null) {
                         try {
                             refundManager.verifyTradeTxChain(txList);
+                            Transaction depositTx = txList.get(2);
                             Transaction delayedPayoutTx = txList.get(3);
                             if (dispute.isUsingLegacyBurningMan()) {
+                                refundManager.verifyDepositTx(depositTx, dispute);
                                 refundManager.verifyLegacyDelayedPayoutTx(delayedPayoutTx, dispute);
                             } else {
-                                refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
+                                refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute);
                             }
+                            refundValidationResult = refundManager.verifyRefundPayoutAmount(depositTx,
+                                    delayedPayoutTx,
+                                    dispute,
+                                    disputeResult.getBuyerPayoutAmount(),
+                                    disputeResult.getSellerPayoutAmount());
                             asyncStatus.complete(true);
                         } catch (Throwable error) {
                             UserThread.runAfter(() -> {
@@ -969,12 +986,49 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         return asyncStatus;
     }
 
+    private boolean isRefundValidationCurrent() {
+        if (dispute.getSupportType() != SupportType.REFUND) {
+            return true;
+        }
+        try {
+            checkNotNull(refundValidationResult,
+                    "Refund transaction evidence has not been validated")
+                    .verifyMatches(dispute, disputeResult);
+            return true;
+        } catch (RuntimeException error) {
+            log.warn("Refund authorization no longer matches validated transaction evidence", error);
+            new Popup().warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed",
+                    error.getMessage())).show();
+            return false;
+        }
+    }
+
+    private boolean isRefundValidationCurrent(Coin buyerPayoutAmount, Coin sellerPayoutAmount) {
+        if (dispute.getSupportType() != SupportType.REFUND) {
+            return true;
+        }
+        try {
+            checkNotNull(refundValidationResult,
+                    "Refund transaction evidence has not been validated")
+                    .verifyMatches(dispute, buyerPayoutAmount, sellerPayoutAmount);
+            return true;
+        } catch (RuntimeException error) {
+            log.warn("Refund payout no longer matches validated transaction evidence", error);
+            new Popup().warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed",
+                    error.getMessage())).show();
+            return false;
+        }
+    }
+
     private void applyDisputeResult(Button closeTicketButton) {
         DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
         if (disputeManager == null) {
             return;
         }
         boolean isRefundAgent = disputeManager instanceof RefundManager;
+        if (isRefundAgent && !isRefundValidationCurrent()) {
+            return;
+        }
         disputeResult.setLoserPublisher(false); // field no longer used per pazza / leo816
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
@@ -1209,4 +1263,3 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 }
-

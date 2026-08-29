@@ -20,9 +20,11 @@ package bisq.core.support.dispute.refund;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.utils.DepositTransactionUtils;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.Dispute;
@@ -46,6 +48,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -63,10 +66,15 @@ import static org.mockito.Mockito.when;
 
 class RefundManagerTest {
     private static final NetworkParameters PARAMS = MainNetParams.get();
+    private static final Coin TRADE_AMOUNT = Coin.valueOf(20_000);
+    private static final Coin BUYER_SECURITY_DEPOSIT = Coin.valueOf(2_000);
+    private static final Coin SELLER_SECURITY_DEPOSIT = Coin.valueOf(3_000);
     private static final Coin ESCROW_VALUE = Coin.valueOf(30_000);
     private static final int SELECTION_HEIGHT = 800_000;
     private static final long TRADE_TX_FEE = 5_000;
     private static final int ADDRESS_LIST_VERSION = 1;
+    private static final ECKey BUYER_MULTISIG_KEY = new ECKey();
+    private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
 
     private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
     private final DaoFacade daoFacade = mock(DaoFacade.class);
@@ -142,7 +150,7 @@ class RefundManagerTest {
         Dispute dispute = burningManDispute(depositTx, receivers);
 
         assertDoesNotThrow(() -> refundManager.verifyDelayedPayoutTxReceivers(
-                delayedPayoutTx(depositTx, receivers), dispute));
+                depositTx, delayedPayoutTx(depositTx, receivers), dispute));
     }
 
     @Test
@@ -155,7 +163,7 @@ class RefundManagerTest {
                 new Tuple2<>(8_000L, receivers.get(1).second)));
 
         assertThrows(IllegalArgumentException.class,
-                () -> refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute));
+                () -> refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute));
     }
 
     @Test
@@ -168,7 +176,7 @@ class RefundManagerTest {
                 new Tuple2<>(9_000L, newAddress())));
 
         assertThrows(IllegalArgumentException.class,
-                () -> refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute));
+                () -> refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute));
     }
 
     @Test
@@ -180,7 +188,132 @@ class RefundManagerTest {
         Transaction delayedPayoutTx = delayedPayoutTx(depositTx, List.of(receivers.get(0)));
 
         assertThrows(IllegalArgumentException.class,
-                () -> refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute));
+                () -> refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // verifyDepositTx and verifyRefundPayoutAmount
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void verifyDepositTxAcceptsContractBoundEscrowScriptAndValue() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+
+        assertDoesNotThrow(() -> refundManager.verifyDepositTx(depositTx,
+                burningManDispute(depositTx, List.of())));
+    }
+
+    @Test
+    void verifyDepositTxRejectsSyntheticUnderfundedEscrow() {
+        Transaction depositTx = depositTx(Coin.valueOf(10_000), expectedEscrowScript());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyDepositTx(depositTx, burningManDispute(depositTx, List.of())));
+    }
+
+    @Test
+    void verifyDepositTxRejectsEscrowUsingWrongScript() {
+        Transaction depositTx = depositTx(ESCROW_VALUE, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyDepositTx(depositTx, burningManDispute(depositTx, List.of())));
+    }
+
+    @Test
+    void verifyDepositTxRejectsClaimedTradeFeeNotDerivedFromEscrowValue() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Dispute dispute = burningManDispute(depositTx, List.of(), TRADE_TX_FEE - 1);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyDepositTx(depositTx, dispute));
+    }
+
+    @Test
+    void verifyRefundPayoutAmountAcceptsAmountAtVerifiedReceiverValue() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertDoesNotThrow(() -> refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(4_000)));
+    }
+
+    @Test
+    void verifyRefundPayoutAmountRejectsAmountAboveVerifiedReceiverValue() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyRefundPayoutAmount(depositTx,
+                        delayedPayoutTx,
+                        dispute,
+                        Coin.valueOf(20_000),
+                        Coin.valueOf(5_000)));
+    }
+
+    @Test
+    void verifyRefundPayoutAmountRejectsAmountAboveDeclaredPot() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(29_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyRefundPayoutAmount(depositTx,
+                        delayedPayoutTx,
+                        dispute,
+                        Coin.valueOf(20_000),
+                        Coin.valueOf(6_000)));
+    }
+
+    @Test
+    void refundValidationResultRejectsPayoutChangedAfterValidation() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        RefundValidationResult result = refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(4_000));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> result.verifyMatches(dispute, Coin.valueOf(20_001), Coin.valueOf(3_999)));
+    }
+
+    @Test
+    void refundValidationResultRejectsReceiverInputsChangedAfterValidation() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        RefundValidationResult result = refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(4_000));
+
+        when(dispute.getTradeTxFee()).thenReturn(TRADE_TX_FEE + 1);
+        assertThrows(IllegalArgumentException.class,
+                () -> result.verifyMatches(dispute, Coin.valueOf(20_000), Coin.valueOf(4_000)));
+
+        when(dispute.getTradeTxFee()).thenReturn(TRADE_TX_FEE);
+        when(dispute.getBurningManSelectionHeight()).thenReturn(SELECTION_HEIGHT + 10);
+        assertThrows(IllegalArgumentException.class,
+                () -> result.verifyMatches(dispute, Coin.valueOf(20_000), Coin.valueOf(4_000)));
     }
 
 
@@ -248,11 +381,7 @@ class RefundManagerTest {
         Transaction makerFeeTx = transactionWithOutput(Coin.valueOf(20_000));
         Transaction takerFeeTx = transactionWithOutput(Coin.valueOf(20_000));
 
-        Transaction depositTx = new Transaction(PARAMS);
-        depositTx.addInput(makerFeeTx.getOutput(0));
-        depositTx.addInput(takerFeeTx.getOutput(0));
-        depositTx.addOutput(ESCROW_VALUE, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
-        depositTx.addOutput(Coin.valueOf(9_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        Transaction depositTx = depositTx(makerFeeTx, takerFeeTx, ESCROW_VALUE, expectedEscrowScript());
 
         Transaction delayedPayoutTx = new Transaction(PARAMS);
         delayedPayoutTx.addInput(depositTx.getOutput(delayedPayoutInputIndex));
@@ -265,6 +394,31 @@ class RefundManagerTest {
         Transaction transaction = new Transaction(PARAMS);
         transaction.addOutput(value, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
         return transaction;
+    }
+
+    private static Transaction depositTx(Coin escrowValue, Script escrowScript) {
+        return depositTx(transactionWithOutput(Coin.valueOf(20_000)),
+                transactionWithOutput(Coin.valueOf(20_000)),
+                escrowValue,
+                escrowScript);
+    }
+
+    private static Transaction depositTx(Transaction makerFeeTx,
+                                         Transaction takerFeeTx,
+                                         Coin escrowValue,
+                                         Script escrowScript) {
+        Transaction depositTx = new Transaction(PARAMS);
+        depositTx.addInput(makerFeeTx.getOutput(0));
+        depositTx.addInput(takerFeeTx.getOutput(0));
+        depositTx.addOutput(escrowValue, escrowScript);
+        depositTx.addOutput(Coin.valueOf(9_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        return depositTx;
+    }
+
+    private static Script expectedEscrowScript() {
+        return DepositTransactionUtils.get2of2MultiSigOutputScript(
+                BUYER_MULTISIG_KEY.getPubKey(),
+                SELLER_MULTISIG_KEY.getPubKey());
     }
 
     // Same shape as TradeWalletService.createDelayedUnsignedPayoutTx: spends deposit output 0 and pays the receivers.
@@ -283,16 +437,31 @@ class RefundManagerTest {
     // The receiver service is stubbed for exactly the escrow output value, so the schedule is only found when the
     // manager derives the input amount from deposit output 0.
     private Dispute burningManDispute(Transaction depositTx, List<Tuple2<Long, String>> receivers) {
+        return burningManDispute(depositTx, receivers, TRADE_TX_FEE);
+    }
+
+    private Dispute burningManDispute(Transaction depositTx,
+                                      List<Tuple2<Long, String>> receivers,
+                                      long tradeTxFee) {
         Contract contract = mock(Contract.class);
+        OfferPayload offerPayload = mock(OfferPayload.class);
+        when(offerPayload.getBuyerSecurityDeposit()).thenReturn(BUYER_SECURITY_DEPOSIT.value);
+        when(offerPayload.getSellerSecurityDeposit()).thenReturn(SELLER_SECURITY_DEPOSIT.value);
+        when(contract.getOfferPayload()).thenReturn(offerPayload);
+        when(contract.getTradeAmount()).thenReturn(TRADE_AMOUNT);
+        when(contract.getBuyerMultiSigPubKey()).thenReturn(BUYER_MULTISIG_KEY.getPubKey());
+        when(contract.getSellerMultiSigPubKey()).thenReturn(SELLER_MULTISIG_KEY.getPubKey());
         when(contract.getBurningManAddressListVersion()).thenReturn(ADDRESS_LIST_VERSION);
         Dispute dispute = mock(Dispute.class);
         when(dispute.findDepositTx(btcWalletService)).thenReturn(Optional.of(depositTx));
+        when(dispute.getDepositTxId()).thenReturn(depositTx.getTxId().toString());
+        when(dispute.getContractHash()).thenReturn(new byte[]{1});
         when(dispute.getBurningManSelectionHeight()).thenReturn(SELECTION_HEIGHT);
-        when(dispute.getTradeTxFee()).thenReturn(TRADE_TX_FEE);
+        when(dispute.getTradeTxFee()).thenReturn(tradeTxFee);
         when(dispute.getContract()).thenReturn(contract);
         when(delayedPayoutTxReceiverService.getReceivers(SELECTION_HEIGHT,
                 ESCROW_VALUE.value,
-                TRADE_TX_FEE,
+                tradeTxFee,
                 ADDRESS_LIST_VERSION)).thenReturn(receivers);
         return dispute;
     }

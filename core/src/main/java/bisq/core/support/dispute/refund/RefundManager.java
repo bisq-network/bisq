@@ -41,6 +41,7 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.AckMessageSourceType;
@@ -57,6 +58,7 @@ import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -338,8 +340,22 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         checkDelayedPayoutTxInput(delayedPayoutTx, depositTx);
     }
 
-    public void verifyDelayedPayoutTxReceivers(Transaction delayedPayoutTx, Dispute dispute) {
-        Transaction depositTx = dispute.findDepositTx(btcWalletService).orElseThrow();
+    public long verifyDepositTx(Transaction depositTx, Dispute dispute) {
+        DisputeValidation.validateRefundDepositTx(dispute, depositTx);
+        Coin declaredPot = getDeclaredTradePot(dispute.getContract());
+        Coin verifiedTradeTxFee = depositTx.getOutput(0).getValue().subtract(declaredPot);
+        checkArgument(verifiedTradeTxFee.isPositive(), "Verified trade tx fee must be positive");
+        checkArgument(verifiedTradeTxFee.value == dispute.getTradeTxFee(),
+                "Trade tx fee does not match the fee derived from deposit output 0. actual=%s, expected=%s",
+                dispute.getTradeTxFee(),
+                verifiedTradeTxFee.value);
+        return verifiedTradeTxFee.value;
+    }
+
+    public void verifyDelayedPayoutTxReceivers(Transaction depositTx,
+                                                Transaction delayedPayoutTx,
+                                                Dispute dispute) {
+        long verifiedTradeTxFee = verifyDepositTx(depositTx, dispute);
         long inputAmount = depositTx.getOutput(0).getValue().value;
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
@@ -347,7 +363,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
-                dispute.getTradeTxFee(),
+                verifiedTradeTxFee,
                 burningManAddressListVersion);
         delayedPayoutTxReceiverService.validateDelayedPayoutTxReceivers(
                 delayedPayoutTxReceivers,
@@ -368,6 +384,56 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
                     "output value does not match delayedPayoutTxReceivers value. transactionOutput=" + transactionOutput);
         }
+    }
+
+    public RefundValidationResult verifyRefundPayoutAmount(Transaction depositTx,
+                                                           Transaction delayedPayoutTx,
+                                                           Dispute dispute,
+                                                           Coin buyerPayoutAmount,
+                                                           Coin sellerPayoutAmount) {
+        verifyDepositTx(depositTx, dispute);
+        checkArgument(depositTx.getTxId().toString().equals(dispute.getDepositTxId()),
+                "Fetched deposit tx ID does not match the dispute deposit tx ID");
+        checkArgument(delayedPayoutTx.getTxId().toString().equals(dispute.getDelayedPayoutTxId()),
+                "Fetched delayed payout tx ID does not match the dispute delayed payout tx ID");
+        Coin checkedBuyerPayoutAmount = checkNotNull(buyerPayoutAmount,
+                "buyerPayoutAmount must not be null");
+        Coin checkedSellerPayoutAmount = checkNotNull(sellerPayoutAmount,
+                "sellerPayoutAmount must not be null");
+        checkArgument(!checkedBuyerPayoutAmount.isNegative(), "buyerPayoutAmount must not be negative");
+        checkArgument(!checkedSellerPayoutAmount.isNegative(), "sellerPayoutAmount must not be negative");
+
+        Coin proposedRefund = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
+        Coin declaredPot = getDeclaredTradePot(dispute.getContract());
+        Coin validatedReceiverOutputSum = delayedPayoutTx.getOutputs().stream()
+                .map(TransactionOutput::getValue)
+                .reduce(Coin.ZERO, Coin::add);
+        Coin verifiedMaximum = declaredPot.isLessThan(validatedReceiverOutputSum)
+                ? declaredPot
+                : validatedReceiverOutputSum;
+        checkArgument(!proposedRefund.isGreaterThan(verifiedMaximum),
+                "Proposed refund amount %s exceeds verified maximum %s",
+                proposedRefund,
+                verifiedMaximum);
+        return new RefundValidationResult(
+                Hex.encode(checkNotNull(dispute.getContractHash(), "dispute contractHash must not be null")),
+                depositTx.getTxId().toString(),
+                delayedPayoutTx.getTxId().toString(),
+                depositTx.getOutput(0).getValue().value,
+                validatedReceiverOutputSum.value,
+                verifiedMaximum.value,
+                dispute.getTradeTxFee(),
+                dispute.getBurningManSelectionHeight(),
+                dispute.getDonationAddressOfDelayedPayoutTx(),
+                checkedBuyerPayoutAmount.value,
+                checkedSellerPayoutAmount.value);
+    }
+
+    private static Coin getDeclaredTradePot(Contract contract) {
+        checkNotNull(contract, "contract must not be null");
+        return contract.getTradeAmount()
+                .add(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()))
+                .add(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()));
     }
 
     // Trades created before the Burning Man receivers paid the whole escrow, minus the miner fee, to a single DAO

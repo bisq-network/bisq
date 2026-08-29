@@ -13,10 +13,35 @@ This validation protects refund-agent and DAO reimbursement funds from cases in 
 control of the escrow while presenting a transaction that does not burn it as the delayed payout
 transaction.
 
-The deposit transaction named by the dispute is bound to the dispute at admission: the serialized
-deposit transaction carried by the dispute must hash to the dispute's deposit transaction ID. The
-transactions used for the validation below are fetched from a block explorer by the IDs carried in
-the dispute and its contract.
+The deposit transaction named by the dispute is bound to the dispute and contract at admission. The
+serialized deposit transaction carried by the dispute must hash to the dispute's deposit transaction
+ID, and its escrow output must match the contract-bound script and value described below. The
+transactions used for the close-time validation are fetched independently by the IDs carried in the
+dispute and its contract, and the fetched deposit must satisfy the same checks.
+
+## Contract-bound escrow
+
+Deposit output `0` must use the P2WSH script derived from the contract's buyer and seller 2-of-2
+multisig public keys. Its value must satisfy the protocol equation exactly:
+
+```text
+deposit output 0 = trade amount
+                 + buyer security deposit
+                 + seller security deposit
+                 + trade transaction fee
+```
+
+The trade amount and deposits come from the hashed contract JSON. The multisig keys come from the
+serialized contract and must derive the script actually funded on chain; legacy contract JSON does
+not commit those keys, so this script check is an escrow-consistency rule rather than independent
+proof that two traders accepted the contract. All amounts and the derived trade transaction fee must
+be positive. The fee used to reconstruct the delayed-payout receiver schedule is derived from the
+validated output value and contract pot; the dispute-carried fee must equal that value and is not an
+independent authority.
+
+These checks apply both to the serialized deposit accepted with a refund dispute and to the fetched
+deposit used immediately before a refund is authorized. A correctly shaped DPT spending an
+underfunded or differently scripted output is not valid refund evidence.
 
 ## Required transaction binding
 
@@ -47,8 +72,9 @@ able to select a weaker rule.
 
 ### Burning Man receivers (selection height greater than zero)
 
-The receiver schedule and amounts must be derived from the value of deposit output `0`. The outputs
-of the delayed payout transaction must match that schedule exactly in number, address and value.
+The receiver schedule and amounts must be derived from the value of deposit output `0` and the trade
+transaction fee derived by the contract-bound escrow check. The outputs of the delayed payout
+transaction must match that schedule exactly in number, address and value.
 
 A transaction that spends another deposit output must fail transaction-chain validation even if its
 outputs happen to match a receiver schedule calculated from deposit output `0`.
@@ -67,6 +93,24 @@ because it does not prove where the fetched transaction actually paid. A transac
 escrow output to any other destination must fail validation even when the dispute claims the legacy
 rule.
 
+## Refund authorization bound
+
+After all delayed-payout outputs have been validated, the maximum normal refund authorization is:
+
+```text
+minimum(contract trade amount + both security deposits,
+        validated delayed-payout receiver output sum)
+```
+
+Buyer and seller payout amounts must each be non-negative and their sum must not exceed that maximum.
+The validation result binds the contract hash, deposit transaction ID, delayed-payout transaction ID,
+validated chain values, trade fee, receiver-selection height, legacy donation address and exact
+buyer/seller allocation. The same binding must still match when the payout confirmation is accepted,
+immediately before a refund-wallet payout and immediately before the dispute result is signed.
+
+Closing the second trader's dispute row must perform the validation again; a peer row's closed flag
+is not evidence that the same contract, transactions and payout allocation were validated.
+
 ## Failure behavior
 
 A failed transaction binding or output validation must be reported as failed delayed-payout
@@ -76,9 +120,10 @@ validation failure is displayed.
 
 ## Compatibility
 
-These rules do not change transaction serialization or the trade protocol. Valid delayed payout
-transactions already spend deposit output `0` and pay the protocol receivers; the rules reject only
-evidence that did not prove the escrow output was spent and burned.
+These rules do not change transaction serialization or the trade protocol. Valid deposits already
+use the contract multisig script and protocol value equation, and valid delayed payout transactions
+already spend deposit output `0` and pay the protocol receivers. The rules reject only inconsistent
+evidence or a refund exceeding the value proved by that evidence.
 
 ## Known limitations
 
@@ -87,18 +132,9 @@ supplied by the dispute opener and are not recomputed or bounded locally. They d
 opener to redirect the escrow to an address of their choice, because the output rules above bind
 every output to DAO-derived addresses, but they are not authenticated facts about the trade:
 
-- Deposit output `0` is not bound to the contract: neither its script is compared with the 2-of-2
-  multisig of the contract's trader keys nor its value with the contract's trade amount, security
-  deposits and trade fee. A self-consistent dispute with a small deposit output can therefore pass
-  while the contract declares a larger trade.
 - The Burning Man selection height is accepted as carried in the dispute. It is not bound to the
   block height of the deposit transaction, so any DAO snapshot may be selected for the receiver
   schedule.
-- The trade fee is accepted as carried in the dispute. It sets the fee rate of the receiver schedule
-  and therefore how much of the escrow becomes miner fee and which small receivers are filtered out.
-  The trade protocol binds this fee to the escrow value (deposit output `0` equals trade amount plus
-  both security deposits plus the trade fee); the refund-agent validation does not apply that rule
-  yet.
 - The transactions returned by the block explorer are trusted: they are not compared with the
   requested transaction IDs, no confirmation depth is required, and the sequence number and lock
   time of the delayed payout transaction are not checked.
