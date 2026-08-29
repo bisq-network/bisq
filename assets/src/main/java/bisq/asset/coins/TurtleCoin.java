@@ -23,6 +23,6 @@ import bisq.asset.RegexAddressValidator;
 public class TurtleCoin extends Coin {
 
     public TurtleCoin() {
-        super("TurtleCoin", "TRTL", new RegexAddressValidator("^TRTL[1-9A-Za-z^OIl]{95}"));
+        super("TurtleCoin", "TRTL", 2, new RegexAddressValidator("^TRTL[1-9A-Za-z^OIl]{95}"));
     }
 }

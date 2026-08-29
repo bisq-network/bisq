@@ -70,6 +70,7 @@ public class CurrencyUtil {
     // See: https://github.com/bisq-network/bisq/pull/4955#issuecomment-745302802
     private static final Map<String, Boolean> isFiatCurrencyMap = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> isCryptoCurrencyMap = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> cryptoPrecisionMap = new ConcurrentHashMap<>();
 
     private static final Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
             CurrencyUtil::createFiatCurrencyMap);
@@ -427,6 +428,18 @@ public class CurrencyUtil {
         return assetRegistry.stream()
                 .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
                 .findAny();
+    }
+
+    // Number of decimal places the given altcoin supports on its own chain. Falls back to
+    // the default precision for BTC, fiat or any unknown/removed asset (none in registry).
+    // findAsset is a linear scan over the asset registry and this gets called per offer row
+    // on UI recalculations, so the result is cached like isCryptoCurrency above.
+    public static int getCryptoPrecision(String currencyCode) {
+        if (currencyCode == null) {
+            return Asset.DEFAULT_PRECISION;
+        }
+        return cryptoPrecisionMap.computeIfAbsent(currencyCode,
+                code -> findAsset(code).map(Asset::getPrecision).orElse(Asset.DEFAULT_PRECISION));
     }
 
     public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {

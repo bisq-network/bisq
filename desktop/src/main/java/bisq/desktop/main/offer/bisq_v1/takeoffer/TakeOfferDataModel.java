@@ -485,6 +485,9 @@ class TakeOfferDataModel extends OfferDataModel {
                 volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
             else if (offer.isFiatOffer())
                 volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+            else if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode()))
+                volumeByAmount = VolumeUtil.getAdjustedAltcoinVolume(volumeByAmount,
+                        CurrencyUtil.getCryptoPrecision(offer.getCurrencyCode()));
 
             volume.set(volumeByAmount);
 
@@ -581,6 +584,14 @@ class TakeOfferDataModel extends OfferDataModel {
         if (amount.get() != null && offer != null)
             return amount.get().isGreaterThan(offer.getAmount());
         return true;
+    }
+
+    boolean isRoundedVolumeZero() {
+        // An altcoin volume below half of one on-chain unit rounds to zero, so there
+        // would be nothing to pay. See docs/specifications/trade/altcoin-volume-precision.md
+        // for the offers that can reach this.
+        Volume volume = this.volume.get();
+        return volume != null && volume.isZero();
     }
 
     boolean wouldCreateDustForMaker() {

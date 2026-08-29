@@ -44,8 +44,17 @@ public abstract class Coin extends AbstractAsset {
         this(name, tickerSymbol, addressValidator, Network.MAINNET);
     }
 
+    public Coin(String name, String tickerSymbol, int precision, AddressValidator addressValidator) {
+        this(name, tickerSymbol, precision, addressValidator, Network.MAINNET);
+    }
+
     public Coin(String name, String tickerSymbol, AddressValidator addressValidator, Network network) {
         super(name, tickerSymbol, addressValidator);
+        this.network = network;
+    }
+
+    public Coin(String name, String tickerSymbol, int precision, AddressValidator addressValidator, Network network) {
+        super(name, tickerSymbol, precision, addressValidator);
         this.network = network;
     }
 

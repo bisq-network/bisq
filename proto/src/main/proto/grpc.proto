@@ -230,10 +230,10 @@ message OfferInfo {
     // The offer's minimum BTC amount in satoshis.  One million satoshis is represented as 1000000.
     uint64 min_amount = 7;
     // The rounded volume of currency to be traded for BTC.
-    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to 2 decimal places.
+    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to the number of decimals the coin supports on its own chain, at most 8.
     string volume = 8;
     // The rounded, minimum volume of currency to be traded for BTC.
-    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to 2 decimal places.
+    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to the number of decimals the coin supports on its own chain, at most 8.
     string min_volume = 9;
     // A long representing the BTC buyer's security deposit in satoshis.
     uint64 buyer_security_deposit = 10;

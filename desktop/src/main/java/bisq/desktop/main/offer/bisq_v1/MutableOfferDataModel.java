@@ -580,6 +580,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
         else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+        else if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
+            volumeByAmount = VolumeUtil.getAdjustedAltcoinVolume(volumeByAmount,
+                    CurrencyUtil.getCryptoPrecision(tradeCurrencyCode.get()));
         return volumeByAmount;
     }
 

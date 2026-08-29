@@ -24,7 +24,7 @@ import bisq.asset.NetworkParametersAdapter;
 public class Emercoin extends Coin {
 
     public Emercoin() {
-        super("Emercoin", "EMC", new Base58AddressValidator(new EmercoinMainNetParams()), Network.MAINNET);
+        super("Emercoin", "EMC", 6, new Base58AddressValidator(new EmercoinMainNetParams()), Network.MAINNET);
     }
 
     public static class EmercoinMainNetParams extends NetworkParametersAdapter {

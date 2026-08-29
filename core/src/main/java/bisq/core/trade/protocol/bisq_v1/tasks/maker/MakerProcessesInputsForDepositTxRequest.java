@@ -159,6 +159,9 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             long takersTradePrice = TradePriceValidation.checkTakersTradePrice(request.getTradePrice(), priceFeedService, offer);
             trade.setPriceAsLong(takersTradePrice);
+            // The maker trade has no price until the taker's price is applied, so the
+            // volume can only be derived and validated from here on.
+            TradeAmountValidation.checkTradeVolume(trade.getVolume());
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 

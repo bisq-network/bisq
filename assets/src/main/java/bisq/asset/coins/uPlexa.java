@@ -25,6 +25,6 @@ import bisq.asset.RegexAddressValidator;
 public class uPlexa extends Coin {
 
     public uPlexa() {
-        super("uPlexa", "UPX", new RegexAddressValidator("^((UPX)[1-9A-Za-z^OIl]{95}|(UPi)[1-9A-Za-z^OIl]{106}|(UmV|UmW)[1-9A-Za-z^OIl]{94})$"));
+        super("uPlexa", "UPX", 2, new RegexAddressValidator("^((UPX)[1-9A-Za-z^OIl]{95}|(UPi)[1-9A-Za-z^OIl]{106}|(UmV|UmW)[1-9A-Za-z^OIl]{94})$"));
     }
 }

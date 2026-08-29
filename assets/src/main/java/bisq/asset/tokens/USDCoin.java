@@ -22,6 +22,6 @@ import bisq.asset.Erc20Token;
 public class USDCoin extends Erc20Token {
 
     public USDCoin() {
-        super("USD Coin", "USDC");
+        super("USD Coin", "USDC", 6);
     }
 }

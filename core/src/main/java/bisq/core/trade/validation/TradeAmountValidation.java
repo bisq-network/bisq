@@ -17,12 +17,16 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.monetary.Volume;
 import bisq.core.payment.TradeLimits;
 
 import org.bitcoinj.core.Coin;
 
+import javax.annotation.Nullable;
+
 import static bisq.core.util.Validator.checkIsPositive;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class TradeAmountValidation {
     private TradeAmountValidation() {
@@ -55,5 +59,22 @@ public final class TradeAmountValidation {
                 "Trade amount must not exceed the network max trade amount. tradeAmount=%s, max=%s",
                 tradeAmount.toFriendlyString(), TradeLimits.MAX_TRADE_AMOUNT.toFriendlyString());
         return tradeAmount;
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Trade volume
+    /* --------------------------------------------------------------------- */
+
+    // An altcoin volume below half of one on-chain unit rounds to zero (see
+    // VolumeUtil.getAdjustedAltcoinVolume), which would settle the trade with no
+    // payment obligation. Reachable through offers that bypassed the volume
+    // validation at placement, e.g. crafted or pre-existing ones, and through
+    // market-priced offers whose price has risen far enough since placement.
+    // Expects a volume already rounded to the asset's chain precision.
+    public static Volume checkTradeVolume(@Nullable Volume tradeVolume) {
+        checkNotNull(tradeVolume, "tradeVolume must not be null");
+        checkArgument(tradeVolume.getValue() > 0,
+                "Trade volume must not be zero. currencyCode=%s", tradeVolume.getCurrencyCode());
+        return tradeVolume;
     }
 }

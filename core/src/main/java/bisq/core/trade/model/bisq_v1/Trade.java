@@ -18,6 +18,7 @@
 package bisq.core.trade.model.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -772,6 +773,9 @@ public abstract class Trade extends TradeModel {
                         volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
                     else if (offer.isFiatOffer())
                         volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+                    else if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode()))
+                        volumeByAmount = VolumeUtil.getAdjustedAltcoinVolume(volumeByAmount,
+                                CurrencyUtil.getCryptoPrecision(offer.getCurrencyCode()));
                 }
                 return volumeByAmount;
             } else {

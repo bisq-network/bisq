@@ -22,6 +22,6 @@ import bisq.asset.Erc20Token;
 public class AugmintEuro extends Erc20Token {
 
     public AugmintEuro() {
-        super("Augmint Euro", "AEUR");
+        super("Augmint Euro", "AEUR", 2);
     }
 }
