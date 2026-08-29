@@ -71,6 +71,14 @@ final class RefundPayoutReceipt {
         return depositTxId.equals(other.depositTxId) || delayedPayoutTxId.equals(other.delayedPayoutTxId);
     }
 
+    boolean hasDepositTxId(String txId) {
+        return depositTxId.equals(parseTxId(txId, "depositTxId"));
+    }
+
+    boolean hasDelayedPayoutTxId(String txId) {
+        return delayedPayoutTxId.equals(parseTxId(txId, "delayedPayoutTxId"));
+    }
+
     String toMemo() {
         return MEMO_PREFIX + depositTxId + ":" + delayedPayoutTxId;
     }

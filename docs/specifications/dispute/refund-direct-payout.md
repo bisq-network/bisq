@@ -23,6 +23,12 @@ wallet transaction that carries the canonical refund-receipt memo is also eviden
 wallet memo is recovery evidence; it is not transmitted on chain and does not replace transaction and dispute
 validation.
 
+A malformed funding transaction ID in a retained record is ignored individually, with a logged warning. If that
+record carries a payout transaction ID, its other parseable funding transaction ID remains receipt-consumption
+evidence and must be compared under the conflict rule above. A retained record with no parseable funding transaction
+ID cannot match a receipt and must not prevent payouts for unrelated receipts. The ticket selected for payout must
+itself carry both parseable IDs; otherwise no payout is authorized for it.
+
 ## Durable reservation and publication
 
 Before a direct payout is committed to the wallet or broadcast, its transaction ID must be bound to the receipt and

@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +51,7 @@ class RefundPayoutReceiptServiceTest {
     private static final String DELAYED_PAYOUT_A = "12".repeat(32);
     private static final String DELAYED_PAYOUT_B = "34".repeat(32);
     private static final String PAYOUT_TX_ID = "56".repeat(32);
+    private static final String PAYOUT_TX_ID_B = "78".repeat(32);
 
     private RefundDisputeList disputeList;
     private PersistenceManager<RefundDisputeList> persistenceManager;
@@ -152,6 +154,56 @@ class RefundPayoutReceiptServiceTest {
         assertTrue(selectedDispute.isPayoutDone());
         assertTrue(peerDispute.isPayoutDone());
         verify(payoutTx).setMemo(RefundPayoutReceipt.MEMO_PREFIX + DEPOSIT_A + ":" + DELAYED_PAYOUT_A);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void ignoresStoredRowsWithUnparseableFundingTransactionIds() {
+        Dispute unparseablePaidDispute = dispute("not-a-tx-id", null, PAYOUT_TX_ID);
+        Dispute unparseableOpenDispute = dispute(DEPOSIT_B, " ", null);
+        Dispute selectedDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);
+        disputeList.add(unparseablePaidDispute);
+        disputeList.add(unparseableOpenDispute);
+        disputeList.add(selectedDispute);
+        Transaction payoutTx = mock(Transaction.class);
+        when(payoutTx.getTxId()).thenReturn(Sha256Hash.wrap(PAYOUT_TX_ID));
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        }).when(persistenceManager).persistNow(any(Runnable.class), any(Consumer.class));
+        AtomicBoolean completed = new AtomicBoolean();
+
+        assertTrue(service.findPayoutTxId(selectedDispute).isEmpty());
+        service.persistPayoutReservation(selectedDispute,
+                payoutTx,
+                () -> completed.set(true),
+                throwable -> {
+                });
+
+        assertTrue(completed.get());
+        assertEquals(PAYOUT_TX_ID, selectedDispute.getDisputePayoutTxId());
+        assertNull(unparseableOpenDispute.getDisputePayoutTxId());
+    }
+
+    @Test
+    void usesEachParseableFundingIdFromMalformedPaidRowsAsConsumptionEvidence() {
+        disputeList.add(dispute(DEPOSIT_A, "not-a-tx-id", PAYOUT_TX_ID));
+        disputeList.add(dispute("not-a-tx-id", DELAYED_PAYOUT_B, PAYOUT_TX_ID_B));
+
+        assertEquals(PAYOUT_TX_ID,
+                service.findPayoutTxId(dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null)).orElseThrow());
+        assertEquals(PAYOUT_TX_ID_B,
+                service.findPayoutTxId(dispute(DEPOSIT_B, DELAYED_PAYOUT_B, null)).orElseThrow());
+    }
+
+    @Test
+    void rejectsSelectedDisputeWithUnparseableFundingTransactionIds() {
+        disputeList.add(dispute(DEPOSIT_A, DELAYED_PAYOUT_A, PAYOUT_TX_ID));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.findPayoutTxId(dispute(DEPOSIT_A, "not-a-tx-id", null)));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.findPayoutTxId(dispute(null, DELAYED_PAYOUT_A, null)));
     }
 
     @Test

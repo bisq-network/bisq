@@ -19,6 +19,7 @@ package bisq.core.support.dispute.refund;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.trade.model.bisq_v1.Contract;
 
@@ -31,10 +32,14 @@ import com.google.inject.Singleton;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 @Singleton
 public final class RefundPayoutReceiptService {
     private final RefundDisputeListService disputeListService;
@@ -53,7 +58,7 @@ public final class RefundPayoutReceiptService {
         for (Dispute storedDispute : disputeListService.getDisputeList().getList()) {
             String payoutTxId = storedDispute.getDisputePayoutTxId();
             if (payoutTxId != null && !payoutTxId.isBlank() &&
-                    receipt.sharesFundingEvidenceWith(RefundPayoutReceipt.fromDispute(storedDispute))) {
+                    sharesParseableFundingEvidence(receipt, storedDispute)) {
                 return Optional.of(payoutTxId);
             }
         }
@@ -101,7 +106,7 @@ public final class RefundPayoutReceiptService {
         checkedPayoutTx.setMemo(receipt.toMemo());
 
         for (Dispute storedDispute : disputeListService.getDisputeList().getList()) {
-            if (receipt.sharesFundingEvidenceWith(RefundPayoutReceipt.fromDispute(storedDispute))) {
+            if (sharesFundingEvidence(receipt, storedDispute)) {
                 markPaid(storedDispute, payoutTxId);
             }
         }
@@ -114,6 +119,51 @@ public final class RefundPayoutReceiptService {
     private static void markPaid(Dispute dispute, String payoutTxId) {
         dispute.setDisputePayoutTxId(payoutTxId);
         dispute.setPayoutDone(true);
+    }
+
+    // A paid historical row can contain one malformed funding ID. Its other, parseable ID remains consumption
+    // evidence because a match on either transaction is sufficient to block another payout.
+    private static boolean sharesParseableFundingEvidence(RefundPayoutReceipt receipt, Dispute storedDispute) {
+        if (storedDispute.getSupportType() != SupportType.REFUND) {
+            log.warn("Ignoring non-refund dispute stored in the refund dispute list. tradeId={}",
+                    storedDispute.getTradeId());
+            return false;
+        }
+
+        boolean sharesDepositTxId = matchesStoredTxId(storedDispute,
+                "depositTxId",
+                storedDispute.getDepositTxId(),
+                receipt::hasDepositTxId);
+        boolean sharesDelayedPayoutTxId = matchesStoredTxId(storedDispute,
+                "delayedPayoutTxId",
+                storedDispute.getDelayedPayoutTxId(),
+                receipt::hasDelayedPayoutTxId);
+        return sharesDepositTxId || sharesDelayedPayoutTxId;
+    }
+
+    private static boolean matchesStoredTxId(Dispute storedDispute,
+                                             String fieldName,
+                                             String txId,
+                                             Predicate<String> matcher) {
+        try {
+            return matcher.test(txId);
+        } catch (IllegalArgumentException exception) {
+            log.warn("Ignoring unparseable {} while matching stored refund dispute. tradeId={}, {}",
+                    fieldName, storedDispute.getTradeId(), exception.getMessage());
+            return false;
+        }
+    }
+
+    // A stored row whose funding transaction IDs cannot be parsed cannot be marked for this receipt. It is skipped so
+    // that it does not block payouts for unrelated receipts. The dispute selected for payout is always parsed strictly.
+    private static boolean sharesFundingEvidence(RefundPayoutReceipt receipt, Dispute storedDispute) {
+        try {
+            return receipt.sharesFundingEvidenceWith(RefundPayoutReceipt.fromDispute(storedDispute));
+        } catch (IllegalArgumentException exception) {
+            log.warn("Ignoring stored refund dispute with unparseable funding transaction IDs. tradeId={}, {}",
+                    storedDispute.getTradeId(), exception.getMessage());
+            return false;
+        }
     }
 
     @VisibleForTesting
