@@ -19,7 +19,7 @@ import javax.inject.Inject
 class PackagingPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
 
     companion object {
-        const val APP_VERSION = "1.10.7"
+        const val APP_VERSION = "1.10.8"
     }
 
     override fun apply(project: Project) {

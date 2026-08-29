@@ -3,7 +3,7 @@ set -e
 
 cd ../../../
 
-version="1.10.7"
+version="1.10.8"
 
 target_dir="desktop/releases/$version"
 
