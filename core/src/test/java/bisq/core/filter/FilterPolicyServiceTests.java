@@ -35,6 +35,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class FilterPolicyServiceTests {
+    @SuppressWarnings("deprecation")
     @Test
     void bansWhenDenyListBansAndNoNetworkFilterBans() {
         Properties properties = new Properties();
