@@ -902,8 +902,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             UserThread.runAfter(() -> {
                                         Popup popup = new Popup();
                                         popup.warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
-                                                .actionButtonText(Res.get("shared.continueAnyway"))
-                                                .onAction(() -> asyncStatus.complete(true))
+                                                .onAction(() -> asyncStatus.complete(false))
                                                 .onClose(() -> asyncStatus.complete(false))
                                                 .show();
                                     },
@@ -913,7 +912,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     } else {
                         UserThread.runAfter(() ->
                                         new Popup().warning(Res.get("disputeSummaryWindow.requestTransactionsError", throwable.getMessage()))
-                                                .onAction(() -> asyncStatus.complete(true))
+                                                .onAction(() -> asyncStatus.complete(false))
                                                 .onClose(() -> asyncStatus.complete(false))
                                                 .show(),
                                 100,

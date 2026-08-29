@@ -154,10 +154,14 @@ is not evidence that the same contract, transactions and payout allocation were 
 
 ## Failure behavior
 
-A failed transaction binding or output validation must be reported as failed delayed-payout
-verification. It must not be represented to the refund agent as successful automatic validation. Any
-operator override offered by the application must remain an explicit decision made after the
-validation failure is displayed.
+A failed transaction fetch, identity check, confirmation/finality check, contract binding, output
+validation or payout-bound check must be reported as failed delayed-payout verification and terminate
+the normal close attempt. The application must not offer an action that continues from failed or
+unavailable evidence into a refund-wallet payout or a signed refund result.
+
+The agent may keep the ticket open, add notes, retry after temporary provider failure, or investigate
+the transactions separately. Manual investigation is not authorization to emit the same payout or
+signed artifact produced by successful automatic validation.
 
 ## Compatibility
 
@@ -170,13 +174,3 @@ Automatic validation also rejects a deposit that confirmed only after its DPT lo
 a legacy-selection trade derived to start at or after the Burning Man snapshot activation boundary.
 Those unusual historical cases require investigation rather than allowing opener-carried timing or
 the legacy selector to weaken the normal authorization rules.
-
-## Known limitation
-
-One authorization-path limitation remains:
-
-- When the transactions cannot be fetched at all, the application warns and lets the agent
-  continue, without any of the validation above having run.
-
-The fetch-failure action must be made terminal and clearly labelled so the interface does not imply
-that an unverified case can proceed through the normal authorization flow.
