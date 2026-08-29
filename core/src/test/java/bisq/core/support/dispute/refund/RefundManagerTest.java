@@ -17,6 +17,24 @@
 
 package bisq.core.support.dispute.refund;
 
+import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.mempool.MempoolService;
+import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.ClosedTradableManager;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
+
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.MailboxMessageService;
+
+import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
@@ -31,13 +49,19 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class RefundManagerTest {
     private static final NetworkParameters PARAMS = MainNetParams.get();
 
-    private final RefundManager refundManager = mock(RefundManager.class, CALLS_REAL_METHODS);
+    private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
+    private final DaoFacade daoFacade = mock(DaoFacade.class);
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService =
+            mock(DelayedPayoutTxReceiverService.class);
+    private final RefundManager refundManager = refundManager(btcWalletService,
+            daoFacade,
+            delayedPayoutTxReceiverService);
 
     @Test
     void verifyTradeTxChainAcceptsDelayedPayoutTxSpendingDepositEscrowOutput() {
@@ -76,5 +100,27 @@ class RefundManagerTest {
         Transaction transaction = new Transaction(PARAMS);
         transaction.addOutput(value, ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
         return transaction;
+    }
+
+    private static RefundManager refundManager(BtcWalletService btcWalletService,
+                                               DaoFacade daoFacade,
+                                               DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+        P2PService p2PService = mock(P2PService.class);
+        when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
+        return new RefundManager(p2PService,
+                mock(TradeWalletService.class),
+                btcWalletService,
+                mock(WalletsSetup.class),
+                mock(TradeManager.class),
+                mock(ClosedTradableManager.class),
+                mock(FailedTradesManager.class),
+                mock(OpenOfferManager.class),
+                daoFacade,
+                delayedPayoutTxReceiverService,
+                mock(KeyRing.class),
+                mock(RefundDisputeListService.class),
+                mock(Config.class),
+                mock(PriceFeedService.class),
+                mock(MempoolService.class));
     }
 }
