@@ -664,6 +664,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
+                                // updateItem runs again for the same item on every table refresh, so
+                                // the previous listener must go before a new one is added.
+                                removeStateListener();
                                 if (item != null && !empty) {
                                     trade = item.getTrade();
                                     listener = (observable, oldValue, newValue) -> update();
@@ -671,12 +674,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     update();
                                 } else {
                                     setGraphic(null);
-                                    if (trade != null && listener != null) {
-                                        trade.stateProperty().removeListener(listener);
-                                        trade = null;
-                                        listener = null;
-                                    }
                                 }
+                            }
+
+                            private void removeStateListener() {
+                                if (trade != null && listener != null) {
+                                    trade.stateProperty().removeListener(listener);
+                                }
+                                trade = null;
+                                listener = null;
                             }
 
                             private void update() {
@@ -985,6 +991,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
+                                // updateItem runs again for the same item on every table refresh, so
+                                // the previous listener must go before a new one is added.
+                                removeStateListener();
                                 if (!empty && newItem != null) {
                                     trade = newItem.getTrade();
                                     listener = (observable, oldValue, newValue) -> update();
@@ -993,6 +1002,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 } else {
                                     cleanup();
                                 }
+                            }
+
+                            private void removeStateListener() {
+                                if (listener != null && trade != null) {
+                                    trade.stateProperty().removeListener(listener);
+                                }
+                                listener = null;
                             }
 
                             private void update() {
@@ -1035,9 +1051,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 if (trashIconButton != null) {
                                     trashIconButton.setOnAction(null);
                                 }
-                                if (listener != null && trade != null) {
-                                    trade.stateProperty().removeListener(listener);
-                                }
+                                removeStateListener();
                                 setGraphic(null);
                             }
                         };
