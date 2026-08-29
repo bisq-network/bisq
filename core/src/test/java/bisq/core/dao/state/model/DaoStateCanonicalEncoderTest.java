@@ -218,7 +218,7 @@ class DaoStateCanonicalEncoderTest {
     void serializesLegacyDaoStateMapsInJava11HashMapIterationOrder() throws Exception {
         DaoState daoState = getDaoStateWithMaps();
 
-        protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChainLegacy());
+        @SuppressWarnings("deprecation") protobuf.DaoState proto = protobuf.DaoState.parseFrom(daoState.getSerializedStateForHashChainLegacy());
 
         assertEquals(JAVA_11_HASH_MAP_ORDER, new ArrayList<>(proto.getIssuanceMapMap().keySet()));
         assertEquals(JAVA_11_TX_OUTPUT_KEY_HASH_MAP_ORDER,
@@ -247,7 +247,7 @@ class DaoStateCanonicalEncoderTest {
 
     @Test
     void serializesLegacyEmptyDaoStateHashChainWithoutLastBlock() throws Exception {
-        protobuf.DaoState proto = protobuf.DaoState.parseFrom(new DaoState().getSerializedStateForHashChainLegacy());
+        @SuppressWarnings("deprecation") protobuf.DaoState proto = protobuf.DaoState.parseFrom(new DaoState().getSerializedStateForHashChainLegacy());
 
         assertEquals(0, proto.getBlocksCount());
     }
