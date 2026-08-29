@@ -874,8 +874,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     if (throwable == null) {
                         try {
                             refundManager.verifyTradeTxChain(txList);
-                            if (!dispute.isUsingLegacyBurningMan()) {
-                                Transaction delayedPayoutTx = txList.get(3);
+                            Transaction delayedPayoutTx = txList.get(3);
+                            if (dispute.isUsingLegacyBurningMan()) {
+                                refundManager.verifyLegacyDelayedPayoutTx(delayedPayoutTx, dispute);
+                            } else {
                                 refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
                             }
                             asyncStatus.complete(true);

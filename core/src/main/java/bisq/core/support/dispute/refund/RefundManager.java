@@ -31,6 +31,7 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -367,5 +368,19 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
                     "output value does not match delayedPayoutTxReceivers value. transactionOutput=" + transactionOutput);
         }
+    }
+
+    // Trades created before the Burning Man receivers paid the whole escrow, minus the miner fee, to a single DAO
+    // donation address. The dispute-carried burningManSelectionHeight selects this branch, so it must be as strict
+    // as verifyDelayedPayoutTxReceivers: the fetched transaction itself has to pay to a DAO donation address.
+    // Checking only the dispute-carried address string would not prove where the escrow went.
+    public void verifyLegacyDelayedPayoutTx(Transaction delayedPayoutTx, Dispute dispute)
+            throws DisputeValidation.AddressException {
+        checkArgument(delayedPayoutTx.getOutputs().size() == 1,
+                "Legacy delayedPayoutTx must have exactly 1 output");
+        DisputeValidation.validateDonationAddress(dispute, delayedPayoutTx, btcWalletService.getParams());
+        DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute,
+                dispute.getDonationAddressOfDelayedPayoutTx(),
+                daoFacade);
     }
 }
