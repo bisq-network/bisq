@@ -40,6 +40,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
 
+### `dispute/`
+
+| Specification | Covers |
+|---|---|
+| [`dispute/refund-direct-payout.md`](dispute/refund-direct-payout.md) | One-time refund receipt consumption, durable payout reservation, amount limits, and inbound refund state. |
+
 ### `network/`
 
 | Specification | Covers |

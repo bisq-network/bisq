@@ -412,14 +412,25 @@ public class PersistenceManager<T extends PersistableEnvelope> {
 
     public void forcePersistNow() {
         // Tor Bridges settings are edited before app init completes, require persistNow to be forced, see writeToDisk()
-        persistNow(null, true);
+        persistNow(null, null, true);
     }
 
     public void persistNow(@Nullable Runnable completeHandler) {
-        persistNow(completeHandler, false);
+        persistNow(completeHandler, null, false);
     }
 
-    private void persistNow(@Nullable Runnable completeHandler, boolean force) {
+    /**
+     * Persists immediately and reports a write failure separately from successful completion.
+     * Existing callers use {@link #persistNow(Runnable)}, whose completion handler is invoked even after a write
+     * failure. Security-sensitive callers that must not continue without durable state use this overload.
+     */
+    public void persistNow(@Nullable Runnable completeHandler, Consumer<Throwable> errorHandler) {
+        persistNow(completeHandler, checkNotNull(errorHandler), false);
+    }
+
+    private void persistNow(@Nullable Runnable completeHandler,
+                            @Nullable Consumer<Throwable> errorHandler,
+                            boolean force) {
         long ts = System.currentTimeMillis();
         try {
             // The serialisation is done on the user thread to avoid threading issue with potential mutations of the
@@ -429,7 +440,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             // For the write to disk task we use a thread. We do not have any issues anymore if the persistable objects
             // gets mutated while the thread is running as we have serialized it already and do not operate on the
             // reference to the persistable object.
-            getWriteToDiskExecutor().execute(() -> writeToDisk(serialized, completeHandler, force));
+            getWriteToDiskExecutor().execute(() -> writeToDisk(serialized, completeHandler, errorHandler, force));
 
             long duration = System.currentTimeMillis() - ts;
             if (duration > 100) {
@@ -438,21 +449,33 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), fileName);
             e.printStackTrace();
-            throw new RuntimeException(e);
+            if (errorHandler != null) {
+                UserThread.execute(() -> errorHandler.accept(e));
+            } else {
+                throw new RuntimeException(e);
+            }
         }
     }
 
-    private void writeToDisk(protobuf.PersistableEnvelope serialized, @Nullable Runnable completeHandler, boolean force) {
+    private void writeToDisk(protobuf.PersistableEnvelope serialized,
+                             @Nullable Runnable completeHandler,
+                             @Nullable Consumer<Throwable> errorHandler,
+                             boolean force) {
         if (!allServicesInitialized.get() && !force) {
             log.warn("Application has not completed start up yet so we do not permit writing data to disk.");
-            if (completeHandler != null)
+            if (errorHandler != null) {
+                UserThread.execute(() -> errorHandler.accept(
+                        new IllegalStateException("Application has not completed start up yet")));
+            } else if (completeHandler != null) {
                 UserThread.execute(completeHandler);
+            }
             return;
         }
 
         long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
+        Throwable writeFailure = null;
 
         try {
             // Before we write we backup existing file
@@ -483,6 +506,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             FileUtil.renameFile(tempFile, storageFile);
             usedTempFilePath = tempFile.toPath();
         } catch (Throwable t) {
+            writeFailure = t;
             // If an error occurred, don't attempt to reuse this path again, in case temp file cleanup fails.
             usedTempFilePath = null;
             log.error("Error at saveToFile, storageFile={}", fileName, t);
@@ -508,7 +532,10 @@ public class PersistenceManager<T extends PersistableEnvelope> {
                 log.info("Writing the serialized {} completed in {} msec", fileName, duration);
             }
             persistenceRequested = false;
-            if (completeHandler != null) {
+            if (writeFailure != null && errorHandler != null) {
+                Throwable failure = writeFailure;
+                UserThread.execute(() -> errorHandler.accept(failure));
+            } else if (completeHandler != null) {
                 UserThread.execute(completeHandler);
             }
         }

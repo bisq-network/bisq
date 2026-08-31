@@ -79,6 +79,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,6 +96,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     private static final int MIN_REFUND_TX_CONFIRMATIONS = 1;
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final MempoolService mempoolService;
+    private final RefundPayoutReceiptService refundPayoutReceiptService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,12 +118,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          RefundDisputeListService refundDisputeListService,
                          Config config,
                          PriceFeedService priceFeedService,
-                         MempoolService mempoolService) {
+                         MempoolService mempoolService,
+                         RefundPayoutReceiptService refundPayoutReceiptService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, failedTradesManager,
                 openOfferManager, daoFacade, keyRing, refundDisputeListService, config, priceFeedService);
         this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
 
         this.mempoolService = mempoolService;
+        this.refundPayoutReceiptService = refundPayoutReceiptService;
     }
 
 
@@ -579,5 +583,23 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute,
                 dispute.getDonationAddressOfDelayedPayoutTx(),
                 daoFacade);
+    }
+
+    public Optional<String> findRefundPayoutTxId(Dispute dispute) {
+        return refundPayoutReceiptService.findPayoutTxId(dispute);
+    }
+
+    public Coin getMaximumRefundPayoutAmount(Dispute dispute) {
+        return refundPayoutReceiptService.getMaximumPayoutAmount(dispute);
+    }
+
+    public void persistRefundPayoutReservation(Dispute dispute,
+                                               Transaction payoutTx,
+                                               Runnable completeHandler,
+                                               Consumer<Throwable> errorHandler) {
+        refundPayoutReceiptService.persistPayoutReservation(dispute,
+                payoutTx,
+                completeHandler,
+                errorHandler);
     }
 }

@@ -417,15 +417,31 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private boolean isPayoutAmountValid() {
         Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
         Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
-        Contract contract = dispute.getContract();
-        Coin tradeAmount = contract.getTradeAmount();
-        Offer offer = new Offer(contract.getOfferPayload());
-        Coin available = tradeAmount
-                .add(offer.getBuyerSecurityDeposit())
-                .add(offer.getSellerSecurityDeposit());
-        Coin totalAmount = buyerAmount.add(sellerAmount);
+        if (buyerAmount.isNegative() || sellerAmount.isNegative()) {
+            return false;
+        }
+
+        Coin totalAmount;
+        try {
+            totalAmount = buyerAmount.add(sellerAmount);
+        } catch (ArithmeticException exception) {
+            return false;
+        }
 
         boolean isRefundAgent = getDisputeManager(dispute) instanceof RefundManager;
+        if (isRefundAgent && totalAmount.isZero()) {
+            // Closing without any payout creates no transaction, so it needs neither the refund receipt nor its limit
+            return true;
+        }
+
+        Coin available;
+        try {
+            available = getMaximumPayoutAmount();
+        } catch (RuntimeException exception) {
+            log.error("Invalid payout data", exception);
+            return false;
+        }
+
         if (isRefundAgent) {
             // We allow to spend less in case of RefundAgent or even zero to both, so in that case no payout tx will
             // be made
@@ -436,6 +452,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             }
             return totalAmount.compareTo(available) == 0;
         }
+    }
+
+    private Coin getMaximumPayoutAmount() {
+        Contract contract = dispute.getContract();
+        Offer offer = new Offer(contract.getOfferPayload());
+        Coin contractPayoutAmount = contract.getTradeAmount()
+                .add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
+
+        return getDisputeManager(dispute) instanceof RefundManager
+                ? refundManager.getMaximumRefundPayoutAmount(dispute)
+                : contractPayoutAmount;
     }
 
     private void applyCustomAmounts(InputTextField inputTextField, boolean oldFocusValue, boolean newFocusValue) {
@@ -739,25 +767,29 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             return asyncStatus;
         }
 
-        if (dispute.isPayoutDone()) {
-            new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
-                    .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .actionButtonText("Close ticket")
-                    .onAction(() -> asyncStatus.complete(true))
-                    .show();
-            return asyncStatus;
+        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
+        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
+        Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
+        if (outputAmount.isPositive()) {
+            // Only a payout consumes the refund receipt; closing without payout does not need it
+            try {
+                if (isRefundReceiptAlreadyPaid()) {
+                    showAlreadyPaidPopup(asyncStatus);
+                    return asyncStatus;
+                }
+            } catch (IllegalArgumentException exception) {
+                log.error("Invalid refund payout receipt", exception);
+                new Popup().error(exception.toString()).onClose(() -> asyncStatus.complete(false)).show();
+                return asyncStatus;
+            }
         }
         if (payoutPromptOnDisplay != null) {
             log.warn("The payout prompt is already on display, we do not show another copy of it.");
             asyncStatus.complete(false);
             return asyncStatus;
         }
-        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         String buyerPayoutAddressString = dispute.getContract().getBuyerPayoutAddressString();
-        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         String sellerPayoutAddressString = dispute.getContract().getSellerPayoutAddressString();
-        Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
         Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, btcWalletService);
         Coin fee = feeTuple.first;
         Integer txVsize = feeTuple.second;
@@ -828,35 +860,78 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             resultHandler.complete(false);
             return;
         }
-        if (dispute.isPayoutDone()) {
-            log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
-                    dispute.getTradeId());
-            resultHandler.complete(true);
-            return;
-        }
-        dispute.setPayoutDone(true);
         try {
+            if (isRefundReceiptAlreadyPaid()) {
+                log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
+                        dispute.getTradeId());
+                showAlreadyPaidPopup(resultHandler);
+                return;
+            }
+
             Transaction tx = btcWalletService.createRefundPayoutTx(buyerPayoutAmount,
                     sellerPayoutAmount,
+                    getMaximumPayoutAmount(),
                     fee,
                     buyerPayoutAddressString,
                     sellerPayoutAddressString);
-            tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
-                @Override
-                public void onSuccess(Transaction transaction) {
-                    resultHandler.complete(true);
-                }
+            refundManager.persistRefundPayoutReservation(dispute,
+                    tx,
+                    () -> {
+                        try {
+                            btcWalletService.commitTx(tx);
+                            tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
+                                @Override
+                                public void onSuccess(Transaction transaction) {
+                                    resultHandler.complete(true);
+                                }
 
-                @Override
-                public void onFailure(TxBroadcastException exception) {
-                    log.error("TxBroadcastException at doPayout", exception);
-                    new Popup().error(exception.toString()).onClose(() -> resultHandler.complete(false)).show();
-                }
-            });
+                                @Override
+                                public void onFailure(TxBroadcastException exception) {
+                                    log.error("TxBroadcastException at doPayout", exception);
+                                    new Popup().error(exception.toString())
+                                            .onClose(() -> resultHandler.complete(false))
+                                            .show();
+                                }
+                            });
+                        } catch (RuntimeException exception) {
+                            log.error("Exception while broadcasting the reserved refund payout", exception);
+                            new Popup().error(exception.toString())
+                                    .onClose(() -> resultHandler.complete(false))
+                                    .show();
+                        }
+                    },
+                    throwable -> {
+                        log.error("Persisting the refund payout reservation failed", throwable);
+                        new Popup().error(Res.get("disputeSummaryWindow.close.payoutPersistenceError",
+                                        throwable.toString()))
+                                .onClose(() -> resultHandler.complete(false))
+                                .show();
+                    });
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
             log.error("Exception at doPayout", e);
             new Popup().error(e.toString()).onClose(() -> resultHandler.complete(false)).show();
+        } catch (RuntimeException e) {
+            log.error("Exception at doPayout", e);
+            new Popup().error(e.toString()).onClose(() -> resultHandler.complete(false)).show();
         }
+    }
+
+    // A payout found on another row or in the wallet is only reported, not written into the selected row. The
+    // selected row may share just one transaction with the paid receipt (see
+    // RefundPayoutReceiptService.persistPayoutReservation); marking it would turn it into a match source that blocks
+    // an unrelated ticket sharing its other transaction.
+    private boolean isRefundReceiptAlreadyPaid() {
+        return dispute.isPayoutDone() || refundManager.findRefundPayoutTxId(dispute).isPresent();
+    }
+
+    private void showAlreadyPaidPopup(CompletableFuture<Boolean> resultHandler) {
+        new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
+                .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
+                .closeButtonText(Res.get("shared.cancel"))
+                .actionButtonText(Res.get("support.closeTicket"))
+                .onAction(() -> resultHandler.complete(true))
+                .onClose(() -> resultHandler.complete(false))
+                .show();
     }
 
     private CompletableFuture<Boolean> maybeCheckTransactions() {

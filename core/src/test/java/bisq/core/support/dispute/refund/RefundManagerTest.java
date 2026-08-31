@@ -723,6 +723,7 @@ class RefundManagerTest {
                 mock(RefundDisputeListService.class),
                 mock(Config.class),
                 mock(PriceFeedService.class),
-                mock(MempoolService.class));
+                mock(MempoolService.class),
+                mock(RefundPayoutReceiptService.class));
     }
 }
