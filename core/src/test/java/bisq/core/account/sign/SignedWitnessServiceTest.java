@@ -214,7 +214,7 @@ public class SignedWitnessServiceTest {
     public void provenOwnerDatesRejectInvalidArbitratorSignatureDespiteOwnerSwap() {
         SignedWitness forged = new SignedWitness(ARBITRATOR,
                 account1DataHash,
-                "invalid-arbitrator-signature".getBytes(Charsets.UTF_8),
+                "invalid-arbitrator-signature".getBytes(StandardCharsets.UTF_8),
                 signer1PubKey,
                 witnessOwner2PubKey,
                 date1,
@@ -689,7 +689,7 @@ public class SignedWitnessServiceTest {
     @Test
     public void publishRejectsAWitnessWithAnInvalidSignature() throws Exception {
         setupTrade();
-        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(Charsets.UTF_8));
+        byte[] invalidSignature = Sig.sign(peer1KeyPair.getPrivate(), "wrong-message".getBytes(StandardCharsets.UTF_8));
 
         assertFalse(publish(new SignedWitness(TRADE, account2DataHash, invalidSignature, signer2PubKey,
                 witnessOwner3PubKey, NOW - 1000, tradeAmount.value)));
