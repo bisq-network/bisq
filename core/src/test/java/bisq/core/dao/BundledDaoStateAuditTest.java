@@ -84,7 +84,7 @@ class BundledDaoStateAuditTest {
     private static final String BLOCK_RESOURCE_DIR = "/BsqBlocks_BTC_MAINNET/";
     private static final int MAINNET_GENESIS_HEIGHT = 571_747;
     private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 962_500;
-    private static final int EXPECTED_BLIND_VOTE_COUNT = 947;
+    private static final int EXPECTED_BLIND_VOTE_COUNT = 950;
     private static final int EXPECTED_REVEALED_BLIND_VOTE_COUNT = 935;
 
     @Test
