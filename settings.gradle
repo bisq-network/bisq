@@ -23,7 +23,6 @@ include 'seednode'
 include 'statsnode'
 include 'apitest'
 include 'platform'
-include 'code-coverage-report'
 include 'updater'
 
 includeBuild 'bitcoind'

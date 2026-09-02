@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'jacoco'
     id 'bisq.reproducible-build'
 }
 
@@ -35,11 +34,4 @@ dependencies {
 
 test {
     useJUnitPlatform()
-}
-
-jacocoTestReport {
-    reports {
-        html.required = false
-        xml.required = true
-    }
 }
