@@ -441,6 +441,7 @@ public class BisqV1MessageIntegrityTest {
         return rawTransactionInput(0, bytes(16), 100_000L);
     }
 
+    @SuppressWarnings("deprecation")
     private static RawTransactionInput rawTransactionInput(long index, byte[] parentTransaction, long value) {
         return new RawTransactionInput(index, parentTransaction, value);
     }
@@ -493,6 +494,7 @@ public class BisqV1MessageIntegrityTest {
         private long txFee = 10_000L;
         private long takerFee = 1_000L;
         private boolean isCurrencyForTakerFeeBtc = false;
+        @SuppressWarnings("deprecation")
         private List<RawTransactionInput> rawTransactionInputs = List.of(
                 new RawTransactionInput(0, bytes(21), 100_000L));
         private byte[] takerMultiSigPubKey = bytes(22);
