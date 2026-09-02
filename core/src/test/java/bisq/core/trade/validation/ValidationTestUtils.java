@@ -253,6 +253,7 @@ class ValidationTestUtils {
         return List.of(rawTransactionInput);
     }
 
+    @SuppressWarnings("deprecation")
     static RawTransactionInput rawTransactionInput(Coin inputAmount) {
         byte[] parentTransaction = new byte[]{1, 2, 3};
         return new RawTransactionInput(0,

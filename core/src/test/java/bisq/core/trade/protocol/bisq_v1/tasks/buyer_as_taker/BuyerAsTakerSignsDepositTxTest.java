@@ -180,6 +180,7 @@ public class BuyerAsTakerSignsDepositTxTest {
                         sellerInputs(170_001)));
     }
 
+    @SuppressWarnings("deprecation")
     private static List<RawTransactionInput> sellerInputs(long value) {
         return Collections.singletonList(new RawTransactionInput(0, new byte[]{}, value));
     }
