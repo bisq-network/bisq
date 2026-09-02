@@ -94,6 +94,7 @@ public class DeprecatedExtraDataMapTest {
                 protobuf.Filter::getExtraDataMap);
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void arbitratorPreservesNonEmptyExtraDataMap() {
         protobuf.Arbitrator proto = arbitrator().toProtoMessage().getArbitrator();
@@ -269,6 +270,7 @@ public class DeprecatedExtraDataMapTest {
         return MockFilterFactory.createFilter(signaturePublicKey(), HEX.encode(new ECKey().getPubKey()), 1L);
     }
 
+    @SuppressWarnings("deprecation")
     private static Arbitrator arbitrator() {
         return new Arbitrator(new NodeAddress("host", 1000),
                 new ECKey().getPubKey(),
