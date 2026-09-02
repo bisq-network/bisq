@@ -575,4 +575,115 @@ public class OpenOfferManagerTest {
         assertFalse(errorHandled.get());
     }
 
+    @Test
+    public void testMaybeRepublishOfferSkipsRetryWhileNotBootstrapped() {
+        P2PService p2PService = mock(P2PService.class);
+        OfferBookService offerBookService = mock(OfferBookService.class);
+        when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                persistenceManager,
+                null
+        );
+
+        OpenOffer openOffer = new OpenOffer(make(btcUsdOffer));
+        manager.getObservableList().add(openOffer);
+
+        when(offerBookService.isBootstrapped()).thenReturn(false);
+        doAnswer(invocation -> {
+            ((ErrorMessageHandler) invocation.getArgument(2)).handleErrorMessage(
+                    "Add offer failed: the P2P network is not bootstrapped yet");
+            return null;
+        }).when(offerBookService).addOffer(any(Offer.class), any(ResultHandler.class), any(ErrorMessageHandler.class));
+
+        ManualTimer.clear();
+        UserThread.setTimerClass(ManualTimer.class);
+        try {
+            manager.maybeRepublishOffer(openOffer);
+            ManualTimer.firePendingTimers();
+
+            // No retry timer must be armed while the network is not bootstrapped: a retry
+            // cannot change the outcome, and firing it would republish every open offer and
+            // log another warning, every 10 seconds until the bootstrap completes.
+            verify(offerBookService, times(1)).addOffer(any(Offer.class),
+                    any(ResultHandler.class),
+                    any(ErrorMessageHandler.class));
+        } finally {
+            ManualTimer.clear();
+            UserThread.setTimerClass(FrameRateTimer.class);
+        }
+    }
+
+    @Test
+    public void testMaybeRepublishOfferRetriesWhenBootstrapped() {
+        P2PService p2PService = mock(P2PService.class);
+        OfferBookService offerBookService = mock(OfferBookService.class);
+        when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                persistenceManager,
+                null
+        );
+
+        OpenOffer openOffer = new OpenOffer(make(btcUsdOffer));
+        manager.getObservableList().add(openOffer);
+
+        when(offerBookService.isBootstrapped()).thenReturn(true);
+        doAnswer(invocation -> {
+            ((ErrorMessageHandler) invocation.getArgument(2)).handleErrorMessage("Add offer failed");
+            return null;
+        }).when(offerBookService).addOffer(any(Offer.class), any(ResultHandler.class), any(ErrorMessageHandler.class));
+
+        ManualTimer.clear();
+        UserThread.setTimerClass(ManualTimer.class);
+        try {
+            manager.maybeRepublishOffer(openOffer);
+            ManualTimer.firePendingTimers();
+
+            // A failure on a bootstrapped node can be transient, so the retry stays.
+            verify(offerBookService, times(2)).addOffer(any(Offer.class),
+                    any(ResultHandler.class),
+                    any(ErrorMessageHandler.class));
+        } finally {
+            ManualTimer.clear();
+            UserThread.setTimerClass(FrameRateTimer.class);
+        }
+    }
+
 }

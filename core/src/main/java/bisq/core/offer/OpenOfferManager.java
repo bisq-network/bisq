@@ -1248,6 +1248,22 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 },
                 errorMessage -> {
                     if (!stopped) {
+                        if (!offerBookService.isBootstrapped()) {
+                            // Retrying cannot change the outcome before the bootstrap, and
+                            // onBootstrapComplete republishes all open offers anyway. An armed
+                            // retry timer would also suppress the republish round which is
+                            // scheduled after the bootstrap only while no retry timer is set.
+                            log.warn("Adding offer to P2P network failed. We do not retry while the " +
+                                            "P2P network is not bootstrapped yet, as all open offers get " +
+                                            "republished after the bootstrap. offerId={}, errorMessage={}",
+                                    openOffer.getId(), errorMessage);
+
+                            if (completeHandler != null) {
+                                completeHandler.run();
+                            }
+                            return;
+                        }
+
                         log.error("Adding offer to P2P network failed. " + errorMessage);
                         stopRetryRepublishOffersTimer();
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
