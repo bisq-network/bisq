@@ -26,16 +26,18 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.TorSetup;
-import bisq.core.locale.Res;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
+import bisq.common.FrameRateTimer;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -100,6 +102,9 @@ public class BisqAppMain extends BisqExecutable {
     protected void configUserThread() {
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);
+        UserThread.setShutdownExecutor(
+                SingleThreadExecutorUtils.getSingleThreadExecutor("BisqShutdownUserThread"),
+                FrameRateTimer.class);
     }
 
     @Override

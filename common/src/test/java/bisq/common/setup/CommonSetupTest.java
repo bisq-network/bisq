@@ -17,8 +17,11 @@
 
 package bisq.common.setup;
 
+import bisq.common.UserThread;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CommonSetupTest {
+
+    @AfterEach
+    void tearDown() {
+        UserThread.resetForTests();
+    }
 
     @Test
     void shutdownHookCanBeRemovedBeforeAControlledExit() {
@@ -38,5 +46,19 @@ class CommonSetupTest {
         assertTrue(CommonSetup.removeShutdownHook());
         assertFalse(CommonSetup.removeShutdownHook());
         assertEquals(0, shutdownCalls.get());
+    }
+
+    @Test
+    void uncaughtExceptionIsNotForwardedToApplicationDuringJvmShutdown() {
+        AtomicInteger handlerCalls = new AtomicInteger();
+        UncaughtExceptionHandler handler = (throwable, doShutDown) -> handlerCalls.incrementAndGet();
+        RuntimeException throwable = new RuntimeException("expected test exception");
+
+        CommonSetup.notifyUncaughtExceptionHandler(handler, throwable);
+        UserThread.executeAtShutdown(() -> {
+        });
+        CommonSetup.notifyUncaughtExceptionHandler(handler, throwable);
+
+        assertEquals(1, handlerCalls.get());
     }
 }
