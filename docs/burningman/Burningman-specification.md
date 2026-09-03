@@ -57,13 +57,15 @@ upgrade.
 ## Candidate Construction
 
 `BurningManService.getBurningManCandidatesByName(chainHeight)` builds a deterministic `TreeMap` keyed by candidate name.
-Candidates come from accepted compensation proposals and from genesis transaction outputs.
+Candidates come from consensus-validated compensation proposals and from genesis transaction outputs. Append-only P2P
+admission alone is insufficient: the proposal body must match the OP_RETURN commitment of its DAO transaction.
 
 ### Compensation Candidates
 
-For every `CompensationProposal`:
+For every consensus-validated `CompensationProposal`:
 
-1. The proposal must have a matching DAO `Issuance`.
+1. The proposal transaction type and OP_RETURN body commitment must be valid, and the proposal must have a matching DAO
+   `Issuance`.
 2. The issuance height must be `<= chainHeight`.
 3. The candidate name is `CompensationProposal.getName()`.
 4. The receiver address is selected as follows:
@@ -508,8 +510,9 @@ The result can be negative.
 
 ### Reimbursements
 
-Reimbursements are DAO issuances of type `REIMBURSEMENT` with matching `ReimbursementProposal` tx ids and height
-`<= chainHeight`.
+Reimbursements are DAO issuances of type `REIMBURSEMENT` with matching consensus-validated `ReimbursementProposal` tx
+ids and height `<= chainHeight`. A raw append-only proposal body cannot enter the burn-target model without matching its
+transaction's OP_RETURN commitment.
 
 Only reimbursements with height:
 

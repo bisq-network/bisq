@@ -74,10 +74,9 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     @Getter
     private final ObservableList<Proposal> tempProposals = FXCollections.observableArrayList();
 
-    // Proposals which got added to the append-only data store in the break before the blind vote phase.
-    // They cannot be removed anymore. This list is used for consensus critical code. Different nodes might have
-    // different data collections due the eventually consistency of the P2P network.
-    @Getter
+    // Raw proposals which got added to the append-only data store in the break before the blind vote phase.
+    // They cannot be removed anymore. Different nodes might have different data collections due to the eventual
+    // consistency of the P2P network. Consensus and economic consumers must validate this projection before use.
     private final ObservableList<ProposalPayload> proposalPayloads = FXCollections.observableArrayList();
 
 
@@ -181,6 +180,15 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Returns the raw append-only P2P projection. Admission to this collection does not prove that a proposal body
+     * matches the corresponding transaction commitment. It must not drive authorization, payout, ownership, or other
+     * economic decisions; those consumers must use {@link #getValidatedProposals()}.
+     */
+    public ObservableList<ProposalPayload> getProposalPayloads() {
+        return proposalPayloads;
+    }
 
     public List<Proposal> getValidatedProposals() {
         return proposalPayloads.stream()
