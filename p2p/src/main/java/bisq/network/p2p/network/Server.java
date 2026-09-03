@@ -129,7 +129,7 @@ class Server implements Runnable {
                 log.warn("Could not schedule the server socket close", e);
             }
         } else {
-            log.warn("stopped already called ast shutdown");
+            log.warn("stopped already called at shutdown");
         }
     }
 
