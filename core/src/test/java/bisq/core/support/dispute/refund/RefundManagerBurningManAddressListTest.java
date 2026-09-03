@@ -49,10 +49,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 
 class RefundManagerBurningManAddressListTest {
     @Test
@@ -64,7 +62,7 @@ class RefundManagerBurningManAddressListTest {
                 burningManService,
                 mock(BurningManAddressListService.class));
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
-        RefundManager refundManager = refundManager(btcWalletService, receiverService);
+        RefundManager refundManager = spy(refundManager(btcWalletService, receiverService));
         TransactionOutput depositOutput = mock(TransactionOutput.class);
         when(depositOutput.getValue()).thenReturn(Coin.valueOf(10_000));
         Transaction depositTx = mock(Transaction.class);
@@ -72,13 +70,17 @@ class RefundManagerBurningManAddressListTest {
         Contract contract = mock(Contract.class);
         when(contract.getBurningManAddressListVersion()).thenReturn(0);
         Dispute dispute = mock(Dispute.class);
-        when(dispute.findDepositTx(btcWalletService)).thenReturn(Optional.of(depositTx));
         when(dispute.getBurningManSelectionHeight()).thenReturn(767_950);
         when(dispute.getContract()).thenReturn(contract);
+        doReturn(1L).when(refundManager).verifyDepositTx(depositTx, dispute);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> refundManager.verifyDelayedPayoutTxReceivers(mock(Transaction.class), dispute));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyDelayedPayoutTxReceivers(
+                        depositTx,
+                        mock(Transaction.class),
+                        dispute));
 
+        assertTrue(exception.getMessage().contains("address list version must be at least 1"));
         verify(burningManService, never()).getActiveBurningManCandidates(767_950);
     }
 
@@ -100,6 +102,7 @@ class RefundManagerBurningManAddressListTest {
                 mock(RefundDisputeListService.class),
                 mock(Config.class),
                 mock(PriceFeedService.class),
-                mock(MempoolService.class));
+                mock(MempoolService.class),
+                mock(RefundPayoutReceiptService.class));
     }
 }
