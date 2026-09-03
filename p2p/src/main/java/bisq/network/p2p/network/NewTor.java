@@ -105,7 +105,9 @@ public class NewTor extends TorMode {
                 override = new Torrc(torrcOptionsMap);
 
         log.info("Starting tor");
-        NativeTor result = new NativeTor(torDir, bridgeEntries, override);
+        // Bisq owns Tor teardown through its graceful-shutdown flow. Letting netlayer register an
+        // additional JVM shutdown hook would race that flow for the same control connection.
+        NativeTor result = new NativeTor(torDir, bridgeEntries, override, false);
         log.info(
                 "\n################################################################\n"
                         + "Tor started after {} ms. Start publishing hidden service.\n"

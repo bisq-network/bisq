@@ -17,6 +17,7 @@
 
 package bisq.common;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.time.Duration;
@@ -28,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.lang.reflect.InvocationTargetException;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -43,23 +43,84 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class UserThread {
-    private static Class<? extends Timer> timerClass;
+    private static volatile Class<? extends Timer> timerClass;
+    private static Class<? extends Timer> shutdownTimerClass;
     @Getter
-    @Setter
-    private static Executor executor;
+    private static volatile Executor executor;
+    private static Executor shutdownExecutor;
+    private static boolean shutdownExecutorConfigured;
+    private static volatile boolean jvmShutdownInProgress;
 
-    public static void setTimerClass(Class<? extends Timer> timerClass) {
+    public static synchronized void setTimerClass(Class<? extends Timer> timerClass) {
         UserThread.timerClass = timerClass;
+        if (!shutdownExecutorConfigured) {
+            shutdownTimerClass = timerClass;
+        }
+    }
+
+    public static synchronized void setExecutor(Executor executor) {
+        UserThread.executor = executor;
+        if (!shutdownExecutorConfigured) {
+            shutdownExecutor = executor;
+        }
+    }
+
+    /**
+     * Configures a UserThread implementation which does not depend on application-framework
+     * infrastructure that can be disposed by a concurrent JVM shutdown hook.
+     * <p>
+     * An explicitly configured shutdown executor wins over the regular executor for the rest of the
+     * process lifetime. Otherwise a later {@link #setExecutor} or {@link #setTimerClass} call would
+     * silently restore the framework executor as the shutdown executor, which is only observable
+     * when the process is terminated externally.
+     */
+    public static synchronized void setShutdownExecutor(Executor executor,
+                                                        Class<? extends Timer> timerClass) {
+        shutdownExecutor = executor;
+        shutdownTimerClass = timerClass;
+        shutdownExecutorConfigured = true;
     }
 
     static {
         // If not defined we use same thread as caller thread
         executor = MoreExecutors.directExecutor();
         timerClass = FrameRateTimer.class;
+        shutdownExecutor = executor;
+        shutdownTimerClass = timerClass;
     }
 
     public static void execute(Runnable command) {
         UserThread.executor.execute(command);
+    }
+
+    /**
+     * Moves all subsequent UserThread work to the shutdown-safe executor before dispatching
+     * the first external-shutdown task. Persistence completion callbacks also use UserThread,
+     * so the replacement must remain available until graceful shutdown has completed.
+     */
+    public static void executeAtShutdown(Runnable command) {
+        Executor executor;
+        synchronized (UserThread.class) {
+            jvmShutdownInProgress = true;
+            UserThread.executor = shutdownExecutor;
+            timerClass = shutdownTimerClass;
+            executor = UserThread.executor;
+        }
+        executor.execute(command);
+    }
+
+    public static boolean isJvmShutdownInProgress() {
+        return jvmShutdownInProgress;
+    }
+
+    @VisibleForTesting
+    public static synchronized void resetForTests() {
+        executor = MoreExecutors.directExecutor();
+        timerClass = FrameRateTimer.class;
+        shutdownExecutor = executor;
+        shutdownTimerClass = timerClass;
+        shutdownExecutorConfigured = false;
+        jvmShutdownInProgress = false;
     }
 
     // Prefer FxTimer if a delay is needed in a JavaFx class (gui module)

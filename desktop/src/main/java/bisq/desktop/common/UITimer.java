@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 public class UITimer implements Timer {
     private final Logger log = LoggerFactory.getLogger(UITimer.class);
     private bisq.common.reactfx.Timer timer;
+    private volatile boolean stopped;
 
     public UITimer() {
     }
@@ -39,7 +40,8 @@ public class UITimer implements Timer {
     public Timer runLater(Duration delay, Runnable runnable) {
         executeDirectlyIfPossible(() -> {
             if (timer == null) {
-                timer = FxTimer.create(delay, runnable);
+                stopped = false;
+                timer = FxTimer.create(delay, guarded(runnable));
                 timer.restart();
             } else {
                 log.warn("runLater called on an already running timer.");
@@ -52,7 +54,8 @@ public class UITimer implements Timer {
     public Timer runPeriodically(Duration interval, Runnable runnable) {
         executeDirectlyIfPossible(() -> {
             if (timer == null) {
-                timer = FxTimer.createPeriodic(interval, runnable);
+                stopped = false;
+                timer = FxTimer.createPeriodic(interval, guarded(runnable));
                 timer.restart();
             } else {
                 log.warn("runPeriodically called on an already running timer.");
@@ -63,6 +66,7 @@ public class UITimer implements Timer {
 
     @Override
     public void stop() {
+        stopped = true;
         executeDirectlyIfPossible(() -> {
             if (timer != null) {
                 timer.stop();
@@ -72,10 +76,24 @@ public class UITimer implements Timer {
     }
 
     private void executeDirectlyIfPossible(Runnable runnable) {
+        // JavaFX disposes its toolkit from a JVM shutdown hook which runs concurrently with
+        // Bisq's hook. At that point timelines must not be accessed from the replacement
+        // shutdown UserThread; their guarded actions have already become no-ops.
+        if (UserThread.isJvmShutdownInProgress()) {
+            return;
+        }
         if (Platform.isFxApplicationThread()) {
             runnable.run();
         } else {
             UserThread.execute(runnable);
         }
+    }
+
+    private Runnable guarded(Runnable runnable) {
+        return () -> {
+            if (!stopped && !UserThread.isJvmShutdownInProgress()) {
+                runnable.run();
+            }
+        };
     }
 }

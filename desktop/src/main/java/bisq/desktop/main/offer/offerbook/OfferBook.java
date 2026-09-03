@@ -27,6 +27,8 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.utils.Utils;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -93,6 +95,10 @@ public class OfferBook {
         offerBookService.addOfferBookChangedListener(new OfferBookService.OfferBookChangedListener() {
             @Override
             public void onAdded(Offer offer) {
+                if (UserThread.isJvmShutdownInProgress()) {
+                    return;
+                }
+
                 printOfferBookListItems("Before onAdded");
                 // We get onAdded called every time a new ProtectedStorageEntry is received.
                 // Mostly it is the same OfferPayload but the ProtectedStorageEntry is different.
@@ -136,6 +142,10 @@ public class OfferBook {
 
             @Override
             public void onRemoved(Offer offer) {
+                if (UserThread.isJvmShutdownInProgress()) {
+                    return;
+                }
+
                 printOfferBookListItems("Before onRemoved");
                 removeOffer(offer);
                 printOfferBookListItems("After onRemoved");

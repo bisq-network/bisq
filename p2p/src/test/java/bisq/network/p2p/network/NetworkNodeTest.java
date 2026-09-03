@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
@@ -38,6 +39,7 @@ import java.lang.reflect.Field;
 
 import org.jetbrains.annotations.Nullable;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,6 +54,11 @@ import static org.mockito.Mockito.when;
 
 public class NetworkNodeTest {
     private static final NodeAddress PEER_NODE_ADDRESS = new NodeAddress("peer", 8080);
+
+    @AfterEach
+    void tearDown() {
+        UserThread.resetForTests();
+    }
 
     @Test
     public void sendMessageUsesInboundConnectionByDefault() throws Exception {
@@ -107,6 +114,54 @@ public class NetworkNodeTest {
             assertSame(outboundConnection, future.get(1, TimeUnit.SECONDS));
             verify(outboundConnection).sendMessage(networkEnvelope);
             assertEquals(0, networkNode.createSocketCalls);
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void connectionLifecycleNotificationsStopWhenJvmShutdownStarts() throws Exception {
+        TestNetworkNode networkNode = new TestNetworkNode();
+        ConnectionListener listener = mock(ConnectionListener.class);
+        Connection connection = mock(Connection.class);
+        networkNode.addConnectionListener(listener);
+
+        try {
+            networkNode.notifyConnectionListeners(e -> e.onConnection(connection));
+
+            verify(listener).onConnection(connection);
+
+            UserThread.executeAtShutdown(() -> {
+            });
+
+            networkNode.notifyConnectionListeners(e -> e.onDisconnect(
+                    CloseConnectionReason.NO_PROTO_BUFFER_ENV, connection));
+
+            verify(listener, never()).onDisconnect(CloseConnectionReason.NO_PROTO_BUFFER_ENV, connection);
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void connectionLifecycleNotificationsStopWhenNetworkShutdownStarts() throws Exception {
+        TestNetworkNode networkNode = new TestNetworkNode();
+        ConnectionListener listener = mock(ConnectionListener.class);
+        Connection connection = mock(Connection.class);
+        networkNode.addConnectionListener(listener);
+
+        try {
+            networkNode.notifyConnectionListeners(e -> e.onConnection(connection));
+
+            verify(listener).onConnection(connection);
+
+            networkNode.shutDown(() -> {
+            });
+
+            networkNode.notifyConnectionListeners(e -> e.onDisconnect(
+                    CloseConnectionReason.APP_SHUT_DOWN, connection));
+
+            verify(listener, never()).onDisconnect(CloseConnectionReason.APP_SHUT_DOWN, connection);
         } finally {
             shutDownExecutors(networkNode);
         }
