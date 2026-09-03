@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     private boolean shutDownRequested;
     private Runnable shutDownResultHandler;
     private final ListeningExecutorService executor;
+    private final AtomicBoolean shutDownCompleted = new AtomicBoolean();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +90,6 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
             // so we can expect that we get onCompleted called very fast and trigger the doShutDown from there.
             maybeBroadcastBundle();
         }
-        executor.shutdown();
     }
 
     public void flush() {
@@ -96,11 +97,16 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     }
 
     private void doShutDown() {
+        if (!shutDownCompleted.compareAndSet(false, true)) {
+            return;
+        }
+
         log.info("Broadcaster doShutDown started");
         broadcastHandlers.forEach(BroadcastHandler::cancel);
         if (timer != null) {
             timer.stop();
         }
+        executor.shutdown();
         shutDownResultHandler.run();
     }
 
