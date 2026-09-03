@@ -130,9 +130,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                                                    long tradeTxFee,
                                                    int burningManAddressListVersion) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> allBurningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
-
         Optional<BurningManAddressList> optionalAddressList = getEnforceableAddressList(burningManAddressListVersion);
+        Collection<BurningManCandidate> allBurningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
         List<BurningManCandidate> burningManCandidates = filterCandidates(allBurningManCandidates, optionalAddressList);
         String legacyBurningManAddress = optionalAddressList
                 .map(BurningManAddressList::getLegacyBurningManAddress)
@@ -203,7 +202,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     }
 
     public List<Integer> getSupportedBurningManAddressListVersions() {
-        return burningManAddressListService.getSupportedVersions();
+        return burningManAddressListService.getNegotiableVersions();
     }
 
     public int selectBurningManAddressListVersion(Collection<Integer> peerVersions) {
@@ -212,10 +211,6 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
 
     public void validateDelayedPayoutTxReceivers(List<Tuple2<Long, String>> receivers,
                                                  int burningManAddressListVersion) {
-        if (burningManAddressListVersion <= 0) {
-            return;
-        }
-
         Optional<BurningManAddressList> optionalAddressList = getEnforceableAddressList(burningManAddressListVersion);
         if (optionalAddressList.isEmpty()) {
             return;
@@ -230,12 +225,17 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     }
 
     private Optional<BurningManAddressList> getEnforceableAddressList(int burningManAddressListVersion) {
-        if (burningManAddressListVersion <= 0) {
-            return Optional.empty();
-        }
+        checkArgument(burningManAddressListVersion >= BurningManAddressListService.MINIMUM_NEGOTIABLE_VERSION,
+                "Burning Man address list version must be at least %s",
+                BurningManAddressListService.MINIMUM_NEGOTIABLE_VERSION);
 
         BurningManAddressList addressList = burningManAddressListService.getAddressList(burningManAddressListVersion);
         if (!addressList.isForCurrentNetwork()) {
+            checkArgument(!Config.baseCurrencyNetwork().isMainnet(),
+                    "Burning Man address list version %s is for network %s, but current network is %s",
+                    burningManAddressListVersion,
+                    addressList.getNetwork(),
+                    Config.baseCurrencyNetwork().name());
             log.warn("Burning Man address list version {} is for network {}, but current network is {}. " +
                             "Skipping Burning Man address list filtering.",
                     burningManAddressListVersion,

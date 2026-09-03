@@ -3,6 +3,9 @@
 This document describes the versioned Burning Man address list used by the Bisq v1 trade protocol to protect delayed
 payout transaction receivers against manipulated DAO data.
 
+The authoritative security and compatibility requirements are specified in
+[`specifications/trade/delayed-payout-receivers.md`](specifications/trade/delayed-payout-receivers.md).
+
 ## Goal
 
 The delayed payout transaction (DPT) pays Burning Man receivers derived from DAO state. If a trader is eclipsed or
@@ -80,7 +83,8 @@ need to update it with each release even if no new addresses have been added.
 
 At startup, all bundled address list resources are loaded into a sorted map keyed by `listVersion`. The service exposes:
 
-- supported versions.
+- all bundled versions for historical lookup.
+- eligible versions for current trade negotiation.
 - latest version.
 - lookup by version.
 - highest-common-version selection for trade setup.
@@ -95,7 +99,8 @@ The first trade protocol messages exchange supported BM address list versions:
 - `InputsForDepositTxRequest.supported_burning_man_address_list_versions`
 - `InputsForDepositTxResponse.supported_burning_man_address_list_versions`
 
-The lists must be non-empty, positive, distinct, and sorted.
+The lists must be non-empty, positive, distinct, and sorted. Only locally bundled versions at or above the current
+minimum (`1`) are advertised or considered during selection for a new trade.
 
 After receiving the peer list, each side selects the highest common version. The selected version is persisted in:
 
@@ -108,6 +113,8 @@ DPT will not match.
 ## DPT creation and verification
 
 When the DPT receiver list is generated, the selected BM address list version is passed into the receiver service.
+Below-minimum and unsupported versions are rejected before DAO candidates are calculated. Contract deserialization
+remains tolerant of historical default value `0`, but that value cannot authorize DPT construction or verification.
 
 The receiver service:
 
@@ -199,6 +206,7 @@ The following behavior should be covered by focused tests:
 - file name version and `listVersion` must match.
 - unsorted entries must load without being reordered; receiver addresses must remain non-blank and unique.
 - supported version lists must be sorted, positive, distinct, and non-empty.
+- protected DPT operations reject negative, zero, unknown, and below-minimum versions before candidate calculation.
 - highest common version selection returns the expected version.
 - peer messages round-trip supported versions through protobuf.
 - selected version persists in `ProcessModel`, `TradingPeer`, and `Contract`.
@@ -207,6 +215,7 @@ The following behavior should be covered by focused tests:
 - DPT receiver generation uses the filtered receiver count for fee calculation.
 - receiver validation rejects outputs not present in the selected allowlist.
 - refund/arbitration verification uses the contract's selected version.
+- refund/arbitration verification rejects a supplied contract with version `0` before receiver reconstruction.
 
 ## Operational notes
 

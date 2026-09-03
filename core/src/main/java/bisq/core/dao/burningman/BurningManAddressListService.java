@@ -67,6 +67,9 @@ public class BurningManAddressListService {
     public static final String FILE_NAME_PREFIX = "bm-addresses-v";
     public static final String FILE_NAME_SUFFIX = ".json";
 
+    // Historical resources below this floor remain loadable but are not eligible for current DPT security decisions.
+    public static final int MINIMUM_NEGOTIABLE_VERSION = 1;
+
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile(FILE_NAME_PREFIX + "(\\d{4,})\\" + FILE_NAME_SUFFIX);
     private static final Gson GSON = new Gson();
 
@@ -101,6 +104,12 @@ public class BurningManAddressListService {
         return new ArrayList<>(addressListsByVersion.keySet());
     }
 
+    public List<Integer> getNegotiableVersions() {
+        return addressListsByVersion.keySet().stream()
+                .filter(version -> version >= MINIMUM_NEGOTIABLE_VERSION)
+                .collect(Collectors.toList());
+    }
+
     public int getLatestVersion() {
         checkArgument(!addressListsByVersion.isEmpty(), "No Burning Man address list versions are available");
         return addressListsByVersion.lastKey();
@@ -118,8 +127,9 @@ public class BurningManAddressListService {
 
     public int selectHighestCommonVersion(Collection<Integer> peerVersions) {
         List<Integer> checkedPeerVersions = getValidatedSupportedVersions(peerVersions);
-        Set<Integer> supportedVersions = new TreeSet<>(addressListsByVersion.keySet());
+        Set<Integer> supportedVersions = new TreeSet<>(getNegotiableVersions());
         return checkedPeerVersions.stream()
+                .filter(version -> version >= MINIMUM_NEGOTIABLE_VERSION)
                 .filter(supportedVersions::contains)
                 .max(Integer::compareTo)
                 .orElseThrow(() -> new IllegalArgumentException("No common Burning Man address list version. " +
