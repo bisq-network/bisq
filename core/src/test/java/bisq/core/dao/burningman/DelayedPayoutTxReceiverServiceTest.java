@@ -33,7 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class DelayedPayoutTxReceiverServiceTest {
@@ -133,15 +137,90 @@ public class DelayedPayoutTxReceiverServiceTest {
                 () -> service.validateDelayedPayoutTxReceivers(List.of(new Tuple2<>(1_000L, UNLISTED_ADDRESS)), 1));
     }
 
+    @Test
+    public void supportedVersionsForTradeAreNegotiableVersions() {
+        BurningManAddressListService addressListService = mock(BurningManAddressListService.class);
+        when(addressListService.getNegotiableVersions()).thenReturn(List.of(2, 3));
+        DelayedPayoutTxReceiverService service = newService(mock(BurningManService.class), addressListService);
+
+        assertEquals(List.of(2, 3), service.getSupportedBurningManAddressListVersions());
+    }
+
+    @Test
+    public void getReceiversRejectsBelowMinimumVersionBeforeLoadingCandidates() {
+        BurningManService burningManService = mock(BurningManService.class);
+        BurningManAddressListService addressListService = mock(BurningManAddressListService.class);
+        DelayedPayoutTxReceiverService service = newService(burningManService, addressListService);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.getReceivers(SELECTION_HEIGHT, INPUT_AMOUNT, TRADE_TX_FEE, -1));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.getReceivers(SELECTION_HEIGHT, INPUT_AMOUNT, TRADE_TX_FEE, 0));
+
+        verify(burningManService, never()).getActiveBurningManCandidates(SELECTION_HEIGHT);
+        verify(addressListService, never()).getAddressList(anyInt());
+    }
+
+    @Test
+    public void getReceiversRejectsUnknownVersionBeforeLoadingCandidates() {
+        BurningManService burningManService = mock(BurningManService.class);
+        BurningManAddressListService addressListService = mock(BurningManAddressListService.class);
+        when(addressListService.getAddressList(999))
+                .thenThrow(new IllegalArgumentException("unsupported address list version"));
+        DelayedPayoutTxReceiverService service = newService(burningManService, addressListService);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.getReceivers(SELECTION_HEIGHT, INPUT_AMOUNT, TRADE_TX_FEE, 999));
+
+        verify(burningManService, never()).getActiveBurningManCandidates(SELECTION_HEIGHT);
+    }
+
+    @Test
+    public void getReceiversRejectsWrongNetworkOnMainnetBeforeLoadingCandidates() {
+        assumeTrue(Config.baseCurrencyNetwork().isMainnet());
+        BurningManService burningManService = mock(BurningManService.class);
+        BurningManAddressListService addressListService = mock(BurningManAddressListService.class);
+        when(addressListService.getAddressList(1)).thenReturn(new BurningManAddressList(
+                BurningManAddressList.SCHEMA_VERSION,
+                1,
+                "BTC_REGTEST",
+                SELECTION_HEIGHT,
+                SELECTION_HEIGHT,
+                LEGACY_ADDRESS,
+                List.of(entry(ALLOWED_ADDRESS_1, 0.05))));
+        DelayedPayoutTxReceiverService service = newService(burningManService, addressListService);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.getReceivers(SELECTION_HEIGHT, INPUT_AMOUNT, TRADE_TX_FEE, 1));
+
+        verify(burningManService, never()).getActiveBurningManCandidates(SELECTION_HEIGHT);
+    }
+
+    @Test
+    public void receiverValidationRejectsBelowMinimumVersion() {
+        BurningManAddressListService addressListService = mock(BurningManAddressListService.class);
+        DelayedPayoutTxReceiverService service = newService(mock(BurningManService.class), addressListService);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.validateDelayedPayoutTxReceivers(List.of(), 0));
+
+        verify(addressListService, never()).getAddressList(anyInt());
+    }
+
     private static DelayedPayoutTxReceiverService newService(BurningManAddressList addressList,
                                                              List<BurningManCandidate> candidates) {
-        DaoStateService daoStateService = mock(DaoStateService.class);
-        when(daoStateService.getLastBlock()).thenReturn(Optional.empty());
         BurningManService burningManService = mock(BurningManService.class);
         when(burningManService.getActiveBurningManCandidates(SELECTION_HEIGHT)).thenReturn(candidates);
         when(burningManService.getLegacyBurningManAddress(SELECTION_HEIGHT)).thenReturn(LEGACY_ADDRESS);
         BurningManAddressListService burningManAddressListService = mock(BurningManAddressListService.class);
         when(burningManAddressListService.getAddressList(1)).thenReturn(addressList);
+        return newService(burningManService, burningManAddressListService);
+    }
+
+    private static DelayedPayoutTxReceiverService newService(BurningManService burningManService,
+                                                             BurningManAddressListService burningManAddressListService) {
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        when(daoStateService.getLastBlock()).thenReturn(Optional.empty());
         return new DelayedPayoutTxReceiverService(daoStateService, burningManService, burningManAddressListService);
     }
 

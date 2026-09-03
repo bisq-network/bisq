@@ -418,6 +418,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     "Support type of dispute must match openNewDisputeMessage.getSupportType()");
             checkArgument(dispute.getDisputeState() == Dispute.State.NEW,
                     "Support state of dispute must be NEW at opening dispute");
+            checkArgument(dispute.disputeResultProperty().get() == null,
+                    "Dispute result must be absent at opening dispute");
+            checkArgument(dispute.getDisputePayoutTxId() == null,
+                    "Dispute payout transaction ID must be absent at opening dispute");
 
             checkArgument(isDisputeOpenerSignaturePubKeyValid(dispute,
                             senderSignaturePubKey,

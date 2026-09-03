@@ -19,18 +19,22 @@ package bisq.core.support.dispute.refund;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.mempool.MempoolService;
+import bisq.core.provider.mempool.MempoolTxStatus;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -40,6 +44,7 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.AckMessageSourceType;
@@ -56,14 +61,17 @@ import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
@@ -71,19 +79,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTx;
+import static bisq.core.trade.validation.DelayedPayoutTxValidation.checkDelayedPayoutTxInput;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
 public final class RefundManager extends DisputeManager<RefundDisputeList> {
+    private static final int MIN_REFUND_TX_CONFIRMATIONS = 1;
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final MempoolService mempoolService;
+    private final RefundPayoutReceiptService refundPayoutReceiptService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,12 +118,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          RefundDisputeListService refundDisputeListService,
                          Config config,
                          PriceFeedService priceFeedService,
-                         MempoolService mempoolService) {
+                         MempoolService mempoolService,
+                         RefundPayoutReceiptService refundPayoutReceiptService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, failedTradesManager,
                 openOfferManager, daoFacade, keyRing, refundDisputeListService, config, priceFeedService);
         this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
 
         this.mempoolService = mempoolService;
+        this.refundPayoutReceiptService = refundPayoutReceiptService;
     }
 
 
@@ -278,15 +293,16 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return trade.getRefundAgentPubKeyRing();
     }
 
-    public CompletableFuture<List<Transaction>> requestBlockchainTransactions(String makerFeeTxId,
-                                                                              String takerFeeTxId,
-                                                                              String depositTxId,
-                                                                              String delayedPayoutTxId) {
+    public CompletableFuture<RefundTransactionChain> requestBlockchainTransactions(String makerFeeTxId,
+                                                                                    String takerFeeTxId,
+                                                                                    String depositTxId,
+                                                                                    String delayedPayoutTxId) {
         // in regtest mode, simulate a delay & failure obtaining the blockchain transactions
         // since we cannot request them in regtest anyway.  this is useful for checking failure scenarios
         if (!Config.baseCurrencyNetwork().isMainnet()) {
-            CompletableFuture<List<Transaction>> retFuture = new CompletableFuture<>();
-            UserThread.runAfter(() -> retFuture.complete(new ArrayList<>()), 5);
+            CompletableFuture<RefundTransactionChain> retFuture = new CompletableFuture<>();
+            UserThread.runAfter(() -> retFuture.completeExceptionally(
+                    new IllegalStateException("Refund transaction verification is only available on mainnet")), 5);
             return retFuture;
         }
 
@@ -294,22 +310,42 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         List<Transaction> txs = new ArrayList<>();
         return mempoolService.requestTxAsHex(makerFeeTxId)
                 .thenCompose(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    txs.add(parseRequestedTransaction(params, makerFeeTxId, txAsHex));
                     return mempoolService.requestTxAsHex(takerFeeTxId);
                 }).thenCompose(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    txs.add(parseRequestedTransaction(params, takerFeeTxId, txAsHex));
                     return mempoolService.requestTxAsHex(depositTxId);
                 }).thenCompose(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    txs.add(parseRequestedTransaction(params, depositTxId, txAsHex));
                     return mempoolService.requestTxAsHex(delayedPayoutTxId);
-                })
-                .thenApply(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
-                    return txs;
-                });
+                }).thenCompose(txAsHex -> {
+                    txs.add(parseRequestedTransaction(params, delayedPayoutTxId, txAsHex));
+                    return mempoolService.requestTxStatus(depositTxId);
+                }).thenCompose(depositStatus -> mempoolService.requestTxStatus(delayedPayoutTxId)
+                        .thenApply(delayedPayoutStatus -> new RefundTransactionChain(
+                                txs.get(0),
+                                txs.get(1),
+                                txs.get(2),
+                                txs.get(3),
+                                depositStatus,
+                                delayedPayoutStatus)));
+    }
+
+    @VisibleForTesting
+    static Transaction parseRequestedTransaction(NetworkParameters params, String requestedTxId, String txAsHex) {
+        Transaction transaction = new Transaction(checkNotNull(params, "params must not be null"),
+                Hex.decode(checkNotNull(txAsHex, "txAsHex must not be null")));
+        Sha256Hash expectedTxId = Sha256Hash.wrap(checkNotNull(requestedTxId,
+                "requestedTxId must not be null"));
+        checkArgument(transaction.getTxId().equals(expectedTxId),
+                "Returned transaction ID %s does not match requested ID %s",
+                transaction.getTxId(),
+                expectedTxId);
+        return transaction;
     }
 
     public void verifyTradeTxChain(List<Transaction> txs) {
+        checkArgument(txs.size() == 4, "Expected exactly 4 trade transactions");
         Transaction makerFeeTx = txs.get(0);
         Transaction takerFeeTx = txs.get(1);
         Transaction depositTx = txs.get(2);
@@ -334,16 +370,127 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         checkArgument(takerFeeTxFoundAtInputs, "takerFeeTx not found at depositTx inputs");
         checkArgument(depositTx.getInputs().size() >= 2,
                 "DepositTx must have at least 2 inputs");
-        checkArgument(delayedPayoutTx.getInputs().size() == 1,
-                "DelayedPayoutTx must have 1 input");
-        TransactionOutPoint delayedPayoutTxInputOutpoint = delayedPayoutTx.getInputs().get(0).getOutpoint();
-        String fundingTxId = delayedPayoutTxInputOutpoint.getHash().toString();
-        checkArgument(fundingTxId.equals(depositTx.getTxId().toString()),
-                "First input at delayedPayoutTx does not connect to depositTx");
+        checkDelayedPayoutTxInput(delayedPayoutTx, depositTx);
     }
 
-    public void verifyDelayedPayoutTxReceivers(Transaction delayedPayoutTx, Dispute dispute) {
-        Transaction depositTx = dispute.findDepositTx(btcWalletService).orElseThrow();
+    public void verifyTradeTxChain(RefundTransactionChain txChain, Dispute dispute) {
+        RefundTransactionChain checkedTxChain = checkNotNull(txChain, "txChain must not be null");
+        Dispute checkedDispute = checkNotNull(dispute, "dispute must not be null");
+        Contract contract = checkNotNull(checkedDispute.getContract(), "dispute contract must not be null");
+
+        checkTransactionId(checkedTxChain.makerFeeTx(),
+                contract.getOfferPayload().getOfferFeePaymentTxId(),
+                "maker fee");
+        checkTransactionId(checkedTxChain.takerFeeTx(), contract.getTakerFeeTxID(), "taker fee");
+        checkTransactionId(checkedTxChain.depositTx(), checkedDispute.getDepositTxId(), "deposit");
+        checkTransactionId(checkedTxChain.delayedPayoutTx(),
+                checkedDispute.getDelayedPayoutTxId(),
+                "delayed payout");
+        verifyTradeTxChain(checkedTxChain.transactions());
+        checkDelayedPayoutTx(checkedTxChain.delayedPayoutTx(), contract.getLockTime());
+
+        long localChainHeight = daoFacade.getChainHeight();
+        checkArgument(localChainHeight > 0, "Local DAO chain height must be positive");
+        long depositBlockHeight = checkConfirmed(checkedTxChain.depositStatus(), localChainHeight, "deposit");
+        long delayedPayoutBlockHeight = checkConfirmed(checkedTxChain.delayedPayoutStatus(),
+                localChainHeight,
+                "delayed payout");
+        checkArgument(delayedPayoutBlockHeight >= depositBlockHeight,
+                "Delayed payout transaction must not confirm before the deposit transaction");
+        checkArgument(delayedPayoutBlockHeight > contract.getLockTime(),
+                "Delayed payout transaction must confirm after its contract lock time");
+
+        long tradeStartHeight = getTradeStartHeight(contract);
+        checkArgument(depositBlockHeight >= tradeStartHeight,
+                "Deposit transaction confirmed before the contract-derived trade start height");
+        checkArgument(depositBlockHeight <= contract.getLockTime(),
+                "Deposit transaction confirmed after the contract lock time");
+        verifyBurningManSelectionHeight(checkedDispute, tradeStartHeight, depositBlockHeight);
+    }
+
+    private static void checkTransactionId(Transaction transaction, String expectedTxId, String label) {
+        Sha256Hash expectedHash = Sha256Hash.wrap(checkNotNull(expectedTxId,
+                "%s transaction ID must not be null",
+                label));
+        checkArgument(transaction.getTxId().equals(expectedHash),
+                "%s transaction ID %s does not match expected ID %s",
+                label,
+                transaction.getTxId(),
+                expectedHash);
+    }
+
+    private static long checkConfirmed(MempoolTxStatus status,
+                                       long localChainHeight,
+                                       String label) {
+        checkArgument(status.confirmed(), "%s transaction must be confirmed", label);
+        checkArgument(status.blockHeight() <= localChainHeight,
+                "%s transaction block height %s is ahead of local chain height %s",
+                label,
+                status.blockHeight(),
+                localChainHeight);
+        long confirmations = localChainHeight - status.blockHeight() + 1;
+        checkArgument(confirmations >= MIN_REFUND_TX_CONFIRMATIONS,
+                "%s transaction must have at least %s confirmation(s)",
+                label,
+                MIN_REFUND_TX_CONFIRMATIONS);
+        return status.blockHeight();
+    }
+
+    private void verifyBurningManSelectionHeight(Dispute dispute,
+                                                 long tradeStartHeight,
+                                                 long depositBlockHeight) {
+        if (dispute.isUsingLegacyBurningMan()) {
+            checkArgument(tradeStartHeight < DelayedPayoutTxReceiverService.MIN_SNAPSHOT_HEIGHT,
+                    "Legacy Burning Man is only valid for trades predating the minimum snapshot height");
+            return;
+        }
+
+        checkArgument(tradeStartHeight >= DelayedPayoutTxReceiverService.MIN_SNAPSHOT_HEIGHT,
+                "Burning Man receiver selection requires a trade at or after the minimum snapshot height");
+        int selectionHeight = dispute.getBurningManSelectionHeight();
+        checkArgument(selectionHeight > 0, "Burning Man selection height must be positive");
+        int expectedSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight(
+                Math.toIntExact(tradeStartHeight));
+        long selectionDifference = Math.abs((long) selectionHeight - expectedSelectionHeight);
+        checkArgument(selectionDifference == 0 ||
+                        selectionDifference == DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE,
+                "Burning Man selection height %s must match contract-derived height %s or differ by one snapshot grid",
+                selectionHeight,
+                expectedSelectionHeight);
+
+        int depositSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight(
+                Math.toIntExact(depositBlockHeight));
+        checkArgument(selectionHeight <= depositSelectionHeight,
+                "Burning Man selection height must not be later than the deposit confirmation snapshot");
+    }
+
+    private static long getTradeStartHeight(Contract contract) {
+        String paymentMethodId = checkNotNull(contract.getPaymentMethodId(),
+                "contract payment method ID must not be null");
+        boolean isBlockchainPayment = PaymentMethod.BLOCK_CHAINS_ID.equals(paymentMethodId) ||
+                PaymentMethod.BLOCK_CHAINS_INSTANT_ID.equals(paymentMethodId);
+        long tradeStartHeight = Math.subtractExact(contract.getLockTime(),
+                Restrictions.getLockTime(isBlockchainPayment));
+        checkArgument(tradeStartHeight > 0, "Contract-derived trade start height must be positive");
+        return tradeStartHeight;
+    }
+
+    public long verifyDepositTx(Transaction depositTx, Dispute dispute) {
+        DisputeValidation.validateRefundDepositTx(dispute, depositTx);
+        Coin declaredPot = getDeclaredTradePot(dispute.getContract());
+        Coin verifiedTradeTxFee = depositTx.getOutput(0).getValue().subtract(declaredPot);
+        checkArgument(verifiedTradeTxFee.isPositive(), "Verified trade tx fee must be positive");
+        checkArgument(verifiedTradeTxFee.value == dispute.getTradeTxFee(),
+                "Trade tx fee does not match the fee derived from deposit output 0. actual=%s, expected=%s",
+                dispute.getTradeTxFee(),
+                verifiedTradeTxFee.value);
+        return verifiedTradeTxFee.value;
+    }
+
+    public void verifyDelayedPayoutTxReceivers(Transaction depositTx,
+                                                Transaction delayedPayoutTx,
+                                                Dispute dispute) {
+        long verifiedTradeTxFee = verifyDepositTx(depositTx, dispute);
         long inputAmount = depositTx.getOutput(0).getValue().value;
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
@@ -351,7 +498,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
-                dispute.getTradeTxFee(),
+                verifiedTradeTxFee,
                 burningManAddressListVersion);
         delayedPayoutTxReceiverService.validateDelayedPayoutTxReceivers(
                 delayedPayoutTxReceivers,
@@ -372,5 +519,87 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
                     "output value does not match delayedPayoutTxReceivers value. transactionOutput=" + transactionOutput);
         }
+    }
+
+    public RefundValidationResult verifyRefundPayoutAmount(Transaction depositTx,
+                                                           Transaction delayedPayoutTx,
+                                                           Dispute dispute,
+                                                           Coin buyerPayoutAmount,
+                                                           Coin sellerPayoutAmount) {
+        verifyDepositTx(depositTx, dispute);
+        checkArgument(depositTx.getTxId().toString().equals(dispute.getDepositTxId()),
+                "Fetched deposit tx ID does not match the dispute deposit tx ID");
+        checkArgument(delayedPayoutTx.getTxId().toString().equals(dispute.getDelayedPayoutTxId()),
+                "Fetched delayed payout tx ID does not match the dispute delayed payout tx ID");
+        Coin checkedBuyerPayoutAmount = checkNotNull(buyerPayoutAmount,
+                "buyerPayoutAmount must not be null");
+        Coin checkedSellerPayoutAmount = checkNotNull(sellerPayoutAmount,
+                "sellerPayoutAmount must not be null");
+        checkArgument(!checkedBuyerPayoutAmount.isNegative(), "buyerPayoutAmount must not be negative");
+        checkArgument(!checkedSellerPayoutAmount.isNegative(), "sellerPayoutAmount must not be negative");
+
+        Coin proposedRefund = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
+        Coin declaredPot = getDeclaredTradePot(dispute.getContract());
+        Coin validatedReceiverOutputSum = delayedPayoutTx.getOutputs().stream()
+                .map(TransactionOutput::getValue)
+                .reduce(Coin.ZERO, Coin::add);
+        Coin verifiedMaximum = declaredPot.isLessThan(validatedReceiverOutputSum)
+                ? declaredPot
+                : validatedReceiverOutputSum;
+        checkArgument(!proposedRefund.isGreaterThan(verifiedMaximum),
+                "Proposed refund amount %s exceeds verified maximum %s",
+                proposedRefund,
+                verifiedMaximum);
+        return new RefundValidationResult(
+                Hex.encode(checkNotNull(dispute.getContractHash(), "dispute contractHash must not be null")),
+                depositTx.getTxId().toString(),
+                delayedPayoutTx.getTxId().toString(),
+                depositTx.getOutput(0).getValue().value,
+                validatedReceiverOutputSum.value,
+                verifiedMaximum.value,
+                dispute.getTradeTxFee(),
+                dispute.getBurningManSelectionHeight(),
+                dispute.getDonationAddressOfDelayedPayoutTx(),
+                checkedBuyerPayoutAmount.value,
+                checkedSellerPayoutAmount.value);
+    }
+
+    private static Coin getDeclaredTradePot(Contract contract) {
+        checkNotNull(contract, "contract must not be null");
+        return contract.getTradeAmount()
+                .add(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()))
+                .add(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()));
+    }
+
+    // Trades created before the Burning Man receivers paid the whole escrow, minus the miner fee, to a single DAO
+    // donation address. The dispute-carried burningManSelectionHeight selects this branch, so it must be as strict
+    // as verifyDelayedPayoutTxReceivers: the fetched transaction itself has to pay to a DAO donation address.
+    // Checking only the dispute-carried address string would not prove where the escrow went.
+    public void verifyLegacyDelayedPayoutTx(Transaction delayedPayoutTx, Dispute dispute)
+            throws DisputeValidation.AddressException {
+        checkArgument(delayedPayoutTx.getOutputs().size() == 1,
+                "Legacy delayedPayoutTx must have exactly 1 output");
+        DisputeValidation.validateDonationAddress(dispute, delayedPayoutTx, btcWalletService.getParams());
+        DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute,
+                dispute.getDonationAddressOfDelayedPayoutTx(),
+                daoFacade);
+    }
+
+    public Optional<String> findRefundPayoutTxId(Dispute dispute) {
+        return refundPayoutReceiptService.findPayoutTxId(dispute);
+    }
+
+    public Coin getMaximumRefundPayoutAmount(Dispute dispute) {
+        return refundPayoutReceiptService.getMaximumPayoutAmount(dispute);
+    }
+
+    public void persistRefundPayoutReservation(Dispute dispute,
+                                               Transaction payoutTx,
+                                               Runnable completeHandler,
+                                               Consumer<Throwable> errorHandler) {
+        refundPayoutReceiptService.persistPayoutReservation(dispute,
+                payoutTx,
+                completeHandler,
+                errorHandler);
     }
 }

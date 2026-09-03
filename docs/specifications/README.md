@@ -40,6 +40,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
 
+### `dispute/`
+
+| Specification | Covers |
+|---|---|
+| [`dispute/refund-direct-payout.md`](dispute/refund-direct-payout.md) | One-time refund receipt consumption, durable payout reservation, amount limits, and inbound refund state. |
+
 ### `network/`
 
 | Specification | Covers |
@@ -59,6 +65,8 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`trade/altcoin-volume-precision.md`](trade/altcoin-volume-precision.md) | Rounding of altcoin trade volumes to the asset's chain precision, and the rejection of volumes that round to zero. |
 | [`trade/deposit-transaction-liveness.md`](trade/deposit-transaction-liveness.md) | The block-explorer evidence rules for classifying a deposit transaction as dead and for authorizing the move to failed trades. |
+| [`trade/delayed-payout-receivers.md`](trade/delayed-payout-receivers.md) | Proposal authenticity, address-list versioning, and fail-closed receiver rules for Burning Man delayed payout transactions. |
 | [`trade/fiat-buyer-payment-account-validation.md`](trade/fiat-buyer-payment-account-validation.md) | Contract-bound buyer payment-account validation and the fiat deposit/settlement gates that depend on it. |
 | [`trade/withdrawal-completion.md`](trade/withdrawal-completion.md) | The completion invariant of a trade payout withdrawal: local wallet commit, one terminal outcome per request, and broadcast failure as a notification. |
+| [`trade/refund-delayed-payout-validation.md`](trade/refund-delayed-payout-validation.md) | Refund-agent validation that a delayed payout transaction spends the deposit transaction's escrow output and pays it to the protocol receivers. |
 | [`trade/xmr-payment-proof-timestamp.md`](trade/xmr-payment-proof-timestamp.md) | The timestamp rule of the XMR payment proof used for automatic confirmation, and why it is one-sided. |

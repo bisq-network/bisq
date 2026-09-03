@@ -152,6 +152,17 @@ public class MempoolService {
                 .whenComplete((result, throwable) -> outstandingRequests--);
     }
 
+    public CompletableFuture<MempoolTxStatus> requestTxStatus(String txId) {
+        outstandingRequests++;
+        return new MempoolRequest(preferences,
+                socks5ProxyProvider,
+                config.allowLanForHttpRequests,
+                config.allowClearnetHttpRequests)
+                .requestTxDetails(txId)
+                .thenApply(json -> MempoolTxStatus.fromJson(txId, json))
+                .whenComplete((result, throwable) -> outstandingRequests--);
+    }
+
     private void validateOfferMakerTx(MempoolRequest mempoolRequest,
                                       TxValidator txValidator,
                                       Consumer<TxValidator> resultHandler) {

@@ -23,7 +23,6 @@ import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.core.dao.burningman.model.ReimbursementModel;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.Cycle;
@@ -161,8 +160,7 @@ class BurnTargetService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Stream<ReimbursementProposal> getReimbursementProposalsForIssuance(Issuance issuance) {
-        return proposalService.getProposalPayloads().stream()
-                .map(ProposalPayload::getProposal)
+        return proposalService.getValidatedProposals().stream()
                 .filter(proposal -> issuance.getTxId().equals(proposal.getTxId()))
                 .filter(proposal -> proposal instanceof ReimbursementProposal)
                 .map(proposal -> (ReimbursementProposal) proposal);

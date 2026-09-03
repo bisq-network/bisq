@@ -64,6 +64,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class BurningManServiceTest {
@@ -130,8 +133,8 @@ public class BurningManServiceTest {
         private void addCompensationIssuanceAndPayloads(Collection<Tuple2<Issuance, ProposalPayload>> tuples) {
             var issuanceMap = tuples.stream()
                     .collect(Collectors.toMap(t -> t.first.getTxId(), t -> t.first));
-            when(proposalService.getProposalPayloads())
-                    .thenReturn(tuples.stream().map(t -> t.second).collect(Collectors.toCollection(FXCollections::observableArrayList)));
+            when(proposalService.getValidatedProposals())
+                    .thenReturn(tuples.stream().map(t -> t.second.getProposal()).collect(Collectors.toList()));
             when(daoStateService.getIssuance(Mockito.anyString()))
                     .thenAnswer((Answer<Optional<Issuance>>) inv -> Optional.ofNullable(issuanceMap.get(inv.getArgument(0, String.class))));
         }
@@ -139,6 +142,22 @@ public class BurningManServiceTest {
         @SafeVarargs
         private void addCompensationIssuanceAndPayloads(Tuple2<Issuance, ProposalPayload>... tuples) {
             addCompensationIssuanceAndPayloads(Arrays.asList(tuples));
+        }
+
+        @Test
+        public void getBurningManCandidatesDoesNotUseRawProposalPayloads() {
+            addCompensationIssuanceAndPayloads(
+                    compensationIssuanceAndPayload("alice", "0001", 790000, 10000));
+            addProofOfBurnTxs(proofOfBurnTx("alice", "1001", 790000, 10000));
+            Tuple2<Issuance, ProposalPayload> poisoned =
+                    compensationIssuanceAndPayload("attacker", "0000", 790000, 10000);
+            Mockito.lenient().when(proposalService.getProposalPayloads())
+                    .thenReturn(FXCollections.observableArrayList(poisoned.second));
+
+            var candidateMap = burningManService.getBurningManCandidatesByName(800000);
+
+            assertFalse(candidateMap.containsKey("attacker"));
+            verify(proposalService, never()).getProposalPayloads();
         }
 
         @Test

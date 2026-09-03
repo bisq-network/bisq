@@ -46,6 +46,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.support.dispute.refund.RefundValidationResult;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -133,6 +134,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ChangeListener<String> compensationOrPenaltyListener;
     private boolean updatingUi = false;
     private Popup payoutPromptOnDisplay = null;
+    private RefundValidationResult refundValidationResult;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -162,6 +164,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     public void show(Dispute dispute) {
         this.dispute = dispute;
+        refundValidationResult = null;
 
         rowIndex = -1;
         width = 1150;
@@ -414,15 +417,31 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private boolean isPayoutAmountValid() {
         Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
         Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
-        Contract contract = dispute.getContract();
-        Coin tradeAmount = contract.getTradeAmount();
-        Offer offer = new Offer(contract.getOfferPayload());
-        Coin available = tradeAmount
-                .add(offer.getBuyerSecurityDeposit())
-                .add(offer.getSellerSecurityDeposit());
-        Coin totalAmount = buyerAmount.add(sellerAmount);
+        if (buyerAmount.isNegative() || sellerAmount.isNegative()) {
+            return false;
+        }
+
+        Coin totalAmount;
+        try {
+            totalAmount = buyerAmount.add(sellerAmount);
+        } catch (ArithmeticException exception) {
+            return false;
+        }
 
         boolean isRefundAgent = getDisputeManager(dispute) instanceof RefundManager;
+        if (isRefundAgent && totalAmount.isZero()) {
+            // Closing without any payout creates no transaction, so it needs neither the refund receipt nor its limit
+            return true;
+        }
+
+        Coin available;
+        try {
+            available = getMaximumPayoutAmount();
+        } catch (RuntimeException exception) {
+            log.error("Invalid payout data", exception);
+            return false;
+        }
+
         if (isRefundAgent) {
             // We allow to spend less in case of RefundAgent or even zero to both, so in that case no payout tx will
             // be made
@@ -433,6 +452,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             }
             return totalAmount.compareTo(available) == 0;
         }
+    }
+
+    private Coin getMaximumPayoutAmount() {
+        Contract contract = dispute.getContract();
+        Offer offer = new Offer(contract.getOfferPayload());
+        Coin contractPayoutAmount = contract.getTradeAmount()
+                .add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
+
+        return getDisputeManager(dispute) instanceof RefundManager
+                ? refundManager.getMaximumRefundPayoutAmount(dispute)
+                : contractPayoutAmount;
     }
 
     private void applyCustomAmounts(InputTextField inputTextField, boolean oldFocusValue, boolean newFocusValue) {
@@ -699,23 +730,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                         return;
                     }
 
-                    if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
-                        applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
-                    } else {
-                        maybeCheckTransactions().thenAccept(continue1 -> {
-                            if (continue1) {
-                                checkGeneralValidity().thenAccept(continue2 -> {
-                                    if (continue2) {
-                                        maybeMakePayout().thenAccept(continue3 -> {
-                                            if (continue3) {
-                                                applyDisputeResult(closeTicketButton);
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
+                    maybeCheckTransactions().thenAccept(continue1 -> {
+                        if (continue1) {
+                            checkGeneralValidity().thenAccept(continue2 -> {
+                                if (continue2) {
+                                    maybeMakePayout().thenAccept(continue3 -> {
+                                        if (continue3) {
+                                            applyDisputeResult(closeTicketButton);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
                 });
 
         cancelButton.setOnAction(e -> {
@@ -728,6 +755,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private CompletableFuture<Boolean> maybeMakePayout() {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
 
+        if (dispute.getSupportType() == SupportType.REFUND && !isRefundValidationCurrent()) {
+            asyncStatus.complete(false);
+            return asyncStatus;
+        }
+
         // bypass for mediation tickets, or when the peer's ticket is already closed
         if (dispute.getSupportType() == SupportType.MEDIATION ||
                 (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed())) {
@@ -735,25 +767,29 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             return asyncStatus;
         }
 
-        if (dispute.isPayoutDone()) {
-            new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
-                    .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .actionButtonText("Close ticket")
-                    .onAction(() -> asyncStatus.complete(true))
-                    .show();
-            return asyncStatus;
+        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
+        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
+        Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
+        if (outputAmount.isPositive()) {
+            // Only a payout consumes the refund receipt; closing without payout does not need it
+            try {
+                if (isRefundReceiptAlreadyPaid()) {
+                    showAlreadyPaidPopup(asyncStatus);
+                    return asyncStatus;
+                }
+            } catch (IllegalArgumentException exception) {
+                log.error("Invalid refund payout receipt", exception);
+                new Popup().error(exception.toString()).onClose(() -> asyncStatus.complete(false)).show();
+                return asyncStatus;
+            }
         }
         if (payoutPromptOnDisplay != null) {
             log.warn("The payout prompt is already on display, we do not show another copy of it.");
             asyncStatus.complete(false);
             return asyncStatus;
         }
-        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         String buyerPayoutAddressString = dispute.getContract().getBuyerPayoutAddressString();
-        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         String sellerPayoutAddressString = dispute.getContract().getSellerPayoutAddressString();
-        Coin outputAmount = buyerPayoutAmount.add(sellerPayoutAmount);
         Tuple2<Coin, Integer> feeTuple = txFeeEstimationService.getEstimatedFeeAndTxVsize(outputAmount, btcWalletService);
         Coin fee = feeTuple.first;
         Integer txVsize = feeTuple.second;
@@ -819,35 +855,83 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                           String buyerPayoutAddressString,
                           String sellerPayoutAddressString,
                           CompletableFuture<Boolean> resultHandler) {
-        if (dispute.isPayoutDone()) {
-            log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
-                    dispute.getTradeId());
-            resultHandler.complete(true);
+        if (!isRefundValidationCurrent() ||
+                !isRefundValidationCurrent(buyerPayoutAmount, sellerPayoutAmount)) {
+            resultHandler.complete(false);
             return;
         }
-        dispute.setPayoutDone(true);
         try {
+            if (isRefundReceiptAlreadyPaid()) {
+                log.error("Payout already processed, returning to avoid double payout for dispute of trade {}",
+                        dispute.getTradeId());
+                showAlreadyPaidPopup(resultHandler);
+                return;
+            }
+
             Transaction tx = btcWalletService.createRefundPayoutTx(buyerPayoutAmount,
                     sellerPayoutAmount,
+                    getMaximumPayoutAmount(),
                     fee,
                     buyerPayoutAddressString,
                     sellerPayoutAddressString);
-            tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
-                @Override
-                public void onSuccess(Transaction transaction) {
-                    resultHandler.complete(true);
-                }
+            refundManager.persistRefundPayoutReservation(dispute,
+                    tx,
+                    () -> {
+                        try {
+                            btcWalletService.commitTx(tx);
+                            tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
+                                @Override
+                                public void onSuccess(Transaction transaction) {
+                                    resultHandler.complete(true);
+                                }
 
-                @Override
-                public void onFailure(TxBroadcastException exception) {
-                    log.error("TxBroadcastException at doPayout", exception);
-                    new Popup().error(exception.toString()).onClose(() -> resultHandler.complete(false)).show();
-                }
-            });
+                                @Override
+                                public void onFailure(TxBroadcastException exception) {
+                                    log.error("TxBroadcastException at doPayout", exception);
+                                    new Popup().error(exception.toString())
+                                            .onClose(() -> resultHandler.complete(false))
+                                            .show();
+                                }
+                            });
+                        } catch (RuntimeException exception) {
+                            log.error("Exception while broadcasting the reserved refund payout", exception);
+                            new Popup().error(exception.toString())
+                                    .onClose(() -> resultHandler.complete(false))
+                                    .show();
+                        }
+                    },
+                    throwable -> {
+                        log.error("Persisting the refund payout reservation failed", throwable);
+                        new Popup().error(Res.get("disputeSummaryWindow.close.payoutPersistenceError",
+                                        throwable.toString()))
+                                .onClose(() -> resultHandler.complete(false))
+                                .show();
+                    });
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
             log.error("Exception at doPayout", e);
             new Popup().error(e.toString()).onClose(() -> resultHandler.complete(false)).show();
+        } catch (RuntimeException e) {
+            log.error("Exception at doPayout", e);
+            new Popup().error(e.toString()).onClose(() -> resultHandler.complete(false)).show();
         }
+    }
+
+    // A payout found on another row or in the wallet is only reported, not written into the selected row. The
+    // selected row may share just one transaction with the paid receipt (see
+    // RefundPayoutReceiptService.persistPayoutReservation); marking it would turn it into a match source that blocks
+    // an unrelated ticket sharing its other transaction.
+    private boolean isRefundReceiptAlreadyPaid() {
+        return dispute.isPayoutDone() || refundManager.findRefundPayoutTxId(dispute).isPresent();
+    }
+
+    private void showAlreadyPaidPopup(CompletableFuture<Boolean> resultHandler) {
+        new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
+                .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
+                .closeButtonText(Res.get("shared.cancel"))
+                .actionButtonText(Res.get("support.closeTicket"))
+                .onAction(() -> resultHandler.complete(true))
+                .onClose(() -> resultHandler.complete(false))
+                .show();
     }
 
     private CompletableFuture<Boolean> maybeCheckTransactions() {
@@ -856,6 +940,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         // Only RefundAgent need to verify transactions to ensure payout is safe
         if (disputeManager instanceof RefundManager) {
             RefundManager refundManager = (RefundManager) disputeManager;
+            refundValidationResult = null;
             Contract contract = dispute.getContract();
             String makerFeeTxId = contract.getOfferPayload().getOfferFeePaymentTxId();
             String takerFeeTxId = contract.getTakerFeeTxID();
@@ -867,24 +952,32 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     takerFeeTxId,
                     depositTxId,
                     delayedPayoutTxId
-            ).whenComplete((txList, throwable) -> {
+            ).whenComplete((txChain, throwable) -> {
                 UserThread.execute(() -> {
                     requestingTxsPopup.hide();
 
                     if (throwable == null) {
                         try {
-                            refundManager.verifyTradeTxChain(txList);
-                            if (!dispute.isUsingLegacyBurningMan()) {
-                                Transaction delayedPayoutTx = txList.get(3);
-                                refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
+                            refundManager.verifyTradeTxChain(txChain, dispute);
+                            Transaction depositTx = txChain.depositTx();
+                            Transaction delayedPayoutTx = txChain.delayedPayoutTx();
+                            if (dispute.isUsingLegacyBurningMan()) {
+                                refundManager.verifyDepositTx(depositTx, dispute);
+                                refundManager.verifyLegacyDelayedPayoutTx(delayedPayoutTx, dispute);
+                            } else {
+                                refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute);
                             }
+                            refundValidationResult = refundManager.verifyRefundPayoutAmount(depositTx,
+                                    delayedPayoutTx,
+                                    dispute,
+                                    disputeResult.getBuyerPayoutAmount(),
+                                    disputeResult.getSellerPayoutAmount());
                             asyncStatus.complete(true);
                         } catch (Throwable error) {
                             UserThread.runAfter(() -> {
                                         Popup popup = new Popup();
                                         popup.warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
-                                                .actionButtonText(Res.get("shared.continueAnyway"))
-                                                .onAction(() -> asyncStatus.complete(true))
+                                                .onAction(() -> asyncStatus.complete(false))
                                                 .onClose(() -> asyncStatus.complete(false))
                                                 .show();
                                     },
@@ -894,7 +987,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     } else {
                         UserThread.runAfter(() ->
                                         new Popup().warning(Res.get("disputeSummaryWindow.requestTransactionsError", throwable.getMessage()))
-                                                .onAction(() -> asyncStatus.complete(true))
+                                                .onAction(() -> asyncStatus.complete(false))
                                                 .onClose(() -> asyncStatus.complete(false))
                                                 .show(),
                                 100,
@@ -967,12 +1060,49 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         return asyncStatus;
     }
 
+    private boolean isRefundValidationCurrent() {
+        if (dispute.getSupportType() != SupportType.REFUND) {
+            return true;
+        }
+        try {
+            checkNotNull(refundValidationResult,
+                    "Refund transaction evidence has not been validated")
+                    .verifyMatches(dispute, disputeResult);
+            return true;
+        } catch (RuntimeException error) {
+            log.warn("Refund authorization no longer matches validated transaction evidence", error);
+            new Popup().warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed",
+                    error.getMessage())).show();
+            return false;
+        }
+    }
+
+    private boolean isRefundValidationCurrent(Coin buyerPayoutAmount, Coin sellerPayoutAmount) {
+        if (dispute.getSupportType() != SupportType.REFUND) {
+            return true;
+        }
+        try {
+            checkNotNull(refundValidationResult,
+                    "Refund transaction evidence has not been validated")
+                    .verifyMatches(dispute, buyerPayoutAmount, sellerPayoutAmount);
+            return true;
+        } catch (RuntimeException error) {
+            log.warn("Refund payout no longer matches validated transaction evidence", error);
+            new Popup().warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed",
+                    error.getMessage())).show();
+            return false;
+        }
+    }
+
     private void applyDisputeResult(Button closeTicketButton) {
         DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
         if (disputeManager == null) {
             return;
         }
         boolean isRefundAgent = disputeManager instanceof RefundManager;
+        if (isRefundAgent && !isRefundValidationCurrent()) {
+            return;
+        }
         disputeResult.setLoserPublisher(false); // field no longer used per pazza / leo816
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
@@ -1207,4 +1337,3 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 }
-

@@ -31,6 +31,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -86,6 +88,19 @@ public class MempoolRequest {
         return mempoolHttpClient.requestTxAsHex(txId);
     }
 
+    public CompletableFuture<String> requestTxDetails(String txId) {
+        mempoolHttpClient.setBaseUrl(getRandomServiceAddress(txBroadcastServices));
+        return CompletableFuture.supplyAsync(() -> {
+            Thread.currentThread().setName("MempoolRequest @ " + mempoolHttpClient.getBaseUrl());
+            log.info("Making http request for information on txId: {}", txId);
+            try {
+                return mempoolHttpClient.getTxDetails(txId);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }, executorService);
+    }
+
     public boolean switchToAnotherProvider() {
         txBroadcastServices.remove(mempoolHttpClient.getBaseUrl());
         return txBroadcastServices.size() > 0;
@@ -97,4 +112,3 @@ public class MempoolRequest {
         return !list.isEmpty() ? list.get(new Random().nextInt(list.size())) : null;
     }
 }
-
