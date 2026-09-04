@@ -151,18 +151,36 @@ public class MempoolService {
 
     public CompletableFuture<String> requestTxAsHex(String txId) {
         outstandingRequests.incrementAndGet();
-        return new MempoolRequest(preferences, socks5ProxyProvider, config.allowLanForHttpRequests, config.allowClearnetHttpRequests)
-                .requestTxAsHex(txId)
-                .whenComplete((result, throwable) -> outstandingRequests.decrementAndGet());
+        CompletableFuture<String> request;
+        try {
+            request = new MempoolRequest(preferences,
+                    socks5ProxyProvider,
+                    config.allowLanForHttpRequests,
+                    config.allowClearnetHttpRequests)
+                    .requestTxAsHex(txId);
+        } catch (RuntimeException exception) {
+            // The transaction ID is validated before the asynchronous request exists. Keep the counter consistent
+            // and report the failure through the future like any other request failure.
+            outstandingRequests.decrementAndGet();
+            return CompletableFuture.failedFuture(exception);
+        }
+        return request.whenComplete((result, throwable) -> outstandingRequests.decrementAndGet());
     }
 
     public CompletableFuture<MempoolTxStatus> requestTxStatus(String txId) {
         outstandingRequests.incrementAndGet();
-        return new MempoolRequest(preferences,
-                socks5ProxyProvider,
-                config.allowLanForHttpRequests,
-                config.allowClearnetHttpRequests)
-                .requestTxDetails(txId)
+        CompletableFuture<String> request;
+        try {
+            request = new MempoolRequest(preferences,
+                    socks5ProxyProvider,
+                    config.allowLanForHttpRequests,
+                    config.allowClearnetHttpRequests)
+                    .requestTxDetails(txId);
+        } catch (RuntimeException exception) {
+            outstandingRequests.decrementAndGet();
+            return CompletableFuture.failedFuture(exception);
+        }
+        return request
                 .thenApply(json -> MempoolTxStatus.fromJson(txId, json))
                 .whenComplete((result, throwable) -> outstandingRequests.decrementAndGet());
     }

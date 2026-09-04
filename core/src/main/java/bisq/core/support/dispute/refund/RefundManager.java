@@ -308,27 +308,33 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
         NetworkParameters params = btcWalletService.getParams();
         List<Transaction> txs = new ArrayList<>();
-        return mempoolService.requestTxAsHex(makerFeeTxId)
-                .thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, makerFeeTxId, txAsHex));
-                    return mempoolService.requestTxAsHex(takerFeeTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, takerFeeTxId, txAsHex));
-                    return mempoolService.requestTxAsHex(depositTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, depositTxId, txAsHex));
-                    return mempoolService.requestTxAsHex(delayedPayoutTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, delayedPayoutTxId, txAsHex));
-                    return mempoolService.requestTxStatus(depositTxId);
-                }).thenCompose(depositStatus -> mempoolService.requestTxStatus(delayedPayoutTxId)
-                        .thenApply(delayedPayoutStatus -> new RefundTransactionChain(
-                                txs.get(0),
-                                txs.get(1),
-                                txs.get(2),
-                                txs.get(3),
-                                depositStatus,
-                                delayedPayoutStatus)));
+        try {
+            return mempoolService.requestTxAsHex(makerFeeTxId)
+                    .thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, makerFeeTxId, txAsHex));
+                        return mempoolService.requestTxAsHex(takerFeeTxId);
+                    }).thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, takerFeeTxId, txAsHex));
+                        return mempoolService.requestTxAsHex(depositTxId);
+                    }).thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, depositTxId, txAsHex));
+                        return mempoolService.requestTxAsHex(delayedPayoutTxId);
+                    }).thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, delayedPayoutTxId, txAsHex));
+                        return mempoolService.requestTxStatus(depositTxId);
+                    }).thenCompose(depositStatus -> mempoolService.requestTxStatus(delayedPayoutTxId)
+                            .thenApply(delayedPayoutStatus -> new RefundTransactionChain(
+                                    txs.get(0),
+                                    txs.get(1),
+                                    txs.get(2),
+                                    txs.get(3),
+                                    depositStatus,
+                                    delayedPayoutStatus)));
+        } catch (RuntimeException exception) {
+            // The first request validates its transaction ID before the asynchronous call is created. A malformed
+            // ID must reach the caller as a failed future, so the close dialog can report it and recover.
+            return CompletableFuture.failedFuture(exception);
+        }
     }
 
     @VisibleForTesting

@@ -63,10 +63,12 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -91,9 +93,11 @@ class RefundManagerTest {
     private final DaoFacade daoFacade = mock(DaoFacade.class);
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService =
             mock(DelayedPayoutTxReceiverService.class);
+    private final MempoolService mempoolService = mock(MempoolService.class);
     private final RefundManager refundManager = refundManager(btcWalletService,
             daoFacade,
-            delayedPayoutTxReceiverService);
+            delayedPayoutTxReceiverService,
+            mempoolService);
 
     @BeforeEach
     void setUp() {
@@ -151,6 +155,21 @@ class RefundManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> refundManager.verifyTradeTxChain(
                 List.of(transactions.get(0), unrelatedTakerFeeTx, transactions.get(2), transactions.get(3))));
+    }
+
+    @Test
+    void requestBlockchainTransactionsFailsFutureWhenTransactionIdIsRejectedBeforeTheRequest() {
+        assumeTrue(Config.baseCurrencyNetwork().isMainnet(), "transaction requests are only made on mainnet");
+        when(mempoolService.requestTxAsHex("not-a-tx-id"))
+                .thenThrow(new IllegalArgumentException("Input string is not a valid transaction ID"));
+
+        CompletableFuture<RefundTransactionChain> future = refundManager.requestBlockchainTransactions(
+                "not-a-tx-id",
+                "ab".repeat(32),
+                "cd".repeat(32),
+                "ef".repeat(32));
+
+        assertTrue(future.isCompletedExceptionally());
     }
 
     @Test
@@ -712,7 +731,8 @@ class RefundManagerTest {
 
     private static RefundManager refundManager(BtcWalletService btcWalletService,
                                                DaoFacade daoFacade,
-                                               DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+                                               DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                               MempoolService mempoolService) {
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
         return new RefundManager(p2PService,
@@ -729,7 +749,7 @@ class RefundManagerTest {
                 mock(RefundDisputeListService.class),
                 mock(Config.class),
                 mock(PriceFeedService.class),
-                mock(MempoolService.class),
+                mempoolService,
                 mock(RefundPayoutReceiptService.class));
     }
 }
