@@ -441,18 +441,24 @@ class RefundManagerTest {
     }
 
     @Test
-    void verifyRefundPayoutAmountRejectsAmountAboveVerifiedReceiverValue() {
+    void verifyRefundPayoutAmountAcceptsContractPotAboveReceiverOutputSum() {
+        // The DPT outputs are smaller than the escrow by the DPT miner fee; the pot is still the refund limit
         Transaction depositTx = tradeTxChain(0).get(2);
         Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
                 List.of(new Tuple2<>(24_000L, newAddress())));
         Dispute dispute = burningManDispute(depositTx, List.of());
         when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
 
+        assertDoesNotThrow(() -> refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(5_000)));
         assertThrows(IllegalArgumentException.class,
                 () -> refundManager.verifyRefundPayoutAmount(depositTx,
                         delayedPayoutTx,
                         dispute,
-                        Coin.valueOf(20_000),
+                        Coin.valueOf(20_001),
                         Coin.valueOf(5_000)));
     }
 

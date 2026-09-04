@@ -155,8 +155,16 @@ After all delayed-payout outputs have been validated, the maximum normal refund 
 
 ```text
 minimum(contract trade amount + both security deposits,
-        validated delayed-payout receiver output sum)
+        deposit output 0 value - verified trade transaction fee)
 ```
+
+For a deposit that satisfies the contract-bound escrow equation both terms are equal, so the bound
+is the contract pot. This is the same limit that the close dialog offers before the delayed payout
+transaction has been fetched (see [`../dispute/refund-direct-payout.md`](../dispute/refund-direct-payout.md));
+the two limits must not diverge, otherwise a full-pot refund is accepted in the form and rejected at
+close. The delayed-payout output sum is deliberately not the bound: it is smaller than the escrow by
+the delayed-payout miner fee, which the refund has always covered, and it is only known after the
+transaction fetch. The output sum is still recorded in the validation binding.
 
 Buyer and seller payout amounts must each be non-negative and their sum must not exceed that maximum.
 The validation result binds the contract hash, deposit transaction ID, delayed-payout transaction ID,

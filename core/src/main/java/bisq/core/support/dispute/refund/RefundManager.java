@@ -526,7 +526,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                                                            Dispute dispute,
                                                            Coin buyerPayoutAmount,
                                                            Coin sellerPayoutAmount) {
-        verifyDepositTx(depositTx, dispute);
+        long verifiedTradeTxFee = verifyDepositTx(depositTx, dispute);
         checkArgument(depositTx.getTxId().toString().equals(dispute.getDepositTxId()),
                 "Fetched deposit tx ID does not match the dispute deposit tx ID");
         checkArgument(delayedPayoutTx.getTxId().toString().equals(dispute.getDelayedPayoutTxId()),
@@ -540,12 +540,17 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
         Coin proposedRefund = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
         Coin declaredPot = getDeclaredTradePot(dispute.getContract());
+        Coin depositOutputValue = depositTx.getOutput(0).getValue();
         Coin validatedReceiverOutputSum = delayedPayoutTx.getOutputs().stream()
                 .map(TransactionOutput::getValue)
                 .reduce(Coin.ZERO, Coin::add);
-        Coin verifiedMaximum = declaredPot.isLessThan(validatedReceiverOutputSum)
-                ? declaredPot
-                : validatedReceiverOutputSum;
+        // The validated deposit output is the escrow evidence. Its value minus the verified trade fee equals the
+        // contract pot, which is also the limit the close dialog offers before the delayed payout transaction has
+        // been fetched (RefundPayoutReceiptService.getMaximumPayoutAmount). The delayed payout outputs are smaller
+        // by the DPT miner fee; they are recorded for the binding below but do not bound the refund.
+        Coin verifiedMaximum = RefundPayoutReceiptService.calculateMaximumPayoutAmount(declaredPot,
+                depositOutputValue,
+                verifiedTradeTxFee);
         checkArgument(!proposedRefund.isGreaterThan(verifiedMaximum),
                 "Proposed refund amount %s exceeds verified maximum %s",
                 proposedRefund,
@@ -554,7 +559,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                 Hex.encode(checkNotNull(dispute.getContractHash(), "dispute contractHash must not be null")),
                 depositTx.getTxId().toString(),
                 delayedPayoutTx.getTxId().toString(),
-                depositTx.getOutput(0).getValue().value,
+                depositOutputValue.value,
                 validatedReceiverOutputSum.value,
                 verifiedMaximum.value,
                 dispute.getTradeTxFee(),
