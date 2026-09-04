@@ -51,10 +51,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -73,8 +73,7 @@ public class MempoolService {
     private final DaoStateService daoStateService;
     private final BurningManAddressListService burningManAddressListService;
     private final BurningManPresentationService burningManPresentationService;
-    @Getter
-    private int outstandingRequests = 0;
+    private final AtomicInteger outstandingRequests = new AtomicInteger();
 
     @Inject
     public MempoolService(Socks5ProxyProvider socks5ProxyProvider,
@@ -98,8 +97,13 @@ public class MempoolService {
     public void onAllServicesInitialized() {
     }
 
+    public int getOutstandingRequests() {
+        return outstandingRequests.get();
+    }
+
     public boolean canRequestBeMade() {
-        return daoStateService.isParseBlockChainComplete() && outstandingRequests < 5; // limit max simultaneous lookups
+        return daoStateService.isParseBlockChainComplete() &&
+                outstandingRequests.get() < 5; // limit max simultaneous lookups
     }
 
     public boolean canRequestBeMade(OfferPayload offerPayload) {
@@ -146,21 +150,21 @@ public class MempoolService {
     }
 
     public CompletableFuture<String> requestTxAsHex(String txId) {
-        outstandingRequests++;
+        outstandingRequests.incrementAndGet();
         return new MempoolRequest(preferences, socks5ProxyProvider, config.allowLanForHttpRequests, config.allowClearnetHttpRequests)
                 .requestTxAsHex(txId)
-                .whenComplete((result, throwable) -> outstandingRequests--);
+                .whenComplete((result, throwable) -> outstandingRequests.decrementAndGet());
     }
 
     public CompletableFuture<MempoolTxStatus> requestTxStatus(String txId) {
-        outstandingRequests++;
+        outstandingRequests.incrementAndGet();
         return new MempoolRequest(preferences,
                 socks5ProxyProvider,
                 config.allowLanForHttpRequests,
                 config.allowClearnetHttpRequests)
                 .requestTxDetails(txId)
                 .thenApply(json -> MempoolTxStatus.fromJson(txId, json))
-                .whenComplete((result, throwable) -> outstandingRequests--);
+                .whenComplete((result, throwable) -> outstandingRequests.decrementAndGet());
     }
 
     private void validateOfferMakerTx(MempoolRequest mempoolRequest,
@@ -198,12 +202,12 @@ public class MempoolService {
     private FutureCallback<String> callbackForMakerTxValidation(MempoolRequest theRequest,
                                                                 TxValidator txValidator,
                                                                 Consumer<TxValidator> resultHandler) {
-        outstandingRequests++;
+        outstandingRequests.incrementAndGet();
         FutureCallback<String> myCallback = new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
-                    outstandingRequests--;
+                    outstandingRequests.decrementAndGet();
                     if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
                         resultHandler.accept(txValidator.parseJsonValidateMakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
                     } else {
@@ -216,7 +220,7 @@ public class MempoolService {
             public void onFailure(Throwable throwable) {
                 log.warn("onFailure - {}", throwable.toString());
                 UserThread.execute(() -> {
-                    outstandingRequests--;
+                    outstandingRequests.decrementAndGet();
                     if (theRequest.switchToAnotherProvider()) {
                         validateOfferMakerTx(theRequest, txValidator, resultHandler);
                     } else {
@@ -232,12 +236,12 @@ public class MempoolService {
     private FutureCallback<String> callbackForTakerTxValidation(MempoolRequest theRequest,
                                                                 TxValidator txValidator,
                                                                 Consumer<TxValidator> resultHandler) {
-        outstandingRequests++;
+        outstandingRequests.incrementAndGet();
         FutureCallback<String> myCallback = new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
-                    outstandingRequests--;
+                    outstandingRequests.decrementAndGet();
                     if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
                         resultHandler.accept(txValidator.parseJsonValidateTakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
                     } else {
@@ -250,7 +254,7 @@ public class MempoolService {
             public void onFailure(Throwable throwable) {
                 log.warn("onFailure - {}", throwable.toString());
                 UserThread.execute(() -> {
-                    outstandingRequests--;
+                    outstandingRequests.decrementAndGet();
                     if (theRequest.switchToAnotherProvider()) {
                         validateOfferTakerTx(theRequest, txValidator, resultHandler);
                     } else {
@@ -267,12 +271,12 @@ public class MempoolService {
                                                         TxValidator txValidator,
                                                         AtomicBoolean everyProviderAnswered404,
                                                         Consumer<TxValidator> resultHandler) {
-        outstandingRequests++;
+        outstandingRequests.incrementAndGet();
         FutureCallback<String> myCallback = new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
-                    outstandingRequests--;
+                    outstandingRequests.decrementAndGet();
                     txValidator.setJsonTxt(jsonTxt);
                     resultHandler.accept(txValidator);
                 });
@@ -282,7 +286,7 @@ public class MempoolService {
             public void onFailure(Throwable throwable) {
                 log.warn("onFailure - {}", throwable.toString());
                 UserThread.execute(() -> {
-                    outstandingRequests--;
+                    outstandingRequests.decrementAndGet();
                     // Only a definitive "tx unknown" (HTTP 404) answer tells us anything about the tx. Any
                     // other failure is a transport problem, so we must not conclude the tx does not exist.
                     if (!isTxUnknownResponse(throwable)) {
