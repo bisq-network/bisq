@@ -52,6 +52,9 @@ public class UserThread {
     private static volatile boolean jvmShutdownInProgress;
 
     public static synchronized void setTimerClass(Class<? extends Timer> timerClass) {
+        if (jvmShutdownInProgress) {
+            return;
+        }
         UserThread.timerClass = timerClass;
         if (!shutdownExecutorConfigured) {
             shutdownTimerClass = timerClass;
@@ -59,6 +62,9 @@ public class UserThread {
     }
 
     public static synchronized void setExecutor(Executor executor) {
+        if (jvmShutdownInProgress) {
+            return;
+        }
         UserThread.executor = executor;
         if (!shutdownExecutorConfigured) {
             shutdownExecutor = executor;

@@ -85,6 +85,30 @@ class UserThreadTest {
         }, 1));
     }
 
+    @Test
+    void regularConfigurationCannotReplaceActiveShutdownExecutorAndTimer() {
+        var shutdownExecutions = new AtomicInteger();
+        Executor shutdownExecutor = command -> {
+            shutdownExecutions.incrementAndGet();
+            command.run();
+        };
+        var frameworkExecutions = new AtomicInteger();
+
+        UserThread.setShutdownExecutor(shutdownExecutor, ShutdownTimer.class);
+        UserThread.executeAtShutdown(() -> {
+        });
+
+        UserThread.setExecutor(command -> frameworkExecutions.incrementAndGet());
+        UserThread.setTimerClass(FrameworkTimer.class);
+        UserThread.execute(() -> {
+        });
+
+        assertEquals(0, frameworkExecutions.get());
+        assertEquals(2, shutdownExecutions.get());
+        assertInstanceOf(ShutdownTimer.class, UserThread.runAfter(() -> {
+        }, 1));
+    }
+
     static class FrameworkTimer implements Timer {
         @Override
         public Timer runLater(Duration delay, Runnable runnable) {
