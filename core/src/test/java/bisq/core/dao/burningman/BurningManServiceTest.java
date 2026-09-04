@@ -150,7 +150,7 @@ public class BurningManServiceTest {
                     compensationIssuanceAndPayload("alice", "0001", 790000, 10000));
             addProofOfBurnTxs(proofOfBurnTx("alice", "1001", 790000, 10000));
             Tuple2<Issuance, ProposalPayload> poisoned =
-                    compensationIssuanceAndPayload("attacker", "0000", 790000, 10000);
+                    compensationIssuanceAndPayload("attacker", "0001", 790000, 10000);
             Mockito.lenient().when(proposalService.getProposalPayloads())
                     .thenReturn(FXCollections.observableArrayList(poisoned.second));
 
