@@ -186,6 +186,15 @@ The agent may keep the ticket open, add notes, retry after temporary provider fa
 the transactions separately. Manual investigation is not authorization to emit the same payout or
 signed artifact produced by successful automatic validation.
 
+## Development networks
+
+Regtest has no block explorer, so the transaction evidence described above cannot be fetched there.
+On regtest the refund close flow skips the evidence validation and the payout and result gates that
+depend on it, so developers can exercise the close flow in a local network. The skip is selected by
+the regtest network only; it must never apply to mainnet, and it does not weaken the amount limits,
+the receipt consumption or the intake validation, which use locally available data. Testnet is not
+supported: the evidence fetch fails there and the close attempt terminates as on mainnet.
+
 ## Compatibility
 
 These rules do not change transaction serialization or the trade protocol. Valid deposits already

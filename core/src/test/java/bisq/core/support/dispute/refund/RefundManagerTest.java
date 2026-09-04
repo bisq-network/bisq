@@ -40,6 +40,7 @@ import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Hex;
@@ -66,6 +67,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -155,6 +157,13 @@ class RefundManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> refundManager.verifyTradeTxChain(
                 List.of(transactions.get(0), unrelatedTakerFeeTx, transactions.get(2), transactions.get(3))));
+    }
+
+    @Test
+    void refundEvidenceValidationIsSkippedOnRegtestOnly() {
+        assertTrue(RefundManager.isRefundEvidenceValidationSkipped(BaseCurrencyNetwork.BTC_REGTEST));
+        assertFalse(RefundManager.isRefundEvidenceValidationSkipped(BaseCurrencyNetwork.BTC_MAINNET));
+        assertFalse(RefundManager.isRefundEvidenceValidationSkipped(BaseCurrencyNetwork.BTC_TESTNET));
     }
 
     @Test

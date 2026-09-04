@@ -54,6 +54,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -293,12 +294,26 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return trade.getRefundAgentPubKeyRing();
     }
 
+    /**
+     * Regtest has no block explorer, so the refund transaction evidence cannot be fetched there. Developers still
+     * need to exercise the refund close flow, so the evidence validation is skipped on regtest only. This is a
+     * development convenience and must never be extended to mainnet, where the fail-closed rules apply.
+     */
+    public boolean isRefundEvidenceValidationSkipped() {
+        return isRefundEvidenceValidationSkipped(Config.baseCurrencyNetwork());
+    }
+
+    @VisibleForTesting
+    static boolean isRefundEvidenceValidationSkipped(BaseCurrencyNetwork baseCurrencyNetwork) {
+        return checkNotNull(baseCurrencyNetwork, "baseCurrencyNetwork must not be null").isRegtest();
+    }
+
     public CompletableFuture<RefundTransactionChain> requestBlockchainTransactions(String makerFeeTxId,
                                                                                     String takerFeeTxId,
                                                                                     String depositTxId,
                                                                                     String delayedPayoutTxId) {
-        // in regtest mode, simulate a delay & failure obtaining the blockchain transactions
-        // since we cannot request them in regtest anyway.  this is useful for checking failure scenarios
+        // Only mainnet has block explorers configured. Regtest skips the evidence validation (see
+        // isRefundEvidenceValidationSkipped); any other network fails closed after a short delay.
         if (!Config.baseCurrencyNetwork().isMainnet()) {
             CompletableFuture<RefundTransactionChain> retFuture = new CompletableFuture<>();
             UserThread.runAfter(() -> retFuture.completeExceptionally(

@@ -941,6 +941,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (disputeManager instanceof RefundManager) {
             RefundManager refundManager = (RefundManager) disputeManager;
             refundValidationResult = null;
+            if (refundManager.isRefundEvidenceValidationSkipped()) {
+                log.warn("Refund transaction evidence is not validated on regtest because no block explorer is " +
+                        "available. This bypass exists for development only.");
+                asyncStatus.complete(true);
+                return asyncStatus;
+            }
             Contract contract = dispute.getContract();
             String makerFeeTxId = contract.getOfferPayload().getOfferFeePaymentTxId();
             String takerFeeTxId = contract.getTakerFeeTxID();
@@ -1061,7 +1067,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean isRefundValidationCurrent() {
-        if (dispute.getSupportType() != SupportType.REFUND) {
+        if (dispute.getSupportType() != SupportType.REFUND || refundManager.isRefundEvidenceValidationSkipped()) {
             return true;
         }
         try {
@@ -1078,7 +1084,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean isRefundValidationCurrent(Coin buyerPayoutAmount, Coin sellerPayoutAmount) {
-        if (dispute.getSupportType() != SupportType.REFUND) {
+        if (dispute.getSupportType() != SupportType.REFUND || refundManager.isRefundEvidenceValidationSkipped()) {
             return true;
         }
         try {
