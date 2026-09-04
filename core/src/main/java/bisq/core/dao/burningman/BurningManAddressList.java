@@ -20,6 +20,7 @@ package bisq.core.dao.burningman;
 import bisq.common.config.Config;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +62,11 @@ public final class BurningManAddressList {
         this.burningManSelectionHeight = burningManSelectionHeight;
         this.legacyBurningManAddress = legacyBurningManAddress;
         this.entries = new ArrayList<>(entries);
+    }
+
+    // The service shares each bundled instance across callers, so this security allowlist must not be mutable.
+    public List<Entry> getEntries() {
+        return entries == null ? null : Collections.unmodifiableList(entries);
     }
 
     public boolean isForCurrentNetwork() {

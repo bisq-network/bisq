@@ -46,6 +46,15 @@ class BurningManAddressListServiceTest {
     }
 
     @Test
+    void doesNotExposeMutableEntriesOfABundledAddressList() {
+        BurningManAddressListService service = new BurningManAddressListService();
+
+        List<BurningManAddressList.Entry> entries = service.getAddressList(1).getEntries();
+
+        assertThrows(UnsupportedOperationException.class, entries::clear);
+    }
+
+    @Test
     void loadsBundledAddressListsByVersion() {
         BurningManAddressListService service = new BurningManAddressListService();
 
