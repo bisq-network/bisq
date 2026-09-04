@@ -19,6 +19,21 @@ ID, and its escrow output must match the contract-bound script and value describ
 transactions used for the close-time validation are fetched independently by the IDs carried in the
 dispute and its contract, and the fetched deposit must satisfy the same checks.
 
+## Contract acceptance by both traders
+
+A refund dispute must carry both trader contract signatures, and each signature must verify against
+the signature key of the respective trader's key ring in the contract over the hashed contract JSON.
+A dispute with a missing or non-verifying signature is rejected at admission. A signature that is
+present on a mediation dispute must verify as well; only its presence stays optional there.
+
+The refund payout is sent to the payout addresses recorded in the dispute-carried contract. The
+contract hash, the escrow script and the escrow value do not commit those addresses independently
+of the opener, so a dispute opener who can present a self-consistent contract with only the own
+signature could substitute the peer's payout address. Both trader signatures are the evidence that
+both traders accepted exactly this contract. Every trade that reached the deposit and delayed payout
+transactions already holds both signatures on both sides, so this rule does not exclude legitimate
+refund cases.
+
 ## Contract-bound escrow
 
 Deposit output `0` must use the P2WSH script derived from the contract's buyer and seller 2-of-2

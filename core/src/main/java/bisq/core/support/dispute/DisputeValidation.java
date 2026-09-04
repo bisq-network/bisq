@@ -111,18 +111,26 @@ public class DisputeValidation {
             }
 
             try {
-                // Only the dispute opener has set the signature
                 String makerContractSignature = dispute.getMakerContractSignature();
-                if (makerContractSignature != null) {
-                    Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
-                            dispute.getContractAsJson(),
-                            makerContractSignature);
-                }
                 String takerContractSignature = dispute.getTakerContractSignature();
+                if (dispute.getSupportType() == SupportType.REFUND) {
+                    // A refund payout is sent to the payout addresses of the contract carried by the dispute. Both
+                    // trader signatures prove that both traders accepted exactly this contract; without the peer
+                    // signature the opener could substitute the peer's payout address.
+                    checkNotNull(makerContractSignature, "Refund dispute must carry the maker contract signature");
+                    checkNotNull(takerContractSignature, "Refund dispute must carry the taker contract signature");
+                }
+                if (makerContractSignature != null) {
+                    checkArgument(Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
+                                    dispute.getContractAsJson(),
+                                    makerContractSignature),
+                            "Invalid makerContractSignature");
+                }
                 if (takerContractSignature != null) {
-                    Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
-                            dispute.getContractAsJson(),
-                            takerContractSignature);
+                    checkArgument(Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
+                                    dispute.getContractAsJson(),
+                                    takerContractSignature),
+                            "Invalid takerContractSignature");
                 }
             } catch (CryptoException e) {
                 throw new ValidationException(dispute, e.getMessage());

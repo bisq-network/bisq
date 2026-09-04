@@ -82,6 +82,10 @@ The deposit transaction ID and, when present, the delayed-payout transaction ID 
 canonical 32-byte transaction IDs. Replay detection and receipt consumption key on these IDs, so a dispute carrying
 any other value is rejected at intake instead of being stored.
 
+An inbound refund dispute must also carry both verified trader contract signatures, because the payout addresses
+come from the dispute-carried contract; see
+[`../trade/refund-delayed-payout-validation.md`](../trade/refund-delayed-payout-validation.md).
+
 ## Compatibility and historical records
 
 The persisted dispute payout transaction ID is the compatibility-safe receipt marker; no serialized schema change is
