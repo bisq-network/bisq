@@ -438,6 +438,7 @@ Each entry contains:
 Loader validation requires:
 
 - schema version equals `1`
+- positive `listVersion`
 - filename version equals `listVersion`
 - non-blank `network`
 - positive `chainHeight`

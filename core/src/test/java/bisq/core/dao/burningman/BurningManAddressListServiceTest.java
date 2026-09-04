@@ -112,4 +112,18 @@ class BurningManAddressListServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.getAddressList(0));
         assertThrows(IllegalArgumentException.class, () -> service.getAddressList(service.getLatestVersion() + 1));
     }
+
+    @Test
+    void rejectsAddressListResourceWithVersionZero() {
+        BurningManAddressList addressList = new BurningManAddressList(BurningManAddressList.SCHEMA_VERSION,
+                0,
+                "BTC_MAINNET",
+                1,
+                1,
+                "legacy-address",
+                List.of(new BurningManAddressList.Entry("receiver-address", 0.1)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> BurningManAddressListService.validateAddressList("bm-addresses-v0000.json", 0, addressList));
+    }
 }
