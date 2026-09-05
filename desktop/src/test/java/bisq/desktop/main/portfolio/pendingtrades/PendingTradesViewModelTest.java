@@ -66,6 +66,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -244,6 +246,24 @@ class PendingTradesViewModelTest {
         // A bypassed check carries no fresh evidence, so it must not authorize the move.
         assertEquals(DeadDepositRecheckResult.UNREACHABLE, recheck(txCheckBypassed()));
         assertTrue(viewModel.isDepositTxProvenDead(trade));
+    }
+
+    @Test
+    void recheckThatCannotBeStartedReleasesTheTradeAndReportsUnreachable() {
+        deliver(txUnknownToAllProviders());
+        doThrow(new IllegalStateException("lookup could not be created"))
+                .when(mempoolService).checkTxIsConfirmed(eq(DEPOSIT_TX_ID), any());
+        AtomicReference<DeadDepositRecheckResult> failedStart = new AtomicReference<>();
+
+        viewModel.recheckDeadDepositTx(trade, failedStart::set);
+
+        assertEquals(DeadDepositRecheckResult.UNREACHABLE, failedStart.get());
+        assertTrue(viewModel.isDepositTxProvenDead(trade));
+
+        // The trade is no longer marked as being re-checked, so the next attempt is dispatched again.
+        doNothing().when(mempoolService).checkTxIsConfirmed(eq(DEPOSIT_TX_ID), any());
+        viewModel.recheckDeadDepositTx(trade, result -> {});
+        verify(mempoolService, times(lookups + 2)).checkTxIsConfirmed(eq(DEPOSIT_TX_ID), any());
     }
 
     @Test

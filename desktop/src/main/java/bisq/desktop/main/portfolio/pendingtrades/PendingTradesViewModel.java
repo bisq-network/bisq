@@ -388,27 +388,34 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 || !deadDepositRechecksInFlight.add(tradeId)) {
             return;
         }
-        mempoolService.checkTxIsConfirmed(depositTxId, validator -> {
+        try {
+            mempoolService.checkTxIsConfirmed(depositTxId, validator -> {
+                deadDepositRechecksInFlight.remove(tradeId);
+                Instant unknownSince = deadDepositUnknownSince.get(tradeId);
+                if (unknownSince == null) {
+                    // A concurrent step 1 lookup revoked the verdict while this re-check was running.
+                    resultHandler.accept(DeadDepositRecheckResult.FOUND);
+                } else if (validator.getStatus() == FeeValidationStatus.NACK_TX_LOOKUP_UNREACHABLE) {
+                    resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
+                } else if (validator.parseJsonValidateTx() >= 0) {
+                    // A provider returned a status for the tx, so it is not gone from the network.
+                    deadDepositUnknownSince.remove(tradeId);
+                    resultHandler.accept(DeadDepositRecheckResult.FOUND);
+                } else if (validator.getStatus() != FeeValidationStatus.NACK_BTC_TX_NOT_FOUND) {
+                    // Whatever else came back is no positive evidence of death.
+                    resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
+                } else if (Duration.between(unknownSince, Instant.now()).compareTo(DEAD_DEPOSIT_SAFETY_INTERVAL) < 0) {
+                    resultHandler.accept(DeadDepositRecheckResult.TOO_RECENT);
+                } else {
+                    resultHandler.accept(DeadDepositRecheckResult.STILL_DEAD);
+                }
+            });
+        } catch (RuntimeException exception) {
+            // A lookup that could not be started must not keep the trade marked as being re-checked.
             deadDepositRechecksInFlight.remove(tradeId);
-            Instant unknownSince = deadDepositUnknownSince.get(tradeId);
-            if (unknownSince == null) {
-                // A concurrent step 1 lookup revoked the verdict while this re-check was running.
-                resultHandler.accept(DeadDepositRecheckResult.FOUND);
-            } else if (validator.getStatus() == FeeValidationStatus.NACK_TX_LOOKUP_UNREACHABLE) {
-                resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
-            } else if (validator.parseJsonValidateTx() >= 0) {
-                // A provider returned a status for the tx, so it is not gone from the network.
-                deadDepositUnknownSince.remove(tradeId);
-                resultHandler.accept(DeadDepositRecheckResult.FOUND);
-            } else if (validator.getStatus() != FeeValidationStatus.NACK_BTC_TX_NOT_FOUND) {
-                // Whatever else came back is no positive evidence of death.
-                resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
-            } else if (Duration.between(unknownSince, Instant.now()).compareTo(DEAD_DEPOSIT_SAFETY_INTERVAL) < 0) {
-                resultHandler.accept(DeadDepositRecheckResult.TOO_RECENT);
-            } else {
-                resultHandler.accept(DeadDepositRecheckResult.STILL_DEAD);
-            }
-        });
+            log.error("Re-checking deposit tx {} of trade {} could not be started", depositTxId, tradeId, exception);
+            resultHandler.accept(DeadDepositRecheckResult.UNREACHABLE);
+        }
     }
 
     private static boolean lacksDepositBroadcastEvidence(Trade trade) {
