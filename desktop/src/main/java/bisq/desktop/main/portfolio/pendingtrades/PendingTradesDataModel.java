@@ -524,7 +524,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 (disputeState == Trade.DisputeState.MEDIATION_REQUESTED && remainingLockTime > 0);
         // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
         boolean useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED ||
-                disputeState == Trade.DisputeState.REFUND_REQUESTED || remainingLockTime <= 0;
+                disputeState == Trade.DisputeState.REFUND_REQUESTED ||
+                disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER || remainingLockTime <= 0;
 
         AtomicReference<String> donationAddressString = new AtomicReference<>(null);
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
@@ -659,11 +660,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
-            trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
             dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
             dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
 
+            try {
+                refundManager.signRefundClaim(dispute);
+            } catch (RuntimeException exception) {
+                log.error("Creating the escrow-key refund claim failed for trade {}", trade.getShortId(), exception);
+                new Popup().error(Res.get("portfolio.pending.error.refundClaimSigningFailed")).show();
+                return;
+            }
+
+            trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
             ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(
                     () -> log.info("DelayedPayoutTx published and message sent to peer"),
                     errorMessage -> new Popup().error(errorMessage).show());
