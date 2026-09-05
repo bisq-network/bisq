@@ -26,7 +26,6 @@ import bisq.common.crypto.Hash;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.common.base.Charsets;
 
 import java.nio.charset.StandardCharsets;
 

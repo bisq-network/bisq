@@ -94,7 +94,6 @@ import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.inject.Inject;
 
-import com.google.common.base.Charsets;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
