@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'bisq.reproducible-build'
+    id 'org.gradlex.reproducible-builds'
 }
 
 repositories {
