@@ -5,7 +5,9 @@
 This specification defines how the altcoin volume of a trade is derived from the signed trade
 amount and price, and when a derived volume must be rejected. It applies to offers, take-offer
 models, contracts and trades of altcoin markets. Fiat volume rounding
-(whole currency units, HalCash multiples) is unchanged and out of scope.
+(whole currency units, HalCash multiples) is unchanged and out of scope, except that the zero-volume
+rejection defined below applies to every market, fiat included: a HalCash trade whose amount rounds to
+0 EUR is rejected in the same way as an altcoin trade whose amount rounds to zero units.
 
 ## Rule
 
