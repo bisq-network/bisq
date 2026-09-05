@@ -19,6 +19,30 @@ ID, and its escrow output must match the contract-bound script and value describ
 transactions used for the close-time validation are fetched independently by the IDs carried in the
 dispute and its contract, and the fetched deposit must satisfy the same checks.
 
+## Contract signature consistency and trust limits
+
+Trader contract signatures are optional at dispute admission, including for refunds. Each signature
+that is present must verify against the respective trader's signature key supplied in the contract
+over the supplied contract JSON. A missing signature does not invalidate the dispute; a present
+but non-verifying signature does.
+
+Production disputes copy the trade's signature fields, which normally hold only the local party's
+signature. The taker retains the received maker signature separately in its peer state. Since 1.7,
+each party also re-signs the payment-account-enriched contract JSON locally without exchanging that
+final signature. Requiring both final signatures would therefore reject legitimate refund disputes.
+
+These checks establish consistency with the supplied keys, not independently authenticated peer
+acceptance. Trader key rings, including the offer's key ring, are excluded from contract JSON and
+come from the dispute opener. An opener can replace the peer payout address and peer signing key,
+regenerate JSON/hash, and supply signatures from both controlled keys. Deposit validation anchors the
+separate multisig keys, not the trader signature keys or payout addresses. Neither a consistent
+contract hash nor two verifying signatures closes this payout-address substitution vulnerability.
+
+Independent proof of peer acceptance would require trusted evidence binding the signing keys and
+exact payout contract to the escrow, or a prior independently trusted commitment. The current
+signature checks do not provide that evidence. This compatibility rule preserves admission of
+existing trades; it does not establish that the payout-address vulnerability has been resolved.
+
 ## Contract-bound escrow
 
 Deposit output `0` must use the P2WSH script derived from the contract's buyer and seller 2-of-2
@@ -140,8 +164,16 @@ After all delayed-payout outputs have been validated, the maximum normal refund 
 
 ```text
 minimum(contract trade amount + both security deposits,
-        validated delayed-payout receiver output sum)
+        deposit output 0 value - verified trade transaction fee)
 ```
+
+For a deposit that satisfies the contract-bound escrow equation both terms are equal, so the bound
+is the contract pot. This is the same limit that the close dialog offers before the delayed payout
+transaction has been fetched (see [`../dispute/refund-direct-payout.md`](../dispute/refund-direct-payout.md));
+the two limits must not diverge, otherwise a full-pot refund is accepted in the form and rejected at
+close. The delayed-payout output sum is deliberately not the bound: it is smaller than the escrow by
+the delayed-payout miner fee, which the refund has always covered, and it is only known after the
+transaction fetch. The output sum is still recorded in the validation binding.
 
 Buyer and seller payout amounts must each be non-negative and their sum must not exceed that maximum.
 The validation result binds the contract hash, deposit transaction ID, delayed-payout transaction ID,
@@ -162,6 +194,15 @@ unavailable evidence into a refund-wallet payout or a signed refund result.
 The agent may keep the ticket open, add notes, retry after temporary provider failure, or investigate
 the transactions separately. Manual investigation is not authorization to emit the same payout or
 signed artifact produced by successful automatic validation.
+
+## Development networks
+
+Regtest has no block explorer, so the transaction evidence described above cannot be fetched there.
+On regtest the refund close flow skips the evidence validation and the payout and result gates that
+depend on it, so developers can exercise the close flow in a local network. The skip is selected by
+the regtest network only; it must never apply to mainnet, and it does not weaken the amount limits,
+the receipt consumption or the intake validation, which use locally available data. Testnet is not
+supported: the evidence fetch fails there and the close attempt terminates as on mainnet.
 
 ## Compatibility
 

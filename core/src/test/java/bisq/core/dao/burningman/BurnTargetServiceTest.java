@@ -44,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -92,6 +93,26 @@ class BurnTargetServiceTest {
         verify(proposalService, never()).getProposalPayloads();
     }
 
+    @Test
+    void validatesProposalsOnceForMultipleIssuances() {
+        String secondTxId = "1123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        Issuance firstIssuance = reimbursementIssuance();
+        Issuance secondIssuance = new Issuance(secondTxId,
+                ISSUANCE_HEIGHT,
+                ISSUANCE_AMOUNT,
+                null,
+                IssuanceType.REIMBURSEMENT);
+        when(daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT))
+                .thenReturn(Set.of(firstIssuance, secondIssuance));
+        when(proposalService.getValidatedProposals()).thenReturn(List.of(reimbursementProposal("first"),
+                reimbursementProposal("second", secondTxId)));
+
+        Set<ReimbursementModel> reimbursements = burnTargetService.getReimbursements(ISSUANCE_HEIGHT);
+
+        assertEquals(2, reimbursements.size());
+        verify(proposalService, times(1)).getValidatedProposals();
+    }
+
     private static Issuance reimbursementIssuance() {
         return new Issuance(TX_ID,
                 ISSUANCE_HEIGHT,
@@ -101,10 +122,14 @@ class BurnTargetServiceTest {
     }
 
     private static ReimbursementProposal reimbursementProposal(String name) {
+        return reimbursementProposal(name, TX_ID);
+    }
+
+    private static ReimbursementProposal reimbursementProposal(String name, String txId) {
         return (ReimbursementProposal) new ReimbursementProposal(name,
                 "link",
                 Coin.valueOf(ISSUANCE_AMOUNT),
                 "B123",
-                null).cloneProposal(TX_ID);
+                null).cloneProposal(txId);
     }
 }

@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
+import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStorageService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
@@ -29,6 +30,7 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
@@ -53,9 +55,31 @@ class ProposalServiceValidatedProposalTest {
     void excludesCompensationBodyNotCommittedByItsTransaction() {
         CompensationProposal committedProposal = compensationProposal("committed");
         CompensationProposal forgedProposal = compensationProposal("attacker");
-        DaoStateService daoStateService = mockDaoStateService(committedProposal);
+        DaoStateService daoStateService = mockDaoStateService(committedProposal,
+                TxType.COMPENSATION_REQUEST,
+                OpReturnType.COMPENSATION_REQUEST);
         PeriodService periodService = mock(PeriodService.class);
         CompensationValidator validator = new CompensationValidator(daoStateService, periodService);
+        ProposalValidatorProvider validatorProvider = mock(ProposalValidatorProvider.class);
+        when(validatorProvider.getValidator(any(Proposal.class))).thenReturn(validator);
+        ProposalService proposalService = newProposalService(daoStateService, periodService, validatorProvider);
+        proposalService.getProposalPayloads().addAll(new ProposalPayload(committedProposal),
+                new ProposalPayload(forgedProposal));
+
+        List<Proposal> validatedProposals = proposalService.getValidatedProposals();
+
+        assertEquals(List.of(committedProposal), validatedProposals);
+    }
+
+    @Test
+    void excludesReimbursementBodyNotCommittedByItsTransaction() {
+        ReimbursementProposal committedProposal = reimbursementProposal("committed");
+        ReimbursementProposal forgedProposal = reimbursementProposal("attacker");
+        DaoStateService daoStateService = mockDaoStateService(committedProposal,
+                TxType.REIMBURSEMENT_REQUEST,
+                OpReturnType.REIMBURSEMENT_REQUEST);
+        PeriodService periodService = mock(PeriodService.class);
+        ReimbursementValidator validator = new ReimbursementValidator(daoStateService, periodService);
         ProposalValidatorProvider validatorProvider = mock(ProposalValidatorProvider.class);
         when(validatorProvider.getValidator(any(Proposal.class))).thenReturn(validator);
         ProposalService proposalService = newProposalService(daoStateService, periodService, validatorProvider);
@@ -80,11 +104,13 @@ class ProposalServiceValidatedProposalTest {
                 validatorProvider);
     }
 
-    private static DaoStateService mockDaoStateService(CompensationProposal committedProposal) {
+    private static DaoStateService mockDaoStateService(Proposal committedProposal,
+                                                       TxType txType,
+                                                       OpReturnType opReturnType) {
         TxOutput txOutput = mock(TxOutput.class);
-        when(txOutput.getOpReturnData()).thenReturn(getOpReturnData(committedProposal));
+        when(txOutput.getOpReturnData()).thenReturn(getOpReturnData(committedProposal, opReturnType));
         Tx tx = mock(Tx.class);
-        when(tx.getTxType()).thenReturn(TxType.COMPENSATION_REQUEST);
+        when(tx.getTxType()).thenReturn(txType);
         when(tx.getLastTxOutput()).thenReturn(txOutput);
         DaoStateService daoStateService = mock(DaoStateService.class);
         when(daoStateService.getTx(TX_ID)).thenReturn(Optional.of(tx));
@@ -99,10 +125,18 @@ class ProposalServiceValidatedProposalTest {
                 null).cloneProposal(TX_ID);
     }
 
-    private static byte[] getOpReturnData(Proposal proposal) {
+    private static ReimbursementProposal reimbursementProposal(String name) {
+        return (ReimbursementProposal) new ReimbursementProposal(name,
+                "link",
+                Coin.valueOf(10_000),
+                "B123",
+                null).cloneProposal(TX_ID);
+    }
+
+    private static byte[] getOpReturnData(Proposal proposal, OpReturnType opReturnType) {
         byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal.cloneProposal(null));
         return ProposalConsensus.getOpReturnData(hashOfPayload,
-                OpReturnType.COMPENSATION_REQUEST.getType(),
+                opReturnType.getType(),
                 proposal.getVersion());
     }
 }

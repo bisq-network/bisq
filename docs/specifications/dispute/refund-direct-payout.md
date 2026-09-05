@@ -82,6 +82,10 @@ The deposit transaction ID and, when present, the delayed-payout transaction ID 
 canonical 32-byte transaction IDs. Replay detection and receipt consumption key on these IDs, so a dispute carrying
 any other value is rejected at intake instead of being stored.
 
+Trader contract signatures are optional at admission, but any supplied signature must verify. Verification with
+dispute-supplied keys does not independently authenticate the contract payout addresses; see the trust limits in
+[`../trade/refund-delayed-payout-validation.md`](../trade/refund-delayed-payout-validation.md).
+
 ## Compatibility and historical records
 
 The persisted dispute payout transaction ID is the compatibility-safe receipt marker; no serialized schema change is

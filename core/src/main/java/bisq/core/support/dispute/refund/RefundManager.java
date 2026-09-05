@@ -54,6 +54,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -293,12 +294,26 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return trade.getRefundAgentPubKeyRing();
     }
 
+    /**
+     * Regtest has no block explorer, so the refund transaction evidence cannot be fetched there. Developers still
+     * need to exercise the refund close flow, so the evidence validation is skipped on regtest only. This is a
+     * development convenience and must never be extended to mainnet, where the fail-closed rules apply.
+     */
+    public boolean isRefundEvidenceValidationSkipped() {
+        return isRefundEvidenceValidationSkipped(Config.baseCurrencyNetwork());
+    }
+
+    @VisibleForTesting
+    static boolean isRefundEvidenceValidationSkipped(BaseCurrencyNetwork baseCurrencyNetwork) {
+        return checkNotNull(baseCurrencyNetwork, "baseCurrencyNetwork must not be null").isRegtest();
+    }
+
     public CompletableFuture<RefundTransactionChain> requestBlockchainTransactions(String makerFeeTxId,
                                                                                     String takerFeeTxId,
                                                                                     String depositTxId,
                                                                                     String delayedPayoutTxId) {
-        // in regtest mode, simulate a delay & failure obtaining the blockchain transactions
-        // since we cannot request them in regtest anyway.  this is useful for checking failure scenarios
+        // Only mainnet has block explorers configured. Regtest skips the evidence validation (see
+        // isRefundEvidenceValidationSkipped); any other network fails closed after a short delay.
         if (!Config.baseCurrencyNetwork().isMainnet()) {
             CompletableFuture<RefundTransactionChain> retFuture = new CompletableFuture<>();
             UserThread.runAfter(() -> retFuture.completeExceptionally(
@@ -308,27 +323,33 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
         NetworkParameters params = btcWalletService.getParams();
         List<Transaction> txs = new ArrayList<>();
-        return mempoolService.requestTxAsHex(makerFeeTxId)
-                .thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, makerFeeTxId, txAsHex));
-                    return mempoolService.requestTxAsHex(takerFeeTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, takerFeeTxId, txAsHex));
-                    return mempoolService.requestTxAsHex(depositTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, depositTxId, txAsHex));
-                    return mempoolService.requestTxAsHex(delayedPayoutTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(parseRequestedTransaction(params, delayedPayoutTxId, txAsHex));
-                    return mempoolService.requestTxStatus(depositTxId);
-                }).thenCompose(depositStatus -> mempoolService.requestTxStatus(delayedPayoutTxId)
-                        .thenApply(delayedPayoutStatus -> new RefundTransactionChain(
-                                txs.get(0),
-                                txs.get(1),
-                                txs.get(2),
-                                txs.get(3),
-                                depositStatus,
-                                delayedPayoutStatus)));
+        try {
+            return mempoolService.requestTxAsHex(makerFeeTxId)
+                    .thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, makerFeeTxId, txAsHex));
+                        return mempoolService.requestTxAsHex(takerFeeTxId);
+                    }).thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, takerFeeTxId, txAsHex));
+                        return mempoolService.requestTxAsHex(depositTxId);
+                    }).thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, depositTxId, txAsHex));
+                        return mempoolService.requestTxAsHex(delayedPayoutTxId);
+                    }).thenCompose(txAsHex -> {
+                        txs.add(parseRequestedTransaction(params, delayedPayoutTxId, txAsHex));
+                        return mempoolService.requestTxStatus(depositTxId);
+                    }).thenCompose(depositStatus -> mempoolService.requestTxStatus(delayedPayoutTxId)
+                            .thenApply(delayedPayoutStatus -> new RefundTransactionChain(
+                                    txs.get(0),
+                                    txs.get(1),
+                                    txs.get(2),
+                                    txs.get(3),
+                                    depositStatus,
+                                    delayedPayoutStatus)));
+        } catch (RuntimeException exception) {
+            // The first request validates its transaction ID before the asynchronous call is created. A malformed
+            // ID must reach the caller as a failed future, so the close dialog can report it and recover.
+            return CompletableFuture.failedFuture(exception);
+        }
     }
 
     @VisibleForTesting
@@ -526,7 +547,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                                                            Dispute dispute,
                                                            Coin buyerPayoutAmount,
                                                            Coin sellerPayoutAmount) {
-        verifyDepositTx(depositTx, dispute);
+        long verifiedTradeTxFee = verifyDepositTx(depositTx, dispute);
         checkArgument(depositTx.getTxId().toString().equals(dispute.getDepositTxId()),
                 "Fetched deposit tx ID does not match the dispute deposit tx ID");
         checkArgument(delayedPayoutTx.getTxId().toString().equals(dispute.getDelayedPayoutTxId()),
@@ -540,12 +561,17 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
         Coin proposedRefund = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
         Coin declaredPot = getDeclaredTradePot(dispute.getContract());
+        Coin depositOutputValue = depositTx.getOutput(0).getValue();
         Coin validatedReceiverOutputSum = delayedPayoutTx.getOutputs().stream()
                 .map(TransactionOutput::getValue)
                 .reduce(Coin.ZERO, Coin::add);
-        Coin verifiedMaximum = declaredPot.isLessThan(validatedReceiverOutputSum)
-                ? declaredPot
-                : validatedReceiverOutputSum;
+        // The validated deposit output is the escrow evidence. Its value minus the verified trade fee equals the
+        // contract pot, which is also the limit the close dialog offers before the delayed payout transaction has
+        // been fetched (RefundPayoutReceiptService.getMaximumPayoutAmount). The delayed payout outputs are smaller
+        // by the DPT miner fee; they are recorded for the binding below but do not bound the refund.
+        Coin verifiedMaximum = RefundPayoutReceiptService.calculateMaximumPayoutAmount(declaredPot,
+                depositOutputValue,
+                verifiedTradeTxFee);
         checkArgument(!proposedRefund.isGreaterThan(verifiedMaximum),
                 "Proposed refund amount %s exceeds verified maximum %s",
                 proposedRefund,
@@ -554,7 +580,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                 Hex.encode(checkNotNull(dispute.getContractHash(), "dispute contractHash must not be null")),
                 depositTx.getTxId().toString(),
                 delayedPayoutTx.getTxId().toString(),
-                depositTx.getOutput(0).getValue().value,
+                depositOutputValue.value,
                 validatedReceiverOutputSum.value,
                 verifiedMaximum.value,
                 dispute.getTradeTxFee(),

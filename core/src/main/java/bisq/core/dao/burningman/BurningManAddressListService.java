@@ -19,6 +19,8 @@ package bisq.core.dao.burningman;
 
 import bisq.common.config.Config;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import com.google.gson.Gson;
 
 import javax.inject.Inject;
@@ -250,12 +252,14 @@ public class BurningManAddressListService {
                 "Duplicate Burning Man address list version %s in %s", addressList.getListVersion(), fileName);
     }
 
-    private void validateAddressList(String fileName,
-                                     int versionFromFileName,
-                                     BurningManAddressList addressList) {
+    @VisibleForTesting
+    static void validateAddressList(String fileName,
+                                    int versionFromFileName,
+                                    BurningManAddressList addressList) {
         checkNotNull(addressList, "Burning Man address list must not be null");
         checkArgument(addressList.getSchemaVersion() == BurningManAddressList.SCHEMA_VERSION,
                 "Invalid schemaVersion in %s", fileName);
+        checkArgument(addressList.getListVersion() > 0, "listVersion must be positive in %s", fileName);
         checkArgument(addressList.getListVersion() == versionFromFileName,
                 "listVersion in %s must match file name version", fileName);
         checkArgument(!isBlank(addressList.getNetwork()), "network must not be blank in %s", fileName);

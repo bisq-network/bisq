@@ -111,18 +111,26 @@ public class DisputeValidation {
             }
 
             try {
-                // Only the dispute opener has set the signature
                 String makerContractSignature = dispute.getMakerContractSignature();
-                if (makerContractSignature != null) {
-                    Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
-                            dispute.getContractAsJson(),
-                            makerContractSignature);
-                }
                 String takerContractSignature = dispute.getTakerContractSignature();
+                // Disputes copy Trade's signature fields, which normally contain only the local signature.
+                // The taker keeps the received maker signature separately in TradingPeer; since 1.7, each side
+                // also re-signs the payment-account-enriched JSON locally without exchanging that final signature.
+                // Thus the peer field may be null and neither signature can be required at admission.
+                // These checks establish consistency only: the dispute supplies the signing keys, and trader
+                // PubKeyRings are excluded from contract JSON. Even two valid signatures do not independently
+                // prove peer acceptance of payout addresses; deposit validation anchors different, multisig keys.
+                if (makerContractSignature != null) {
+                    checkArgument(Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
+                                    dispute.getContractAsJson(),
+                                    makerContractSignature),
+                            "Invalid makerContractSignature");
+                }
                 if (takerContractSignature != null) {
-                    Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
-                            dispute.getContractAsJson(),
-                            takerContractSignature);
+                    checkArgument(Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
+                                    dispute.getContractAsJson(),
+                                    takerContractSignature),
+                            "Invalid takerContractSignature");
                 }
             } catch (CryptoException e) {
                 throw new ValidationException(dispute, e.getMessage());

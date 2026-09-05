@@ -64,7 +64,9 @@ JavaFX-observable state, while the underlying domain operation and any required 
 must continue. Uncaught-error handling during external shutdown must remain logging-only rather than
 attempting to display UI. The transition itself is not synchronised with work already queued on the
 replaced executor. That work may still run concurrently and is not awaited, so the shutdown path must
-not depend on it having completed.
+not depend on it having completed. Library callbacks that were registered with the UserThread executor
+before the transition must resolve the current executor at dispatch time, so events raised by shutdown
+work are serialised with it instead of being delivered to the replaced executor.
 
 Resources governed by graceful shutdown must have one shutdown owner. A library or component must
 not independently tear down the same resource from a concurrent JVM hook when doing so can violate

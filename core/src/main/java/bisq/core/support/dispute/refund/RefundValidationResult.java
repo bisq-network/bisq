@@ -57,8 +57,6 @@ public record RefundValidationResult(String contractHash,
         checkArgument(sellerPayoutAmount >= 0, "sellerPayoutAmount must not be negative");
         checkArgument(maximumRefundAmount <= depositOutputValue,
                 "maximumRefundAmount must not exceed depositOutputValue");
-        checkArgument(maximumRefundAmount <= delayedPayoutOutputValue,
-                "maximumRefundAmount must not exceed delayedPayoutOutputValue");
         checkArgument(Math.addExact(buyerPayoutAmount, sellerPayoutAmount) <= maximumRefundAmount,
                 "Payout amount must not exceed maximumRefundAmount");
     }

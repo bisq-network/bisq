@@ -11,6 +11,7 @@ import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
@@ -22,8 +23,14 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.ScriptBuilder;
 
+import java.security.KeyPair;
+
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 
@@ -47,6 +54,7 @@ class DisputeValidationTest {
     private static final ECKey BUYER_MULTISIG_KEY = new ECKey();
     private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
     private static final long TRADE_TX_FEE = 1_000;
+    private static final Map<PubKeyRing, KeyPair> SIGNATURE_KEY_PAIRS = new HashMap<>();
 
     @Test
     void validateDisputeDataDoesNotUseSenderSuppliedTradeDateWithoutLocalTrade() {
@@ -193,6 +201,98 @@ class DisputeValidationTest {
     }
 
     @Test
+    void validateDisputeDataAcceptsValidContractSignaturesOnMediationDispute() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing mediatorPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, mediatorPubKeyRing, pubKeyRing());
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Dispute dispute = dispute(buyerPubKeyRing,
+                mediatorPubKeyRing,
+                contract,
+                SupportType.MEDIATION,
+                POST_ACTIVATION_TRADE_DATE,
+                false,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsContractSignatureFromWrongKey() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing mediatorPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, mediatorPubKeyRing, pubKeyRing());
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        // A well-formed signature produced by a key that is not the taker's must be rejected
+        Dispute dispute = dispute(buyerPubKeyRing,
+                mediatorPubKeyRing,
+                contract,
+                SupportType.MEDIATION,
+                POST_ACTIVATION_TRADE_DATE,
+                false,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson));
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataAcceptsRefundDisputeWithOnlyOneContractSignature() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), refundAgentPubKeyRing);
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Dispute withoutTakerSignature = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                true,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                null);
+        Dispute withoutMakerSignature = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                true,
+                null,
+                contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(withoutTakerSignature, walletService(), POST_ACTIVATION_NOW));
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(withoutMakerSignature, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsRefundDisputeWithForgedPeerContractSignature() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), refundAgentPubKeyRing);
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        // The opener signs with the own key for both fields; the peer signature does not verify against the peer key
+        Dispute dispute = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                true,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson));
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
     void replayCheckAcceptsFirstDisputeNotYetInList() {
         // Regression: the fail-closed ingest path validates before the dispute is added to the list. The replay
         // check must interpret the stored count together with the dispute under test, otherwise the first legitimate
@@ -280,6 +380,25 @@ class DisputeValidationTest {
                                    long tradeDate,
                                    boolean includeRefundDepositTx) {
         String contractAsJson = JsonUtil.objectToJson(contract);
+        return dispute(traderPubKeyRing,
+                agentPubKeyRing,
+                contract,
+                supportType,
+                tradeDate,
+                includeRefundDepositTx,
+                makerContractSignature(contract, contractAsJson, supportType),
+                takerContractSignature(contract, contractAsJson, supportType));
+    }
+
+    private static Dispute dispute(PubKeyRing traderPubKeyRing,
+                                   PubKeyRing agentPubKeyRing,
+                                   Contract contract,
+                                   SupportType supportType,
+                                   long tradeDate,
+                                   boolean includeRefundDepositTx,
+                                   @Nullable String makerContractSignature,
+                                   @Nullable String takerContractSignature) {
+        String contractAsJson = JsonUtil.objectToJson(contract);
         Transaction depositTx = supportType == SupportType.REFUND && includeRefundDepositTx
                 ? refundDepositTx(contract)
                 : null;
@@ -299,8 +418,8 @@ class DisputeValidationTest {
                 depositTx == null ? null : depositTx.getTxId().toString(),
                 null,
                 contractAsJson,
-                null,
-                null,
+                makerContractSignature,
+                takerContractSignature,
                 agentPubKeyRing,
                 false,
                 supportType);
@@ -332,8 +451,8 @@ class DisputeValidationTest {
                 depositTxId,
                 null,
                 contractAsJson,
-                null,
-                null,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getTakerPubKeyRing(), contractAsJson),
                 refundAgentPubKeyRing,
                 false,
                 SupportType.REFUND);
@@ -427,8 +546,33 @@ class DisputeValidationTest {
     }
 
     private static PubKeyRing pubKeyRing() {
-        return new PubKeyRing(Sig.generateKeyPair().getPublic(),
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(),
                 Encryption.generateKeyPair().getPublic());
+        SIGNATURE_KEY_PAIRS.put(pubKeyRing, signatureKeyPair);
+        return pubKeyRing;
+    }
+
+    private static String contractSignature(PubKeyRing signer, String contractAsJson) {
+        try {
+            return Sig.sign(SIGNATURE_KEY_PAIRS.get(signer).getPrivate(), contractAsJson);
+        } catch (CryptoException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Nullable
+    private static String makerContractSignature(Contract contract, String contractAsJson, SupportType supportType) {
+        return supportType == SupportType.REFUND
+                ? contractSignature(contract.getMakerPubKeyRing(), contractAsJson)
+                : null;
+    }
+
+    @Nullable
+    private static String takerContractSignature(Contract contract, String contractAsJson, SupportType supportType) {
+        return supportType == SupportType.REFUND
+                ? contractSignature(contract.getTakerPubKeyRing(), contractAsJson)
+                : null;
     }
 
     private static Transaction refundDepositTx(Contract contract) {

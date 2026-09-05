@@ -40,6 +40,7 @@ import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Hex;
@@ -63,10 +64,13 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -91,9 +95,11 @@ class RefundManagerTest {
     private final DaoFacade daoFacade = mock(DaoFacade.class);
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService =
             mock(DelayedPayoutTxReceiverService.class);
+    private final MempoolService mempoolService = mock(MempoolService.class);
     private final RefundManager refundManager = refundManager(btcWalletService,
             daoFacade,
-            delayedPayoutTxReceiverService);
+            delayedPayoutTxReceiverService,
+            mempoolService);
 
     @BeforeEach
     void setUp() {
@@ -151,6 +157,28 @@ class RefundManagerTest {
 
         assertThrows(IllegalArgumentException.class, () -> refundManager.verifyTradeTxChain(
                 List.of(transactions.get(0), unrelatedTakerFeeTx, transactions.get(2), transactions.get(3))));
+    }
+
+    @Test
+    void refundEvidenceValidationIsSkippedOnRegtestOnly() {
+        assertTrue(RefundManager.isRefundEvidenceValidationSkipped(BaseCurrencyNetwork.BTC_REGTEST));
+        assertFalse(RefundManager.isRefundEvidenceValidationSkipped(BaseCurrencyNetwork.BTC_MAINNET));
+        assertFalse(RefundManager.isRefundEvidenceValidationSkipped(BaseCurrencyNetwork.BTC_TESTNET));
+    }
+
+    @Test
+    void requestBlockchainTransactionsFailsFutureWhenTransactionIdIsRejectedBeforeTheRequest() {
+        assumeTrue(Config.baseCurrencyNetwork().isMainnet(), "transaction requests are only made on mainnet");
+        when(mempoolService.requestTxAsHex("not-a-tx-id"))
+                .thenThrow(new IllegalArgumentException("Input string is not a valid transaction ID"));
+
+        CompletableFuture<RefundTransactionChain> future = refundManager.requestBlockchainTransactions(
+                "not-a-tx-id",
+                "ab".repeat(32),
+                "cd".repeat(32),
+                "ef".repeat(32));
+
+        assertTrue(future.isCompletedExceptionally());
     }
 
     @Test
@@ -441,18 +469,24 @@ class RefundManagerTest {
     }
 
     @Test
-    void verifyRefundPayoutAmountRejectsAmountAboveVerifiedReceiverValue() {
+    void verifyRefundPayoutAmountAcceptsContractPotAboveReceiverOutputSum() {
+        // The DPT outputs are smaller than the escrow by the DPT miner fee; the pot is still the refund limit
         Transaction depositTx = tradeTxChain(0).get(2);
         Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
                 List.of(new Tuple2<>(24_000L, newAddress())));
         Dispute dispute = burningManDispute(depositTx, List.of());
         when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
 
+        assertDoesNotThrow(() -> refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(5_000)));
         assertThrows(IllegalArgumentException.class,
                 () -> refundManager.verifyRefundPayoutAmount(depositTx,
                         delayedPayoutTx,
                         dispute,
-                        Coin.valueOf(20_000),
+                        Coin.valueOf(20_001),
                         Coin.valueOf(5_000)));
     }
 
@@ -706,7 +740,8 @@ class RefundManagerTest {
 
     private static RefundManager refundManager(BtcWalletService btcWalletService,
                                                DaoFacade daoFacade,
-                                               DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
+                                               DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                               MempoolService mempoolService) {
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
         return new RefundManager(p2PService,
@@ -723,7 +758,7 @@ class RefundManagerTest {
                 mock(RefundDisputeListService.class),
                 mock(Config.class),
                 mock(PriceFeedService.class),
-                mock(MempoolService.class),
+                mempoolService,
                 mock(RefundPayoutReceiptService.class));
     }
 }

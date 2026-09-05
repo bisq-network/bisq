@@ -26,7 +26,6 @@ import bisq.core.trade.model.bisq_v1.Contract;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -201,7 +200,6 @@ public final class RefundPayoutReceiptService {
         }
     }
 
-    @VisibleForTesting
     static Coin calculateMaximumPayoutAmount(Coin contractPayoutAmount,
                                              Coin depositOutputAmount,
                                              long tradeTxFee) {
