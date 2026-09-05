@@ -58,6 +58,11 @@ transaction is created. Because both amounts are non-negative, their sum equals 
 outputs; a negative amount must never offset a larger positive output. Closing a ticket with zero payout to both
 traders creates no transaction; it neither requires nor consumes a receipt.
 
+When exactly one trader receives a positive payout, that role must have authenticated the claim with its escrow key.
+A payout to both traders is exceptional and requires the operator to verify both addresses directly. A temporary
+manual-verification exception for stored legacy disputes expires on 1 November 2026. These rules are
+defined in [`refund-claimant-authentication.md`](refund-claimant-authentication.md).
+
 The trader-output sum must not exceed either:
 
 - the payout pot represented by the contract's trade amount and security deposits; or
@@ -85,10 +90,13 @@ any other value is rejected at intake instead of being stored.
 Trader contract signatures are optional at admission, but any supplied signature must verify. Verification with
 dispute-supplied keys does not independently authenticate the contract payout addresses; see the trust limits in
 [`../trade/refund-delayed-payout-validation.md`](../trade/refund-delayed-payout-validation.md).
+Admission must additionally authenticate the opener with the role-specific escrow key as defined in
+[`refund-claimant-authentication.md`](refund-claimant-authentication.md).
 
 ## Compatibility and historical records
 
-The persisted dispute payout transaction ID is the compatibility-safe receipt marker; no serialized schema change is
-required. Payouts created by older releases that stored neither this marker nor the wallet receipt memo cannot always
-be identified automatically. Operators must correlate historical payout transactions before paying an old or restored
-refund ticket whose receipt may already have been used.
+The persisted dispute payout transaction ID is the compatibility-safe receipt marker. Payouts created by older
+releases that stored neither this marker nor the wallet receipt memo cannot always be identified automatically.
+Operators must correlate historical payout transactions before paying an old or restored refund ticket whose receipt
+may already have been used. The independently specified claimant proof adds a serialized dispute field and is required
+for new refund authorization after upgrade, subject to its temporary grace period for legacy records.

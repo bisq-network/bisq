@@ -142,6 +142,13 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Setter
     private long tradeTxFee;
 
+    // Proves that a refund claimant controls the role-specific escrow key committed by deposit output 0.
+    @Setter
+    @Nullable
+    private String refundClaimSignature;
+    @Setter
+    private long refundClaimOpeningDate;
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
@@ -245,7 +252,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 .setState(Dispute.State.toProtoMessage(disputeState))
                 .setId(id)
                 .setBurningManSelectionHeight(burningManSelectionHeight)
-                .setTradeTxFee(tradeTxFee);
+                .setTradeTxFee(tradeTxFee)
+                .setRefundClaimOpeningDate(refundClaimOpeningDate);
 
         Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(e)));
         Optional.ofNullable(depositTxSerialized).ifPresent(e -> builder.setDepositTxSerialized(ByteString.copyFrom(e)));
@@ -260,6 +268,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
+        Optional.ofNullable(refundClaimSignature).ifPresent(builder::setRefundClaimSignature);
         Optional.ofNullable(getExtraDataMap()).map(DisputeExtraDataMap::getMap).ifPresent(builder::putAllExtraData);
         return builder.build();
     }
@@ -316,6 +325,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
         dispute.setBurningManSelectionHeight(proto.getBurningManSelectionHeight());
         dispute.setTradeTxFee(proto.getTradeTxFee());
+        dispute.setRefundClaimSignature(ProtoUtil.stringOrNullFromProto(proto.getRefundClaimSignature()));
+        dispute.setRefundClaimOpeningDate(proto.getRefundClaimOpeningDate());
 
         if (Dispute.State.fromProto(proto.getState()) == State.NEEDS_UPGRADE) {
             // old disputes did not have a state field, so choose an appropriate state:

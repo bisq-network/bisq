@@ -965,6 +965,8 @@ message Dispute {
     map<string, string> extra_data = 30;
     int32 burning_man_selection_height = 31;  // Added in v 1.9.7
     int64 trade_tx_fee = 32;  // Added in v 1.9.7
+    string refund_claim_signature = 33;
+    int64 refund_claim_opening_date = 34;
 }
 
 message Attachment { // Deprecated; kept to reserve the old wire format.

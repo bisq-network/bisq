@@ -19,6 +19,10 @@ ID, and its escrow output must match the contract-bound script and value describ
 transactions used for the close-time validation are fetched independently by the IDs carried in the
 dispute and its contract, and the fetched deposit must satisfy the same checks.
 
+The claimant must separately prove control of one of the escrow keys bound by that script. The proof
+and its payout-allocation rules are defined in
+[`../dispute/refund-claimant-authentication.md`](../dispute/refund-claimant-authentication.md).
+
 ## Contract signature consistency and trust limits
 
 Trader contract signatures are optional at dispute admission, including for refunds. Each signature
@@ -42,6 +46,9 @@ Independent proof of peer acceptance would require trusted evidence binding the 
 exact payout contract to the escrow, or a prior independently trusted commitment. The current
 signature checks do not provide that evidence. This compatibility rule preserves admission of
 existing trades; it does not establish that the payout-address vulnerability has been resolved.
+
+The escrow-key claim and recipient-authorization rules linked above address the normal
+single-recipient case; the two-recipient exception requires independent manual verification.
 
 ## Contract-bound escrow
 
@@ -178,8 +185,12 @@ transaction fetch. The output sum is still recorded in the validation binding.
 Buyer and seller payout amounts must each be non-negative and their sum must not exceed that maximum.
 The validation result binds the contract hash, deposit transaction ID, delayed-payout transaction ID,
 validated chain values, trade fee, receiver-selection height, legacy donation address and exact
-buyer/seller allocation. The same binding must still match when the payout confirmation is accepted,
+buyer/seller allocation. It also binds the refund claim subject, including the identity and escrow
+keys excluded from legacy contract hashes. The same binding must still match when the payout confirmation is accepted,
 immediately before a refund-wallet payout and immediately before the dispute result is signed.
+The escrow-key claimant proof must be re-verified at those same authorization boundaries, or the
+temporary legacy grace period and manual confirmation must still be valid as specified in
+[`../dispute/refund-claimant-authentication.md`](../dispute/refund-claimant-authentication.md).
 
 Closing the second trader's dispute row must perform the validation again; a peer row's closed flag
 is not evidence that the same contract, transactions and payout allocation were validated.

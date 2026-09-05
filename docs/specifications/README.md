@@ -44,6 +44,7 @@ specification says so explicitly instead of describing the implementation as if 
 
 | Specification | Covers |
 |---|---|
+| [`dispute/refund-claimant-authentication.md`](dispute/refund-claimant-authentication.md) | Escrow-key proof that a refund claimant participated in the trade, including normal and exceptional payout authorization. |
 | [`dispute/refund-direct-payout.md`](dispute/refund-direct-payout.md) | One-time refund receipt consumption, durable payout reservation, amount limits, and inbound refund state. |
 
 ### `network/`
