@@ -180,6 +180,12 @@ current dialog, claim subject and buyer/seller amounts. Changed evidence or allo
 fresh approval. Both payout and result-signing authorization must enforce this requirement;
 displaying a warning only in the wallet transaction confirmation is insufficient.
 
+For both split-payout and legacy confirmations, an observed mismatch in the dispute row, claim subject,
+allocation or legacy eligibility must discard the saved approval. A malformed subject must also discard it.
+Restoring the previously approved values must not revive that confirmation. Check for such changes even
+when the current allocation no longer requires manual verification, and require a fresh explicit confirmation
+before a later attempt can use the manual exception again.
+
 Closing without a payout still requires a valid claimant before the agent signs a refund result,
 except for the temporary legacy-record grace period below.
 

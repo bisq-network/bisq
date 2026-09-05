@@ -988,12 +988,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             try {
                 Coin buyerAmount = disputeResult.getBuyerPayoutAmount();
                 Coin sellerAmount = disputeResult.getSellerPayoutAmount();
-                // Claim authentication is independent of explorer availability, including on the local test network.
-                refundManager.verifyRefundClaimForPayout(dispute, buyerAmount, sellerAmount);
                 // TODO Remove the legacy alternative in releases after 2026-11-01.
                 boolean legacyClaim = refundManager.requiresLegacyRefundClaimVerification(dispute);
+                boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim);
+                // Claim authentication is independent of explorer availability, including on the local test network.
+                refundManager.verifyRefundClaimForPayout(dispute, buyerAmount, sellerAmount);
                 if ((legacyClaim || buyerAmount.isPositive() && sellerAmount.isPositive()) &&
-                        !hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim)) {
+                        !hasApproval) {
                     RefundClaimApproval approval = RefundClaimApproval.capture(dispute,
                             buyerAmount, sellerAmount, legacyClaim);
                     String warning = legacyClaim ? Res.get("disputeSummaryWindow.legacyRefundClaim.warning") :
@@ -1159,16 +1160,23 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean hasRefundClaimApproval(Coin buyerAmount, Coin sellerAmount, boolean legacyClaim) {
+        // Clear before comparing so mismatches and malformed subjects cannot revive an old confirmation later.
+        RefundClaimApproval previousApproval = refundClaimApproval;
+        refundClaimApproval = null;
         // Approval belongs to this exact in-memory row, not a value-equal replacement or restored copy.
-        return refundClaimApproval != null && refundClaimApproval.dispute() == dispute && refundClaimApproval.equals(
-                RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount, legacyClaim));
+        if (previousApproval != null && previousApproval.dispute() == dispute && previousApproval.equals(
+                RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount, legacyClaim))) {
+            refundClaimApproval = previousApproval;
+        }
+        return refundClaimApproval != null;
     }
 
     private void verifyRefundClaimApproval(Coin buyerAmount, Coin sellerAmount) {
         // TODO Remove the legacy alternative in releases after 2026-11-01.
         boolean legacyClaim = refundManager.requiresLegacyRefundClaimVerification(dispute);
+        boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim);
         if (legacyClaim || buyerAmount.isPositive() && sellerAmount.isPositive()) {
-            checkArgument(hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim),
+            checkArgument(hasApproval,
                     "The agent must manually verify this refund claim and its payout addresses");
         }
     }
@@ -1177,10 +1185,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (dispute.getSupportType() != SupportType.REFUND) {
             return;
         }
+        verifyRefundClaimApproval(disputeResult.getBuyerPayoutAmount(), disputeResult.getSellerPayoutAmount());
         refundManager.verifyRefundClaimForPayout(dispute,
                 disputeResult.getBuyerPayoutAmount(),
                 disputeResult.getSellerPayoutAmount());
-        verifyRefundClaimApproval(disputeResult.getBuyerPayoutAmount(), disputeResult.getSellerPayoutAmount());
         if (refundManager.isRefundEvidenceValidationSkipped()) {
             return;
         }
@@ -1193,8 +1201,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (dispute.getSupportType() != SupportType.REFUND) {
             return;
         }
-        refundManager.verifyRefundClaimForPayout(dispute, buyerPayoutAmount, sellerPayoutAmount);
         verifyRefundClaimApproval(buyerPayoutAmount, sellerPayoutAmount);
+        refundManager.verifyRefundClaimForPayout(dispute, buyerPayoutAmount, sellerPayoutAmount);
         if (refundManager.isRefundEvidenceValidationSkipped()) {
             return;
         }
