@@ -963,13 +963,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void showAlreadyPaidPopup(CompletableFuture<Boolean> resultHandler) {
+        String headline = Res.get("disputeSummaryWindow.close.alreadyPaid.headline");
         String text = Res.get("disputeSummaryWindow.close.alreadyPaid.text");
         String payoutTxId = refundManager.findRefundPayoutTxId(dispute).orElse(dispute.getDisputePayoutTxId());
-        // A reservation that was persisted but never committed leaves a receipt marker without a wallet transaction.
+        // Missing wallet data does not establish whether the recorded transaction was published.
         if (payoutTxId != null && btcWalletService.getTransaction(payoutTxId) == null) {
-            text += "\n\n" + Res.get("disputeSummaryWindow.close.alreadyPaid.notInWallet", payoutTxId);
+            headline = Res.get("disputeSummaryWindow.close.alreadyPaid.notInWallet.headline");
+            text = Res.get("disputeSummaryWindow.close.alreadyPaid.notInWallet", payoutTxId);
         }
-        new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
+        new Popup().headLine(headline)
                 .confirmation(text)
                 .closeButtonText(Res.get("shared.cancel"))
                 .actionButtonText(Res.get("support.closeTicket"))

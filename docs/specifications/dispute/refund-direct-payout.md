@@ -55,7 +55,8 @@ signing. The successful durable reservation remains consumed and requires invest
 cleared to enable a replacement payout. The operator must be told, at the failed attempt itself, that no transaction
 was committed or broadcast and which recorded transaction ID now blocks a replacement payout. A later close attempt
 that finds a consumed receipt whose transaction is unknown to the wallet must say so as well, instead of reporting
-that a payout was created.
+that a payout was created or paid. Absence from the current wallet does not establish whether the recorded transaction
+was broadcast or paid; the message must report that uncertainty and require investigation before closing the ticket.
 
 This ordering deliberately favors preventing a second spend over automatic recovery. A process failure after durable
 reservation but before wallet commit or broadcast can require manual investigation of the recorded transaction ID.

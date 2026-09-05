@@ -127,6 +127,44 @@ class DisputeSummaryWindowRefundAuthorizationTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void consumedReceiptPopupDistinguishesMissingWalletTransaction(boolean transactionInWallet) throws Exception {
+        String payoutTxId = Sha256Hash.ZERO_HASH.toString();
+        when(manager.findRefundPayoutTxId(dispute)).thenReturn(Optional.of(payoutTxId));
+        when(wallet.getTransaction(payoutTxId)).thenReturn(transactionInWallet ? mock(Transaction.class) : null);
+        try (MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
+            CompletableFuture<?> outcome = (CompletableFuture<?>) invoke("maybeMakePayout");
+
+            assertFalse(outcome.isDone());
+            assertEquals(1, popups.constructed().size());
+            Popup popup = popups.constructed().get(0);
+            ArgumentCaptor<String> headline = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
+            verify(popup).headLine(headline.capture());
+            verify(popup).confirmation(message.capture());
+            if (transactionInWallet) {
+                assertEquals(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"), headline.getValue());
+                assertEquals(Res.get("disputeSummaryWindow.close.alreadyPaid.text"), message.getValue());
+            } else {
+                assertEquals("Refund payout requires investigation", headline.getValue());
+                assertTrue(message.getValue().contains(payoutTxId));
+                assertTrue(message.getValue().contains("a replacement payout is blocked"));
+                assertTrue(message.getValue().contains("broadcast and payment status are unknown"));
+                assertTrue(message.getValue().contains("before closing the ticket"));
+                assertFalse(message.getValue().contains("A payout transaction has already been created"));
+                assertFalse(message.getValue().contains("most likely"));
+            }
+            ArgumentCaptor<Runnable> closeTicket = ArgumentCaptor.forClass(Runnable.class);
+            verify(popup).onAction(closeTicket.capture());
+            closeTicket.getValue().run();
+            assertEquals(true, outcome.join());
+            verify(wallet, never()).createRefundPayoutTx(any(), any(), any(), any(), any(), any());
+            verify(wallet, never()).commitTx(any());
+            verify(tradeWallet, never()).broadcastTx(any(), any());
+        }
+    }
+
     @Test
     void unchangedAuthorizationCommitsAfterDurableReservation() throws Exception {
         Transaction transaction = mock(Transaction.class);
