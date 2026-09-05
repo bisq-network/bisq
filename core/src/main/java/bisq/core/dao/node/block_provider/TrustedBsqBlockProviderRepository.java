@@ -33,7 +33,6 @@ import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -48,9 +47,10 @@ import lombok.extern.slf4j.Slf4j;
 public class TrustedBsqBlockProviderRepository {
     private static final String POSTFIX = ".trusted_bsq_block_providers";
 
-    private final Set<TrustedBsqBlockProvider> trustedBsqBlockProviders = new HashSet<>();
     private final Config config;
     private final DenyList denyList;
+    private Set<TrustedBsqBlockProvider> trustedBsqBlockProviders = Set.of();
+    private boolean initialized;
 
     @Inject
     public TrustedBsqBlockProviderRepository(Config config, DenyList denyList) {
@@ -63,8 +63,8 @@ public class TrustedBsqBlockProviderRepository {
     }
 
 
-    public Collection<TrustedBsqBlockProvider> getTrustedBsqBlockProviders() {
-        if (trustedBsqBlockProviders.isEmpty()) {
+    public synchronized Collection<TrustedBsqBlockProvider> getTrustedBsqBlockProviders() {
+        if (!initialized) {
             lazyInitialize();
         }
 
@@ -99,8 +99,8 @@ public class TrustedBsqBlockProviderRepository {
                     .filter(Objects::nonNull)
                     .filter(provider -> !deniedNodeAddresses.contains(provider.getNodeAddress()))
                     .collect(Collectors.toSet());
-            trustedBsqBlockProviders.clear();
-            trustedBsqBlockProviders.addAll(providers);
+            trustedBsqBlockProviders = Set.copyOf(providers);
+            initialized = true;
         } catch (Exception t) {
             log.error("Failed to initialize trustedBsqBlockProviders", t);
             throw t;
