@@ -126,6 +126,11 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     public void broadcast(BroadcastMessage message,
                           @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
+        if (shutDownCompleted.get()) {
+            // The executor is stopped; a bundle created now would only be rejected.
+            log.warn("Ignoring broadcast request for {} after shutdown", message.getClass().getSimpleName());
+            return;
+        }
         broadcastRequests.add(new BroadcastRequest(message, sender, listener));
         if (timer == null) {
             timer = UserThread.runAfter(this::maybeBroadcastBundle, BROADCAST_INTERVAL_MS, TimeUnit.MILLISECONDS);
