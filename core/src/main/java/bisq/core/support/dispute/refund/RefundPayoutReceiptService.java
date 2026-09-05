@@ -209,8 +209,11 @@ public final class RefundPayoutReceiptService {
     static Coin calculateMaximumPayoutAmount(Coin contractPayoutAmount,
                                              Coin depositOutputAmount,
                                              long tradeTxFee) {
-        Coin feeReserve = tradeTxFee > 0 ? Coin.valueOf(tradeTxFee) : Coin.ZERO;
-        Coin receiptPayoutAmount = depositOutputAmount.subtract(feeReserve);
+        // Admission and close-time validation require a positive fee, so a row without one cannot be paid at all.
+        if (tradeTxFee <= 0) {
+            return Coin.ZERO;
+        }
+        Coin receiptPayoutAmount = depositOutputAmount.subtract(Coin.valueOf(tradeTxFee));
         if (receiptPayoutAmount.isNegative()) {
             return Coin.ZERO;
         }

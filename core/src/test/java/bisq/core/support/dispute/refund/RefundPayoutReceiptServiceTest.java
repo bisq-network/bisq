@@ -123,7 +123,8 @@ class RefundPayoutReceiptServiceTest {
                 Coin.valueOf(200_000),
                 Coin.valueOf(101_000),
                 1_000));
-        assertEquals(contractPayoutAmount, RefundPayoutReceiptService.calculateMaximumPayoutAmount(
+        // A row without a positive trade fee is rejected at admission and close time, so the dialog offers nothing.
+        assertEquals(Coin.ZERO, RefundPayoutReceiptService.calculateMaximumPayoutAmount(
                 contractPayoutAmount,
                 Coin.valueOf(101_000),
                 0));
