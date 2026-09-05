@@ -53,6 +53,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -379,11 +380,17 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
             Set<Connection> allConnections = getAllConnections();
             int numConnections = allConnections.size();
 
-            if (numConnections == 0) {
-                log.info("Shutdown immediately because no connections are open.");
-                if (shutDownCompleteHandler != null) {
+            // The timeout and the last connection close can both complete the shutdown; report it only once.
+            AtomicBoolean completed = new AtomicBoolean();
+            Runnable completeOnce = () -> {
+                if (shutDownCompleteHandler != null && completed.compareAndSet(false, true)) {
                     shutDownCompleteHandler.run();
                 }
+            };
+
+            if (numConnections == 0) {
+                log.info("Shutdown immediately because no connections are open.");
+                completeOnce.run();
                 return;
             }
 
@@ -391,10 +398,8 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
 
             AtomicInteger shutdownCompleted = new AtomicInteger();
             Timer timeoutHandler = UserThread.runAfter(() -> {
-                if (shutDownCompleteHandler != null) {
-                    log.info("Shutdown completed due timeout");
-                    shutDownCompleteHandler.run();
-                }
+                log.info("Shutdown completed due timeout");
+                completeOnce.run();
             }, 1500, TimeUnit.MILLISECONDS);
 
             allConnections.forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN,
@@ -406,9 +411,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                             timeoutHandler.stop();
                             connectionExecutor.shutdownNow();
                             sendMessageExecutor.shutdownNow();
-                            if (shutDownCompleteHandler != null) {
-                                shutDownCompleteHandler.run();
-                            }
+                            completeOnce.run();
                         }
                     }));
         }

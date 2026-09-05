@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -30,10 +31,15 @@ import java.net.Socket;
 
 import java.io.IOException;
 
+import java.time.Duration;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import java.lang.reflect.Field;
 
@@ -41,12 +47,14 @@ import org.jetbrains.annotations.Nullable;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -164,6 +172,60 @@ public class NetworkNodeTest {
             verify(listener, never()).onDisconnect(CloseConnectionReason.APP_SHUT_DOWN, connection);
         } finally {
             shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void shutDownReportsCompletionOnlyOnce() throws Exception {
+        UserThread.setExecutor(Runnable::run);
+        UserThread.setTimerClass(CapturingTimer.class);
+        CapturingTimer.clear();
+        TestNetworkNode networkNode = new TestNetworkNode();
+        InboundConnection connection = confirmedInboundConnection();
+        addConnection(networkNode, "inBoundConnections", connection);
+        AtomicInteger completions = new AtomicInteger();
+
+        try {
+            networkNode.shutDown(completions::incrementAndGet);
+
+            ArgumentCaptor<Runnable> connectionClosed = ArgumentCaptor.forClass(Runnable.class);
+            verify(connection).shutDown(eq(CloseConnectionReason.APP_SHUT_DOWN), connectionClosed.capture());
+            // The timeout fires first, then the last connection reports its close.
+            CapturingTimer.runAll();
+            assertEquals(1, completions.get());
+            connectionClosed.getValue().run();
+            assertEquals(1, completions.get());
+        } finally {
+            shutDownExecutors(networkNode);
+            CapturingTimer.clear();
+        }
+    }
+
+    public static class CapturingTimer implements Timer {
+        private static final List<Runnable> scheduled = new ArrayList<>();
+
+        @Override
+        public Timer runLater(Duration delay, Runnable runnable) {
+            scheduled.add(runnable);
+            return this;
+        }
+
+        @Override
+        public Timer runPeriodically(Duration interval, Runnable runnable) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void stop() {
+        }
+
+        static void runAll() {
+            new ArrayList<>(scheduled).forEach(Runnable::run);
+            scheduled.clear();
+        }
+
+        static void clear() {
+            scheduled.clear();
         }
     }
 
