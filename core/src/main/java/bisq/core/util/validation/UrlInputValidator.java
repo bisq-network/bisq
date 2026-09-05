@@ -35,7 +35,8 @@ public class UrlInputValidator extends InputValidator {
 
         try {
             new URI(input).toURL(); // does not cover all invalid urls, so we use a regex as well
-            String regex = "^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]";
+            // URI parsing above already rejects '|', so the regex must not admit it either.
+            String regex = "^(https?)://[-a-zA-Z0-9+&@#/%?=~_!:,.;]*[-a-zA-Z0-9+&@#/%=~_]";
             checkArgument(input.matches(regex), "URL does not match regex");
             return validationResult;
         } catch (Throwable t) {
