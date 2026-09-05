@@ -19,20 +19,29 @@ ID, and its escrow output must match the contract-bound script and value describ
 transactions used for the close-time validation are fetched independently by the IDs carried in the
 dispute and its contract, and the fetched deposit must satisfy the same checks.
 
-## Contract acceptance by both traders
+## Contract signature consistency and trust limits
 
-A refund dispute must carry both trader contract signatures, and each signature must verify against
-the signature key of the respective trader's key ring in the contract over the hashed contract JSON.
-A dispute with a missing or non-verifying signature is rejected at admission. A signature that is
-present on a mediation dispute must verify as well; only its presence stays optional there.
+Trader contract signatures are optional at dispute admission, including for refunds. Each signature
+that is present must verify against the respective trader's signature key supplied in the contract
+over the supplied contract JSON. A missing signature does not invalidate the dispute; a present
+but non-verifying signature does.
 
-The refund payout is sent to the payout addresses recorded in the dispute-carried contract. The
-contract hash, the escrow script and the escrow value do not commit those addresses independently
-of the opener, so a dispute opener who can present a self-consistent contract with only the own
-signature could substitute the peer's payout address. Both trader signatures are the evidence that
-both traders accepted exactly this contract. Every trade that reached the deposit and delayed payout
-transactions already holds both signatures on both sides, so this rule does not exclude legitimate
-refund cases.
+Production disputes copy the trade's signature fields, which normally hold only the local party's
+signature. The taker retains the received maker signature separately in its peer state. Since 1.7,
+each party also re-signs the payment-account-enriched contract JSON locally without exchanging that
+final signature. Requiring both final signatures would therefore reject legitimate refund disputes.
+
+These checks establish consistency with the supplied keys, not independently authenticated peer
+acceptance. Trader key rings, including the offer's key ring, are excluded from contract JSON and
+come from the dispute opener. An opener can replace the peer payout address and peer signing key,
+regenerate JSON/hash, and supply signatures from both controlled keys. Deposit validation anchors the
+separate multisig keys, not the trader signature keys or payout addresses. Neither a consistent
+contract hash nor two verifying signatures closes this payout-address substitution vulnerability.
+
+Independent proof of peer acceptance would require trusted evidence binding the signing keys and
+exact payout contract to the escrow, or a prior independently trusted commitment. The current
+signature checks do not provide that evidence. This compatibility rule preserves admission of
+existing trades; it does not establish that the payout-address vulnerability has been resolved.
 
 ## Contract-bound escrow
 

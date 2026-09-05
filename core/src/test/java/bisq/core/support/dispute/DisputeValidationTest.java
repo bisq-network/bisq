@@ -30,9 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Test;
-
 import javax.annotation.Nullable;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -242,7 +242,7 @@ class DisputeValidationTest {
     }
 
     @Test
-    void validateDisputeDataRejectsRefundDisputeWithoutPeerContractSignature() {
+    void validateDisputeDataAcceptsRefundDisputeWithOnlyOneContractSignature() {
         PubKeyRing buyerPubKeyRing = pubKeyRing();
         PubKeyRing sellerPubKeyRing = pubKeyRing();
         PubKeyRing refundAgentPubKeyRing = pubKeyRing();
@@ -265,9 +265,9 @@ class DisputeValidationTest {
                 null,
                 contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
 
-        assertThrows(DisputeValidation.ValidationException.class,
+        assertDoesNotThrow(
                 () -> DisputeValidation.validateDisputeData(withoutTakerSignature, walletService(), POST_ACTIVATION_NOW));
-        assertThrows(DisputeValidation.ValidationException.class,
+        assertDoesNotThrow(
                 () -> DisputeValidation.validateDisputeData(withoutMakerSignature, walletService(), POST_ACTIVATION_NOW));
     }
 

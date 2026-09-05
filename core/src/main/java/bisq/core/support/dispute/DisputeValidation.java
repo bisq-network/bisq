@@ -113,13 +113,13 @@ public class DisputeValidation {
             try {
                 String makerContractSignature = dispute.getMakerContractSignature();
                 String takerContractSignature = dispute.getTakerContractSignature();
-                if (dispute.getSupportType() == SupportType.REFUND) {
-                    // A refund payout is sent to the payout addresses of the contract carried by the dispute. Both
-                    // trader signatures prove that both traders accepted exactly this contract; without the peer
-                    // signature the opener could substitute the peer's payout address.
-                    checkNotNull(makerContractSignature, "Refund dispute must carry the maker contract signature");
-                    checkNotNull(takerContractSignature, "Refund dispute must carry the taker contract signature");
-                }
+                // Disputes copy Trade's signature fields, which normally contain only the local signature.
+                // The taker keeps the received maker signature separately in TradingPeer; since 1.7, each side
+                // also re-signs the payment-account-enriched JSON locally without exchanging that final signature.
+                // Thus the peer field may be null and neither signature can be required at admission.
+                // These checks establish consistency only: the dispute supplies the signing keys, and trader
+                // PubKeyRings are excluded from contract JSON. Even two valid signatures do not independently
+                // prove peer acceptance of payout addresses; deposit validation anchors different, multisig keys.
                 if (makerContractSignature != null) {
                     checkArgument(Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
                                     dispute.getContractAsJson(),
