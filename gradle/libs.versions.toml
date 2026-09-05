@@ -18,6 +18,7 @@ google-findbugs = { strictly = '3.0.2' }
 google-gson = { strictly = '2.14.0' }
 google-guava = { strictly = '33.6.0-jre' }
 google-guice = { strictly = '6.0.0' }
+gradlex-reproducible-builds = { strictly = '1.1' }
 
 grpc = { strictly = '1.81.0' }
 hamcrest = { strictly = '3.0' }
@@ -68,6 +69,7 @@ google-findbugs = { module = "com.google.code.findbugs:jsr305", version.ref = "g
 google-gson = { module = "com.google.code.gson:gson", version.ref = "google-gson" }
 google-guava = { module = "com.google.guava:guava", version.ref = "google-guava" }
 google-guice = { module = "com.google.inject:guice", version.ref = "google-guice" }
+gradlex-reproducible-builds = { module = "org.gradlex:reproducible-builds", version.ref = "gradlex-reproducible-builds" }
 
 grpc-core = { module = "io.grpc:grpc-core", version.ref = "grpc" }
 grpc-netty-shaded = { module = "io.grpc:grpc-netty-shaded", version.ref = "grpc" }

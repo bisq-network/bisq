@@ -8,4 +8,5 @@ repositories {
 
 dependencies {
     implementation libs.openjfx.javafx.plugin
+    implementation libs.gradlex.reproducible.builds
 }
