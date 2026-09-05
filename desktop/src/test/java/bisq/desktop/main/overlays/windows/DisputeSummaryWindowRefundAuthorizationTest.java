@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
@@ -40,11 +41,13 @@ import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.ArgumentCaptor;
@@ -58,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.RETURNS_SELF;
 import static org.mockito.Mockito.doThrow;
@@ -75,6 +79,8 @@ class DisputeSummaryWindowRefundAuthorizationTest {
     private final DisputeResult result = new DisputeResult("trade-id", 1);
     private final RefundValidationResult evidence = mock(RefundValidationResult.class);
     private final TxFeeEstimationService feeEstimator = mock(TxFeeEstimationService.class);
+    private final BtcWalletService wallet = mock(BtcWalletService.class);
+    private final TradeWalletService tradeWallet = mock(TradeWalletService.class);
     private DisputeSummaryWindow window;
 
     @BeforeEach
@@ -88,7 +94,7 @@ class DisputeSummaryWindowRefundAuthorizationTest {
         result.setBuyerPayoutAmount(Coin.valueOf(1_000));
         result.setSellerPayoutAmount(Coin.ZERO);
         window = new DisputeSummaryWindow(mock(CoinFormatter.class), mock(MediationManager.class),
-                manager, mock(TradeWalletService.class), mock(BtcWalletService.class),
+                manager, tradeWallet, wallet,
                 feeEstimator, mock(MempoolService.class), mock(DaoFacade.class));
         // Set only dialog state, without constructing JavaFX controls or widening production visibility.
         setField("dispute", dispute);
@@ -116,6 +122,63 @@ class DisputeSummaryWindowRefundAuthorizationTest {
             assertTrue(warning.getValue().startsWith("Refund authorization failed."));
             assertTrue(warning.getValue().contains("missing claim"));
         }
+    }
+
+    @Test
+    void unchangedAuthorizationCommitsAfterDurableReservation() throws Exception {
+        Transaction transaction = mock(Transaction.class);
+        CompletableFuture<Boolean> outcome = new CompletableFuture<>();
+        Runnable persisted = beginPayoutReservation(transaction, outcome);
+        verify(wallet, never()).commitTx(any());
+        verify(tradeWallet, never()).broadcastTx(any(), any());
+
+        persisted.run();
+
+        verify(wallet).commitTx(transaction);
+        verify(tradeWallet).broadcastTx(eq(transaction), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"expired claim", "changed allocation", "replaced dialog row"})
+    void authorizationChangesDuringPersistencePreventWalletCommit(String change) throws Exception {
+        Transaction transaction = mock(Transaction.class);
+        CompletableFuture<Boolean> outcome = new CompletableFuture<>();
+        Runnable persisted = beginPayoutReservation(transaction, outcome);
+        switch (change) {
+            case "expired claim" -> doThrow(new IllegalArgumentException("grace period expired"))
+                    .when(manager).verifyRefundClaimForPayout(dispute, Coin.valueOf(1_000), Coin.ZERO);
+            case "changed allocation" -> {
+                result.setBuyerPayoutAmount(Coin.valueOf(900));
+                doThrow(new IllegalArgumentException("Buyer payout amount changed after refund validation"))
+                        .when(evidence).verifyMatches(dispute, result);
+            }
+            case "replaced dialog row" -> setField("dispute", mock(Dispute.class));
+            default -> throw new AssertionError(change);
+        }
+        try (MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
+            persisted.run();
+
+            assertTrue(outcome.isDone());
+            assertEquals(false, outcome.join());
+            verify(wallet, never()).commitTx(any());
+            verify(tradeWallet, never()).broadcastTx(any(), any());
+        }
+    }
+
+    private Runnable beginPayoutReservation(Transaction transaction, CompletableFuture<Boolean> outcome) throws Exception {
+        Contract contract = dispute.getContract();
+        when(contract.getOfferPayload()).thenReturn(mock(OfferPayload.class));
+        when(contract.getTradeAmount()).thenReturn(Coin.valueOf(1_000));
+        when(manager.getMaximumRefundPayoutAmount(dispute)).thenReturn(Coin.valueOf(1_000));
+        when(wallet.createRefundPayoutTx(any(), any(), any(), any(), any(), any())).thenReturn(transaction);
+        Method payout = DisputeSummaryWindow.class.getDeclaredMethod("doPayout", Coin.class, Coin.class,
+                Coin.class, String.class, String.class, CompletableFuture.class);
+        payout.setAccessible(true);
+        payout.invoke(window, Coin.valueOf(1_000), Coin.ZERO, Coin.valueOf(100),
+                "buyer-address", "seller-address", outcome);
+        ArgumentCaptor<Runnable> persisted = ArgumentCaptor.forClass(Runnable.class);
+        verify(manager).persistRefundPayoutReservation(eq(dispute), eq(transaction), persisted.capture(), any());
+        return persisted.getValue();
     }
 
     @Test

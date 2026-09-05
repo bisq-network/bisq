@@ -892,9 +892,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     fee,
                     buyerPayoutAddressString,
                     sellerPayoutAddressString);
-            refundManager.persistRefundPayoutReservation(dispute,
+            Dispute payoutDispute = dispute;
+            refundManager.persistRefundPayoutReservation(payoutDispute,
                     tx,
                     () -> {
+                        // Persistence is asynchronous: approval can expire or the dialog can change before commit.
+                        // Keep the durable reservation consumed even when authorization no longer permits publication.
+                        if (dispute != payoutDispute || !isRefundValidationCurrent() ||
+                                !isRefundValidationCurrent(buyerPayoutAmount, sellerPayoutAmount)) {
+                            log.warn("Refund authorization changed while persisting payout {} for trade {}",
+                                    tx.getTxId(), payoutDispute.getTradeId());
+                            resultHandler.complete(false);
+                            return;
+                        }
                         try {
                             btcWalletService.commitTx(tx);
                             tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
