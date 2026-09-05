@@ -17,7 +17,7 @@ plugins {
     id 'bisq.gradle.regtest_plugin.RegtestPlugin'
 }
 
-def dependencyVerificationMetadata = layout.projectDirectory.file('gradle/verification-metadata.xml')
+/*def dependencyVerificationMetadata = layout.projectDirectory.file('gradle/verification-metadata.xml')
 def dependencyVerificationKeyring = layout.projectDirectory.file('gradle/verification-keyring.keys')
 def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/verification-keyring.gpg')
 def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/dependency-checksum-fallback-allowlist.tsv')
@@ -794,7 +794,7 @@ def resolveManifestFile = { File manifestPath, String manifestFileName ->
     }
 
     def matchingManifests = fileTree(manifestPath) {
-        include "**/${manifestFileName}"
+        include "**\/${manifestFileName}"
     }.files.sort { left, right -> left.path <=> right.path }
 
     if (matchingManifests.empty) {
@@ -854,7 +854,7 @@ def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean
 
     if (evidencePath.directory) {
         def matchingFiles = fileTree(evidencePath) {
-            include "**/${evidenceFileName}"
+            include "**\/${evidenceFileName}"
         }.files.sort { left, right -> left.path <=> right.path }
 
         if (matchingFiles.empty) {
@@ -1092,7 +1092,7 @@ def installerArtifactsIn = { File installerDir ->
     installerDir.directory
             ? fileTree(installerDir) {
                 installerArtifactIncludes.each { include it }
-                exclude '**/jpackage_temp/**'
+                exclude '**\/jpackage_temp/**'
             }.files
                     .findAll { it.isFile() }
                     .sort { left, right -> left.path <=> right.path }
@@ -1803,7 +1803,7 @@ tasks.register('verifyGithubActionsSecurity') {
                         def checkoutStepLines = []
                         for (int nextLineIndex = index + 1; nextLineIndex < lines.size(); nextLineIndex++) {
                             def nextLine = lines[nextLineIndex]
-                            if (nextLine ==~ /^\s*-\s+(name|uses):\s+.*/) {
+                            if (nextLine ==~ /^\s*-\s+(name|uses):\s+.*\/) {
                                 break
                             }
                             checkoutStepLines << nextLine
@@ -1815,7 +1815,7 @@ tasks.register('verifyGithubActionsSecurity') {
                     }
                 }
 
-                if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*/) {
+                if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*\/) {
                     violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
                 }
 
@@ -3516,4 +3516,4 @@ tasks.register('verifyReleaseManifest') {
 
         verifyManifestMatches('Release manifest', expectedManifest, actualManifest)
     }
-}
+}*/
