@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -273,6 +274,40 @@ class RefundPayoutReceiptServiceTest {
         assertFalse(peerDispute.isPayoutDone());
         assertTrue(service.findPayoutTxId(selectedDispute).isEmpty());
         verify(disputeListService).requestPersistence();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void clearsReservationMarksWhenPersistenceCannotBeStarted() {
+        Dispute selectedDispute = dispute(DEPOSIT_A, DELAYED_PAYOUT_A, null);
+        disputeList.add(selectedDispute);
+        Transaction payoutTx = mock(Transaction.class);
+        when(payoutTx.getTxId()).thenReturn(Sha256Hash.wrap(PAYOUT_TX_ID));
+        IllegalStateException startFailure = new IllegalStateException("persistence not initialized");
+        doThrow(startFailure).when(persistenceManager).persistNow(any(Runnable.class), any(Consumer.class));
+        AtomicBoolean completed = new AtomicBoolean();
+        AtomicReference<Throwable> reportedFailure = new AtomicReference<>();
+
+        IllegalStateException thrown = assertThrows(IllegalStateException.class,
+                () -> service.persistPayoutReservation(selectedDispute,
+                        payoutTx,
+                        () -> completed.set(true),
+                        reportedFailure::set));
+
+        assertSame(startFailure, thrown);
+        assertFalse(completed.get());
+        assertNull(reportedFailure.get());
+        assertNull(selectedDispute.getDisputePayoutTxId());
+        assertFalse(selectedDispute.isPayoutDone());
+
+        // The failed start must not block the next reservation until restart.
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        }).when(persistenceManager).persistNow(any(Runnable.class), any(Consumer.class));
+        service.persistPayoutReservation(selectedDispute, payoutTx, () -> completed.set(true), reportedFailure::set);
+        assertTrue(completed.get());
+        assertTrue(selectedDispute.isPayoutDone());
     }
 
     @Test

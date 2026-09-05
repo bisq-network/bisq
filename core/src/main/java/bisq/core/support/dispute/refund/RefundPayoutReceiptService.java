@@ -122,18 +122,24 @@ public final class RefundPayoutReceiptService {
 
         payoutReservationInProgress = true;
         reservedDisputes.forEach(reservedDispute -> markPaid(reservedDispute, payoutTxId));
-        disputeListService.getPersistenceManager().persistNow(
-                () -> {
-                    finishReservation();
-                    checkedCompleteHandler.run();
-                },
-                throwable -> {
-                    // Nothing has been committed or broadcast at this point, so the receipt is not consumed. The
-                    // marks are removed again; keeping them would persist a paid state without any transaction.
-                    clearFailedReservation(reservedDisputes);
-                    disputeListService.requestPersistence();
-                    checkedErrorHandler.accept(throwable);
-                });
+        try {
+            disputeListService.getPersistenceManager().persistNow(
+                    () -> {
+                        finishReservation();
+                        checkedCompleteHandler.run();
+                    },
+                    throwable -> {
+                        // Nothing has been committed or broadcast at this point, so the receipt is not consumed. The
+                        // marks are removed again; keeping them would persist a paid state without any transaction.
+                        clearFailedReservation(reservedDisputes);
+                        disputeListService.requestPersistence();
+                        checkedErrorHandler.accept(throwable);
+                    });
+        } catch (RuntimeException exception) {
+            // The write never started, so no paid state reached disk and the next reservation must not be blocked.
+            clearFailedReservation(reservedDisputes);
+            throw exception;
+        }
     }
 
     private synchronized void finishReservation() {
