@@ -55,6 +55,8 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     private final List<BroadcastRequest> broadcastRequests = new ArrayList<>();
     private Timer timer;
     private boolean shutDownRequested;
+    @Nullable
+    private volatile BroadcastHandler shutDownBroadcastHandler;
     private Runnable shutDownResultHandler;
     private final ListeningExecutorService executor;
     private final AtomicBoolean shutDownCompleted = new AtomicBoolean();
@@ -134,6 +136,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         if (!broadcastRequests.isEmpty()) {
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
             broadcastHandlers.add(broadcastHandler);
+            if (shutDownRequested) {
+                shutDownBroadcastHandler = broadcastHandler;
+            }
             broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested, executor);
             broadcastRequests.clear();
 
@@ -152,7 +157,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     @Override
     public void onCompleted(BroadcastHandler broadcastHandler) {
         broadcastHandlers.remove(broadcastHandler);
-        if (shutDownRequested) {
+        // An earlier runtime broadcast may finish before the shutdown bundle has submitted its sends.
+        // Only the shutdown bundle's completion (including its bounded timeout) may cancel the remaining work.
+        if (broadcastHandler == shutDownBroadcastHandler) {
             doShutDown();
         }
     }
