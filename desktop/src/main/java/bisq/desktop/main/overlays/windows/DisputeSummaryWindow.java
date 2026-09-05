@@ -99,6 +99,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 @Slf4j
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
@@ -897,12 +898,21 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     tx,
                     () -> {
                         // Persistence is asynchronous: approval can expire or the dialog can change before commit.
-                        // Keep the durable reservation consumed even when authorization no longer permits publication.
-                        if (dispute != payoutDispute || !isRefundValidationCurrent() ||
-                                !isRefundValidationCurrent(buyerPayoutAmount, sellerPayoutAmount)) {
-                            log.warn("Refund authorization changed while persisting payout {} for trade {}",
-                                    tx.getTxId(), payoutDispute.getTradeId());
-                            resultHandler.complete(false);
+                        // Keep the durable reservation consumed even when authorization no longer permits publication,
+                        // and tell the operator which reserved transaction ID now blocks a replacement payout.
+                        try {
+                            checkState(dispute == payoutDispute,
+                                    "The dialog no longer shows the dispute row whose payout was reserved");
+                            verifyRefundAuthorization();
+                            verifyRefundAuthorization(buyerPayoutAmount, sellerPayoutAmount);
+                        } catch (RuntimeException error) {
+                            log.error("Refund authorization changed while persisting payout {} for trade {}",
+                                    tx.getTxId(), payoutDispute.getTradeId(), error);
+                            new Popup().warning(Res.get("disputeSummaryWindow.close.reservationConsumed",
+                                            tx.getTxId(), error.getMessage()))
+                                    .onAction(() -> resultHandler.complete(false))
+                                    .onClose(() -> resultHandler.complete(false))
+                                    .show();
                             return;
                         }
                         try {
@@ -953,8 +963,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void showAlreadyPaidPopup(CompletableFuture<Boolean> resultHandler) {
+        String text = Res.get("disputeSummaryWindow.close.alreadyPaid.text");
+        String payoutTxId = refundManager.findRefundPayoutTxId(dispute).orElse(dispute.getDisputePayoutTxId());
+        // A reservation that was persisted but never committed leaves a receipt marker without a wallet transaction.
+        if (payoutTxId != null && btcWalletService.getTransaction(payoutTxId) == null) {
+            text += "\n\n" + Res.get("disputeSummaryWindow.close.alreadyPaid.notInWallet", payoutTxId);
+        }
         new Popup().headLine(Res.get("disputeSummaryWindow.close.alreadyPaid.headline"))
-                .confirmation(Res.get("disputeSummaryWindow.close.alreadyPaid.text"))
+                .confirmation(text)
                 .closeButtonText(Res.get("shared.cancel"))
                 .actionButtonText(Res.get("support.closeTicket"))
                 .onAction(() -> resultHandler.complete(true))
@@ -1157,21 +1173,39 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
-    private boolean isRefundValidationCurrent() {
+    private void verifyRefundAuthorization() {
         if (dispute.getSupportType() != SupportType.REFUND) {
-            return true;
+            return;
         }
+        refundManager.verifyRefundClaimForPayout(dispute,
+                disputeResult.getBuyerPayoutAmount(),
+                disputeResult.getSellerPayoutAmount());
+        verifyRefundClaimApproval(disputeResult.getBuyerPayoutAmount(), disputeResult.getSellerPayoutAmount());
+        if (refundManager.isRefundEvidenceValidationSkipped()) {
+            return;
+        }
+        checkNotNull(refundValidationResult,
+                "Refund transaction evidence has not been validated")
+                .verifyMatches(dispute, disputeResult);
+    }
+
+    private void verifyRefundAuthorization(Coin buyerPayoutAmount, Coin sellerPayoutAmount) {
+        if (dispute.getSupportType() != SupportType.REFUND) {
+            return;
+        }
+        refundManager.verifyRefundClaimForPayout(dispute, buyerPayoutAmount, sellerPayoutAmount);
+        verifyRefundClaimApproval(buyerPayoutAmount, sellerPayoutAmount);
+        if (refundManager.isRefundEvidenceValidationSkipped()) {
+            return;
+        }
+        checkNotNull(refundValidationResult,
+                "Refund transaction evidence has not been validated")
+                .verifyMatches(dispute, buyerPayoutAmount, sellerPayoutAmount);
+    }
+
+    private boolean isRefundValidationCurrent() {
         try {
-            refundManager.verifyRefundClaimForPayout(dispute,
-                    disputeResult.getBuyerPayoutAmount(),
-                    disputeResult.getSellerPayoutAmount());
-            verifyRefundClaimApproval(disputeResult.getBuyerPayoutAmount(), disputeResult.getSellerPayoutAmount());
-            if (refundManager.isRefundEvidenceValidationSkipped()) {
-                return true;
-            }
-            checkNotNull(refundValidationResult,
-                    "Refund transaction evidence has not been validated")
-                    .verifyMatches(dispute, disputeResult);
+            verifyRefundAuthorization();
             return true;
         } catch (RuntimeException error) {
             log.warn("Refund authorization failed before result signing", error);
@@ -1182,18 +1216,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean isRefundValidationCurrent(Coin buyerPayoutAmount, Coin sellerPayoutAmount) {
-        if (dispute.getSupportType() != SupportType.REFUND) {
-            return true;
-        }
         try {
-            refundManager.verifyRefundClaimForPayout(dispute, buyerPayoutAmount, sellerPayoutAmount);
-            verifyRefundClaimApproval(buyerPayoutAmount, sellerPayoutAmount);
-            if (refundManager.isRefundEvidenceValidationSkipped()) {
-                return true;
-            }
-            checkNotNull(refundValidationResult,
-                    "Refund transaction evidence has not been validated")
-                    .verifyMatches(dispute, buyerPayoutAmount, sellerPayoutAmount);
+            verifyRefundAuthorization(buyerPayoutAmount, sellerPayoutAmount);
             return true;
         } catch (RuntimeException error) {
             log.warn("Refund authorization failed before payout", error);

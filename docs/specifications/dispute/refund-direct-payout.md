@@ -52,7 +52,10 @@ Durable persistence is asynchronous and is not itself continuing payout authoriz
 immediately before wallet commit, the original dispute row, current claim eligibility, manual approval, evidence and
 exact payout allocation must still match. Expired eligibility or changed dialog state stops publication and result
 signing. The successful durable reservation remains consumed and requires investigation; it must not be silently
-cleared to enable a replacement payout.
+cleared to enable a replacement payout. The operator must be told, at the failed attempt itself, that no transaction
+was committed or broadcast and which recorded transaction ID now blocks a replacement payout. A later close attempt
+that finds a consumed receipt whose transaction is unknown to the wallet must say so as well, instead of reporting
+that a payout was created.
 
 This ordering deliberately favors preventing a second spend over automatic recovery. A process failure after durable
 reservation but before wallet commit or broadcast can require manual investigation of the recorded transaction ID.

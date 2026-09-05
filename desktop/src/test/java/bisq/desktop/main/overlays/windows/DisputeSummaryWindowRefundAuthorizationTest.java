@@ -41,6 +41,7 @@ import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -158,14 +159,26 @@ class DisputeSummaryWindowRefundAuthorizationTest {
         try (MockedConstruction<Popup> popups = mockConstruction(Popup.class, withSettings().defaultAnswer(RETURNS_SELF))) {
             persisted.run();
 
-            assertTrue(outcome.isDone());
-            assertEquals(false, outcome.join());
             verify(wallet, never()).commitTx(any());
             verify(tradeWallet, never()).broadcastTx(any(), any());
+            // The consumed reservation is reported once, naming the reserved transaction, and the close attempt
+            // ends only when the operator dismisses that report.
+            assertEquals(1, popups.constructed().size());
+            ArgumentCaptor<String> warning = ArgumentCaptor.forClass(String.class);
+            verify(popups.constructed().get(0)).warning(warning.capture());
+            assertTrue(warning.getValue().startsWith("Refund authorization failed after the payout reservation was saved."));
+            assertTrue(warning.getValue().contains(Sha256Hash.ZERO_HASH.toString()));
+            assertTrue(warning.getValue().contains("No transaction was committed or broadcast"));
+            assertFalse(outcome.isDone());
+            ArgumentCaptor<Runnable> closeHandler = ArgumentCaptor.forClass(Runnable.class);
+            verify(popups.constructed().get(0)).onClose(closeHandler.capture());
+            closeHandler.getValue().run();
+            assertEquals(false, outcome.join());
         }
     }
 
     private Runnable beginPayoutReservation(Transaction transaction, CompletableFuture<Boolean> outcome) throws Exception {
+        when(transaction.getTxId()).thenReturn(Sha256Hash.ZERO_HASH);
         Contract contract = dispute.getContract();
         when(contract.getOfferPayload()).thenReturn(mock(OfferPayload.class));
         when(contract.getTradeAmount()).thenReturn(Coin.valueOf(1_000));
