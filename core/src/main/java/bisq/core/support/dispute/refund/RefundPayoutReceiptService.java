@@ -122,18 +122,24 @@ public final class RefundPayoutReceiptService {
 
         payoutReservationInProgress = true;
         reservedDisputes.forEach(reservedDispute -> markPaid(reservedDispute, payoutTxId));
-        disputeListService.getPersistenceManager().persistNow(
-                () -> {
-                    finishReservation();
-                    checkedCompleteHandler.run();
-                },
-                throwable -> {
-                    // Nothing has been committed or broadcast at this point, so the receipt is not consumed. The
-                    // marks are removed again; keeping them would persist a paid state without any transaction.
-                    clearFailedReservation(reservedDisputes);
-                    disputeListService.requestPersistence();
-                    checkedErrorHandler.accept(throwable);
-                });
+        try {
+            disputeListService.getPersistenceManager().persistNow(
+                    () -> {
+                        finishReservation();
+                        checkedCompleteHandler.run();
+                    },
+                    throwable -> {
+                        // Nothing has been committed or broadcast at this point, so the receipt is not consumed. The
+                        // marks are removed again; keeping them would persist a paid state without any transaction.
+                        clearFailedReservation(reservedDisputes);
+                        disputeListService.requestPersistence();
+                        checkedErrorHandler.accept(throwable);
+                    });
+        } catch (RuntimeException exception) {
+            // The write never started, so no paid state reached disk and the next reservation must not be blocked.
+            clearFailedReservation(reservedDisputes);
+            throw exception;
+        }
     }
 
     private synchronized void finishReservation() {
@@ -203,8 +209,11 @@ public final class RefundPayoutReceiptService {
     static Coin calculateMaximumPayoutAmount(Coin contractPayoutAmount,
                                              Coin depositOutputAmount,
                                              long tradeTxFee) {
-        Coin feeReserve = tradeTxFee > 0 ? Coin.valueOf(tradeTxFee) : Coin.ZERO;
-        Coin receiptPayoutAmount = depositOutputAmount.subtract(feeReserve);
+        // Admission and close-time validation require a positive fee, so a row without one cannot be paid at all.
+        if (tradeTxFee <= 0) {
+            return Coin.ZERO;
+        }
+        Coin receiptPayoutAmount = depositOutputAmount.subtract(Coin.valueOf(tradeTxFee));
         if (receiptPayoutAmount.isNegative()) {
             return Coin.ZERO;
         }

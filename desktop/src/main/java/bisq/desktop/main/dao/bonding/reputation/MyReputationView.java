@@ -49,7 +49,6 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Charsets;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;

@@ -30,6 +30,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.mempool.MempoolTxStatus;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.ClosedTradableManager;
@@ -42,7 +43,11 @@ import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
+import bisq.common.crypto.Encryption;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
@@ -61,6 +66,8 @@ import org.bitcoinj.script.ScriptBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -71,7 +78,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class RefundManagerTest {
@@ -90,6 +102,9 @@ class RefundManagerTest {
     private static final int LOCAL_CHAIN_HEIGHT = DELAYED_PAYOUT_BLOCK_HEIGHT + 10;
     private static final ECKey BUYER_MULTISIG_KEY = new ECKey();
     private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
+    private static final PubKeyRing BUYER_PUB_KEY_RING = pubKeyRing();
+    private static final PubKeyRing SELLER_PUB_KEY_RING = pubKeyRing();
+    private static final PubKeyRing REFUND_AGENT_PUB_KEY_RING = pubKeyRing();
 
     private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
     private final DaoFacade daoFacade = mock(DaoFacade.class);
@@ -421,6 +436,51 @@ class RefundManagerTest {
     /* --------------------------------------------------------------------- */
 
     @Test
+    void incomingRefundDisputeRequiresEscrowClaim() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertDoesNotThrow(() -> refundManager.validateIncomingOpenNewDispute(dispute));
+
+        doReturn(null).when(dispute).getRefundClaimSignature();
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.validateIncomingOpenNewDispute(dispute));
+    }
+
+    @Test
+    void validatedReopenedDisputeUpdatesStoredClaimProof() {
+        Dispute storedDispute = mock(Dispute.class);
+        Dispute incomingDispute = mock(Dispute.class);
+        when(incomingDispute.getRefundClaimSignature()).thenReturn("new-signature");
+        when(incomingDispute.getRefundClaimOpeningDate()).thenReturn(1_700_000_000_000L);
+
+        refundManager.updateStoredDisputeFromValidatedIncoming(storedDispute, incomingDispute);
+
+        verify(storedDispute).setRefundClaimSignature("new-signature");
+        verify(storedDispute).setRefundClaimOpeningDate(1_700_000_000_000L);
+    }
+
+    @Test
+    void reopenedDisputeCannotAttachClaimToDifferentStoredSubject() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute storedDispute = burningManDispute(depositTx, List.of());
+        Dispute incomingDispute = burningManDispute(depositTx, List.of());
+        when(storedDispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        when(incomingDispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        when(incomingDispute.getTradeTxFee()).thenReturn(TRADE_TX_FEE + 1);
+        useRefundClaim(incomingDispute, RefundClaimSignature.Claimant.BUYER, BUYER_MULTISIG_KEY);
+        refundManager.getDisputesAsObservableList().add(storedDispute);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.validateIncomingOpenNewDispute(incomingDispute));
+    }
+
+    @Test
     void verifyDepositTxAcceptsContractBoundEscrowScriptAndValue() {
         Transaction depositTx = tradeTxChain(0).get(2);
 
@@ -491,6 +551,134 @@ class RefundManagerTest {
     }
 
     @Test
+    void legacyGracePreservesPayoutLimitAndEvidenceBinding() {
+        Transaction deposit = tradeTxChain(0).get(2);
+        Transaction payout = delayedPayoutTx(deposit, List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute legacy = burningManDispute(deposit, List.of());
+        when(legacy.getDelayedPayoutTxId()).thenReturn(payout.getTxId().toString());
+        doReturn(null).when(legacy).getRefundClaimSignature();
+        when(legacy.getRefundClaimOpeningDate()).thenReturn(0L);
+        refundManager.getDisputesAsObservableList().add(legacy);
+        Instant beforeCutoff = Instant.parse("2026-10-31T23:59:59Z");
+        try (var time = mockStatic(Instant.class, CALLS_REAL_METHODS)) {
+            time.when(Instant::now).thenReturn(beforeCutoff);
+            RefundValidationResult validated = refundManager.verifyRefundPayoutAmount(deposit, payout,
+                    legacy, Coin.ZERO, Coin.valueOf(25_000));
+            assertDoesNotThrow(() -> validated.verifyMatches(legacy, Coin.ZERO, Coin.valueOf(25_000)));
+            assertThrows(IllegalArgumentException.class, () -> refundManager.verifyRefundPayoutAmount(deposit, payout,
+                    legacy, Coin.ZERO, Coin.valueOf(25_001)));
+            when(legacy.getTradeTxFee()).thenReturn(5_001L);
+            assertThrows(IllegalArgumentException.class,
+                    () -> validated.verifyMatches(legacy, Coin.ZERO, Coin.valueOf(25_000)));
+        }
+    }
+
+    @Test
+    void verifyRefundPayoutAmountAcceptsSingleBuyerRecipientWithBuyerProof() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertDoesNotThrow(() -> refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(25_000),
+                Coin.ZERO));
+    }
+
+    @Test
+    void verifyRefundClaimAllowsExceptionalTwoRecipientPayoutWithOneProof() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertDoesNotThrow(() -> refundManager.verifyRefundClaimForPayout(dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(5_000)));
+    }
+
+    @Test
+    void verifyRefundPayoutAmountRejectsSingleRecipientWithoutThatRolesProof() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyRefundPayoutAmount(depositTx,
+                        delayedPayoutTx,
+                        dispute,
+                        Coin.ZERO,
+                        Coin.valueOf(25_000)));
+    }
+
+    @Test
+    void verifyRefundPayoutAmountAcceptsSingleSellerRecipientWithSellerProof() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        useRefundClaim(dispute, RefundClaimSignature.Claimant.SELLER, SELLER_MULTISIG_KEY);
+
+        assertDoesNotThrow(() -> refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.ZERO,
+                Coin.valueOf(25_000)));
+    }
+
+    @Test
+    void payoutCanUseMatchingProofFromOtherTraderDisputeRow() {
+        RefundDisputeListService disputeListService = refundDisputeListService();
+        RefundManager manager = refundManager(btcWalletService,
+                daoFacade,
+                delayedPayoutTxReceiverService,
+                mempoolService,
+                disputeListService);
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute buyerDispute = burningManDispute(depositTx, List.of());
+        Dispute sellerDispute = burningManDispute(depositTx, List.of());
+        when(buyerDispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        when(sellerDispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        when(sellerDispute.isDisputeOpenerIsBuyer()).thenReturn(false);
+        when(sellerDispute.isDisputeOpenerIsMaker()).thenReturn(false);
+        when(sellerDispute.getTraderPubKeyRing()).thenReturn(SELLER_PUB_KEY_RING);
+        useRefundClaim(sellerDispute, RefundClaimSignature.Claimant.SELLER, SELLER_MULTISIG_KEY);
+        disputeListService.getDisputeList().add(sellerDispute);
+
+        assertDoesNotThrow(() -> manager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                buyerDispute,
+                Coin.ZERO,
+                Coin.valueOf(25_000)));
+    }
+
+    @Test
+    void verifyRefundPayoutAmountRejectsMissingEscrowClaim() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        doReturn(null).when(dispute).getRefundClaimSignature();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> refundManager.verifyRefundPayoutAmount(depositTx,
+                        delayedPayoutTx,
+                        dispute,
+                        Coin.valueOf(20_000),
+                        Coin.valueOf(5_000)));
+    }
+
+    @Test
     void verifyRefundPayoutAmountRejectsAmountAboveDeclaredPot() {
         Transaction depositTx = tradeTxChain(0).get(2);
         Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
@@ -542,6 +730,25 @@ class RefundManagerTest {
 
         when(dispute.getTradeTxFee()).thenReturn(TRADE_TX_FEE);
         when(dispute.getBurningManSelectionHeight()).thenReturn(SELECTION_HEIGHT + 10);
+        assertThrows(IllegalArgumentException.class,
+                () -> result.verifyMatches(dispute, Coin.valueOf(20_000), Coin.valueOf(4_000)));
+    }
+
+    @Test
+    void refundValidationResultRejectsEscrowKeyChangedAfterValidation() {
+        Transaction depositTx = tradeTxChain(0).get(2);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx,
+                List.of(new Tuple2<>(24_000L, newAddress())));
+        Dispute dispute = burningManDispute(depositTx, List.of());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        RefundValidationResult result = refundManager.verifyRefundPayoutAmount(depositTx,
+                delayedPayoutTx,
+                dispute,
+                Coin.valueOf(20_000),
+                Coin.valueOf(4_000));
+
+        when(dispute.getContract().getMakerMultiSigPubKey()).thenReturn(new ECKey().getPubKey());
+
         assertThrows(IllegalArgumentException.class,
                 () -> result.verifyMatches(dispute, Coin.valueOf(20_000), Coin.valueOf(4_000)));
     }
@@ -715,21 +922,50 @@ class RefundManagerTest {
         when(offerPayload.getSellerSecurityDeposit()).thenReturn(SELLER_SECURITY_DEPOSIT.value);
         when(contract.getOfferPayload()).thenReturn(offerPayload);
         when(contract.getTradeAmount()).thenReturn(TRADE_AMOUNT);
+        when(contract.getMakerPubKeyRing()).thenReturn(BUYER_PUB_KEY_RING);
+        when(contract.getTakerPubKeyRing()).thenReturn(SELLER_PUB_KEY_RING);
+        when(contract.getBuyerPubKeyRing()).thenReturn(BUYER_PUB_KEY_RING);
+        when(contract.getSellerPubKeyRing()).thenReturn(SELLER_PUB_KEY_RING);
+        when(contract.getMakerMultiSigPubKey()).thenReturn(BUYER_MULTISIG_KEY.getPubKey());
+        when(contract.getTakerMultiSigPubKey()).thenReturn(SELLER_MULTISIG_KEY.getPubKey());
         when(contract.getBuyerMultiSigPubKey()).thenReturn(BUYER_MULTISIG_KEY.getPubKey());
         when(contract.getSellerMultiSigPubKey()).thenReturn(SELLER_MULTISIG_KEY.getPubKey());
+        when(contract.isBuyerMakerAndSellerTaker()).thenReturn(true);
         when(contract.getBurningManAddressListVersion()).thenReturn(ADDRESS_LIST_VERSION);
         Dispute dispute = mock(Dispute.class);
+        when(dispute.getId()).thenReturn("trade-id_buyer");
+        when(dispute.getTradeId()).thenReturn("trade-id");
+        when(dispute.getSupportType()).thenReturn(SupportType.REFUND);
         when(dispute.findDepositTx(btcWalletService)).thenReturn(Optional.of(depositTx));
         when(dispute.getDepositTxId()).thenReturn(depositTx.getTxId().toString());
-        when(dispute.getContractHash()).thenReturn(new byte[]{1});
+        when(dispute.getContractHash()).thenReturn(new byte[32]);
+        when(dispute.getAgentPubKeyRing()).thenReturn(REFUND_AGENT_PUB_KEY_RING);
+        when(dispute.getRefundClaimOpeningDate()).thenReturn(1_700_000_000_000L);
+        when(dispute.getOpeningDate()).thenReturn(new Date(1_700_000_000_000L));
+        when(dispute.isDisputeOpenerIsBuyer()).thenReturn(true);
+        when(dispute.isDisputeOpenerIsMaker()).thenReturn(true);
+        when(dispute.getTraderPubKeyRing()).thenReturn(BUYER_PUB_KEY_RING);
         when(dispute.getBurningManSelectionHeight()).thenReturn(SELECTION_HEIGHT);
         when(dispute.getTradeTxFee()).thenReturn(tradeTxFee);
         when(dispute.getContract()).thenReturn(contract);
+        useRefundClaim(dispute, RefundClaimSignature.Claimant.BUYER, BUYER_MULTISIG_KEY);
         when(delayedPayoutTxReceiverService.getReceivers(SELECTION_HEIGHT,
                 ESCROW_VALUE.value,
                 tradeTxFee,
                 ADDRESS_LIST_VERSION)).thenReturn(receivers);
         return dispute;
+    }
+
+    private static void useRefundClaim(Dispute dispute,
+                                       RefundClaimSignature.Claimant claimant,
+                                       ECKey signingKey) {
+        doAnswer(invocation -> signingKey.signMessage(RefundClaimSignature.getMessage(dispute, claimant)))
+                .when(dispute)
+                .getRefundClaimSignature();
+    }
+
+    private static PubKeyRing pubKeyRing() {
+        return new PubKeyRing(Sig.generateKeyPair().getPublic(), Encryption.generateKeyPair().getPublic());
     }
 
     private static Dispute legacyDispute(String donationAddress) {
@@ -742,6 +978,18 @@ class RefundManagerTest {
                                                DaoFacade daoFacade,
                                                DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                                                MempoolService mempoolService) {
+        return refundManager(btcWalletService,
+                daoFacade,
+                delayedPayoutTxReceiverService,
+                mempoolService,
+                refundDisputeListService());
+    }
+
+    private static RefundManager refundManager(BtcWalletService btcWalletService,
+                                               DaoFacade daoFacade,
+                                               DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
+                                               MempoolService mempoolService,
+                                               RefundDisputeListService refundDisputeListService) {
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
         return new RefundManager(p2PService,
@@ -755,10 +1003,15 @@ class RefundManagerTest {
                 daoFacade,
                 delayedPayoutTxReceiverService,
                 mock(KeyRing.class),
-                mock(RefundDisputeListService.class),
+                refundDisputeListService,
                 mock(Config.class),
                 mock(PriceFeedService.class),
                 mempoolService,
                 mock(RefundPayoutReceiptService.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static RefundDisputeListService refundDisputeListService() {
+        return new RefundDisputeListService(mock(PersistenceManager.class));
     }
 }

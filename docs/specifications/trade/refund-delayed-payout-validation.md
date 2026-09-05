@@ -19,12 +19,17 @@ ID, and its escrow output must match the contract-bound script and value describ
 transactions used for the close-time validation are fetched independently by the IDs carried in the
 dispute and its contract, and the fetched deposit must satisfy the same checks.
 
+The claimant must separately prove control of one of the escrow keys bound by that script. The proof
+and its payout-allocation rules are defined in
+[`../dispute/refund-claimant-authentication.md`](../dispute/refund-claimant-authentication.md).
+
 ## Contract signature consistency and trust limits
 
 Trader contract signatures are optional at dispute admission, including for refunds. Each signature
 that is present must verify against the respective trader's signature key supplied in the contract
 over the supplied contract JSON. A missing signature does not invalidate the dispute; a present
-but non-verifying signature does.
+but non-verifying signature does. Trades created by clients older than 1.7.0 may carry a local
+signature over an earlier contract JSON; disputes on such trades are rejected by design.
 
 Production disputes copy the trade's signature fields, which normally hold only the local party's
 signature. The taker retains the received maker signature separately in its peer state. Since 1.7,
@@ -42,6 +47,9 @@ Independent proof of peer acceptance would require trusted evidence binding the 
 exact payout contract to the escrow, or a prior independently trusted commitment. The current
 signature checks do not provide that evidence. This compatibility rule preserves admission of
 existing trades; it does not establish that the payout-address vulnerability has been resolved.
+
+The escrow-key claim and recipient-authorization rules linked above address the normal
+single-recipient case; the two-recipient exception requires independent manual verification.
 
 ## Contract-bound escrow
 
@@ -178,8 +186,12 @@ transaction fetch. The output sum is still recorded in the validation binding.
 Buyer and seller payout amounts must each be non-negative and their sum must not exceed that maximum.
 The validation result binds the contract hash, deposit transaction ID, delayed-payout transaction ID,
 validated chain values, trade fee, receiver-selection height, legacy donation address and exact
-buyer/seller allocation. The same binding must still match when the payout confirmation is accepted,
+buyer/seller allocation. It also binds the refund claim subject, including the identity and escrow
+keys excluded from legacy contract hashes. The same binding must still match when the payout confirmation is accepted,
 immediately before a refund-wallet payout and immediately before the dispute result is signed.
+The escrow-key claimant proof must be re-verified at those same authorization boundaries, or the
+temporary legacy grace period and manual confirmation must still be valid as specified in
+[`../dispute/refund-claimant-authentication.md`](../dispute/refund-claimant-authentication.md).
 
 Closing the second trader's dispute row must perform the validation again; a peer row's closed flag
 is not evidence that the same contract, transactions and payout allocation were validated.
@@ -200,7 +212,8 @@ signed artifact produced by successful automatic validation.
 Regtest has no block explorer, so the transaction evidence described above cannot be fetched there.
 On regtest the refund close flow skips the evidence validation and the payout and result gates that
 depend on it, so developers can exercise the close flow in a local network. The skip is selected by
-the regtest network only; it must never apply to mainnet, and it does not weaken the amount limits,
+the plain Bitcoin regtest network only; the DAO regtest and DAO testnet networks also have no
+explorer and therefore fail closed. It must never apply to mainnet, and it does not weaken the amount limits,
 the receipt consumption or the intake validation, which use locally available data. Testnet is not
 supported: the evidence fetch fails there and the close attempt terminates as on mainnet.
 

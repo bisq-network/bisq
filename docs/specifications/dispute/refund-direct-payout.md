@@ -48,6 +48,16 @@ broadcast status, restart, reopening, or a later close attempt must not create a
 closed because the original transaction may already have propagated. Recovery may rebroadcast or inspect the original
 transaction, but it must not silently clear receipt consumption.
 
+Durable persistence is asynchronous and is not itself continuing payout authorization. After it succeeds and
+immediately before wallet commit, the original dispute row, current claim eligibility, manual approval, evidence and
+exact payout allocation must still match. Expired eligibility or changed dialog state stops publication and result
+signing. The successful durable reservation remains consumed and requires investigation; it must not be silently
+cleared to enable a replacement payout. The operator must be told, at the failed attempt itself, that no transaction
+was committed or broadcast and which recorded transaction ID now blocks a replacement payout. A later close attempt
+that finds a consumed receipt whose transaction is unknown to the wallet must say so as well, instead of reporting
+that a payout was created or paid. Absence from the current wallet does not establish whether the recorded transaction
+was broadcast or paid; the message must report that uncertainty and require investigation before closing the ticket.
+
 This ordering deliberately favors preventing a second spend over automatic recovery. A process failure after durable
 reservation but before wallet commit or broadcast can require manual investigation of the recorded transaction ID.
 
@@ -56,7 +66,14 @@ reservation but before wallet commit or broadcast can require manual investigati
 Buyer and seller payout amounts must each be non-negative. At least one output must be positive when a payout
 transaction is created. Because both amounts are non-negative, their sum equals the value of the actual trader
 outputs; a negative amount must never offset a larger positive output. Closing a ticket with zero payout to both
-traders creates no transaction; it neither requires nor consumes a receipt.
+traders creates no transaction; it consumes no receipt. It still requires validated transaction evidence and an
+authenticated claimant (or the temporary legacy exception) before the refund result is signed, so a ticket whose
+funding transaction identifiers are malformed cannot be closed through the application even with a zero payout.
+
+When exactly one trader receives a positive payout, that role must have authenticated the claim with its escrow key.
+A payout to both traders is exceptional and requires the operator to verify both addresses directly. A temporary
+manual-verification exception for stored legacy disputes expires on 1 November 2026. These rules are
+defined in [`refund-claimant-authentication.md`](refund-claimant-authentication.md).
 
 The trader-output sum must not exceed either:
 
@@ -85,10 +102,13 @@ any other value is rejected at intake instead of being stored.
 Trader contract signatures are optional at admission, but any supplied signature must verify. Verification with
 dispute-supplied keys does not independently authenticate the contract payout addresses; see the trust limits in
 [`../trade/refund-delayed-payout-validation.md`](../trade/refund-delayed-payout-validation.md).
+Admission must additionally authenticate the opener with the role-specific escrow key as defined in
+[`refund-claimant-authentication.md`](refund-claimant-authentication.md).
 
 ## Compatibility and historical records
 
-The persisted dispute payout transaction ID is the compatibility-safe receipt marker; no serialized schema change is
-required. Payouts created by older releases that stored neither this marker nor the wallet receipt memo cannot always
-be identified automatically. Operators must correlate historical payout transactions before paying an old or restored
-refund ticket whose receipt may already have been used.
+The persisted dispute payout transaction ID is the compatibility-safe receipt marker. Payouts created by older
+releases that stored neither this marker nor the wallet receipt memo cannot always be identified automatically.
+Operators must correlate historical payout transactions before paying an old or restored refund ticket whose receipt
+may already have been used. The independently specified claimant proof adds a serialized dispute field and is required
+for new refund authorization after upgrade, subject to its temporary grace period for legacy records.

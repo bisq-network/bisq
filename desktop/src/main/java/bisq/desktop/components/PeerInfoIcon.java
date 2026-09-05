@@ -28,7 +28,6 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 
-import com.google.common.base.Charsets;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;

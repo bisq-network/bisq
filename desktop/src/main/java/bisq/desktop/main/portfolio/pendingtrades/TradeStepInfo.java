@@ -163,19 +163,19 @@ public class TradeStepInfo {
                 // red button
                 titledGroupBg.setText(Res.get("portfolio.pending.refundRequested"));
                 label.updateContent(Res.get("portfolio.pending.disputeOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator")));
-                button.setText(Res.get("portfolio.pending.refundRequested").toUpperCase());
+                button.setText(Res.get("portfolio.pending.sendRefundClaimProof").toUpperCase());
                 button.setId("open-dispute-button");
                 button.getStyleClass().remove("action-button");
-                button.setDisable(true);
+                button.setDisable(false);
                 break;
             case IN_REFUND_REQUEST_PEER_REQUESTED:
                 // red button
                 titledGroupBg.setText(Res.get("portfolio.pending.refundRequested"));
                 label.updateContent(Res.get("portfolio.pending.disputeOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator")));
-                button.setText(Res.get("portfolio.pending.refundRequested").toUpperCase());
+                button.setText(Res.get("portfolio.pending.sendRefundClaimProof").toUpperCase());
                 button.setId("open-dispute-button");
                 button.getStyleClass().remove("action-button");
-                button.setDisable(true);
+                button.setDisable(false);
                 break;
             case WARN_HALF_PERIOD:
                 // orange button

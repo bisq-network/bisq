@@ -54,15 +54,20 @@ import bisq.common.crypto.Sig;
 
 import com.google.protobuf.Message;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 
+import java.lang.reflect.Field;
+
 import java.security.PublicKey;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -94,9 +99,17 @@ class DisputeManagerAuthTest {
     private ClosedTradableManager closedTradableManager;
     private FailedTradesManager failedTradesManager;
     private TestDisputeManager manager;
+    private final Map<Field, Object> originalConfigValues = new HashMap<>();
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws ReflectiveOperationException {
+        // Config construction also changes process-wide values used by other tests and static initializers.
+        for (String fieldName : List.of("APP_DATA_DIR_VALUE", "BASE_CURRENCY_NETWORK_VALUE",
+                "TRADE_STATISTICS_MAX_ITEMS_VALUE")) {
+            Field field = Config.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            originalConfigValues.put(field, field.get(null));
+        }
         Res.setup();
 
         tradeManager = mock(TradeManager.class);
@@ -115,6 +128,13 @@ class DisputeManagerAuthTest {
                 closedTradableManager,
                 failedTradesManager,
                 keyStorageDir);
+    }
+
+    @AfterEach
+    void restoreConfig() throws IllegalAccessException {
+        for (Map.Entry<Field, Object> entry : originalConfigValues.entrySet()) {
+            entry.getKey().set(null, entry.getValue());
+        }
     }
 
     @Test

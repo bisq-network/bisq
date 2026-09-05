@@ -55,6 +55,8 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     private final List<BroadcastRequest> broadcastRequests = new ArrayList<>();
     private Timer timer;
     private boolean shutDownRequested;
+    @Nullable
+    private volatile BroadcastHandler shutDownBroadcastHandler;
     private Runnable shutDownResultHandler;
     private final ListeningExecutorService executor;
     private final AtomicBoolean shutDownCompleted = new AtomicBoolean();
@@ -124,6 +126,11 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     public void broadcast(BroadcastMessage message,
                           @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
+        if (shutDownCompleted.get()) {
+            // The executor is stopped; a bundle created now would only be rejected.
+            log.warn("Ignoring broadcast request for {} after shutdown", message.getClass().getSimpleName());
+            return;
+        }
         broadcastRequests.add(new BroadcastRequest(message, sender, listener));
         if (timer == null) {
             timer = UserThread.runAfter(this::maybeBroadcastBundle, BROADCAST_INTERVAL_MS, TimeUnit.MILLISECONDS);
@@ -134,6 +141,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         if (!broadcastRequests.isEmpty()) {
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
             broadcastHandlers.add(broadcastHandler);
+            if (shutDownRequested) {
+                shutDownBroadcastHandler = broadcastHandler;
+            }
             broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested, executor);
             broadcastRequests.clear();
 
@@ -152,7 +162,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     @Override
     public void onCompleted(BroadcastHandler broadcastHandler) {
         broadcastHandlers.remove(broadcastHandler);
-        if (shutDownRequested) {
+        // An earlier runtime broadcast may finish before the shutdown bundle has submitted its sends.
+        // Only the shutdown bundle's completion (including its bounded timeout) may cancel the remaining work.
+        if (broadcastHandler == shutDownBroadcastHandler) {
             doShutDown();
         }
     }

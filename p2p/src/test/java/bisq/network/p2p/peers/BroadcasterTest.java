@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +44,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.same;
@@ -99,6 +101,44 @@ class BroadcasterTest {
     }
 
     @Test
+    void earlierBroadcastCompletionDoesNotCancelShutdownBundle() {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        PeerManager peerManager = mock(PeerManager.class);
+        Connection connection = mock(Connection.class);
+        BroadcastMessage earlierMessage = mock(BroadcastMessage.class);
+        BroadcastMessage removalMessage = mock(BroadcastMessage.class);
+        var completionCount = new AtomicInteger();
+        SettableFuture<Connection> earlierSend = SettableFuture.create();
+        SettableFuture<Connection> removalSend = SettableFuture.create();
+
+        when(networkNode.getConfirmedConnections()).thenReturn(Set.of(connection));
+        when(connection.getPeersNodeAddressOptional()).thenReturn(Optional.empty());
+        when(connection.testCapability(any())).thenReturn(true);
+        when(networkNode.sendMessage(same(connection), same(earlierMessage), any(ListeningExecutorService.class)))
+                .thenReturn(earlierSend);
+        when(networkNode.sendMessage(same(connection), same(removalMessage), any(ListeningExecutorService.class)))
+                .thenAnswer(invocation -> {
+                    assertFalse(invocation.<ListeningExecutorService>getArgument(2).isShutdown());
+                    return removalSend;
+                });
+
+        Broadcaster broadcaster = new Broadcaster(networkNode, peerManager, 1);
+        broadcaster.broadcast(earlierMessage, null);
+        broadcaster.flush();
+        ManualTimer.runNext();
+
+        broadcaster.broadcast(removalMessage, null);
+        broadcaster.shutDown(completionCount::incrementAndGet);
+        earlierSend.set(connection);
+
+        assertEquals(0, completionCount.get());
+        ManualTimer.runNext();
+        verify(networkNode).sendMessage(same(connection), same(removalMessage), any(ListeningExecutorService.class));
+        removalSend.set(connection);
+        assertEquals(1, completionCount.get());
+    }
+
+    @Test
     void completesShutdownOnceWhenAnActiveBroadcastIsCancelled() {
         NetworkNode networkNode = mock(NetworkNode.class);
         PeerManager peerManager = mock(PeerManager.class);
@@ -117,6 +157,27 @@ class BroadcasterTest {
         broadcaster.shutDown(completionCount::incrementAndGet);
 
         assertEquals(1, completionCount.get());
+        verify(networkNode, never()).sendMessage(any(Connection.class),
+                any(BroadcastMessage.class),
+                any(ListeningExecutorService.class));
+    }
+
+    @Test
+    void ignoresBroadcastRequestsAfterShutdownCompleted() {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        PeerManager peerManager = mock(PeerManager.class);
+        BroadcastMessage message = mock(BroadcastMessage.class);
+        var completionCount = new AtomicInteger();
+        when(networkNode.getConfirmedConnections()).thenReturn(Set.of());
+
+        Broadcaster broadcaster = new Broadcaster(networkNode, peerManager, 1);
+        broadcaster.shutDown(completionCount::incrementAndGet);
+        assertEquals(1, completionCount.get());
+
+        broadcaster.broadcast(message, null);
+
+        // No bundle timer is scheduled, so nothing can hand the stopped executor to a new BroadcastHandler.
+        assertThrows(NoSuchElementException.class, ManualTimer::runNext);
         verify(networkNode, never()).sendMessage(any(Connection.class),
                 any(BroadcastMessage.class),
                 any(ListeningExecutorService.class));
@@ -152,6 +213,7 @@ class BroadcasterTest {
                     .filter(candidate -> !candidate.stopped)
                     .min(Comparator.comparing(candidate -> candidate.delay))
                     .orElseThrow();
+            timer.stopped = true;
             timer.runnable.run();
         }
 

@@ -483,7 +483,7 @@ public abstract class TradeStepView extends AnchorPane {
                 ownDispute = model.dataModel.refundManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     if (tradeStepInfo != null)
-                        tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
+                        showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
                 });
 
                 if (acceptMediationResultPopup != null) {
@@ -501,7 +501,7 @@ public abstract class TradeStepView extends AnchorPane {
                 ownDispute = model.dataModel.refundManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     if (tradeStepInfo != null)
-                        tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
+                        showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
                 });
 
                 if (acceptMediationResultPopup != null) {
@@ -516,12 +516,17 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
+    private void showRefundRequestState(TradeStepInfo.State state) {
+        tradeStepInfo.setOnAction(e -> model.dataModel.onOpenDispute());
+        tradeStepInfo.setState(state);
+    }
+
     protected void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
         if (isInArbitration()) {
             if (isRefundRequestStartedByPeer()) {
-                tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
+                showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
             } else if (isRefundRequestSelfStarted()) {
-                tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
+                showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
             }
         } else if (isMediationClosedState()) {
             // We do not use the state itself as it is not guaranteed the last state reflects relevant information

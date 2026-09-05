@@ -141,6 +141,28 @@ public class DisputeOpenMessageTest {
         assertTrue(persistedDispute.isPayoutDone());
     }
 
+    @Test
+    public void disputeRoundTripPreservesRefundClaimSignature() {
+        Dispute dispute = dispute(pubKeyRing(), pubKeyRing(), pubKeyRing());
+        dispute.setRefundClaimSignature("refund-claim-signature");
+        dispute.setRefundClaimOpeningDate(1_700_000_000_000L);
+
+        Dispute restoredDispute = Dispute.fromProto(dispute.toProtoMessage(), mock(CoreProtoResolver.class));
+
+        assertEquals("refund-claim-signature", restoredDispute.getRefundClaimSignature());
+        assertEquals(1_700_000_000_000L, restoredDispute.getRefundClaimOpeningDate());
+    }
+
+    @Test
+    public void disputeRoundTripKeepsMissingRefundClaimSignatureAsNull() {
+        Dispute dispute = dispute(pubKeyRing(), pubKeyRing(), pubKeyRing());
+
+        Dispute restoredDispute = Dispute.fromProto(dispute.toProtoMessage(), mock(CoreProtoResolver.class));
+
+        assertNull(restoredDispute.getRefundClaimSignature());
+        assertEquals(0, restoredDispute.getRefundClaimOpeningDate());
+    }
+
     private static Dispute dispute(PubKeyRing buyerPubKeyRing,
                                    PubKeyRing sellerPubKeyRing,
                                    PubKeyRing agentPubKeyRing) {

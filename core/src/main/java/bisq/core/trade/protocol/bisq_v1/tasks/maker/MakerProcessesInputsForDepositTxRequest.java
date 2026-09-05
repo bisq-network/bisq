@@ -43,7 +43,6 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 

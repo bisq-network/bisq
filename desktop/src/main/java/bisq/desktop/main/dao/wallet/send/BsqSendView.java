@@ -75,7 +75,6 @@ import org.bitcoinj.core.TransactionOutput;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.google.common.base.Charsets;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

@@ -428,16 +428,16 @@ public class ChatView extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.OK_SIGN;
                             text = Res.get("support.acknowledged");
-                        } else if (message.storedInMailboxProperty().get()) {
-                            visible = true;
-                            icon = AwesomeIcon.ENVELOPE;
-                            text = Res.get("support.savedInMailbox");
                         } else if (message.ackErrorProperty().get() != null) {
                             visible = true;
                             icon = AwesomeIcon.EXCLAMATION_SIGN;
                             text = Res.get("support.error", message.ackErrorProperty().get());
                             statusIcon.getStyleClass().add("error-text");
                             statusInfoLabel.getStyleClass().add("error-text");
+                        } else if (message.storedInMailboxProperty().get()) {
+                            visible = true;
+                            icon = AwesomeIcon.ENVELOPE;
+                            text = Res.get("support.savedInMailbox");
                         } else if (message.arrivedProperty().get()) {
                             visible = true;
                             icon = AwesomeIcon.MAIL_REPLY;

@@ -23,6 +23,8 @@ the external operation does not return.
 Executors needed by delayed shutdown work must remain available until that work completes or is
 cancelled. In particular, messages deliberately broadcast during shutdown must be submitted before
 their executor stops accepting work.
+Completion of an unrelated, earlier runtime broadcast must not cancel the shutdown broadcast bundle.
+That bundle must finish or reach its own bounded timeout before remaining broadcasts are cancelled.
 
 Once network shutdown has started, connection lifecycle events no longer describe runtime state and
 must not be published to observers. Disconnects caused by the shutdown itself must not be counted as

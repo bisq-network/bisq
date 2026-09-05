@@ -53,6 +53,7 @@ public class UserThread {
 
     public static synchronized void setTimerClass(Class<? extends Timer> timerClass) {
         if (jvmShutdownInProgress) {
+            log.debug("Ignoring timer class {} because the JVM shutdown timer class stays active", timerClass);
             return;
         }
         UserThread.timerClass = timerClass;
@@ -63,6 +64,7 @@ public class UserThread {
 
     public static synchronized void setExecutor(Executor executor) {
         if (jvmShutdownInProgress) {
+            log.debug("Ignoring executor {} because the JVM shutdown executor stays active", executor);
             return;
         }
         UserThread.executor = executor;

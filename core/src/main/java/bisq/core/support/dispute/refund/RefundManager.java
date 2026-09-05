@@ -60,6 +60,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -69,6 +70,8 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 
+import org.bouncycastle.crypto.params.KeyParameter;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -76,9 +79,15 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
+import java.time.Instant;
+
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -94,6 +103,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class RefundManager extends DisputeManager<RefundDisputeList> {
+    // TODO Remove the legacy claim grace period in releases after 2026-11-01.
+    private static final Instant LEGACY_REFUND_CLAIM_CUTOFF =
+            Utilities.getUTCDate(2026, GregorianCalendar.NOVEMBER, 1).toInstant();
     private static final int MIN_REFUND_TX_CONFIRMATIONS = 1;
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final MempoolService mempoolService;
@@ -198,6 +210,70 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         // At refund agent we do not add the option trade price check as the time for dispute opening is not correct.
         // In case of an option trade the mediator adds to the result summary message automatically the system message
         // with the option trade detection info so the refund agent can see that as well.
+    }
+
+    public void signRefundClaim(Dispute dispute) {
+        byte[] claimantPubKey = RefundClaimSignature.getOpenerMultiSigPubKey(dispute);
+        var keyPair = checkNotNull(btcWalletService.getMultiSigKeyPair(dispute.getTradeId(), claimantPubKey),
+                "Escrow key pair not found for refund claim");
+        KeyParameter aesKey = btcWalletService.isEncrypted() ?
+                checkNotNull(btcWalletService.getAesKey(),
+                        "Encrypted wallet must be unlocked before opening a refund dispute") : null;
+        long claimOpeningDate = dispute.getOpeningDate().getTime();
+        String signature = RefundClaimSignature.sign(dispute, keyPair, aesKey, claimOpeningDate);
+        dispute.setRefundClaimOpeningDate(claimOpeningDate);
+        dispute.setRefundClaimSignature(signature);
+    }
+
+    @Override
+    protected void validateIncomingOpenNewDispute(Dispute dispute) {
+        checkArgument(dispute.getRefundClaimSignature() != null && !dispute.getRefundClaimSignature().isEmpty(),
+                "Refund request requires an escrow-key claim proof. Update your client and submit the refund " +
+                        "request again from the pending trade, choosing Open dispute again if a ticket exists.");
+        RefundClaimSignature.verifyDisputeOpener(dispute);
+        RefundDisputeList storedDisputes = getDisputeList();
+        if (storedDisputes != null) {
+            storedDisputes.stream()
+                    .filter(stored -> Objects.equals(stored.getTradeId(), dispute.getTradeId()))
+                    .filter(stored -> stored.getTraderId() == dispute.getTraderId())
+                    .findAny()
+                    .ifPresent(stored -> {
+                        checkArgument(Objects.equals(stored.getTraderPubKeyRing(), dispute.getTraderPubKeyRing()),
+                                "Refund claimant identity does not match the stored dispute");
+                        checkArgument(RefundClaimSignature.hasSameClaimSubject(stored, dispute),
+                                "Refund claim subject does not match the stored dispute");
+                    });
+        }
+    }
+
+    @Override
+    protected void validateIncomingDisputeReplay(Dispute dispute) throws DisputeValidation.DisputeReplayException {
+        List<Dispute> storedDisputes = checkNotNull(getDisputeList()).getList();
+        Optional<Dispute> replaced = findDispute(dispute.getTradeId(), dispute.getTraderId())
+                .filter(stored -> Objects.equals(stored.getTraderPubKeyRing(), dispute.getTraderPubKeyRing()))
+                .filter(stored -> RefundClaimSignature.hasSameClaimSubject(stored, dispute));
+        // A validated matching request updates one ticket; its fresh message identifier is not a third ticket.
+        // Keep every other row in the replay check, including unrelated rows sharing funding evidence.
+        List<Dispute> resultingDisputes = replaced.map(stored -> storedDisputes.stream()
+                        .filter(candidate -> candidate != stored)
+                        .toList())
+                .orElse(storedDisputes);
+        DisputeValidation.testIfDisputeTriesReplay(dispute, resultingDisputes);
+    }
+
+    @Override
+    protected void updateStoredDisputeFromValidatedIncoming(Dispute storedDispute, Dispute incomingDispute) {
+        if (Objects.equals(storedDispute.getRefundClaimSignature(), incomingDispute.getRefundClaimSignature()) &&
+                storedDispute.getRefundClaimOpeningDate() == incomingDispute.getRefundClaimOpeningDate()) {
+            return;
+        }
+        storedDispute.setRefundClaimSignature(incomingDispute.getRefundClaimSignature());
+        storedDispute.setRefundClaimOpeningDate(incomingDispute.getRefundClaimOpeningDate());
+        ChatMessage notice = new ChatMessage(SupportType.REFUND, storedDispute.getTradeId(),
+                storedDispute.getTraderId(), false, Res.get("support.refundClaimProofReceived"), p2PService.getAddress());
+        notice.setSystemMessage(true);
+        storedDispute.addAndPersistChatMessage(notice);
+        log.info("Updated escrow-key refund claim proof for dispute {}", storedDispute.getId());
     }
 
 
@@ -558,6 +634,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                 "sellerPayoutAmount must not be null");
         checkArgument(!checkedBuyerPayoutAmount.isNegative(), "buyerPayoutAmount must not be negative");
         checkArgument(!checkedSellerPayoutAmount.isNegative(), "sellerPayoutAmount must not be negative");
+        verifyRefundClaimForPayout(dispute, checkedBuyerPayoutAmount, checkedSellerPayoutAmount);
 
         Coin proposedRefund = checkedBuyerPayoutAmount.add(checkedSellerPayoutAmount);
         Coin declaredPot = getDeclaredTradePot(dispute.getContract());
@@ -578,6 +655,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                 verifiedMaximum);
         return new RefundValidationResult(
                 Hex.encode(checkNotNull(dispute.getContractHash(), "dispute contractHash must not be null")),
+                RefundClaimSignature.getClaimSubjectHash(dispute),
                 depositTx.getTxId().toString(),
                 delayedPayoutTx.getTxId().toString(),
                 depositOutputValue.value,
@@ -588,6 +666,99 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                 dispute.getDonationAddressOfDelayedPayoutTx(),
                 checkedBuyerPayoutAmount.value,
                 checkedSellerPayoutAmount.value);
+    }
+
+    // TODO Remove these legacy eligibility methods in releases after 2026-11-01.
+    public boolean requiresLegacyRefundClaimVerification(Dispute dispute) {
+        return requiresLegacyRefundClaimVerification(dispute, Instant.now());
+    }
+
+    @VisibleForTesting
+    boolean requiresLegacyRefundClaimVerification(Dispute dispute, Instant now) {
+        if (!now.isBefore(LEGACY_REFUND_CLAIM_CUTOFF) ||
+                dispute == null || dispute.getSupportType() != SupportType.REFUND ||
+                dispute.getRefundClaimOpeningDate() != 0 ||
+                (dispute.getRefundClaimSignature() != null && !dispute.getRefundClaimSignature().isEmpty())) {
+            return false;
+        }
+        // New unsigned requests fail admission. Only an existing local row can use the upgrade exception;
+        // an opener-supplied date or a copied row identifier is not evidence of a legacy record.
+        RefundDisputeList stored = getDisputeList();
+        return stored != null && stored.stream().anyMatch(row -> row == dispute);
+    }
+
+    /**
+     * Re-verifies the escrow-key proof at each authorization boundary. In the usual single-recipient case the
+     * recipient must be a proven claimant. A two-recipient payout remains an exceptional, manually checked agent
+     * decision and therefore requires at least one authenticated opener without introducing a peer-signature protocol.
+     */
+    public void verifyRefundClaimForPayout(Dispute dispute,
+                                           Coin buyerPayoutAmount,
+                                           Coin sellerPayoutAmount) {
+        Coin checkedBuyerPayoutAmount = checkNotNull(buyerPayoutAmount,
+                "buyerPayoutAmount must not be null");
+        Coin checkedSellerPayoutAmount = checkNotNull(sellerPayoutAmount,
+                "sellerPayoutAmount must not be null");
+        checkArgument(!checkedBuyerPayoutAmount.isNegative(), "buyerPayoutAmount must not be negative");
+        checkArgument(!checkedSellerPayoutAmount.isNegative(), "sellerPayoutAmount must not be negative");
+
+        // TODO Remove in releases after 2026-11-01. The close dialog requires manual verification confirmation.
+        if (requiresLegacyRefundClaimVerification(dispute)) {
+            return;
+        }
+        Set<RefundClaimSignature.Claimant> verifiedClaimants = findVerifiedClaimants(dispute);
+        checkArgument(!verifiedClaimants.isEmpty(),
+                "Refund authorization requires a valid escrow-key claim signature");
+
+        boolean buyerReceivesPayout = checkedBuyerPayoutAmount.isPositive();
+        boolean sellerReceivesPayout = checkedSellerPayoutAmount.isPositive();
+        if (buyerReceivesPayout ^ sellerReceivesPayout) {
+            RefundClaimSignature.Claimant recipient = buyerReceivesPayout ?
+                    RefundClaimSignature.Claimant.BUYER :
+                    RefundClaimSignature.Claimant.SELLER;
+            checkArgument(verifiedClaimants.contains(recipient),
+                    "The sole refund recipient must prove control of that role's escrow key. " +
+                            "Ask that trader to submit their own refund request from the pending trade with an " +
+                            "updated client, using Open dispute again if a ticket already exists. " +
+                            "Reopening the support ticket alone does not submit a new proof.");
+        }
+    }
+
+    private Set<RefundClaimSignature.Claimant> findVerifiedClaimants(Dispute dispute) {
+        Dispute checkedDispute = checkNotNull(dispute, "dispute must not be null");
+        // The selected subject must be well formed; only optional candidate proofs may be ignored.
+        String claimSubjectHash = RefundClaimSignature.getClaimSubjectHash(checkedDispute);
+        EnumSet<RefundClaimSignature.Claimant> claimants =
+                EnumSet.noneOf(RefundClaimSignature.Claimant.class);
+        List<Dispute> candidates = new ArrayList<>();
+        candidates.add(checkedDispute);
+
+        // Both traders may have opened independently. Their rows can jointly authenticate both payout recipients,
+        // but only if their full claim subjects match the ticket being closed.
+        RefundDisputeList storedDisputes = getDisputeList();
+        if (storedDisputes != null) {
+            storedDisputes.stream()
+                    .filter(candidate -> candidate != checkedDispute)
+                    .filter(candidate -> candidate.getSupportType() == SupportType.REFUND)
+                    .filter(candidate -> Objects.equals(candidate.getTradeId(), checkedDispute.getTradeId()))
+                    .filter(candidate -> Objects.equals(candidate.getDepositTxId(), checkedDispute.getDepositTxId()))
+                    .filter(candidate -> Objects.equals(candidate.getDelayedPayoutTxId(),
+                            checkedDispute.getDelayedPayoutTxId()))
+                    .forEach(candidates::add);
+        }
+
+        for (Dispute candidate : candidates) {
+            try {
+                if (claimSubjectHash.equals(RefundClaimSignature.getClaimSubjectHash(candidate))) {
+                    claimants.add(RefundClaimSignature.verifyClaimant(candidate));
+                }
+            } catch (RuntimeException exception) {
+                log.warn("Ignoring invalid refund claim proof on dispute row {} for trade {}",
+                        candidate.getId(),
+                        checkedDispute.getTradeId());
+            }
+        }
+        return claimants;
     }
 
     private static Coin getDeclaredTradePot(Contract contract) {

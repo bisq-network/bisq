@@ -73,6 +73,7 @@ import java.time.Instant;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -413,6 +414,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             return;
         }
 
+        boolean senderValidated = false;
         try {
             checkArgument(dispute.getSupportType() == openNewDisputeMessage.getSupportType(),
                     "Support type of dispute must match openNewDisputeMessage.getSupportType()");
@@ -431,7 +433,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateDisputeOpenerIsTrader(dispute, openNewDisputeMessage.getSenderNodeAddress());
-            DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            senderValidated = true;
+            validateIncomingOpenNewDispute(dispute);
+            validateIncomingDisputeReplay(dispute);
 
             // Normally we do not expect legacy burning man as fee receiver anymore, but in some edge cases we can stil
             // fall back to that, thus we keep that check.
@@ -441,10 +445,18 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         } catch (IllegalArgumentException e) {
             log.error("Validating dispute failed", e);
             validationExceptions.add(new DisputeValidation.ValidationException(dispute, e.getMessage()));
+            if (senderValidated) {
+                sendDisputeOpeningAck(openNewDisputeMessage,
+                        Objects.requireNonNullElse(e.getMessage(), "Dispute request validation failed"));
+            }
             return;
         } catch (DisputeValidation.ValidationException e) {
             log.error("Validating dispute failed", e);
             validationExceptions.add(e);
+            if (senderValidated) {
+                sendDisputeOpeningAck(openNewDisputeMessage,
+                        Objects.requireNonNullElse(e.getMessage(), "Dispute request validation failed"));
+            }
             return;
         }
 
@@ -459,6 +471,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     disputeList.add(dispute);
                     sendPeerOpenedDisputeMessage(dispute, contract, peersPubKeyRing);
                 } else {
+                    updateStoredDisputeFromValidatedIncoming(storedDisputeOptional.get(), dispute);
                     // valid case if both have opened a dispute and agent was not online.
                     log.debug("We got a dispute already open for that trade and trading peer. TradeId = {}",
                             dispute.getTradeId());
@@ -472,16 +485,54 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             log.error(errorMessage);
         }
 
-        // We use the ChatMessage not the openNewDisputeMessage for the ACK
-        ObservableList<ChatMessage> messages = dispute.getChatMessages();
-        if (!messages.isEmpty()) {
-            ChatMessage chatMessage = messages.get(0);
-            PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
-            sendAckMessage(chatMessage, sendersPubKeyRing, errorMessage == null, errorMessage);
-        }
+        sendDisputeOpeningAck(openNewDisputeMessage, errorMessage);
 
         addMediationResultMessage(dispute);
         requestPersistence();
+    }
+
+    private void sendDisputeOpeningAck(OpenNewDisputeMessage request, @Nullable String errorMessage) {
+        Dispute dispute = request.getDispute();
+        if (!isAgent(dispute)) {
+            return;
+        }
+        Contract contract = dispute.getContract();
+        NodeAddress senderAddress = dispute.isDisputeOpenerIsBuyer() ?
+                contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
+        if (!Objects.equals(request.getSenderNodeAddress(), senderAddress)) {
+            return;
+        }
+        // The chat message is the persisted ACK target, but its routing fields are supplied by the sender.
+        // Bind it to the authenticated opening request before replying, including on validation failures.
+        ObservableList<ChatMessage> messages = dispute.getChatMessages();
+        if (!messages.isEmpty()) {
+            ChatMessage chatMessage = messages.get(0);
+            if (chatMessage.getSupportType() != request.getSupportType() ||
+                    !Objects.equals(chatMessage.getTradeId(), dispute.getTradeId()) ||
+                    chatMessage.getTraderId() != dispute.getTraderId() ||
+                    !Objects.equals(chatMessage.getSenderNodeAddress(), request.getSenderNodeAddress())) {
+                log.warn("Ignoring unbound dispute opening ACK target for trade {}", dispute.getTradeId());
+                return;
+            }
+            PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
+            sendAckMessage(chatMessage, sendersPubKeyRing, errorMessage == null, errorMessage);
+        }
+    }
+
+    /**
+     * Support-type-specific validation which must succeed before an inbound dispute is stored.
+     */
+    protected void validateIncomingOpenNewDispute(Dispute dispute) {
+    }
+
+    protected void validateIncomingDisputeReplay(Dispute dispute) throws DisputeValidation.DisputeReplayException {
+        DisputeValidation.testIfDisputeTriesReplay(dispute, checkNotNull(getDisputeList()).getList());
+    }
+
+    /**
+     * Lets a support type retain newly validated authorization data when the dispute row already exists.
+     */
+    protected void updateStoredDisputeFromValidatedIncoming(Dispute storedDispute, Dispute incomingDispute) {
     }
 
     // Not-dispute-requester receives that msg from dispute agent
@@ -654,6 +705,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             dispute.addAndPersistChatMessage(chatMessage);
             if (!reOpen) {
                 disputeList.add(dispute);
+            } else {
+                // ACKs are resolved against retained chat messages, not the transient reopening payload.
+                storedDisputeOptional.ifPresent(stored -> stored.addAndPersistChatMessage(chatMessage));
             }
 
             NodeAddress agentNodeAddress = getAgentNodeAddress(dispute);
@@ -785,6 +839,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
         dispute.setBurningManSelectionHeight(disputeFromOpener.getBurningManSelectionHeight());
         dispute.setTradeTxFee(disputeFromOpener.getTradeTxFee());
+        dispute.setRefundClaimSignature(disputeFromOpener.getRefundClaimSignature());
+        dispute.setRefundClaimOpeningDate(disputeFromOpener.getRefundClaimOpeningDate());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
 

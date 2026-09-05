@@ -33,6 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Immutable binding between validated refund evidence and the exact payout authorization checked against it.
  */
 public record RefundValidationResult(String contractHash,
+                                     String refundClaimSubjectHash,
                                      String depositTxId,
                                      String delayedPayoutTxId,
                                      long depositOutputValue,
@@ -45,6 +46,7 @@ public record RefundValidationResult(String contractHash,
                                      long sellerPayoutAmount) {
     public RefundValidationResult {
         checkNotNull(contractHash, "contractHash must not be null");
+        checkNotNull(refundClaimSubjectHash, "refundClaimSubjectHash must not be null");
         checkNotNull(depositTxId, "depositTxId must not be null");
         checkNotNull(delayedPayoutTxId, "delayedPayoutTxId must not be null");
         checkArgument(depositOutputValue > 0, "depositOutputValue must be positive");
@@ -74,6 +76,8 @@ public record RefundValidationResult(String contractHash,
         checkArgument(contractHash.equals(Hex.encode(checkNotNull(checkedDispute.getContractHash(),
                         "dispute contractHash must not be null"))),
                 "Validated contract hash no longer matches the dispute");
+        checkArgument(refundClaimSubjectHash.equals(RefundClaimSignature.getClaimSubjectHash(checkedDispute)),
+                "Validated refund claim subject no longer matches the dispute");
         checkArgument(depositTxId.equals(checkedDispute.getDepositTxId()),
                 "Validated deposit tx ID no longer matches the dispute");
         checkArgument(delayedPayoutTxId.equals(checkedDispute.getDelayedPayoutTxId()),

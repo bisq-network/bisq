@@ -35,7 +35,6 @@ import org.bitcoinj.core.Utils;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.google.common.base.Charsets;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;

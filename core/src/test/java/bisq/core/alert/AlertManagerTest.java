@@ -29,7 +29,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
 
-import com.google.common.base.Charsets;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;

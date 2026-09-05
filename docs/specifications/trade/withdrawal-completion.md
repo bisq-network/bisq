@@ -17,7 +17,10 @@ Completion must not wait for the network to accept the transaction. The broadcas
 the wallet only completes once connected peers announce the transaction back, which over Tor can
 take a long time or never happen; gating the completion on it left trades in open trades although
 the funds were sent. A committed transaction is re-broadcast at every start while it is pending,
-and it is additionally published via the mempool nodes right away.
+and it is additionally published via the mempool nodes right away. The re-broadcast at start is
+bitcoinj behaviour, not Bisq code: attaching the wallet to the peer group installs the wallet's
+transaction broadcaster, which re-announces pending self-created transactions. A bitcoinj upgrade
+must keep this behaviour or Bisq must re-announce pending withdrawals itself.
 
 ## One terminal outcome per request
 
