@@ -7,6 +7,7 @@ import bisq.core.btc.wallet.BsqCoinSelector;
 import bisq.core.btc.wallet.BsqWalletV2;
 import bisq.core.btc.wallet.BtcWalletV2;
 import bisq.core.btc.wallet.WalletFactory;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
@@ -101,7 +102,8 @@ public class BitcoinjBsqTests {
         doReturn(true).when(daoStateService)
                 .isTxOutputSpendable(any(TxOutputKey.class));
 
-        bsqCoinSelector = new BsqCoinSelector(daoStateService, mock(UnconfirmedBsqChangeOutputListService.class));
+        bsqCoinSelector = new BsqCoinSelector(daoStateService, mock(DaoStateMonitoringService.class),
+                mock(UnconfirmedBsqChangeOutputListService.class));
         btcWalletV2 = new BtcWalletV2(btcCoinSelector, btcWallet);
     }
 

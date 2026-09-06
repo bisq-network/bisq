@@ -21,6 +21,7 @@ import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
+import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
 import bisq.core.user.Preferences;
@@ -54,6 +55,7 @@ public class DaoStateMonitoringServiceTest {
     private static final String OTHER_HASH = "0000000000000000000000000000000000000000";
 
     private DaoStateMonitoringService service;
+    private DaoStateService daoStateService;
     private DaoStateStorageService daoStateStorageService;
     private DaoStateMonitoringService.Listener listener;
 
@@ -61,9 +63,10 @@ public class DaoStateMonitoringServiceTest {
     public void setup() {
         daoStateStorageService = mock(DaoStateStorageService.class);
         listener = mock(DaoStateMonitoringService.Listener.class);
+        daoStateService = new DaoStateService(new DaoState(), mock(GenesisTxInfo.class), null);
 
         service = new DaoStateMonitoringService(
-                mock(DaoStateService.class),
+                daoStateService,
                 daoStateStorageService,
                 mock(DaoStateNetworkService.class),
                 mock(GenesisTxInfo.class),
@@ -119,6 +122,7 @@ public class DaoStateMonitoringServiceTest {
 
         verify(daoStateStorageService, times(1)).removeAndBackupAllDaoData();
         verify(listener, times(1)).onCheckpointFailed();
+        assertTrue(service.isCheckpointFailed());
     }
 
     @Test
@@ -244,6 +248,28 @@ public class DaoStateMonitoringServiceTest {
         verify(daoStateStorageService, times(1)).removeAndBackupAllDaoData();
     }
 
+    @Test
+    void ignoreDevMsgStillSkipsCreatedAndRestoredCheckpointVerification() throws IOException {
+        GenesisTxInfo genesis = mock(GenesisTxInfo.class);
+        when(genesis.getGenesisBlockHeight()).thenReturn(CHECKPOINT_HEIGHT);
+        DaoStateService state = spy(new DaoStateService(new DaoState(), genesis, null));
+        doReturn(new byte[]{1, 2, 3}).when(state).getSerializedStateForHashChain();
+        DaoStateMonitoringService monitor = new DaoStateMonitoringService(state, daoStateStorageService,
+                mock(DaoStateNetworkService.class), genesis, mock(SeedNodeRepository.class),
+                mock(Preferences.class), null, true, false);
+        monitor.addListener(listener);
+
+        monitor.createHashFromBlock(new Block(CHECKPOINT_HEIGHT, 0, "hash", "previous"));
+        assertFalse(monitor.isCheckpointFailed());
+        monitor.applySnapshot(new LinkedList<>(java.util.List.of(
+                new DaoStateHash(CHECKPOINT_HEIGHT, new byte[20], true))));
+        monitor.onParseBlockChainComplete();
+
+        assertFalse(monitor.isCheckpointFailed());
+        verify(daoStateStorageService, never()).removeAndBackupAllDaoData();
+        verify(listener, never()).onCheckpointFailed();
+    }
+
     private DaoStateMonitoringService createServiceForDump(int genesisBlockHeight,
                                                            File appDataDir,
                                                            boolean dumpDaoStateHashCheckpoints,
@@ -257,8 +283,8 @@ public class DaoStateMonitoringServiceTest {
                                                            boolean dumpDaoStateHashCheckpoints,
                                                            byte[] stateBytes,
                                                            DaoStateStorageService daoStateStorageService) {
-        DaoStateService daoStateService = mock(DaoStateService.class);
-        when(daoStateService.getSerializedStateForHashChain()).thenReturn(stateBytes);
+        DaoStateService daoStateService = spy(new DaoStateService(new DaoState(), mock(GenesisTxInfo.class), null));
+        doReturn(stateBytes).when(daoStateService).getSerializedStateForHashChain();
         GenesisTxInfo genesisTxInfo = mock(GenesisTxInfo.class);
         when(genesisTxInfo.getGenesisBlockHeight()).thenReturn(genesisBlockHeight);
         return new DaoStateMonitoringService(

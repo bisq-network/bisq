@@ -78,6 +78,8 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Monitors the DaoState by using a hash for the complete daoState and make it accessible to the network
  * so we can detect quickly if any consensus issue arise.
@@ -132,9 +134,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private boolean isInConflictWithSeedNode;
     @Getter
     private boolean daoStateBlockChainNotConnecting;
+    // Session-local integrity failure; snapshot application must not reset it.
+    @Getter
+    private volatile boolean checkpointFailed;
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
-    private boolean checkpointFailed;
     private final boolean ignoreDevMsg;
     private int numCalls;
     private long accumulatedDuration;
@@ -274,6 +278,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void assertCheckpointNotFailed() {
+        checkState(!checkpointFailed,
+                "DAO checkpoint verification failed; financial use is blocked until restart and recovery");
+    }
 
     public void createHashFromBlock(Block block) {
         createDaoStateBlock(block).ifPresent(daoStateBlock -> {

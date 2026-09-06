@@ -161,6 +161,7 @@ public class WalletsManager {
 
     // A bsq tx has miner fees in btc included. Thus we need to handle it on both wallets.
     public void publishAndCommitBsqTx(Transaction tx, TxType txType, TxBroadcaster.Callback callback) {
+        bsqWalletService.assertCheckpointNotFailed();
         // We need to create another instance, otherwise the tx would trigger an invalid state exception
         // if it gets committed 2 times
         // We clone before commit to avoid unwanted side effects

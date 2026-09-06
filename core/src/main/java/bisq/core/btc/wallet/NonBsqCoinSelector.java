@@ -17,6 +17,7 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.user.Preferences;
@@ -37,17 +38,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
     private DaoStateService daoStateService;
+    private final DaoStateMonitoringService daoStateMonitoringService;
     @Setter
     private Preferences preferences;
 
     @Inject
-    public NonBsqCoinSelector(DaoStateService daoStateService) {
+    public NonBsqCoinSelector(DaoStateService daoStateService,
+                             DaoStateMonitoringService daoStateMonitoringService) {
         super(false);
         this.daoStateService = daoStateService;
+        this.daoStateMonitoringService = daoStateMonitoringService;
     }
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
+        if (daoStateMonitoringService.isCheckpointFailed())
+            return false;
+
         // output.getParentTransaction() cannot be null as it is checked in calling method
         Transaction parentTransaction = output.getParentTransaction();
         if (parentTransaction == null)
