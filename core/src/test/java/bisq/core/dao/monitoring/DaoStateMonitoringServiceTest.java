@@ -28,6 +28,7 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
 
+import bisq.common.UserThread;
 import bisq.common.crypto.Hash;
 import bisq.common.util.Utilities;
 
@@ -40,9 +41,18 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import org.mockito.ArgumentCaptor;
+
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -137,6 +147,36 @@ public class DaoStateMonitoringServiceTest {
 
         verify(daoStateStorageService, times(1)).removeAndBackupAllDaoData();
         verify(listener, times(1)).onCheckpointFailed();
+    }
+
+    @Test
+    void checkpointFailureExplainsSuppressedOperationsInOneWarning() {
+        Logger logger = (Logger) LoggerFactory.getLogger(DaoStateMonitoringService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            Map<Integer, String> checkpoints = Map.of(CHECKPOINT_HEIGHT, CHECKPOINT_HASH);
+            LinkedList<DaoStateHash> hashes = new LinkedList<>();
+            hashes.add(new DaoStateHash(CHECKPOINT_HEIGHT, Utilities.decodeFromHex(OTHER_HASH), true));
+
+            service.maybeVerifyCheckpoint(CHECKPOINT_HEIGHT, checkpoints, hashes);
+            service.maybeVerifyCheckpoint(CHECKPOINT_HEIGHT, checkpoints, hashes);
+            assertTrue(service.isCheckpointFailed());
+            assertTrue(service.isCheckpointFailed());
+
+            var warnings = appender.list.stream().filter(event -> event.getLevel() == Level.WARN).toList();
+            assertEquals(1, warnings.size());
+            String message = warnings.getFirst().getFormattedMessage();
+            assertTrue(message.contains("New BSQ-dependent financial authorization"));
+            assertTrue(message.contains("DAO snapshot creation and delayed state-hash broadcasts are blocked for this process"));
+            assertTrue(message.contains(Integer.toString(CHECKPOINT_HEIGHT)));
+            assertTrue(message.contains(CHECKPOINT_HASH));
+            assertTrue(message.contains(OTHER_HASH));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
 
     @Test
@@ -249,6 +289,11 @@ public class DaoStateMonitoringServiceTest {
     }
 
     @Test
+    void queuedBroadcastIsSuppressedWhenCreatedHashFailsCheckpoint() {
+        verifyQueuedBroadcast(CHECKPOINT_HEIGHT, false);
+    }
+
+    @Test
     void ignoreDevMsgStillSkipsCreatedAndRestoredCheckpointVerification() throws IOException {
         GenesisTxInfo genesis = mock(GenesisTxInfo.class);
         when(genesis.getGenesisBlockHeight()).thenReturn(CHECKPOINT_HEIGHT);
@@ -268,6 +313,33 @@ public class DaoStateMonitoringServiceTest {
         assertFalse(monitor.isCheckpointFailed());
         verify(daoStateStorageService, never()).removeAndBackupAllDaoData();
         verify(listener, never()).onCheckpointFailed();
+    }
+
+    @Test
+    void healthyQueuedBroadcastStillSendsHash() {
+        verifyQueuedBroadcast(1000, true);
+    }
+
+    private void verifyQueuedBroadcast(int height, boolean shouldBroadcast) {
+        DaoStateNetworkService network = mock(DaoStateNetworkService.class);
+        GenesisTxInfo genesis = mock(GenesisTxInfo.class);
+        when(genesis.getGenesisBlockHeight()).thenReturn(height);
+        DaoStateService state = spy(new DaoStateService(new DaoState(), genesis, null));
+        doReturn(new byte[]{1, 2, 3}).when(state).getSerializedStateForHashChain();
+        DaoStateMonitoringService monitor = new DaoStateMonitoringService(state, daoStateStorageService,
+                network, genesis, mock(SeedNodeRepository.class), mock(Preferences.class), null, false, false);
+        monitor.onParseBlockChainComplete();
+
+        try (var userThread = mockStatic(UserThread.class)) {
+            monitor.createHashFromBlock(new Block(height, 0, "hash", "previous"));
+            ArgumentCaptor<Runnable> queued = ArgumentCaptor.forClass(Runnable.class);
+            userThread.verify(() -> UserThread.runAfter(queued.capture(), anyLong()));
+
+            queued.getValue().run();
+
+            assertEquals(!shouldBroadcast, monitor.isCheckpointFailed());
+            verify(network, times(shouldBroadcast ? 1 : 0)).broadcastMyStateHash(any());
+        }
     }
 
     private DaoStateMonitoringService createServiceForDump(int genesisBlockHeight,

@@ -401,7 +401,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             if (Config.baseCurrencyNetwork().isRegtest()) {
                 delayInSec = 1;
             }
-            UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
+            UserThread.runAfter(() -> {
+                if (!checkpointFailed) {
+                    daoStateNetworkService.broadcastMyStateHash(myDaoStateHash);
+                }
+            }, delayInSec);
         }
         long duration = System.currentTimeMillis() - ts;
         log.trace("updateHashChain for block {} took {} ms",
@@ -604,7 +608,9 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                     return;
                                 }
                                 checkpointFailed = true;
-                                log.warn("verifyCheckpoints failed. We resync from resources " +
+                                log.warn("DAO checkpoint verification failed. New BSQ-dependent financial authorization, " +
+                                                "DAO snapshot creation and delayed state-hash broadcasts are blocked for this process. " +
+                                                "Attempting DAO data backup/removal for recovery after restart. " +
                                                 "blockHeight={}, daoStateHash={}, checkPointHash={}",
                                         blockHeight,
                                         daoStateHash,

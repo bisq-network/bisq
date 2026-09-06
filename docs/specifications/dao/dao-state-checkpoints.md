@@ -79,6 +79,9 @@ says nothing about the validity of the local DAO state.
   triggered. This happens if the hash chain does not reach the checkpoint height, or if the
   hash at that height was taken over from peers.
 - **Mismatching hash:**
+    - A warning is logged once with the checkpoint height, actual and expected hashes, and
+      the resulting restrictions on new financial authorization, snapshots, and delayed
+      state-hash broadcasts. Repeated status checks must not emit the warning again.
     - `DaoStateStorageService.removeAndBackupAllDaoData()` is called once to back up and
       remove the local DAO data, forcing a resync from resources on the next startup.
     - All registered `DaoStateMonitoringService.Listener` instances receive
@@ -108,6 +111,12 @@ required for revoking authorization after an already detected mismatch.
 Transactions already submitted to a broadcaster cannot be recalled. Their outcome callbacks,
 network observation, and wallet/trade-history accounting must continue; a later checkpoint failure
 must not be reported as cancellation of an already submitted transaction.
+
+The snapshot service must stop initiating captures and persistence requests after failure,
+including callbacks registered before failure and replacement captures after an earlier write
+finishes. A mismatch discovered during hash creation must prevent the immediately following
+snapshot. A queued state-hash broadcast must also recheck checkpoint failure before sending.
+This does not cancel writes already submitted or disable every state-hash network response.
 
 Restart alone is not proof of trustworthy recovery. Existing backup/removal remains best effort:
 independently queued writes and the shutdown persistence flush can recreate deleted DAO files.
