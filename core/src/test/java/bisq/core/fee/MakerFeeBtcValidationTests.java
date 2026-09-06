@@ -62,12 +62,9 @@ public class MakerFeeBtcValidationTests {
     }
 
     @Test
-    void makerCheckFeeAddressBtcTooOldValidFee() {
-        doReturn(Coin.valueOf(5000)).when(daoStateService).getParamValueAsCoin(any(), anyInt());
-        doReturn(Coin.valueOf(5000)).when(daoStateService).getParamValueAsCoin(any(), anyString());
-
+    void makerRejectsUnknownFeeReceiverEvenWithOldHeight() {
         TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(VALID_MAKER_FEE_JSON_RESPONSE, Collections.emptyList());
-        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.ACK_FEE_OK));
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER));
     }
 
     @Test

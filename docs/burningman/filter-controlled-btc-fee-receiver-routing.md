@@ -141,6 +141,11 @@ normally be rejected before they reach the network.
 
 ## Mempool Validation
 
+For both maker and taker BTC fee transactions, the first output must pay a known BTC fee receiver. This requirement
+applies regardless of the claimed offer-creation height, the transaction's confirmation height, or whether the
+transaction is confirmed. In particular, heights below 599,999 do not exempt unknown recipients from validation:
+an offer's advertised height is controlled by its maker and must not authorize an arbitrary fee destination.
+
 BTC fee transaction mempool validation must accept any configured filter receiver address and any address-list legacy
 fallback that `BtcFeeReceiverService` can select. `MempoolService` extracts the configured addresses from the active
 filter and adds them to the known BTC fee receiver list, and also adds the latest current-network Burning Man address
@@ -148,6 +153,9 @@ list's legacy address.
 
 If the filter receiver configuration is invalid, the extracted address list is empty and mempool validation continues to
 use the existing DAO donation and Burning Man receiver addresses.
+
+Historical transactions to known receivers remain eligible. Height-based fee-rate selection and fee-amount tolerances
+are separate from receiver authorization and are unchanged by removal of the old-height receiver exemption.
 
 ## Compatibility
 

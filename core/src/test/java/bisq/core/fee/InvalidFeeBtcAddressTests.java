@@ -22,11 +22,14 @@ import bisq.core.filter.FilterManager;
 import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.TxValidator;
 
+import org.bitcoinj.core.Coin;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,9 +37,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class InvalidFeeBtcAddressTests {
@@ -60,6 +69,57 @@ public class InvalidFeeBtcAddressTests {
         String jsonContent = createJsonResponseString();
         TxValidator txValidator1 = txValidator.parseJsonValidateTakerFeeTx(jsonContent, Collections.emptyList());
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "true, 1, 900000",
+            "false, 1, 900000",
+            "true, 599998, 900000",
+            "false, 599998, 900000",
+            "true, 599999, 900000",
+            "false, 599999, 900000",
+            "true, 900000, 900000",
+            "false, 900000, 900000",
+            "true, 599998, 0",
+            "false, 599998, 0",
+            "true, 0, 599998",
+            "false, 0, 599998",
+            "true, 0, 599999",
+            "false, 0, 599999",
+            "true, 0, 0",
+            "false, 0, 0"
+    })
+    void btcFeeReceiverMustBeKnownRegardlessOfHeight(boolean isMaker,
+                                                    int feePaymentBlockHeight,
+                                                    int txBlockHeight,
+                                                    @Mock DaoStateService daoStateService,
+                                                    @Mock FilterManager filterManager) {
+        when(daoStateService.getChainHeight()).thenReturn(900_000);
+        when(daoStateService.getParamValueAsCoin(any(), anyInt())).thenReturn(Coin.valueOf(5000));
+        when(daoStateService.getParamValueAsCoin(any(), anyString())).thenReturn(Coin.valueOf(5000));
+
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        JsonObject status = json.getAsJsonObject("status");
+        status.addProperty("confirmed", txBlockHeight > 0);
+        if (txBlockHeight > 0) {
+            status.addProperty("block_height", txBlockHeight);
+        } else {
+            status.remove("block_height");
+        }
+        String jsonContent = new Gson().toJson(json);
+        TxValidator validator = new TxValidator(daoStateService, json.get("txid").getAsString(),
+                Coin.valueOf(100000), true, feePaymentBlockHeight, filterManager);
+
+        for (List<String> receivers : List.of(MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES,
+                List.of("unknown-receiver"), List.<String>of())) {
+            FeeValidationStatus expected = receivers.equals(MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES)
+                    ? FeeValidationStatus.ACK_FEE_OK : FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER;
+            TxValidator result = isMaker
+                    ? validator.parseJsonValidateMakerFeeTx(jsonContent, receivers)
+                    : validator.parseJsonValidateTakerFeeTx(jsonContent, receivers);
+            assertThat(result.getStatus(), is(expected));
+        }
     }
 
     private String createJsonResponseString() {
