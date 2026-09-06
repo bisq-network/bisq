@@ -112,6 +112,16 @@ Transactions already submitted to a broadcaster cannot be recalled. Their outcom
 network observation, and wallet/trade-history accounting must continue; a later checkpoint failure
 must not be reported as cancellation of an already submitted transaction.
 
+Swap sellers must recheck shared readiness immediately before releasing their signed finalize
+request, even if admission and signing succeeded earlier. Buyers may send the final signed
+transaction while not ready only if that exact transaction was already handed to the publication
+workflow. Record this handoff after the guarded publication call returns normally and before
+advancing to the final-message task. Outcome callbacks must not advance ahead of that record.
+The handoff is session-only and binds immutable full transaction bytes, including witness data;
+it is not proof of propagation or mining. Wallet commitment, an existing wallet transaction, and
+deserialization alone must not establish it. Unknown handoff status fails closed, including after
+restart; observing settlement must still update trade history independently of notification success.
+
 The snapshot service must stop initiating captures and persistence requests after failure,
 including callbacks registered before failure and replacement captures after an earlier write
 finishes. A mismatch discovered during hash creation must prevent the immediately following
