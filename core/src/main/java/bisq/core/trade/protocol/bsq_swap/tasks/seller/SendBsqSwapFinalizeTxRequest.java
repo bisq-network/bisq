@@ -27,6 +27,8 @@ import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class SendBsqSwapFinalizeTxRequest extends SendBsqSwapMessageTask {
 
@@ -49,6 +51,7 @@ public class SendBsqSwapFinalizeTxRequest extends SendBsqSwapMessageTask {
                     protocolModel.getBsqAddress(),
                     protocolModel.getBtcAddress());
 
+            checkArgument(protocolModel.getDaoFacade().isDaoStateReadyAndInSync(), "DAO state is not ready and in sync");
             send(request);
         } catch (Throwable t) {
             failed(t);

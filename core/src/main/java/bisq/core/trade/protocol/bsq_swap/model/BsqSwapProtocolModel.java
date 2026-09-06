@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +77,9 @@ public class BsqSwapProtocolModel implements ProtocolModel<BsqSwapTradePeer> {
     transient private NodeAddress tempTradingPeerNodeAddress;
     @Nullable
     private transient Transaction transaction;
+    @Nullable
+    @Getter(AccessLevel.NONE)
+    private transient ByteString publishedTransaction;
 
     private final BsqSwapTradePeer tradePeer;
     private final PubKeyRing pubKeyRing;
@@ -184,6 +188,16 @@ public class BsqSwapProtocolModel implements ProtocolModel<BsqSwapTradePeer> {
     public void applyTransaction(Transaction transaction) {
         this.transaction = transaction;
         tx = transaction.bitcoinSerialize();
+    }
+
+    // Records handoff to the publication workflow, not confirmation. Wallet membership is not evidence of handoff.
+    public void recordTransactionPublication(byte[] transactionBytes) {
+        publishedTransaction = ByteString.copyFrom(transactionBytes);
+    }
+
+    public boolean hasTransactionPublication(byte[] transactionBytes) {
+        // Include witness bytes: a txid alone does not identify the signatures that would be released.
+        return publishedTransaction != null && publishedTransaction.equals(ByteString.copyFrom(transactionBytes));
     }
 
     @Nullable

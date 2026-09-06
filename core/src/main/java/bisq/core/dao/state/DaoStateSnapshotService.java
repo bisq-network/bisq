@@ -153,6 +153,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // We need to listen during batch processing as well to write snapshots during that process.
     @Override
     public void onDaoStateChanged(Block block) {
+        if (daoStateMonitoringService.isCheckpointFailed()) {
+            return;
+        }
         // If we have isUseDaoMonitor activated we apply the hash and snapshots at each new block during initial parsing.
         // Otherwise, we do it only after the initial blockchain parsing is completed to not delay the parsing.
         // In that case we get the missing hashes from the seed nodes. At any new block we do the hash calculation
@@ -169,6 +172,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     @Override
     public void onParseBlockChainComplete() {
+        if (daoStateMonitoringService.isCheckpointFailed()) {
+            return;
+        }
         isParseBlockChainComplete.set(true);
 
         // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing,
@@ -177,6 +183,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             // We register a callback handler once the daoStateMonitoringService has received the missing hashes from
             // the seed node and applied the latest hash. After that we are ready to make a snapshot and persist it.
             daoStateMonitoringService.setCreateSnapshotHandler(() -> {
+                if (daoStateMonitoringService.isCheckpointFailed()) {
+                    return;
+                }
                 // As we did not have created any snapshots during initial parsing we create it now. We cannot use the past
                 // snapshot height as we have not cloned a candidate (that would cause quite some delay during parsing).
                 // The next snapshots will be created again according to the snapshot height grid (each 20 blocks).
@@ -213,6 +222,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
+        if (daoStateMonitoringService.isCheckpointFailed()) {
+            return;
+        }
         // We protect to get called while we are not completed with persisting the daoState. This can take about
         // 20 seconds, and it is not expected that we get triggered another snapshot event in that period, but this
         // check guards that we would skip such calls.
@@ -257,6 +269,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     }
 
     private void persist() {
+        if (daoStateMonitoringService.isCheckpointFailed()) {
+            return;
+        }
         long ts = System.currentTimeMillis();
         persistingBlockInProgress.set(true);
         daoStateStorageService.requestPersistence(daoStateCandidate,
@@ -272,6 +287,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     }
 
     private void createSnapshot() {
+        if (daoStateMonitoringService.isCheckpointFailed()) {
+            return;
+        }
         long ts = System.currentTimeMillis();
         // Now we clone and keep it in memory for the next trigger event
         // We do not fit into the target grid of 20 blocks as we get called here once persistence is

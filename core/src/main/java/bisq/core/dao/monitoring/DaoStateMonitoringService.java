@@ -78,6 +78,8 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Monitors the DaoState by using a hash for the complete daoState and make it accessible to the network
  * so we can detect quickly if any consensus issue arise.
@@ -132,9 +134,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private boolean isInConflictWithSeedNode;
     @Getter
     private boolean daoStateBlockChainNotConnecting;
+    // Session-local integrity failure; snapshot application must not reset it.
+    @Getter
+    private volatile boolean checkpointFailed;
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
-    private boolean checkpointFailed;
     private final boolean ignoreDevMsg;
     private int numCalls;
     private long accumulatedDuration;
@@ -275,6 +279,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void assertCheckpointNotFailed() {
+        checkState(!checkpointFailed,
+                "DAO checkpoint verification failed; financial use is blocked until restart and recovery");
+    }
+
     public void createHashFromBlock(Block block) {
         createDaoStateBlock(block).ifPresent(daoStateBlock -> {
             // We verify the checkpoints here and not in onDaoStateChanged because onDaoStateChanged is
@@ -392,7 +401,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             if (Config.baseCurrencyNetwork().isRegtest()) {
                 delayInSec = 1;
             }
-            UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
+            UserThread.runAfter(() -> {
+                if (!checkpointFailed) {
+                    daoStateNetworkService.broadcastMyStateHash(myDaoStateHash);
+                }
+            }, delayInSec);
         }
         long duration = System.currentTimeMillis() - ts;
         log.trace("updateHashChain for block {} took {} ms",
@@ -595,7 +608,9 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                     return;
                                 }
                                 checkpointFailed = true;
-                                log.warn("verifyCheckpoints failed. We resync from resources " +
+                                log.warn("DAO checkpoint verification failed. New BSQ-dependent financial authorization, " +
+                                                "DAO snapshot creation and delayed state-hash broadcasts are blocked for this process. " +
+                                                "Attempting DAO data backup/removal for recovery after restart. " +
                                                 "blockHeight={}, daoStateHash={}, checkPointHash={}",
                                         blockHeight,
                                         daoStateHash,
