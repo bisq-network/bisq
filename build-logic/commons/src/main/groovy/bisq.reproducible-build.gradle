@@ -31,11 +31,6 @@ def verifyZipArchive = { AbstractArchiveTask archiveTask, File archiveFile ->
     }
 }
 
-tasks.withType(AbstractArchiveTask).configureEach {
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
-}
-
 tasks.register('verifyReproducibleArchives') {
     group = 'verification'
     description = 'Builds archive outputs and verifies reproducible archive configuration and ZIP/JAR metadata.'
