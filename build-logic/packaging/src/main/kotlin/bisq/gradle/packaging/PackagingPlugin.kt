@@ -34,6 +34,13 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
         project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
         project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+
+        project.tasks.register<DebReproducibleTask>("reproducibleDeb") {
+            appVersion.set(APP_VERSION)
+            distDirFile.set(installDistTask.map { it.destinationDir })
+            outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
+        }
+
     }
 
     private fun jPackageTaskConfiguration(

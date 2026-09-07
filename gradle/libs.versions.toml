@@ -1,4 +1,5 @@
 [versions]
+apache-commons-compress = { strictly = '1.28.0' }
 apache-commons-lang3 = { strictly = '3.20.0' }
 apache-httpclient = { strictly = '4.5.14' }
 
@@ -47,10 +48,12 @@ protobuf-plugin = { strictly = '0.9.5' }
 slf4j = { strictly = '2.0.17' }
 spark = { strictly = '2.9.4' }
 swagger-lib = { strictly = '2.2.49' }
+tukaani-xz-lib = { strictly = '1.12' }
 zxing = { strictly = '3.5.4' }
 
 [libraries]
 apache-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache-httpclient" }
+apache-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-commons-compress" }
 apache-commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "apache-commons-lang3" }
 
 bitcoinj = { module = "com.github.bisq-network:bitcoinj", version.ref = "bitcoinj" }
@@ -114,6 +117,7 @@ protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "p
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 spark-core = { module = "com.sparkjava:spark-core", version.ref = "spark" }
 swagger = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-lib' }
+tukaani-xz = { module = 'org.tukaani:xz', version.ref = 'tukaani-xz-lib' }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [bundles]
