@@ -8,6 +8,7 @@ dependencyResolutionManagement {
 
 include 'app-start-plugin'
 include 'commons'
+include 'deb-packager'
 include 'docker-image-builder'
 include 'gradle-tasks'
 include 'packaging'
