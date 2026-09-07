@@ -15,10 +15,6 @@ java {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
 dependencies {
     compileOnly libs.google.findbugs
 
