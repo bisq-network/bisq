@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class HistoricalDataStoreService<T extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> extends MapStoreService<T, PersistableNetworkPayload> {
     protected ImmutableMap<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion;
     // Cache to avoid that we have to recreate the historical data at each request
-    private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
+    protected ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -117,9 +117,16 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         return getMapOfAllData();
     }
 
+    // The generic implementation would go through getMap, which copies the live and all historical
+    // data into a new map. A membership test only needs a lookup in each of them.
+    @Override
+    boolean containsKey(P2PDataStorage.ByteArray hash) {
+        return getMapOfLiveData().containsKey(hash) || allHistoricalPayloads.containsKey(hash);
+    }
+
     @Override
     protected void put(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        if (anyMapContainsKey(hash)) {
+        if (containsKey(hash)) {
             return;
         }
 
@@ -129,7 +136,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
     @Override
     protected PersistableNetworkPayload putIfAbsent(P2PDataStorage.ByteArray hash, PersistableNetworkPayload payload) {
-        if (anyMapContainsKey(hash)) {
+        if (containsKey(hash)) {
             return null;
         }
 
@@ -206,9 +213,5 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
             log.debug("No pruning from historical data store with version {} was applied", version);
         }
         requestPersistence();
-    }
-
-    private boolean anyMapContainsKey(P2PDataStorage.ByteArray hash) {
-        return getMapOfLiveData().containsKey(hash) || allHistoricalPayloads.containsKey(hash);
     }
 }
