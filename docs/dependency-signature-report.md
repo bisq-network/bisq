@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 183 configurations.
+Generated from `gradle/verification-metadata.xml` after resolving 143 configurations.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
@@ -16,19 +16,19 @@ Refresh the metadata before regenerating this report:
 
 ## Summary
 
-| Metric |   Count |
-| --- |--------:|
-| Resolved external modules |     182 |
-| Modules with PGP-signed artifacts only |     164 |
-| Modules using checksum fallback only |      25 |
-| Modules with mixed signed/checksum-only artifacts |       0 |
-| Modules missing verification metadata |       0 |
-| Verified artifacts |     382 |
-| PGP-signed artifacts |     347 |
-| Checksum-fallback artifacts |      35 |
-| Signer keys found in exported keyring | 67 / 67 |
-| Signer keys with name or email | 47 / 67 |
-| Signer keys with creation date | 67 / 67 |
+| Metric | Count |
+| --- | ---: |
+| Resolved external modules | 176 |
+| Modules with PGP-signed artifacts only | 158 |
+| Modules using checksum fallback only | 18 |
+| Modules with mixed signed/checksum-only artifacts | 0 |
+| Modules missing verification metadata | 0 |
+| Verified artifacts | 369 |
+| PGP-signed artifacts | 334 |
+| Checksum-fallback artifacts | 35 |
+| Signer keys found in exported keyring | 66 / 66 |
+| Signer keys with name or email | 47 / 66 |
+| Signer keys with creation date | 66 / 66 |
 
 ## Handling Transitive Dependencies
 
@@ -39,15 +39,15 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum-only artifacts and review rationale |
 | --- | --- | --- |
 | `aopalliance:aopalliance:1.0` | transitive | `aopalliance-1.0.jar`<br>Legacy Maven Central artifact without published detached signatures.<br><br>`aopalliance-1.0.pom`<br>Legacy Maven Central artifact without published detached signatures. |
-| `com.github.bisq-network.netlayer:tor.external:4433f8f4a9d4b86ade908bf7ca627ccc1036c1db` | direct | `tor.external-4433f8f4a9d4b86ade908bf7ca627ccc1036c1db.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor.external-4433f8f4a9d4b86ade908bf7ca627ccc1036c1db.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
-| `com.github.bisq-network.netlayer:tor.native:4433f8f4a9d4b86ade908bf7ca627ccc1036c1db` | direct | `tor.native-4433f8f4a9d4b86ade908bf7ca627ccc1036c1db.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor.native-4433f8f4a9d4b86ade908bf7ca627ccc1036c1db.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
-| `com.github.bisq-network.netlayer:tor:4433f8f4a9d4b86ade908bf7ca627ccc1036c1db` | transitive | `tor-4433f8f4a9d4b86ade908bf7ca627ccc1036c1db.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor-4433f8f4a9d4b86ade908bf7ca627ccc1036c1db.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-geoip:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | `tor-binary-geoip-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-geoip-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-linux32:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | `tor-binary-linux32-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux32-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-linux64:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | `tor-binary-linux64-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux64-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | `tor-binary-macos-aarch64-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-aarch64-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-macos:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | `tor-binary-macos-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-windows:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | `tor-binary-windows-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-windows-c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.netlayer:tor.external:1e704010cab446b7ace1b452c343875b4259c150` | direct | `tor.external-1e704010cab446b7ace1b452c343875b4259c150.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor.external-1e704010cab446b7ace1b452c343875b4259c150.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
+| `com.github.bisq-network.netlayer:tor.native:1e704010cab446b7ace1b452c343875b4259c150` | direct | `tor.native-1e704010cab446b7ace1b452c343875b4259c150.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor.native-1e704010cab446b7ace1b452c343875b4259c150.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
+| `com.github.bisq-network.netlayer:tor:1e704010cab446b7ace1b452c343875b4259c150` | transitive | `tor-1e704010cab446b7ace1b452c343875b4259c150.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor-1e704010cab446b7ace1b452c343875b4259c150.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-geoip:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-geoip-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-geoip-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-linux32:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-linux32-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux32-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-linux64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-linux64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-macos-aarch64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-aarch64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-macos:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-macos-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-windows:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-windows-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-windows-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
 | `com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a` | direct | `bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.jar`<br>Bisq-maintained JitPack fork pinned to an immutable commit.<br><br>`bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.module`<br>Bisq-maintained JitPack fork pinned to an immutable commit. |
 | `com.github.bisq-network:jsocks:8bfc68c58d443b0ea03a8e8ec352e120fd020127` | transitive | `jsocks-8bfc68c58d443b0ea03a8e8ec352e120fd020127.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit.<br><br>`jsocks-8bfc68c58d443b0ea03a8e8ec352e120fd020127.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit. |
 | `com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1` | direct | `jsonrpc4j-1.6.0.bisq.1.jar`<br>Bisq-maintained JitPack fork pinned to a reviewed Bisq release version.<br><br>`jsonrpc4j-1.6.0.bisq.1.module`<br>Bisq-maintained JitPack fork pinned to a reviewed Bisq release version. |
@@ -81,15 +81,15 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:2.21.2` | transitive | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson:jackson-bom:2.21.1` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson:jackson-bom:2.21.2` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
-| `com.github.bisq-network.netlayer:tor.external:4433f8f4a9d4b86ade908bf7ca627ccc1036c1db` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.netlayer:tor.native:4433f8f4a9d4b86ade908bf7ca627ccc1036c1db` | direct | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.netlayer:tor:4433f8f4a9d4b86ade908bf7ca627ccc1036c1db` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-geoip:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-linux32:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-linux64:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-macos:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-windows:c1d5be3a9f6f9d28f4433e42fa7dc51ab6d5926b` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor.external:1e704010cab446b7ace1b452c343875b4259c150` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor.native:1e704010cab446b7ace1b452c343875b4259c150` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor:1e704010cab446b7ace1b452c343875b4259c150` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-geoip:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-linux32:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-linux64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-macos:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-windows:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a` | direct | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:jsocks:8bfc68c58d443b0ea03a8e8ec352e120fd020127` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1` | direct | checksum fallback | 0 signed / 2 checksum | - |
@@ -205,11 +205,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.glassfish.jersey.ext:jersey-entity-filtering:4.0.2` | transitive | PGP signed | 2 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
 | `org.glassfish.jersey.inject:jersey-hk2:4.0.2` | direct | PGP signed | 2 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
 | `org.glassfish.jersey.media:jersey-media-json-jackson:4.0.2` | direct | PGP signed | 2 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
+| `org.gradlex:reproducible-builds:1.1` | transitive | PGP signed | 1 signed / 0 checksum | `66D7CBFF956830FE9F5A723AFE6C7D77A1CE15A6`<br>GradleX Code Signing<br>`team@gradlex.org`<br>created 2022-08-13 |
 | `org.hamcrest:hamcrest:3.0` | direct | PGP signed | 2 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>Joe Schmetzer<br>`joe@exubero.com`<br>created 2018-11-21 |
-| `org.jacoco:org.jacoco.agent:0.8.11` | direct | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
-| `org.jacoco:org.jacoco.ant:0.8.11` | direct | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
-| `org.jacoco:org.jacoco.core:0.8.11` | transitive | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
-| `org.jacoco:org.jacoco.report:0.8.11` | transitive | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
 | `org.javassist:javassist:3.30.2-GA` | transitive | PGP signed | 2 signed / 0 checksum | `E5C3B1929191DF06136CCB2B164779204E106A76`<br>Shigeru Chiba (Javassist Developer)<br>`chiba@javassist.org`<br>created 2021-05-07 |
 | `org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.3.21` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
 | `org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.21` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
@@ -234,9 +231,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.openjfx:javafx-graphics:21.0.10` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.opentest4j:opentest4j:1.3.0` | transitive | PGP signed | 2 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
-| `org.ow2.asm:asm-commons:9.6` | transitive | PGP signed | 2 signed / 0 checksum | `A5BD02B93E7A40482EB1D66A5F69AD087600B22C`<br>Eric Bruneton<br>`ebruneton@free.fr`<br>created 2011-11-20 |
-| `org.ow2.asm:asm-tree:9.6` | transitive | PGP signed | 2 signed / 0 checksum | `A5BD02B93E7A40482EB1D66A5F69AD087600B22C`<br>Eric Bruneton<br>`ebruneton@free.fr`<br>created 2011-11-20 |
-| `org.ow2.asm:asm:9.6` | transitive | PGP signed | 2 signed / 0 checksum | `A5BD02B93E7A40482EB1D66A5F69AD087600B22C`<br>Eric Bruneton<br>`ebruneton@free.fr`<br>created 2011-11-20 |
 | `org.pcollections:pcollections:2.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `908366594E746BF3C449F5622BE5D98F751F4136`<br>Harold Cooper<br>`harold@mit.edu`<br>created 2010-06-07 |
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 2 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
 | `org.slf4j:slf4j-api:2.0.17` | direct | PGP signed | 2 signed / 0 checksum | `60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
