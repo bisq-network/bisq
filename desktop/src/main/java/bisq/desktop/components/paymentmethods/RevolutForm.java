@@ -67,7 +67,7 @@ public class RevolutForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField userNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.userName"));
+        InputTextField userNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.revtag"));
         userNameInputTextField.setValidator(validator);
         userNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setUserName(newValue.trim());
@@ -106,7 +106,7 @@ public class RevolutForm extends PaymentMethodForm {
                 Res.get(account.getPaymentMethod().getId()));
 
         String userName = account.getUserName();
-        TextField userNameTf = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.userName"), userName).second;
+        TextField userNameTf = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.revtag"), userName).second;
         userNameTf.setMouseTransparent(false);
 
         if (account.hasOldAccountId()) {
