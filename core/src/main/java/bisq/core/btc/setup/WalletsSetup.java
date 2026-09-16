@@ -189,12 +189,13 @@ public class WalletsSetup {
     public void initialize(@Nullable DeterministicSeed seed,
                            ResultHandler resultHandler,
                            ExceptionHandler exceptionHandler) {
-        // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
-        // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
-        // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
-        // a future version.
+        // Tell bitcoinj to execute event handlers on the UserThread. This keeps things simple and means
+        // we cannot forget to switch threads when adding event handlers. The executor is resolved at dispatch
+        // time, so listeners registered with it follow the UserThread when an external JVM shutdown moves it
+        // off the JavaFX application thread. Unfortunately, the DownloadListener we give to the app kit is
+        // currently an exception and runs on a library thread. It'll get fixed in a future version.
 
-        Threading.USER_THREAD = UserThread.getExecutor();
+        Threading.USER_THREAD = UserThread::execute;
 
         Timer timeoutTimer = UserThread.runAfter(() ->
                 exceptionHandler.handleException(new TimeoutException("Wallet did not initialize in " +

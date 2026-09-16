@@ -46,12 +46,25 @@ class BurningManAddressListServiceTest {
     }
 
     @Test
+    void doesNotExposeMutableEntriesOfABundledAddressList() {
+        BurningManAddressListService service = new BurningManAddressListService();
+
+        List<BurningManAddressList.Entry> entries = service.getAddressList(1).getEntries();
+
+        assertThrows(UnsupportedOperationException.class, entries::clear);
+    }
+
+    @Test
     void loadsBundledAddressListsByVersion() {
         BurningManAddressListService service = new BurningManAddressListService();
 
         List<Integer> supportedVersions = service.getSupportedVersions();
         assertEquals(new ArrayList<>(new TreeSet<>(supportedVersions)), supportedVersions);
         assertTrue(supportedVersions.contains(1));
+        assertEquals(supportedVersions.stream()
+                        .filter(version -> version >= BurningManAddressListService.MINIMUM_NEGOTIABLE_VERSION)
+                        .toList(),
+                service.getNegotiableVersions());
 
         BurningManAddressList addressList = service.getAddressList(1);
         assertEquals(1, addressList.getListVersion());
@@ -71,6 +84,8 @@ class BurningManAddressListServiceTest {
 
         assertEquals(1, service.selectHighestCommonVersion(List.of(1)));
         assertEquals(service.getLatestVersion(), service.selectHighestCommonVersion(service.getSupportedVersions()));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.selectHighestCommonVersion(List.of(service.getLatestVersion() + 1)));
     }
 
     @Test
@@ -97,5 +112,27 @@ class BurningManAddressListServiceTest {
                 () -> BurningManAddressListService.getValidatedSupportedVersions(List.of(0)));
         assertThrows(IllegalArgumentException.class,
                 () -> BurningManAddressListService.getValidatedSupportedVersions(List.of(-1)));
+    }
+
+    @Test
+    void rejectsUnsupportedAddressListVersion() {
+        BurningManAddressListService service = new BurningManAddressListService();
+
+        assertThrows(IllegalArgumentException.class, () -> service.getAddressList(0));
+        assertThrows(IllegalArgumentException.class, () -> service.getAddressList(service.getLatestVersion() + 1));
+    }
+
+    @Test
+    void rejectsAddressListResourceWithVersionZero() {
+        BurningManAddressList addressList = new BurningManAddressList(BurningManAddressList.SCHEMA_VERSION,
+                0,
+                "BTC_MAINNET",
+                1,
+                1,
+                "legacy-address",
+                List.of(new BurningManAddressList.Entry("receiver-address", 0.1)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> BurningManAddressListService.validateAddressList("bm-addresses-v0000.json", 0, addressList));
     }
 }

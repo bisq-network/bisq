@@ -24,7 +24,6 @@ import bisq.core.dao.burningman.model.CompensationModel;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -40,7 +39,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.charset.StandardCharsets;
@@ -232,8 +230,7 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void forEachCompensationIssuance(int chainHeight, BiConsumer<Issuance, CompensationProposal> action) {
-        proposalService.getProposalPayloads().stream()
-                .map(ProposalPayload::getProposal)
+        proposalService.getValidatedProposals().stream()
                 .filter(proposal -> proposal instanceof CompensationProposal)
                 .flatMap(proposal -> daoStateService.getIssuance(proposal.getTxId())
                         .filter(issuance -> issuance.getChainHeight() <= chainHeight)

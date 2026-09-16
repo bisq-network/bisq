@@ -50,7 +50,6 @@ import com.google.protobuf.ByteString;
 import org.bitcoinj.core.Coin;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

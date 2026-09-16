@@ -29,6 +29,8 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.store.BlockStoreException;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.net.URISyntaxException;
@@ -83,7 +85,7 @@ public class CommonSetup {
                 Profiler.printSystemLoad();
                 log.error("OutOfMemoryError occurred. We shut down.", throwable);
                 // Leave it to the handleUncaughtException to shut down or not.
-                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
+                notifyUncaughtExceptionHandler(uncaughtExceptionHandler, throwable);
             } else if (throwable instanceof ClassCastException &&
                     "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());
@@ -98,11 +100,22 @@ public class CommonSetup {
                 log.error("throwableClass= " + throwable.getClass());
                 log.error("Stack trace:\n" + ExceptionUtils.getStackTrace(throwable));
                 throwable.printStackTrace();
-                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
+                notifyUncaughtExceptionHandler(uncaughtExceptionHandler, throwable);
             }
         };
         Thread.setDefaultUncaughtExceptionHandler(handler);
         Thread.currentThread().setUncaughtExceptionHandler(handler);
+    }
+
+    @VisibleForTesting
+    static void notifyUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler,
+                                               Throwable throwable) {
+        // The desktop handler displays JavaFX UI. During JVM shutdown the toolkit is being disposed
+        // concurrently and the replacement UserThread is intentionally not the FX application
+        // thread, so logging above is the only safe error reporting path.
+        if (!UserThread.isJvmShutdownInProgress()) {
+            UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
+        }
     }
 
     private static void setupLog(Config config) {
@@ -120,7 +133,7 @@ public class CommonSetup {
         Thread hook = new Thread(() -> {
             try {
                 var countDownLatch = new CountDownLatch(1);
-                UserThread.execute(() ->
+                UserThread.executeAtShutdown(() ->
                         gracefulShutDownHandler.gracefulShutDown(countDownLatch::countDown));
                 //noinspection ResultOfMethodCallIgnored
                 countDownLatch.await(2, TimeUnit.MINUTES);

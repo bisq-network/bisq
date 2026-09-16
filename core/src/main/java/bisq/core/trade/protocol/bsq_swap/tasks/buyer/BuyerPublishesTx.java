@@ -59,6 +59,7 @@ public class BuyerPublishesTx extends BsqSwapTask {
                 return;
             }
 
+            byte[] publishedTransaction = transaction.bitcoinSerialize();
             protocolModel.getWalletsManager().publishAndCommitBsqTx(transaction,
                     TxType.TRANSFER_BSQ,
                     new TxBroadcaster.Callback() {
@@ -68,12 +69,6 @@ public class BuyerPublishesTx extends BsqSwapTask {
                             trade.setState(BsqSwapTrade.State.COMPLETED);
                             protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
                             protocolModel.getTradeManager().requestPersistence();
-
-                            if (!completed) {
-                                complete();
-                            } else {
-                                log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                            }
                         }
 
                         @Override
@@ -85,6 +80,8 @@ public class BuyerPublishesTx extends BsqSwapTask {
                             }
                         }
                     });
+            // Advance only after recording the exact handoff; even an immediate success callback must not advance first.
+            protocolModel.recordTransactionPublication(publishedTransaction);
             complete();
         } catch (Throwable t) {
             failed(t);

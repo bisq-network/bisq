@@ -1,6 +1,7 @@
 package bisq.core.support.dispute;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.utils.DepositTransactionUtils;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -10,13 +11,26 @@ import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.ScriptBuilder;
+
+import java.security.KeyPair;
+
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +51,10 @@ class DisputeValidationTest {
             Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() + 1;
     private static final Date POST_ACTIVATION_NOW =
             new Date(Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() + 1);
+    private static final ECKey BUYER_MULTISIG_KEY = new ECKey();
+    private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
+    private static final long TRADE_TX_FEE = 1_000;
+    private static final Map<PubKeyRing, KeyPair> SIGNATURE_KEY_PAIRS = new HashMap<>();
 
     @Test
     void validateDisputeDataDoesNotUseSenderSuppliedTradeDateWithoutLocalTrade() {
@@ -110,7 +128,7 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, refundAgentPubKeyRing, contract, SupportType.REFUND);
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
     }
 
     @Test
@@ -121,7 +139,24 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.REFUND);
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsRefundDisputeWithoutSerializedDepositTx() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), refundAgentPubKeyRing);
+        Dispute dispute = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                false);
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
     }
 
     @Test
@@ -133,6 +168,128 @@ class DisputeValidationTest {
 
         assertDoesNotThrow(
                 () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataAcceptsCanonicalTransactionIds() {
+        Dispute dispute = refundDisputeWithDelayedPayoutTxId("cd".repeat(32));
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsNonHexDepositTxId() {
+        Dispute dispute = refundDisputeWithTxIds("deposit-tx-id", "cd".repeat(32));
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsNonCanonicalDelayedPayoutTxId() {
+        Dispute upperCase = refundDisputeWithDelayedPayoutTxId("CD".repeat(32));
+        Dispute wrongLength = refundDisputeWithDelayedPayoutTxId("cd".repeat(31));
+        Dispute blank = refundDisputeWithDelayedPayoutTxId(" ");
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(upperCase, walletService(), POST_ACTIVATION_NOW));
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(wrongLength, walletService(), POST_ACTIVATION_NOW));
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(blank, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataAcceptsValidContractSignaturesOnMediationDispute() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing mediatorPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, mediatorPubKeyRing, pubKeyRing());
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Dispute dispute = dispute(buyerPubKeyRing,
+                mediatorPubKeyRing,
+                contract,
+                SupportType.MEDIATION,
+                POST_ACTIVATION_TRADE_DATE,
+                false,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsContractSignatureFromWrongKey() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing mediatorPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, mediatorPubKeyRing, pubKeyRing());
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        // A well-formed signature produced by a key that is not the taker's must be rejected
+        Dispute dispute = dispute(buyerPubKeyRing,
+                mediatorPubKeyRing,
+                contract,
+                SupportType.MEDIATION,
+                POST_ACTIVATION_TRADE_DATE,
+                false,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson));
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataAcceptsRefundDisputeWithOnlyOneContractSignature() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), refundAgentPubKeyRing);
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Dispute withoutTakerSignature = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                true,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                null);
+        Dispute withoutMakerSignature = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                true,
+                null,
+                contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
+
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(withoutTakerSignature, walletService(), POST_ACTIVATION_NOW));
+        assertDoesNotThrow(
+                () -> DisputeValidation.validateDisputeData(withoutMakerSignature, walletService(), POST_ACTIVATION_NOW));
+    }
+
+    @Test
+    void validateDisputeDataRejectsRefundDisputeWithForgedPeerContractSignature() {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, pubKeyRing(), refundAgentPubKeyRing);
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        // The opener signs with the own key for both fields; the peer signature does not verify against the peer key
+        Dispute dispute = dispute(buyerPubKeyRing,
+                refundAgentPubKeyRing,
+                contract,
+                SupportType.REFUND,
+                POST_ACTIVATION_TRADE_DATE,
+                true,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson));
+
+        assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
     }
 
     @Test
@@ -213,8 +370,39 @@ class DisputeValidationTest {
                                    Contract contract,
                                    SupportType supportType,
                                    long tradeDate) {
+        return dispute(traderPubKeyRing, agentPubKeyRing, contract, supportType, tradeDate, true);
+    }
+
+    private static Dispute dispute(PubKeyRing traderPubKeyRing,
+                                   PubKeyRing agentPubKeyRing,
+                                   Contract contract,
+                                   SupportType supportType,
+                                   long tradeDate,
+                                   boolean includeRefundDepositTx) {
         String contractAsJson = JsonUtil.objectToJson(contract);
-        return new Dispute(
+        return dispute(traderPubKeyRing,
+                agentPubKeyRing,
+                contract,
+                supportType,
+                tradeDate,
+                includeRefundDepositTx,
+                makerContractSignature(contract, contractAsJson, supportType),
+                takerContractSignature(contract, contractAsJson, supportType));
+    }
+
+    private static Dispute dispute(PubKeyRing traderPubKeyRing,
+                                   PubKeyRing agentPubKeyRing,
+                                   Contract contract,
+                                   SupportType supportType,
+                                   long tradeDate,
+                                   boolean includeRefundDepositTx,
+                                   @Nullable String makerContractSignature,
+                                   @Nullable String takerContractSignature) {
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Transaction depositTx = supportType == SupportType.REFUND && includeRefundDepositTx
+                ? refundDepositTx(contract)
+                : null;
+        Dispute dispute = new Dispute(
                 0,
                 TRADE_ID,
                 TRADER_ID,
@@ -225,16 +413,61 @@ class DisputeValidationTest {
                 0,
                 contract,
                 Hash.getSha256Hash(contractAsJson),
+                depositTx == null ? null : depositTx.bitcoinSerialize(),
                 null,
-                null,
-                null,
+                depositTx == null ? null : depositTx.getTxId().toString(),
                 null,
                 contractAsJson,
-                null,
-                null,
+                makerContractSignature,
+                takerContractSignature,
                 agentPubKeyRing,
                 false,
                 supportType);
+        if (supportType == SupportType.REFUND) {
+            dispute.setTradeTxFee(TRADE_TX_FEE);
+        }
+        return dispute;
+    }
+
+    private static Dispute refundDisputeWithTxIds(String depositTxId, String delayedPayoutTxId) {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, pubKeyRing(), pubKeyRing(), refundAgentPubKeyRing);
+        String contractAsJson = JsonUtil.objectToJson(contract);
+        Transaction depositTx = refundDepositTx(contract);
+        Dispute dispute = new Dispute(
+                0,
+                TRADE_ID,
+                TRADER_ID,
+                true,
+                true,
+                buyerPubKeyRing,
+                POST_ACTIVATION_TRADE_DATE,
+                0,
+                contract,
+                Hash.getSha256Hash(contractAsJson),
+                depositTx.bitcoinSerialize(),
+                null,
+                depositTxId,
+                null,
+                contractAsJson,
+                contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
+                contractSignature(contract.getTakerPubKeyRing(), contractAsJson),
+                refundAgentPubKeyRing,
+                false,
+                SupportType.REFUND);
+        dispute.setTradeTxFee(TRADE_TX_FEE);
+        dispute.setDelayedPayoutTxId(delayedPayoutTxId);
+        return dispute;
+    }
+
+    private static Dispute refundDisputeWithDelayedPayoutTxId(String delayedPayoutTxId) {
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing refundAgentPubKeyRing = pubKeyRing();
+        Contract contract = contract(buyerPubKeyRing, pubKeyRing(), pubKeyRing(), refundAgentPubKeyRing);
+        Dispute dispute = dispute(buyerPubKeyRing, refundAgentPubKeyRing, contract, SupportType.REFUND);
+        dispute.setDelayedPayoutTxId(delayedPayoutTxId);
+        return dispute;
     }
 
     private static Contract contract(PubKeyRing buyerPubKeyRing,
@@ -258,8 +491,8 @@ class DisputeValidationTest {
                 sellerPubKeyRing,
                 "makerPayoutAddress",
                 "takerPayoutAddress",
-                new byte[33],
-                new byte[33],
+                BUYER_MULTISIG_KEY.getPubKey(),
+                SELLER_MULTISIG_KEY.getPubKey(),
                 0,
                 REFUND_AGENT_NODE_ADDRESS,
                 null,
@@ -313,7 +546,58 @@ class DisputeValidationTest {
     }
 
     private static PubKeyRing pubKeyRing() {
-        return new PubKeyRing(Sig.generateKeyPair().getPublic(),
+        KeyPair signatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(),
                 Encryption.generateKeyPair().getPublic());
+        SIGNATURE_KEY_PAIRS.put(pubKeyRing, signatureKeyPair);
+        return pubKeyRing;
+    }
+
+    private static String contractSignature(PubKeyRing signer, String contractAsJson) {
+        try {
+            return Sig.sign(SIGNATURE_KEY_PAIRS.get(signer).getPrivate(), contractAsJson);
+        } catch (CryptoException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Nullable
+    private static String makerContractSignature(Contract contract, String contractAsJson, SupportType supportType) {
+        return supportType == SupportType.REFUND
+                ? contractSignature(contract.getMakerPubKeyRing(), contractAsJson)
+                : null;
+    }
+
+    @Nullable
+    private static String takerContractSignature(Contract contract, String contractAsJson, SupportType supportType) {
+        return supportType == SupportType.REFUND
+                ? contractSignature(contract.getTakerPubKeyRing(), contractAsJson)
+                : null;
+    }
+
+    private static Transaction refundDepositTx(Contract contract) {
+        Transaction makerFeeTx = new Transaction(MainNetParams.get());
+        makerFeeTx.addOutput(Coin.valueOf(600_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        Transaction takerFeeTx = new Transaction(MainNetParams.get());
+        takerFeeTx.addOutput(Coin.valueOf(600_000), ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+
+        Transaction depositTx = new Transaction(MainNetParams.get());
+        depositTx.addInput(makerFeeTx.getOutput(0));
+        depositTx.addInput(takerFeeTx.getOutput(0));
+        Coin outputValue = contract.getTradeAmount()
+                .add(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()))
+                .add(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()))
+                .add(Coin.valueOf(TRADE_TX_FEE));
+        depositTx.addOutput(outputValue,
+                DepositTransactionUtils.get2of2MultiSigOutputScript(
+                        contract.getBuyerMultiSigPubKey(),
+                        contract.getSellerMultiSigPubKey()));
+        return depositTx;
+    }
+
+    private static BtcWalletService walletService() {
+        BtcWalletService walletService = mock(BtcWalletService.class);
+        org.mockito.Mockito.when(walletService.getParams()).thenReturn(MainNetParams.get());
+        return walletService;
     }
 }

@@ -21,6 +21,7 @@ import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.components.controls.BisqJfxProgressBar;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
@@ -48,8 +49,6 @@ import org.bitcoinj.core.listeners.NewBestBlockListener;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import bisq.desktop.components.controls.BisqJfxProgressBar;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -483,7 +482,7 @@ public abstract class TradeStepView extends AnchorPane {
                 ownDispute = model.dataModel.refundManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     if (tradeStepInfo != null)
-                        tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
+                        showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
                 });
 
                 if (acceptMediationResultPopup != null) {
@@ -501,7 +500,7 @@ public abstract class TradeStepView extends AnchorPane {
                 ownDispute = model.dataModel.refundManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     if (tradeStepInfo != null)
-                        tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
+                        showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
                 });
 
                 if (acceptMediationResultPopup != null) {
@@ -516,12 +515,17 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
+    private void showRefundRequestState(TradeStepInfo.State state) {
+        tradeStepInfo.setOnAction(e -> model.dataModel.onOpenDispute());
+        tradeStepInfo.setState(state);
+    }
+
     protected void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
         if (isInArbitration()) {
             if (isRefundRequestStartedByPeer()) {
-                tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
+                showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
             } else if (isRefundRequestSelfStarted()) {
-                tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
+                showRefundRequestState(TradeStepInfo.State.IN_REFUND_REQUEST_SELF_REQUESTED);
             }
         } else if (isMediationClosedState()) {
             // We do not use the state itself as it is not guaranteed the last state reflects relevant information
@@ -636,18 +640,50 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
         }
 
-        acceptMediationResultPopup = new Popup().width(900)
+        Popup popup = new Popup().width(900)
                 .headLine(headLine)
                 .instruction(message)
-                .actionButtonText(actionButtonText)
-                .onAction(this::acceptProposal)
+                .actionButtonText(actionButtonText);
+        popup.onAction(() -> onMediationResultAction(popup, disputeResult, this::acceptProposal))
                 .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.reject"))
-                .onSecondaryAction(this::rejectProposal)
+                .onSecondaryAction(() -> onMediationResultAction(popup, disputeResult, this::rejectProposal))
                 .tertiaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
                 .onTertiaryAction(this::startArbitration)
                 .setTertiaryButtonDisabledState(remaining > 0)
-                .onClose(() -> acceptMediationResultPopup = null);
-        acceptMediationResultPopup.show();
+                .onClose(() -> {
+                    if (acceptMediationResultPopup == popup) {
+                        acceptMediationResultPopup = null;
+                    }
+                });
+        acceptMediationResultPopup = popup;
+        popup.show();
+    }
+
+    private void onMediationResultAction(Popup popup, DisputeResult displayedResult, Runnable action) {
+        if (acceptMediationResultPopup != popup) {
+            return;
+        }
+
+        boolean isCurrentResult = model.dataModel.mediationManager.findDispute(trade.getId())
+                .filter(dispute -> dispute.getDisputeResultProperty().get() == displayedResult)
+                .isPresent();
+        if (isCurrentResult) {
+            action.run();
+            return;
+        }
+
+        Popup errorPopup = new Popup().error(Res.get("portfolio.pending.mediationResult.error.resultChanged"));
+        // Retain the error as the current popup to suppress repeated stale actions and reopening until dismissal.
+        acceptMediationResultPopup = errorPopup;
+        errorPopup.onClose(() -> {
+            if (acceptMediationResultPopup != errorPopup) {
+                return;
+            }
+            acceptMediationResultPopup = null;
+            if (isMediationClosedState()) {
+                updateMediationResultState(false);
+            }
+        }).show();
     }
 
     private void acceptProposal() {

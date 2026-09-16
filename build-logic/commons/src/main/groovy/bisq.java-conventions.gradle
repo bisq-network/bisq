@@ -1,22 +1,18 @@
 plugins {
     id 'java'
-    id 'jacoco'
     id 'bisq.reproducible-build'
+    id 'org.gradlex.reproducible-builds'
 }
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io" }
+    maven { url = "https://jitpack.io" }
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
 }
 
 dependencies {
@@ -35,11 +31,4 @@ dependencies {
 
 test {
     useJUnitPlatform()
-}
-
-jacocoTestReport {
-    reports {
-        html.required = false
-        xml.required = true
-    }
 }

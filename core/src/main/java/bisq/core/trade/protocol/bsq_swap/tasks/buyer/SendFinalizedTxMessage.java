@@ -23,7 +23,11 @@ import bisq.core.trade.protocol.bsq_swap.tasks.SendBsqSwapMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class SendFinalizedTxMessage extends SendBsqSwapMessageTask {
@@ -38,11 +42,15 @@ public class SendFinalizedTxMessage extends SendBsqSwapMessageTask {
         try {
             runInterceptHook();
 
+            byte[] transactionBytes = Objects.requireNonNull(protocolModel.getTx()).clone();
             BsqSwapFinalizedTxMessage message = new BsqSwapFinalizedTxMessage(
                     protocolModel.getOfferId(),
                     protocolModel.getMyNodeAddress(),
-                    protocolModel.getTx());
+                    transactionBytes);
 
+            checkArgument(protocolModel.getDaoFacade().isDaoStateReadyAndInSync() ||
+                            protocolModel.hasTransactionPublication(transactionBytes),
+                    "DAO state is not ready and in sync and transaction publication handoff is unknown");
             send(message);
         } catch (Throwable t) {
             failed(t);

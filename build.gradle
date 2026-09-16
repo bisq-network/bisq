@@ -1,13 +1,13 @@
 buildscript {
     repositories {
         mavenCentral()
-        maven { url "https://jitpack.io" }
-        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url = "https://jitpack.io" }
+        maven { url = "https://plugins.gradle.org/m2/" }
     }
 }
 
-import org.gradle.jvm.tasks.Jar
-import org.gradle.api.tasks.bundling.Zip
+
+import groovy.xml.XmlSlurper
 
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -23,6 +23,7 @@ def dependencyVerificationBinaryKeyring = layout.projectDirectory.file('gradle/v
 def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/dependency-checksum-fallback-allowlist.tsv')
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
 def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
+def gradleProjectDirectory = rootProject.projectDir
 def linuxReleaseBuilderDockerfile = layout.projectDirectory.file('docker/release-builder/linux/Dockerfile')
 def linuxReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/release-builder.yml')
 def installerEvidenceWorkflow = layout.projectDirectory.file('.github/workflows/installer-evidence.yml')
@@ -409,20 +410,27 @@ tasks.register('refreshDependencyVerificationKeyring') {
     doLast {
         def keyringFile = dependencyVerificationKeyring.asFile
         def previousModified = keyringFile.exists() ? keyringFile.lastModified() : 0L
-        def result = exec {
-            commandLine gradleWrapperCommand, '--no-daemon', 'help', '--refresh-keys', '--export-keys'
-            ignoreExitValue = true
-        }
+        def process = new ProcessBuilder(
+                gradleWrapperCommand,
+                '--no-daemon',
+                'help',
+                '--refresh-keys',
+                '--export-keys'
+        )
+                .directory(gradleProjectDirectory)
+                .inheritIO()
+                .start()
+        def exitValue = process.waitFor()
 
         if (!keyringFile.exists()) {
             throw new GradleException("Failed to write ${keyringFile}. Check network access to the configured Gradle verification key servers.")
         }
 
-        if (result.exitValue != 0) {
+        if (exitValue != 0) {
             if (keyringFile.lastModified() <= previousModified) {
-                throw new GradleException("Gradle --refresh-keys --export-keys failed with exit code ${result.exitValue} and did not update ${keyringFile}.")
+                throw new GradleException("Gradle --refresh-keys --export-keys failed with exit code ${exitValue} and did not update ${keyringFile}.")
             }
-            logger.warn("Gradle --refresh-keys --export-keys exited with ${result.exitValue} after updating ${keyringFile}. This can happen in some Gradle/Bouncy Castle combinations.")
+            logger.warn("Gradle --refresh-keys --export-keys exited with ${exitValue} after updating ${keyringFile}. This can happen in some Gradle/Bouncy Castle combinations.")
         }
 
         if (dependencyVerificationBinaryKeyring.asFile.exists()) {

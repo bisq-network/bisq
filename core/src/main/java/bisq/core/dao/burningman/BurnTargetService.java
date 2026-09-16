@@ -23,12 +23,12 @@ import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.core.dao.burningman.model.ReimbursementModel;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.common.config.Config;
@@ -39,6 +39,7 @@ import javax.inject.Singleton;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -87,9 +88,15 @@ class BurnTargetService {
 
     Set<ReimbursementModel> getReimbursements(int chainHeight) {
         Set<ReimbursementModel> reimbursements = new HashSet<>();
-        daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream()
+        List<Issuance> issuances = daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream()
                 .filter(issuance -> issuance.getChainHeight() <= chainHeight)
-                .forEach(issuance -> getReimbursementProposalsForIssuance(issuance)
+                .toList();
+        if (issuances.isEmpty()) {
+            return reimbursements;
+        }
+
+        List<Proposal> validatedProposals = proposalService.getValidatedProposals();
+        issuances.forEach(issuance -> getReimbursementProposalsForIssuance(issuance, validatedProposals)
                         .forEach(reimbursementProposal -> {
                             int issuanceHeight = issuance.getChainHeight();
                             long issuanceAmount = issuance.getAmount();
@@ -160,9 +167,9 @@ class BurnTargetService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<ReimbursementProposal> getReimbursementProposalsForIssuance(Issuance issuance) {
-        return proposalService.getProposalPayloads().stream()
-                .map(ProposalPayload::getProposal)
+    private Stream<ReimbursementProposal> getReimbursementProposalsForIssuance(Issuance issuance,
+                                                                                List<Proposal> validatedProposals) {
+        return validatedProposals.stream()
                 .filter(proposal -> issuance.getTxId().equals(proposal.getTxId()))
                 .filter(proposal -> proposal instanceof ReimbursementProposal)
                 .map(proposal -> (ReimbursementProposal) proposal);

@@ -17,6 +17,7 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BsqCoinSelector extends BisqDefaultCoinSelector {
     private final DaoStateService daoStateService;
+    private final DaoStateMonitoringService daoStateMonitoringService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     @Setter
     @Getter
@@ -44,15 +46,20 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     @Inject
     public BsqCoinSelector(DaoStateService daoStateService,
+                           DaoStateMonitoringService daoStateMonitoringService,
                            UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService) {
         // permitForeignPendingTx is not relevant here as we do not support pending foreign utxos anyway.
         super(false);
         this.daoStateService = daoStateService;
+        this.daoStateMonitoringService = daoStateMonitoringService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
     }
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
+        if (daoStateMonitoringService.isCheckpointFailed())
+            return false;
+
         // output.getParentTransaction() cannot be null as it is checked in calling method
         Transaction parentTransaction = output.getParentTransaction();
         if (parentTransaction == null)

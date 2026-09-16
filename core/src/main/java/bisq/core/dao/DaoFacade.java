@@ -555,6 +555,7 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isDaoStateReadyAndInSync() {
         return daoStateService.isParseBlockChainComplete() &&
+                !daoStateMonitoringService.isCheckpointFailed() &&
                 !daoStateMonitoringService.isInConflictWithSeedNode() &&
                 !daoStateMonitoringService.isDaoStateBlockChainNotConnecting();
     }

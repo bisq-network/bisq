@@ -20,7 +20,6 @@ package bisq.core.notifications;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import com.google.common.base.Charsets;
 
 import org.apache.commons.codec.binary.Base64;
 

@@ -38,9 +38,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class DisputeOpenMessageTest {
@@ -113,6 +115,52 @@ public class DisputeOpenMessageTest {
         PeerOpenedDisputeMessage fromProto = PeerOpenedDisputeMessage.fromProto(proto, mock(CoreProtoResolver.class), 1);
 
         assertNull(fromProto.getSenderSignaturePubKey());
+    }
+
+    @Test
+    public void persistedDisputePayoutTxIdRestoresPayoutDoneLatch() {
+        String payoutTxId = "ab".repeat(32);
+        Dispute dispute = dispute(pubKeyRing(), pubKeyRing(), pubKeyRing());
+        dispute.setDisputePayoutTxId(payoutTxId);
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                SENDER_NODE_ADDRESS,
+                "uid",
+                SupportType.MEDIATION);
+
+        protobuf.OpenNewDisputeMessage proto = message.toProtoNetworkEnvelope().getOpenNewDisputeMessage();
+        Dispute restoredDispute = OpenNewDisputeMessage.fromProto(proto, mock(CoreProtoResolver.class), 1)
+                .getDispute();
+
+        assertEquals(payoutTxId, restoredDispute.getDisputePayoutTxId());
+        assertTrue(restoredDispute.isPayoutDone());
+
+        // The persisted dispute list restores rows through Dispute.fromProto directly; the latch must survive that too
+        Dispute persistedDispute = Dispute.fromProto(dispute.toProtoMessage(), mock(CoreProtoResolver.class));
+
+        assertEquals(payoutTxId, persistedDispute.getDisputePayoutTxId());
+        assertTrue(persistedDispute.isPayoutDone());
+    }
+
+    @Test
+    public void disputeRoundTripPreservesRefundClaimSignature() {
+        Dispute dispute = dispute(pubKeyRing(), pubKeyRing(), pubKeyRing());
+        dispute.setRefundClaimSignature("refund-claim-signature");
+        dispute.setRefundClaimOpeningDate(1_700_000_000_000L);
+
+        Dispute restoredDispute = Dispute.fromProto(dispute.toProtoMessage(), mock(CoreProtoResolver.class));
+
+        assertEquals("refund-claim-signature", restoredDispute.getRefundClaimSignature());
+        assertEquals(1_700_000_000_000L, restoredDispute.getRefundClaimOpeningDate());
+    }
+
+    @Test
+    public void disputeRoundTripKeepsMissingRefundClaimSignatureAsNull() {
+        Dispute dispute = dispute(pubKeyRing(), pubKeyRing(), pubKeyRing());
+
+        Dispute restoredDispute = Dispute.fromProto(dispute.toProtoMessage(), mock(CoreProtoResolver.class));
+
+        assertNull(restoredDispute.getRefundClaimSignature());
+        assertEquals(0, restoredDispute.getRefundClaimOpeningDate());
     }
 
     private static Dispute dispute(PubKeyRing buyerPubKeyRing,

@@ -31,7 +31,6 @@ import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.common.base.Charsets;
 
 import java.security.PublicKey;
 

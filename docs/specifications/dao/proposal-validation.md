@@ -3,9 +3,9 @@
 ## Scope
 
 This specification defines when an append-only DAO proposal may enter a node's proposal cache and
-when it is eligible for proposal-state hashing and ballots. It covers startup parsing, live payload
-arrival, persisted ballots, activation, and historical compatibility. Proposal-type-specific rules
-may impose additional requirements; bonded-role terms are specified in
+when it is eligible for proposal-state hashing, ballots, and downstream economic use. It covers
+startup parsing, live payload arrival, persisted ballots, activation, and historical compatibility.
+Proposal-type-specific rules may impose additional requirements; bonded-role terms are specified in
 [`bonded-roles.md`](bonded-roles.md).
 
 ## Trust and commitment boundary
@@ -52,13 +52,15 @@ from disk during startup or from the network after startup.
 
 ## Consensus eligibility
 
-Consensus consumers must validate proposals independently of cache admission and ballot
-persistence. In particular, the same eligibility boundary applies to:
+Consensus and economic consumers must validate proposals independently of cache admission and
+ballot persistence. In particular, the same eligibility boundary applies to:
 
 - the proposal list used by proposal-state hashing;
 - ballots offered for voting;
 - the valid ballot universe reconstructed during vote-result calculation; and
-- ballots restored from an older local persistence file.
+- ballots restored from an older local persistence file;
+- compensation proposals used to construct Burning Man payout candidates; and
+- reimbursement proposals used in the Burning Man burn-target model.
 
 From activation, full data-field validation is performed even during initial blockchain parsing.
 Validation must not depend on the node-wide "initial parsing complete" flag. At the point a proposal

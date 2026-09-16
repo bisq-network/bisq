@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 169 configurations.
+Generated from `gradle/verification-metadata.xml` after resolving 143 configurations.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
@@ -18,17 +18,17 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 205 |
-| Modules with PGP-signed artifacts only | 191 |
-| Modules using checksum fallback only | 14 |
+| Resolved external modules | 176 |
+| Modules with PGP-signed artifacts only | 158 |
+| Modules using checksum fallback only | 18 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 428 |
-| PGP-signed artifacts | 401 |
-| Checksum-fallback artifacts | 27 |
-| Signer keys found in exported keyring | 73 / 73 |
-| Signer keys with name or email | 53 / 73 |
-| Signer keys with creation date | 73 / 73 |
+| Verified artifacts | 369 |
+| PGP-signed artifacts | 334 |
+| Checksum-fallback artifacts | 35 |
+| Signer keys found in exported keyring | 66 / 66 |
+| Signer keys with name or email | 47 / 66 |
+| Signer keys with creation date | 66 / 66 |
 
 ## Handling Transitive Dependencies
 
@@ -39,11 +39,15 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum-only artifacts and review rationale |
 | --- | --- | --- |
 | `aopalliance:aopalliance:1.0` | transitive | `aopalliance-1.0.jar`<br>Legacy Maven Central artifact without published detached signatures.<br><br>`aopalliance-1.0.pom`<br>Legacy Maven Central artifact without published detached signatures. |
-| `com.github.bisq-network.tor-binary:tor-binary-geoip:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-geoip-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-geoip-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-linux32:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-linux32-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux32-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-linux64:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-linux64-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux64-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-macos:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-macos-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
-| `com.github.bisq-network.tor-binary:tor-binary-windows:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | `tor-binary-windows-7358b044704548b70cf8db4e2dacbe1ff4aa2171.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-windows-7358b044704548b70cf8db4e2dacbe1ff4aa2171.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.netlayer:tor.external:1e704010cab446b7ace1b452c343875b4259c150` | direct | `tor.external-1e704010cab446b7ace1b452c343875b4259c150.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor.external-1e704010cab446b7ace1b452c343875b4259c150.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
+| `com.github.bisq-network.netlayer:tor.native:1e704010cab446b7ace1b452c343875b4259c150` | direct | `tor.native-1e704010cab446b7ace1b452c343875b4259c150.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor.native-1e704010cab446b7ace1b452c343875b4259c150.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
+| `com.github.bisq-network.netlayer:tor:1e704010cab446b7ace1b452c343875b4259c150` | transitive | `tor-1e704010cab446b7ace1b452c343875b4259c150.jar`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit.<br><br>`tor-1e704010cab446b7ace1b452c343875b4259c150.pom`<br>Bisq-maintained netlayer JitPack artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-geoip:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-geoip-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-geoip-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-linux32:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-linux32-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux32-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-linux64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-linux64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-linux64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-macos-aarch64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-aarch64-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-macos:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-macos-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-macos-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
+| `com.github.bisq-network.tor-binary:tor-binary-windows:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | `tor-binary-windows-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.jar`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit.<br><br>`tor-binary-windows-18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1.pom`<br>Bisq-maintained Tor binary artifact pinned to an immutable commit. |
 | `com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a` | direct | `bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.jar`<br>Bisq-maintained JitPack fork pinned to an immutable commit.<br><br>`bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.module`<br>Bisq-maintained JitPack fork pinned to an immutable commit. |
 | `com.github.bisq-network:jsocks:8bfc68c58d443b0ea03a8e8ec352e120fd020127` | transitive | `jsocks-8bfc68c58d443b0ea03a8e8ec352e120fd020127.jar`<br>Bisq-maintained JitPack dependency pinned to an immutable commit.<br><br>`jsocks-8bfc68c58d443b0ea03a8e8ec352e120fd020127.pom`<br>Bisq-maintained JitPack dependency pinned to an immutable commit. |
 | `com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1` | direct | `jsonrpc4j-1.6.0.bisq.1.jar`<br>Bisq-maintained JitPack fork pinned to a reviewed Bisq release version.<br><br>`jsonrpc4j-1.6.0.bisq.1.module`<br>Bisq-maintained JitPack fork pinned to a reviewed Bisq release version. |
@@ -60,7 +64,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `aopalliance:aopalliance:1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `ch.qos.logback:logback-classic:1.5.32` | direct | PGP signed | 2 signed / 0 checksum | `60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
 | `ch.qos.logback:logback-core:1.5.32` | direct | PGP signed | 2 signed / 0 checksum | `60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
-| `com.eatthepath:fast-uuid:0.1` | transitive | PGP signed | 2 signed / 0 checksum | `8822C1150CB43540F20A97DB5216D78789719FAF`<br>Jon Chambers<br>`jon.chambers@gmail.com`<br>created 2018-01-27 |
 | `com.fasterxml.jackson.core:jackson-annotations:2.21` | direct | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson.core:jackson-core:2.21.1` | transitive | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson.core:jackson-core:2.21.2` | direct | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
@@ -78,26 +81,24 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:2.21.2` | transitive | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson:jackson-bom:2.21.1` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
 | `com.fasterxml.jackson:jackson-bom:2.21.2` | transitive | PGP signed | 1 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
-| `com.github.bisq-network.netlayer:tor.external:09c287b4573020a19f84507cb4fbbc9e78001383` | direct | PGP signed | 2 signed / 0 checksum | - |
-| `com.github.bisq-network.netlayer:tor.native:09c287b4573020a19f84507cb4fbbc9e78001383` | direct | PGP signed | 2 signed / 0 checksum | - |
-| `com.github.bisq-network.netlayer:tor:09c287b4573020a19f84507cb4fbbc9e78001383` | transitive | PGP signed | 2 signed / 0 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-geoip:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-linux32:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-linux64:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | PGP signed | 2 signed / 0 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-macos:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
-| `com.github.bisq-network.tor-binary:tor-binary-windows:7358b044704548b70cf8db4e2dacbe1ff4aa2171` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor.external:1e704010cab446b7ace1b452c343875b4259c150` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor.native:1e704010cab446b7ace1b452c343875b4259c150` | direct | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.netlayer:tor:1e704010cab446b7ace1b452c343875b4259c150` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-geoip:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-linux32:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-linux64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-macos-aarch64:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-macos:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `com.github.bisq-network.tor-binary:tor-binary-windows:18f7b42d8d2e0f4a97ac9eac73586f9ea06105c1` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a` | direct | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:jsocks:8bfc68c58d443b0ea03a8e8ec352e120fd020127` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1` | direct | checksum fallback | 0 signed / 2 checksum | - |
 | `com.github.bisq-network:jtorctl:30db998d855ff351c6f74783ff386f15304e875a` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `com.google.android:annotations:4.1.1.4` | transitive | PGP signed | 2 signed / 0 checksum | `0F07D1201BDDAB67CFB84EB479752DB6C966F0B8`<br>Rob Manning<br>`robert.m.manning@gmail.com`<br>created 2009-08-28<br><br>`1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
 | `com.google.api.grpc:proto-google-common-protos:2.64.1` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
-| `com.google.auth:google-auth-library-credentials:1.42.1` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
 | `com.google.code.findbugs:jsr305:3.0.2` | direct | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`7616EB882DAF57A11477AAF559A252FB1199D873`<br>created 2015-03-12 |
 | `com.google.code.gson:gson:2.13.2` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`9E84765A7AA3E3D3D5598A408E3F0DE7AE354651`<br>Jesse Wilson<br>`jwilson@squareup.com`<br>created 2014-03-18<br><br>`C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7`<br>Éamonn McManus<br>`eamonn@mcmanus.net`<br>created 2016-06-10 |
 | `com.google.code.gson:gson:2.14.0` | direct | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`9E84765A7AA3E3D3D5598A408E3F0DE7AE354651`<br>Jesse Wilson<br>`jwilson@squareup.com`<br>created 2014-03-18<br><br>`C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7`<br>Éamonn McManus<br>`eamonn@mcmanus.net`<br>created 2016-06-10 |
-| `com.google.code.gson:gson:2.8.0` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`9E84765A7AA3E3D3D5598A408E3F0DE7AE354651`<br>Jesse Wilson<br>`jwilson@squareup.com`<br>created 2014-03-18<br><br>`C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7`<br>Éamonn McManus<br>`eamonn@mcmanus.net`<br>created 2016-06-10 |
 | `com.google.errorprone:error_prone_annotations:2.47.0` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`EE0CA873074092F806F59B65D364ABAA39A47320`<br>Liam Miller-Cushon (Error Prone releases)<br>`cushon@google.com`<br>created 2022-01-28 |
 | `com.google.errorprone:error_prone_annotations:2.48.0` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`EE0CA873074092F806F59B65D364ABAA39A47320`<br>Liam Miller-Cushon (Error Prone releases)<br>`cushon@google.com`<br>created 2022-01-28 |
 | `com.google.gradle:osdetector-gradle-plugin:1.7.3` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
@@ -111,10 +112,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.google.protobuf:protobuf-java:3.25.8` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
 | `com.google.protobuf:protobuf-java:3.25.9` | transitive | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
 | `com.google.protobuf:protoc:3.25.8` | direct | PGP signed | 5 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30 |
-| `com.google.zxing:core:3.0.0` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
-| `com.google.zxing:javase:3.0.0` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
+| `com.google.zxing:core:3.5.4` | direct | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>Google Api Client Libraries (Releases)<br>`google-api-client-libraries@google.com`<br>created 2013-04-30<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.googlecode.jcsv:jcsv:1.4.0` | direct | PGP signed | 2 signed / 0 checksum | `93F864CEC9C19C6ABA6E0134107C8E67A79F79DA`<br>Eike Bergmann<br>`skironnet@gmail.com`<br>created 2012-02-12 |
-| `com.jfoenix:jfoenix:9.0.10` | direct | PGP signed | 2 signed / 0 checksum | `6E53CC65FF73101498F2D09FC5175C1E88879011`<br>Shadi Shaheen (JFoenix library)<br>`shadizr4@gmail.com`<br>created 2016-09-14 |
 | `com.natpryce:make-it-easy:4.0.1` | direct | PGP signed | 2 signed / 0 checksum | `207EEB28C8E18344209ACFBA08D10FD8BAD264C9`<br>Nat Pryce<br>`sw@natpryce.com`<br>created 2012-10-23 |
 | `com.sparkjava:spark-core:2.9.4` | direct | PGP signed | 2 signed / 0 checksum | `284C69F182F53A95F3D57966CF152F806378D293`<br>Per Wendel<br>`per.i.wendel@gmail.com`<br>created 2022-07-10 |
 | `com.squareup.moshi:moshi:1.15.2` | transitive | PGP signed | 2 signed / 0 checksum | `DBD744ACE7ADE6AA50DD591F66B50994442D2D40`<br>Square Clippy<br>`opensource@squareup.com`<br>created 2021-07-09 |
@@ -124,20 +123,15 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.squareup.okio:okio-jvm:3.7.0` | transitive | PGP signed | 2 signed / 0 checksum | `DBD744ACE7ADE6AA50DD591F66B50994442D2D40`<br>Square Clippy<br>`opensource@squareup.com`<br>created 2021-07-09 |
 | `com.squareup.okio:okio:3.7.0` | transitive | PGP signed | 1 signed / 0 checksum | `DBD744ACE7ADE6AA50DD591F66B50994442D2D40`<br>Square Clippy<br>`opensource@squareup.com`<br>created 2021-07-09 |
 | `com.sun.istack:istack-commons-runtime:4.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `04543577D6A9CC626239C50C7ECBD740FF06AEB5`<br>Eclipse Implementation of JAXB Project<br>`jaxb-impl-dev@eclipse.org`<br>created 2018-09-11 |
-| `com.turo:pushy:0.13.10` | direct | PGP signed | 2 signed / 0 checksum | `8822C1150CB43540F20A97DB5216D78789719FAF`<br>Jon Chambers<br>`jon.chambers@gmail.com`<br>created 2018-01-27 |
 | `commons-codec:commons-codec:1.19.0` | transitive | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `commons-codec:commons-codec:1.22.0` | direct | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `commons-io:commons-io:2.20.0` | transitive | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `commons-io:commons-io:2.22.0` | direct | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `commons-logging:commons-logging:1.2` | transitive | PGP signed | 2 signed / 0 checksum | `0CC641C3A62453AB390066C4A41F13C999945293`<br>created 2012-01-19 |
-| `de.jensd:fontawesomefx-commons:9.1.2` | direct | PGP signed | 2 signed / 0 checksum | `E6A6566630749F995E4703542C3097C79005FF30`<br>Jens Deters<br>`mail@jensd.de`<br>created 2017-03-27 |
-| `de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2` | direct | PGP signed | 2 signed / 0 checksum | `E6A6566630749F995E4703542C3097C79005FF30`<br>Jens Deters<br>`mail@jensd.de`<br>created 2017-03-27 |
-| `de.jensd:fontawesomefx:8.0.0` | direct | PGP signed | 2 signed / 0 checksum | `D98E48D9AB0116441BBC16CD0F64F95CEF5F0629`<br>Jens Deters<br>`mail@jensd.de`<br>created 2013-07-29<br><br>`E6A6566630749F995E4703542C3097C79005FF30`<br>Jens Deters<br>`mail@jensd.de`<br>created 2017-03-27 |
 | `eu.neilalexander:jnacl:1.0.0` | transitive | PGP signed | 2 signed / 0 checksum | `2F8B75551BAF4A693C1A7F9A8C7B8F00E43F742E`<br>Roy Lenferink (CODE SIGNING KEY)<br>`rlenferink@apache.org`<br>created 2018-01-12 |
 | `io.github.classgraph:classgraph:4.8.184` | transitive | PGP signed | 2 signed / 0 checksum | `1F47744C9B6E14F2049C2857F1F111AF65925306`<br>created 2015-01-14 |
 | `io.github.oshai:kotlin-logging-jvm:8.0.02` | transitive | PGP signed | 2 signed / 0 checksum | `47EB6836245D2D40E89DFB4136D4E9618F3ADAB5`<br>Ohad Shai<br>`ohadshai@gmail.com`<br>created 2021-11-27 |
 | `io.grpc:grpc-api:1.81.0` | transitive | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
-| `io.grpc:grpc-auth:1.81.0` | direct | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-context:1.81.0` | transitive | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-core:1.81.0` | direct | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-netty-shaded:1.81.0` | direct | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
@@ -146,18 +140,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `io.grpc:grpc-stub:1.81.0` | direct | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-util:1.81.0` | transitive | PGP signed | 2 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 5 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
-| `io.netty:netty-buffer:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-codec-dns:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-codec-http2:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-codec-http:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-codec-socks:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-codec:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-common:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-handler-proxy:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-handler:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-resolver-dns:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-resolver:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
-| `io.netty:netty-transport:4.1.37.Final` | transitive | PGP signed | 2 signed / 0 checksum | `7E22D50A7EBD9D2CD269B2D4056ACA74D46000BF`<br>Norman Maurer<br>`norman@apache.org`<br>created 2009-06-05 |
 | `io.perfmark:perfmark-api:0.27.0` | transitive | PGP signed | 2 signed / 0 checksum | `C6F7D1C804C821F49AF3BFC13AD93C3C677A106E`<br>Carl Mastrangelo<br>`carl@carlmastrangelo.com`<br>created 2019-05-31 |
 | `io.swagger.core.v3:swagger-annotations-jakarta:2.2.49` | transitive | PGP signed | 2 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
 | `io.swagger.core.v3:swagger-core-jakarta:2.2.49` | transitive | PGP signed | 2 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
@@ -177,14 +159,13 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `net.bytebuddy:byte-buddy-agent:1.17.7` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-07 |
 | `net.bytebuddy:byte-buddy:1.17.7` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-07 |
 | `net.bytebuddy:byte-buddy:1.18.3` | transitive | PGP signed | 2 signed / 0 checksum | `A7892505CF1A58076453E52D7999BEFBA1039E8B`<br>Rafael Winterhalter<br>`rafael.wth@gmail.com`<br>created 2019-11-07 |
-| `net.glxn:qrgen:1.4` | direct | PGP signed | 2 signed / 0 checksum | `06FAAF08F9E322363ECA5C080F97219EA9EEA989`<br>Ken Gullaksen (kenglxn)<br>`ken@glxn.net`<br>created 2013-04-24 |
 | `net.jcip:jcip-annotations:1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `net.sf.jopt-simple:jopt-simple:5.0.4` | direct | PGP signed | 2 signed / 0 checksum | `517B94F8D0A46317A28D8AB30DA8A5EC02D11EAD`<br>Paul Holser<br>`pholser@alumni.rice.edu`<br>created 2011-05-12 |
 | `org.apache.commons:commons-compress:1.28.0` | transitive | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12 |
 | `org.apache.commons:commons-lang3:3.18.0` | transitive | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12 |
 | `org.apache.commons:commons-lang3:3.20.0` | direct | PGP signed | 2 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12 |
 | `org.apache.httpcomponents:httpclient:4.5.14` | direct | PGP signed | 2 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
-| `org.apache.httpcomponents:httpcore:4.4.16` | direct | PGP signed | 2 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
+| `org.apache.httpcomponents:httpcore:4.4.16` | transitive | PGP signed | 2 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apiguardian:apiguardian-api:1.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
 | `org.assertj:assertj-core:3.27.7` | transitive | PGP signed | 2 signed / 0 checksum | `BE685132AFD2740D9095F9040CC0B712FEE75827`<br>AssertJ<br>`assertj@assertj.github.io`<br>created 2020-10-12 |
 | `org.bitbucket.cowwoc:diff-match-patch:1.2` | direct | PGP signed | 2 signed / 0 checksum | `64CD4D429F3BCD7F48BEE410E5CDB6E74294955A`<br>created 2010-11-07 |
@@ -224,11 +205,8 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.glassfish.jersey.ext:jersey-entity-filtering:4.0.2` | transitive | PGP signed | 2 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
 | `org.glassfish.jersey.inject:jersey-hk2:4.0.2` | direct | PGP signed | 2 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
 | `org.glassfish.jersey.media:jersey-media-json-jackson:4.0.2` | direct | PGP signed | 2 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
+| `org.gradlex:reproducible-builds:1.1` | transitive | PGP signed | 1 signed / 0 checksum | `66D7CBFF956830FE9F5A723AFE6C7D77A1CE15A6`<br>GradleX Code Signing<br>`team@gradlex.org`<br>created 2022-08-13 |
 | `org.hamcrest:hamcrest:3.0` | direct | PGP signed | 2 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>Joe Schmetzer<br>`joe@exubero.com`<br>created 2018-11-21 |
-| `org.jacoco:org.jacoco.agent:0.8.11` | direct | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
-| `org.jacoco:org.jacoco.ant:0.8.11` | direct | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
-| `org.jacoco:org.jacoco.core:0.8.11` | transitive | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
-| `org.jacoco:org.jacoco.report:0.8.11` | transitive | PGP signed | 2 signed / 0 checksum | `A413F67D71BEEC23ADD0CE0ACB43338E060CF9FA`<br>created 2010-12-19 |
 | `org.javassist:javassist:3.30.2-GA` | transitive | PGP signed | 2 signed / 0 checksum | `E5C3B1929191DF06136CCB2B164779204E106A76`<br>Shigeru Chiba (Javassist Developer)<br>`chiba@javassist.org`<br>created 2021-05-07 |
 | `org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.3.21` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
 | `org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.21` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
@@ -253,9 +231,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.openjfx:javafx-graphics:21.0.10` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.opentest4j:opentest4j:1.3.0` | transitive | PGP signed | 2 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
-| `org.ow2.asm:asm-commons:9.6` | transitive | PGP signed | 2 signed / 0 checksum | `A5BD02B93E7A40482EB1D66A5F69AD087600B22C`<br>Eric Bruneton<br>`ebruneton@free.fr`<br>created 2011-11-20 |
-| `org.ow2.asm:asm-tree:9.6` | transitive | PGP signed | 2 signed / 0 checksum | `A5BD02B93E7A40482EB1D66A5F69AD087600B22C`<br>Eric Bruneton<br>`ebruneton@free.fr`<br>created 2011-11-20 |
-| `org.ow2.asm:asm:9.6` | transitive | PGP signed | 2 signed / 0 checksum | `A5BD02B93E7A40482EB1D66A5F69AD087600B22C`<br>Eric Bruneton<br>`ebruneton@free.fr`<br>created 2011-11-20 |
 | `org.pcollections:pcollections:2.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `908366594E746BF3C449F5622BE5D98F751F4136`<br>Harold Cooper<br>`harold@mit.edu`<br>created 2010-06-07 |
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 2 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
 | `org.slf4j:slf4j-api:2.0.17` | direct | PGP signed | 2 signed / 0 checksum | `60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |

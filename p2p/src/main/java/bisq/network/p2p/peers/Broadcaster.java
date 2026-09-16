@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +55,11 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     private final List<BroadcastRequest> broadcastRequests = new ArrayList<>();
     private Timer timer;
     private boolean shutDownRequested;
+    @Nullable
+    private volatile BroadcastHandler shutDownBroadcastHandler;
     private Runnable shutDownResultHandler;
     private final ListeningExecutorService executor;
+    private final AtomicBoolean shutDownCompleted = new AtomicBoolean();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +92,6 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
             // so we can expect that we get onCompleted called very fast and trigger the doShutDown from there.
             maybeBroadcastBundle();
         }
-        executor.shutdown();
     }
 
     public void flush() {
@@ -96,11 +99,16 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     }
 
     private void doShutDown() {
+        if (!shutDownCompleted.compareAndSet(false, true)) {
+            return;
+        }
+
         log.info("Broadcaster doShutDown started");
         broadcastHandlers.forEach(BroadcastHandler::cancel);
         if (timer != null) {
             timer.stop();
         }
+        executor.shutdown();
         shutDownResultHandler.run();
     }
 
@@ -118,6 +126,11 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     public void broadcast(BroadcastMessage message,
                           @Nullable NodeAddress sender,
                           @Nullable BroadcastHandler.Listener listener) {
+        if (shutDownCompleted.get()) {
+            // The executor is stopped; a bundle created now would only be rejected.
+            log.warn("Ignoring broadcast request for {} after shutdown", message.getClass().getSimpleName());
+            return;
+        }
         broadcastRequests.add(new BroadcastRequest(message, sender, listener));
         if (timer == null) {
             timer = UserThread.runAfter(this::maybeBroadcastBundle, BROADCAST_INTERVAL_MS, TimeUnit.MILLISECONDS);
@@ -128,6 +141,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         if (!broadcastRequests.isEmpty()) {
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
             broadcastHandlers.add(broadcastHandler);
+            if (shutDownRequested) {
+                shutDownBroadcastHandler = broadcastHandler;
+            }
             broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested, executor);
             broadcastRequests.clear();
 
@@ -146,7 +162,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     @Override
     public void onCompleted(BroadcastHandler broadcastHandler) {
         broadcastHandlers.remove(broadcastHandler);
-        if (shutDownRequested) {
+        // An earlier runtime broadcast may finish before the shutdown bundle has submitted its sends.
+        // Only the shutdown bundle's completion (including its bounded timeout) may cancel the remaining work.
+        if (broadcastHandler == shutDownBroadcastHandler) {
             doShutDown();
         }
     }

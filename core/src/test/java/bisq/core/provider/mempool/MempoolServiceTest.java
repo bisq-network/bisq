@@ -27,6 +27,7 @@ import bisq.core.user.Preferences;
 
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.http.HttpException;
+import bisq.network.http.UrlSafetyChecker;
 
 import bisq.common.config.Config;
 
@@ -37,10 +38,16 @@ import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -69,6 +76,57 @@ class MempoolServiceTest {
 
         assertTrue(receivers.contains(DONATION_ADDRESS));
         assertFalse(receivers.contains(LIST_LEGACY_ADDRESS));
+    }
+
+    @Test
+    void requestTxAsHexRejectsMalformedTxIdWithoutLeakingOutstandingRequest() {
+        MempoolService service = requestService("https://mempool.space/api/tx");
+
+        assertFailedRequest(service, service.requestTxAsHex("not-a-transaction-id"), IllegalArgumentException.class);
+    }
+
+    @Test
+    void requestTxStatusRejectsMalformedTxIdWithoutLeakingOutstandingRequest() {
+        MempoolService service = requestService("https://mempool.space/api/tx");
+
+        assertFailedRequest(service, service.requestTxStatus("not-a-transaction-id"), IllegalArgumentException.class);
+    }
+
+    @Test
+    void requestTxAsHexHandlesSynchronousProviderFailure() {
+        MempoolService service = requestService("not-a-url");
+
+        assertFailedRequest(service, service.requestTxAsHex("00".repeat(32)), UrlSafetyChecker.InvalidUrlException.class);
+    }
+
+    @Test
+    void requestTxStatusHandlesSynchronousProviderFailure() {
+        MempoolService service = requestService("not-a-url");
+
+        assertFailedRequest(service, service.requestTxStatus("00".repeat(32)), UrlSafetyChecker.InvalidUrlException.class);
+    }
+
+    private static void assertFailedRequest(MempoolService service,
+                                            CompletableFuture<?> future,
+                                            Class<? extends Throwable> expectedCause) {
+        ExecutionException exception = assertThrows(ExecutionException.class,
+                () -> future.get(5, TimeUnit.SECONDS));
+        assertInstanceOf(expectedCause, exception.getCause());
+        assertTrue(future.isCompletedExceptionally());
+        assertEquals(0, service.getOutstandingRequests());
+    }
+
+    private static MempoolService requestService(String provider) {
+        Preferences preferences = mock(Preferences.class);
+        when(preferences.getDefaultTxBroadcastServices()).thenReturn(List.of(provider));
+        return new MempoolService(mock(Socks5ProxyProvider.class),
+                mock(Config.class),
+                preferences,
+                mock(FilterPolicyService.class),
+                mock(DaoFacade.class),
+                mock(DaoStateService.class),
+                mock(BurningManAddressListService.class),
+                mock(BurningManPresentationService.class));
     }
 
     private static MempoolService newService(BurningManAddressList addressList) {

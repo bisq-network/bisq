@@ -22,6 +22,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.validation.DepositTxValidation;
 import bisq.core.util.JsonUtil;
 import bisq.core.util.validation.RegexValidatorFactory;
 
@@ -35,7 +36,9 @@ import bisq.common.crypto.Sig;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
@@ -92,26 +95,42 @@ public class DisputeValidation {
             checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
                     "Invalid contractHash");
             validateContractDisputeAgentPubKeys(dispute, contract, now, trustedTradeDate);
+            validateTxIdFormat(dispute.getDepositTxId(), "depositTxId");
+            validateTxIdFormat(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId");
 
             Optional<Transaction> depositTx = dispute.findDepositTx(btcWalletService);
+            if (dispute.getSupportType() == SupportType.REFUND) {
+                checkArgument(depositTx.isPresent(), "Refund dispute must include the serialized deposit tx");
+            }
             if (depositTx.isPresent()) {
                 checkArgument(depositTx.get().getTxId().toString().equals(dispute.getDepositTxId()), "Invalid depositTxId");
                 checkArgument(depositTx.get().getInputs().size() >= 2, "DepositTx must have at least 2 inputs");
+                if (dispute.getSupportType() == SupportType.REFUND) {
+                    validateRefundDepositTx(dispute, depositTx.get());
+                }
             }
 
             try {
-                // Only the dispute opener has set the signature
                 String makerContractSignature = dispute.getMakerContractSignature();
-                if (makerContractSignature != null) {
-                    Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
-                            dispute.getContractAsJson(),
-                            makerContractSignature);
-                }
                 String takerContractSignature = dispute.getTakerContractSignature();
+                // Disputes copy Trade's signature fields, which normally contain only the local signature.
+                // The taker keeps the received maker signature separately in TradingPeer; since 1.7, each side
+                // also re-signs the payment-account-enriched JSON locally without exchanging that final signature.
+                // Thus the peer field may be null and neither signature can be required at admission.
+                // These checks establish consistency only: the dispute supplies the signing keys, and trader
+                // PubKeyRings are excluded from contract JSON. Even two valid signatures do not independently
+                // prove peer acceptance of payout addresses; deposit validation anchors different, multisig keys.
+                if (makerContractSignature != null) {
+                    checkArgument(Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
+                                    dispute.getContractAsJson(),
+                                    makerContractSignature),
+                            "Invalid makerContractSignature");
+                }
                 if (takerContractSignature != null) {
-                    Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
-                            dispute.getContractAsJson(),
-                            takerContractSignature);
+                    checkArgument(Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
+                                    dispute.getContractAsJson(),
+                                    takerContractSignature),
+                            "Invalid takerContractSignature");
                 }
             } catch (CryptoException e) {
                 throw new ValidationException(dispute, e.getMessage());
@@ -119,6 +138,22 @@ public class DisputeValidation {
         } catch (Throwable t) {
             throw new ValidationException(dispute, t.getMessage());
         }
+    }
+
+    public static Transaction validateRefundDepositTx(Dispute dispute, Transaction depositTx) {
+        Dispute checkedDispute = checkNotNull(dispute, "dispute must not be null");
+        Contract contract = checkNotNull(checkedDispute.getContract(), "dispute contract must not be null");
+        long tradeTxFee = checkedDispute.getTradeTxFee();
+        checkArgument(tradeTxFee > 0, "tradeTxFee must be positive");
+
+        return DepositTxValidation.checkDepositTxMultisigOutput(
+                depositTx,
+                contract.getTradeAmount(),
+                Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()),
+                Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()),
+                Coin.valueOf(tradeTxFee),
+                contract.getBuyerMultiSigPubKey(),
+                contract.getSellerMultiSigPubKey());
     }
 
     private static void validateContractDisputeAgentPubKeys(Dispute dispute,
@@ -157,6 +192,22 @@ public class DisputeValidation {
 
         // Legacy arbitration has no contract-bound dispute-agent pubKeyRing.
         return null;
+    }
+
+    // Replay detection and refund receipt accounting key on these IDs. Legitimate clients derive them from
+    // Transaction.getTxId().toString(), so any other spelling is rejected before the dispute can be stored.
+    private static void validateTxIdFormat(@Nullable String txId, String fieldName) {
+        if (txId == null) {
+            return;
+        }
+
+        boolean isCanonicalTxId;
+        try {
+            isCanonicalTxId = Sha256Hash.wrap(txId).toString().equals(txId);
+        } catch (IllegalArgumentException e) {
+            isCanonicalTxId = false;
+        }
+        checkArgument(isCanonicalTxId, "%s must be a canonical 32-byte transaction ID", fieldName);
     }
 
     public static void validateTradeAndDispute(Dispute dispute, Trade trade)

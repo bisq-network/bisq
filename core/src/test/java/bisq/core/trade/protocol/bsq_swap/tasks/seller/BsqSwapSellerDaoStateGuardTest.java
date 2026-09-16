@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.DaoCheckpointTestFixture;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
@@ -60,10 +61,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -137,11 +141,54 @@ class BsqSwapSellerDaoStateGuardTest {
         assertSigningBlocked(SellerAsTakerCreatesAndSignsTx.class, TAKER_FEE);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void actualCheckpointFailureBlocksSellerAdmission(boolean sellerAsMaker) {
+        var checkpoint = new DaoCheckpointTestFixture();
+        assertTrue(checkpoint.facade.isDaoStateReadyAndInSync());
+        Fixture fixture = fixture(checkpoint.facade);
+        RawTransactionInput input = rawInput(BSQ_TRADE_AMOUNT + (sellerAsMaker ? TAKER_FEE : MAKER_FEE));
+        when(fixture.btcWalletService.getTxFromSerializedTx(any())).thenReturn(parentTx(input));
+        fixture.protocolModel.setTradeMessage(sellerAsMaker ?
+                new BuyersBsqSwapRequest("trade-id", NODE_ADDRESS, mock(PubKeyRing.class), BTC_TRADE_AMOUNT,
+                        TX_FEE_PER_VBYTE, MAKER_FEE, TAKER_FEE, 1, List.of(input), 0,
+                        addressString(), addressString()) :
+                new BsqSwapTxInputsMessage("trade-id", NODE_ADDRESS, List.of(input), 0,
+                        addressString(), addressString()));
+
+        checkpoint.failCheckpoint();
+        TaskResult result = runTask(fixture.trade, sellerAsMaker ?
+                ProcessBuyersBsqSwapRequest.class : ProcessBsqSwapTxInputsMessage.class);
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("DAO state is not ready and in sync"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void actualCheckpointFailureBlocksSellerSigning(boolean sellerAsMaker) throws Exception {
+        var checkpoint = new DaoCheckpointTestFixture();
+        assertTrue(checkpoint.facade.isDaoStateReadyAndInSync());
+        Fixture fixture = fixture(checkpoint.facade);
+
+        checkpoint.failCheckpoint();
+
+        assertSigningBlocked(sellerAsMaker ? SellerAsMakerCreatesAndSignsTx.class :
+                SellerAsTakerCreatesAndSignsTx.class, sellerAsMaker ? MAKER_FEE : TAKER_FEE, fixture);
+    }
+
     private static void assertSigningBlocked(Class<? extends bisq.common.taskrunner.Task> taskClass,
                                              long sellersTradeFee) throws Exception {
+        Fixture fixture = fixture();
+        when(fixture.daoFacade.isDaoStateReadyAndInSync()).thenReturn(false);
+        assertSigningBlocked(taskClass, sellersTradeFee, fixture);
+    }
+
+    private static void assertSigningBlocked(Class<? extends bisq.common.taskrunner.Task> taskClass,
+                                             long sellersTradeFee,
+                                             Fixture fixture) throws Exception {
         RawTransactionInput buyerBsqInput = rawInput(BSQ_TRADE_AMOUNT);
         RawTransactionInput sellerBtcInput = rawInput(BTC_TRADE_AMOUNT);
-        Fixture fixture = fixture();
         fixture.protocolModel.getTradePeer().setInputs(List.of(buyerBsqInput));
         fixture.protocolModel.getTradePeer().setChange(0);
         fixture.protocolModel.getTradePeer().setBtcAddress(addressString());
@@ -164,7 +211,6 @@ class BsqSwapSellerDaoStateGuardTest {
                 any(Coin.class),
                 any()))
                 .thenReturn(unsignedSwapTx(buyerBsqInput, sellerBtcInput));
-        when(fixture.daoFacade.isDaoStateReadyAndInSync()).thenReturn(false);
 
         TaskResult result = runTask(fixture.trade, taskClass);
 
@@ -174,12 +220,15 @@ class BsqSwapSellerDaoStateGuardTest {
     }
 
     private static Fixture fixture() {
+        return fixture(mock(DaoFacade.class));
+    }
+
+    private static Fixture fixture(DaoFacade daoFacade) {
         configureFeeService();
 
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         BsqWalletService bsqWalletService = mock(BsqWalletService.class);
         TradeWalletService tradeWalletService = mock(TradeWalletService.class);
-        DaoFacade daoFacade = mock(DaoFacade.class);
         Provider provider = mock(Provider.class);
         TradeManager tradeManager = mock(TradeManager.class);
         Offer offer = mock(Offer.class);

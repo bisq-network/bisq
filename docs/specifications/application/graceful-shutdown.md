@@ -15,6 +15,23 @@ flush before scheduling process termination. The supplied completion handler mus
 termination, including when shutdown happens before dependency injection is complete or when a
 downgrade deliberately suppresses persistence.
 
+Service shutdown operations that can wait without a bound for network, socket, subprocess, or
+control-protocol I/O must not run on the UserThread. Their completion may be bounded by a timeout,
+and the UserThread must remain available to execute that timeout and the final persistence flush if
+the external operation does not return.
+
+Executors needed by delayed shutdown work must remain available until that work completes or is
+cancelled. In particular, messages deliberately broadcast during shutdown must be submitted before
+their executor stops accepting work.
+Completion of an unrelated, earlier runtime broadcast must not cancel the shutdown broadcast bundle.
+That bundle must finish or reach its own bounded timeout before remaining broadcasts are cancelled.
+
+Once network shutdown has started, connection lifecycle events no longer describe runtime state and
+must not be published to observers. Disconnects caused by the shutdown itself must not be counted as
+peer connection faults, must not change persisted peer data, and must not schedule further work. This
+applies to the controlled exit and to the JVM shutdown-hook backstop alike, so that the observable
+outcome does not depend on how termination was triggered.
+
 A shutdown request received while graceful shutdown is already in progress must join the in-progress
 shutdown. Its completion handler must be notified when that shutdown completes; the repeated request
 must neither start shutdown work again nor report completion before the work has completed. This
@@ -33,8 +50,30 @@ mutate the exit status captured by that normal shutdown.
 ### JVM shutdown-hook backstop
 
 The common JVM shutdown hook is a backstop for termination initiated outside the controlled flow. It
-must request graceful shutdown on the configured UserThread and wait for completion for no longer
-than two minutes.
+must first move UserThread dispatch to a serial executor and timer implementation that remain
+available throughout shutdown, then request graceful shutdown there and wait for completion for no
+longer than two minutes. An executor configured specifically for that purpose must not be replaced by
+later configuration of the regular executor, because the resulting defect is only observable when the
+process is terminated externally. For the GUI this shutdown path must not depend on the JavaFX
+application thread or JavaFX timers: JavaFX can dispose its toolkit concurrently from its own JVM
+shutdown hook, after which queued JavaFX work is not guaranteed to run. Existing JavaFX timers
+must not execute their callbacks or require explicit toolkit access once external JVM shutdown has
+begun.
+
+The transition to the shutdown executor ends presentation-event delivery. Presentation-layer
+subscribers must ignore domain notifications emitted by shutdown work instead of mutating
+JavaFX-observable state, while the underlying domain operation and any required network broadcast
+must continue. Uncaught-error handling during external shutdown must remain logging-only rather than
+attempting to display UI. The transition itself is not synchronised with work already queued on the
+replaced executor. That work may still run concurrently and is not awaited, so the shutdown path must
+not depend on it having completed. Library callbacks that were registered with the UserThread executor
+before the transition must resolve the current executor at dispatch time, so events raised by shutdown
+work are serialised with it instead of being delivered to the replaced executor.
+
+Resources governed by graceful shutdown must have one shutdown owner. A library or component must
+not independently tear down the same resource from a concurrent JVM hook when doing so can violate
+the application shutdown order. Abrupt process termination may still rely on operating-system or
+protocol ownership semantics as a final backstop.
 
 Once a controlled graceful shutdown has completed, its own subsequent `System.exit` must unregister
 the common hook before initiating JVM shutdown. Re-entering the already completed graceful shutdown
@@ -47,6 +86,9 @@ must not be required for normal shutdown handling.
 ## Rationale
 
 The UserThread serializes mutable application state and persistence snapshots. It must remain
-available until graceful shutdown and persistence callbacks finish. Separating that work from the
-final process exit prevents a wait cycle between the UserThread, `System.exit`, and the JVM shutdown
-hook while preserving a bounded best-effort path for external termination.
+available until graceful shutdown and persistence callbacks finish. A GUI-specific shutdown
+executor preserves that serialization without depending on the concurrently terminating JavaFX
+toolkit. Moving potentially unbounded external teardown off that executor keeps the timeout and
+persistence paths responsive. Separating that work from the final process exit prevents a wait cycle
+between the UserThread, `System.exit`, and the JVM shutdown hook while preserving a bounded
+best-effort path for external termination.

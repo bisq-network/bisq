@@ -18,6 +18,9 @@ Parameters in `BurningManService` and `DelayedPayoutTxReceiverService` are proto
 two peers derive different DPT outputs and fail trade verification unless the change is coordinated as a protocol
 upgrade.
 
+Authoritative DPT proposal-authentication, address-list version, and compatibility requirements are specified in
+[`../specifications/trade/delayed-payout-receivers.md`](../specifications/trade/delayed-payout-receivers.md).
+
 ## Units
 
 - BSQ amounts are stored in the DAO's smallest BSQ unit.
@@ -46,6 +49,7 @@ upgrade.
 | Minimum DPT output amount | `1_000` sats | DPT output filtering | `DPT_MIN_OUTPUT_AMOUNT` |
 | Minimum DPT remainder to legacy BM | `25_000` sats | Legacy fallback output | `DPT_MIN_REMAINDER_TO_LEGACY_BM` |
 | Minimum DPT fee rate | `10` sat/vbyte | DPT fee calculation | `DPT_MIN_TX_FEE_RATE` |
+| Minimum DPT address-list version | `1` | Negotiation and protected DPT operations | `BurningManAddressListService.MINIMUM_NEGOTIABLE_VERSION` |
 | Address-list share tolerance | `0.5` | DPT address-list share filter | `BM_ADDRESS_LIST_SHARE_RANGE_TOLERANCE` |
 | BTC-fee selection granularity | `10_000` weight units | Random BTC-fee receiver selection | `BtcFeeReceiverService` |
 | Accounting earliest block | Mainnet `656035`, regtest `111` | BM accounting store | `EARLIEST_BLOCK_HEIGHT` |
@@ -57,13 +61,15 @@ upgrade.
 ## Candidate Construction
 
 `BurningManService.getBurningManCandidatesByName(chainHeight)` builds a deterministic `TreeMap` keyed by candidate name.
-Candidates come from accepted compensation proposals and from genesis transaction outputs.
+Candidates come from consensus-validated compensation proposals and from genesis transaction outputs. Append-only P2P
+admission alone is insufficient: the proposal body must match the OP_RETURN commitment of its DAO transaction.
 
 ### Compensation Candidates
 
-For every `CompensationProposal`:
+For every consensus-validated `CompensationProposal`:
 
-1. The proposal must have a matching DAO `Issuance`.
+1. The proposal transaction type and OP_RETURN body commitment must be valid, and the proposal must have a matching DAO
+   `Issuance`.
 2. The issuance height must be `<= chainHeight`.
 3. The candidate name is `CompensationProposal.getName()`.
 4. The receiver address is selected as follows:
@@ -432,6 +438,7 @@ Each entry contains:
 Loader validation requires:
 
 - schema version equals `1`
+- positive `listVersion`
 - filename version equals `listVersion`
 - non-blank `network`
 - positive `chainHeight`
@@ -456,11 +463,15 @@ Peer version lists must be:
 - distinct
 - sorted ascending
 
-If no common version exists, selection throws. A version `<= 0` disables address-list filtering and validation.
+Nodes advertise only bundled versions at or above the minimum (`1`) and select the highest eligible common version.
+Historical versions below a future raised minimum are ignored during selection. If no eligible common version exists,
+selection throws. Version `0` is a tolerated historical serialization default, not a selectable no-filter policy.
 
 ### DPT Filtering
 
-If the selected address list is enforceable for the current network:
+Before loading candidates, DPT construction and verification reject below-minimum and unsupported versions. Mainnet also
+rejects an address-list resource for another network. If the selected address list is enforceable for the current
+network:
 
 1. Allowed addresses are all entry receiver addresses plus the list's legacy BM address.
 2. A candidate is skipped if its receiver address is missing from the allowlist.
@@ -508,8 +519,9 @@ The result can be negative.
 
 ### Reimbursements
 
-Reimbursements are DAO issuances of type `REIMBURSEMENT` with matching `ReimbursementProposal` tx ids and height
-`<= chainHeight`.
+Reimbursements are DAO issuances of type `REIMBURSEMENT` with matching consensus-validated `ReimbursementProposal` tx
+ids and height `<= chainHeight`. A raw append-only proposal body cannot enter the burn-target model without matching its
+transaction's OP_RETURN commitment.
 
 Only reimbursements with height:
 

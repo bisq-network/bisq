@@ -797,7 +797,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         ByteArray hashAsByteArray = new ByteArray(payload.getHash());
-        boolean payloadHashAlreadyInStore = appendOnlyDataStoreService.getMap(payload).containsKey(hashAsByteArray);
+        boolean payloadHashAlreadyInStore = appendOnlyDataStoreService.containsKey(payload, hashAsByteArray);
 
         // Store already knows about this payload. Ignore it unless the caller specifically requests a republish.
         if (payloadHashAlreadyInStore && !reBroadcast) {

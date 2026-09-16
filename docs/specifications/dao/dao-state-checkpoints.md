@@ -79,11 +79,60 @@ says nothing about the validity of the local DAO state.
   triggered. This happens if the hash chain does not reach the checkpoint height, or if the
   hash at that height was taken over from peers.
 - **Mismatching hash:**
+    - A warning is logged once with the checkpoint height, actual and expected hashes, and
+      the resulting restrictions on new financial authorization, snapshots, and delayed
+      state-hash broadcasts. Repeated status checks must not emit the warning again.
     - `DaoStateStorageService.removeAndBackupAllDaoData()` is called once to back up and
       remove the local DAO data, forcing a resync from resources on the next startup.
     - All registered `DaoStateMonitoringService.Listener` instances receive
       `onCheckpointFailed()`.
     - Subsequent mismatches are ignored once `checkpointFailed` has been set.
+
+## Financial safety after failure
+
+A mismatching self-created checkpoint must immediately revoke shared DAO financial readiness,
+before cleanup or listener callbacks run. The failure is sticky for the lifetime of the process:
+later matching hashes, snapshot application, synchronization completion, or successful recovery of
+another DAO error must not clear it. Cleanup failure or a missing/throwing listener must not restore
+authorization. Failure flags are local and must not enter serialized consensus state or its hashes.
+
+The BSQ wallet must reject new signing, commitment, and broadcast operations while checkpoint-failed.
+Both BSQ and non-BSQ coin selection in that wallet must refuse outputs, including own unconfirmed
+change: unreliable coloring must not make genuine BSQ spendable as ordinary BTC. Publication of a
+BSQ transaction involving both wallets must check before committing to either wallet. Existing swap
+seller readiness checks must reject input admission and BTC-input signing after failure.
+
+These rules guard BSQ-coloring-dependent financial use, not every BTC operation influenced by DAO
+data. Ordinary BTC withdrawals and DAO-independent escrow settlement are not globally disabled.
+They do not change consensus UTXO lookup or spendability semantics, checkpoint contents, validation
+of missing/non-self-created hashes, or the explicit `ignoreDevMsg` policy. No activation cutoff is
+required for revoking authorization after an already detected mismatch.
+
+Transactions already submitted to a broadcaster cannot be recalled. Their outcome callbacks,
+network observation, and wallet/trade-history accounting must continue; a later checkpoint failure
+must not be reported as cancellation of an already submitted transaction.
+
+Swap sellers must recheck shared readiness immediately before releasing their signed finalize
+request, even if admission and signing succeeded earlier. Buyers may send the final signed
+transaction while not ready only if that exact transaction was already handed to the publication
+workflow. Record this handoff after the guarded publication call returns normally and before
+advancing to the final-message task. Outcome callbacks must not advance ahead of that record.
+The handoff is session-only and binds immutable full transaction bytes, including witness data;
+it is not proof of propagation or mining. Wallet commitment, an existing wallet transaction, and
+deserialization alone must not establish it. Unknown handoff status fails closed, including after
+restart; observing settlement must still update trade history independently of notification success.
+
+The snapshot service must stop initiating captures and persistence requests after failure,
+including callbacks registered before failure and replacement captures after an earlier write
+finishes. A mismatch discovered during hash creation must prevent the immediately following
+snapshot. A queued state-hash broadcast must also recheck checkpoint failure before sending.
+This does not cancel writes already submitted or disable every state-hash network response.
+
+Restart alone is not proof of trustworthy recovery. Existing backup/removal remains best effort:
+independently queued writes and the shutdown persistence flush can recreate deleted DAO files.
+Race-free all-store cleanup, snapshot provenance, and verification of historical coloring require
+separate recovery work. A checkpoint failure must remain financially blocked regardless of whether
+that cleanup succeeds.
 
 ## Generating new checkpoint entries
 

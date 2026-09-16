@@ -42,7 +42,6 @@ import org.bitcoinj.core.Utils;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;

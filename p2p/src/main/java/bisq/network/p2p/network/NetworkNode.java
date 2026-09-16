@@ -28,6 +28,7 @@ import bisq.common.util.Utilities;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -52,7 +53,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -196,7 +199,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                             if (!connection.isStopped()) {
                                 outBoundConnections.add((OutboundConnection) connection);
                                 printOutBoundConnections();
-                                connectionListeners.forEach(e -> e.onConnection(connection));
+                                notifyConnectionListeners(e -> e.onConnection(connection));
                             }
                         }
 
@@ -206,7 +209,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                             //noinspection SuspiciousMethodCalls
                             outBoundConnections.remove(connection);
                             printOutBoundConnections();
-                            connectionListeners.forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+                            notifyConnectionListeners(e -> e.onDisconnect(closeConnectionReason, connection));
                         }
                     };
                     outboundConnection = new OutboundConnection(socket,
@@ -370,18 +373,24 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             if (server != null) {
-                server.shutDown();
+                shutDownServer(server);
                 server = null;
             }
 
             Set<Connection> allConnections = getAllConnections();
             int numConnections = allConnections.size();
 
-            if (numConnections == 0) {
-                log.info("Shutdown immediately because no connections are open.");
-                if (shutDownCompleteHandler != null) {
+            // The timeout and the last connection close can both complete the shutdown; report it only once.
+            AtomicBoolean completed = new AtomicBoolean();
+            Runnable completeOnce = () -> {
+                if (shutDownCompleteHandler != null && completed.compareAndSet(false, true)) {
                     shutDownCompleteHandler.run();
                 }
+            };
+
+            if (numConnections == 0) {
+                log.info("Shutdown immediately because no connections are open.");
+                completeOnce.run();
                 return;
             }
 
@@ -389,10 +398,8 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
 
             AtomicInteger shutdownCompleted = new AtomicInteger();
             Timer timeoutHandler = UserThread.runAfter(() -> {
-                if (shutDownCompleteHandler != null) {
-                    log.info("Shutdown completed due timeout");
-                    shutDownCompleteHandler.run();
-                }
+                log.info("Shutdown completed due timeout");
+                completeOnce.run();
             }, 1500, TimeUnit.MILLISECONDS);
 
             allConnections.forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN,
@@ -404,9 +411,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                             timeoutHandler.stop();
                             connectionExecutor.shutdownNow();
                             sendMessageExecutor.shutdownNow();
-                            if (shutDownCompleteHandler != null) {
-                                shutDownCompleteHandler.run();
-                            }
+                            completeOnce.run();
                         }
                     }));
         }
@@ -452,6 +457,19 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                     "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
+    @VisibleForTesting
+    void notifyConnectionListeners(Consumer<ConnectionListener> notification) {
+        // Connection lifecycle events describe runtime state. Once shutdown has started they no
+        // longer do: the disconnects are caused by us, so observers would treat our own shutdown as
+        // peer connection faults, schedule new work, or update GUI state. During an external JVM
+        // shutdown the replacement UserThread is additionally independent of JavaFX, so presentation
+        // observers must not be invoked from it at all. Both shutdown paths are covered so that the
+        // observable outcome does not depend on how termination was triggered.
+        if (!shutDownInProgress && !UserThread.isJvmShutdownInProgress()) {
+            connectionListeners.forEach(notification);
+        }
+    }
+
     public void addMessageListener(MessageListener messageListener) {
         boolean isNewEntry = messageListeners.add(messageListener);
         if (!isNewEntry)
@@ -470,6 +488,10 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    void shutDownServer(Server server) {
+        server.shutDown();
+    }
+
     void startServer(ServerSocket serverSocket) {
         ConnectionListener connectionListener = new ConnectionListener() {
             @Override
@@ -477,7 +499,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                 if (!connection.isStopped()) {
                     inBoundConnections.add((InboundConnection) connection);
                     printInboundConnections();
-                    connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                    notifyConnectionListeners(e -> e.onConnection(connection));
                 }
             }
 
@@ -487,7 +509,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
                 //noinspection SuspiciousMethodCalls
                 inBoundConnections.remove(connection);
                 printInboundConnections();
-                connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+                notifyConnectionListeners(e -> e.onDisconnect(closeConnectionReason, connection));
             }
         };
         server = new Server(serverSocket,

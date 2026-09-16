@@ -28,12 +28,13 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +51,6 @@ import static bisq.core.util.coin.CoinUtil.maxCoin;
 @Getter
 public class TxValidator {
     private final static double FEE_TOLERANCE = 0.5;     // we expect fees to be at least 50% of target
-    private final static long BLOCK_TOLERANCE = 599999;  // allow really old offers with weird fee addresses
 
     private final DaoStateService daoStateService;
     private final FilterPolicyService filterPolicyService;
@@ -190,9 +190,6 @@ public class TxValidator {
             JsonElement jsonFeeAddress = jsonVout0.get("scriptpubkey_address");
             log.debug("fee address: {}", jsonFeeAddress.getAsString());
             if (btcFeeReceivers.contains(jsonFeeAddress.getAsString())) {
-                return FeeValidationStatus.ACK_FEE_OK;
-            } else if (getBlockHeightForFeeCalculation(jsonTxt) < BLOCK_TOLERANCE) {
-                log.info("Leniency rule, unrecognised fee receiver but its a really old offer so let it pass, {}", jsonFeeAddress.getAsString());
                 return FeeValidationStatus.ACK_FEE_OK;
             } else {
                 String error = "fee address: " + jsonFeeAddress.getAsString() + " was not a known BTC fee receiver";

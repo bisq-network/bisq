@@ -25,6 +25,7 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoKillSwitch;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -90,6 +91,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final BsqCoinSelector bsqCoinSelector;
     private final NonBsqCoinSelector nonBsqCoinSelector;
     private final DaoStateService daoStateService;
+    private final DaoStateMonitoringService daoStateMonitoringService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     private final List<Transaction> walletTransactions = new ArrayList<>();
     private Map<String, Transaction> walletTransactionsById;
@@ -128,6 +130,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             BsqCoinSelector bsqCoinSelector,
                             NonBsqCoinSelector nonBsqCoinSelector,
                             DaoStateService daoStateService,
+                            DaoStateMonitoringService daoStateMonitoringService,
                             UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                             Preferences preferences,
                             FeeService feeService,
@@ -140,6 +143,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.bsqCoinSelector = bsqCoinSelector;
         this.nonBsqCoinSelector = nonBsqCoinSelector;
         this.daoStateService = daoStateService;
+        this.daoStateMonitoringService = daoStateMonitoringService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.daoKillSwitch = daoKillSwitch;
         this.bsqFormatter = bsqFormatter;
@@ -470,9 +474,26 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public Transaction signTxAndVerifyNoDustOutputs(Transaction tx)
             throws WalletException, TransactionVerificationException {
+        assertCheckpointNotFailed();
         WalletService.signTx(wallet, aesKey, tx);
         WalletService.verifyNonDustTxo(tx);
         return tx;
+    }
+
+    void assertCheckpointNotFailed() {
+        daoStateMonitoringService.assertCheckpointNotFailed();
+    }
+
+    @Override
+    public void broadcastTx(Transaction tx, TxBroadcaster.Callback callback) {
+        assertCheckpointNotFailed();
+        super.broadcastTx(tx, callback);
+    }
+
+    @Override
+    public void broadcastTx(Transaction tx, TxBroadcaster.Callback callback, int timeOut) {
+        assertCheckpointNotFailed();
+        super.broadcastTx(tx, callback, timeOut);
     }
 
 
@@ -481,6 +502,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void commitTx(Transaction tx, TxType txType) {
+        assertCheckpointNotFailed();
         wallet.commitTx(tx);
         //printTx("BSQ commit Tx", tx);
 
@@ -732,6 +754,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs)
             throws TransactionVerificationException {
+        assertCheckpointNotFailed();
         for (TransactionInput input : myInputs) {
             TransactionOutput connectedOutput = input.getConnectedOutput();
             checkNotNull(connectedOutput, "connectedOutput must not be null");

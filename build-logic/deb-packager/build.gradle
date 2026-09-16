@@ -1,0 +1,26 @@
+plugins {
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation libs.apache.commons.compress
+    implementation libs.commons.io
+    implementation libs.tukaani.xz
+
+    testImplementation libs.hamcrest
+    testImplementation libs.junit.jupiter.api
+    testImplementation libs.junit.jupiter.params
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.junit.jupiter
+
+    testRuntimeOnly libs.junit.jupiter.engine
+    testRuntimeOnly libs.junit.platform.launcher
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Set;
 
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
+import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -125,10 +126,13 @@ public final class DepositTxValidation {
 
         byte[] buyerPubKey = checkedOffer.isBuyOffer() ? checkedMakerMultiSigPubKey : checkedTakerMultiSigPubKey;
         byte[] sellerPubKey = checkedOffer.isBuyOffer() ? checkedTakerMultiSigPubKey : checkedMakerMultiSigPubKey;
-        Coin expectedMsOutputAmount = buyerSecurityDeposit
-                .add(sellerSecurityDeposit)
-                .add(checkedTradeTxFee)
-                .add(checkedTradeAmount);
+        checkDepositTxMultisigOutput(checkedPreparedDepositTx,
+                checkedTradeAmount,
+                buyerSecurityDeposit,
+                sellerSecurityDeposit,
+                checkedTradeTxFee,
+                buyerPubKey,
+                sellerPubKey);
         checkPreparedDepositTxOutputs(checkedPreparedDepositTx,
                 checkedOffer,
                 offerAmount,
@@ -136,11 +140,51 @@ public final class DepositTxValidation {
                 checkedTradeAmount,
                 checkedTradeTxFee,
                 checkedMakerInputs,
-                checkedTakerInputs,
-                expectedMsOutputAmount,
-                buyerPubKey,
-                sellerPubKey);
+                checkedTakerInputs);
         return checkedPreparedDepositTx;
+    }
+
+    /**
+     * Binds deposit output 0 to the value and 2-of-2 multisig script committed by a trade contract.
+     * This output-only check is reusable when the full maker/taker funding-input context is unavailable,
+     * such as when a dispute agent validates a serialized or independently fetched deposit transaction.
+     */
+    public static Transaction checkDepositTxMultisigOutput(Transaction depositTx,
+                                                           Coin tradeAmount,
+                                                           Coin buyerSecurityDeposit,
+                                                           Coin sellerSecurityDeposit,
+                                                           Coin tradeTxFee,
+                                                           byte[] buyerMultiSigPubKey,
+                                                           byte[] sellerMultiSigPubKey) {
+        Transaction checkedDepositTx = checkTransaction(checkNotNull(depositTx,
+                "depositTx must not be null"));
+        Coin checkedTradeAmount = checkIsPositive(tradeAmount, "tradeAmount");
+        Coin checkedBuyerSecurityDeposit = checkIsPositive(buyerSecurityDeposit,
+                "buyerSecurityDeposit");
+        Coin checkedSellerSecurityDeposit = checkIsPositive(sellerSecurityDeposit,
+                "sellerSecurityDeposit");
+        Coin checkedTradeTxFee = checkIsPositive(tradeTxFee, "tradeTxFee");
+        byte[] checkedBuyerMultiSigPubKey = TransactionValidation.checkMultiSigPubKey(buyerMultiSigPubKey);
+        byte[] checkedSellerMultiSigPubKey = TransactionValidation.checkMultiSigPubKey(sellerMultiSigPubKey);
+
+        checkArgument(!checkedDepositTx.getOutputs().isEmpty(),
+                "Deposit tx must have a multisig output at index 0");
+        TransactionOutput multisigOutput = checkedDepositTx.getOutput(0);
+        Coin expectedValue = checkedTradeAmount
+                .add(checkedBuyerSecurityDeposit)
+                .add(checkedSellerSecurityDeposit)
+                .add(checkedTradeTxFee);
+        checkArgument(multisigOutput.getValue().equals(expectedValue),
+                "Deposit tx multisig output amount mismatch. actual=%s, expected=%s",
+                multisigOutput.getValue(),
+                expectedValue);
+
+        Script expectedScript = DepositTransactionUtils.get2of2MultiSigOutputScript(
+                checkedBuyerMultiSigPubKey,
+                checkedSellerMultiSigPubKey);
+        checkArgument(multisigOutput.getScriptPubKey().equals(expectedScript),
+                "Deposit tx multisig output script does not match expected trade multisig script");
+        return checkedDepositTx;
     }
 
 
@@ -378,22 +422,7 @@ public final class DepositTxValidation {
                                                       Coin tradeAmount,
                                                       Coin tradeTxFee,
                                                       List<RawTransactionInput> makerInputs,
-                                                      List<RawTransactionInput> takerInputs,
-                                                      Coin expectedMsOutputAmount,
-                                                      byte[] buyerPubKey,
-                                                      byte[] sellerPubKey) {
-        checkArgument(!preparedDepositTx.getOutputs().isEmpty(),
-                "Prepared deposit tx must have at least the multisig output");
-
-        TransactionOutput multisigOutput = preparedDepositTx.getOutput(0);
-        checkArgument(multisigOutput.getValue().equals(expectedMsOutputAmount),
-                "Prepared deposit tx multisig output amount mismatch. actual=%s, expected=%s",
-                multisigOutput.getValue(),
-                expectedMsOutputAmount);
-        Script expectedMultiSigOutputScript = DepositTransactionUtils.get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
-        checkArgument(multisigOutput.getScriptPubKey().equals(expectedMultiSigOutputScript),
-                "Prepared deposit tx multisig output script does not match expected trade multisig script");
-
+                                                      List<RawTransactionInput> takerInputs) {
         Coin expectedMakerChange = offer.isBuyOffer()
                 ? Coin.ZERO
                 : DepositTransactionUtils.sumInputValues(makerInputs)
