@@ -32,6 +32,7 @@ import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.User;
 
 import java.util.Optional;
@@ -46,26 +47,25 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class CoreTradesServiceConfirmPaymentStartedTest {
+class CoreTradesServiceConfirmPermittedTest {
     private static final String TRADE_ID = "tradeId";
 
     private CoreTradesService coreTradesService;
+    private TradeManager tradeManager;
     private Trade trade;
-    private Contract contract;
-    private BuyerProtocol buyerProtocol;
 
     @BeforeEach
     void setUp() {
-        TradeManager tradeManager = mock(TradeManager.class);
+        tradeManager = mock(TradeManager.class);
         trade = mock(Trade.class);
-        contract = mock(Contract.class);
-        buyerProtocol = mock(BuyerProtocol.class);
 
         when(trade.getId()).thenReturn(TRADE_ID);
         when(trade.isDepositConfirmed()).thenReturn(true);
-        when(trade.confirmPermitted()).thenReturn(true);
+        // A valid contract, so on the buyer side only the dispute state can reject the call.
+        Contract contract = mock(Contract.class);
+        when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));
+        when(trade.getContract()).thenReturn(contract);
         when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(trade));
-        when(tradeManager.getTradeProtocol(trade)).thenReturn(buyerProtocol);
 
         coreTradesService = new CoreTradesService(new CoreContext(),
                 mock(CoreWalletsService.class),
@@ -83,35 +83,52 @@ class CoreTradesServiceConfirmPaymentStartedTest {
     }
 
     @Test
-    void missingSellerPaymentAccountPayloadIsRejected() {
-        when(trade.getContract()).thenReturn(contract);
-        when(contract.getSellerPaymentAccountPayload()).thenReturn(null);
+    void buyerIsRejectedWhileTheTradeIsUnderArbitration() {
+        BuyerProtocol buyerProtocol = mock(BuyerProtocol.class);
+        when(tradeManager.getTradeProtocol(trade)).thenReturn(buyerProtocol);
+        when(trade.confirmPermitted()).thenReturn(false);
 
         assertThrows(FailedPreconditionException.class,
                 () -> coreTradesService.confirmPaymentStarted(TRADE_ID, "txId", "txKey"));
+
         verify(buyerProtocol, never()).onPaymentStarted(any(), any());
         verify(trade, never()).setCounterCurrencyTxId(any());
         verify(trade, never()).setCounterCurrencyExtraData(any());
     }
 
     @Test
-    void missingContractIsRejected() {
-        // The contract is set during the take offer handshake, so this is not the missing
-        // message case; Trade.contract is @Nullable and the payload access would NPE.
-        when(trade.getContract()).thenReturn(null);
-
-        assertThrows(FailedPreconditionException.class,
-                () -> coreTradesService.confirmPaymentStarted(TRADE_ID, null, null));
-        verify(buyerProtocol, never()).onPaymentStarted(any(), any());
-    }
-
-    @Test
-    void presentSellerPaymentAccountPayloadStartsPayment() {
-        when(trade.getContract()).thenReturn(contract);
-        when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));
+    void buyerProceedsWhenTheDisputeStatePermitsIt() {
+        BuyerProtocol buyerProtocol = mock(BuyerProtocol.class);
+        when(tradeManager.getTradeProtocol(trade)).thenReturn(buyerProtocol);
+        when(trade.confirmPermitted()).thenReturn(true);
 
         coreTradesService.confirmPaymentStarted(TRADE_ID, null, null);
 
         verify(buyerProtocol).onPaymentStarted(any(), any());
+    }
+
+    @Test
+    void sellerIsRejectedWhileTheTradeIsInADispute() {
+        SellerProtocol sellerProtocol = mock(SellerProtocol.class);
+        when(tradeManager.getTradeProtocol(trade)).thenReturn(sellerProtocol);
+        when(trade.isFiatSent()).thenReturn(true);
+        when(trade.confirmPermitted()).thenReturn(false);
+
+        assertThrows(FailedPreconditionException.class,
+                () -> coreTradesService.confirmPaymentReceived(TRADE_ID));
+
+        verify(sellerProtocol, never()).onPaymentReceived(any(), any());
+    }
+
+    @Test
+    void sellerProceedsWhenTheDisputeStatePermitsIt() {
+        SellerProtocol sellerProtocol = mock(SellerProtocol.class);
+        when(tradeManager.getTradeProtocol(trade)).thenReturn(sellerProtocol);
+        when(trade.isFiatSent()).thenReturn(true);
+        when(trade.confirmPermitted()).thenReturn(true);
+
+        coreTradesService.confirmPaymentReceived(TRADE_ID);
+
+        verify(sellerProtocol).onPaymentReceived(any(), any());
     }
 }
