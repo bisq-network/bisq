@@ -1944,6 +1944,10 @@ tasks.register('generateJarHashes') {
     group = 'verification'
     description = 'Builds all project Jar task outputs and writes a canonical SHA-256 and size manifest.'
 
+    // The list of Jar tasks is collected from allprojects while the task runs. Task objects cannot be
+    // written to the configuration cache, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Collects Jar tasks of all projects at execution time')
+
     def jarTasks = provider {
         enabledJarTasks()
     }
@@ -1983,6 +1987,10 @@ tasks.register('generateJarHashes') {
 tasks.register('generateReleaseManifest') {
     group = 'verification'
     description = 'Builds the desktop Java payload and writes canonical SHA-256 release manifests.'
+
+    // The list of Jar tasks is collected from allprojects while the task runs. Task objects cannot be
+    // written to the configuration cache, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Collects Jar tasks of all projects at execution time')
 
     def desktopInstallDist = project(':desktop').tasks.named('installDist')
     def jarTasks = provider {
