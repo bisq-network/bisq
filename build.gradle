@@ -24,6 +24,8 @@ def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/d
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
 def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
 def gradleProjectDirectory = rootProject.projectDir
+// Captured while the build is configured; task actions must not read the layout.
+def manifestInputsDirectory = layout.buildDirectory.dir('tmp/manifest-inputs')
 // Task actions must not touch the project model, which the configuration cache enforces.
 // Paths in messages are therefore made relative to this directory instead of asking the
 // root project for a relative path while a task runs.
@@ -804,10 +806,10 @@ def resolveManifestFile = { File manifestPath, String manifestFileName ->
             }
 
             def extractedDir = new File(
-                    layout.buildDirectory.dir('tmp/manifest-inputs').get().asFile,
+                    manifestInputsDirectory.get().asFile,
                     Integer.toHexString(manifestPath.canonicalPath.hashCode())
             )
-            project.delete(extractedDir)
+            extractedDir.deleteDir()
             extractedDir.mkdirs()
 
             extractedManifest = new File(extractedDir, manifestFileName)
@@ -824,9 +826,13 @@ def resolveManifestFile = { File manifestPath, String manifestFileName ->
         return manifestPath
     }
 
-    def matchingManifests = fileTree(manifestPath) {
-        include "**/${manifestFileName}"
-    }.files.sort { left, right -> left.path <=> right.path }
+    def matchingManifests = []
+    manifestPath.eachFileRecurse(groovy.io.FileType.FILES) { candidate ->
+        if (candidate.name == manifestFileName) {
+            matchingManifests << candidate
+        }
+    }
+    matchingManifests = matchingManifests.sort { left, right -> left.path <=> right.path }
 
     if (matchingManifests.empty) {
         throw new GradleException("No ${manifestFileName} found under ${manifestPath}")
@@ -849,7 +855,7 @@ def resolveInstallerManifestFile = { File manifestPath ->
     resolveManifestFile(manifestPath, 'installer-manifest.tsv')
 }
 
-def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean required ->
+def readEvidenceTextFile = { File evidencePath, String evidenceFileName, Boolean required ->
     def missingMessage = { String location ->
         "No ${evidenceFileName} found ${location}"
     }
@@ -884,9 +890,13 @@ def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean
     }
 
     if (evidencePath.directory) {
-        def matchingFiles = fileTree(evidencePath) {
-            include "**/${evidenceFileName}"
-        }.files.sort { left, right -> left.path <=> right.path }
+        def matchingFiles = []
+        evidencePath.eachFileRecurse(groovy.io.FileType.FILES) { candidate ->
+            if (candidate.name == evidenceFileName) {
+                matchingFiles << candidate
+            }
+        }
+        matchingFiles = matchingFiles.sort { left, right -> left.path <=> right.path }
 
         if (matchingFiles.empty) {
             if (required) {
@@ -1120,14 +1130,20 @@ def verifyManifestMatches = { String manifestLabel, File expectedManifest, File 
 def installerArtifactIncludes = ['*.dmg', '*.deb', '*.rpm', '*.exe', '*.msi', '*.pkg']
 
 def installerArtifactsIn = { File installerDir ->
-    installerDir.directory
-            ? fileTree(installerDir) {
-                installerArtifactIncludes.each { include it }
-                exclude '**/jpackage_temp/**'
-            }.files
-                    .findAll { it.isFile() }
-                    .sort { left, right -> left.path <=> right.path }
-            : []
+    if (!installerDir.directory) {
+        return []
+    }
+    // The include patterns carry no slash, so they only ever matched the installer files
+    // directly inside this directory. Nothing below it was collected, which also made the
+    // jpackage_temp exclusion of the previous file tree redundant.
+    def children = installerDir.listFiles()
+    (children == null ? [] : children.toList())
+            .findAll { candidate ->
+                candidate.isFile() && installerArtifactIncludes.any { pattern ->
+                    candidate.name.endsWith(pattern.substring(1))
+                }
+            }
+            .sort { left, right -> left.path <=> right.path }
 }
 
 def expectedInstallerArtifactExtensions = {
@@ -2199,7 +2215,7 @@ tasks.register('generateInstallerStructureReport') {
     doLast {
         def installerFiles = installerArtifactsIn(desktopInstallerDir.get().asFile)
         def reportDir = installerStructureReportDir.get().asFile
-        project.delete(reportDir)
+        reportDir.deleteDir()
         reportDir.mkdirs()
         def normalizeReportOutput = { String value ->
             value == null ? null : value.replace(gradleProjectDirectory.absolutePath, '<repo>')

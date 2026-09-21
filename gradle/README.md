@@ -141,8 +141,13 @@ Five files are then ready to be committed, plus `gradle.properties` and the chec
 
 ### 5. Trust the Develocity plugin of the new Gradle version
 
-The workflows run Gradle with `--scan`, and `--scan` makes Gradle apply the Develocity
-plugin. **Which version it applies depends on the Gradle version**: Gradle 8.9 applied
+Any Gradle invocation with `--scan` makes Gradle apply the Develocity plugin. In this
+repository that is `.github/workflows/build.yml`, which runs `verifyReleaseBuild --scan`,
+and `.github/workflows/installer-evidence.yml`, which runs
+`verifyInstallerEvidenceBundle --scan` on the three platforms. Other workflows, among them
+`release-builder.yml`, do not pass `--scan` and are therefore not affected.
+
+**Which plugin version is applied depends on the Gradle version**: Gradle 8.9 applied
 `com.gradle:develocity-gradle-plugin:3.17.5`, Gradle 9.0.0 applies `4.1`. Dependency
 verification then rejects the new version, because the signing key is trusted per version:
 
