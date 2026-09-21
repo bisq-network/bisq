@@ -35,6 +35,10 @@ tasks.register('verifyReproducibleArchives') {
     group = 'verification'
     description = 'Builds archive outputs and verifies reproducible archive configuration and ZIP/JAR metadata.'
 
+    // The archive tasks are inspected while this task runs, because their settings are what is being
+    // checked. Task objects cannot be written to the configuration cache, so it is turned off here.
+    notCompatibleWithConfigurationCache('Inspects the archive tasks of the project at execution time')
+
     def archiveTasks = tasks.withType(AbstractArchiveTask)
     dependsOn archiveTasks
 
