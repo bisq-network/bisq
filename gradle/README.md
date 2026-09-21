@@ -25,16 +25,21 @@ Look up the version on [gradle.org/releases](https://gradle.org/releases/). All 
 follow the same pattern, and `https://services.gradle.org/versions/all` lists them per
 version in the fields `downloadUrl`, `checksumUrl` and `wrapperChecksumUrl`.
 
+Set `REPO_ROOT` to your checkout of this repository first. The commands below can then be
+copied as they are.
+
 ```bash
 V=9.0.0
 B=https://services.gradle.org/distributions
+REPO_ROOT=~/bisq
+
 curl -LO $B/gradle-$V-bin.zip
 curl -LO $B/gradle-$V-bin.zip.sha256
 curl -LO $B/gradle-$V-bin.zip.asc
 curl -LO $B/gradle-$V-wrapper.jar.sha256
 
 echo "$(cat gradle-$V-bin.zip.sha256)  gradle-$V-bin.zip" | sha256sum -c -
-gpg --import <path to the checkout>/gradle/verification-keyring.keys
+gpg --import "$REPO_ROOT/gradle/verification-keyring.keys"
 gpg --verify gradle-$V-bin.zip.asc gradle-$V-bin.zip
 ```
 
@@ -59,12 +64,17 @@ Generate the four files with the distribution you just verified, in an empty dir
 they cannot come from anywhere else:
 
 ```bash
+SUM=$(cat gradle-$V-bin.zip.sha256)
+
 unzip -q gradle-$V-bin.zip -d dist
 mkdir gen && cd gen
 echo "rootProject.name = 'wrapper-gen'" > settings.gradle
 ../dist/gradle-$V/bin/gradle wrapper --gradle-version $V --distribution-type bin \
-    --gradle-distribution-sha256-sum <value from gradle-$V-bin.zip.sha256>
+    --gradle-distribution-sha256-sum "$SUM"
 ```
+
+**This procedure runs once.** The distribution it uses is already the new one, so the jar
+and both scripts are written for the new version in that single run.
 
 Check that the generated `gradle/wrapper/gradle-wrapper.jar` has the SHA-256 published in
 `gradle-<version>-wrapper.jar.sha256`, then copy all four files into the project:
@@ -79,8 +89,10 @@ Keep the executable bit on `gradlew`.
 You can instead run the `wrapper` task in the project itself:
 
 ```bash
+SUM=$(cat gradle-$V-bin.zip.sha256)
+
 ./gradlew wrapper --gradle-version $V --distribution-type bin \
-    --gradle-distribution-sha256-sum <value from gradle-$V-bin.zip.sha256>
+    --gradle-distribution-sha256-sum "$SUM"
 ```
 
 Two details matter here:
@@ -88,15 +100,16 @@ Two details matter here:
 - The checksum option is not optional. As long as `gradle-wrapper.properties` contains
   `distributionSha256Sum`, the task stops with "gradle-wrapper.properties contains
   distributionSha256Sum property, but the wrapper configuration does not have one".
-- **The task has to run twice.** It always writes the jar and the two scripts of the Gradle
-  version that is *running*, while it writes the new version into
-  `gradle-wrapper.properties`. So the first run leaves the jar and the scripts at the old
-  version, and only the second run, which already uses the new distribution, replaces them.
-  Stopping after the first run is how this project ended up with a Gradle 8.9 wrapper jar
-  next to a 9.0.0 distribution address, which turned every build red until it was corrected.
+- **This command has to run twice**, unlike the procedure in the isolated directory above,
+  which runs once. The task always writes the jar and the two scripts of the Gradle version
+  that is *running*, while it writes the new version into `gradle-wrapper.properties`. So
+  the first run leaves the jar and the scripts at the old version, and only the second run,
+  which already uses the new distribution, replaces them. Stopping after the first run is
+  how this project ended up with a Gradle 8.9 wrapper jar next to a 9.0.0 distribution
+  address, which turned every build red until it was corrected.
 
-The way described above needs one run and ties the files to a distribution you verified
-yourself.
+Of the two, prefer the isolated directory: it needs one run and ties the files to a
+distribution you verified yourself.
 
 ### 3. Refresh the approved checksums
 
