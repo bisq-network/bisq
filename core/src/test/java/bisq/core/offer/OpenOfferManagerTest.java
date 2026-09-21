@@ -42,9 +42,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class OpenOfferManagerTest {
@@ -680,6 +682,76 @@ public class OpenOfferManagerTest {
             verify(offerBookService, times(2)).addOffer(any(Offer.class),
                     any(ResultHandler.class),
                     any(ErrorMessageHandler.class));
+        } finally {
+            ManualTimer.clear();
+            UserThread.setTimerClass(FrameRateTimer.class);
+        }
+    }
+
+    @Test
+    public void testRepublishOffersKeepsWalkingTheListWhileNotBootstrapped() {
+        P2PService p2PService = mock(P2PService.class);
+        OfferBookService offerBookService = mock(OfferBookService.class);
+        when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
+                null,
+                null,
+                null,
+                p2PService,
+                null,
+                null,
+                null,
+                offerBookService,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                persistenceManager,
+                null
+        );
+
+        OpenOffer firstOffer = new OpenOffer(make(btcUsdOffer));
+        OpenOffer secondOffer = new OpenOffer(make(btcUsdOffer.but(with(OfferMaker.id, "5678"))));
+        manager.getObservableList().add(firstOffer);
+        manager.getObservableList().add(secondOffer);
+
+        doAnswer(invocation -> {
+            ((ErrorMessageHandler) invocation.getArgument(2)).handleErrorMessage("Add offer failed");
+            return null;
+        }).when(offerBookService).addOffer(any(Offer.class), any(ResultHandler.class), any(ErrorMessageHandler.class));
+
+        ManualTimer.clear();
+        UserThread.setTimerClass(ManualTimer.class);
+        try {
+            // A failure on a bootstrapped node arms the retry, which republishes the whole list.
+            when(offerBookService.isBootstrapped()).thenReturn(true);
+            manager.maybeRepublishOffer(firstOffer);
+            verify(offerBookService, times(1)).addOffer(any(Offer.class),
+                    any(ResultHandler.class),
+                    any(ErrorMessageHandler.class));
+
+            // The retry fires while the network is not bootstrapped. The early return must
+            // still call the complete handler, otherwise the list walk stops at the first
+            // offer and the second one is never attempted.
+            when(offerBookService.isBootstrapped()).thenReturn(false);
+            ManualTimer retryTimer = ManualTimer.latest();
+            ManualTimer.firePendingTimers();
+            verify(offerBookService, times(1)).addOffer(eq(secondOffer.getOffer()),
+                    any(ResultHandler.class),
+                    any(ErrorMessageHandler.class));
+            verify(offerBookService, times(3)).addOffer(any(Offer.class),
+                    any(ResultHandler.class),
+                    any(ErrorMessageHandler.class));
+
+            // The walk armed no further retry.
+            assertSame(retryTimer, ManualTimer.latest());
         } finally {
             ManualTimer.clear();
             UserThread.setTimerClass(FrameRateTimer.class);
