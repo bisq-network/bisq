@@ -1559,6 +1559,10 @@ tasks.register('verifyReleaseEnvironment') {
     inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
     outputs.upToDateWhen { false }
 
+    // The Gradle object must not be read while the task runs, so the version is taken now.
+    // The Java values come from system properties of the running virtual machine and stay in doLast.
+    def actualGradleVersion = gradle.gradleVersion
+
     doLast {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
@@ -1573,15 +1577,15 @@ tasks.register('verifyReleaseEnvironment') {
         if (actualJavaVendor != expectedJavaVendorValue) {
             violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
         }
-        if (gradle.gradleVersion != expectedGradleVersion) {
-            violations << "Gradle version expected ${expectedGradleVersion} but was ${gradle.gradleVersion}"
+        if (actualGradleVersion != expectedGradleVersion) {
+            violations << "Gradle version expected ${expectedGradleVersion} but was ${actualGradleVersion}"
         }
 
         if (!violations.empty) {
             throw new GradleException("Release build environment verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
         }
 
-        logger.lifecycle("Verified release build environment: Gradle ${gradle.gradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
+        logger.lifecycle("Verified release build environment: Gradle ${actualGradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
     }
 }
 
