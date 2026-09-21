@@ -342,6 +342,10 @@ tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
     description = 'Resolves every resolvable configuration so Gradle dependency verification checks all dependency artifacts.'
 
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+
     doLast {
         resolveConfigurations(false)
         logger.lifecycle("Resolved and verified ${resolvableConfigurations().size()} configurations.")
@@ -354,6 +358,10 @@ tasks.register('verifyDependencySignaturePolicy') {
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyChecksumFallbackAllowlist)
+
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
 
     doLast {
         resolveConfigurations(false)
@@ -450,6 +458,10 @@ tasks.register('dependencySignatureReport') {
     inputs.file(dependencyChecksumFallbackAllowlist)
     outputs.file(dependencySignatureReport)
     outputs.upToDateWhen { false }
+
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
 
     doLast {
         def resolved = resolveConfigurations(true)
