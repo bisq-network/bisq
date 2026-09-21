@@ -126,6 +126,29 @@ no change, because its Dockerfile runs `./gradlew`.
 
 Five files are then ready to be committed, plus `gradle.properties` and the checklist.
 
+### 5. Trust the Develocity plugin of the new Gradle version
+
+The workflows run Gradle with `--scan`, and `--scan` makes Gradle apply the Develocity
+plugin. **Which version it applies depends on the Gradle version**: Gradle 8.9 applied
+`com.gradle:develocity-gradle-plugin:3.17.5`, Gradle 9.0.0 applies `4.1`. Dependency
+verification then rejects the new version, because the signing key is trusted per version:
+
+```text
+Error resolving plugin [id: 'com.gradle.develocity', version: '4.1', ...]
+> Dependency verification failed ...
+    Artifact was signed with key '7B79ADD11F8A779FE90FD3D0893A028475557671'
+    (Gradle Inc. <info@gradle.com>) and passed verification but the key isn't in
+    your trusted keys list.
+```
+
+This happens during plugin resolution, so it stops the build before any task runs, and a
+build without `--scan` does not show it. Reproduce it with `./gradlew help --scan`.
+
+Add the new version to `verification-metadata.xml`: a `<trusting>` line for that key and a
+`<component>` entry with the checksums of the jar and the module. Take the artifacts from
+`https://plugins.gradle.org/m2/com/gradle/develocity-gradle-plugin/<version>/`, verify the
+`.asc` signatures against the key above, then record their SHA-256 values.
+
 ## Dependency verification
 
 To update the verification metadata without PGP signature metadata run:
