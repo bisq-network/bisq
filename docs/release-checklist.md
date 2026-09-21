@@ -354,7 +354,7 @@ The build environment is pinned in `gradle.properties`:
 ```
 releaseBuild.javaVersion=21.0.6
 releaseBuild.javaVendor=Azul Systems, Inc.
-releaseBuild.gradleVersion=8.9
+releaseBuild.gradleVersion=9.0.0
 ```
 
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
