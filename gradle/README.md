@@ -19,32 +19,67 @@ and repeated in `docs/release-checklist.md`.
 
 ## How to upgrade the Gradle version
 
+### Before you start: one shell, four settings
+
+All blocks below are meant to be pasted into **one terminal window that stays open**. They
+share four shell variables, which the first block sets. If you open a new window later, run
+that first block again before anything else.
+
+The blocks contain no `#` comments on purpose. macOS Terminal runs zsh, and an interactive
+zsh does not treat `#` as a comment: a line such as `V=9.0.0   # version` becomes a command
+named `#`, the assignment is lost, and every later block fails with empty variables. All
+explanations are therefore in the text, not in the blocks.
+
+Checksums are taken with `shasum -a 256`, which exists on macOS and on Linux and writes the
+same format as `sha256sum`. The workflow uses `sha256sum` where it exists and falls back to
+`shasum -a 256`. On macOS `gpg` is not installed by default; `brew install gnupg` provides it.
+
+Edit `REPO_ROOT` to the path of your checkout, then paste:
+
+```bash
+V=9.0.0
+B=https://services.gradle.org/distributions
+REPO_ROOT=~/bisq
+WORK=~/gradle-$V-upgrade
+```
+
+- `V` is the Gradle version you are moving to.
+- `B` is the download address of the Gradle distributions.
+- `REPO_ROOT` is your checkout of this repository.
+- `WORK` is a scratch directory for the downloads and the generated files. It is created by
+  the next block and can be deleted afterwards.
+
+Check that the values arrived before you continue:
+
+```bash
+echo "V=$V REPO_ROOT=$REPO_ROOT WORK=$WORK"
+```
+
 ### 1. Pick a version and verify its distribution
 
 Look up the version on [gradle.org/releases](https://gradle.org/releases/). All addresses
 follow the same pattern, and `https://services.gradle.org/versions/all` lists them per
 version in the fields `downloadUrl`, `checksumUrl` and `wrapperChecksumUrl`.
 
-Set `REPO_ROOT` to your checkout of this repository first. The commands below can then be
-copied as they are.
+This block runs in `$WORK`, which it creates:
 
 ```bash
-V=9.0.0
-B=https://services.gradle.org/distributions
-REPO_ROOT=~/bisq
+mkdir -p "$WORK"
+cd "$WORK"
 
-curl -LO $B/gradle-$V-bin.zip
-curl -LO $B/gradle-$V-bin.zip.sha256
-curl -LO $B/gradle-$V-bin.zip.asc
-curl -LO $B/gradle-$V-wrapper.jar.sha256
+curl -LO "$B/gradle-$V-bin.zip"
+curl -LO "$B/gradle-$V-bin.zip.sha256"
+curl -LO "$B/gradle-$V-bin.zip.asc"
+curl -LO "$B/gradle-$V-wrapper.jar.sha256"
 
-echo "$(cat gradle-$V-bin.zip.sha256)  gradle-$V-bin.zip" | sha256sum -c -
+echo "$(cat "$WORK/gradle-$V-bin.zip.sha256")  gradle-$V-bin.zip" | shasum -a 256 -c -
 gpg --import "$REPO_ROOT/gradle/verification-keyring.keys"
-gpg --verify gradle-$V-bin.zip.asc gradle-$V-bin.zip
+gpg --verify "gradle-$V-bin.zip.asc" "gradle-$V-bin.zip"
 ```
 
-`gpg --verify` must print "Good signature from Gradle Inc.". Its remark that the key is not
-certified with a trusted signature is normal; it only says that no owner trust was assigned.
+The checksum line must print `gradle-9.0.0-bin.zip: OK`. `gpg --verify` must print "Good
+signature from Gradle Inc.". Its remark that the key is not certified with a trusted
+signature is normal; it only says that no owner trust was assigned.
 
 The value in `gradle-<version>-bin.zip.sha256` is the one that belongs into
 `distributionSha256Sum` in `wrapper/gradle-wrapper.properties`.
@@ -61,37 +96,50 @@ to `verification-keyring.keys` and let the new `gradle:gradle:<version>` entry i
 ### 2. Write the wrapper files
 
 Generate the four files with the distribution you just verified, in an empty directory, so
-they cannot come from anywhere else:
+they cannot come from anywhere else. This block runs in `$WORK`:
 
 ```bash
-SUM=$(cat gradle-$V-bin.zip.sha256)
+cd "$WORK"
+SUM=$(cat "$WORK/gradle-$V-bin.zip.sha256")
 
-unzip -q gradle-$V-bin.zip -d dist
-mkdir gen && cd gen
+unzip -q "gradle-$V-bin.zip" -d "$WORK/dist"
+mkdir -p "$WORK/gen"
+cd "$WORK/gen"
 echo "rootProject.name = 'wrapper-gen'" > settings.gradle
-../dist/gradle-$V/bin/gradle wrapper --gradle-version $V --distribution-type bin \
+"$WORK/dist/gradle-$V/bin/gradle" wrapper --gradle-version "$V" --distribution-type bin \
     --gradle-distribution-sha256-sum "$SUM"
 ```
 
 **This procedure runs once.** The distribution it uses is already the new one, so the jar
 and both scripts are written for the new version in that single run.
 
-Check that the generated `gradle/wrapper/gradle-wrapper.jar` has the SHA-256 published in
-`gradle-<version>-wrapper.jar.sha256`, then copy all four files into the project:
-
-- `gradlew`
-- `gradlew.bat`
-- `gradle/wrapper/gradle-wrapper.jar`
-- `gradle/wrapper/gradle-wrapper.properties`
-
-Keep the executable bit on `gradlew`.
-
-You can instead run the `wrapper` task in the project itself:
+Compare the generated jar with the checksum Gradle publishes for it:
 
 ```bash
-SUM=$(cat gradle-$V-bin.zip.sha256)
+cd "$WORK/gen"
+GENERATED=$(shasum -a 256 gradle/wrapper/gradle-wrapper.jar | cut -d ' ' -f 1)
+PUBLISHED=$(cat "$WORK/gradle-$V-wrapper.jar.sha256")
+if [ "$GENERATED" = "$PUBLISHED" ]; then echo "wrapper jar OK"; else echo "wrapper jar MISMATCH"; fi
+```
 
-./gradlew wrapper --gradle-version $V --distribution-type bin \
+Continue only if that printed `wrapper jar OK`. Then copy the four files into the checkout:
+
+```bash
+cd "$WORK/gen"
+cp gradlew gradlew.bat "$REPO_ROOT/"
+cp gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties \
+    "$REPO_ROOT/gradle/wrapper/"
+chmod 755 "$REPO_ROOT/gradlew"
+```
+
+You can instead run the `wrapper` task in the checkout itself. This block runs in
+`$REPO_ROOT` and still reads the checksum from `$WORK`:
+
+```bash
+cd "$REPO_ROOT"
+SUM=$(cat "$WORK/gradle-$V-bin.zip.sha256")
+
+./gradlew wrapper --gradle-version "$V" --distribution-type bin \
     --gradle-distribution-sha256-sum "$SUM"
 ```
 
@@ -118,13 +166,18 @@ of `.github/workflows/build.yml` and by the Gradle task `verifyGradleWrapperSecu
 **Changing the wrapper without updating this file turns every build red, including every
 open pull request.**
 
+This block runs in `$REPO_ROOT`:
+
 ```bash
+cd "$REPO_ROOT"
 head -2 gradle/wrapper/gradle-wrapper.sha256 > new.sha256
-sha256sum gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar \
+shasum -a 256 gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar \
     gradle/wrapper/gradle-wrapper.properties >> new.sha256
 mv new.sha256 gradle/wrapper/gradle-wrapper.sha256
-sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 ```
+
+All four files must be reported as `OK`.
 
 `.gitattributes` contains `*.bat text eol=crlf`, so `gradlew.bat` is stored with single line
 feeds in Git and written with carriage return and line feed into the working directory. Take
