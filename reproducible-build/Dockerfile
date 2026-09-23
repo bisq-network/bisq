@@ -9,6 +9,7 @@ ENV BISQ_REPO=${BISQ_REPO}
 ENV BITCOIND_REPO=${BITCOIND_REPO}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+  binutils \
   git \
   && rm -rf /var/lib/apt/lists/*
 
@@ -20,5 +21,5 @@ RUN git config submodule.bitcoind.url $BITCOIND_REPO && \
     git submodule update --init
 
 FROM repo-cloner AS builder
-ENTRYPOINT ["./gradlew", "--no-daemon"]
-CMD ["build"]
+ENTRYPOINT ["./gradlew", "--no-daemon", "--stacktrace"]
+CMD [":desktop:reproducibleDeb"]
