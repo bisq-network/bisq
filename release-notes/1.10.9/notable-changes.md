@@ -1,0 +1,30 @@
+# Bisq 1.10.9 Notable Changes
+
+Bisq 1.10.9 updates bundled DAO resources, the Burning Man address list, the Tor dependency, and build and release tooling.
+
+## Bundled Resources
+
+- Mainnet DAO state and block resources are updated through height 969000.
+- DAO state hash checkpoints now include heights 967000 and 968000.
+- The Burning Man v0006 address list and BTC mainnet denylist are updated.
+
+Related commits: [f88c8aa430](https://github.com/bisq-network/bisq/commit/f88c8aa430), [4e2e013558](https://github.com/bisq-network/bisq/commit/4e2e013558), [2b937972cd](https://github.com/bisq-network/bisq/commit/2b937972cd), [383aae0b76](https://github.com/bisq-network/bisq/commit/383aae0b76).
+
+## Tor and Dependency Verification
+
+- Update netlayer to revision `0d4dc4b6368f72bd90e517667cbb22b42a798754`, which includes Tor 0.4.9.13.
+- Update Gradle dependency verification metadata and the dependency signature report.
+
+Related commit: [050f1cc085](https://github.com/bisq-network/bisq/commit/050f1cc085).
+
+## Build and Release Tooling
+
+- Pin release builds to Gradle 9.0.0 and improve configuration-cache support in verification and release tasks.
+- Enable Gradle build caching and improve the reproducible Debian Docker build.
+- Update CI actions and build documentation.
+
+Related commits: [ed94df26a3](https://github.com/bisq-network/bisq/commit/ed94df26a3), [8040b67ee3](https://github.com/bisq-network/bisq/commit/8040b67ee3), [2d7770db49](https://github.com/bisq-network/bisq/commit/2d7770db49), [e4758054ad](https://github.com/bisq-network/bisq/commit/e4758054ad), [d80a83727e](https://github.com/bisq-network/bisq/commit/d80a83727e), [a8f16139d4](https://github.com/bisq-network/bisq/commit/a8f16139d4), [f2b4aef427](https://github.com/bisq-network/bisq/commit/f2b4aef427).
+
+## Version
+
+The application and packaging version is `1.10.9`, set by [4cf915501b](https://github.com/bisq-network/bisq/commit/4cf915501b).
