@@ -77,9 +77,9 @@ it is not a workaround which preserves or follows the burnt collateral.
 
 Below the activation height, historical parsing behaviour is preserved and a positive-valued
 non-canonical spend can survive as an ordinary BSQ transfer. No such spend exists in the bundled
-mainnet history through height 963120. Heights 963121 through 963349 immediately before mainnet
-activation and other persistent networks require their own audit; downstream state derivation must
-continue to fail closed for those histories.
+mainnet history through height 968341, which includes heights 963121 through 963349 immediately before
+mainnet activation. Other persistent networks require their own audit; downstream state derivation
+must continue to fail closed for those histories.
 
 ## 3. Bond state
 
