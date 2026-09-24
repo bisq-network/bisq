@@ -178,7 +178,7 @@ Update these only when a change is needed.
 
 | File | Content |
 |------|---------|
-| `core/src/main/resources/denylist/btc_mainnet.denylist` | Node addresses that are blocked at start. Also holds `requiredVersionForTrading` |
+| `core/src/main/resources/denylist/btc_mainnet.denylist` | Bans that apply from the start, before a network filter arrives. See [filter-and-deny-list.md](filter-and-deny-list.md) |
 | `core/src/main/resources/btc_mainnet.trusted_bsq_block_providers` | Trusted BSQ block providers with their public keys |
 | `core/src/main/resources/btc_mainnet.seednodes` | Seed nodes |
 | `p2p/src/main/resources/bitcoin_core_nodes_main.txt` | Bitcoin Core nodes used for peer discovery |

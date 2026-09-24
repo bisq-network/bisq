@@ -70,11 +70,13 @@ public class FilterPolicyServiceTests {
     }
 
     @Test
-    void requiresUpdateWhenDenyListVersionIsNewer() {
-        Properties properties = new Properties();
-        properties.setProperty("requiredVersionForTrading", "99.0.0");
-        DenyList denyList = DenyList.fromProperties(properties);
-        FilterPolicyService filterPolicyService = new FilterPolicyService(denyList, mock(FilterManager.class));
+    void requiresUpdateForTradingOnlyWhenNetworkFilterRequiresIt() {
+        FilterManager filterManager = mock(FilterManager.class);
+        FilterPolicyService filterPolicyService = new FilterPolicyService(DenyList.empty(), filterManager);
+
+        assertFalse(filterPolicyService.requireUpdateToNewVersionForTrading());
+
+        when(filterManager.requireUpdateToNewVersionForTrading()).thenReturn(true);
 
         assertTrue(filterPolicyService.requireUpdateToNewVersionForTrading());
     }

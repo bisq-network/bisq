@@ -70,7 +70,6 @@ public class DenyListTests {
 
         assertTrue(denyList.getNodeAddressesBannedFromTrading().isEmpty());
         assertTrue(denyList.getBannedSeedNodes().isEmpty());
-        assertTrue(denyList.getRequiredVersionForTrading().isEmpty());
     }
 
     @Test
@@ -85,7 +84,6 @@ public class DenyListTests {
         assertTrue(denyList.getBannedBtcNodes().contains("165.227.34.198:8333"));
         assertTrue(denyList.getBannedPriceRelayNodes().contains("wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid"));
         assertTrue(denyList.getBannedAutoConfExplorers().contains("explorer.monero.wiz.biz"));
-        assertEquals("1.10.0", denyList.getRequiredVersionForTrading());
     }
 
     @Test
