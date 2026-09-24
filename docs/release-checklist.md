@@ -329,6 +329,10 @@ bundle it as their runtime. The build info records the exact runtime and Zulu bu
 `releaseBuild.javaVersion` before the build when the release must not ship without a fix of a newer
 Java build, for example a security fix.
 
+The project does not enable the Gradle build cache. If you enabled it in `~/.gradle/gradle.properties`,
+pass `--no-build-cache` for release and evidence builds. Restored task outputs are not covered by
+dependency verification and would hide non-determinism in a two-build comparison.
+
 1. Verify the build and produce the evidence files:
 
    ```
