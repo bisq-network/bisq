@@ -1,5 +1,16 @@
 # Bisq 1.10.9 Highlights
 
+## Trading and Payments
+
+- The API prevents payment-started confirmation before seller payment details arrive.
+- Revolut account details use the Revtag identifier.
+- Offer republishing waits for P2P bootstrap to complete.
+
+## Reliability
+
+- Trusted BSQ block providers are initialized once, including when the configured list is empty.
+- Bank account input validation runs before country-dependent fields are cleared.
+
 ## DAO Resources
 
 - Updated bundled mainnet DAO state and block data through height 969000.

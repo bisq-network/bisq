@@ -2,6 +2,21 @@
 
 Bisq 1.10.9 updates bundled DAO resources, the Burning Man address list, the Tor dependency, and build and release tooling.
 
+## Trading and Payment Accounts
+
+- The API rejects payment-started confirmation until the buyer has received the seller's payment account details.
+- Revolut account details use the current “Revtag” label.
+- Bank form validation runs before country-dependent fields are reset.
+- Offer republish retries wait until P2P bootstrap is complete; all open offers are republished after bootstrap.
+
+Related commits: [d19bf16771](https://github.com/bisq-network/bisq/commit/d19bf16771), [02d5f908b8](https://github.com/bisq-network/bisq/commit/02d5f908b8), [8eca917a15](https://github.com/bisq-network/bisq/commit/8eca917a15), [5ea8afc452](https://github.com/bisq-network/bisq/commit/5ea8afc452).
+
+## Trusted BSQ Block Providers
+
+- Trusted BSQ block providers are initialized once, even when no providers are configured, and callers receive an immutable collection.
+
+Related commit: [dcf9916f17](https://github.com/bisq-network/bisq/commit/dcf9916f17).
+
 ## Bundled Resources
 
 - Mainnet DAO state and block resources are updated through height 969000.
