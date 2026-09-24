@@ -58,6 +58,34 @@ of the same parent transaction.
 An output of a BSQ transaction which the DAO classifies as a BTC output, for example the BTC change
 of a transaction which paid a trade fee in BSQ, is not a BSQ output. The seller may spend it.
 
+## Seller signatures
+
+Before the buyer signs, each seller input must be in the form in which the seller's wallet signs it,
+and its signature must be valid for the value and the script of the spent output. The seller's
+wallet signs only P2PK, P2PKH and P2WPKH outputs, always with SIGHASH_ALL, in this form:
+
+- P2WPKH: an empty scriptSig and a witness with exactly the signature and the compressed public key.
+- P2PKH: a scriptSig with exactly the signature and the public key as shortest pushes, and no
+  witness.
+- P2PK: a scriptSig with exactly the signature as shortest push, and no witness.
+
+The public key must be compressed or uncompressed; the network does not relay a hybrid encoded key.
+
+The buyer rejects every other form. The script check which the buyer uses verifies signatures only
+for these output types, and even for them it does not check all rules of the network, for example
+the number of witness items or the ANYONECANPAY flag of a witness signature. A seller input which
+the network rejects or does not relay leaves the buyer with a transaction which does not confirm. If
+the seller can correct such an input later, it also gives the seller the same option as an unsigned
+input.
+
+These SIGHASH_ALL signatures cover the outpoints of all inputs and all outputs, but not the scripts
+and witnesses of the buyer's inputs, so they stay valid when the buyer signs its own inputs.
+
+The rule prevents the buyer from signing a transaction which is incomplete because of the seller's
+inputs. It does not remove the seller's option to decide later whether the swap happens: an input of
+a parent transaction which the seller has not published has the same effect, and the buyer cannot
+detect it (see Not covered).
+
 ## Compatibility
 
 Honest sellers of all versions build their inputs from their own descriptions, so the binding rules
@@ -79,5 +107,8 @@ request.
   buyer's wallet then shows a swap which does not confirm.
 - An output which the buyer's DAO state does not hold yet, for example an output of a parent
   transaction which is not confirmed, is not detected as a BSQ output.
+- The buyer commits the swap transaction to its wallet and sends it to the seller before the
+  broadcast result is known, and a broadcast timeout counts as success. A transaction which the
+  network rejects can therefore still complete the trade on the buyer side.
 - The fee rate tolerance for the taker is not changed. With the invariant above the seller cannot
   take back any part of the miner fee, so a high fee rate costs the seller its own fee share too.

@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 import static bisq.core.trade.validation.TransactionValidation.checkInputOutpoints;
+import static bisq.core.trade.validation.TransactionValidation.checkInputSignatures;
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -51,7 +52,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Each seller input in the tx must spend exactly the output described by the matching RawTransactionInput (parent tx
  * ID and output index). The parent tx ID commits to the outputs of the parent tx, so the values and script types we
- * use for the fee and change checks are those of the outputs which the seller inputs spend.
+ * use for the fee and change checks are those of the outputs which the seller inputs spend. The seller inputs must be
+ * validly signed, so that the tx is complete once we have signed our inputs.
  * See docs/specifications/trade/bsq-swap-seller-inputs.md.
  * We cannot verify if the sellers inputs really exist and are unspent as we do not have the blockchain data for it.
  * In that case the tx would never get confirmed.
@@ -108,9 +110,10 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                 checkArgument(!daoFacade.isUnspentTxOutput(key), "Seller input %s spends a BSQ output", key);
             }
 
-            boolean hasUnSignedInputs = sellersBtcInputs.stream()
-                    .anyMatch(input -> input.getScriptSig() == null && !input.hasWitness());
-            checkArgument(!hasUnSignedInputs, "SellersBtcInputs from tx has unsigned inputs");
+            // Without valid signatures of the seller the tx would be incomplete after we signed it, and only the seller
+            // could complete it later. The seller's SIGHASH_ALL signatures do not cover the scripts and witnesses of
+            // our inputs, so signing our inputs later does not invalidate them.
+            checkInputSignatures(sellersTransaction, buyersInputSize, sellersRawBtcInputs, params, "seller");
 
             long change = request.getBtcChange();
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),

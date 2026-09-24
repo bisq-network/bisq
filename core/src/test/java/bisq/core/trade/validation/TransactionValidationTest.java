@@ -28,8 +28,11 @@ import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
+import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
 import java.math.BigInteger;
@@ -442,6 +445,64 @@ class TransactionValidationTest {
                     () -> TransactionValidation.checkMultiSigPubKey(multiSigPubKey),
                     invalidEncoding);
         }
+    }
+
+    @Test
+    void checkInputSignaturesAcceptsValidP2wpkhSignature() {
+        ECKey key = new ECKey();
+        Transaction parentTransaction = parentTransactionPayingTo(ScriptBuilder.createP2WPKHOutputScript(key));
+        Transaction transaction = transactionSpendingAtIndexOne(parentTransaction.getOutput(0));
+        TransactionSignature signature = transaction.calculateWitnessSignature(1,
+                key,
+                ScriptBuilder.createP2PKHOutputScript(key),
+                parentTransaction.getOutput(0).getValue(),
+                Transaction.SigHash.ALL,
+                false);
+        transaction.getInput(1).setWitness(TransactionWitness.redeemP2WPKH(signature, key));
+
+        assertDoesNotThrow(() -> TransactionValidation.checkInputSignatures(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(0))),
+                MainNetParams.get(),
+                "seller"));
+    }
+
+    @Test
+    void checkInputSignaturesAcceptsValidP2pkhSignature() {
+        ECKey key = new ECKey();
+        Transaction parentTransaction = parentTransactionPayingTo(ScriptBuilder.createP2PKHOutputScript(key));
+        Transaction transaction = transactionSpendingAtIndexOne(parentTransaction.getOutput(0));
+        TransactionSignature signature = transaction.calculateSignature(1,
+                key,
+                parentTransaction.getOutput(0).getScriptPubKey(),
+                Transaction.SigHash.ALL,
+                false);
+        transaction.getInput(1).setScriptSig(ScriptBuilder.createInputScript(signature, key));
+
+        assertDoesNotThrow(() -> TransactionValidation.checkInputSignatures(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(0))),
+                MainNetParams.get(),
+                "seller"));
+    }
+
+    @Test
+    void checkInputSignaturesRejectsMissingSignature() {
+        Transaction parentTransaction = parentTransactionPayingTo(ScriptBuilder.createP2WPKHOutputScript(new ECKey()));
+        Transaction transaction = transactionSpendingAtIndexOne(parentTransaction.getOutput(0));
+
+        assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkInputSignatures(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(0))),
+                MainNetParams.get(),
+                "seller"));
+    }
+
+    private static Transaction parentTransactionPayingTo(Script outputScript) {
+        Transaction parentTransaction = new Transaction(MainNetParams.get());
+        parentTransaction.addInput(Sha256Hash.of(new ECKey().getPubKey()), 0, ScriptBuilder.createEmpty());
+        parentTransaction.addOutput(Coin.valueOf(2_000), outputScript);
+        return parentTransaction;
     }
 
     private static Transaction parentTransactionWithTwoOutputs() {

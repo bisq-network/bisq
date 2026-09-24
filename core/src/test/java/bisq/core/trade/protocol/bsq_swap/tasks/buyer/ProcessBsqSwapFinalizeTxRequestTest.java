@@ -56,13 +56,18 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptPattern;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -103,6 +108,13 @@ class ProcessBsqSwapFinalizeTxRequestTest {
     private static final long SELLERS_CHANGE = LARGER_OUTPUT - BUYERS_BTC_PAYOUT - 1340 - 1030;
     // Spending this output while describing the larger one would leave a miner fee of only 190 instead of 2390.
     private static final long SMALLER_OUTPUT = 147_800;
+    // A legacy BTC input is 149 vbytes, so the seller's tx fee is 10 * (5 + 149 + 62) - 10 = 2150.
+    private static final long SELLERS_CHANGE_WITH_LEGACY_INPUT = LARGER_OUTPUT - BUYERS_BTC_PAYOUT - 2150 - 1030;
+
+    private static final String NOT_IN_WALLET_FORM =
+            "Transaction input 1 is not a P2PK, P2PKH or P2WPKH spend in the form of a Bisq wallet";
+
+    private enum SellersSignature {VALID, NONE, OTHER_KEY, OTHER_VALUE}
 
     @ParameterizedTest
     @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
@@ -250,6 +262,274 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         assertThat(result.errorMessage.get(), containsString("DAO state is not ready and in sync"));
     }
 
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSellerInputWithoutSignature(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.NONE, fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSellerInputSignedWithAnotherKey(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.OTHER_KEY, fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("Transaction input 1 has no valid signature"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSellerInputSignedForAnotherValue(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.OTHER_VALUE, fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("Transaction input 1 has no valid signature"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void acceptsSignedSellerInputWhichSpendsALegacyOutput(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture(ScriptBuilder::createP2PKHOutputScript);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertTrue(result.completed.get(), result.errorMessage.get());
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsUnsignedSellerInputWhichSpendsALegacyOutput(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture(ScriptBuilder::createP2PKHOutputScript);
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.NONE, fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsUnsignedSellerInputWhichSpendsAP2wshOutput(Class<? extends Task<?>> taskClass) {
+        // The legacy script interpreter leaves the 32 byte witness program on the stack, which counts as true.
+        Fixture fixture = new Fixture(key -> ScriptBuilder.createP2WSHOutputScript(
+                ScriptBuilder.createP2PKHOutputScript(key)));
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.NONE, fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsUnsignedSellerInputWhichSpendsAP2shWrappedP2wpkhOutput(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture(key -> ScriptBuilder.createP2SHOutputScript(
+                ScriptBuilder.createP2WPKHOutputScript(key)));
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.NONE, fixture.sellersParent.getOutput(1));
+        // Only the redeem script, which the P2SH evaluation accepts without any signature
+        sellersTx.getInput(1).setScriptSig(new ScriptBuilder()
+                .data(ScriptBuilder.createP2WPKHOutputScript(fixture.sellersKey).getProgram())
+                .build());
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSignedP2wpkhSellerInputWithAScriptSig(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+        sellersTx.getInput(1).setScriptSig(new ScriptBuilder().data(new byte[]{1, 2}).build());
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSignedP2wpkhSellerInputWithAThirdWitnessItem(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+        TransactionWitness validWitness = sellersTx.getInput(1).getWitness();
+        TransactionWitness witness = new TransactionWitness(3);
+        witness.setPush(0, validWitness.getPush(0));
+        witness.setPush(1, validWitness.getPush(1));
+        witness.setPush(2, new byte[]{1});
+        sellersTx.getInput(1).setWitness(witness);
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSignedLegacySellerInputWithAWitness(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture(ScriptBuilder::createP2PKHOutputScript);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+        TransactionWitness witness = new TransactionWitness(1);
+        witness.setPush(0, new byte[]{1});
+        sellersTx.getInput(1).setWitness(witness);
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsP2wpkhSellerSignatureWithAnyoneCanPayFlag(Class<? extends Task<?>> taskClass) {
+        // The script interpreter ignores the ANYONECANPAY flag of a witness signature, the network does not.
+        Fixture fixture = new Fixture();
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+        TransactionWitness witness = sellersTx.getInput(1).getWitness();
+        byte[] signature = witness.getPush(0).clone();
+        signature[signature.length - 1] = (byte) 0x81;
+        TransactionWitness changedWitness = new TransactionWitness(2);
+        changedWitness.setPush(0, signature);
+        changedWitness.setPush(1, witness.getPush(1));
+        sellersTx.getInput(1).setWitness(changedWitness);
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsP2wpkhSellerInputWithAnUncompressedKey(Class<? extends Task<?>> taskClass) {
+        ECKey uncompressedKey = ECKey.fromPrivate(new ECKey().getPrivKey(), false);
+        Fixture fixture = new Fixture(uncompressedKey,
+                key -> ScriptBuilder.createP2WPKHOutputScript(key.getPubKeyHash()));
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSignedLegacySellerInputWithAnExtraPush(Class<? extends Task<?>> taskClass) {
+        // Valid for the script interpreter, but the network does not relay it and the seller could remove it later.
+        Fixture fixture = new Fixture(ScriptBuilder::createP2PKHOutputScript);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+        List<ScriptChunk> chunks = sellersTx.getInput(1).getScriptSig().getChunks();
+        sellersTx.getInput(1).setScriptSig(new ScriptBuilder()
+                .data(new byte[]{1, 2})
+                .data(chunks.get(0).data)
+                .data(chunks.get(1).data)
+                .build());
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSignedLegacySellerInputWithAHybridEncodedKey(Class<? extends Task<?>> taskClass) {
+        // Valid for the script interpreter, but the network does not relay it and the seller cannot change the key.
+        ECKey key = new ECKey();
+        byte[] hybridPubKey = hybridEncoding(key);
+        Fixture fixture = new Fixture(key, ignored -> ScriptBuilder.createP2PKHOutputScript(
+                Utils.sha256hash160(hybridPubKey)));
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+        byte[] signature = sellersTx.getInput(1).getScriptSig().getChunks().get(0).data;
+        sellersTx.getInput(1).setScriptSig(new ScriptBuilder().data(signature).data(hybridPubKey).build());
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSignedSellerInputWhichSpendsAP2pkOutputWithAHybridEncodedKey(Class<? extends Task<?>> taskClass) {
+        ECKey key = new ECKey();
+        Fixture fixture = new Fixture(key, ignored -> ScriptBuilder.createP2PKOutputScript(hybridEncoding(key)));
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString(NOT_IN_WALLET_FORM));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void acceptsSignedSellerInputWhichSpendsAP2pkOutput(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture(ScriptBuilder::createP2PKOutputScript);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertTrue(result.completed.get(), result.errorMessage.get());
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void acceptsSignedSellerInputsOfDifferentTypes(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        Transaction legacyParent = parentTx(ScriptBuilder.createP2PKHOutputScript(fixture.sellersKey), LARGER_OUTPUT);
+        // One segwit and one legacy input with change are 5 + 68 + 149 + 62 = 284 vbytes, so the tx fee is 2830.
+        long change = 2 * LARGER_OUTPUT - BUYERS_BTC_PAYOUT - 2830 - 1030;
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.VALID,
+                change,
+                fixture.sellersParent.getOutput(1),
+                legacyParent.getOutput(0));
+
+        TaskResult result = fixture.process(taskClass,
+                sellersTx,
+                List.of(fixture.describedSellersInput(), rawInput(legacyParent.getOutput(0))),
+                change);
+
+        assertTrue(result.completed.get(), result.errorMessage.get());
+    }
+
     private static Stream<Arguments> buyerTasksAndBsqOutputTypes() {
         return Stream.of(BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
                         BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class)
@@ -259,8 +539,12 @@ class ProcessBsqSwapFinalizeTxRequestTest {
                         .map(bsqOutputType -> Arguments.of(taskClass, bsqOutputType)));
     }
 
-    // The parent spends a segwit input, so a segwit description carries it with witness data.
     private static Transaction parentTx(ECKey key, long... outputValues) {
+        return parentTx(ScriptBuilder.createP2WPKHOutputScript(key), outputValues);
+    }
+
+    // The parent spends a segwit input, so a segwit description carries it with witness data.
+    private static Transaction parentTx(Script outputScript, long... outputValues) {
         Transaction parentTx = new Transaction(PARAMS);
         TransactionInput parentInput = parentTx.addInput(Sha256Hash.of(new ECKey().getPubKey()),
                 0,
@@ -270,9 +554,16 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         parentWitness.setPush(1, new byte[]{2});
         parentInput.setWitness(parentWitness);
         for (long outputValue : outputValues) {
-            parentTx.addOutput(Coin.valueOf(outputValue), SegwitAddress.fromKey(PARAMS, key));
+            parentTx.addOutput(Coin.valueOf(outputValue), outputScript);
         }
         return new Transaction(PARAMS, parentTx.bitcoinSerialize());
+    }
+
+    // The uncompressed encoding with the prefix 0x06 or 0x07, which also tells whether y is even or odd
+    private static byte[] hybridEncoding(ECKey key) {
+        byte[] pubKey = ECKey.fromPrivate(key.getPrivKey(), false).getPubKey();
+        pubKey[0] = (byte) ((pubKey[64] & 1) == 0 ? 0x06 : 0x07);
+        return pubKey;
     }
 
     private static RawTransactionInput rawInput(TransactionOutput output) {
@@ -284,9 +575,10 @@ class ProcessBsqSwapFinalizeTxRequestTest {
     }
 
     private static class Fixture {
-        private final ECKey sellersKey = new ECKey();
+        private final ECKey sellersKey;
         private final Transaction buyersParent = parentTx(new ECKey(), BUYERS_BSQ_INPUT);
-        private final Transaction sellersParent = parentTx(sellersKey, SMALLER_OUTPUT, LARGER_OUTPUT);
+        private final Transaction sellersParent;
+        private final long sellersChange;
         private final String sellersBsqPayoutAddress = address();
         private final String sellersBtcChangeAddress = address();
         private final BsqSwapProtocolModel protocolModel = new BsqSwapProtocolModel(mock(PubKeyRing.class));
@@ -294,6 +586,17 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         private final DaoCheckpointTestFixture dao = new DaoCheckpointTestFixture();
 
         Fixture() {
+            this(ScriptBuilder::createP2WPKHOutputScript);
+        }
+
+        Fixture(Function<ECKey, Script> sellersOutputScript) {
+            this(new ECKey(), sellersOutputScript);
+        }
+
+        Fixture(ECKey sellersKey, Function<ECKey, Script> sellersOutputScript) {
+            this.sellersKey = sellersKey;
+            sellersParent = parentTx(sellersOutputScript.apply(sellersKey), SMALLER_OUTPUT, LARGER_OUTPUT);
+            sellersChange = describedSellersInput().isSegwit() ? SELLERS_CHANGE : SELLERS_CHANGE_WITH_LEGACY_INPUT;
             configureFeeService();
 
             BtcWalletService btcWalletService = mock(BtcWalletService.class);
@@ -357,9 +660,17 @@ class ProcessBsqSwapFinalizeTxRequestTest {
                     .forEach(daoStateService::addUnspentTxOutput);
         }
 
-        // Builds and signs the tx the way the seller does: buyer inputs first, then the seller's inputs, and the
-        // outputs in the order of TradeWalletService.buildBsqSwapTx.
         Transaction sellersTx(TransactionOutput... spentOutputs) {
+            return sellersTx(SellersSignature.VALID, spentOutputs);
+        }
+
+        // Builds and signs the tx the way the seller does: buyer inputs first, then the seller's inputs, and the
+        // outputs in the order of TradeWalletService.buildBsqSwapTx. The buyer's input is not signed yet.
+        Transaction sellersTx(SellersSignature sellersSignature, TransactionOutput... spentOutputs) {
+            return sellersTx(sellersSignature, sellersChange, spentOutputs);
+        }
+
+        Transaction sellersTx(SellersSignature sellersSignature, long change, TransactionOutput... spentOutputs) {
             Transaction tx = new Transaction(PARAMS);
             tx.addInput(buyersParent.getOutput(0));
             for (TransactionOutput spentOutput : spentOutputs) {
@@ -367,16 +678,40 @@ class ProcessBsqSwapFinalizeTxRequestTest {
             }
             tx.addOutput(Coin.valueOf(SELLERS_BSQ_PAYOUT), Address.fromString(PARAMS, sellersBsqPayoutAddress));
             tx.addOutput(Coin.valueOf(BUYERS_BTC_PAYOUT), SegwitAddress.fromKey(PARAMS, new ECKey()));
-            tx.addOutput(Coin.valueOf(SELLERS_CHANGE), Address.fromString(PARAMS, sellersBtcChangeAddress));
+            tx.addOutput(Coin.valueOf(change), Address.fromString(PARAMS, sellersBtcChangeAddress));
+            if (sellersSignature == SellersSignature.NONE) {
+                return tx;
+            }
+            ECKey key = sellersSignature == SellersSignature.OTHER_KEY ? new ECKey() : sellersKey;
             for (int i = 0; i < spentOutputs.length; i++) {
-                TransactionInput input = tx.getInput(1 + i);
-                TransactionSignature signature = tx.calculateWitnessSignature(1 + i,
-                        sellersKey,
-                        ScriptBuilder.createP2PKHOutputScript(sellersKey),
-                        spentOutputs[i].getValue(),
-                        Transaction.SigHash.ALL,
-                        false);
-                input.setWitness(TransactionWitness.redeemP2WPKH(signature, sellersKey));
+                int inputIndex = 1 + i;
+                TransactionOutput spentOutput = spentOutputs[i];
+                TransactionInput input = tx.getInput(inputIndex);
+                if (ScriptPattern.isP2WPKH(spentOutput.getScriptPubKey())) {
+                    Coin value = sellersSignature == SellersSignature.OTHER_VALUE ?
+                            spentOutput.getValue().add(Coin.SATOSHI) :
+                            spentOutput.getValue();
+                    TransactionSignature signature = tx.calculateWitnessSignature(inputIndex,
+                            key,
+                            ScriptBuilder.createP2PKHOutputScript(key.getPubKeyHash()),
+                            value,
+                            Transaction.SigHash.ALL,
+                            false);
+                    // Built by hand, as TransactionWitness.redeemP2WPKH accepts only compressed keys
+                    TransactionWitness witness = new TransactionWitness(2);
+                    witness.setPush(0, signature.encodeToBitcoin());
+                    witness.setPush(1, key.getPubKey());
+                    input.setWitness(witness);
+                } else {
+                    TransactionSignature signature = tx.calculateSignature(inputIndex,
+                            key,
+                            spentOutput.getScriptPubKey(),
+                            Transaction.SigHash.ALL,
+                            false);
+                    input.setScriptSig(ScriptPattern.isP2PK(spentOutput.getScriptPubKey()) ?
+                            ScriptBuilder.createInputScript(signature) :
+                            ScriptBuilder.createInputScript(signature, key));
+                }
             }
             return tx;
         }
@@ -384,7 +719,7 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         TaskResult process(Class<? extends Task<?>> taskClass,
                            Transaction sellersTx,
                            List<RawTransactionInput> describedSellersInputs) {
-            return process(taskClass, sellersTx, describedSellersInputs, SELLERS_CHANGE);
+            return process(taskClass, sellersTx, describedSellersInputs, sellersChange);
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})
