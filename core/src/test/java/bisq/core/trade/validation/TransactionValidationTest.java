@@ -17,19 +17,25 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
 
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.SegwitAddress;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.script.ScriptBuilder;
 
 import java.math.BigInteger;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
@@ -176,6 +182,60 @@ class TransactionValidationTest {
         assertThrows(NullPointerException.class, () -> TransactionValidation.toVerifiedTransaction(
                 ValidationTestUtils.serializedTransaction(),
                 mock(BtcWalletService.class)));
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Transaction inputs
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkInputOutpointsAcceptsInputWhichSpendsTheExpectedOutpoint() {
+        Transaction parentTransaction = parentTransactionWithTwoOutputs();
+        Transaction transaction = transactionSpendingAtIndexOne(parentTransaction.getOutput(1));
+
+        assertDoesNotThrow(() -> TransactionValidation.checkInputOutpoints(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(1))),
+                MainNetParams.get(),
+                "seller"));
+    }
+
+    @Test
+    void checkInputOutpointsAcceptsTwoOutputsOfTheSameParentTransaction() {
+        Transaction parentTransaction = parentTransactionWithTwoOutputs();
+        Transaction transaction = transactionSpendingAtIndexOne(parentTransaction.getOutput(1));
+        transaction.addInput(parentTransaction.getOutput(0));
+
+        assertDoesNotThrow(() -> TransactionValidation.checkInputOutpoints(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(1)), rawInput(parentTransaction.getOutput(0))),
+                MainNetParams.get(),
+                "seller"));
+    }
+
+    @Test
+    void checkInputOutpointsRejectsOtherOutputOfTheExpectedParentTransaction() {
+        Transaction parentTransaction = parentTransactionWithTwoOutputs();
+        Transaction transaction = transactionSpendingAtIndexOne(parentTransaction.getOutput(0));
+
+        assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkInputOutpoints(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(1))),
+                MainNetParams.get(),
+                "seller"));
+    }
+
+    @Test
+    void checkInputOutpointsRejectsOutputOfAnotherParentTransaction() {
+        Transaction parentTransaction = parentTransactionWithTwoOutputs();
+        Transaction otherParentTransaction = parentTransactionWithTwoOutputs();
+        Transaction transaction = transactionSpendingAtIndexOne(otherParentTransaction.getOutput(1));
+
+        assertThrows(IllegalArgumentException.class, () -> TransactionValidation.checkInputOutpoints(transaction,
+                1,
+                List.of(rawInput(parentTransaction.getOutput(1))),
+                MainNetParams.get(),
+                "seller"));
     }
 
     /* --------------------------------------------------------------------- */
@@ -382,5 +442,25 @@ class TransactionValidationTest {
                     () -> TransactionValidation.checkMultiSigPubKey(multiSigPubKey),
                     invalidEncoding);
         }
+    }
+
+    private static Transaction parentTransactionWithTwoOutputs() {
+        Transaction parentTransaction = new Transaction(MainNetParams.get());
+        parentTransaction.addInput(Sha256Hash.of(new ECKey().getPubKey()), 0, ScriptBuilder.createEmpty());
+        parentTransaction.addOutput(Coin.valueOf(1_000), SegwitAddress.fromKey(MainNetParams.get(), new ECKey()));
+        parentTransaction.addOutput(Coin.valueOf(2_000), SegwitAddress.fromKey(MainNetParams.get(), new ECKey()));
+        return parentTransaction;
+    }
+
+    private static Transaction transactionSpendingAtIndexOne(TransactionOutput output) {
+        Transaction transaction = new Transaction(MainNetParams.get());
+        transaction.addInput(Sha256Hash.of(new ECKey().getPubKey()), 0, ScriptBuilder.createEmpty());
+        transaction.addInput(output);
+        transaction.addOutput(Coin.valueOf(500), SegwitAddress.fromKey(MainNetParams.get(), new ECKey()));
+        return transaction;
+    }
+
+    private static RawTransactionInput rawInput(TransactionOutput output) {
+        return new RawTransactionInput(new Transaction(MainNetParams.get()).addInput(output));
     }
 }

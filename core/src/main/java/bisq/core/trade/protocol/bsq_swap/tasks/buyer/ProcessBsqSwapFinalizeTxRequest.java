@@ -41,17 +41,22 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
+import static bisq.core.trade.validation.TransactionValidation.checkInputOutpoints;
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * We cannot verify the sellers inputs if they really exist as we do not have the blockchain data for it.
- * Worst case would be that the seller pays less for miner fee as expected and thus risks to get the tx never confirmed.
+ * Each seller input in the tx must spend exactly the output described by the matching RawTransactionInput (parent tx
+ * ID and output index). The parent tx ID commits to the outputs of the parent tx, so the values and script types we
+ * use for the fee and change checks are those of the outputs which the seller inputs spend.
+ * See docs/specifications/trade/bsq-swap-seller-inputs.md.
+ * We cannot verify if the sellers inputs really exist and are unspent as we do not have the blockchain data for it.
+ * In that case the tx would never get confirmed.
  * The change output cannot be verified exactly due potential dust values and non-deterministic behaviour of the
  * fee estimation.
- * The important values for out BTC output and out BSQ change output are set already in BuyerCreatesBsqInputsAndChange
- * and are not related to the data provided by the peer. If the peers inputs would not be sufficient the tx would
- * fail anyway.
+ * The important values for our BTC output and our BSQ change output are set already in BuyerCreatesBsqInputsAndChange
+ * and are not related to the data provided by the peer.
  */
 @Slf4j
 public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
@@ -67,10 +72,13 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkNotNull(request);
             checkTradeId(protocolModel.getOfferId(), request);
 
-            // We will use only the seller's BTC inputs from the tx, so we do not verify anything else.
+            // We will use only the seller's BTC inputs from the tx. The rest of the tx gets rebuilt from our data and
+            // compared in BuyerCreatesAndSignsFinalizedTx.
             byte[] tx = request.getTx();
             WalletService btcWalletService = protocolModel.getBtcWalletService();
-            Transaction sellersTransaction = btcWalletService.getTxFromSerializedTx(tx);
+            NetworkParameters params = btcWalletService.getParams();
+            // Rejects a tx which spends the same outpoint twice, so that no input value can be counted twice.
+            Transaction sellersTransaction = checkTransaction(btcWalletService.getTxFromSerializedTx(tx));
             List<RawTransactionInput> sellersRawBtcInputs = request.getBtcInputs();
             checkArgument(!sellersRawBtcInputs.isEmpty(), "SellersRawBtcInputs must not be empty");
             sellersRawBtcInputs.forEach(input -> input.validate(btcWalletService));
@@ -82,12 +90,10 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                     .collect(Collectors.toList());
             checkArgument(sellersBtcInputs.size() == sellersRawBtcInputs.size(),
                     "Number of sellersBtcInputs in tx must match the number of sellersRawBtcInputs");
-            for (int i = 0; i < sellersBtcInputs.size(); i++) {
-                String parentTxId = sellersBtcInputs.get(i).getOutpoint().getHash().toString();
-                String rawParentTxId = sellersRawBtcInputs.get(i).getParentTxId(btcWalletService);
-                checkArgument(parentTxId.equals(rawParentTxId),
-                        "Spending tx mismatch between sellersBtcInputs and sellersRawBtcInputs at index %s", i);
-            }
+            // RawTransactionInput.validate checks the value and script type only of the output which the seller
+            // describes. Each seller input must spend exactly that output, otherwise the seller could spend a smaller
+            // output of the same parent tx and claim the value of a larger one.
+            checkInputOutpoints(sellersTransaction, buyersInputSize, sellersRawBtcInputs, params, "seller");
 
             boolean hasUnSignedInputs = sellersBtcInputs.stream()
                     .anyMatch(input -> input.getScriptSig() == null && !input.hasWitness());
@@ -128,7 +134,6 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(change <= expectedChange.value,
                     "Change must be smaller or equal to expectedChange");
 
-            NetworkParameters params = btcWalletService.getParams();
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
             checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");
             checkArgument(!sellersBsqPayoutAddress.isEmpty(), "sellersBsqPayoutAddress must not be empty");
