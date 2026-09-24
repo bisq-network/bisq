@@ -1,137 +1,48 @@
 # Release checklist
 
 This checklist lists every task that a Bisq 1 release requires. It covers the version number, the
-bundled data files, the consensus activation heights, the build, the signatures and the publication.
+bundled data files, the build, the signatures, the publication and the consensus activation heights.
 
 [release-process.md](release-process.md) describes the manual build and upload work in more detail.
 This file is the complete task list and points to the document that explains how to create each file.
 
-Work through the steps in order, with one exception: the data-store step 2.1 uses the version number
-that step 3 sets, so set the version in `copy_dbs.sh` before you run that script. Step 1 and step 2
-need a fully synced mainnet node, so start them early.
+Steps 1 to 7 are required for every release. Work through them in order. Step 2 needs a fully synced
+mainnet node, so start the sync early.
+
+The section [Consensus and protocol constants](#consensus-and-protocol-constants) at the end lists
+values that an ordinary release only checks. If the release plans a consensus or protocol change,
+decide those values before anything else, because the activation heights depend on the planned
+release date. Some checks in that section also need a synced mainnet node.
 
 ---
 
-## Step 1: Decide the consensus changes
+## Step 1: Update the version number
 
-These items change how nodes calculate the DAO state or how they validate trade messages. A node that
-runs an older release will calculate a different result. Decide them before anything else, because
-the activation heights depend on the planned release date.
+Ten values in eight files hold the version. Set `oldVersion` and `newVersion` in
+`desktop/package/macosx/replace_version_number.sh` by hand first, then run that script. It updates
+most of the other files.
 
-### 1.1 Hard fork activation heights
+| # | File | Line | Value |
+|---|------|------|-------|
+| 1 | `common/src/main/java/bisq/common/app/Version.java` | 39 | `VERSION` |
+| 2 | `build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt` | 22 | `APP_VERSION` |
+| 3 | `desktop/package/macosx/Info.plist` | 8 | `CFBundleVersion` |
+| 4 | `desktop/package/macosx/Info.plist` | 11 | `CFBundleShortVersionString` |
+| 5 | `desktop/package/macosx/finalize.sh` | 6 | `version=` |
+| 6 | `desktop/package/macosx/copy_dbs.sh` | 5 | `version=` |
+| 7 | `desktop/package/macosx/insert_snapshot_version.sh` | 5 | `version=` |
+| 8 | `desktop/package/macosx/replace_version_number.sh` | 5 | `oldVersion=` |
+| 9 | `desktop/package/macosx/replace_version_number.sh` | 6 | `newVersion=` |
+| 10 | `desktop/src/main/resources/version.txt` | 1 | The version |
 
-File: `core/src/main/java/bisq/core/dao/DaoHardFork.java`
+The version must have exactly three parts that are separated by a dot. `Version.getSubVersion`
+rejects any other form.
 
-| Scheduled rule | Constant prefix | Mainnet | Bitcoin testnet | Regtest and DAO test networks | Rule-selection height |
-|----------------|-----------------|--------:|----------------:|------------------------------:|-----------------------|
-| Hard fork 3 | `ACTIVATE_HARD_FORK_3_HEIGHT_` | `963_350` | `3_000_000` | `1` | Height consumed by each hard-fork-3 rule |
-| Duplicate vote proposal-ID validation | `DUPLICATE_VOTE_PROPOSAL_TX_ID_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | Cycle's RESULT block |
-| Blind-vote merit fallback and equal-ID ordering | `BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | Cycle's RESULT block |
-| Proposal data-field validation | `PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | First RESULT block of the proposal's cycle |
+The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other seven by
+hand, for example with `grep -rn "<old version>"`.
 
-These are finalized consensus constants for the coordinated rollout. Verify every row during release
-preparation, but do not change one as part of an ordinary release.
-
-Three consensus rules activate together with hard fork 3:
-
-- `core/src/main/java/bisq/core/dao/node/parser/TxParser.java` — spending a lockup output outside an
-  unlock transaction becomes invalid.
-- `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` — an issuance may back merit
-  at most once per cycle.
-- `core/src/main/java/bisq/core/dao/governance/proposal/role/RoleValidator.java` — the required bond
-  unit and the unlock time in a role proposal must match the bonded role type.
-
-Three additional rules currently use the same network heights but retain independent constants:
-
-- `VoteResultService` rejects a decrypted vote containing a duplicate proposal transaction ID and
-  isolates that malformed voter.
-- `BlindVoteConsensus`, `VoteRevealService`, and `VoteResultService` preserve the complete
-  majority-committed blind-vote list, order equal transaction IDs by full canonical payload bytes,
-  and treat an undecryptable merit list as empty. Vote reveal must select this rule with the current
-  cycle's future RESULT height so reveal and result cannot disagree.
-- Proposal validators apply full proposal data-field validation at consensus consumers, including
-  startup replay and persisted ballots. `ProposalService` applies common admission checks and a full
-  post-parse recheck. Both select the rule for an entire cycle by its first RESULT block.
-
-The independent constants are intentional: each rule can be rescheduled without silently changing
-another consensus rule. Before publication, obtain and record explicit developer approval for every
-row, including the future-RESULT selection used by blind-vote ordering and the whole-cycle selection
-used by proposal validation. Equal numeric values do not substitute for that approval and are not a
-reason to fold the constants together.
-
-The release must ship far enough before the activation height that users have time to upgrade. If the
-schedule no longer permits that, stop and obtain an explicit new consensus decision rather than
-silently moving the height. The rule is described in
-[specifications/dao/bond-lockup-spend.md](specifications/dao/bond-lockup-spend.md) and in
-[specifications/dao/merit.md](specifications/dao/merit.md), section 7. The additional voting and
-proposal rules are specified in
-[specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md) and
-[specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
-
-Before the release:
-
-1. Run both bundled DAO resource audits in step 2.1. They reproduce the stored proposal checks and
-   the 952-payload/940-reveal blind-vote decryption audit through height `968_341`.
-2. Repeat the duplicate merit audit described in
-   [specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node synced past
-   the last completed voting cycle.
-3. While an activation height in the table above lies above the bundled DAO-state height, audit
-   proposal, blind-vote, and completed RESULT data after the bundled height from a synced mainnet node
-   for invalid proposal fields, duplicate proposal transaction IDs, duplicate blind-vote transaction
-   IDs, and vote or merit decryption failures. The mainnet heights `963_350` lie below the bundled
-   height `968_341`. The remaining mainnet obligation is the proposal-type-specific validation named in
-   [specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
-4. Repeat the synced-node audits after every proposal or RESULT phase between release and activation.
-   Preserve the command and output used for release review.
-
-Historical hard fork heights must not be changed. Only check that they are unchanged:
-
-| File | Constant | Value |
-|------|----------|-------|
-| `core/src/main/java/bisq/core/dao/node/parser/TxOutputParser.java` | `ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET` | `605000` |
-| `core/src/main/java/bisq/core/dao/node/full/RpcService.java` | `ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET` | `680300` |
-| `core/src/main/java/bisq/core/dao/state/model/governance/DaoArithmetics.java` | `DAO_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
-| `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` | `MERIT_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
-| `core/src/main/java/bisq/core/dao/governance/bond/role/BondedRolesRepository.java` | `LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET` | `963_350` |
-
-### 1.2 Activation dates
-
-Some rules activate on a calendar date instead of a block height. Check that the release ships before
-the date, and remove the compatibility code once a date has passed.
-
-| File | Line | Constant | Date |
-|------|------|----------|------|
-| `core/src/main/java/bisq/core/support/dispute/messages/DisputeMessage.java` | 41 | `SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE` | 2026-09-01 |
-| `core/src/main/java/bisq/core/trade/model/bisq_v1/Contract.java` | 69 | `DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE` | 2026-08-01 |
-
-`core/src/main/java/bisq/core/support/dispute/DisputeValidation.java` carries a `TODO` to remove the
-legacy contract fallback after the dispute agent public key date has passed.
-
-### 1.3 Values in the trade protocol that must stay identical between peers
-
-Do not change these unless the change is planned as a protocol change. Both trade peers calculate the
-delayed payout transaction from them, so a difference breaks the trade.
-
-`core/src/main/java/bisq/core/dao/burningman/DelayedPayoutTxReceiverService.java`:
-`MIN_SNAPSHOT_HEIGHT` (`767950`), `SNAPSHOT_SELECTION_GRID_SIZE`, `DPT_MIN_OUTPUT_AMOUNT`,
-`DPT_MIN_REMAINDER_TO_LEGACY_BM`, `DPT_MIN_TX_FEE_RATE`, `BM_ADDRESS_LIST_SHARE_RANGE_TOLERANCE`.
-
-`core/src/main/java/bisq/core/dao/burningman/BurnTargetService.java`: `ACTIVATION_BLOCK` (`769845`).
-
-`core/src/main/java/bisq/core/dao/burningman/accounting/BurningManAccountingService.java`:
-`EARLIEST_BLOCK_HEIGHT` (`656035`).
-
-### 1.4 Protocol and database version numbers
-
-File: `common/src/main/java/bisq/common/app/Version.java`
-
-| Line | Constant | Current | Increase only when |
-|------|----------|---------|--------------------|
-| 96 | `P2P_NETWORK_VERSION` | `1` | An object sent over the network changes in a way that older nodes cannot read |
-| 100 | `LOCAL_DB_VERSION` | `1` | The format of the data written to disk changes in a way that older releases cannot read |
-| 111 | `TRADE_PROTOCOL_VERSION` | `4` | The trade protocol changes. Existing offers become invalid or must be migrated |
-
-A normal release does not change these three values.
+The version number on the website is changed in a separate repository, in `_config.yml` of
+`bisq-network/bisq-website`.
 
 ---
 
@@ -148,7 +59,7 @@ Document: [data-stores.md](data-stores.md)
 (line 5) and uses it to name the two new files. If you run the script while that variable still holds
 the previous release version, it writes files with the previous version in the name and overwrites
 resource files that were already released. Those files must never change, see the note further below.
-So do step 3 of this checklist, or at least the `copy_dbs.sh` part of it, before you run the script.
+So finish step 1, or at least the `copy_dbs.sh` part of it, before you run the script.
 
 1. Start the client and let it sync completely. A restart may be needed more than once, because one
    request returns at most 3000 trade statistic objects.
@@ -294,37 +205,7 @@ Update these only when a change is needed.
 
 ---
 
-## Step 3: Update the version number
-
-Ten values in eight files hold the version. Set `oldVersion` and `newVersion` in
-`desktop/package/macosx/replace_version_number.sh` by hand first, then run that script. It updates
-most of the other files.
-
-| # | File | Line | Value |
-|---|------|------|-------|
-| 1 | `common/src/main/java/bisq/common/app/Version.java` | 39 | `VERSION` |
-| 2 | `build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt` | 22 | `APP_VERSION` |
-| 3 | `desktop/package/macosx/Info.plist` | 8 | `CFBundleVersion` |
-| 4 | `desktop/package/macosx/Info.plist` | 11 | `CFBundleShortVersionString` |
-| 5 | `desktop/package/macosx/finalize.sh` | 6 | `version=` |
-| 6 | `desktop/package/macosx/copy_dbs.sh` | 5 | `version=` |
-| 7 | `desktop/package/macosx/insert_snapshot_version.sh` | 5 | `version=` |
-| 8 | `desktop/package/macosx/replace_version_number.sh` | 5 | `oldVersion=` |
-| 9 | `desktop/package/macosx/replace_version_number.sh` | 6 | `newVersion=` |
-| 10 | `desktop/src/main/resources/version.txt` | 1 | The version |
-
-The version must have exactly three parts that are separated by a dot. `Version.getSubVersion`
-rejects any other form.
-
-The task `verifyGithubReleaseReadiness` checks only entries 1, 2 and 5. Check the other seven by
-hand, for example with `grep -rn "<old version>"`.
-
-The version number on the website is changed in a separate repository, in `_config.yml` of
-`bisq-network/bisq-website`.
-
----
-
-## Step 4: Release notes
+## Step 3: Release notes
 
 Create the directory `release-notes/<version>/` with three files, as in the earlier releases:
 
@@ -347,7 +228,7 @@ afterwards.
 
 ---
 
-## Step 5: Build
+## Step 4: Build
 
 Document: [reproducible-builds/](reproducible-builds/) and
 [reproducible-builds/usage.md](reproducible-builds/usage.md)
@@ -420,7 +301,7 @@ longer needed also makes the build fail.
 
 ---
 
-## Step 6: Sign
+## Step 5: Sign
 
 Set `BISQ_GPG_USER` and `BISQ_SHARED_FOLDER` in your environment.
 
@@ -468,7 +349,7 @@ stored twice and must be identical in both places: `desktop/package/<id>.asc` an
 
 ---
 
-## Step 7: Publish
+## Step 6: Publish
 
 1. Make at least one real trade on mainnet with a currency that is rarely used, so that no other
    trader is disturbed.
@@ -513,7 +394,7 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 
 ---
 
-## Step 8: After the release
+## Step 7: After the release
 
 1. Add the note "A newer version is already available! Please don't use this version anymore." to the
    older GitHub releases.
@@ -597,3 +478,127 @@ rely on a step.
 6. `verifyGithubActionsSecurity` compares fixed text from `release-builder.yml`. If you change that
    workflow or `releaseBuild.javaVersion`, you must change the workflow, the file
    `docker/release-builder/linux/Dockerfile` and the expected text in that task together.
+
+---
+
+## Consensus and protocol constants
+
+These items change how nodes calculate the DAO state or how they validate trade messages. A node that
+runs an older release will calculate a different result. An ordinary release does not change them;
+check them before the build. If the release plans such a change, decide it before anything else,
+because the activation heights depend on the planned release date.
+
+### Hard fork activation heights
+
+File: `core/src/main/java/bisq/core/dao/DaoHardFork.java`
+
+| Scheduled rule | Constant prefix | Mainnet | Bitcoin testnet | Regtest and DAO test networks | Rule-selection height |
+|----------------|-----------------|--------:|----------------:|------------------------------:|-----------------------|
+| Hard fork 3 | `ACTIVATE_HARD_FORK_3_HEIGHT_` | `963_350` | `3_000_000` | `1` | Height consumed by each hard-fork-3 rule |
+| Duplicate vote proposal-ID validation | `DUPLICATE_VOTE_PROPOSAL_TX_ID_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | Cycle's RESULT block |
+| Blind-vote merit fallback and equal-ID ordering | `BLIND_VOTE_MERIT_DECRYPTABILITY_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | Cycle's RESULT block |
+| Proposal data-field validation | `PROPOSAL_DATA_FIELD_VALIDATION_ACTIVATION_HEIGHT_` | `963_350` | `3_000_000` | `1` | First RESULT block of the proposal's cycle |
+
+These are finalized consensus constants for the coordinated rollout. Verify every row during release
+preparation, but do not change one as part of an ordinary release.
+
+Three consensus rules activate together with hard fork 3:
+
+- `core/src/main/java/bisq/core/dao/node/parser/TxParser.java` — spending a lockup output outside an
+  unlock transaction becomes invalid.
+- `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` — an issuance may back merit
+  at most once per cycle.
+- `core/src/main/java/bisq/core/dao/governance/proposal/role/RoleValidator.java` — the required bond
+  unit and the unlock time in a role proposal must match the bonded role type.
+
+Three additional rules currently use the same network heights but retain independent constants:
+
+- `VoteResultService` rejects a decrypted vote containing a duplicate proposal transaction ID and
+  isolates that malformed voter.
+- `BlindVoteConsensus`, `VoteRevealService`, and `VoteResultService` preserve the complete
+  majority-committed blind-vote list, order equal transaction IDs by full canonical payload bytes,
+  and treat an undecryptable merit list as empty. Vote reveal must select this rule with the current
+  cycle's future RESULT height so reveal and result cannot disagree.
+- Proposal validators apply full proposal data-field validation at consensus consumers, including
+  startup replay and persisted ballots. `ProposalService` applies common admission checks and a full
+  post-parse recheck. Both select the rule for an entire cycle by its first RESULT block.
+
+The independent constants are intentional: each rule can be rescheduled without silently changing
+another consensus rule. Before publication, obtain and record explicit developer approval for every
+row, including the future-RESULT selection used by blind-vote ordering and the whole-cycle selection
+used by proposal validation. Equal numeric values do not substitute for that approval and are not a
+reason to fold the constants together.
+
+The release must ship far enough before the activation height that users have time to upgrade. If the
+schedule no longer permits that, stop and obtain an explicit new consensus decision rather than
+silently moving the height. The rule is described in
+[specifications/dao/bond-lockup-spend.md](specifications/dao/bond-lockup-spend.md) and in
+[specifications/dao/merit.md](specifications/dao/merit.md), section 7. The additional voting and
+proposal rules are specified in
+[specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md) and
+[specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
+
+Before the release:
+
+1. Run both bundled DAO resource audits in step 2.1. They reproduce the stored proposal checks and
+   the 952-payload/940-reveal blind-vote decryption audit through height `968_341`.
+2. Repeat the duplicate merit audit described in
+   [specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node synced past
+   the last completed voting cycle.
+3. While an activation height in the table above lies above the bundled DAO-state height, audit
+   proposal, blind-vote, and completed RESULT data after the bundled height from a synced mainnet node
+   for invalid proposal fields, duplicate proposal transaction IDs, duplicate blind-vote transaction
+   IDs, and vote or merit decryption failures. The mainnet heights `963_350` lie below the bundled
+   height `968_341`. The remaining mainnet obligation is the proposal-type-specific validation named in
+   [specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
+4. Repeat the synced-node audits after every proposal or RESULT phase between release and activation.
+   Preserve the command and output used for release review.
+
+Historical hard fork heights must not be changed. Only check that they are unchanged:
+
+| File | Constant | Value |
+|------|----------|-------|
+| `core/src/main/java/bisq/core/dao/node/parser/TxOutputParser.java` | `ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET` | `605000` |
+| `core/src/main/java/bisq/core/dao/node/full/RpcService.java` | `ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET` | `680300` |
+| `core/src/main/java/bisq/core/dao/state/model/governance/DaoArithmetics.java` | `DAO_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
+| `core/src/main/java/bisq/core/dao/governance/merit/MeritConsensus.java` | `MERIT_CONSENSUS_V2_ACTIVATION_HEIGHT` | `954_200` |
+| `core/src/main/java/bisq/core/dao/governance/bond/role/BondedRolesRepository.java` | `LEGACY_REGISTRATION_CUTOFF_HEIGHT_MAINNET` | `963_350` |
+
+### Activation dates
+
+Some rules activate on a calendar date instead of a block height. Check that the release ships before
+the date, and remove the compatibility code once a date has passed.
+
+| File | Line | Constant | Date |
+|------|------|----------|------|
+| `core/src/main/java/bisq/core/support/dispute/messages/DisputeMessage.java` | 41 | `SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE` | 2026-09-01 |
+| `core/src/main/java/bisq/core/trade/model/bisq_v1/Contract.java` | 69 | `DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE` | 2026-08-01 |
+
+`core/src/main/java/bisq/core/support/dispute/DisputeValidation.java` carries a `TODO` to remove the
+legacy contract fallback after the dispute agent public key date has passed.
+
+### Values in the trade protocol that must stay identical between peers
+
+Do not change these unless the change is planned as a protocol change. Both trade peers calculate the
+delayed payout transaction from them, so a difference breaks the trade.
+
+`core/src/main/java/bisq/core/dao/burningman/DelayedPayoutTxReceiverService.java`:
+`MIN_SNAPSHOT_HEIGHT` (`767950`), `SNAPSHOT_SELECTION_GRID_SIZE`, `DPT_MIN_OUTPUT_AMOUNT`,
+`DPT_MIN_REMAINDER_TO_LEGACY_BM`, `DPT_MIN_TX_FEE_RATE`, `BM_ADDRESS_LIST_SHARE_RANGE_TOLERANCE`.
+
+`core/src/main/java/bisq/core/dao/burningman/BurnTargetService.java`: `ACTIVATION_BLOCK` (`769845`).
+
+`core/src/main/java/bisq/core/dao/burningman/accounting/BurningManAccountingService.java`:
+`EARLIEST_BLOCK_HEIGHT` (`656035`).
+
+### Protocol and database version numbers
+
+File: `common/src/main/java/bisq/common/app/Version.java`
+
+| Line | Constant | Current | Increase only when |
+|------|----------|---------|--------------------|
+| 96 | `P2P_NETWORK_VERSION` | `1` | An object sent over the network changes in a way that older nodes cannot read |
+| 100 | `LOCAL_DB_VERSION` | `1` | The format of the data written to disk changes in a way that older releases cannot read |
+| 111 | `TRADE_PROTOCOL_VERSION` | `4` | The trade protocol changes. Existing offers become invalid or must be migrated |
+
+A normal release does not change these three values.
