@@ -55,6 +55,10 @@ test {
         events "passed", "failed", "standardError"
     }
 
+    // Read while the build is configured. Inside afterSuite the task itself is not
+    // available any more once the configuration cache is in use.
+    def htmlReportEntryPoint = reports.html.entryPoint
+
     afterSuite { desc, result ->
         if (!desc.parent) {
             println("${result.resultType} " +
@@ -65,9 +69,8 @@ test {
 
             // Show report link if all tests passed in case you want to see more detail, stdout, skipped, etc.
             if (result.resultType == TestResult.ResultType.SUCCESS) {
-                DirectoryReport htmlReport = getReports().getHtml()
                 String reportUrl = new org.gradle.internal.logging.ConsoleRenderer()
-                    .asClickableFileUrl(htmlReport.getEntryPoint())
+                    .asClickableFileUrl(htmlReportEntryPoint)
                 println("REPORT  " + reportUrl)
             }
         }

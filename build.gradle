@@ -24,6 +24,19 @@ def dependencyChecksumFallbackAllowlist = layout.projectDirectory.file('gradle/d
 def dependencySignatureReport = layout.projectDirectory.file('docs/dependency-signature-report.md')
 def gradleWrapperChecksums = layout.projectDirectory.file('gradle/wrapper/gradle-wrapper.sha256')
 def gradleProjectDirectory = rootProject.projectDir
+// Captured while the build is configured; task actions must not read the layout.
+def manifestInputsDirectory = layout.buildDirectory.dir('tmp/manifest-inputs')
+// Task actions must not touch the project model, which the configuration cache enforces.
+// Paths in messages are therefore made relative to this directory instead of asking the
+// root project for a relative path while a task runs.
+def relativeToProjectDirectory = { file ->
+    gradleProjectDirectory.toPath().relativize(file.toPath()).toString().replace(File.separatorChar, '/' as char)
+}
+// Same resolution as Project.file(), but without reaching into the project model while a task runs.
+def resolveProjectFile = { path ->
+    def candidate = new File(path.toString())
+    candidate.absolute ? candidate : new File(gradleProjectDirectory, path.toString())
+}
 def linuxReleaseBuilderDockerfile = layout.projectDirectory.file('docker/release-builder/linux/Dockerfile')
 def linuxReleaseBuilderWorkflow = layout.projectDirectory.file('.github/workflows/release-builder.yml')
 def installerEvidenceWorkflow = layout.projectDirectory.file('.github/workflows/installer-evidence.yml')
@@ -342,6 +355,10 @@ tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
     description = 'Resolves every resolvable configuration so Gradle dependency verification checks all dependency artifacts.'
 
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+
     doLast {
         resolveConfigurations(false)
         logger.lifecycle("Resolved and verified ${resolvableConfigurations().size()} configurations.")
@@ -354,6 +371,10 @@ tasks.register('verifyDependencySignaturePolicy') {
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyChecksumFallbackAllowlist)
+
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
 
     doLast {
         resolveConfigurations(false)
@@ -450,6 +471,10 @@ tasks.register('dependencySignatureReport') {
     inputs.file(dependencyChecksumFallbackAllowlist)
     outputs.file(dependencySignatureReport)
     outputs.upToDateWhen { false }
+
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
 
     doLast {
         def resolved = resolveConfigurations(true)
@@ -704,8 +729,8 @@ def sha256Bytes = { byte[] bytes ->
             .join()
 }
 
-def canonicalPath = { File file ->
-    rootProject.relativePath(file).replace(File.separatorChar, '/' as char)
+def canonicalPath = { file ->
+    relativeToProjectDirectory(file)
 }
 
 def normalizeReleaseVersion = { String rawReleaseVersion ->
@@ -781,10 +806,10 @@ def resolveManifestFile = { File manifestPath, String manifestFileName ->
             }
 
             def extractedDir = new File(
-                    layout.buildDirectory.dir('tmp/manifest-inputs').get().asFile,
+                    manifestInputsDirectory.get().asFile,
                     Integer.toHexString(manifestPath.canonicalPath.hashCode())
             )
-            project.delete(extractedDir)
+            extractedDir.deleteDir()
             extractedDir.mkdirs()
 
             extractedManifest = new File(extractedDir, manifestFileName)
@@ -801,9 +826,13 @@ def resolveManifestFile = { File manifestPath, String manifestFileName ->
         return manifestPath
     }
 
-    def matchingManifests = fileTree(manifestPath) {
-        include "**/${manifestFileName}"
-    }.files.sort { left, right -> left.path <=> right.path }
+    def matchingManifests = []
+    manifestPath.eachFileRecurse(groovy.io.FileType.FILES) { candidate ->
+        if (candidate.name == manifestFileName) {
+            matchingManifests << candidate
+        }
+    }
+    matchingManifests = matchingManifests.sort { left, right -> left.path <=> right.path }
 
     if (matchingManifests.empty) {
         throw new GradleException("No ${manifestFileName} found under ${manifestPath}")
@@ -826,7 +855,7 @@ def resolveInstallerManifestFile = { File manifestPath ->
     resolveManifestFile(manifestPath, 'installer-manifest.tsv')
 }
 
-def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean required ->
+def readEvidenceTextFile = { File evidencePath, String evidenceFileName, Boolean required ->
     def missingMessage = { String location ->
         "No ${evidenceFileName} found ${location}"
     }
@@ -861,9 +890,13 @@ def readEvidenceTextFile = { File evidencePath, String evidenceFileName, boolean
     }
 
     if (evidencePath.directory) {
-        def matchingFiles = fileTree(evidencePath) {
-            include "**/${evidenceFileName}"
-        }.files.sort { left, right -> left.path <=> right.path }
+        def matchingFiles = []
+        evidencePath.eachFileRecurse(groovy.io.FileType.FILES) { candidate ->
+            if (candidate.name == evidenceFileName) {
+                matchingFiles << candidate
+            }
+        }
+        matchingFiles = matchingFiles.sort { left, right -> left.path <=> right.path }
 
         if (matchingFiles.empty) {
             if (required) {
@@ -1097,14 +1130,20 @@ def verifyManifestMatches = { String manifestLabel, File expectedManifest, File 
 def installerArtifactIncludes = ['*.dmg', '*.deb', '*.rpm', '*.exe', '*.msi', '*.pkg']
 
 def installerArtifactsIn = { File installerDir ->
-    installerDir.directory
-            ? fileTree(installerDir) {
-                installerArtifactIncludes.each { include it }
-                exclude '**/jpackage_temp/**'
-            }.files
-                    .findAll { it.isFile() }
-                    .sort { left, right -> left.path <=> right.path }
-            : []
+    if (!installerDir.directory) {
+        return []
+    }
+    // The include patterns carry no slash, so they only ever matched the installer files
+    // directly inside this directory. Nothing below it was collected, which also made the
+    // jpackage_temp exclusion of the previous file tree redundant.
+    def children = installerDir.listFiles()
+    (children == null ? [] : children.toList())
+            .findAll { candidate ->
+                candidate.isFile() && installerArtifactIncludes.any { pattern ->
+                    candidate.name.endsWith(pattern.substring(1))
+                }
+            }
+            .sort { left, right -> left.path <=> right.path }
 }
 
 def expectedInstallerArtifactExtensions = {
@@ -1409,7 +1448,7 @@ def localeEnvironment = {
 
 def loadGradleWrapperProperties = {
     def wrapperProperties = new Properties()
-    def wrapperPropertiesFile = file('gradle/wrapper/gradle-wrapper.properties')
+    def wrapperPropertiesFile = new File(gradleProjectDirectory, 'gradle/wrapper/gradle-wrapper.properties')
     if (wrapperPropertiesFile.file) {
         wrapperPropertiesFile.withInputStream { wrapperProperties.load(it) }
     }
@@ -1547,6 +1586,10 @@ tasks.register('verifyReleaseEnvironment') {
     inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
     outputs.upToDateWhen { false }
 
+    // The Gradle object must not be read while the task runs, so the version is taken now.
+    // The Java values come from system properties of the running virtual machine and stay in doLast.
+    def actualGradleVersion = gradle.gradleVersion
+
     doLast {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
@@ -1561,15 +1604,15 @@ tasks.register('verifyReleaseEnvironment') {
         if (actualJavaVendor != expectedJavaVendorValue) {
             violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
         }
-        if (gradle.gradleVersion != expectedGradleVersion) {
-            violations << "Gradle version expected ${expectedGradleVersion} but was ${gradle.gradleVersion}"
+        if (actualGradleVersion != expectedGradleVersion) {
+            violations << "Gradle version expected ${expectedGradleVersion} but was ${actualGradleVersion}"
         }
 
         if (!violations.empty) {
             throw new GradleException("Release build environment verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
         }
 
-        logger.lifecycle("Verified release build environment: Gradle ${gradle.gradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
+        logger.lifecycle("Verified release build environment: Gradle ${actualGradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
     }
 }
 
@@ -1637,7 +1680,7 @@ tasks.register('verifyGradleWrapperSecurity') {
         }
 
         expectedHashes.each { path, expectedHash ->
-            def wrapperFile = file(path)
+            def wrapperFile = new File(gradleProjectDirectory, path)
             if (!wrapperFile.file) {
                 violations << "Missing Gradle wrapper file: ${path}"
                 return
@@ -1774,7 +1817,7 @@ tasks.register('verifyReleaseBuilderImage') {
             throw new GradleException("Linux release-builder image verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
         }
 
-        logger.lifecycle("Verified Linux release-builder Dockerfile: ${rootProject.relativePath(dockerfile)}")
+        logger.lifecycle("Verified Linux release-builder Dockerfile: ${relativeToProjectDirectory(dockerfile)}")
     }
 }
 
@@ -1803,7 +1846,7 @@ tasks.register('verifyGithubActionsSecurity') {
                         def atIndex = actionRef.lastIndexOf('@')
                         def ref = atIndex >= 0 ? actionRef.substring(atIndex + 1) : ''
                         if (!(ref ==~ /[0-9a-fA-F]{40}/)) {
-                            violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses '${actionRef}' without a full 40-character commit SHA"
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses '${actionRef}' without a full 40-character commit SHA"
                         }
                     }
 
@@ -1818,36 +1861,36 @@ tasks.register('verifyGithubActionsSecurity') {
                         }
 
                         if (!checkoutStepLines.any { it ==~ /^\s*persist-credentials:\s*false\s*$/ }) {
-                            violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses actions/checkout without persist-credentials: false"
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses actions/checkout without persist-credentials: false"
                         }
                     }
                 }
 
                 if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*/) {
-                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
                 }
 
                 if (line ==~ /^\s*java-version:\s*['"]?\d+['"]?\s*$/) {
-                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
                 }
 
                 if (line ==~ /^\s*java:\s*\[\s*['"]?\d+['"]?\s*\]\s*$/) {
-                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
                 }
 
                 if (line ==~ /^\s*check-latest:\s*true\s*$/) {
-                    violations << "${rootProject.relativePath(workflowFile)}:${lineNumber} sets check-latest: true"
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} sets check-latest: true"
                 }
             }
         }
 
         def releaseBuilderWorkflowFile = linuxReleaseBuilderWorkflow.asFile
         if (!releaseBuilderWorkflowFile.file) {
-            violations << "Missing Linux release-builder workflow: ${rootProject.relativePath(releaseBuilderWorkflowFile)}"
+            violations << "Missing Linux release-builder workflow: ${relativeToProjectDirectory(releaseBuilderWorkflowFile)}"
         } else {
             def releaseBuilderWorkflowText = releaseBuilderWorkflowFile.getText(StandardCharsets.UTF_8.name())
             def releaseBuilderWorkflowLines = releaseBuilderWorkflowFile.readLines(StandardCharsets.UTF_8.name())
-            def releaseBuilderWorkflowPath = rootProject.relativePath(releaseBuilderWorkflowFile)
+            def releaseBuilderWorkflowPath = relativeToProjectDirectory(releaseBuilderWorkflowFile)
             [
                     'name: Linux Release Builder',
                     '  workflow_dispatch:',
@@ -1904,10 +1947,10 @@ tasks.register('verifyGithubActionsSecurity') {
                 ]
         ].each { workflowFile, requiredTexts ->
             if (!workflowFile.file) {
-                violations << "Missing workflow: ${rootProject.relativePath(workflowFile)}"
+                violations << "Missing workflow: ${relativeToProjectDirectory(workflowFile)}"
             } else {
                 def workflowText = workflowFile.getText(StandardCharsets.UTF_8.name())
-                def workflowPath = rootProject.relativePath(workflowFile)
+                def workflowPath = relativeToProjectDirectory(workflowFile)
                 requiredTexts.each { requiredText ->
                     if (!workflowText.contains(requiredText)) {
                         violations << "${workflowPath} must contain '${requiredText}'"
@@ -1927,6 +1970,10 @@ tasks.register('verifyGithubActionsSecurity') {
 tasks.register('generateJarHashes') {
     group = 'verification'
     description = 'Builds all project Jar task outputs and writes a canonical SHA-256 and size manifest.'
+
+    // The list of Jar tasks is collected from allprojects while the task runs. Task objects cannot be
+    // written to the configuration cache, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Collects Jar tasks of all projects at execution time')
 
     def jarTasks = provider {
         enabledJarTasks()
@@ -1960,13 +2007,17 @@ tasks.register('generateJarHashes') {
         output.parentFile.mkdirs()
         output.setText(lines.join('\n') + '\n', StandardCharsets.UTF_8.name())
 
-        logger.lifecycle("Wrote ${lines.size()} jar checksums to ${rootProject.relativePath(output)}")
+        logger.lifecycle("Wrote ${lines.size()} jar checksums to ${relativeToProjectDirectory(output)}")
     }
 }
 
 tasks.register('generateReleaseManifest') {
     group = 'verification'
     description = 'Builds the desktop Java payload and writes canonical SHA-256 release manifests.'
+
+    // The list of Jar tasks is collected from allprojects while the task runs. Task objects cannot be
+    // written to the configuration cache, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Collects Jar tasks of all projects at execution time')
 
     def desktopInstallDist = project(':desktop').tasks.named('installDist')
     def jarTasks = provider {
@@ -2022,9 +2073,9 @@ tasks.register('generateReleaseManifest') {
         def buildInfoFile = releaseBuildInfoFile.get().asFile
         writeBuildInfo(buildInfoFile, buildInfoForManifest(entries, releaseManifest, sha256Sums))
 
-        logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${rootProject.relativePath(releaseManifest)}")
-        logger.lifecycle("Wrote ${entries.size()} release checksums to ${rootProject.relativePath(sha256Sums)}")
-        logger.lifecycle("Wrote release build info to ${rootProject.relativePath(buildInfoFile)}")
+        logger.lifecycle("Wrote ${entries.size()} release manifest entries to ${relativeToProjectDirectory(releaseManifest)}")
+        logger.lifecycle("Wrote ${entries.size()} release checksums to ${relativeToProjectDirectory(sha256Sums)}")
+        logger.lifecycle("Wrote release build info to ${relativeToProjectDirectory(buildInfoFile)}")
     }
 }
 
@@ -2048,7 +2099,7 @@ tasks.register('generateReleaseEvidenceBundle', Zip) {
 
     doLast {
         def bundle = archiveFile.get().asFile
-        logger.lifecycle("Wrote release evidence bundle to ${rootProject.relativePath(bundle)}")
+        logger.lifecycle("Wrote release evidence bundle to ${relativeToProjectDirectory(bundle)}")
         logger.lifecycle("Release evidence bundle SHA-256: ${sha256(bundle)}")
     }
 }
@@ -2065,7 +2116,7 @@ tasks.register('verifyReleaseEvidenceBundle') {
         def bundle = releaseEvidenceBundleFile.get().asFile
         def validation = validateReleaseEvidenceBundle(bundle)
         logger.lifecycle(
-                "Verified release evidence bundle ${rootProject.relativePath(bundle)} " +
+                "Verified release evidence bundle ${relativeToProjectDirectory(bundle)} " +
                         "with ${validation.entryCount} entries."
         )
     }
@@ -2137,9 +2188,9 @@ tasks.register('generateInstallerManifest') {
         def buildInfoFile = installerBuildInfoFile.get().asFile
         writeBuildInfo(buildInfoFile, buildInfoForManifest(entries, installerManifest, sha256Sums))
 
-        logger.lifecycle("Wrote ${entries.size()} installer manifest entries to ${rootProject.relativePath(installerManifest)}")
-        logger.lifecycle("Wrote ${entries.size()} installer checksums to ${rootProject.relativePath(sha256Sums)}")
-        logger.lifecycle("Wrote installer build info to ${rootProject.relativePath(buildInfoFile)}")
+        logger.lifecycle("Wrote ${entries.size()} installer manifest entries to ${relativeToProjectDirectory(installerManifest)}")
+        logger.lifecycle("Wrote ${entries.size()} installer checksums to ${relativeToProjectDirectory(sha256Sums)}")
+        logger.lifecycle("Wrote installer build info to ${relativeToProjectDirectory(buildInfoFile)}")
     }
 }
 
@@ -2164,10 +2215,10 @@ tasks.register('generateInstallerStructureReport') {
     doLast {
         def installerFiles = installerArtifactsIn(desktopInstallerDir.get().asFile)
         def reportDir = installerStructureReportDir.get().asFile
-        project.delete(reportDir)
+        reportDir.deleteDir()
         reportDir.mkdirs()
         def normalizeReportOutput = { String value ->
-            value == null ? null : value.replace(rootProject.projectDir.absolutePath, '<repo>')
+            value == null ? null : value.replace(gradleProjectDirectory.absolutePath, '<repo>')
         }
         def powershellSingleQuoted = { String value ->
             "'${value.replace("'", "''")}'"
@@ -2387,8 +2438,8 @@ tasks.register('generateInstallerStructureReport') {
         def structureSummary = installerStructureSummaryFile.get().asFile
         structureSummary.setText(summary.toString(), StandardCharsets.UTF_8.name())
 
-        logger.lifecycle("Wrote installer structure report to ${rootProject.relativePath(structureReport)}")
-        logger.lifecycle("Wrote installer structure summary to ${rootProject.relativePath(structureSummary)}")
+        logger.lifecycle("Wrote installer structure report to ${relativeToProjectDirectory(structureReport)}")
+        logger.lifecycle("Wrote installer structure summary to ${relativeToProjectDirectory(structureSummary)}")
     }
 }
 
@@ -2414,7 +2465,7 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
                 .drop(1)
                 .collect { it.split('\t', -1) }
                 .findAll { columns -> columns.length >= 5 && columns[4] }
-                .collect { columns -> file(columns[4]) }
+                .collect { columns -> resolveProjectFile(columns[4]) }
     }
     def structureDirectoryFiles = {
         def structureDir = installerStructureReportDir.get().asFile
@@ -2501,7 +2552,7 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
             )
         }
 
-        logger.lifecycle("Wrote installer evidence bundle to ${rootProject.relativePath(bundle)}")
+        logger.lifecycle("Wrote installer evidence bundle to ${relativeToProjectDirectory(bundle)}")
         logger.lifecycle("Installer evidence bundle SHA-256: ${sha256(bundle)}")
     }
 }
@@ -2518,7 +2569,7 @@ tasks.register('verifyInstallerEvidenceBundle') {
         def bundle = installerEvidenceBundleFile.get().asFile
         def validation = validateInstallerEvidenceBundle(bundle)
         logger.lifecycle(
-                "Verified installer evidence bundle ${rootProject.relativePath(bundle)} " +
+                "Verified installer evidence bundle ${relativeToProjectDirectory(bundle)} " +
                         "with ${validation.entryCount} entries and " +
                         "${validation.referencedStructureEntryCount} referenced structure reports."
         )
@@ -2545,8 +2596,8 @@ tasks.register('compareReleaseEvidenceBundles') {
             )
         }
 
-        def leftEvidence = file(leftReleaseEvidencePath)
-        def rightEvidence = file(rightReleaseEvidencePath)
+        def leftEvidence = resolveProjectFile(leftReleaseEvidencePath)
+        def rightEvidence = resolveProjectFile(rightReleaseEvidencePath)
         def leftManifest = resolveReleaseManifestFile(leftEvidence)
         def rightManifest = resolveReleaseManifestFile(rightEvidence)
         def leftEntries = readReleaseManifest(leftManifest)
@@ -2630,8 +2681,8 @@ tasks.register('compareInstallerEvidenceBundles') {
             )
         }
 
-        def leftEvidence = file(leftInstallerEvidencePath)
-        def rightEvidence = file(rightInstallerEvidencePath)
+        def leftEvidence = resolveProjectFile(leftInstallerEvidencePath)
+        def rightEvidence = resolveProjectFile(rightInstallerEvidencePath)
         def leftManifest = resolveInstallerManifestFile(leftEvidence)
         def rightManifest = resolveInstallerManifestFile(rightEvidence)
         def leftEntries = readReleaseManifest(leftManifest)
@@ -2740,7 +2791,7 @@ tasks.register('verifyReleaseBuild') {
     }
 
     doLast {
-        logger.lifecycle("Verified release build and wrote ${rootProject.relativePath(releaseEvidenceBundleFile.get().asFile)}")
+        logger.lifecycle("Verified release build and wrote ${relativeToProjectDirectory(releaseEvidenceBundleFile.get().asFile)}")
     }
 }
 
@@ -2771,7 +2822,7 @@ tasks.register('createReleaseJarTxt') {
             throw new GradleException('Missing required -PreleaseDir=<directory>, for example -PreleaseDir=/Users/ben/Documents/v1.10.0')
         }
 
-        def releaseDir = file(rawReleaseDir.trim())
+        def releaseDir = resolveProjectFile(rawReleaseDir.trim())
         if (!releaseDir.exists() && !releaseDir.mkdirs()) {
             throw new GradleException("Could not create release directory: ${releaseDir}")
         }
@@ -2785,7 +2836,7 @@ tasks.register('createReleaseJarTxt') {
                 throw new GradleException("Missing required -P${inputSpec.property}=<path> for the ${inputSpec.label} jar SHA-256 file.")
             }
 
-            def sourceFile = file(rawPath.trim())
+            def sourceFile = resolveProjectFile(rawPath.trim())
             if (!sourceFile.file) {
                 throw new GradleException("Missing ${inputSpec.label} jar SHA-256 file: ${sourceFile}")
             }
@@ -2845,7 +2896,7 @@ tasks.register('signReleaseArtifacts') {
         }
         gpgUser = gpgUser.trim()
 
-        def releaseDir = file(rawReleaseDir.trim())
+        def releaseDir = resolveProjectFile(rawReleaseDir.trim())
         if (!releaseDir.directory) {
             throw new GradleException("Release directory is not a directory: ${releaseDir}")
         }
@@ -2927,6 +2978,11 @@ tasks.register('verifyGithubReleaseReadiness') {
     description = 'Manually verifies GitHub release assets, Bisq download URLs, versions, and signer keys for -PreleaseVersion=<version>.'
 
     def releaseVersionProperty = providers.gradleProperty('releaseVersion')
+    // Providers must be created while the build is configured, not while the task runs.
+    def githubTokenProperty = providers.gradleProperty('githubToken')
+    def githubTokenEnvironment = providers.environmentVariable('GITHUB_TOKEN')
+    def gpgExecutableProperty = providers.gradleProperty('gpgExecutable')
+    def gpgExecutableEnvironment = providers.environmentVariable('GPG_EXECUTABLE')
 
     inputs.property('releaseVersion', releaseVersionProperty.orElse(''))
     outputs.file(githubReleaseReadinessReportFile)
@@ -3056,41 +3112,41 @@ tasks.register('verifyGithubReleaseReadiness') {
 
         def checkVersionValue = { String label, File sourceFile, String regex ->
             if (!sourceFile.file) {
-                fail(label, "Missing ${rootProject.relativePath(sourceFile)}")
+                fail(label, "Missing ${relativeToProjectDirectory(sourceFile)}")
                 return
             }
             def matcher = sourceFile.getText(StandardCharsets.UTF_8.name()) =~ regex
             if (!matcher.find()) {
-                fail(label, "Could not find version declaration in ${rootProject.relativePath(sourceFile)}")
+                fail(label, "Could not find version declaration in ${relativeToProjectDirectory(sourceFile)}")
                 return
             }
             def actualVersion = matcher.group(1)
             if (actualVersion == releaseVersion) {
-                pass(label, "${rootProject.relativePath(sourceFile)} is set to ${actualVersion}")
+                pass(label, "${relativeToProjectDirectory(sourceFile)} is set to ${actualVersion}")
             } else {
-                fail(label, "${rootProject.relativePath(sourceFile)} is ${actualVersion}, expected ${releaseVersion}")
+                fail(label, "${relativeToProjectDirectory(sourceFile)} is ${actualVersion}, expected ${releaseVersion}")
             }
         }
 
         checkVersionValue(
                 'Version.VERSION',
-                file('common/src/main/java/bisq/common/app/Version.java'),
+                new File(gradleProjectDirectory, 'common/src/main/java/bisq/common/app/Version.java'),
                 /public\s+static\s+final\s+String\s+VERSION\s*=\s*"([^"]+)"/
         )
         checkVersionValue(
                 'PackagingPlugin.APP_VERSION',
-                file('build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt'),
+                new File(gradleProjectDirectory, 'build-logic/packaging/src/main/kotlin/bisq/gradle/packaging/PackagingPlugin.kt'),
                 /const\s+val\s+APP_VERSION\s*=\s*"([^"]+)"/
         )
         checkVersionValue(
                 'finalize.sh version',
-                file('desktop/package/macosx/finalize.sh'),
+                new File(gradleProjectDirectory, 'desktop/package/macosx/finalize.sh'),
                 /(?m)^\s*version="([^"]+)"/
         )
 
-        def installerSourceFile = file('desktop/src/main/java/bisq/desktop/main/overlays/windows/downloadupdate/BisqInstaller.java')
+        def installerSourceFile = new File(gradleProjectDirectory, 'desktop/src/main/java/bisq/desktop/main/overlays/windows/downloadupdate/BisqInstaller.java')
         if (!installerSourceFile.file) {
-            fail('Updater source resources', "Missing ${rootProject.relativePath(installerSourceFile)}")
+            fail('Updater source resources', "Missing ${relativeToProjectDirectory(installerSourceFile)}")
         } else {
             def installerSource = installerSourceFile.getText(StandardCharsets.UTF_8.name())
             if (installerSource.contains('DOWNLOAD_HOST_URL = "https://bisq.network/downloads/"') &&
@@ -3141,7 +3197,7 @@ tasks.register('verifyGithubReleaseReadiness') {
                 'signingkey.asc'
         ].sort()
 
-        def githubToken = providers.gradleProperty('githubToken').orNull ?: providers.environmentVariable('GITHUB_TOKEN').orNull
+        def githubToken = githubTokenProperty.orNull ?: githubTokenEnvironment.orNull
         def githubHeaders = [
                 'Accept'              : 'application/vnd.github+json',
                 'X-GitHub-Api-Version': '2022-11-28'
@@ -3220,10 +3276,10 @@ tasks.register('verifyGithubReleaseReadiness') {
         }
 
         def keyIds = ['387C8307', '4A133008', 'E222AA02']
-        def signingKeyFile = file('desktop/package/signingkey.asc')
+        def signingKeyFile = new File(gradleProjectDirectory, 'desktop/package/signingkey.asc')
         def activeSigningKeyId = ''
         if (!signingKeyFile.file) {
-            fail('signingkey.asc local file', "Missing ${rootProject.relativePath(signingKeyFile)}")
+            fail('signingkey.asc local file', "Missing ${relativeToProjectDirectory(signingKeyFile)}")
         } else {
             activeSigningKeyId = signingKeyFile.getText(StandardCharsets.UTF_8.name()).trim().toUpperCase(Locale.ROOT)
             if (keyIds.contains(activeSigningKeyId)) {
@@ -3235,20 +3291,20 @@ tasks.register('verifyGithubReleaseReadiness') {
 
         def resourceKeyFiles = [:]
         keyIds.each { keyId ->
-            def resourceFile = file("desktop/src/main/resources/keys/${keyId}.asc")
-            def packageFile = file("desktop/package/${keyId}.asc")
+            def resourceFile = new File(gradleProjectDirectory, "desktop/src/main/resources/keys/${keyId}.asc")
+            def packageFile = new File(gradleProjectDirectory, "desktop/package/${keyId}.asc")
             resourceKeyFiles[keyId] = resourceFile
 
             def sourceBytesByName = [:]
             if (resourceFile.file) {
                 sourceBytesByName['app resources'] = resourceFile.bytes
             } else {
-                fail("Public key ${keyId} app resource", "Missing ${rootProject.relativePath(resourceFile)}")
+                fail("Public key ${keyId} app resource", "Missing ${relativeToProjectDirectory(resourceFile)}")
             }
             if (packageFile.file) {
                 sourceBytesByName['release package'] = packageFile.bytes
             } else {
-                fail("Public key ${keyId} package resource", "Missing ${rootProject.relativePath(packageFile)}")
+                fail("Public key ${keyId} package resource", "Missing ${relativeToProjectDirectory(packageFile)}")
             }
 
             try {
@@ -3338,8 +3394,8 @@ tasks.register('verifyGithubReleaseReadiness') {
             }
         }
 
-        def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
-                providers.environmentVariable('GPG_EXECUTABLE').orNull
+        def configuredGpgExecutable = gpgExecutableProperty.orNull ?:
+                gpgExecutableEnvironment.orNull
         def gpgExecutable = configuredGpgExecutable ?: [
                 '/opt/homebrew/bin/gpg',
                 '/usr/local/bin/gpg',
@@ -3460,11 +3516,11 @@ tasks.register('verifyGithubReleaseReadiness') {
         }
         markdown << '\n'
         reportFile.setText(markdown.toString(), StandardCharsets.UTF_8.name())
-        logger.lifecycle("Wrote ${rootProject.relativePath(reportFile)}")
+        logger.lifecycle("Wrote ${relativeToProjectDirectory(reportFile)}")
 
         def failures = results.findAll { it.status == 'FAIL' }
         if (!failures.empty) {
-            throw new GradleException("GitHub release readiness failed with ${failures.size()} failure(s). See ${rootProject.relativePath(reportFile)}")
+            throw new GradleException("GitHub release readiness failed with ${failures.size()} failure(s). See ${relativeToProjectDirectory(reportFile)}")
         }
 
         logger.lifecycle("GitHub release readiness passed with ${results.count { it.status == 'WARN' }} warning(s).")
@@ -3488,7 +3544,7 @@ tasks.register('verifyInstallerManifest') {
             throw new GradleException('Missing required -PinstallerManifest=<path-to-installer-manifest.tsv-directory-or-zip>')
         }
 
-        def expectedManifest = resolveInstallerManifestFile(file(expectedInstallerManifestPath))
+        def expectedManifest = resolveInstallerManifestFile(resolveProjectFile(expectedInstallerManifestPath))
         def actualManifest = installerManifestFile.get().asFile
         if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
             logger.warn("Expected installer manifest points at the generated local manifest: ${expectedManifest}")
@@ -3516,7 +3572,7 @@ tasks.register('verifyReleaseManifest') {
             throw new GradleException('Missing required -PreleaseManifest=<path-to-release-manifest.tsv-directory-or-zip>')
         }
 
-        def expectedManifest = resolveReleaseManifestFile(file(expectedReleaseManifestPath))
+        def expectedManifest = resolveReleaseManifestFile(resolveProjectFile(expectedReleaseManifestPath))
         def actualManifest = releaseManifestFile.get().asFile
         if (expectedManifest.canonicalFile == actualManifest.canonicalFile) {
             logger.warn("Expected release manifest points at the generated local manifest: ${expectedManifest}")
