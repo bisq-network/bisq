@@ -71,13 +71,16 @@ proposal rules are specified in
 Before the release:
 
 1. Run both bundled DAO resource audits in step 2.1. They reproduce the stored proposal checks and
-   the 947-payload/935-reveal blind-vote decryption audit through height `963_120`.
+   the 952-payload/940-reveal blind-vote decryption audit through height `968_341`.
 2. Repeat the duplicate merit audit described in
    [specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node synced past
    the last completed voting cycle.
-3. From a synced mainnet node, audit proposal, blind-vote, and completed RESULT data after bundled
-   height `963_120` for invalid proposal fields, duplicate proposal transaction IDs, duplicate
-   blind-vote transaction IDs, and vote or merit decryption failures.
+3. While an activation height in the table above lies above the bundled DAO-state height, audit
+   proposal, blind-vote, and completed RESULT data after the bundled height from a synced mainnet node
+   for invalid proposal fields, duplicate proposal transaction IDs, duplicate blind-vote transaction
+   IDs, and vote or merit decryption failures. The mainnet heights `963_350` lie below the bundled
+   height `968_341`. The remaining mainnet obligation is the proposal-type-specific validation named in
+   [specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
 4. Repeat the synced-node audits after every proposal or RESULT phase between release and activation.
    Preserve the command and output used for release review.
 
