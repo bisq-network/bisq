@@ -17,6 +17,8 @@
 
 package bisq.core.dao.node.block_provider;
 
+import bisq.core.filter.DenyList;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -35,7 +38,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class TrustedBsqBlockProviderRepositoryTest {
     private static final String MAINNET = format("--%s=%s", Config.BASE_CURRENCY_NETWORK, "btc_mainnet");
@@ -126,6 +134,27 @@ public class TrustedBsqBlockProviderRepositoryTest {
         assertNull(provider.getRole());
         assertDoesNotThrow(() -> Sig.getPublicKeyFromBytes(provider.getEncodedPublicKey()));
         assertFalse(isTrusted(trustedFullDaoNodes, bundledProviderAddress));
+    }
+
+    @Test
+    public void initializesOnlyOnceWhenNoProvidersAreLoaded() {
+        DenyList denyList = mock(DenyList.class);
+        when(denyList.getBannedSeedNodes()).thenReturn(List.of());
+        TrustedBsqBlockProviderRepository trustedFullDaoNodes =
+                new TrustedBsqBlockProviderRepository(new Config(REGTEST), denyList);
+
+        assertTrue(trustedFullDaoNodes.getTrustedBsqBlockProviders().isEmpty());
+        assertTrue(trustedFullDaoNodes.getTrustedBsqBlockProviders().isEmpty());
+
+        verify(denyList, times(1)).getBannedSeedNodes();
+    }
+
+    @Test
+    public void returnsUnmodifiableProviders() {
+        TrustedBsqBlockProviderRepository trustedFullDaoNodes = new TrustedBsqBlockProviderRepository(new Config(MAINNET));
+        Collection<TrustedBsqBlockProvider> providers = trustedFullDaoNodes.getTrustedBsqBlockProviders();
+
+        assertThrows(UnsupportedOperationException.class, providers::clear);
     }
 
     @AfterEach
