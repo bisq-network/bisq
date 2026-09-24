@@ -221,12 +221,24 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public boolean isChainHeightMatchingLastBlockHeight(DaoState persistedDaoState) {
+        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
         if (persistedDaoState.getBlocks().isEmpty()) {
-            log.warn("Cannot check chain height: DaoState has no blocks.");
-            return true;
+            // Empty blocks list is only consistent with the freshly initialized state (chainHeight==0).
+            // Any other value means the proto recorded a chainHeight but the side-channel block file
+            // (bsqBlocksStorageService) didn't provide matching blocks — likely an incomplete or
+            // mis-versioned data dir. Returning true here would make applySnapshot proceed with a
+            // DaoState that reports a synced height but has no parsed blocks, freezing reported
+            // chainHeight at the stale value and stalling LiteNode sync (its startParseBlocks
+            // short-circuits when chainHeight == bsqWallet best height).
+            if (chainHeightOfPersistedDaoState == 0) {
+                return true;
+            }
+            log.warn("DaoState reports chainHeight={} but has no blocks — block storage is incomplete. " +
+                    "Treating as chain-height mismatch so applySnapshot can trigger resyncDaoStateFromResources.",
+                    chainHeightOfPersistedDaoState);
+            return false;
         }
         int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
-        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
         boolean isMatching = heightOfPersistedLastBlock == chainHeightOfPersistedDaoState;
         if (!isMatching) {
             log.warn("heightOfPersistedLastBlock is not same as chainHeightOfPersistedDaoState.\n" +
