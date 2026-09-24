@@ -1,0 +1,14 @@
+# Deny-list fixture for DenyListTests. Tests load it explicitly with --denyListResource. Its name
+# differs from every bundled resource, so it cannot replace a bundled deny list on the test classpath.
+
+nodeAddressesBannedFromTrading=tradingpeer.onion:9999
+nodeAddressesBannedFromNetwork=networkpeer.onion:9999
+bannedCurrencies=KYD
+bannedPaymentMethods=VENMO
+bannedAccountWitnessSignerPubKeys=02a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192
+bannedMediators=mediator.onion:9999
+bannedRefundAgents=refundagent.onion:9999
+bannedSeedNodes=seednode.onion:8000
+bannedPriceRelayNodes=pricerelayserviceid
+bannedBtcNodes=203.0.113.1:8333
+bannedAutoConfExplorers=explorer.example

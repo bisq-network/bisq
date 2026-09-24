@@ -19,6 +19,7 @@ package bisq.core.filter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -96,8 +97,13 @@ public class DenyList {
 
     @VisibleForTesting
     static String resourceName(Config config) {
+        return resourceName(config.getBaseCurrencyNetwork());
+    }
+
+    @VisibleForTesting
+    static String resourceName(BaseCurrencyNetwork baseCurrencyNetwork) {
         return RESOURCE_DIRECTORY + "/" +
-                config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH) +
+                baseCurrencyNetwork.name().toLowerCase(Locale.ENGLISH) +
                 RESOURCE_EXTENSION;
     }
 
