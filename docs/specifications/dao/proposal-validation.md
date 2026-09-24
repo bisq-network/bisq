@@ -104,7 +104,7 @@ hardening but does not replace the activation gate or cover later blocks. The co
 transaction-ID checks are reproduced by the opt-in resource audit:
 
 ```bash
-./gradlew --no-daemon --max-workers=2 :core:cleanTest :core:test \
+./gradlew --no-daemon --max-workers=2 :core:test --rerun \
   --tests bisq.core.dao.BundledDaoStateAuditTest.refreshedBundledStoresAreReadableAndInternallyNonEmpty \
   -PrunResourceAudits=true --console=plain
 ```

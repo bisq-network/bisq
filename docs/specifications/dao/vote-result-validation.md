@@ -120,7 +120,7 @@ decrypts both ciphertexts with the production routines, and checks proposal tran
 uniqueness in every decrypted vote list. Run it with:
 
 ```bash
-./gradlew --no-daemon --max-workers=2 :core:cleanTest :core:test \
+./gradlew --no-daemon --max-workers=2 :core:test --rerun \
   --tests bisq.core.dao.BundledDaoStateAuditTest.bundledBlockHistoryAndRevealedBlindVotesAreInternallyConsistent \
   -PrunResourceAudits=true --console=plain
 ```
