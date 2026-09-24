@@ -119,6 +119,6 @@ oxbj7g4fybthmfm42bnjtelf3zfxnhnpvbixqp3abvnxh4sjatpfdpqd.onion:8333,\
 qs535l32ne43rxr5iqexbhu4r6zifrfez653pm7j3rpi7c7omaz7xcqd.onion:8333,\
 izdwkfkzlzzporvnmaykbskibeswr3wfrk52p2lkhobacqqsim74b4qd.onion:8333
 
-requiredVersionForTrading=1.10.0
+requiredVersionForTrading=1.10.8
 
 bannedAutoConfExplorers=explorer.monero.wiz.biz
