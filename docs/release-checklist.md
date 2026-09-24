@@ -96,27 +96,10 @@ This is why commit `c2a4c8d2de` removed such files again.
 Old files that carry a version in the name must never be renamed or deleted. Older peers still
 request them.
 
-After you refresh `DaoStateStore_BTC_MAINNET`, run
-`core/src/test/java/bisq/core/dao/governance/merit/BundledMeritDuplicationAuditTest.java`. It reads
-that resource directly, so its result can change.
-
-Also run the resource integration audit explicitly:
-
-```bash
-./gradlew :core:test --tests bisq.core.dao.BundledDaoStateAuditTest -PrunResourceAudits=true
-```
-
-It checks that the separate BSQ block resources are contiguous through the DAO-state height, that
-their embedded transaction and output coordinates are internally consistent, that no historical
-lockup was spent by anything other than a canonical unlock shape matching its parsed transaction
-type, and that evaluated role terms still match their role types. It also validates proposal common
-fields and transaction-ID uniqueness, resolves every stored vote reveal against the bundled block
-history, decrypts its vote and merit ciphertexts, checks decrypted proposal-ID uniqueness, and checks
-that the refreshed P2P stores and versioned Burning Man address lists are readable and internally
-consistent. It is kept out of the regular unit-test suite because it scans the full bundled history.
+After the other resources of this step are refreshed, run the audits of step 2.7.
 
 Create a pull request against the release branch that contains screenshots of the hashes of a full
-node and a light node, so that a reviewer can compare them.
+node and a light node, so that a reviewer can compare them, and the audit summaries of step 2.7.
 
 ### 2.2 Burning Man address list
 
@@ -202,6 +185,101 @@ Update these only when a change is needed.
 
 `core/src/main/java/bisq/core/dao/node/full/RpcService.java` holds
 `SUPPORTED_NODE_VERSION_RANGE`. Change it if a newer Bitcoin Core version should be supported.
+
+### 2.7 Audit the bundled resources
+
+Documents:
+[specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md#historical-compatibility-audit)
+and [specifications/dao/merit.md](specifications/dao/merit.md), section 7.1
+
+Run this in every release, after steps 2.1 to 2.4. Two tests read the bundled mainnet resources
+directly:
+
+- `core/src/test/java/bisq/core/dao/BundledDaoStateAuditTest.java` checks that the separate BSQ block
+  resources are contiguous through the DAO-state height, that their embedded transaction and output
+  coordinates are internally consistent, that every DAO state hash checkpoint matches the bundled hash
+  chain, that no historical lockup was spent by anything other than a canonical unlock shape matching
+  its parsed transaction type, and that evaluated role terms still match their role types. It also
+  validates proposal common fields and transaction-ID uniqueness, resolves every stored vote reveal
+  against the bundled block history, decrypts its vote and merit ciphertexts, checks decrypted
+  proposal-ID uniqueness, and checks that the refreshed P2P stores and versioned Burning Man address
+  lists are readable and internally consistent. It is kept out of the regular unit-test suite because
+  it scans the full bundled history, so it runs only with `-PrunResourceAudits=true`.
+- `core/src/test/java/bisq/core/dao/governance/merit/BundledMeritDuplicationAuditTest.java` checks
+  that no issuance backs the merit of more than one blind vote in the same cycle. It also runs in the
+  regular unit-test suite.
+
+Run both:
+
+```bash
+./gradlew :core:test --rerun -PrunResourceAudits=true \
+  --tests bisq.core.dao.BundledDaoStateAuditTest \
+  --tests bisq.core.dao.governance.merit.BundledMeritDuplicationAuditTest
+```
+
+`--rerun` is required. Without it, Gradle reports the test task as up to date, or restores it from
+the build cache, when its inputs did not change, and the audits do not run. Gradle does not print the
+audit summaries. Read them in the tab "Standard output" of
+`core/build/reports/tests/test/classes/bisq.core.dao.BundledDaoStateAuditTest.html` and
+`core/build/reports/tests/test/classes/bisq.core.dao.governance.merit.BundledMeritDuplicationAuditTest.html`.
+
+`BundledDaoStateAuditTest` pins three values, so that a changed resource fails the audit until a
+person has reviewed the change:
+
+| Constant | Meaning |
+|----------|---------|
+| `EXPECTED_BLIND_VOTE_COUNT` | Number of payloads in `BlindVoteStore_BTC_MAINNET` |
+| `EXPECTED_REVEALED_BLIND_VOTE_COUNT` | Number of those payloads that have a vote reveal transaction in the bundled blocks. The audit decrypts each of them |
+| `PREVIOUS_BOND_AUDIT_HEIGHT` | DAO-state height of the previous audit. The last line of the summary reports the lockups, unlock spends and evaluated role proposals after this height |
+
+#### Refresh the audit when the resources changed
+
+After new votes, the audit fails with "bundled blind-vote count changed; refresh the compatibility
+audit" or "revealed blind-vote count changed; refresh the compatibility audit". This is expected and
+is not a reason to weaken or remove an assertion. The count check runs before all other checks, so
+none of them has run when it fails.
+
+1. Set `PREVIOUS_BOND_AUDIT_HEIGHT` to the height of the previous audit. The DAO specifications name
+   it as the height of their audited DAO state, for example
+   [specifications/dao/bond-lockup-spend.md](specifications/dao/bond-lockup-spend.md).
+2. Run the audit. When a count check fails, its message shows the new value (`but was: <n>`). Review
+   the change as described in the next items, set the constant to the reviewed value and run the audit
+   again. Repeat until the audit passes.
+3. Review the blind votes. Compare the summary line
+   `blind-vote payloads=... (revealed and decrypted=..., without reveal=...)` with the values in
+   [specifications/dao/vote-result-validation.md](specifications/dao/vote-result-validation.md#historical-compatibility-audit).
+   - New payloads normally belong to the most recent voting cycle. When the bundled blocks contain the
+     vote reveal phase of that cycle, each new payload also increases the revealed count, and the audit
+     has decrypted it.
+   - A new payload without a reveal is expected while the bundled DAO-state height lies before the end
+     of the vote reveal phase of its cycle. After that phase it means that the voter did not reveal.
+     Such a vote cannot enter the result. Name it in the pull request.
+   - The failure "vote reveal has no bundled blind-vote payload" means that `BlindVoteStore_BTC_MAINNET`
+     is older than the bundled blocks. Copy that store from the synced node as well (its line in
+     `copy_dbs.sh` is commented out) and run the audit again.
+4. Review the line `since height ...: lockups=..., unlock spends=..., evaluated role proposals=...`
+   and the lockup totals per reason. A new `BONDED_ROLE` lockup or a new evaluated role proposal
+   changes the bonded-role evidence and needs a closer review.
+5. Every other check must pass without changing it. A checkpoint that does not match, a gap in the
+   block history, a non-canonical lockup spend, a decryption failure, a duplicate transaction ID or a
+   role-term mismatch stops the release until the cause is understood.
+6. Check that the `BundledMeritDuplicationAuditTest` summary reports 0 issuances claimed by several
+   blind votes of one cycle.
+7. Update the audit evidence in the DAO specifications to the new DAO-state height:
+
+   | Specification | Values to update |
+   |---------------|------------------|
+   | [vote-result-validation.md](specifications/dao/vote-result-validation.md#historical-compatibility-audit) | Payloads, reveals and payloads without a reveal |
+   | [merit.md](specifications/dao/merit.md), section 7.1 | The table, from the `BundledMeritDuplicationAuditTest` summary |
+   | [proposal-validation.md](specifications/dao/proposal-validation.md) | Number of append-only proposal payloads |
+   | [bonded-roles.md](specifications/dao/bonded-roles.md), section 1.2 | Evaluated role proposals |
+   | [bond-lockup-spend.md](specifications/dao/bond-lockup-spend.md), [bonds.md](specifications/dao/bonds.md), [bonded-reputation.md](specifications/dao/bonded-reputation.md) | Lockups, unlock transactions and the audited height |
+
+   If the new height passes an activation height of the section
+   [Consensus and protocol constants](#consensus-and-protocol-constants), also update the audit
+   obligations that the specifications list for that activation.
+8. Commit the changed constants and the specification updates together, and add both audit summaries
+   to the pull request of step 2.1.
 
 ---
 
@@ -440,6 +518,8 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 | `p2p/src/main/resources/burningman/bm-addresses-vNNNN.json` | Yes | `--dumpBurningManData=true` |
 | `core/src/main/resources/wallet/checkpoints.txt` | Yes | `build-checkpoints` in the bitcoinj repository |
 | `core/src/main/resources/dao/daoStateHash.checkpoints` | Recommended | `--dumpDaoStateHashCheckpoints=true` |
+| `core/src/test/java/bisq/core/dao/BundledDaoStateAuditTest.java` | When the bundled DAO state changes | Step 2.7, after review |
+| `docs/specifications/dao/*.md`, audit evidence | When the bundled DAO state changes | Step 2.7, from the audit summaries |
 | `core/src/main/resources/i18n/` | Yes | `core/update_translations.sh` |
 | `core/src/main/resources/denylist/btc_mainnet.denylist` | Only when needed | By hand |
 | `core/src/main/resources/btc_mainnet.trusted_bsq_block_providers` | Only when needed | By hand |
@@ -540,19 +620,21 @@ proposal rules are specified in
 
 Before the release:
 
-1. Run both bundled DAO resource audits in step 2.1. They reproduce the stored proposal checks and
-   the 952-payload/940-reveal blind-vote decryption audit through height `968_341`.
-2. Repeat the duplicate merit audit described in
-   [specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node synced past
-   the last completed voting cycle.
-3. While an activation height in the table above lies above the bundled DAO-state height, audit
-   proposal, blind-vote, and completed RESULT data after the bundled height from a synced mainnet node
-   for invalid proposal fields, duplicate proposal transaction IDs, duplicate blind-vote transaction
-   IDs, and vote or merit decryption failures. The mainnet heights `963_350` lie below the bundled
-   height `968_341`. The remaining mainnet obligation is the proposal-type-specific validation named in
+1. Step 2.7 runs the bundled DAO resource audits. They reproduce the stored proposal checks and the
+   blind-vote decryption audit through the height of the bundled DAO state.
+2. While an activation height in the table above lies above the bundled DAO-state height:
+   - Repeat the duplicate merit audit described in
+     [specifications/dao/merit.md](specifications/dao/merit.md), section 7.2, against a node synced
+     past the last completed voting cycle.
+   - From a synced mainnet node, audit proposal, blind-vote, and completed RESULT data after the
+     bundled height for invalid proposal fields, duplicate proposal transaction IDs, duplicate
+     blind-vote transaction IDs, and vote or merit decryption failures.
+   - Repeat the synced-node audits after every proposal or RESULT phase between release and
+     activation. Preserve the command and output used for release review.
+3. On mainnet, the heights in the table lie below the bundled DAO-state height, and the DAO
+   specifications record the audit through that height. The remaining mainnet obligation is the
+   proposal-type-specific validation named in
    [specifications/dao/proposal-validation.md](specifications/dao/proposal-validation.md).
-4. Repeat the synced-node audits after every proposal or RESULT phase between release and activation.
-   Preserve the command and output used for release review.
 
 Historical hard fork heights must not be changed. Only check that they are unchanged:
 
