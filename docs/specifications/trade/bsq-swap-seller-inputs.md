@@ -13,7 +13,8 @@ not take more change than it is due. How the fees are shared is described in
 
 The seller's check of the buyer's inputs is outside this scope. The seller builds the transaction
 itself from the buyer's input descriptions, so the buyer's inputs are bound to their descriptions
-by construction.
+by construction. The seller's check of the buyer's signatures is specified in
+[`bsq-swap-buyer-signatures.md`](bsq-swap-buyer-signatures.md).
 
 ## Security invariant
 

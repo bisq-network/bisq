@@ -17,6 +17,8 @@
 
 package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
+import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
@@ -27,11 +29,13 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionWitness;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
+import static bisq.core.trade.validation.TransactionValidation.checkInputSignatures;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -50,8 +54,10 @@ public abstract class ProcessBsqSwapFinalizedTxMessage extends BsqSwapTask {
             checkTradeId(protocolModel.getOfferId(), message);
 
             // We cross check if the tx matches our partially signed tx by removing the sigs from the buyers inputs
-            Transaction buyersTransactionWithoutSigs = protocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
-            int buyersInputSize = Objects.requireNonNull(protocolModel.getTradePeer().getInputs()).size();
+            WalletService btcWalletService = protocolModel.getBtcWalletService();
+            Transaction buyersTransactionWithoutSigs = btcWalletService.getTxFromSerializedTx(message.getTx());
+            List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(protocolModel.getTradePeer().getInputs());
+            int buyersInputSize = buyersBsqInputs.size();
             Objects.requireNonNull(buyersTransactionWithoutSigs.getInputs()).stream()
                     .filter(input -> input.getIndex() < buyersInputSize)
                     .forEach(input -> {
@@ -68,7 +74,11 @@ public abstract class ProcessBsqSwapFinalizedTxMessage extends BsqSwapTask {
                 return;
             }
 
-            Transaction buyersTransaction = protocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
+            Transaction buyersTransaction = btcWalletService.getTxFromSerializedTx(message.getTx());
+            // The comparison above ignores the buyer's scripts and witnesses. Without valid signatures of the buyer we
+            // would commit our BTC inputs to a tx which the network rejects, and close our offer.
+            // See docs/specifications/trade/bsq-swap-buyer-signatures.md.
+            checkInputSignatures(buyersTransaction, 0, buyersBsqInputs, btcWalletService.getParams(), "buyer");
             trade.applyTransaction(buyersTransaction);
             trade.setState(BsqSwapTrade.State.COMPLETED);
             protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
