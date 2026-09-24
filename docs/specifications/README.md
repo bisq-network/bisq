@@ -72,4 +72,4 @@ specification says so explicitly instead of describing the implementation as if 
 | [`trade/withdrawal-completion.md`](trade/withdrawal-completion.md) | The completion invariant of a trade payout withdrawal: local wallet commit, one terminal outcome per request, and broadcast failure as a notification. |
 | [`trade/refund-delayed-payout-validation.md`](trade/refund-delayed-payout-validation.md) | Refund-agent validation that a delayed payout transaction spends the deposit transaction's escrow output and pays it to the protocol receivers. |
 | [`trade/xmr-payment-proof-timestamp.md`](trade/xmr-payment-proof-timestamp.md) | The timestamp rule of the XMR payment proof used for automatic confirmation, and why it is one-sided. |
-| [`trade/bsq-swap-seller-inputs.md`](trade/bsq-swap-seller-inputs.md) | What the BSQ swap buyer verifies about the seller's inputs before it signs: each input spends exactly the described output. |
+| [`trade/bsq-swap-seller-inputs.md`](trade/bsq-swap-seller-inputs.md) | What the BSQ swap buyer verifies about the seller's inputs before it signs: each input spends exactly the described output, which is not a BSQ output. |

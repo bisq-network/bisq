@@ -20,6 +20,8 @@ package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.trade.bsq_swap.BsqSwapCalculation;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
@@ -94,6 +96,17 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             // describes. Each seller input must spend exactly that output, otherwise the seller could spend a smaller
             // output of the same parent tx and claim the value of a larger one.
             checkInputOutpoints(sellersTransaction, buyersInputSize, sellersRawBtcInputs, params, "seller");
+
+            // The seller must spend BTC only. A seller input which spends a BSQ output changes how the DAO parses the
+            // tx. Spending a lockup output, or an unlock output before its lock time, even makes the whole tx invalid
+            // for the DAO, which burns the BSQ change of the buyer. A BTC output of a BSQ tx is not in the unspent BSQ
+            // outputs of the DAO state and is accepted.
+            DaoFacade daoFacade = protocolModel.getDaoFacade();
+            checkArgument(daoFacade.isDaoStateReadyAndInSync(), "DAO state is not ready and in sync");
+            for (RawTransactionInput input : sellersRawBtcInputs) {
+                TxOutputKey key = new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index);
+                checkArgument(!daoFacade.isUnspentTxOutput(key), "Seller input %s spends a BSQ output", key);
+            }
 
             boolean hasUnSignedInputs = sellersBtcInputs.stream()
                     .anyMatch(input -> input.getScriptSig() == null && !input.hasWitness());

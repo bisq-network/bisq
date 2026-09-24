@@ -38,10 +38,38 @@ maker's local estimate, which makes the buyer's fee share larger when the buyer 
 - The transaction must not spend the same outpoint twice. Otherwise a description could be listed
   twice and its value counted twice.
 
+## BSQ outputs as seller inputs
+
+The seller must pay with BTC only. Before the buyer signs, no seller input may spend an output which
+the buyer's DAO state holds as an unspent BSQ output. The buyer's DAO state must be ready and in
+sync to evaluate this rule; otherwise the buyer rejects the request.
+
+A seller input which spends a BSQ output changes how the DAO parses the swap transaction. Spending a
+lockup output from the hard fork 3 height on (see
+[`../dao/bond-lockup-spend.md`](../dao/bond-lockup-spend.md)), or an unlock output before its lock
+time has passed, makes the whole transaction invalid for the DAO. All BSQ inputs of an invalid
+transaction are burnt and none of its outputs becomes a BSQ output, so the buyer loses its BSQ
+change.
+
+The rule is evaluated on the output which the seller input spends, as required by the security
+invariant above. A check of the described output alone could be bypassed by describing a BTC output
+of the same parent transaction.
+
+An output of a BSQ transaction which the DAO classifies as a BTC output, for example the BTC change
+of a transaction which paid a trade fee in BSQ, is not a BSQ output. The seller may spend it.
+
 ## Compatibility
 
-Honest sellers of all versions build their inputs from their own descriptions, so these rules do
-not reject an honest transaction. Messages and persisted data do not change.
+Honest sellers of all versions build their inputs from their own descriptions, so the binding rules
+do not reject an honest transaction. Messages and persisted data do not change.
+
+The seller's BTC wallet does not exclude BSQ outputs from its coin selection. A seller whose BTC
+wallet holds a BSQ output, for example BSQ sent to one of its BTC addresses, can select it. The
+buyer now rejects such a request instead of signing a transaction which changes how the DAO parses
+the swap.
+
+The buyer now also checks that its DAO state is ready and in sync when it processes the seller's
+request.
 
 ## Not covered
 
@@ -49,5 +77,7 @@ not reject an honest transaction. Messages and persisted data do not change.
   confirmed. The seller can therefore delay or prevent the confirmation of the swap, for example
   with an input of a parent transaction which it has not published or which it replaces later. The
   buyer's wallet then shows a swap which does not confirm.
+- An output which the buyer's DAO state does not hold yet, for example an output of a parent
+  transaction which is not confirmed, is not detected as a BSQ output.
 - The fee rate tolerance for the taker is not changed. With the invariant above the seller cannot
   take back any part of the miner fee, so a high fee rate costs the seller its own fee share too.

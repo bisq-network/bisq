@@ -19,9 +19,15 @@ package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoCheckpointTestFixture;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
@@ -57,8 +63,11 @@ import org.bitcoinj.script.ScriptBuilder;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -181,6 +190,75 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         assertThat(result.errorMessage.get(), containsString("Change must be smaller or equal to expectedChange"));
     }
 
+    @ParameterizedTest
+    @MethodSource("buyerTasksAndBsqOutputTypes")
+    void rejectsSellerInputWhichSpendsAnUnspentBsqOutput(Class<? extends Task<?>> taskClass,
+                                                         TxOutputType bsqOutputType) {
+        Fixture fixture = new Fixture();
+        fixture.addSellersParentToDaoState(TxOutputType.BTC_OUTPUT, bsqOutputType);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("spends a BSQ output"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void acceptsSellerInputWhichSpendsABtcOutputOfABsqTx(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        // E.g. the BTC change of a tx which paid a trade fee in BSQ
+        fixture.addSellersParentToDaoState(TxOutputType.BSQ_OUTPUT, TxOutputType.BTC_OUTPUT);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertTrue(result.completed.get(), result.errorMessage.get());
+        // The DAO state knows the output, so checking only for a known output would reject an honest seller.
+        assertTrue(fixture.dao.daoStateService.existsTxOutput(
+                new TxOutputKey(fixture.sellersParent.getTxId().toString(), 1)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSellerInputWhichSpendsABsqOutputAndDescribesABtcOutputOfTheSameTx(
+            Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        fixture.addSellersParentToDaoState(TxOutputType.UNLOCK_OUTPUT, TxOutputType.BTC_OUTPUT);
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(0));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("Transaction input 1 does not match expected seller input 0"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
+    void rejectsSellerInputsWhenDaoStateIsNotReadyAndInSync(Class<? extends Task<?>> taskClass) {
+        Fixture fixture = new Fixture();
+        fixture.dao.failCheckpoint();
+        Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(1));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("DAO state is not ready and in sync"));
+    }
+
+    private static Stream<Arguments> buyerTasksAndBsqOutputTypes() {
+        return Stream.of(BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+                        BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class)
+                .flatMap(taskClass -> Stream.of(TxOutputType.BSQ_OUTPUT,
+                                TxOutputType.LOCKUP_OUTPUT,
+                                TxOutputType.UNLOCK_OUTPUT)
+                        .map(bsqOutputType -> Arguments.of(taskClass, bsqOutputType)));
+    }
+
     // The parent spends a segwit input, so a segwit description carries it with witness data.
     private static Transaction parentTx(ECKey key, long... outputValues) {
         Transaction parentTx = new Transaction(PARAMS);
@@ -213,6 +291,7 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         private final String sellersBtcChangeAddress = address();
         private final BsqSwapProtocolModel protocolModel = new BsqSwapProtocolModel(mock(PubKeyRing.class));
         private final BsqSwapTrade trade = mock(BsqSwapTrade.class);
+        private final DaoCheckpointTestFixture dao = new DaoCheckpointTestFixture();
 
         Fixture() {
             configureFeeService();
@@ -223,6 +302,7 @@ class ProcessBsqSwapFinalizeTxRequestTest {
                     .thenAnswer(invocation -> new Transaction(PARAMS, invocation.getArgument(0)));
             Provider provider = mock(Provider.class);
             when(provider.getBtcWalletService()).thenReturn(btcWalletService);
+            when(provider.getDaoFacade()).thenReturn(dao.facade);
             Offer offer = mock(Offer.class);
             when(offer.getId()).thenReturn(TRADE_ID);
             protocolModel.applyTransient(provider, mock(TradeManager.class), offer);
@@ -242,6 +322,39 @@ class ProcessBsqSwapFinalizeTxRequestTest {
 
         RawTransactionInput describedSellersInput() {
             return rawInput(sellersParent.getOutput(1));
+        }
+
+        // Adds the seller's parent tx to the DAO state as a parsed BSQ tx with the given output types. As the DAO
+        // parser does, only BSQ outputs become unspent tx outputs.
+        void addSellersParentToDaoState(TxOutputType... outputTypes) {
+            DaoStateService daoStateService = dao.daoStateService;
+            int height = daoStateService.getGenesisBlockHeight();
+            String txId = sellersParent.getTxId().toString();
+            protobuf.Tx.Builder tx = protobuf.Tx.newBuilder().setTxType(TxType.TRANSFER_BSQ.toProtoMessage());
+            for (int i = 0; i < outputTypes.length; i++) {
+                tx.addTxOutputs(protobuf.BaseTxOutput.newBuilder()
+                        .setIndex(i)
+                        .setValue(sellersParent.getOutput(i).getValue().value)
+                        .setTxId(txId)
+                        .setBlockHeight(height)
+                        .setTxOutput(protobuf.TxOutput.newBuilder()
+                                .setTxOutputType(outputTypes[i].toProtoMessage())
+                                .setLockTime(-1)));
+            }
+            Tx daoTx = Tx.fromProto(protobuf.BaseTx.newBuilder()
+                    .setTxVersion(Version.BSQ_TX_VERSION)
+                    .setId(txId)
+                    .setBlockHeight(height)
+                    .setBlockHash("block")
+                    .setTx(tx)
+                    .build());
+            Block block = new Block(height, 0, "block", "previous-block");
+            daoStateService.onNewBlockHeight(height);
+            daoStateService.onNewBlockWithEmptyTxs(block);
+            daoStateService.onNewTxForLastBlock(block, daoTx);
+            daoTx.getTxOutputs().stream()
+                    .filter(daoStateService::isBsqTxOutputType)
+                    .forEach(daoStateService::addUnspentTxOutput);
         }
 
         // Builds and signs the tx the way the seller does: buyer inputs first, then the seller's inputs, and the
