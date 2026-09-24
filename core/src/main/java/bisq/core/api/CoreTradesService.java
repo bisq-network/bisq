@@ -202,6 +202,19 @@ class CoreTradesService {
                                 trade.getId(),
                                 trade.getDepositTxId()));
             }
+
+            // Without the seller's payment account payload the buyer has no details to pay
+            // to, so a payment started message would tell the seller a payment happened that
+            // cannot have happened. The desktop client disables its confirm button on the
+            // same condition.
+            if (trade.getContract() == null
+                    || trade.getContract().getSellerPaymentAccountPayload() == null) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment started message for trade '%s'%n"
+                                        + "until the seller's payment account details have been received",
+                                trade.getId()));
+            }
+
             // pass along counter currency tx proof info if provided
             if (txId != null && txKey != null && !txId.isEmpty() && !txKey.isEmpty()) {
                 trade.setCounterCurrencyTxId(txId);

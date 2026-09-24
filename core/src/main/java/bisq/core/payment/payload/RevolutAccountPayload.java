@@ -118,7 +118,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
         checkArgument(!userName.isEmpty() || hasOldAccountId(),
                 "Either username must be set or we have an old account with accountId");
         if (!userName.isEmpty()) {
-            label = Res.get("payment.account.userName");
+            label = Res.get("payment.account.revtag");
             value = userName;
 
             if (hasOldAccountId()) {
