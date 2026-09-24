@@ -17,7 +17,9 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -27,6 +29,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.VerificationException;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -34,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import static bisq.core.util.Validator.checkNonBlankString;
@@ -116,6 +120,32 @@ public final class TransactionValidation {
             return transaction;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid serialized transaction", e);
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Transaction inputs
+    /* --------------------------------------------------------------------- */
+
+    public static void checkInputOutpoints(Transaction transaction,
+                                           int startIndex,
+                                           List<RawTransactionInput> expectedInputs,
+                                           NetworkParameters params,
+                                           String inputOwner) {
+        for (int i = 0; i < expectedInputs.size(); i++) {
+            RawTransactionInput expectedInput = checkNotNull(expectedInputs.get(i),
+                    "%s input at position %s must not be null",
+                    inputOwner,
+                    i);
+            TransactionOutPoint expectedOutpoint = WalletUtils.getConnectedOutPoint(expectedInput, params);
+            TransactionOutPoint actualOutpoint = transaction.getInput(startIndex + i).getOutpoint();
+            checkArgument(actualOutpoint.getIndex() == expectedOutpoint.getIndex() &&
+                            actualOutpoint.getHash().equals(expectedOutpoint.getHash()),
+                    "Transaction input %s does not match expected %s input %s",
+                    startIndex + i,
+                    inputOwner,
+                    i);
         }
     }
 
