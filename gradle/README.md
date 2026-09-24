@@ -19,10 +19,10 @@ and repeated in `docs/release-checklist.md`.
 
 ## How to upgrade the Gradle version
 
-### Before you start: one shell, four settings
+### Before you start: one shell, five settings
 
 All blocks below are meant to be pasted into **one terminal window that stays open**. They
-share four shell variables, which the first block sets. If you open a new window later, run
+share five shell variables, which the first block sets. If you open a new window later, run
 that first block again before anything else.
 
 The blocks contain no `#` comments on purpose. macOS Terminal runs zsh, and an interactive
@@ -38,12 +38,16 @@ Edit `REPO_ROOT` to the path of your checkout, then paste:
 
 ```bash
 V=9.0.0
+KEY=1BD97A6A154E7810EE0BC832E2F38302C8075E3D
 B=https://services.gradle.org/distributions
 REPO_ROOT=~/bisq
 WORK=~/gradle-$V-upgrade
 ```
 
 - `V` is the Gradle version you are moving to.
+- `KEY` is the fingerprint of the key that signs version `V`:
+  `1BD97A6A154E7810EE0BC832E2F38302C8075E3D` up to and including 9.7.0, and
+  `EA96F38569C044AAEF7FCF732887F479B0B9771A` from 9.7.1 on. See "About the signing key" below.
 - `B` is the download address of the Gradle distributions.
 - `REPO_ROOT` is your checkout of this repository.
 - `WORK` is a scratch directory for the downloads and the generated files. It is created by
@@ -52,7 +56,7 @@ WORK=~/gradle-$V-upgrade
 Check that the values arrived before you continue:
 
 ```bash
-echo "V=$V REPO_ROOT=$REPO_ROOT WORK=$WORK"
+echo "V=$V KEY=$KEY REPO_ROOT=$REPO_ROOT WORK=$WORK"
 ```
 
 ### 1. Pick a version and verify its distribution
@@ -64,7 +68,8 @@ version in the fields `downloadUrl`, `checksumUrl` and `wrapperChecksumUrl`.
 This block runs in `$WORK`, which it creates:
 
 ```bash
-mkdir -p "$WORK"
+mkdir -p "$WORK/gnupg"
+chmod 700 "$WORK/gnupg"
 cd "$WORK"
 
 curl -LO "$B/gradle-$V-bin.zip"
@@ -73,13 +78,20 @@ curl -LO "$B/gradle-$V-bin.zip.asc"
 curl -LO "$B/gradle-$V-wrapper.jar.sha256"
 
 echo "$(cat "$WORK/gradle-$V-bin.zip.sha256")  gradle-$V-bin.zip" | shasum -a 256 -c -
-gpg --import "$REPO_ROOT/gradle/verification-keyring.keys"
-gpg --verify "gradle-$V-bin.zip.asc" "gradle-$V-bin.zip"
+gpg --homedir "$WORK/gnupg" --import "$REPO_ROOT/gradle/verification-keyring.keys"
+gpg --homedir "$WORK/gnupg" --status-fd 1 --verify "gradle-$V-bin.zip.asc" "gradle-$V-bin.zip" | grep "^\[GNUPG:\] VALIDSIG .* $KEY$"
 ```
 
-The checksum line must print `gradle-9.0.0-bin.zip: OK`. `gpg --verify` must print "Good
-signature from Gradle Inc.". Its remark that the key is not certified with a trusted
-signature is normal; it only says that no owner trust was assigned.
+The checksum line must print `gradle-9.0.0-bin.zip: OK`. The last command must print one line
+that starts with `[GNUPG:] VALIDSIG` and ends with the fingerprint in `KEY`. If it prints
+nothing, the distribution is not signed by that key: stop.
+
+Do not rely on the text "Good signature from Gradle Inc." alone. `verification-keyring.keys`
+holds the keys of many publishers, among them a second "Gradle Inc." key that signs the
+Develocity plugin, and gpg reports a good signature for each of them. The fingerprint check
+accepts only `KEY`. The keys are imported into `$WORK/gnupg`, so your own keyring does not
+change. The remark that the key is not certified with a trusted signature is normal; it only
+says that no owner trust was assigned.
 
 The value in `gradle-<version>-bin.zip.sha256` is the one that belongs into
 `distributionSha256Sum` in `wrapper/gradle-wrapper.properties`.
@@ -88,7 +100,12 @@ The value in `gradle-<version>-bin.zip.sha256` is the one that belongs into
 and including 9.7.0 are signed by `1BD97A6A154E7810EE0BC832E2F38302C8075E3D`, which is the
 key present in `verification-keyring.keys`. That key now carries a revocation with the
 reason "key is superseded", not "key is compromised", so its earlier signatures keep their
-meaning. Releases from **9.7.1** on are signed by
+meaning. The key servers publish the revocation, for example keyserver.ubuntu.com shows
+"revoked: 2026-08-08, reason for revocation: Key is superseded". The copy in
+`verification-keyring.keys` was exported before that date and does not contain it. With a
+copy that contains the revocation, gpg additionally warns that the key has been revoked; for
+a release up to 9.7.0 that warning is expected, and the `VALIDSIG` line is still printed.
+Releases from **9.7.1** on are signed by
 `EA96F38569C044AAEF7FCF732887F479B0B9771A`. When upgrading to 9.7.1 or newer, add that key
 to `verification-keyring.keys` and let the new `gradle:gradle:<version>` entry in
 `verification-metadata.xml` name it.
