@@ -22,6 +22,7 @@ import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.network.InboundConnection;
 import bisq.network.p2p.network.LocalhostNetworkNode;
 import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.network.SetupListener;
@@ -71,6 +72,27 @@ public class P2PDataStoreDisconnectNetworkTest {
     public void tearDown() {
         if (networkNode != null)
             networkNode.shutDown(null);
+    }
+
+    // TESTCASE: A peer that claims the owner's address on an inbound connection and then drops it doesn't reduce TTL
+    @Test
+    public void inboundPeerClaimsOwnerAddressAndDisconnects() throws Exception {
+        TestState testState = new TestState();
+        ProtectedStorageEntry ownersEntry = addEntry(testState, getTestNodeAddress());
+        long ownersCreationTimeStamp = ownersEntry.getCreationTimeStamp();
+        int port = getFreePort();
+        startNetworkNode(testState, port);
+
+        // One message with the owner's address as sender, then the connection is dropped
+        try (Socket socket = new Socket("localhost", port)) {
+            sendGetUpdatedDataRequest(socket, getTestNodeAddress());
+        }
+
+        assertTrue(disconnectLatch.await(30, TimeUnit.SECONDS));
+        assertInstanceOf(InboundConnection.class, closedConnection.get());
+        assertEquals(Optional.of(getTestNodeAddress()), closedConnection.get().getPeersNodeAddressOptional());
+        assertFalse(closeConnectionReason.get().isIntended);
+        assertEquals(ownersCreationTimeStamp, ownersEntry.getCreationTimeStamp());
     }
 
     // TESTCASE: A dialed peer that claims the owner's address keeps the dialed address, so only its own entries are backdated
