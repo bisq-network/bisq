@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.EncodingContext;
 
 import com.google.protobuf.Message;
 
@@ -68,7 +69,7 @@ public class ProtectedStoragePayloadStub implements ProtectedStoragePayload {
     }
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return toProtoMessage().toByteArray();
     }
 }
