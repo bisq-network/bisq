@@ -51,6 +51,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptPattern;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -69,8 +70,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Runs the seller's processing of the buyer's finalized tx with real transactions. The seller has signed its input
- * at index 1, the buyer signs its BSQ input at index 0.
+ * Runs the seller's processing of the buyer's finalized tx with real transactions. The buyer's BSQ inputs come first
+ * and the buyer signs them, the seller has signed its input after them.
  */
 class ProcessBsqSwapFinalizedTxMessageTest {
     private static final NetworkParameters PARAMS = MainNetParams.get();
@@ -159,6 +160,22 @@ class ProcessBsqSwapFinalizedTxMessageTest {
     @ParameterizedTest
     @ValueSource(classes = {SellerAsMakerProcessBsqSwapFinalizedTxMessage.class,
             SellerAsTakerProcessBsqSwapFinalizedTxMessage.class})
+    void rejectsFinalizedTxWhichSpendsABuyerOutpointTwice(Class<? extends Task<?>> taskClass) {
+        // As if we had accepted the buyer's input twice when we built the tx. The buyer signs both copies.
+        Fixture fixture = new Fixture(false, 2);
+        Transaction finalizedTx = fixture.finalizedTx(fixture.buyersKey);
+
+        TaskResult result = fixture.process(taskClass, finalizedTx);
+
+        assertFalse(result.completed.get());
+        assertThat(result.errorMessage.get(), containsString("Invalid transaction"));
+        verify(fixture.trade, never()).setState(any());
+        verify(fixture.openOfferManager, never()).closeOpenOffer(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(classes = {SellerAsMakerProcessBsqSwapFinalizedTxMessage.class,
+            SellerAsTakerProcessBsqSwapFinalizedTxMessage.class})
     void completesWithoutProcessingAgainWhenWeHaveTheTxAlready(Class<? extends Task<?>> taskClass) {
         Fixture fixture = new Fixture();
         when(fixture.trade.getTransaction(any())).thenReturn(fixture.finalizedTx(fixture.buyersKey));
@@ -201,6 +218,7 @@ class ProcessBsqSwapFinalizedTxMessageTest {
         private final ECKey buyersKey = new ECKey();
         private final ECKey sellersKey = new ECKey();
         private final Transaction buyersParent;
+        private final int numBuyersInputs;
         private final Transaction sellersParent = parentTx(sellersKey, 150_000);
         private final Transaction sellersTx;
         private final BsqSwapProtocolModel protocolModel = new BsqSwapProtocolModel(mock(PubKeyRing.class));
@@ -212,17 +230,28 @@ class ProcessBsqSwapFinalizedTxMessageTest {
         }
 
         Fixture(boolean legacyBuyersInput) {
+            this(legacyBuyersInput, 1);
+        }
+
+        // With numBuyersInputs above 1 the buyer's input was accepted that many times.
+        Fixture(boolean legacyBuyersInput, int numBuyersInputs) {
+            this.numBuyersInputs = numBuyersInputs;
             buyersParent = legacyBuyersInput ?
                     parentTx(ScriptBuilder.createP2PKHOutputScript(buyersKey), 100_010) :
                     parentTx(buyersKey, 100_010);
-            // The tx as we built and signed it in SellerCreatesAndSignsTx: buyer input first, then our input.
+            // The tx as we built and signed it in SellerCreatesAndSignsTx: buyer inputs first, then our input.
             sellersTx = new Transaction(PARAMS);
-            sellersTx.addInput(buyersParent.getOutput(0));
+            for (int i = 0; i < numBuyersInputs; i++) {
+                sellersTx.addInput(buyersParent.getOutput(0));
+            }
             sellersTx.addInput(sellersParent.getOutput(0));
             sellersTx.addOutput(Coin.valueOf(99_990), SegwitAddress.fromKey(PARAMS, new ECKey()));
             sellersTx.addOutput(Coin.valueOf(98_970), SegwitAddress.fromKey(PARAMS, new ECKey()));
             sellersTx.addOutput(Coin.valueOf(48_660), SegwitAddress.fromKey(PARAMS, new ECKey()));
-            sellersTx.getInput(1).setWitness(p2wpkhWitness(sellersTx, 1, sellersKey, sellersParent.getOutput(0)));
+            sellersTx.getInput(numBuyersInputs).setWitness(p2wpkhWitness(sellersTx,
+                    numBuyersInputs,
+                    sellersKey,
+                    sellersParent.getOutput(0)));
 
             BtcWalletService btcWalletService = mock(BtcWalletService.class);
             when(btcWalletService.getParams()).thenReturn(PARAMS);
@@ -234,8 +263,9 @@ class ProcessBsqSwapFinalizedTxMessageTest {
             Offer offer = mock(Offer.class);
             when(offer.getId()).thenReturn(TRADE_ID);
             protocolModel.applyTransient(provider, mock(TradeManager.class), offer);
-            protocolModel.getTradePeer().setInputs(List.of(new RawTransactionInput(
-                    new Transaction(PARAMS).addInput(buyersParent.getOutput(0)))));
+            RawTransactionInput buyersInput = new RawTransactionInput(
+                    new Transaction(PARAMS).addInput(buyersParent.getOutput(0)));
+            protocolModel.getTradePeer().setInputs(Collections.nCopies(numBuyersInputs, buyersInput));
             protocolModel.setTx(sellersTx.bitcoinSerialize());
 
             when(trade.getBsqSwapProtocolModel()).thenReturn(protocolModel);
@@ -246,19 +276,21 @@ class ProcessBsqSwapFinalizedTxMessageTest {
             return p2wpkhWitness(tx, 0, key, buyersParent.getOutput(0));
         }
 
-        // The buyer adds its signature to the tx which we signed.
+        // The buyer adds its signatures to the tx which we signed.
         Transaction finalizedTx(ECKey key) {
             Transaction finalizedTx = new Transaction(PARAMS, sellersTx.bitcoinSerialize());
             TransactionOutput buyersOutput = buyersParent.getOutput(0);
-            if (ScriptPattern.isP2PKH(buyersOutput.getScriptPubKey())) {
-                TransactionSignature signature = finalizedTx.calculateSignature(0,
-                        key,
-                        buyersOutput.getScriptPubKey(),
-                        Transaction.SigHash.ALL,
-                        false);
-                finalizedTx.getInput(0).setScriptSig(ScriptBuilder.createInputScript(signature, key));
-            } else {
-                finalizedTx.getInput(0).setWitness(signBuyersInput(finalizedTx, key));
+            for (int i = 0; i < numBuyersInputs; i++) {
+                if (ScriptPattern.isP2PKH(buyersOutput.getScriptPubKey())) {
+                    TransactionSignature signature = finalizedTx.calculateSignature(i,
+                            key,
+                            buyersOutput.getScriptPubKey(),
+                            Transaction.SigHash.ALL,
+                            false);
+                    finalizedTx.getInput(i).setScriptSig(ScriptBuilder.createInputScript(signature, key));
+                } else {
+                    finalizedTx.getInput(i).setWitness(p2wpkhWitness(finalizedTx, i, key, buyersOutput));
+                }
             }
             return finalizedTx;
         }

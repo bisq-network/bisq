@@ -35,6 +35,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,6 +68,13 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             List<RawTransactionInput> inputs = message.getBsqInputs();
             checkArgument(!inputs.isEmpty(), "Buyers BSQ inputs must not be empty");
             inputs.forEach(input -> input.validate(btcWalletService));
+            List<TxOutputKey> inputKeys = inputs.stream()
+                    .map(input -> new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))
+                    .collect(Collectors.toList());
+            // An output listed twice would count twice in the sums below, and our tx would spend the same outpoint
+            // twice, which the network rejects. See docs/specifications/trade/bsq-swap-buyer-signatures.md.
+            checkArgument(inputKeys.stream().distinct().count() == inputKeys.size(),
+                    "Buyers BSQ inputs must not spend the same output twice");
 
             Coin sumInputs = inputs.stream()
                     .map(input -> Coin.valueOf(input.value))
@@ -78,15 +86,13 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             DaoFacade daoFacade = protocolModel.getDaoFacade();
             checkArgument(daoFacade.isDaoStateReadyAndInSync(), "DAO state is not ready and in sync");
 
-            Coin sumValidBsqInputValue = inputs.stream()
-                    .map(input -> Coin.valueOf(daoFacade.getUnspentTxOutputValue(
-                            new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))))
+            Coin sumValidBsqInputValue = inputKeys.stream()
+                    .map(key -> Coin.valueOf(daoFacade.getUnspentTxOutputValue(key)))
                     .reduce(Coin.ZERO, Coin::add);
             checkArgument(sumInputs.equals(sumValidBsqInputValue),
                     "Buyers BSQ input amount must match input amount from unspentTxOutputMap in DAO state");
 
-            long numValidBsqInputs = inputs.stream()
-                    .map(input -> new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))
+            long numValidBsqInputs = inputKeys.stream()
                     .filter(daoFacade::isTxOutputSpendable)
                     .count();
             checkArgument(inputs.size() == numValidBsqInputs,

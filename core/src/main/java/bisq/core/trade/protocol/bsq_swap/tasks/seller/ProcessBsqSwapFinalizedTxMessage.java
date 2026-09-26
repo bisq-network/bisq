@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 import static bisq.core.trade.validation.TransactionValidation.checkInputSignatures;
+import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -55,7 +56,8 @@ public abstract class ProcessBsqSwapFinalizedTxMessage extends BsqSwapTask {
 
             // We cross check if the tx matches our partially signed tx by removing the sigs from the buyers inputs
             WalletService btcWalletService = protocolModel.getBtcWalletService();
-            Transaction buyersTransactionWithoutSigs = btcWalletService.getTxFromSerializedTx(message.getTx());
+            Transaction buyersTransactionWithoutSigs = checkTransaction(
+                    btcWalletService.getTxFromSerializedTx(message.getTx()));
             List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(protocolModel.getTradePeer().getInputs());
             int buyersInputSize = buyersBsqInputs.size();
             Objects.requireNonNull(buyersTransactionWithoutSigs.getInputs()).stream()
