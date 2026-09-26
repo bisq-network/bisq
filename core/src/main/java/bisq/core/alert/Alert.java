@@ -26,6 +26,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.CollectionUtils;
@@ -192,7 +193,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                             .bool(7, alert -> alert.isPreReleaseInfo));
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         if (signatureAsBase64 == null) {
             throw new IllegalStateException("signatureAsBase64 must not be null for canonical Alert encoding");
         }

@@ -66,6 +66,7 @@ import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalWriter;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -1310,13 +1311,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         @Override
-        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
             CanonicalWriter writer = new CanonicalWriter();
             // DataAndSeqNrPair is a hash/signature preimage wrapper for the protected payload bytes
             // and the sequence number. Keep field 1 delegated to the protected payload's own hash preimage
             // instead of trying to model the whole StoragePayload oneof here. Field numbers still mirror
             // protobuf.DataAndSeqNrPair: payload = 1 and sequence_number = 2.
-            writer.writeCompose(1, protectedStoragePayload.encodeCanonical(canonicalEncoder));
+            writer.writeCompose(1, protectedStoragePayload.encodeCanonical(canonicalEncoder, encodingContext));
             writer.writeInt32(2, sequenceNumber);
             return writer.toByteArray();
         }

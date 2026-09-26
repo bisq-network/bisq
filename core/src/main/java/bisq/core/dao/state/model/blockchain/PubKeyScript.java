@@ -23,6 +23,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import com.google.common.collect.ImmutableList;
@@ -100,7 +101,7 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel,
             .string(5, pubKeyScript -> pubKeyScript.hex).build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

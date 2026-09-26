@@ -21,11 +21,13 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.EncodingContext;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
+
+import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings("ALL")
 public class MockData implements ProtectedStoragePayload, ExpirablePayload {
@@ -77,7 +79,7 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return msg == null ? new byte[0] : msg.getBytes(StandardCharsets.UTF_8);
     }
 }

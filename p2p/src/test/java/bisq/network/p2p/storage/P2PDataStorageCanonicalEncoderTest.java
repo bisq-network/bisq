@@ -21,15 +21,16 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.EncodingContext;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
-import org.junit.jupiter.api.Test;
-
 import java.security.PublicKey;
 
 import java.util.Arrays;
+
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -67,7 +68,7 @@ public class P2PDataStorageCanonicalEncoderTest {
         P2PDataStorage.DataAndSeqNrPair pair = new P2PDataStorage.DataAndSeqNrPair(payload, 7);
         CanonicalEncoder canonicalEncoder = new CanonicalEncoder();
 
-        pair.encodeCanonical(canonicalEncoder);
+        pair.encodeCanonical(canonicalEncoder, EncodingContext.DEFAULT);
 
         assertSame(canonicalEncoder, payload.lastCanonicalEncoder);
     }
@@ -93,7 +94,7 @@ public class P2PDataStorageCanonicalEncoderTest {
         }
 
         @Override
-        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
             return toProtoMessage().toByteArray();
         }
     }
@@ -115,7 +116,7 @@ public class P2PDataStorageCanonicalEncoderTest {
         }
 
         @Override
-        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
             lastCanonicalEncoder = canonicalEncoder;
             return new byte[]{0x08, 0x2a};
         }

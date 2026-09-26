@@ -22,6 +22,7 @@ import bisq.core.dao.governance.ConsensusCritical;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.persistable.PersistableList;
 
 import com.google.protobuf.Message;
@@ -79,7 +80,7 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
                             .repeatedCompose(1, MyBlindVoteList::getList, BlindVote.SCHEMA));
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 
