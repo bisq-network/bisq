@@ -23,11 +23,8 @@ import bisq.core.dao.DaoCheckpointTestFixture;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
-import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.provider.fee.FeeService;
@@ -627,37 +624,9 @@ class ProcessBsqSwapFinalizeTxRequestTest {
             return rawInput(sellersParent.getOutput(1));
         }
 
-        // Adds the seller's parent tx to the DAO state as a parsed BSQ tx with the given output types. As the DAO
-        // parser does, only BSQ outputs become unspent tx outputs.
+        // Adds the seller's parent tx to the DAO state as a parsed BSQ tx with the given output types.
         void addSellersParentToDaoState(TxOutputType... outputTypes) {
-            DaoStateService daoStateService = dao.daoStateService;
-            int height = daoStateService.getGenesisBlockHeight();
-            String txId = sellersParent.getTxId().toString();
-            protobuf.Tx.Builder tx = protobuf.Tx.newBuilder().setTxType(TxType.TRANSFER_BSQ.toProtoMessage());
-            for (int i = 0; i < outputTypes.length; i++) {
-                tx.addTxOutputs(protobuf.BaseTxOutput.newBuilder()
-                        .setIndex(i)
-                        .setValue(sellersParent.getOutput(i).getValue().value)
-                        .setTxId(txId)
-                        .setBlockHeight(height)
-                        .setTxOutput(protobuf.TxOutput.newBuilder()
-                                .setTxOutputType(outputTypes[i].toProtoMessage())
-                                .setLockTime(-1)));
-            }
-            Tx daoTx = Tx.fromProto(protobuf.BaseTx.newBuilder()
-                    .setTxVersion(Version.BSQ_TX_VERSION)
-                    .setId(txId)
-                    .setBlockHeight(height)
-                    .setBlockHash("block")
-                    .setTx(tx)
-                    .build());
-            Block block = new Block(height, 0, "block", "previous-block");
-            daoStateService.onNewBlockHeight(height);
-            daoStateService.onNewBlockWithEmptyTxs(block);
-            daoStateService.onNewTxForLastBlock(block, daoTx);
-            daoTx.getTxOutputs().stream()
-                    .filter(daoStateService::isBsqTxOutputType)
-                    .forEach(daoStateService::addUnspentTxOutput);
+            dao.addParsedTx(sellersParent, outputTypes);
         }
 
         Transaction sellersTx(TransactionOutput... spentOutputs) {
