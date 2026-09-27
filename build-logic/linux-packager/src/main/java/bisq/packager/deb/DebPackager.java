@@ -1,4 +1,4 @@
-package bisq.deb_packager;
+package bisq.packager.deb;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
