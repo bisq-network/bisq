@@ -1,4 +1,4 @@
-package bisq.deb_packager;
+package bisq.packager.deb;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
