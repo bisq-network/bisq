@@ -18,6 +18,7 @@ javafx {
 }
 
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
+distTar.enabled = true // Needed for RPM build
 
 dependencies {
     implementation enforcedPlatform(project(':platform'))
