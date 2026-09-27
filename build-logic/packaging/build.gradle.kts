@@ -17,7 +17,7 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation(project(":deb-packager"))
+    implementation(project(":linux-packager"))
     implementation(project(":gradle-tasks"))
     implementation(libs.commons.codec)
 }
