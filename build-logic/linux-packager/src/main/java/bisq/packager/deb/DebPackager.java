@@ -8,7 +8,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class DebPackager {
+
+
+import bisq.packager.Packager;
+
+public class DebPackager implements Packager {
     private final String versionNumber;
     private final Path sourceDirectory;
     private final Path workingDirectory;
@@ -21,6 +25,7 @@ public class DebPackager {
         this.finalArchiveWorkingDirPath = workingDirectory.resolve("final");
     }
 
+    @Override
     public void createPackage() throws IOException {
         Files.createDirectories(workingDirectory);
         Files.createDirectories(finalArchiveWorkingDirPath);
