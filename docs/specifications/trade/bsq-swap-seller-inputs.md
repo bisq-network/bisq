@@ -3,7 +3,8 @@
 ## Scope
 
 This specification defines what the BTC buyer of a BSQ swap must verify about the BTC seller's
-inputs before it signs the swap transaction. It applies whether the buyer is maker or taker.
+inputs before it signs the swap transaction, and which of its outputs the seller may select as
+inputs. It applies whether the buyer or the seller is maker or taker.
 
 The seller builds the swap transaction and sends it to the buyer, together with a description of
 each of its inputs: the parent transaction, the output index, the value and the script type. The
@@ -59,6 +60,11 @@ of the same parent transaction.
 An output of a BSQ transaction which the DAO classifies as a BTC output, for example the BTC change
 of a transaction which paid a trade fee in BSQ, is not a BSQ output. The seller may spend it.
 
+The seller applies the same rule when it selects its BTC inputs, for the swap and for the estimate
+of the funds it needs. It does not select an output which its DAO state holds as an unspent BSQ
+output, for example BSQ sent to one of its BTC addresses. If its BTC wallet does not have enough BTC
+besides such outputs, the seller has missing funds.
+
 ## Seller signatures
 
 Before the buyer signs, each seller input must be in the form in which the seller's wallet signs it,
@@ -92,10 +98,9 @@ detect it (see Not covered).
 Honest sellers of all versions build their inputs from their own descriptions, so the binding rules
 do not reject an honest transaction. Messages and persisted data do not change.
 
-The seller's BTC wallet does not exclude BSQ outputs from its coin selection. A seller whose BTC
-wallet holds a BSQ output, for example BSQ sent to one of its BTC addresses, can select it. The
-buyer now rejects such a request instead of signing a transaction which changes how the DAO parses
-the swap.
+A seller of an older version does not exclude BSQ outputs from its coin selection and can select a
+BSQ output which its BTC wallet holds. The buyer rejects such a request instead of signing a
+transaction which changes how the DAO parses the swap.
 
 The buyer now also checks that its DAO state is ready and in sync when it processes the seller's
 request.
@@ -106,8 +111,9 @@ request.
   confirmed. The seller can therefore delay or prevent the confirmation of the swap, for example
   with an input of a parent transaction which it has not published or which it replaces later. The
   buyer's wallet then shows a swap which does not confirm.
-- An output which the buyer's DAO state does not hold yet, for example an output of a parent
-  transaction which is not confirmed, is not detected as a BSQ output.
+- An output which the DAO state does not hold yet, for example an output of a parent transaction
+  which is not confirmed, is not detected as a BSQ output, neither by the buyer nor when the seller
+  selects its inputs.
 - The buyer commits the swap transaction to its wallet and sends it to the seller before the
   broadcast result is known, and a broadcast timeout counts as success. A transaction which the
   network rejects can therefore still complete the trade on the buyer side.

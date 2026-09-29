@@ -197,7 +197,7 @@ class BsqSwapSellerDaoStateGuardTest {
         AddressEntry changeAddressEntry = mock(AddressEntry.class);
         when(changeAddressEntry.getAddressString()).thenReturn(addressString());
         when(fixture.btcWalletService.getFreshAddressEntry()).thenReturn(changeAddressEntry);
-        when(fixture.btcWalletService.getInputsAndChange(any(Coin.class)))
+        when(fixture.btcWalletService.getInputsAndChange(any(Coin.class), any()))
                 .thenReturn(new Tuple2<>(List.of(sellerBtcInput), Coin.ZERO));
         when(fixture.bsqWalletService.getUnusedAddress()).thenReturn(Address.fromString(PARAMS, addressString()));
         when(fixture.tradeWalletService.sellerBuildBsqSwapTx(anyList(),
