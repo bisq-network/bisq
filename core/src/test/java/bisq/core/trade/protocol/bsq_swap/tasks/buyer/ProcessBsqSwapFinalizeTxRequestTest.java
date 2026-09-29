@@ -113,6 +113,18 @@ class ProcessBsqSwapFinalizeTxRequestTest {
 
     private enum SellersSignature {VALID, NONE, OTHER_KEY, OTHER_VALUE}
 
+    private enum SellersOutputType {
+        P2WPKH(ScriptBuilder::createP2WPKHOutputScript),
+        P2PKH(ScriptBuilder::createP2PKHOutputScript),
+        P2PK(ScriptBuilder::createP2PKOutputScript);
+
+        private final Function<ECKey, Script> script;
+
+        SellersOutputType(Function<ECKey, Script> script) {
+            this.script = script;
+        }
+    }
+
     @ParameterizedTest
     @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
             BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
@@ -127,11 +139,13 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         assertEquals(SELLERS_CHANGE, fixture.protocolModel.getTradePeer().getChange());
     }
 
+    // For a legacy input the seller's signature does not commit to the spent value, so only the binding to the
+    // outpoint rejects the other output.
     @ParameterizedTest
-    @ValueSource(classes = {BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
-            BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class})
-    void rejectsSellerInputWhichSpendsAnotherOutputOfTheDescribedParent(Class<? extends Task<?>> taskClass) {
-        Fixture fixture = new Fixture();
+    @MethodSource("buyerTasksAndSellersOutputTypes")
+    void rejectsSellerInputWhichSpendsAnotherOutputOfTheDescribedParent(Class<? extends Task<?>> taskClass,
+                                                                       SellersOutputType sellersOutputType) {
+        Fixture fixture = new Fixture(sellersOutputType.script);
         Transaction sellersTx = fixture.sellersTx(fixture.sellersParent.getOutput(0));
 
         TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
@@ -525,6 +539,13 @@ class ProcessBsqSwapFinalizeTxRequestTest {
                 change);
 
         assertTrue(result.completed.get(), result.errorMessage.get());
+    }
+
+    private static Stream<Arguments> buyerTasksAndSellersOutputTypes() {
+        return Stream.of(BuyerAsMakerProcessBsqSwapFinalizeTxRequest.class,
+                        BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class)
+                .flatMap(taskClass -> Stream.of(SellersOutputType.values())
+                        .map(sellersOutputType -> Arguments.of(taskClass, sellersOutputType)));
     }
 
     private static Stream<Arguments> buyerTasksAndBsqOutputTypes() {
