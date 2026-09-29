@@ -39,6 +39,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/merit.md`](dao/merit.md) | Merit as vote weight: what a merit claim must prove against DAO state, decay, uniqueness per cycle, and the activation boundary. |
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
+| [`dao/seed-node-state-hashes.md`](dao/seed-node-state-hashes.md) | Which connections the node trusts as seed nodes when DAO, proposal and blind vote state hashes are exchanged. |
 
 ### `dispute/`
 

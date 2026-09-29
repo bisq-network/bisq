@@ -26,8 +26,10 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -76,6 +78,7 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage<StH>,
     protected final NetworkNode networkNode;
     protected final PeerManager peerManager;
     private final Broadcaster broadcaster;
+    private final SeedNodeRepository seedNodeRepository;
 
     @Getter
     private final Map<NodeAddress, Han> requestStateHashHandlerMap = new HashMap<>();
@@ -91,10 +94,12 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage<StH>,
     @Inject
     public StateNetworkService(NetworkNode networkNode,
                                PeerManager peerManager,
-                               Broadcaster broadcaster) {
+                               Broadcaster broadcaster,
+                               SeedNodeRepository seedNodeRepository) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.broadcaster = broadcaster;
+        this.seedNodeRepository = seedNodeRepository;
     }
 
 
@@ -129,6 +134,15 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage<StH>,
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (isNewStateHashMessage(networkEnvelope)) {
             Msg newStateHashMessage = castToNewStateHashMessage(networkEnvelope);
+            // A peer can claim a seed node address on an inbound connection, so we trust seed node hashes only on
+            // outbound connections. We check the seed node list of the monitors, as PeerManager drops banned addresses.
+            if (!(connection instanceof OutboundConnection) &&
+                    connection.getPeersNodeAddressOptional().map(seedNodeRepository::isSeedNode).orElse(false)) {
+                log.debug("We ignore a {} from peer {} which claims a seed node address on an inbound connection",
+                        newStateHashMessage.getClass().getSimpleName(),
+                        connection.getPeersNodeAddressOptional());
+                return;
+            }
             log.debug("We received a {} from peer {} with stateHash={} ",
                     newStateHashMessage.getClass().getSimpleName(),
                     connection.getPeersNodeAddressOptional(),

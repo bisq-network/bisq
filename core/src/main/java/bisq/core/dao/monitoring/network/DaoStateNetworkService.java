@@ -26,6 +26,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
@@ -44,8 +45,9 @@ public class DaoStateNetworkService extends StateNetworkService<NewDaoStateHashM
     @Inject
     public DaoStateNetworkService(NetworkNode networkNode,
                                   PeerManager peerManager,
-                                  Broadcaster broadcaster) {
-        super(networkNode, peerManager, broadcaster);
+                                  Broadcaster broadcaster,
+                                  SeedNodeRepository seedNodeRepository) {
+        super(networkNode, peerManager, broadcaster, seedNodeRepository);
     }
 
     @Override
