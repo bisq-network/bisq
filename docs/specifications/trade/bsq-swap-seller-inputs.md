@@ -111,5 +111,12 @@ request.
 - The buyer commits the swap transaction to its wallet and sends it to the seller before the
   broadcast result is known, and a broadcast timeout counts as success. A transaction which the
   network rejects can therefore still complete the trade on the buyer side.
-- The fee rate tolerance for the taker is not changed. With the invariant above the seller cannot
-  take back any part of the miner fee, so a high fee rate costs the seller its own fee share too.
+- The fee rate tolerance for the taker is not changed. The taker chooses the fee rate, and the maker
+  accepts a rate between half and twice its own estimate
+  (`MinerFeeValidation.checkMinerFeeRateIsInTolerance`). With the invariant above the seller cannot
+  take back any part of the miner fee. A seller who takes the offer of a buyer can still make the
+  buyer pay its share of the fee at up to twice the buyer's estimate, and this share grows with the
+  size of the buyer's inputs and change output. The extra fee goes to the miners, and the seller
+  pays its own share at the same rate. The tolerance lets traders with different fee estimates trade
+  with each other, and a narrower one would reject takes which are accepted today, so a change is a
+  decision of the maintainers and not part of this change.
