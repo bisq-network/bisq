@@ -17,8 +17,11 @@
 
 package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 
+import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoCheckpointTestFixture;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
@@ -35,6 +38,7 @@ import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.model.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer_as_maker.BuyerAsMakerProcessBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer_as_taker.BuyerAsTakerProcessBsqSwapFinalizeTxRequest;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -45,6 +49,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
@@ -60,6 +65,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptChunk;
 import org.bitcoinj.script.ScriptPattern;
+import org.bitcoinj.wallet.Wallet;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -71,6 +77,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -79,6 +86,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -137,6 +145,20 @@ class ProcessBsqSwapFinalizeTxRequestTest {
         assertTrue(result.completed.get(), result.errorMessage.get());
         assertEquals(List.of(fixture.describedSellersInput()), fixture.protocolModel.getTradePeer().getInputs());
         assertEquals(SELLERS_CHANGE, fixture.protocolModel.getTradePeer().getChange());
+    }
+
+    // The seller signs its inputs with TradeWalletService.signBsqSwapTransaction
+    @ParameterizedTest
+    @MethodSource("buyerTasksAndSellersOutputTypes")
+    void acceptsSellerInputSignedByTheTradeWallet(Class<? extends Task<?>> taskClass,
+                                                  SellersOutputType sellersOutputType) throws SigningException {
+        Fixture fixture = new Fixture(sellersOutputType.script);
+        Transaction sellersTx = fixture.sellersTx(SellersSignature.NONE, fixture.sellersParent.getOutput(1));
+        tradeWalletService(fixture.sellersKey).signBsqSwapTransaction(sellersTx, List.of(sellersTx.getInput(1)));
+
+        TaskResult result = fixture.process(taskClass, sellersTx, List.of(fixture.describedSellersInput()));
+
+        assertTrue(result.completed.get(), result.errorMessage.get());
     }
 
     // For a legacy input the seller's signature does not commit to the spent value, so only the binding to the
@@ -539,6 +561,21 @@ class ProcessBsqSwapFinalizeTxRequestTest {
                 change);
 
         assertTrue(result.completed.get(), result.errorMessage.get());
+    }
+
+    // A TradeWalletService whose wallet holds the key, as after the wallet setup
+    private static TradeWalletService tradeWalletService(ECKey key) {
+        // Wallet.createBasic needs a context of PARAMS on the thread, and another test may leave a RegTest one
+        Context.propagate(new Context(PARAMS));
+        Wallet wallet = Wallet.createBasic(PARAMS);
+        wallet.importKey(key);
+        WalletsSetup walletsSetup = mock(WalletsSetup.class);
+        when(walletsSetup.getBtcWallet()).thenReturn(wallet);
+        TradeWalletService tradeWalletService = new TradeWalletService(walletsSetup, mock(Preferences.class));
+        ArgumentCaptor<Runnable> setupCompletedHandler = ArgumentCaptor.forClass(Runnable.class);
+        verify(walletsSetup).addSetupCompletedHandler(setupCompletedHandler.capture());
+        setupCompletedHandler.getValue().run();
+        return tradeWalletService;
     }
 
     private static Stream<Arguments> buyerTasksAndSellersOutputTypes() {

@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
@@ -37,6 +38,7 @@ import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
@@ -50,13 +52,17 @@ import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptPattern;
+import org.bitcoinj.wallet.Wallet;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -100,6 +106,20 @@ class ProcessBsqSwapFinalizedTxMessageTest {
         // The legacy keychain of an older BSQ wallet
         Fixture fixture = new Fixture(true);
         Transaction finalizedTx = fixture.finalizedTx(fixture.buyersKey);
+
+        TaskResult result = fixture.process(taskClass, finalizedTx);
+
+        assertTrue(result.completed.get(), result.errorMessage.get());
+        verify(fixture.trade).setState(BsqSwapTrade.State.COMPLETED);
+    }
+
+    // The buyer signs its inputs with BsqWalletService.signBsqSwapTransaction, which uses
+    // WalletService.signTransactionInput
+    @ParameterizedTest
+    @MethodSource("sellerTasksAndBuyersInputTypes")
+    void acceptsFinalizedTxSignedByTheBsqWallet(Class<? extends Task<?>> taskClass, boolean legacyBuyersInput) {
+        Fixture fixture = new Fixture(legacyBuyersInput);
+        Transaction finalizedTx = fixture.finalizedTxSignedByTheBsqWallet();
 
         TaskResult result = fixture.process(taskClass, finalizedTx);
 
@@ -204,6 +224,13 @@ class ProcessBsqSwapFinalizedTxMessageTest {
         return new Transaction(PARAMS, parentTx.bitcoinSerialize());
     }
 
+    private static Stream<Arguments> sellerTasksAndBuyersInputTypes() {
+        return Stream.of(SellerAsMakerProcessBsqSwapFinalizedTxMessage.class,
+                        SellerAsTakerProcessBsqSwapFinalizedTxMessage.class)
+                .flatMap(taskClass -> Stream.of(false, true)
+                        .map(legacyBuyersInput -> Arguments.of(taskClass, legacyBuyersInput)));
+    }
+
     private static TransactionWitness p2wpkhWitness(Transaction tx, int index, ECKey key, TransactionOutput spent) {
         TransactionSignature signature = tx.calculateWitnessSignature(index,
                 key,
@@ -291,6 +318,27 @@ class ProcessBsqSwapFinalizedTxMessageTest {
                 } else {
                     finalizedTx.getInput(i).setWitness(p2wpkhWitness(finalizedTx, i, key, buyersOutput));
                 }
+            }
+            return finalizedTx;
+        }
+
+        // The buyer builds the tx from its wallet outputs and signs its inputs as
+        // BsqWalletService.signBsqSwapTransaction does.
+        Transaction finalizedTxSignedByTheBsqWallet() {
+            // Wallet.createBasic needs a context of PARAMS on the thread, and another test may leave a RegTest one
+            Context.propagate(new Context(PARAMS));
+            Wallet wallet = Wallet.createBasic(PARAMS);
+            wallet.importKey(buyersKey);
+            Transaction finalizedTx = new Transaction(PARAMS);
+            for (int i = 0; i < numBuyersInputs; i++) {
+                finalizedTx.addInput(buyersParent.getOutput(0));
+            }
+            finalizedTx.addInput(sellersParent.getOutput(0))
+                    .setWitness(sellersTx.getInput(numBuyersInputs).getWitness());
+            sellersTx.getOutputs().forEach(output ->
+                    finalizedTx.addOutput(output.getValue(), output.getScriptPubKey()));
+            for (int i = 0; i < numBuyersInputs; i++) {
+                WalletService.signTransactionInput(wallet, null, finalizedTx, finalizedTx.getInput(i), i);
             }
             return finalizedTx;
         }
