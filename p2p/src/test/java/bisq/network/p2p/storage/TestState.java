@@ -76,6 +76,7 @@ public class TestState {
     private final PersistenceManager<SequenceNumberMap> mockSeqNrPersistenceManager;
     private final ProtectedDataStoreService protectedDataStoreService;
     final ClockFake clockFake;
+    final NetworkNode mockedNetworkNode;
     private RemovedPayloadsService removedPayloadsService;
 
     @SuppressWarnings("unchecked")
@@ -85,6 +86,7 @@ public class TestState {
         this.removedPayloadsService = mock(RemovedPayloadsService.class);
         this.clockFake = new ClockFake();
         this.protectedDataStoreService = new ProtectedDataStoreService();
+        this.mockedNetworkNode = mock(NetworkNode.class);
 
         this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
                 this.mockBroadcaster,
@@ -101,6 +103,7 @@ public class TestState {
         this.protectedDataStoreService.addService(new MapStoreServiceFake());
 
         this.mockedStorage = createP2PDataStorageForTest(
+                this.mockedNetworkNode,
                 this.mockBroadcaster,
                 this.protectedDataStoreService,
                 this.mockSeqNrPersistenceManager,
@@ -122,6 +125,7 @@ public class TestState {
     void simulateRestart() {
         this.removedPayloadsService = mock(RemovedPayloadsService.class);
         this.mockedStorage = createP2PDataStorageForTest(
+                this.mockedNetworkNode,
                 this.mockBroadcaster,
                 this.protectedDataStoreService,
                 this.mockSeqNrPersistenceManager,
@@ -135,6 +139,7 @@ public class TestState {
     }
 
     private static P2PDataStorage createP2PDataStorageForTest(
+            NetworkNode networkNode,
             Broadcaster broadcaster,
             ProtectedDataStoreService protectedDataStoreService,
             PersistenceManager<SequenceNumberMap> sequenceNrMapPersistenceManager,
@@ -143,7 +148,7 @@ public class TestState {
             AppendOnlyDataStoreListener appendOnlyDataStoreListener,
             RemovedPayloadsService removedPayloadsService) {
 
-        P2PDataStorage p2PDataStorage = new P2PDataStorage(mock(NetworkNode.class),
+        P2PDataStorage p2PDataStorage = new P2PDataStorage(networkNode,
                 broadcaster,
                 new AppendOnlyDataStoreServiceFake(),
                 protectedDataStoreService,
