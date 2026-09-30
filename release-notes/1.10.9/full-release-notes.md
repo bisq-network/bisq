@@ -1,18 +1,18 @@
 # Bisq 1.10.9 Release Notes
 
-These release notes cover the changes after commit `f32c8523f13260611a348b54311fc335a20e806e` through `HEAD` (`45007c3d53`).
+These release notes cover the changes after commit `f32c8523f13260611a348b54311fc335a20e806e` through `HEAD` (`46c4e4c5aa`).
 
-- Total commits: 54
-- Non-merge commits: 32
-- Merge commits: 22
-- Files changed: 67
-- Generated on: 2026-09-24
+- Total commits: 96
+- Non-merge commits: 62
+- Merge commits: 34
+- Files changed: 113
+- Generated on: 2026-09-30
 
 ## Compatibility and Operator Notes
 
 - The application and packaging version is `1.10.9`.
-- Bundled mainnet DAO data, state hash checkpoints, and the Burning Man address list are updated. New installations and nodes using bundled data start from the updated resources.
-- The bundled netlayer dependency is updated to `0d4dc4b6368f72bd90e517667cbb22b42a798754`, which includes Tor 0.4.9.13.
+- Bundled mainnet DAO data is updated through height 970000; state hash checkpoints and the Burning Man address list are refreshed. New installations and nodes using bundled data start from the updated resources.
+- The bundled netlayer dependency is updated to revision `3dd905665ed6120eb441c59203b5ceecad797a31` (v0.7.11), which includes Tor 0.4.9.13.
 - P2P, local database, and trade protocol version numbers remain unchanged.
 - The Gradle wrapper is pinned to Gradle 9.0.0. Release and reproducible-build tasks received configuration-cache and build-cache updates.
 
@@ -20,11 +20,19 @@ These release notes cover the changes after commit `f32c8523f13260611a348b54311f
 
 ### Bundled DAO and Network Resources
 
-Bundled mainnet DAO state and block resources are refreshed through height 969000. The DAO state hash checkpoints now include heights 967000 and 968000. The Burning Man v0006 address list and the BTC mainnet denylist are also updated.
+Bundled mainnet DAO state and block resources are refreshed through height 970000. The DAO state hash checkpoints are updated, the Burning Man v0006 address list is refreshed, and the bundled BTC mainnet denylist is updated. The DAO resource audit and its documented refresh procedure are also updated.
 
 ### Tor and Dependency Verification
 
-The netlayer dependency is updated to a revision containing Tor 0.4.9.13. Gradle dependency verification metadata and the dependency signature report were updated for the new artifacts.
+The netlayer dependency is updated to v0.7.11, a revision containing Tor 0.4.9.13. Gradle dependency verification metadata and the dependency signature report were updated for the new artifacts. A test checks that bundled Tor binaries report their declared version, and the Gradle distribution is verified against its expected key fingerprint.
+
+### BSQ Swap Validation
+
+BSQ swap validation now binds seller inputs to their outpoints, rejects BSQ outputs and duplicate buyer inputs, and verifies seller input and buyer signatures. Tests cover invalid inputs, signatures, and sibling spends of legacy BSQ swap inputs. Documentation describes the remaining fee-rate risk.
+
+### P2P and DAO State Hash Security
+
+Offer expiry is backdated only after outbound disconnects. The dialed peer address is bound before peer data is read. DAO seed state hashes are accepted only from outbound connections.
 
 ### Trading and Payment Accounts
 
@@ -42,11 +50,11 @@ The reproducible build Docker workflow uses a multi-stage build, invokes the rep
 
 ## Tests and Documentation
 
-The range also adds regression coverage for API payment-start validation, trusted-provider initialization, and offer republishing before bootstrap. It updates Gradle task behavior and documentation, release and dependency verification metadata, CI workflows, and bundled resource files. This release note summarizes verified source and resource changes; it does not claim that release builds or tests were run for this note.
+The range adds regression coverage for API payment-start validation, trusted-provider initialization, offer republishing before bootstrap, BSQ swap transaction validation, peer disconnect handling, and seed state hash trust. It updates Gradle task behavior and documentation, release and dependency verification metadata, CI workflows, and bundled resource files. This release note summarizes source and resource changes; it does not claim that release builds or tests were run for this note.
 
 ## Commit Summary
 
-The range contains 32 non-merge commits and 22 merge commits. Principal changes include:
+The range contains 62 non-merge commits and 34 merge commits. Principal changes include:
 
 | Commit | Summary |
 | --- | --- |
@@ -74,3 +82,14 @@ The range contains 32 non-merge commits and 22 merge commits. Principal changes 
 | [145e32fb36](https://github.com/bisq-network/bisq/commit/145e32fb36) | Read Gradle version during configuration |
 | [8040b67ee3](https://github.com/bisq-network/bisq/commit/8040b67ee3) | Support configuration cache in dependency verification tasks |
 | [ed94df26a3](https://github.com/bisq-network/bisq/commit/ed94df26a3) | Pin release build environment to Gradle 9.0.0 |
+| [e3bce7cf8a](https://github.com/bisq-network/bisq/commit/e3bce7cf8a) | Bind BSQ swap seller inputs to their outpoints |
+| [6568d18225](https://github.com/bisq-network/bisq/commit/6568d18225) | Reject BSQ outputs as BSQ swap seller inputs |
+| [953f185e05](https://github.com/bisq-network/bisq/commit/953f185e05) | Verify BSQ swap seller input signatures |
+| [8dc198a772](https://github.com/bisq-network/bisq/commit/8dc198a772) | Verify BSQ swap buyer signatures at the seller |
+| [0787ced549](https://github.com/bisq-network/bisq/commit/0787ced549) | Reject duplicate BSQ swap buyer inputs |
+| [e03ea869c2](https://github.com/bisq-network/bisq/commit/e03ea869c2) | Backdate offers only on outbound disconnects |
+| [7ca7adb676](https://github.com/bisq-network/bisq/commit/7ca7adb676) | Require outbound connections for seed state hashes |
+| [68783482a9](https://github.com/bisq-network/bisq/commit/68783482a9) | Update netlayer to v0.7.11 and dependency verification metadata |
+| [13f6915b47](https://github.com/bisq-network/bisq/commit/13f6915b47) | Update DAO resources through height 970000 |
+| [d0e2f1c269](https://github.com/bisq-network/bisq/commit/d0e2f1c269) | Update DAO state hash checkpoints |
+| [40f25a606a](https://github.com/bisq-network/bisq/commit/40f25a606a) | Update Burning Man address list |
