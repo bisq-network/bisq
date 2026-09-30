@@ -23,10 +23,18 @@ import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutputType;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.storage.DaoStateStorageService;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.app.Version;
+
+import org.bitcoinj.core.Transaction;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +59,38 @@ public final class DaoCheckpointTestFixture {
     public DaoCheckpointTestFixture() {
         monitor.addListeners();
         daoStateService.onParseBlockChainComplete();
+    }
+
+    // Adds the tx to the DAO state as a parsed BSQ tx with the given output types. As the DAO parser does, only BSQ
+    // outputs become unspent tx outputs. The tx gets a block at the genesis height, so add only one tx per fixture.
+    public void addParsedTx(Transaction transaction, TxOutputType... outputTypes) {
+        int height = daoStateService.getGenesisBlockHeight();
+        String txId = transaction.getTxId().toString();
+        protobuf.Tx.Builder tx = protobuf.Tx.newBuilder().setTxType(TxType.TRANSFER_BSQ.toProtoMessage());
+        for (int i = 0; i < outputTypes.length; i++) {
+            tx.addTxOutputs(protobuf.BaseTxOutput.newBuilder()
+                    .setIndex(i)
+                    .setValue(transaction.getOutput(i).getValue().value)
+                    .setTxId(txId)
+                    .setBlockHeight(height)
+                    .setTxOutput(protobuf.TxOutput.newBuilder()
+                            .setTxOutputType(outputTypes[i].toProtoMessage())
+                            .setLockTime(-1)));
+        }
+        Tx daoTx = Tx.fromProto(protobuf.BaseTx.newBuilder()
+                .setTxVersion(Version.BSQ_TX_VERSION)
+                .setId(txId)
+                .setBlockHeight(height)
+                .setBlockHash("block")
+                .setTx(tx)
+                .build());
+        Block block = new Block(height, 0, "block", "previous-block");
+        daoStateService.onNewBlockHeight(height);
+        daoStateService.onNewBlockWithEmptyTxs(block);
+        daoStateService.onNewTxForLastBlock(block, daoTx);
+        daoTx.getTxOutputs().stream()
+                .filter(daoStateService::isBsqTxOutputType)
+                .forEach(daoStateService::addUnspentTxOutput);
     }
 
     public void failCheckpoint() {
