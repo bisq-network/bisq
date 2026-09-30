@@ -4,7 +4,8 @@ cd $(dirname $0)/../../../
 
 version="1.10.9"
 
-# Set BISQ_DIR as environment var to the path of your locally synced Bisq data directory e.g. BISQ_DIR=~/Library/Application\ Support/Bisq
+# Set BISQ_DIR as environment var to the path of your locally synced Bisq data directory e.g.
+# BISQ_DIR=~/Library/Application\ Support/bisq-BTC_MAINNET_Dev-full-dao-bm-node
 
 dbDir=$BISQ_DIR/btc_mainnet/db
 resDir=p2p/src/main/resources
