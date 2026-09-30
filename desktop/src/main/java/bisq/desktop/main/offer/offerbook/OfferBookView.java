@@ -116,6 +116,7 @@ import javafx.util.StringConverter;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -676,6 +677,10 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                 break;
             case IS_IGNORED:
                 new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
+                break;
+            case IS_IGNORED_BY_MAKER:
+                new Popup().warning(Res.get("offerbook.warning.ignoredByMaker",
+                        TimeUnit.MILLISECONDS.toMinutes(OfferFilterService.MAKER_IGNORES_US_TTL_MS))).show();
                 break;
             case IS_OFFER_BANNED:
                 new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
