@@ -53,6 +53,7 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`network/bisq2-bridge-block-continuity.md`](network/bisq2-bridge-block-continuity.md) | Snapshot and live-stream continuity for DAO block data exported to Bisq 2 oracle nodes. |
+| [`network/owner-disconnect-backdating.md`](network/owner-disconnect-backdating.md) | Backdating of offers when the connection to their owner is lost, allowed only for outbound connections. |
 | [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
 
 ### `offer/`

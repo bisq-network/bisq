@@ -23,6 +23,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
@@ -735,6 +736,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
         if (closeConnectionReason.isIntended)
+            return;
+
+        // Only on an outbound connection is the peer's address the one we dialed. On an inbound
+        // connection the peer only claims an address, so its disconnect does not show that the
+        // owner of that address went offline.
+        // See docs/specifications/network/owner-disconnect-backdating.md.
+        if (!(connection instanceof OutboundConnection))
             return;
 
         if (!connection.getPeersNodeAddressOptional().isPresent())
