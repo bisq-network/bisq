@@ -19,6 +19,7 @@ package bisq.core.offer.bsq_swap;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterPolicyService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -53,10 +54,11 @@ public class BsqSwapTakeOfferModel extends BsqSwapOfferModel {
     public BsqSwapTakeOfferModel(OfferUtil offerUtil,
                                  BtcWalletService btcWalletService,
                                  BsqWalletService bsqWalletService,
+                                 DaoFacade daoFacade,
                                  FeeService feeService,
                                  TradeManager tradeManager,
                                  FilterPolicyService filterPolicyService) {
-        super(offerUtil, btcWalletService, bsqWalletService, feeService);
+        super(offerUtil, btcWalletService, bsqWalletService, daoFacade, feeService);
         this.tradeManager = tradeManager;
         this.filterPolicyService = filterPolicyService;
     }
