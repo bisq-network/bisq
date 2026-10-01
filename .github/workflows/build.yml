@@ -14,7 +14,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: ${{ fromJSON(vars.BUILD_OS_MATRIX || '["ubuntu-24.04", "macos-15", "windows-2025"]') }}
+            # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of
+            # the two checked-in runner lists, so every runner label stays reviewed and verified.
+            os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15", "windows-2025"]') }}
             java: [ '21.0.6' ]
     name: Test Java ${{ matrix.java }}, ${{ matrix.os }}
     steps:
