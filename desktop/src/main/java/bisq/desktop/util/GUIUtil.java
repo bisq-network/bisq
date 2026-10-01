@@ -449,7 +449,7 @@ public class GUIUtil {
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
-                new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+                new Popup().error(Res.get("guiUtil.jsonExport.exportFailed", e.getMessage())).show();
             }
         }
     }
