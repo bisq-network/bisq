@@ -37,6 +37,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -67,6 +68,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1393,16 +1395,18 @@ public class BtcWalletService extends WalletService {
     // Find inputs and change
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Tuple2<List<RawTransactionInput>, Coin> getInputsAndChange(Coin required) throws InsufficientMoneyException {
-        BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
-                preferences.getIgnoreDustThreshold());
-        CoinSelection coinSelection = coinSelector.select(required, Objects.requireNonNull(wallet).calculateAllSpendCandidates());
+    public Tuple2<List<RawTransactionInput>, Coin> getInputsAndChange(Coin required,
+                                                                      Predicate<TransactionOutput> isExcluded)
+            throws InsufficientMoneyException {
+        BtcCoinSelector coinSelector = getAvailableCoinSelector();
+        CoinSelection coinSelection = coinSelector.select(required, getSpendCandidates(isExcluded));
 
         Coin change;
         try {
             change = coinSelector.getChange(required, coinSelection);
         } catch (InsufficientMoneyException e) {
-            log.error("Missing funds in getSellersBtcInputsForBsqSwapTx. missing={}", e.missing);
+            // An expected case, which the caller handles
+            log.debug("Missing funds for the inputs. missing={}", e.missing);
             throw new InsufficientMoneyException(e.missing);
         }
 
@@ -1412,5 +1416,23 @@ public class BtcWalletService extends WalletService {
                 .map(RawTransactionInput::new)
                 .collect(Collectors.toList());
         return new Tuple2<>(inputs, change);
+    }
+
+    // The value of all outputs which getInputsAndChange can select
+    public Coin getSelectableBalance(Predicate<TransactionOutput> isExcluded) {
+        CoinSelection coinSelection = getAvailableCoinSelector().select(NetworkParameters.MAX_MONEY,
+                getSpendCandidates(isExcluded));
+        return coinSelection.valueGathered;
+    }
+
+    private BtcCoinSelector getAvailableCoinSelector() {
+        return new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+    }
+
+    private List<TransactionOutput> getSpendCandidates(Predicate<TransactionOutput> isExcluded) {
+        return Objects.requireNonNull(wallet).calculateAllSpendCandidates().stream()
+                .filter(output -> !isExcluded.test(output))
+                .collect(Collectors.toList());
     }
 }

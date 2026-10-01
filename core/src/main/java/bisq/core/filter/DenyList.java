@@ -19,6 +19,7 @@ package bisq.core.filter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -59,7 +60,6 @@ public class DenyList {
     private final List<String> bannedPriceRelayNodes;
     private final List<String> bannedBtcNodes;
     private final List<String> bannedAutoConfExplorers;
-    private final String requiredVersionForTrading;
 
     @Inject
     public DenyList(Config config) {
@@ -84,7 +84,6 @@ public class DenyList {
         bannedPriceRelayNodes = readList(properties, "bannedPriceRelayNodes");
         bannedBtcNodes = readNodeAddressList(properties, "bannedBtcNodes");
         bannedAutoConfExplorers = readList(properties, "bannedAutoConfExplorers");
-        requiredVersionForTrading = properties.getProperty("requiredVersionForTrading", "").trim();
     }
 
     public static DenyList empty() {
@@ -98,8 +97,13 @@ public class DenyList {
 
     @VisibleForTesting
     static String resourceName(Config config) {
+        return resourceName(config.getBaseCurrencyNetwork());
+    }
+
+    @VisibleForTesting
+    static String resourceName(BaseCurrencyNetwork baseCurrencyNetwork) {
         return RESOURCE_DIRECTORY + "/" +
-                config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH) +
+                baseCurrencyNetwork.name().toLowerCase(Locale.ENGLISH) +
                 RESOURCE_EXTENSION;
     }
 
@@ -146,9 +150,5 @@ public class DenyList {
         Set<String> values = new LinkedHashSet<>();
         COMMA_SPLITTER.split(properties.getProperty(key, "")).forEach(values::add);
         return List.copyOf(values);
-    }
-
-    boolean hasRequiredVersionForTrading() {
-        return !requiredVersionForTrading.isEmpty();
     }
 }

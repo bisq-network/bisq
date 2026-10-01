@@ -203,15 +203,17 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             // It will not return until that header has been read.
             protoOutputStream = new ProtoOutputStream(socket.getOutputStream(), statistic);
             protoInputStream = socket.getInputStream();
+            // The dialed address is bound before the input handler starts, so that a sender address stated
+            // by the peer cannot replace it.
+            if (peersNodeAddress != null)
+                setPeersNodeAddress(peersNodeAddress);
+
             // We create a thread for handling inputStream data
             executorService.submit(this);
 
-            if (peersNodeAddress != null) {
-                setPeersNodeAddress(peersNodeAddress);
-                if (banFilter != null && banFilter.isPeerBanned(peersNodeAddress)) {
-                    log.warn("We created an outbound connection with a banned peer");
-                    reportInvalidRequest(RuleViolation.PEER_BANNED);
-                }
+            if (peersNodeAddress != null && banFilter != null && banFilter.isPeerBanned(peersNodeAddress)) {
+                log.warn("We created an outbound connection with a banned peer");
+                reportInvalidRequest(RuleViolation.PEER_BANNED);
             }
             UserThread.execute(() -> connectionListener.onConnection(this));
         } catch (Throwable e) {

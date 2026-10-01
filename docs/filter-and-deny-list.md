@@ -41,7 +41,11 @@ The deny-list currently supports:
 * banned price relay nodes
 * banned Bitcoin nodes
 * banned auto-confirm explorers
-* required trading version
+
+The deny-list does not hold a required trading version. The resource ships inside the release that
+reads it, and the value would only be compared with the version of that same release, so it could
+never require an update. The required trading version belongs to the signed network filter, which
+can be raised after a release.
 
 Set `--ignoreDenyList=true` to skip loading the bundled resource. This is intended for development and controlled recovery scenarios.
 Set `--denyListResource=<classpath-resource>` only for tests or controlled recovery when a non-network-specific resource must be loaded explicitly.

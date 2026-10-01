@@ -287,7 +287,8 @@ public class OpenBsqSwapOfferService {
                 this,
                 feeService,
                 btcWalletService,
-                bsqWalletService);
+                bsqWalletService,
+                daoFacade);
         OpenBsqSwapOffer prev = openBsqSwapOffersById.put(openOffer.getId(), openBsqSwapOffer);
         if (prev != null) {
             prev.removeListeners();

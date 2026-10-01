@@ -113,25 +113,33 @@ validation or failure boundaries.
 
 ## Historical compatibility audit
 
-The opt-in `BundledDaoStateAuditTest` makes the bundled-history claims executable. It reads the 947
-payloads in `BlindVoteStore_BTC_MAINNET`, rejects duplicate blind-vote transaction IDs, resolves each
+The opt-in `BundledDaoStateAuditTest` makes the bundled-history claims executable. It reads every
+payload in `BlindVoteStore_BTC_MAINNET`, rejects duplicate blind-vote transaction IDs, resolves each
 VOTE_REVEAL transaction from the complete bundled block history, extracts the on-chain secret key,
 decrypts both ciphertexts with the production routines, and checks proposal transaction-ID
 uniqueness in every decrypted vote list. Run it with:
 
 ```bash
-./gradlew --no-daemon --max-workers=2 :core:cleanTest :core:test \
+./gradlew --no-daemon --max-workers=2 :core:test --rerun \
   --tests bisq.core.dao.BundledDaoStateAuditTest.bundledBlockHistoryAndRevealedBlindVotesAreInternallyConsistent \
   -PrunResourceAudits=true --console=plain
 ```
 
-For the bundled mainnet resources through height `963 120`, all 947 stored payloads have distinct
-transaction IDs. Exactly 935 have an on-chain reveal and decrypt successfully; none contains a
-duplicate proposal transaction ID and none has a merit-list decryption failure. The 12 payloads
-without a reveal cannot enter a vote result and their encrypted contents cannot be audited.
+For the bundled mainnet resources through height `969 240`, all 963 stored payloads have distinct
+transaction IDs. Exactly 948 have an on-chain reveal and decrypt successfully; none contains a
+duplicate proposal transaction ID and none has a merit-list decryption failure. The 15 payloads
+without a reveal cannot enter a vote result and their encrypted contents cannot be audited. Of the 16
+payloads added after the previous audit at height `963 120`, five were cast in the blind-vote phase of
+the cycle that started at height `960 187`; all five were revealed and decrypt. The other 11 were cast
+between heights `968 645` and `968 922` in the blind-vote phase of the cycle that started at height
+`964 867`. The bundled snapshot ends inside that cycle's vote-reveal phase (heights `969 077` to
+`969 527`): eight of the 11 were revealed by height `969 240` and decrypt, and the other three can
+still be revealed after the snapshot, so three of the 15 payloads without a reveal are not final.
 
-This audit supports deployment confidence but does not replace the explicit height gates. Before
-release, audit any proposal, blind-vote, and completed RESULT data after bundled height `963 120` from
-a synced mainnet node. Repeat after every RESULT phase through activation. A changed resource count
-requires review and an intentional update to the test's expected snapshot counts, not a weakened
-assertion.
+This audit supports deployment confidence but does not replace the explicit height gates. Between the
+previous audit boundary `963 120` and the mainnet activation height `963 350`, the network was in the
+proposal phase of the cycle that started at height `960 187`, so no blind-vote, vote-reveal, or RESULT
+data exists in that interval. The blind votes, reveals and RESULT phase (heights `964 857` to
+`964 866`) of that cycle, which is the first cycle evaluated with these rules on mainnet, are part of
+the audited bundled history. A changed resource count requires review and an intentional update to
+the test's expected snapshot counts, not a weakened assertion.

@@ -21,6 +21,8 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.InboundConnection;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.storage.mocks.ExpirableProtectedStoragePayloadStub;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -39,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import static bisq.network.p2p.storage.TestState.SavedTestState;
 import static bisq.network.p2p.storage.TestState.getTestNodeAddress;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -77,7 +80,7 @@ public class P2PDataStoreDisconnectTest {
 
     @BeforeEach
     public void setUp() {
-        this.mockedConnection = mock(Connection.class);
+        this.mockedConnection = mock(OutboundConnection.class);
         this.testState = new TestState();
     }
 
@@ -147,5 +150,56 @@ public class P2PDataStoreDisconnectTest {
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
         verifyStateAfterDisconnect(this.testState, beforeState, false);
+    }
+
+    // TESTCASE: Unintended disconnects of an inbound peer that claims the owner's address don't reduce TTL
+    @Test
+    public void connectionClosedInboundPeerClaimsOwnerAddress() throws NoSuchAlgorithmException, CryptoException {
+        Connection inboundConnection = mock(InboundConnection.class);
+        when(inboundConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
+
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.DAYS.toMillis(90));
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
+        this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, inboundConnection);
+
+        verifyStateAfterDisconnect(this.testState, beforeState, false);
+    }
+
+    // TESTCASE: Two unintended disconnects of the owner expire its entry
+    @Test
+    public void connectionClosedTwiceExpiresEntry() throws NoSuchAlgorithmException, CryptoException {
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
+
+        disconnectTwiceAndRemoveExpiredEntries(this.mockedConnection, true);
+    }
+
+    // TESTCASE: Two unintended disconnects of an inbound peer that claims the owner's address don't expire its entry
+    @Test
+    public void connectionClosedTwiceInboundPeerClaimsOwnerAddress() throws NoSuchAlgorithmException, CryptoException {
+        Connection inboundConnection = mock(InboundConnection.class);
+        when(inboundConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
+
+        disconnectTwiceAndRemoveExpiredEntries(inboundConnection, false);
+    }
+
+    private void disconnectTwiceAndRemoveExpiredEntries(Connection connection,
+                                                        boolean expectedRemoved) throws NoSuchAlgorithmException, CryptoException {
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.MINUTES.toMillis(9));
+
+        // Each backdate moves the entry back by TTL / 2, so after two the entry is at the end of its TTL
+        // and expires once any more time passes
+        this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, connection);
+        this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, connection);
+        assertFalse(protectedStorageEntry.isExpired(this.testState.clockFake));
+        this.testState.clockFake.increment(1);
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
+        this.testState.mockedStorage.removeExpiredEntries();
+
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry,
+                expectedRemoved, expectedRemoved, false, false);
     }
 }

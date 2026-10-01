@@ -22,6 +22,8 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.monetary.Volume;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
@@ -33,8 +35,10 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.TransactionOutput;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -147,10 +151,12 @@ public class BsqSwapCalculation {
     }
 
     public static Coin getSellersBtcInputValue(BtcWalletService btcWalletService,
+                                               DaoFacade daoFacade,
                                                Coin btcTradeAmount,
                                                long txFeePerVbyte,
                                                long sellersTradeFee) throws InsufficientMoneyException {
         Tuple2<List<RawTransactionInput>, Coin> inputsAndChange = getSellersBtcInputsAndChange(btcWalletService,
+                daoFacade,
                 btcTradeAmount.getValue(),
                 txFeePerVbyte,
                 sellersTradeFee);
@@ -182,10 +188,13 @@ public class BsqSwapCalculation {
 
     // Tx fee estimation
     public static Tuple2<List<RawTransactionInput>, Coin> getSellersBtcInputsAndChange(BtcWalletService btcWalletService,
+                                                                                       DaoFacade daoFacade,
                                                                                        long amount,
                                                                                        long txFeePerVbyte,
                                                                                        long sellersTradeFee)
             throws InsufficientMoneyException {
+        Predicate<TransactionOutput> isUnspentBsqOutput = isUnspentBsqOutput(daoFacade);
+
         // Figure out how large out tx will be
         int iterations = 0;
         Tuple2<List<RawTransactionInput>, Coin> inputsAndChange;
@@ -198,7 +207,7 @@ public class BsqSwapCalculation {
 
         // We do a first calculation here to get the size of the inputs (segwit or not) and we adjust the sellersTxSize
         // so that we avoid to get into dangling states.
-        inputsAndChange = btcWalletService.getInputsAndChange(required);
+        inputsAndChange = btcWalletService.getInputsAndChange(required, isUnspentBsqOutput);
         sellersTxSize = getVBytesSize(inputsAndChange.first, 0);
         required = getSellersBtcInputValue(amount, txFeePerVbyte, sellersTxSize, sellersTradeFee);
 
@@ -206,7 +215,7 @@ public class BsqSwapCalculation {
         // inputs. We would take the latest result before we break iteration. Worst case is that we under- or
         // overpay a bit. As fee rate is anyway an estimation we ignore that imperfection.
         while (iterations < 10 && !required.equals(previous)) {
-            inputsAndChange = btcWalletService.getInputsAndChange(required);
+            inputsAndChange = btcWalletService.getInputsAndChange(required, isUnspentBsqOutput);
             previous = required;
 
             // We calculate more exact tx size based on resulted inputs and change
@@ -225,6 +234,18 @@ public class BsqSwapCalculation {
         checkNotNull(inputsAndChange);
 
         return new Tuple2<>(inputsAndChange.first, change);
+    }
+
+    // The value of the BTC outputs which the seller can select as inputs
+    public static Coin getSellersSelectableBtcBalance(BtcWalletService btcWalletService, DaoFacade daoFacade) {
+        return btcWalletService.getSelectableBalance(isUnspentBsqOutput(daoFacade));
+    }
+
+    // The buyer rejects a seller input which spends an unspent BSQ output, so the seller does not select one.
+    // See docs/specifications/trade/bsq-swap-seller-inputs.md.
+    private static Predicate<TransactionOutput> isUnspentBsqOutput(DaoFacade daoFacade) {
+        return output -> daoFacade.isUnspentTxOutput(
+                new TxOutputKey(output.getParentTransactionHash().toString(), output.getIndex()));
     }
 
     // Tx fee
