@@ -38,7 +38,7 @@ jobs:
         check-latest: false
 
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+      uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
       with:
         arguments: verifyReleaseBuild --scan
 
