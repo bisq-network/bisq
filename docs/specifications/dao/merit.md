@@ -189,7 +189,7 @@ grouping which never compares anything. That every one of the 8 031 claims also 
 says separately that no forged, mismatched or unknown-issuance claim exists in that history.
 
 Merit-ciphertext decryptability is audited separately with the complete bundled block and blind-vote
-stores. The reproducible command and its 940 revealed-payload result are specified in
+stores. The reproducible command and its 948 revealed-payload result are specified in
 [`vote-result-validation.md`](vote-result-validation.md#historical-compatibility-audit).
 
 ### 7.2 Remaining obligations

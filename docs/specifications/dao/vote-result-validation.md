@@ -125,12 +125,16 @@ uniqueness in every decrypted vote list. Run it with:
   -PrunResourceAudits=true --console=plain
 ```
 
-For the bundled mainnet resources through height `968 341`, all 952 stored payloads have distinct
-transaction IDs. Exactly 940 have an on-chain reveal and decrypt successfully; none contains a
-duplicate proposal transaction ID and none has a merit-list decryption failure. The 12 payloads
-without a reveal cannot enter a vote result and their encrypted contents cannot be audited. The five
-payloads added after the previous audit at height `963 120` were cast in the blind-vote phase of the
-cycle that started at height `960 187`; all five were revealed and decrypt.
+For the bundled mainnet resources through height `969 240`, all 963 stored payloads have distinct
+transaction IDs. Exactly 948 have an on-chain reveal and decrypt successfully; none contains a
+duplicate proposal transaction ID and none has a merit-list decryption failure. The 15 payloads
+without a reveal cannot enter a vote result and their encrypted contents cannot be audited. Of the 16
+payloads added after the previous audit at height `963 120`, five were cast in the blind-vote phase of
+the cycle that started at height `960 187`; all five were revealed and decrypt. The other 11 were cast
+between heights `968 645` and `968 922` in the blind-vote phase of the cycle that started at height
+`964 867`. The bundled snapshot ends inside that cycle's vote-reveal phase (heights `969 077` to
+`969 527`): eight of the 11 were revealed by height `969 240` and decrypt, and the other three can
+still be revealed after the snapshot, so three of the 15 payloads without a reveal are not final.
 
 This audit supports deployment confidence but does not replace the explicit height gates. Between the
 previous audit boundary `963 120` and the mainnet activation height `963 350`, the network was in the
