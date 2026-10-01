@@ -20,6 +20,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`application/data-directory-backup.md`](application/data-directory-backup.md) | What "Backup now" copies from the data directory, how it treats links and special files, and who can read the backup. |
 | [`application/key-ring-storage.md`](application/key-ring-storage.md) | Who can read the private keys of the key ring and their rolling backups. |
 
+### `api/`
+
+| Specification | Covers |
+|---|---|
+| [`api/market-price.md`](api/market-price.md) | How the API answers a market price request from the prices the node holds, without waiting for a price provider, and when a price is unavailable. |
+
 
 ### `account/`
 
