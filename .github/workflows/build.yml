@@ -9,6 +9,8 @@ permissions:
 
 jobs:
   build:
+    # A repository can set BUILD_ON_PUSH to false to build pull requests only and avoid a second run per commit.
+    if: github.event_name != 'push' || vars.BUILD_ON_PUSH != 'false'
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
