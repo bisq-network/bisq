@@ -1870,6 +1870,16 @@ tasks.register('verifyGithubActionsSecurity') {
                     violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
                 }
 
+                // Repository variables are not reviewed and not visible to this check. They may select between
+                // checked-in runner labels, but must never provide a label themselves.
+                def lineWithoutVariableComparisons = line.replaceAll(/\bvars\.[A-Za-z0-9_]+\s*==\s*'[^']*'/, '')
+                if (lineWithoutVariableComparisons =~ /(?i)fromJson\(\s*vars\./) {
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} parses a repository variable as JSON: ${line.trim()}"
+                }
+                if (line =~ /^\s*-?\s*(runs-on|os):/ && lineWithoutVariableComparisons =~ /\bvars\./) {
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} takes a runner label from a repository variable: ${line.trim()}"
+                }
+
                 if (line ==~ /^\s*java-version:\s*['"]?\d+['"]?\s*$/) {
                     violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
                 }
