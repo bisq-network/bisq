@@ -23,6 +23,7 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -63,6 +64,7 @@ public class BsqSwapOfferModel {
     private final OfferUtil offerUtil;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final DaoFacade daoFacade;
     private final FeeService feeService;
 
     // offer data
@@ -115,10 +117,12 @@ public class BsqSwapOfferModel {
     public BsqSwapOfferModel(OfferUtil offerUtil,
                              BtcWalletService btcWalletService,
                              BsqWalletService bsqWalletService,
+                             DaoFacade daoFacade,
                              FeeService feeService) {
         this.offerUtil = offerUtil;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.daoFacade = daoFacade;
         this.feeService = feeService;
     }
 
@@ -256,6 +260,7 @@ public class BsqSwapOfferModel {
         } else {
             try {
                 inputAmountAsCoin.set(BsqSwapCalculation.getSellersBtcInputValue(btcWalletService,
+                        daoFacade,
                         btcTradeAmountAsCoin,
                         txFeePerVbyte,
                         tradeFee));
@@ -274,9 +279,10 @@ public class BsqSwapOfferModel {
     }
 
     private void evaluateMissingFunds() {
+        // The seller counts only the BTC which it can select as inputs, not the BSQ outputs in its BTC wallet
         Coin walletBalance = isBuyer() ?
                 bsqWalletService.getVerifiedBalance() :
-                btcWalletService.getSavingWalletBalance();
+                BsqSwapCalculation.getSellersSelectableBtcBalance(btcWalletService, daoFacade);
         missingFunds.set(offerUtil.getBalanceShortage(inputAmountAsCoin.get(), walletBalance));
     }
 
@@ -324,6 +330,7 @@ public class BsqSwapOfferModel {
                         tradeFee);
             } else {
                 btcInputsAndChange = BsqSwapCalculation.getSellersBtcInputsAndChange(btcWalletService,
+                        daoFacade,
                         btcAmount.get().getValue(),
                         txFeePerVbyte,
                         tradeFee);

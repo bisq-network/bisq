@@ -97,22 +97,25 @@ commitment validation without retroactively making every UI/admission rule a con
 Independently activated proposal-type rules, including bonded-role term validation, continue to use
 their own specified activation semantics.
 
-The bundled mainnet resources through height `963 120` contain 1,989 append-only proposal payloads.
+The bundled mainnet resources through height `968 341` contain 2,018 append-only proposal payloads.
 None fails the common name, link, transaction-ID, or extra-data validation, and no two payloads use
 the same proposal transaction ID. This audit supports historical compatibility of the admission
 hardening but does not replace the activation gate or cover later blocks. The common-field and
 transaction-ID checks are reproduced by the opt-in resource audit:
 
 ```bash
-./gradlew --no-daemon --max-workers=2 :core:cleanTest :core:test \
+./gradlew --no-daemon --max-workers=2 :core:test --rerun \
   --tests bisq.core.dao.BundledDaoStateAuditTest.refreshedBundledStoresAreReadableAndInternallyNonEmpty \
   -PrunResourceAudits=true --console=plain
 ```
 
-Before release, audit proposals observed after bundled height `963 120` through activation against a
-synced mainnet node, including proposal-type-specific validation at the DAO state effective at each
-proposal transaction height. Repeat the audit if another proposal or RESULT phase completes before
-activation.
+The bundled history includes every proposal of the cycle that started at height `960 187`. Its first
+RESULT block, `964 857`, is the first result-evaluation height at or above the mainnet activation
+height, so its proposals were the first to be evaluated with full data-field validation. Eight of them
+(six compensation and two reimbursement requests) were mined between the previous audit boundary
+`963 120` and the activation height. The resource audit checks the common fields and transaction IDs
+of these proposals but not their proposal-type-specific validation at the DAO state effective at each
+proposal transaction height. That part must be confirmed from a synced mainnet node.
 
 ## Security rationale
 

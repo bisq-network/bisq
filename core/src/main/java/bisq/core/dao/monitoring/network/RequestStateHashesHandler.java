@@ -25,6 +25,7 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.OutboundConnection;
 import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
@@ -124,7 +125,8 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
 
             log.debug("We send to peer {} a {}.", nodeAddress, getStateHashesRequest);
             networkNode.addMessageListener(this);
-            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getStateHashesRequest);
+            // A peer can claim any address on an inbound connection, so we only send over a connection we dialed
+            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getStateHashesRequest, false);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(Connection connection) {
@@ -166,7 +168,10 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (isGetStateHashesResponse(networkEnvelope)) {
-            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
+            // Only the outbound connection that carried our request proves the address of the peer
+            if (connection instanceof OutboundConnection &&
+                    connection.getPeersNodeAddressOptional().isPresent() &&
+                    connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
                 if (!stopped) {
                     Res getStateHashesResponse = castToGetStateHashesResponse(networkEnvelope);
                     if (getStateHashesResponse.getRequestNonce() == nonce) {

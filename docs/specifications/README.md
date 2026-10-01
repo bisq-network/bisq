@@ -39,6 +39,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/merit.md`](dao/merit.md) | Merit as vote weight: what a merit claim must prove against DAO state, decay, uniqueness per cycle, and the activation boundary. |
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
+| [`dao/seed-node-state-hashes.md`](dao/seed-node-state-hashes.md) | Which connections the node trusts as seed nodes when DAO, proposal and blind vote state hashes are exchanged. |
 
 ### `dispute/`
 
@@ -53,6 +54,7 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`network/bisq2-bridge-block-continuity.md`](network/bisq2-bridge-block-continuity.md) | Snapshot and live-stream continuity for DAO block data exported to Bisq 2 oracle nodes. |
+| [`network/owner-disconnect-backdating.md`](network/owner-disconnect-backdating.md) | Backdating of offers when the connection to their owner is lost, allowed only for outbound connections. |
 | [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
 
 ### `offer/`
@@ -72,3 +74,5 @@ specification says so explicitly instead of describing the implementation as if 
 | [`trade/withdrawal-completion.md`](trade/withdrawal-completion.md) | The completion invariant of a trade payout withdrawal: local wallet commit, one terminal outcome per request, and broadcast failure as a notification. |
 | [`trade/refund-delayed-payout-validation.md`](trade/refund-delayed-payout-validation.md) | Refund-agent validation that a delayed payout transaction spends the deposit transaction's escrow output and pays it to the protocol receivers. |
 | [`trade/xmr-payment-proof-timestamp.md`](trade/xmr-payment-proof-timestamp.md) | The timestamp rule of the XMR payment proof used for automatic confirmation, and why it is one-sided. |
+| [`trade/bsq-swap-seller-inputs.md`](trade/bsq-swap-seller-inputs.md) | What the BSQ swap buyer verifies about the seller's inputs before it signs: each input spends exactly the described output, which is not a BSQ output, with a valid signature; and the seller's own rule not to select BSQ outputs as inputs. |
+| [`trade/bsq-swap-buyer-signatures.md`](trade/bsq-swap-buyer-signatures.md) | What the BSQ swap seller verifies about the buyer's signatures before it accepts the finalized transaction, and the rejection of buyer inputs listed twice. |

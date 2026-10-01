@@ -31,7 +31,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
-import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 
@@ -42,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static bisq.core.trade.validation.TransactionValidation.checkInputOutpoints;
 import static bisq.core.trade.validation.TransactionValidation.checkTransaction;
 import static bisq.core.util.Validator.checkIsPositive;
 import static bisq.core.util.Validator.checkNonEmptyBytes;
@@ -364,27 +364,6 @@ public final class DepositTxValidation {
         } else {
             checkInputOutpoints(preparedDepositTx, 0, takerInputs, params, "taker");
             checkInputOutpoints(preparedDepositTx, takerInputs.size(), makerInputs, params, "maker");
-        }
-    }
-
-    private static void checkInputOutpoints(Transaction preparedDepositTx,
-                                            int startIndex,
-                                            List<RawTransactionInput> expectedInputs,
-                                            NetworkParameters params,
-                                            String inputOwner) {
-        for (int i = 0; i < expectedInputs.size(); i++) {
-            RawTransactionInput expectedInput = checkNotNull(expectedInputs.get(i),
-                    "%s input at position %s must not be null",
-                    inputOwner,
-                    i);
-            TransactionOutPoint expectedOutpoint = WalletUtils.getConnectedOutPoint(expectedInput, params);
-            TransactionOutPoint actualOutpoint = preparedDepositTx.getInput(startIndex + i).getOutpoint();
-            checkArgument(actualOutpoint.getIndex() == expectedOutpoint.getIndex() &&
-                            actualOutpoint.getHash().equals(expectedOutpoint.getHash()),
-                    "Prepared deposit tx input %s does not match expected %s input %s",
-                    startIndex + i,
-                    inputOwner,
-                    i);
         }
     }
 

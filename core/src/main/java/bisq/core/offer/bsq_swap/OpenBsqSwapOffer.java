@@ -20,6 +20,9 @@ package bisq.core.offer.bsq_swap;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.fee.FeeService;
@@ -38,7 +41,8 @@ import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Wrapper for OpenOffer listening for txFee and wallet changes.
+ * Wrapper for OpenOffer listening for txFee and wallet changes, and for a sell offer also for new DAO blocks, as the
+ * seller does not select unspent BSQ outputs as inputs.
  * After a change event we recalculate the required funds and compare it with the available
  * wallet funds. If not enough funds we set the bsqSwapOfferHasMissingFunds flag at
  * openOffer and call the disableBsqSwapOffer at bsqSwapOpenOfferService.
@@ -56,12 +60,14 @@ class OpenBsqSwapOffer {
     private final FeeService feeService;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final DaoFacade daoFacade;
 
     private final long tradeFee;
     private final boolean isBuyOffer;
     private final InvalidationListener feeChangeListener;
     private final BsqBalanceListener bsqBalanceListener;
     private final WalletChangeEventListener btcWalletChangeEventListener;
+    private final DaoStateListener daoStateListener;
     private final Coin btcAmount;
     private final Coin requiredBsqInput;
 
@@ -74,12 +80,14 @@ class OpenBsqSwapOffer {
                             OpenBsqSwapOfferService openBsqSwapOfferService,
                             FeeService feeService,
                             BtcWalletService btcWalletService,
-                            BsqWalletService bsqWalletService) {
+                            BsqWalletService bsqWalletService,
+                            DaoFacade daoFacade) {
         this.openOffer = openOffer;
         this.openBsqSwapOfferService = openBsqSwapOfferService;
         this.feeService = feeService;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.daoFacade = daoFacade;
 
         Offer offer = openOffer.getOffer();
         isBuyOffer = offer.isBuyOffer();
@@ -122,6 +130,7 @@ class OpenBsqSwapOffer {
             };
             bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
             btcWalletChangeEventListener = null;
+            daoStateListener = null;
             btcAmount = null;
         } else {
             btcAmount = offer.getAmount();
@@ -137,6 +146,15 @@ class OpenBsqSwapOffer {
                 }
             };
             btcWalletService.addChangeEventListener(btcWalletChangeEventListener);
+            // An output becomes an unspent BSQ output, which the selection skips, when the DAO parses its block
+            daoStateListener = new DaoStateListener() {
+                @Override
+                public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+                    evaluateFundedState();
+                    applyFundingState();
+                }
+            };
+            daoFacade.addBsqStateListener(daoStateListener);
             bsqBalanceListener = null;
             requiredBsqInput = null;
         }
@@ -157,6 +175,7 @@ class OpenBsqSwapOffer {
             bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
         } else {
             btcWalletService.removeChangeEventListener(btcWalletChangeEventListener);
+            daoFacade.removeBsqStateListener(daoStateListener);
         }
     }
 
@@ -192,11 +211,13 @@ class OpenBsqSwapOffer {
                 if (tradeFee <= 0) {
                     fee = FeeService.getMinMakerFee(false).value;
                 }
-                Coin requiredInput = BsqSwapCalculation.getSellersBtcInputValue(btcWalletService,
+                BsqSwapCalculation.getSellersBtcInputValue(btcWalletService,
+                        daoFacade,
                         btcAmount,
                         txFeePerVbyte,
                         fee);
-                hasMissingFunds = walletBalance.isLessThan(requiredInput);
+                // The selection decides, as the wallet balance also counts BSQ outputs which the seller must not spend
+                hasMissingFunds = false;
             } catch (InsufficientMoneyException e) {
                 hasMissingFunds = true;
             }

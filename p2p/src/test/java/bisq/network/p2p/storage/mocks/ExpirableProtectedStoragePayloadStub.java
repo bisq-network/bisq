@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 public class ExpirableProtectedStoragePayloadStub extends ProtectedStoragePayloadStub
                                                   implements ExpirablePayload, RequiresOwnerIsOnlinePayload {
     private long ttl;
+    private NodeAddress ownerNodeAddress = TestState.getTestNodeAddress();
 
     public ExpirableProtectedStoragePayloadStub(PublicKey ownerPubKey) {
         super(ownerPubKey);
@@ -47,9 +48,14 @@ public class ExpirableProtectedStoragePayloadStub extends ProtectedStoragePayloa
         this.ttl = ttl;
     }
 
+    public ExpirableProtectedStoragePayloadStub(PublicKey ownerPubKey, long ttl, NodeAddress ownerNodeAddress) {
+        this(ownerPubKey, ttl);
+        this.ownerNodeAddress = ownerNodeAddress;
+    }
+
     @Override
     public NodeAddress getOwnerNodeAddress() {
-        return TestState.getTestNodeAddress();
+        return ownerNodeAddress;
     }
 
     @Override

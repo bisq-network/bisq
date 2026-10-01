@@ -57,6 +57,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             long txFeePerVbyte = trade.getTxFeePerVbyte();
             Tuple2<List<RawTransactionInput>, Coin> btcInputsAndChange = BsqSwapCalculation.getSellersBtcInputsAndChange(
                     protocolModel.getBtcWalletService(),
+                    protocolModel.getDaoFacade(),
                     trade.getAmountAsLong(),
                     txFeePerVbyte,
                     sellersTradeFee);
