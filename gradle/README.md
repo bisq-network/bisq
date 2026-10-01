@@ -293,6 +293,47 @@ Keep the list exact and sorted by module and artifact. `verifyDependencySignatur
 fails when a checksum-only artifact is missing from the allowlist, when an allowlist entry is
 stale, or when an entry has no rationale.
 
+### Updating the allowlist after a dependency change
+
+An allowlist entry names an exact version and an exact artifact file name. Changing the
+version of a checksum-only dependency therefore makes the old entries stale and the new
+artifacts unapproved. This is the normal case for the Bisq-maintained JitPack dependencies
+(`netlayer`, `tor-binary`, `bitcoinj`, `jsocks` and others), because they are pinned to a Git
+commit and every update changes the commit. A `netlayer` update usually changes the
+`tor-binary` commit as well.
+**Updating `verification-metadata.xml` without updating the allowlist turns `verifyReleaseBuild`
+red, including every open pull request.** The failure looks like this:
+
+```text
+Execution failed for task ':verifyDependencySignaturePolicy'.
+> Dependency signature policy failed.
+
+  Unapproved checksum-only dependency artifacts:
+   - com.github.bisq-network.netlayer:tor:<new-commit>	tor-<new-commit>.jar
+   ...
+  Allowlist entries that are no longer checksum-only artifacts:
+   - com.github.bisq-network.netlayer:tor:<old-commit>	tor-<old-commit>.jar
+   ...
+```
+
+Do these steps in the same commit as the version change:
+
+1. Update `gradle/libs.versions.toml` and refresh `verification-metadata.xml` as described
+   above.
+2. Run `./gradlew verifyDependencySignaturePolicy`. The two lists in its output are the exact
+   entries to add and to remove.
+3. Edit `dependency-checksum-fallback-allowlist.tsv`. When only the version changed, replace
+   the old version with the new one in every affected line, for example
+   `sed -i 's/<old-commit>/<new-commit>/g' gradle/dependency-checksum-fallback-allowlist.tsv`,
+   and keep the existing rationale. For a new artifact, write a rationale that says why a
+   checksum is acceptable for it. Keep the file sorted, with tabs between the three columns.
+4. Run `./gradlew dependencySignatureReport`. Checksum-only artifacts without an allowlist
+   rationale appear there as `Missing allowlist rationale`; there must be none.
+5. Run `./gradlew verifyDependencySignaturePolicy` again. It must end with `BUILD SUCCESSFUL`.
+
+Commit `libs.versions.toml`, `verification-metadata.xml`, the allowlist and
+`docs/dependency-signature-report.md` together.
+
 ## A note on the configuration cache
 
 `org.gradle.configuration-cache=true` is set in `gradle.properties`.
