@@ -200,6 +200,8 @@ This protects the `getAdjustedTxFee` zero-clamp logic from underpaying relay min
 
 During protocol execution, each side verifies the peer-supplied inputs and change against locally calculated values. Peer change is allowed to be less than the exact expected change, because dust or coin-selection excess can fall through to miner fee. Peer change must not be greater than expected, because that would let the peer reclaim value that should have paid fees.
 
+On the buyer side these checks use the values of the seller's input descriptions. They hold only because each seller input must spend exactly the described output; see [`specifications/trade/bsq-swap-seller-inputs.md`](specifications/trade/bsq-swap-seller-inputs.md).
+
 ## Main Code Paths
 
 - `core/src/main/java/bisq/core/trade/bsq_swap/BsqSwapCalculation.java`

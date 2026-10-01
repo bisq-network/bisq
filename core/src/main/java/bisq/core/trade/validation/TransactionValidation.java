@@ -17,7 +17,9 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -27,13 +29,21 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.VerificationException;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptException;
+import org.bitcoinj.script.ScriptPattern;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.math.BigInteger;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import static bisq.core.util.Validator.checkNonBlankString;
@@ -117,6 +127,113 @@ public final class TransactionValidation {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid serialized transaction", e);
         }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Transaction inputs
+    /* --------------------------------------------------------------------- */
+
+    public static void checkInputOutpoints(Transaction transaction,
+                                           int startIndex,
+                                           List<RawTransactionInput> expectedInputs,
+                                           NetworkParameters params,
+                                           String inputOwner) {
+        for (int i = 0; i < expectedInputs.size(); i++) {
+            RawTransactionInput expectedInput = checkNotNull(expectedInputs.get(i),
+                    "%s input at position %s must not be null",
+                    inputOwner,
+                    i);
+            TransactionOutPoint expectedOutpoint = WalletUtils.getConnectedOutPoint(expectedInput, params);
+            TransactionOutPoint actualOutpoint = transaction.getInput(startIndex + i).getOutpoint();
+            checkArgument(actualOutpoint.getIndex() == expectedOutpoint.getIndex() &&
+                            actualOutpoint.getHash().equals(expectedOutpoint.getHash()),
+                    "Transaction input %s does not match expected %s input %s",
+                    startIndex + i,
+                    inputOwner,
+                    i);
+        }
+    }
+
+    // Bisq wallets sign only P2PK, P2PKH and P2WPKH inputs, always with SIGHASH_ALL and in one fixed form (see
+    // TradeWalletService.signInput). We accept only this form. Script.correctlySpends verifies signatures only for
+    // these types, and even for them it does not check all rules of the network, for example the witness structure,
+    // the ANYONECANPAY flag of a witness signature or the relay rules for the scriptSig.
+    public static void checkInputSignatures(Transaction transaction,
+                                            int startIndex,
+                                            List<RawTransactionInput> expectedInputs,
+                                            NetworkParameters params,
+                                            String inputOwner) {
+        checkInputOutpoints(transaction, startIndex, expectedInputs, params, inputOwner);
+        for (int i = 0; i < expectedInputs.size(); i++) {
+            int inputIndex = startIndex + i;
+            TransactionInput input = transaction.getInput(inputIndex);
+            TransactionOutput spentOutput = checkNotNull(
+                    WalletUtils.getConnectedOutPoint(expectedInputs.get(i), params).getConnectedOutput(),
+                    "%s input at position %s has no connected output",
+                    inputOwner,
+                    i);
+            Script scriptPubKey = spentOutput.getScriptPubKey();
+            checkArgument(isSignedInBisqWalletForm(input, scriptPubKey),
+                    "Transaction input %s is not a P2PK, P2PKH or P2WPKH spend in the form of a Bisq wallet " +
+                            "for expected %s input %s",
+                    inputIndex,
+                    inputOwner,
+                    i);
+            try {
+                input.getScriptSig().correctlySpends(transaction,
+                        inputIndex,
+                        input.getWitness(),
+                        spentOutput.getValue(),
+                        scriptPubKey,
+                        Script.ALL_VERIFY_FLAGS);
+            } catch (ScriptException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Transaction input %s has no valid signature for expected %s input %s",
+                        inputIndex,
+                        inputOwner,
+                        i), e);
+            }
+        }
+    }
+
+    // P2WPKH: empty scriptSig and a witness with the signature and the compressed public key.
+    // P2PKH: the signature and the public key as shortest pushes in the scriptSig, no witness.
+    // P2PK: the signature as shortest push in the scriptSig, no witness.
+    // The public key must have a standard encoding, the network does not relay a hybrid encoded key.
+    private static boolean isSignedInBisqWalletForm(TransactionInput input, Script scriptPubKey) {
+        TransactionWitness witness = input.getWitness();
+        if (ScriptPattern.isP2WPKH(scriptPubKey)) {
+            return input.getScriptBytes().length == 0 &&
+                    witness.getPushCount() == 2 &&
+                    isSignedWithSigHashAll(witness.getPush(0)) &&
+                    witness.getPush(1).length == 33;
+        }
+
+        int numPushes;
+        if (ScriptPattern.isP2PKH(scriptPubKey)) {
+            numPushes = 2;
+        } else if (ScriptPattern.isP2PK(scriptPubKey)) {
+            numPushes = 1;
+        } else {
+            return false;
+        }
+        if (input.hasWitness()) {
+            return false;
+        }
+        List<ScriptChunk> chunks = input.getScriptSig().getChunks();
+        if (chunks.size() != numPushes ||
+                !chunks.stream().allMatch(chunk -> chunk.data != null && chunk.isShortestPossiblePushData()) ||
+                !isSignedWithSigHashAll(chunks.get(0).data)) {
+            return false;
+        }
+        byte[] pubKey = numPushes == 2 ? chunks.get(1).data : ScriptPattern.extractKeyFromP2PK(scriptPubKey);
+        return ECKey.isPubKeyCanonical(pubKey);
+    }
+
+    private static boolean isSignedWithSigHashAll(byte[] signature) {
+        return signature.length > 0 &&
+                (signature[signature.length - 1] & 0xff) == Transaction.SigHash.ALL.value;
     }
 
 

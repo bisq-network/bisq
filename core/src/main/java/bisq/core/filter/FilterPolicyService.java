@@ -23,8 +23,6 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.app.Version;
-
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -124,9 +122,7 @@ public class FilterPolicyService {
     }
 
     public boolean requireUpdateToNewVersionForTrading() {
-        return (denyList.hasRequiredVersionForTrading() &&
-                Version.isNewVersion(denyList.getRequiredVersionForTrading())) ||
-                filterManager.requireUpdateToNewVersionForTrading();
+        return filterManager.requireUpdateToNewVersionForTrading();
     }
 
     public boolean isPriceInBounds(Offer offer) {
