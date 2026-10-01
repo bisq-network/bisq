@@ -139,8 +139,8 @@ public class PriceFeedService {
         }
     }
 
-    public void initialRequestPriceFeed() {
-        request(false);
+    public void startRequestingPrices() {
+        request(true);
     }
 
     public boolean hasPrices() {
