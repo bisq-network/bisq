@@ -208,7 +208,6 @@ public class TradeUtil {
                     format("could not get role because no offer was found for bsq swap '%s'",
                             trade.getShortId()));
 
-        KeyRing keyRing = trade.getBsqSwapProtocolModel().getKeyRing();
         return getRole(offer.isBuyOffer(),
                 offer.isMyOffer(keyRing),
                 offer.getCurrencyCode());
