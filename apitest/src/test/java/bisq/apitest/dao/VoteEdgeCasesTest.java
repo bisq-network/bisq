@@ -78,11 +78,12 @@ public class VoteEdgeCasesTest extends DaoTestBase {
         dao.advanceToPhase(DaoPhaseEnum.DAO_PHASE_RESULT);
         dao.generateBlocks(1);
 
-        EvaluatedProposalInfo eval = find(p.getTxId());
-        assertFalse(eval.getIsAccepted(), "all ignore → rejected (no active votes)");
-        assertEquals(0, eval.getNumAcceptedVotes());
-        assertEquals(0, eval.getNumRejectedVotes());
-        assertTrue(eval.getNumIgnoredVotes() >= 2);
+        // A proposal without any accept or reject vote gets no evaluated proposal, see
+        // docs/specifications/dao/vote-result-validation.md. Like a proposal without any
+        // blind vote, it is functionally rejected.
+        boolean present = alice.getVoteResults(-1).getEvaluatedProposalsList().stream()
+                .anyMatch(e -> e.getProposal().getTxId().equals(p.getTxId()));
+        assertFalse(present, "all-ignore proposal must not be in evaluated list");
     }
 
     @Test

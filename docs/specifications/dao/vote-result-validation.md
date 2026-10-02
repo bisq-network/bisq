@@ -4,8 +4,9 @@
 
 This specification defines how a DAO vote result consumes the untrusted vote data revealed from a
 blind vote. It covers validation that can occur only after decryption, the failure boundary for a
-malformed voter, majority blind-vote-list reconstruction, and compatibility with results evaluated
-before a rule activates. Merit-claim validity is specified separately in [`merit.md`](merit.md).
+malformed voter, majority blind-vote-list reconstruction, which proposals a result records, and
+compatibility with results evaluated before a rule activates. Merit-claim validity is specified
+separately in [`merit.md`](merit.md).
 
 ## Trust boundary
 
@@ -111,13 +112,39 @@ Before the respective activation, historical behavior is preserved:
 These behaviors are retained only for deterministic replay of old cycles; they are not the desired
 validation or failure boundaries.
 
+## Proposals without counted votes
+
+Each entry of a decrypted vote list names a proposal with an accept vote, a reject vote, or no vote.
+Only accept and reject votes are counted; a valid proposal that a voter's list does not name counts
+as a reject vote from that voter. A proposal that gets no accept or reject vote in the cycle
+produces no evaluated proposal: it is not accepted, and the result contains no entry for it.
+
+The evaluated proposals are part of the hashed DAO state. The recorded set must therefore depend
+only on chain data, the matched blind-vote data and the valid ballot universe defined by
+[`proposal-validation.md`](proposal-validation.md). It must not depend on presentation state such as
+proposal lists kept for display, or on whether the node processed the result block while running or
+while parsing during startup or a resync.
+
+Earlier versions recorded such a proposal as rejected with zero accept and reject votes when it was
+in a proposal list kept for display. That list is not refreshed per block during initial parsing, so
+a running node recorded the proposal while a node that parsed the result block during startup or a
+resync usually did not. The two groups computed different DAO state hashes from that block on.
+
+This rule has no activation height. The bundled mainnet resources through height `969 240` contain
+no evaluated proposal without an accept or reject vote, so no earlier result changes. The first
+result with such a proposal is the RESULT block `969 537`, where one reimbursement request got no
+accept or reject vote. Nodes that did not record it already match this rule; nodes that recorded it
+must rebuild their DAO state. Nodes on an earlier version still record such a proposal when they
+process a RESULT block while running, so they can diverge again in a later cycle.
+
 ## Historical compatibility audit
 
 The opt-in `BundledDaoStateAuditTest` makes the bundled-history claims executable. It reads every
 payload in `BlindVoteStore_BTC_MAINNET`, rejects duplicate blind-vote transaction IDs, resolves each
 VOTE_REVEAL transaction from the complete bundled block history, extracts the on-chain secret key,
 decrypts both ciphertexts with the production routines, and checks proposal transaction-ID
-uniqueness in every decrypted vote list. Run it with:
+uniqueness in every decrypted vote list. It also checks that the bundled DAO state contains no
+evaluated proposal without an accept or reject vote. Run it with:
 
 ```bash
 ./gradlew --no-daemon --max-workers=2 :core:test --rerun \
