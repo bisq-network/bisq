@@ -476,6 +476,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onVote() {
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         Coin stake = ParsingUtils.parseToCoin(stakeInputTextField.getText(), bsqFormatter);
         try {
             // We create a dummy tx to get the miningFee for displaying it at the confirmation popup
@@ -495,6 +499,11 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void publishBlindVote(Coin stake) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         //TODO Starting voteButtonBusyAnimation here does not make sense if we stop it immediately below.
         // Check if voteButtonBusyAnimation should stay running until we hear back from publishing and only disable
         // button so that the user cannot click twice.
