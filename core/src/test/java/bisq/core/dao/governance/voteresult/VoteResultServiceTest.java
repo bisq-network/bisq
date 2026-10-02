@@ -22,9 +22,9 @@ import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
-import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.proposal.ProposalValidatorProvider;
@@ -69,8 +69,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
+
+import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -78,6 +81,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -96,6 +100,7 @@ class VoteResultServiceTest {
     private static final String COMPENSATION_TX_ID = "9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba";
     private static final String SECOND_BLIND_VOTE_TX_ID = "1111111111111111111111111111111111111111111111111111111111111111";
     private static final String SECOND_VOTE_REVEAL_TX_ID = "2222222222222222222222222222222222222222222222222222222222222222";
+    private static final String IGNORED_PROPOSAL_TX_ID = "3333333333333333333333333333333333333333333333333333333333333333";
     private static final long ISSUANCE_AMOUNT = 100_000;
     private static final byte[] HASH_OF_BLIND_VOTE_LIST = new byte[]{0x01, 0x02, 0x03};
 
@@ -541,6 +546,54 @@ class VoteResultServiceTest {
     }
 
     @Test
+    void proposalIgnoredByEveryVoterGetsNoEvaluatedProposal() throws Exception {
+        Proposal votedProposal = new GenericProposal("voted", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        Proposal ignoredProposal = new GenericProposal("ignored", "https://bisq.network", null)
+                .cloneProposal(IGNORED_PROPOSAL_TX_ID);
+        // The voter lists both proposals, but casts no vote for the ignored one.
+        byte[] voteListBytes = protobuf.VoteWithProposalTxIdList.newBuilder()
+                .addItem(protobuf.VoteWithProposalTxId.newBuilder()
+                        .setProposalTxId(PROPOSAL_TX_ID)
+                        .setVote(protobuf.Vote.newBuilder().setAccepted(true)))
+                .addItem(protobuf.VoteWithProposalTxId.newBuilder()
+                        .setProposalTxId(IGNORED_PROPOSAL_TX_ID))
+                .build()
+                .toByteArray();
+
+        Set<EvaluatedProposal> evaluatedProposals = evaluatedProposalsOfVoteResult(voteListBytes,
+                List.of(votedProposal, ignoredProposal));
+
+        assertEquals(Set.of(PROPOSAL_TX_ID), evaluatedProposals.stream()
+                .map(EvaluatedProposal::getProposalTxId)
+                .collect(Collectors.toSet()));
+        assertTrue(evaluatedProposals.iterator().next().isAccepted());
+    }
+
+    @Test
+    void validProposalNotNamedByVoterGetsRejectVote() throws Exception {
+        Proposal votedProposal = new GenericProposal("voted", "https://bisq.network", null)
+                .cloneProposal(PROPOSAL_TX_ID);
+        Proposal unnamedProposal = new GenericProposal("unnamed", "https://bisq.network", null)
+                .cloneProposal(IGNORED_PROPOSAL_TX_ID);
+        // The voter's list does not contain the second valid proposal of the cycle.
+        byte[] voteListBytes = voteWithProposalTxIdListBytes(true);
+
+        Set<EvaluatedProposal> evaluatedProposals = evaluatedProposalsOfVoteResult(voteListBytes,
+                List.of(votedProposal, unnamedProposal));
+
+        EvaluatedProposal unnamed = evaluatedProposals.stream()
+                .filter(evaluatedProposal -> evaluatedProposal.getProposalTxId().equals(IGNORED_PROPOSAL_TX_ID))
+                .findAny()
+                .orElseThrow();
+        assertEquals(2, evaluatedProposals.size());
+        assertFalse(unnamed.isAccepted());
+        assertEquals(0, unnamed.getProposalVoteResult().getNumAcceptedVotes());
+        assertEquals(1, unnamed.getProposalVoteResult().getNumRejectedVotes());
+        assertEquals(123_456, unnamed.getProposalVoteResult().getStakeOfRejectedVotes());
+    }
+
+    @Test
     void sameTxIdDuplicateSelectsMeritDecryptablePayloadFromActivation() throws Exception {
         int chainHeight = DaoHardFork.getBlindVoteMeritDecryptabilityActivationHeight();
         SecretKey secretKey = BlindVoteConsensus.createSecretKey();
@@ -769,8 +822,7 @@ class VoteResultServiceTest {
         DaoStateService daoStateService = mock(DaoStateService.class);
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(voteRevealTxOutputs);
 
-        return new VoteResultService(mock(ProposalListPresentation.class),
-                daoStateService,
+        return new VoteResultService(daoStateService,
                 mock(PeriodService.class),
                 ballotListService,
                 mock(BlindVoteListService.class),
@@ -798,13 +850,54 @@ class VoteResultServiceTest {
         BallotListService ballotListService = mock(BallotListService.class);
         when(ballotListService.getValidBallotsOfCycle()).thenReturn(List.of(new Ballot(proposal)));
 
-        return new VoteResultService(mock(ProposalListPresentation.class),
-                daoStateService,
+        return new VoteResultService(daoStateService,
                 periodService,
                 ballotListService,
                 blindVoteListService,
                 mock(IssuanceService.class),
                 missingDataRequestService);
+    }
+
+    private static Set<EvaluatedProposal> evaluatedProposalsOfVoteResult(byte[] voteWithProposalTxIdListBytes,
+                                                                       List<Proposal> validBallotProposals)
+            throws Exception {
+        int chainHeight = DaoHardFork.getBlindVoteMeritDecryptabilityActivationHeight();
+        SecretKey secretKey = BlindVoteConsensus.createSecretKey();
+        BlindVote blindVote = blindVote(voteWithProposalTxIdListBytes, secretKey);
+        byte[] majorityBlindVoteListHash = VoteRevealConsensus.getHashOfBlindVoteList(List.of(blindVote));
+
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        PeriodService periodService = mock(PeriodService.class);
+        BlindVoteListService blindVoteListService = mock(BlindVoteListService.class);
+        when(blindVoteListService.getBlindVotesInPhaseAndCycle()).thenReturn(List.of(blindVote));
+        configureVoteRevealBlockchainData(daoStateService,
+                periodService,
+                secretKey,
+                majorityBlindVoteListHash,
+                chainHeight);
+        when(periodService.getFirstBlockOfPhase(chainHeight, DaoPhase.Phase.RESULT)).thenReturn(chainHeight);
+        when(daoStateService.getParamValueAsCoin(any(Param.class), anyInt())).thenReturn(Coin.valueOf(100));
+        when(daoStateService.getParamValueAsPercentDouble(any(Param.class), anyInt())).thenReturn(0.5);
+        BallotListService ballotListService = mock(BallotListService.class);
+        when(ballotListService.getValidBallotsOfCycle()).thenReturn(validBallotProposals.stream()
+                .map(Ballot::new)
+                .collect(Collectors.toList()));
+        VoteResultService voteResultService = new VoteResultService(daoStateService,
+                periodService,
+                ballotListService,
+                blindVoteListService,
+                mock(IssuanceService.class),
+                mock(MissingDataRequestService.class));
+        Block block = mock(Block.class);
+        when(block.getHeight()).thenReturn(chainHeight);
+
+        voteResultService.onParseBlockComplete(block);
+
+        assertTrue(voteResultService.getVoteResultExceptions().isEmpty());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Set<EvaluatedProposal>> evaluatedProposals = ArgumentCaptor.forClass(Set.class);
+        verify(daoStateService).addEvaluatedProposalSet(evaluatedProposals.capture());
+        return evaluatedProposals.getValue();
     }
 
     @SuppressWarnings("unchecked")
@@ -918,8 +1011,11 @@ class VoteResultServiceTest {
     }
 
     private static BlindVote blindVote(SecretKey secretKey, boolean accepted) throws Exception {
-        byte[] encryptedVotes = BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdListBytes(accepted),
-                secretKey);
+        return blindVote(voteWithProposalTxIdListBytes(accepted), secretKey);
+    }
+
+    private static BlindVote blindVote(byte[] voteWithProposalTxIdListBytes, SecretKey secretKey) throws Exception {
+        byte[] encryptedVotes = BlindVoteConsensus.getEncryptedVotes(voteWithProposalTxIdListBytes, secretKey);
         byte[] encryptedMeritList = BlindVoteConsensus.getEncryptedMeritList(protobuf.MeritList.newBuilder()
                         .build()
                         .toByteArray(),
