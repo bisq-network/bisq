@@ -29,7 +29,9 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
+import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
@@ -52,21 +54,10 @@ class CoreTradesServiceConfirmPermittedTest {
 
     private CoreTradesService coreTradesService;
     private TradeManager tradeManager;
-    private Trade trade;
 
     @BeforeEach
     void setUp() {
         tradeManager = mock(TradeManager.class);
-        trade = mock(Trade.class);
-
-        when(trade.getId()).thenReturn(TRADE_ID);
-        when(trade.isDepositConfirmed()).thenReturn(true);
-        // A valid contract, so on the buyer side only the dispute state can reject the call.
-        Contract contract = mock(Contract.class);
-        when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));
-        when(trade.getContract()).thenReturn(contract);
-        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(trade));
-
         coreTradesService = new CoreTradesService(new CoreContext(),
                 mock(CoreWalletsService.class),
                 mock(BtcWalletService.class),
@@ -82,11 +73,26 @@ class CoreTradesServiceConfirmPermittedTest {
                 mock(User.class));
     }
 
+    // confirmPermitted() is not stubbed: the real rule of the trade's class decides by the dispute state.
+    private <T extends Trade> T tradeIn(Class<T> tradeClass, Trade.DisputeState disputeState) {
+        T trade = mock(tradeClass);
+        when(trade.getId()).thenReturn(TRADE_ID);
+        when(trade.isDepositConfirmed()).thenReturn(true);
+        // A valid contract, so on the buyer side only the dispute state can reject the call.
+        Contract contract = mock(Contract.class);
+        when(contract.getSellerPaymentAccountPayload()).thenReturn(mock(PaymentAccountPayload.class));
+        when(trade.getContract()).thenReturn(contract);
+        when(trade.getDisputeState()).thenReturn(disputeState);
+        when(trade.confirmPermitted()).thenCallRealMethod();
+        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(trade));
+        return trade;
+    }
+
     @Test
     void buyerIsRejectedWhileTheTradeIsUnderArbitration() {
+        Trade trade = tradeIn(BuyerAsTakerTrade.class, Trade.DisputeState.REFUND_REQUESTED);
         BuyerProtocol buyerProtocol = mock(BuyerProtocol.class);
         when(tradeManager.getTradeProtocol(trade)).thenReturn(buyerProtocol);
-        when(trade.confirmPermitted()).thenReturn(false);
 
         assertThrows(FailedPreconditionException.class,
                 () -> coreTradesService.confirmPaymentStarted(TRADE_ID, "txId", "txKey"));
@@ -97,10 +103,10 @@ class CoreTradesServiceConfirmPermittedTest {
     }
 
     @Test
-    void buyerProceedsWhenTheDisputeStatePermitsIt() {
+    void buyerProceedsDuringMediation() {
+        Trade trade = tradeIn(BuyerAsTakerTrade.class, Trade.DisputeState.MEDIATION_REQUESTED);
         BuyerProtocol buyerProtocol = mock(BuyerProtocol.class);
         when(tradeManager.getTradeProtocol(trade)).thenReturn(buyerProtocol);
-        when(trade.confirmPermitted()).thenReturn(true);
 
         coreTradesService.confirmPaymentStarted(TRADE_ID, null, null);
 
@@ -108,11 +114,11 @@ class CoreTradesServiceConfirmPermittedTest {
     }
 
     @Test
-    void sellerIsRejectedWhileTheTradeIsInADispute() {
+    void sellerIsRejectedDuringMediation() {
+        Trade trade = tradeIn(SellerAsTakerTrade.class, Trade.DisputeState.MEDIATION_REQUESTED);
         SellerProtocol sellerProtocol = mock(SellerProtocol.class);
         when(tradeManager.getTradeProtocol(trade)).thenReturn(sellerProtocol);
         when(trade.isFiatSent()).thenReturn(true);
-        when(trade.confirmPermitted()).thenReturn(false);
 
         assertThrows(FailedPreconditionException.class,
                 () -> coreTradesService.confirmPaymentReceived(TRADE_ID));
@@ -121,11 +127,11 @@ class CoreTradesServiceConfirmPermittedTest {
     }
 
     @Test
-    void sellerProceedsWhenTheDisputeStatePermitsIt() {
+    void sellerProceedsWithoutADispute() {
+        Trade trade = tradeIn(SellerAsTakerTrade.class, Trade.DisputeState.NO_DISPUTE);
         SellerProtocol sellerProtocol = mock(SellerProtocol.class);
         when(tradeManager.getTradeProtocol(trade)).thenReturn(sellerProtocol);
         when(trade.isFiatSent()).thenReturn(true);
-        when(trade.confirmPermitted()).thenReturn(true);
 
         coreTradesService.confirmPaymentReceived(TRADE_ID);
 
