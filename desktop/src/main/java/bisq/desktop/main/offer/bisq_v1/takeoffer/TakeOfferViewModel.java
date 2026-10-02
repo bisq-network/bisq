@@ -23,6 +23,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.bisq_v1.OfferViewModelUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
@@ -419,10 +420,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 updateButtonDisableState();
                 break;
             case NOT_AVAILABLE:
-                if (takeOfferRequested)
-                    offerWarning.set(Res.get("takeOffer.failed.offerNotAvailable"));
-                else
-                    offerWarning.set(Res.get("takeOffer.failed.offerTaken"));
+                offerWarning.set(OfferViewUtil.getNotAvailableWarning(offer.getAvailabilityResult(), takeOfferRequested));
                 takeOfferRequested = false;
                 break;
             case REMOVED:

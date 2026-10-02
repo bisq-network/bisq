@@ -19,6 +19,7 @@ package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.filter.FilterPolicyService;
+import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.user.Preferences;
@@ -28,6 +29,8 @@ import bisq.common.app.Version;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -36,9 +39,12 @@ import javafx.collections.SetChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 @Singleton
@@ -49,6 +55,13 @@ public class OfferFilterService {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
     private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
+    // Makers whose last answer to one of our availability requests was USER_IGNORED, by node
+    // address, with the time of that answer. A maker's ignore list is private to the maker, so
+    // this answer is the only way to know that all offers of the maker are closed to us. Entries
+    // expire, so a maker who removed us from the list is asked again; an AVAILABLE answer
+    // removes the entry at once.
+    private final Map<String, Long> makersIgnoringUs = new HashMap<>();
+    public static final long MAKER_IGNORES_US_TTL_MS = TimeUnit.HOURS.toMillis(1);
 
     @Inject
     public OfferFilterService(User user,
@@ -73,6 +86,7 @@ public class OfferFilterService {
         HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER,
         HAS_NOT_SAME_PROTOCOL_VERSION,
         IS_IGNORED,
+        IS_IGNORED_BY_MAKER,
         IS_OFFER_BANNED,
         IS_CURRENCY_BANNED,
         IS_PAYMENT_METHOD_BANNED,
@@ -111,6 +125,9 @@ public class OfferFilterService {
         if (isIgnored(offer)) {
             return Result.IS_IGNORED;
         }
+        if (isIgnoredByMaker(offer)) {
+            return Result.IS_IGNORED_BY_MAKER;
+        }
         if (isOfferBanned(offer)) {
             return Result.IS_OFFER_BANNED;
         }
@@ -148,6 +165,35 @@ public class OfferFilterService {
     public boolean isIgnored(Offer offer) {
         return preferences.getIgnoreTradersList().stream()
                 .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getFullAddress()));
+    }
+
+    public boolean isIgnoredByMaker(Offer offer) {
+        String maker = offer.getMakerNodeAddress().getFullAddress();
+        Long since = makersIgnoringUs.get(maker);
+        if (since == null)
+            return false;
+        if (now() - since > MAKER_IGNORES_US_TTL_MS) {
+            makersIgnoringUs.remove(maker);
+            return false;
+        }
+        return true;
+    }
+
+    // The maker's answer to one of our availability requests. Only USER_IGNORED closes the
+    // maker and only AVAILABLE reopens them; every other answer is about that one request.
+    public void onAvailabilityAnswer(Offer offer, @Nullable AvailabilityResult result) {
+        if (result == null)
+            return;
+        String maker = offer.getMakerNodeAddress().getFullAddress();
+        if (result == AvailabilityResult.USER_IGNORED)
+            makersIgnoringUs.put(maker, now());
+        else if (result == AvailabilityResult.AVAILABLE)
+            makersIgnoringUs.remove(maker);
+    }
+
+    @VisibleForTesting
+    protected long now() {
+        return System.currentTimeMillis();
     }
 
     public boolean isOfferBanned(Offer offer) {
