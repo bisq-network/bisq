@@ -18,11 +18,12 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.node.parser.TempTxOutput;
+import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
-import bisq.core.dao.state.model.ImmutableDaoStateModel;
-
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import java.util.Objects;
@@ -129,7 +130,7 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload, Immuta
             .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

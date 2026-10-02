@@ -17,18 +17,8 @@
 
 package bisq.common.encoding.canonical;
 
-public interface Canonical {
-    byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext);
-
-    default byte[] encodeCanonical() {
-        return encodeCanonical(CanonicalEncoder.DEFAULT, EncodingContext.DEFAULT);
-    }
-
-    default byte[] encodeCanonical(EncodingContext encodingContext) {
-        return encodeCanonical(CanonicalEncoder.DEFAULT, encodingContext);
-    }
-
-    default byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
-        return encodeCanonical(canonicalEncoder, EncodingContext.DEFAULT);
-    }
+public enum EncodingContext {
+    DEFAULT,
+    SIGNATURE_PRE_IMAGE,
+    STORAGE_HASH,
 }
