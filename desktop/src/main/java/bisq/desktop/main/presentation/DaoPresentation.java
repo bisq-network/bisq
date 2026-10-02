@@ -172,7 +172,7 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
 
         // We do not queue behind another popup, which can be an earlier resync popup. Otherwise the popups would pile
         // up while the user is away from the screen.
-        if (!PopupManager.isNoPopupDisplayed()) {
+        if (!PopupManager.isNoPopupDisplayedOrQueued()) {
             return false;
         }
 
