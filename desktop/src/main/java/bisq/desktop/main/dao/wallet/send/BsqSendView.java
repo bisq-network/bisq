@@ -314,7 +314,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void onSendBsq() {
-        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) ||
+                !GUIUtil.isDaoStateInSyncOrShowPopup()) {
             return;
         }
 
@@ -467,7 +468,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void onSendBtc() {
-        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) ||
+                !GUIUtil.isDaoStateInSyncOrShowPopup()) {
             return;
         }
 

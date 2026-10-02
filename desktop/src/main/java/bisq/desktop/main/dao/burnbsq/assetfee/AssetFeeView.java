@@ -180,6 +180,10 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
 
         payFeeButton.setOnAction((event) -> {
+            if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+                return;
+            }
+
             Coin listingFee = getListingFee();
             long days = getDays();
             // We don't allow shorter periods as it would allow an attacker to try to deactivate other coins by making a

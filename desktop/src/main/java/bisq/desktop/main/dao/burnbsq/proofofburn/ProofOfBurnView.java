@@ -190,6 +190,10 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
 
         burnButton.setOnAction((event) -> {
+            if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+                return;
+            }
+
             String preImageAsString = preImageTextField.getText();
             if (!preImageAsString.equals(preImageAsString.trim())) {
                 new Popup().warning(Res.get("dao.proofOfBurn.preImage.notTrimmedWarning"))

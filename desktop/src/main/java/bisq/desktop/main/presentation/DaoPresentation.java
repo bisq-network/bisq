@@ -6,6 +6,7 @@ import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.monitor.MonitorView;
 import bisq.desktop.main.dao.monitor.daostate.DaoStateMonitorView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.popups.PopupManager;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -16,7 +17,9 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -34,7 +37,6 @@ import javafx.collections.MapChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 @Singleton
@@ -53,8 +55,8 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
     @Getter
     private final StringProperty daoStateInfo = new SimpleStringProperty("");
     private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
-    @Nullable
-    private Popup popup;
+    // Chain height at which the user was last reminded that the DAO state needs a resync
+    private int resyncReminderHeight;
 
     @Inject
     public DaoPresentation(Preferences preferences,
@@ -119,33 +121,68 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
             return;
         }
 
-        // We might get multiple times called onDaoStateHashesChanged. To avoid multiple popups we
-        // check against null and set it back to null after a 30 sec delay once the user closed it.
-        if (popup == null &&
-                (daoStateMonitoringService.isInConflictWithSeedNode() ||
-                        daoStateMonitoringService.isDaoStateBlockChainNotConnecting())) {
-            popup = new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
-                    .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
-                    .onAction(() -> {
-                        navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
-                        resetPopupAndCheckAgain();
-                    })
-                    .onClose(this::resetPopupAndCheckAgain);
-            popup.show();
+        // We get called several times per block. While a resync is needed we remind the user once per block, so a user
+        // who closed the popup sees it again at the next block.
+        int chainHeight = daoStateService.getChainHeight();
+        if (isResyncReminderDue(chainHeight) && showResyncPopup()) {
+            resyncReminderHeight = chainHeight;
         }
     }
 
-    private void resetPopupAndCheckAgain() {
-        UserThread.runAfter(() -> {
-            popup = null;
-            onDaoStateHashesChanged();
-        }, 30);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Gate for actions which create or take an offer or publish a DAO transaction. If the DAO state needs a resync,
+     * the action must not run: the user gets the resync popup and the method returns false.
+     */
+    public boolean isDaoStateInSyncOrShowPopup() {
+        if (!isDaoStateResyncNeeded()) {
+            return true;
+        }
+
+        showResyncPopup();
+        return false;
+    }
+
+    @VisibleForTesting
+    boolean isResyncReminderDue(int chainHeight) {
+        return isDaoStateResyncNeeded() && chainHeight != resyncReminderHeight;
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isDaoStateResyncNeeded() {
+        return daoStateService.isParseBlockChainComplete() &&
+                (daoStateMonitoringService.isInConflictWithSeedNode() ||
+                        daoStateMonitoringService.isDaoStateBlockChainNotConnecting());
+    }
+
+    // Returns false if the popup could not be shown now
+    private boolean showResyncPopup() {
+        if (DevEnv.isIgnorePopupsInDevMode()) {
+            log.warn("The DAO state needs a resync. The popup is ignored in dev mode.");
+            return true;
+        }
+
+        // We do not queue behind another popup, which can be an earlier resync popup. Otherwise the popups would pile
+        // up while the user is away from the screen.
+        if (!PopupManager.isNoPopupDisplayed()) {
+            return false;
+        }
+
+        new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+                .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
+                .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class,
+                        DaoStateMonitorView.class))
+                .show();
+        return true;
+    }
 
     private void onUpdateAnyChainHeight() {
         int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();

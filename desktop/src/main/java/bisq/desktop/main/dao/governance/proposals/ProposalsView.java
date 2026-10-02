@@ -476,6 +476,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onVote() {
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         Coin stake = ParsingUtils.parseToCoin(stakeInputTextField.getText(), bsqFormatter);
         try {
             // We create a dummy tx to get the miningFee for displaying it at the confirmation popup

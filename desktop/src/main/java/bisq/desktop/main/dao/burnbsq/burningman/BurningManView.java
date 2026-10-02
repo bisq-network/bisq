@@ -908,6 +908,10 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     }
 
     private void onBurn() {
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         BurningManListItem selectedItem = contributorComboBox.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
             Coin amount = getAmountFee();

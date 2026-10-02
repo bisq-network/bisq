@@ -18,6 +18,8 @@
 package bisq.desktop.main.dao.bonding;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.presentation.DaoPresentationTestUtil;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
@@ -46,8 +48,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +71,7 @@ public class BondingViewUtilsTest {
         when(p2PService.getNumConnectedPeers()).thenReturn(new SimpleIntegerProperty(1));
         when(walletsSetup.hasSufficientPeersForBroadcast()).thenReturn(true);
         when(walletsSetup.isDownloadComplete()).thenReturn(true);
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(false));
 
         bondingViewUtils = new BondingViewUtils(
                 p2PService,
@@ -81,6 +86,7 @@ public class BondingViewUtilsTest {
     @AfterEach
     public void tearDown() {
         DevEnv.setDevMode(false);
+        GUIUtil.setDaoPresentation(null);
     }
 
     @Test
@@ -106,5 +112,28 @@ public class BondingViewUtilsTest {
                 eq(role.getHash()),
                 any(),
                 any());
+    }
+
+    @Test
+    public void lockupAndUnlockAreBlockedWhileDaoStateNeedsResync() {
+        GUIUtil.setDaoPresentation(DaoPresentationTestUtil.daoPresentation(true));
+        Role role = new Role(
+                "alice",
+                "https://bisq.network/roles/81",
+                BondedRoleType.NETLAYER_MAINTAINER);
+        RoleProposal proposal = new RoleProposal(role, new TreeMap<>());
+        Optional<RoleProposal> optionalProposal = Optional.of(proposal);
+        when(bondedRolesRepository.getAcceptedBondedRoleProposal(role)).thenReturn(optionalProposal);
+        when(bondedRolesRepository.canCreateNewLockup(role)).thenReturn(true);
+        when(daoFacade.getRequiredBond(optionalProposal)).thenReturn(20_000L);
+        @SuppressWarnings("unchecked")
+        Consumer<String> resultHandler = mock(Consumer.class);
+
+        bondingViewUtils.lockupBondForBondedRole(role, resultHandler);
+        bondingViewUtils.unLock("lockupTxId", resultHandler);
+
+        verify(daoFacade, never()).publishLockupTx(any(), anyInt(), any(), any(), any(), any());
+        verify(daoFacade, never()).publishUnlockTx(any(), any(), any());
+        verify(daoFacade, never()).getLockupTxOutput(any());
     }
 }
