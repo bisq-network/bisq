@@ -123,9 +123,12 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
 
         // We get called several times per block. While a resync is needed we remind the user once per block, so a user
         // who closed the popup sees it again at the next block.
+        // We do not queue behind another popup, which can be an earlier resync popup. Otherwise the popups would pile
+        // up while the user is away from the screen.
         int chainHeight = daoStateService.getChainHeight();
-        if (isResyncReminderDue(chainHeight) && showResyncPopup()) {
+        if (isResyncReminderDue(chainHeight) && PopupManager.isNoPopupDisplayedOrQueued()) {
             resyncReminderHeight = chainHeight;
+            showResyncPopup();
         }
     }
 
@@ -143,6 +146,8 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
             return true;
         }
 
+        // The gate also runs in the action handler of a confirmation popup which is still closing. The resync popup
+        // then waits in the queue until the confirmation popup is gone.
         showResyncPopup();
         return false;
     }
@@ -163,17 +168,10 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
                         daoStateMonitoringService.isDaoStateBlockChainNotConnecting());
     }
 
-    // Returns false if the popup could not be shown now
-    private boolean showResyncPopup() {
+    private void showResyncPopup() {
         if (DevEnv.isIgnorePopupsInDevMode()) {
             log.warn("The DAO state needs a resync. The popup is ignored in dev mode.");
-            return true;
-        }
-
-        // We do not queue behind another popup, which can be an earlier resync popup. Otherwise the popups would pile
-        // up while the user is away from the screen.
-        if (!PopupManager.isNoPopupDisplayedOrQueued()) {
-            return false;
+            return;
         }
 
         new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
@@ -181,7 +179,6 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
                 .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class,
                         DaoStateMonitorView.class))
                 .show();
-        return true;
     }
 
     private void onUpdateAnyChainHeight() {

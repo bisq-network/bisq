@@ -939,6 +939,11 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     }
 
     private void doPublishFeeTx(Transaction transaction, String preImageAsString) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         proofOfBurnService.publishTransaction(transaction, preImageAsString,
                 () -> {
                     if (!DevEnv.isIgnorePopupsInDevMode())

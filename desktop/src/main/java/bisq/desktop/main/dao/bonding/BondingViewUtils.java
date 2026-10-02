@@ -158,6 +158,11 @@ public class BondingViewUtils {
                                  LockupReason lockupReason,
                                  byte[] hash,
                                  Consumer<String> resultHandler) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
                 lockupReason,
@@ -218,6 +223,11 @@ public class BondingViewUtils {
     }
 
     private void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         daoFacade.publishUnlockTx(lockupTxId,
                 txId -> {
                     if (!DevEnv.isIgnorePopupsInDevMode())

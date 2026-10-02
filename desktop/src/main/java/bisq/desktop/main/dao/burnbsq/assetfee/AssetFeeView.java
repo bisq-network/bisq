@@ -320,6 +320,11 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     }
 
     private void doPublishFeeTx(Transaction transaction) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         assetService.publishTransaction(transaction,
                 () -> {
                     assetComboBox.getSelectionModel().clearSelection();
