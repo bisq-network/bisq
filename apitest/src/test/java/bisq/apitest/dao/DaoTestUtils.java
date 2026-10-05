@@ -25,8 +25,11 @@ import bisq.proto.grpc.OfferInfo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -425,24 +428,37 @@ public class DaoTestUtils {
         cmd.add("-rpcpassword=bsq");
         for (String a : args) cmd.add(a);
         try {
-            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            String out;
-            try (BufferedReader r = new BufferedReader(
-                    new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
-                out = r.lines().collect(Collectors.joining("\n"));
-            }
+            Process p = new ProcessBuilder(cmd).start();
+            // The command's stdout is the return value, so anything the container
+            // runtime writes to stderr must stay out of it. stderr is drained in
+            // parallel: reading it after stdout could block once its pipe fills.
+            // A stderr reader that outlives the process is given up on after the
+            // same timeout the process wait below uses.
+            CompletableFuture<String> errReader =
+                    CompletableFuture.supplyAsync(() -> readFully(p.getErrorStream()));
+            String out = readFully(p.getInputStream());
+            String err = errReader.completeOnTimeout("", 60, TimeUnit.SECONDS).join();
             if (!p.waitFor(60, TimeUnit.SECONDS)) {
                 p.destroyForcibly();
                 throw new IllegalStateException("bitcoin-cli timed out: " + String.join(" ", cmd));
             }
             if (p.exitValue() != 0) {
                 throw new IllegalStateException("bitcoin-cli failed (" + p.exitValue() + "): "
-                        + String.join(" ", cmd) + "\n" + out);
+                        + String.join(" ", cmd) + (out.isEmpty() ? "" : "\n" + out)
+                        + (err.isEmpty() ? "" : "\n" + err));
             }
             return out;
         } catch (IOException | InterruptedException ex) {
             if (ex instanceof InterruptedException) Thread.currentThread().interrupt();
             throw new IllegalStateException("bitcoin-cli invocation failed", ex);
+        }
+    }
+
+    private static String readFully(InputStream in) {
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            return r.lines().collect(Collectors.joining("\n"));
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 }
