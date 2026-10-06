@@ -47,6 +47,8 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
@@ -62,6 +64,14 @@ public class DisputeProtocol extends TradeProtocol {
         MEDIATION_RESULT_REJECTED,
         ARBITRATION_REQUESTED
     }
+
+    // Phases in which a trader accepts the MediatedPayoutTxPublishedMessage.
+    @VisibleForTesting
+    public static final Trade.Phase[] MEDIATED_PAYOUT_TX_PUBLISHED_MSG_PHASES = {
+            Trade.Phase.DEPOSIT_CONFIRMED,
+            Trade.Phase.FIAT_SENT,
+            Trade.Phase.FIAT_RECEIVED
+    };
 
     public DisputeProtocol(Trade trade) {
         super(trade);
@@ -174,9 +184,7 @@ public class DisputeProtocol extends TradeProtocol {
     }
 
     protected void handle(MediatedPayoutTxPublishedMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
-                Trade.Phase.FIAT_SENT,
-                Trade.Phase.FIAT_RECEIVED)
+        expect(anyPhase(MEDIATED_PAYOUT_TX_PUBLISHED_MSG_PHASES)
                 .with(message)
                 .from(peer))
                 .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
