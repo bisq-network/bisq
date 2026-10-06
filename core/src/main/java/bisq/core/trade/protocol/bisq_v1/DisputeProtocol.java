@@ -65,12 +65,14 @@ public class DisputeProtocol extends TradeProtocol {
         ARBITRATION_REQUESTED
     }
 
-    // Phases in which a trader accepts the MediatedPayoutTxPublishedMessage.
+    // Phases in which a trader accepts the MediatedPayoutTxPublishedMessage. Both traders can publish the
+    // mediated payout, so the message can arrive after our own payout was published. We keep our payout then.
     @VisibleForTesting
     public static final Trade.Phase[] MEDIATED_PAYOUT_TX_PUBLISHED_MSG_PHASES = {
             Trade.Phase.DEPOSIT_CONFIRMED,
             Trade.Phase.FIAT_SENT,
-            Trade.Phase.FIAT_RECEIVED
+            Trade.Phase.FIAT_RECEIVED,
+            Trade.Phase.PAYOUT_PUBLISHED
     };
 
     public DisputeProtocol(Trade trade) {
