@@ -104,6 +104,8 @@ public class DisputeProtocol extends TradeProtocol {
                 .preCondition(processModel.getMediatedPayoutTxSignature() != null))
                 .setup(tasks(SetupMediatedPayoutTxListener.class))
                 .executeTasks();
+
+        maybeFinalizeMediatedPayout();
     }
 
 
@@ -205,7 +207,13 @@ public class DisputeProtocol extends TradeProtocol {
                 Trade.Phase.FIAT_RECEIVED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class))
+                .setup(tasks(ProcessMediatedPayoutSignatureMessage.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    handleTaskRunnerSuccess(message);
+                                    maybeFinalizeMediatedPayout();
+                                },
+                                errorMessage -> handleTaskRunnerFault(message, errorMessage))))
                 .executeTasks();
     }
 
@@ -260,6 +268,40 @@ public class DisputeProtocol extends TradeProtocol {
         }
 
         handle(message, peer);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mediation: both traders have signed
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // A trader who has signed the mediated payout and has the peer's signature publishes it. The peer's
+    // signature can arrive after our own acceptance, and a trade can be in that state at startup. The
+    // check runs after the current event is handled, at startup after the startup tasks of the trade.
+    private void maybeFinalizeMediatedPayout() {
+        UserThread.execute(() -> {
+            if (!isMediatedPayoutReadyToFinalize(trade)) {
+                return;
+            }
+
+            log.info("We have both signatures of the mediated payout and publish it. tradeId={}", trade.getId());
+            onFinalizeMediationResultPayout(() -> {
+                        if (trade.getPayoutTx() != null) {
+                            processModel.getTradeManager().closeDisputedTrade(trade.getId(),
+                                    Trade.DisputeState.MEDIATION_CLOSED);
+                        }
+                    },
+                    errorMessage -> log.warn("Publishing the mediated payout failed. tradeId={}, errorMessage={}",
+                            trade.getId(), errorMessage));
+        });
+    }
+
+    @VisibleForTesting
+    public static boolean isMediatedPayoutReadyToFinalize(Trade trade) {
+        ProcessModel processModel = trade.getProcessModel();
+        return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED &&
+                trade.getPayoutTx() == null &&
+                processModel.getMediatedPayoutTxSignature() != null &&
+                processModel.getTradePeer().getMediatedPayoutTxSignature() != null;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
