@@ -10,7 +10,7 @@ mediation result is proposed (dispute state MEDIATION_CLOSED) and the payout is 
 
 - Accepting the mediation result signs the mediated payout and sends the signature to the peer.
   The signature is the acceptance: the peer can publish the payout with it, so it cannot be
-  withdrawn.
+  withdrawn. The desktop therefore disables rejecting the result once the trader has signed.
 - A node that has signed the mediated payout and has the peer's signature publishes it, whichever
   of the two came last. The accept button publishes it when the peer's signature is already there,
   and the processing of the peer's signature publishes it when the trader has already accepted. A

@@ -214,6 +214,17 @@ class TradeStepViewMediationResultTest {
         verifyNoDecision();
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void rejectIsDisabledOnlyAfterOwnAcceptance(boolean selfAccepted) {
+        byte[] ownSignature = selfAccepted ? new byte[]{1} : null;
+        when(fixture.trade.getProcessModel().getMediatedPayoutTxSignature()).thenReturn(ownSignature);
+
+        Popup popup = openResult();
+
+        verify(popup).setSecondaryButtonDisabledState(selfAccepted);
+    }
+
     private Popup failStaleAction() {
         Popup oldPopup = openResult();
         fixture.result.set(result(2_000));
