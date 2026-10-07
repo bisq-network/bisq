@@ -222,10 +222,23 @@ public class DisputeProtocol extends TradeProtocol {
                 trade.disputeStateProperty().removeListener(mediationResultListener);
                 mediationResultListener = null;
                 // We handle the message after the mediation result has been processed completely
-                UserThread.execute(() -> handle(message, peer));
+                UserThread.execute(() -> handleKeptMessage(message, peer));
             }
         };
         trade.disputeStateProperty().addListener(mediationResultListener);
+    }
+
+    // A newer signature can be handled before the kept one. Once a signature of the peer has passed the check and is
+    // stored, the kept message is not needed anymore.
+    private void handleKeptMessage(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        if (processModel.getTradePeer().getMediatedPayoutTxSignature() != null) {
+            log.info("We drop the kept MediatedPayoutTxSignatureMessage as we have stored a signature of the peer " +
+                    "already. tradeId={}", trade.getId());
+            removeMailboxMessageAfterProcessing(message);
+            return;
+        }
+
+        handle(message, peer);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

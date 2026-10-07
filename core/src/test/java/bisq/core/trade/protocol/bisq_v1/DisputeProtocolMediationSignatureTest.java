@@ -27,6 +27,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.mediation.ProcessMediatedPayoutSig
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.taskrunner.Task;
 
 import javafx.beans.property.SimpleObjectProperty;
@@ -34,6 +35,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -52,6 +54,11 @@ import static org.mockito.Mockito.when;
 class DisputeProtocolMediationSignatureTest {
     private static final String TRADE_ID = "trade-id";
     private static final NodeAddress PEER = new NodeAddress("peer.onion", 9999);
+
+    @AfterEach
+    void resetUserThread() {
+        UserThread.resetForTests();
+    }
 
     @ParameterizedTest
     @EnumSource(value = Trade.DisputeState.class,
@@ -108,17 +115,35 @@ class DisputeProtocolMediationSignatureTest {
         assertEquals(List.of(second), setup.protocol.handledMessages);
     }
 
+    @Test
+    void keptSignatureIsDroppedOnceASignatureOfThePeerIsStored() {
+        List<Runnable> queuedTasks = new ArrayList<>();
+        UserThread.setExecutor(queuedTasks::add);
+        TestSetup setup = new TestSetup(Trade.DisputeState.MEDIATION_STARTED_BY_PEER);
+        MediatedPayoutTxSignatureMessage kept = signatureMessage("kept");
+
+        setup.protocol.onMailboxMessage(kept, PEER);
+        setup.disputeState.set(Trade.DisputeState.MEDIATION_CLOSED);
+        // A newer signature is handled and stored before the queued handling of the kept one runs
+        setup.processModel.getTradePeer().setMediatedPayoutTxSignature(new byte[]{2});
+        queuedTasks.forEach(Runnable::run);
+
+        assertTrue(setup.protocol.handledMessages.isEmpty());
+        assertEquals(List.of(kept), setup.protocol.removedMailboxMessages);
+    }
+
     private static MediatedPayoutTxSignatureMessage signatureMessage(String uid) {
         return new MediatedPayoutTxSignatureMessage(new byte[]{1}, TRADE_ID, PEER, uid);
     }
 
     private static final class TestSetup {
         private final SimpleObjectProperty<Trade.DisputeState> disputeState;
+        private final ProcessModel processModel;
         private final TestDisputeProtocol protocol;
 
         private TestSetup(Trade.DisputeState initialDisputeState) {
             disputeState = new SimpleObjectProperty<>(initialDisputeState);
-            ProcessModel processModel = new ProcessModel(TRADE_ID, "account-id", null);
+            processModel = new ProcessModel(TRADE_ID, "account-id", null);
             Trade trade = mock(Trade.class);
             when(trade.getProcessModel()).thenReturn(processModel);
             when(trade.getTradeProtocolModel()).thenReturn(processModel);
@@ -129,9 +154,11 @@ class DisputeProtocolMediationSignatureTest {
         }
     }
 
-    // Records which messages the protocol handles and with which tasks, without running the tasks.
+    // Records which messages the protocol handles and with which tasks, without running the tasks, and which
+    // mailbox messages it removes.
     private static final class TestDisputeProtocol extends DisputeProtocol {
         private final List<TradeMessage> handledMessages = new ArrayList<>();
+        private final List<TradeMessage> removedMailboxMessages = new ArrayList<>();
         private Class<? extends Task<TradeModel>>[] selectedTasks;
 
         private TestDisputeProtocol(Trade trade) {
@@ -153,6 +180,11 @@ class DisputeProtocolMediationSignatureTest {
                     return this;
                 }
             };
+        }
+
+        @Override
+        public void removeMailboxMessageAfterProcessing(TradeMessage tradeMessage) {
+            removedMailboxMessages.add(tradeMessage);
         }
     }
 }
