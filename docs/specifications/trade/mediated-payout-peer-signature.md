@@ -15,8 +15,10 @@ copy of the mediation result.
   reject it. It keeps the message and checks it once the result is applied (dispute state
   MEDIATION_CLOSED). Before the result means no dispute yet, or a mediation without result
   (MEDIATION_REQUESTED or MEDIATION_STARTED_BY_PEER).
-- The node keeps one such message per trade. A newer one replaces it.
-- The node acknowledges the message after the check, with its outcome.
+- The node keeps one such message per trade. A newer one replaces it. If a signature of the peer
+  passes the check before the kept message is handled, the kept message is dropped.
+- The node acknowledges the message after the check, with its outcome. A dropped message is not
+  acknowledged.
 
 The peer signs only after it received the mediation result, but this trader's copy can arrive
 later. The mediator sends the result to each trader separately, and after a restart the trade
@@ -32,5 +34,6 @@ arrives before the result.
 ## Not covered
 
 A kept message is not persisted. One from the mailbox stays in the mailbox until its check
-succeeds, so it is handled again after a restart. One received directly is lost if the node stops
-before the result arrives; the peer then needs this trader's signature to publish the payout.
+succeeds or it is dropped, so it is handled again after a restart. One received directly is lost
+if the node stops before the result arrives; the peer then needs this trader's signature to
+publish the payout.
