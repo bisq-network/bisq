@@ -3159,7 +3159,6 @@ tasks.register('verifyGithubReleaseReadiness') {
 
         def expectedAssets = [
                 '387C8307.asc',
-                '4A133008.asc',
                 'E222AA02.asc',
                 'signingkey.asc',
                 "Bisq-x86_64-${releaseVersion}.dmg".toString(),
@@ -3275,7 +3274,7 @@ tasks.register('verifyGithubReleaseReadiness') {
             }
         }
 
-        def keyIds = ['387C8307', '4A133008', 'E222AA02']
+        def keyIds = ['387C8307', 'E222AA02']
         def signingKeyFile = new File(gradleProjectDirectory, 'desktop/package/signingkey.asc')
         def activeSigningKeyId = ''
         if (!signingKeyFile.file) {
