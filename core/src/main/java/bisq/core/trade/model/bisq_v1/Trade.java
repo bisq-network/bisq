@@ -963,12 +963,8 @@ public abstract class Trade extends TradeModel {
 
         // Legacy arbitration is not handled anymore as not used anymore.
 
-        // In mediation case we check for the mediationResultState. As there are multiple sub-states we use ordinal.
-        if (disputeState == DisputeState.MEDIATION_CLOSED) {
-            if (mediationResultState != null &&
-                    mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal()) {
-                return false;
-            }
+        if (isMediatedPayoutPublished()) {
+            return false;
         }
 
         // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
@@ -992,6 +988,13 @@ public abstract class Trade extends TradeModel {
 
     public boolean isPayoutPublished() {
         return getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+    }
+
+    public boolean isMediatedPayoutPublished() {
+        // In mediation case we check for the mediationResultState. As there are multiple sub-states we use ordinal.
+        return disputeState == DisputeState.MEDIATION_CLOSED &&
+                mediationResultState != null &&
+                mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal();
     }
 
     public boolean isWithdrawn() {
