@@ -159,7 +159,7 @@ Build output expected:
 Build output expected:
 
 1. `E222AA02.asc` Sig key of Alejandro García
-2. `4A133008.asc` Sig key of Gabriel Bernard
+2. `387C8307.asc` Sig key of Henrik Jannsen
 3. `signingkey.asc` Fingerprint of key that was used for these builds
 4. `Bisq-x86_64-${NEW_VERSION}.dmg` macOS Intel installer
 5. `Bisq-x86_64-${NEW_VERSION}.dmg.asc` Signature for macOS Intel installer
