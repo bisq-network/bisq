@@ -557,6 +557,110 @@ class PayoutTxValidationTest {
                 PARAMS));
     }
 
+    /* --------------------------------------------------------------------- */
+    // Payout tx seen in the network
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void checkPayoutTxSeenInNetworkAcceptsConfirmedPayoutTxWithoutWitness() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        // The transactions of a filtered block arrive without witness data.
+        fixture.payoutTx.getInput(0).setWitness(TransactionWitness.EMPTY);
+
+        assertSame(fixture.payoutTx, PayoutTxValidation.checkPayoutTxSeenInNetwork(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS,
+                true));
+    }
+
+    @Test
+    void checkPayoutTxSeenInNetworkAcceptsConfirmedPayoutTxWithInvalidWitness() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        // The witness is not part of the tx id, so a peer could have relayed this tx with another witness.
+        TransactionSignature invalidSellerSignature = createWitnessSignature(fixture.payoutTx,
+                fixture.depositTx,
+                new ECKey(),
+                Transaction.SigHash.ALL);
+        TransactionSignature buyerSignature = createWitnessSignature(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_MULTI_SIG_KEY,
+                Transaction.SigHash.ALL);
+        setP2wshWitness(fixture.payoutTx, invalidSellerSignature, buyerSignature, REDEEM_SCRIPT);
+
+        assertSame(fixture.payoutTx, PayoutTxValidation.checkPayoutTxSeenInNetwork(fixture.payoutTx,
+                fixture.depositTx,
+                BUYER_PAYOUT_AMOUNT,
+                SELLER_PAYOUT_AMOUNT,
+                BUYER_PAYOUT_ADDRESS,
+                SELLER_PAYOUT_ADDRESS,
+                BUYER_MULTI_SIG_KEY.getPubKey(),
+                SELLER_MULTI_SIG_KEY.getPubKey(),
+                PARAMS,
+                true));
+    }
+
+    @Test
+    void checkPayoutTxSeenInNetworkRejectsUnconfirmedPayoutTxWithoutWitness() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        fixture.payoutTx.getInput(0).setWitness(TransactionWitness.EMPTY);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> PayoutTxValidation.checkPayoutTxSeenInNetwork(fixture.payoutTx,
+                        fixture.depositTx,
+                        BUYER_PAYOUT_AMOUNT,
+                        SELLER_PAYOUT_AMOUNT,
+                        BUYER_PAYOUT_ADDRESS,
+                        SELLER_PAYOUT_ADDRESS,
+                        BUYER_MULTI_SIG_KEY.getPubKey(),
+                        SELLER_MULTI_SIG_KEY.getPubKey(),
+                        PARAMS,
+                        false));
+    }
+
+    @Test
+    void checkPayoutTxSeenInNetworkRejectsConfirmedPayoutTxToOtherBuyerPayoutAddress() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        fixture.payoutTx.getInput(0).setWitness(TransactionWitness.EMPTY);
+        String otherBuyerPayoutAddress = SegwitAddress.fromKey(PARAMS, new ECKey()).toString();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> PayoutTxValidation.checkPayoutTxSeenInNetwork(fixture.payoutTx,
+                        fixture.depositTx,
+                        BUYER_PAYOUT_AMOUNT,
+                        SELLER_PAYOUT_AMOUNT,
+                        otherBuyerPayoutAddress,
+                        SELLER_PAYOUT_ADDRESS,
+                        BUYER_MULTI_SIG_KEY.getPubKey(),
+                        SELLER_MULTI_SIG_KEY.getPubKey(),
+                        PARAMS,
+                        true));
+    }
+
+    @Test
+    void checkPayoutTxSeenInNetworkRejectsConfirmedPayoutTxWhichDoesNotSpendDepositOutput() {
+        PayoutFixture fixture = createPayoutFixture(BUYER_PAYOUT_AMOUNT, SELLER_PAYOUT_AMOUNT);
+        fixture.payoutTx.getInput(0).setWitness(TransactionWitness.EMPTY);
+        Transaction otherDepositTx = createDepositTx(OTHER_FUNDING_TX_ID);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> PayoutTxValidation.checkPayoutTxSeenInNetwork(fixture.payoutTx,
+                        otherDepositTx,
+                        BUYER_PAYOUT_AMOUNT,
+                        SELLER_PAYOUT_AMOUNT,
+                        BUYER_PAYOUT_ADDRESS,
+                        SELLER_PAYOUT_ADDRESS,
+                        BUYER_MULTI_SIG_KEY.getPubKey(),
+                        SELLER_MULTI_SIG_KEY.getPubKey(),
+                        PARAMS,
+                        true));
+    }
+
     private static PayoutFixture createPayoutFixture(Coin buyerPayoutAmount,
                                                      Coin sellerPayoutAmount) {
         return createPayoutFixture(buyerPayoutAmount,
