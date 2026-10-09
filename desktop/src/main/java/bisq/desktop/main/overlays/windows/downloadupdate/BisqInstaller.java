@@ -57,7 +57,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqInstaller {
-    private static final String FINGER_PRINT_GABRIEL_BERNARD = "4A133008";
     private static final String FINGER_PRINT_ALEJANDRO_GARCIA = "E222AA02";
     private static final String FINGER_PRINT_HENRIK_JANNSEN = "387C8307";
     private static final String PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/";
@@ -286,9 +285,6 @@ public class BisqInstaller {
 
         list.add(getKeyFileDescriptor(FINGER_PRINT_ALEJANDRO_GARCIA));
         list.add(getLocalKeyFileDescriptor(FINGER_PRINT_ALEJANDRO_GARCIA));
-
-        list.add(getKeyFileDescriptor(FINGER_PRINT_GABRIEL_BERNARD));
-        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_GABRIEL_BERNARD));
 
         list.add(getKeyFileDescriptor(FINGER_PRINT_HENRIK_JANNSEN));
         list.add(getLocalKeyFileDescriptor(FINGER_PRINT_HENRIK_JANNSEN));
