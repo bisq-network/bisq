@@ -102,7 +102,8 @@ public abstract class SellerTrade extends Trade {
                 return false;
 
             case MEDIATION_CLOSED:
-                return !mediationResultAppliedPenaltyToSeller();
+                // The seller can complete the trade until the mediated payout is published
+                return !mediationResultAppliedPenaltyToSeller() && !isMediatedPayoutPublished();
 
             case REFUND_REQUESTED:
             case REFUND_REQUEST_STARTED_BY_PEER:
