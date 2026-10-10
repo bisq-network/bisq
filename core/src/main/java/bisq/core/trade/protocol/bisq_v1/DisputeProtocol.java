@@ -58,6 +58,7 @@ public class DisputeProtocol extends TradeProtocol {
     protected final ProcessModel processModel;
 
     enum DisputeEvent implements FluentProtocol.Event {
+        STARTUP,
         MEDIATION_RESULT_ACCEPTED,
         MEDIATION_RESULT_REJECTED,
         ARBITRATION_REQUESTED
@@ -73,6 +74,16 @@ public class DisputeProtocol extends TradeProtocol {
     protected void onInitialized() {
         super.onInitialized();
         processModel.applyPaymentAccount(trade);
+
+        // A trader who has accepted the mediation result also detects the peer's payout in the wallet, as the
+        // MediatedPayoutTxPublishedMessage can be lost. The listener is set up at the acceptance and again at startup.
+        given(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(DisputeEvent.STARTUP)
+                .preCondition(processModel.getMediatedPayoutTxSignature() != null))
+                .setup(tasks(SetupMediatedPayoutTxListener.class))
+                .executeTasks();
     }
 
 
