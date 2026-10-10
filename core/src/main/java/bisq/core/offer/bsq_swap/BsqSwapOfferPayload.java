@@ -32,6 +32,7 @@ import bisq.common.crypto.ProofOfWork;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
@@ -204,7 +205,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                             .int32(12, offerPayload -> offerPayload.protocolVersion));
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 
