@@ -44,10 +44,15 @@ import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SignMediatedPayoutTx;
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.UserThread;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import javafx.beans.value.ChangeListener;
+
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.core.trade.validation.TradeValidation.checkTradeId;
 
@@ -56,6 +61,9 @@ public class DisputeProtocol extends TradeProtocol {
 
     protected Trade trade;
     protected final ProcessModel processModel;
+    // Set while a peer's signature of the mediated payout waits for our mediation result
+    @Nullable
+    private ChangeListener<Trade.DisputeState> mediationResultListener;
 
     enum DisputeEvent implements FluentProtocol.Event {
         MEDIATION_RESULT_ACCEPTED,
@@ -164,6 +172,11 @@ public class DisputeProtocol extends TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        if (isBeforeMediationResult()) {
+            handleOnceMediationResultIsApplied(message, peer);
+            return;
+        }
+
         expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
                 Trade.Phase.FIAT_SENT,
                 Trade.Phase.FIAT_RECEIVED)
@@ -181,6 +194,51 @@ public class DisputeProtocol extends TradeProtocol {
                 .from(peer))
                 .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
                 .executeTasks();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mediation: peer's signature before our mediation result
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // No dispute yet, or a mediation without result: the peer's signature cannot be checked yet.
+    private boolean isBeforeMediationResult() {
+        Trade.DisputeState disputeState = trade.getDisputeState();
+        return disputeState == Trade.DisputeState.NO_DISPUTE ||
+                disputeState == Trade.DisputeState.MEDIATION_REQUESTED ||
+                disputeState == Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+    }
+
+    // Our copy of the mediation result can arrive after the peer's signature: the mediator sends it to each trader
+    // separately, and at startup our mailbox messages can be handled first. As the signature is checked against
+    // the result, we keep the message until the result is applied. A newer message replaces it.
+    private void handleOnceMediationResultIsApplied(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        log.info("We received the MediatedPayoutTxSignatureMessage before the mediation result and handle it " +
+                "once the result is applied. tradeId={}", trade.getId());
+        if (mediationResultListener != null) {
+            trade.disputeStateProperty().removeListener(mediationResultListener);
+        }
+        mediationResultListener = (observable, oldValue, newValue) -> {
+            if (newValue == Trade.DisputeState.MEDIATION_CLOSED) {
+                trade.disputeStateProperty().removeListener(mediationResultListener);
+                mediationResultListener = null;
+                // We handle the message after the mediation result has been processed completely
+                UserThread.execute(() -> handleKeptMessage(message, peer));
+            }
+        };
+        trade.disputeStateProperty().addListener(mediationResultListener);
+    }
+
+    // A newer signature can be handled before the kept one. Once a signature of the peer has passed the check and is
+    // stored, the kept message is not needed anymore.
+    private void handleKeptMessage(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        if (processModel.getTradePeer().getMediatedPayoutTxSignature() != null) {
+            log.info("We drop the kept MediatedPayoutTxSignatureMessage as we have stored a signature of the peer " +
+                    "already. tradeId={}", trade.getId());
+            removeMailboxMessageAfterProcessing(message);
+            return;
+        }
+
+        handle(message, peer);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
