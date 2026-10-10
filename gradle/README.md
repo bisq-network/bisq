@@ -324,7 +324,8 @@ Do these steps in the same commit as the version change:
    entries to add and to remove.
 3. Edit `dependency-checksum-fallback-allowlist.tsv`. When only the version changed, replace
    the old version with the new one in every affected line, for example
-   `sed -i 's/<old-commit>/<new-commit>/g' gradle/dependency-checksum-fallback-allowlist.tsv`,
+   `sed -i.bak 's/<old-commit>/<new-commit>/g' gradle/dependency-checksum-fallback-allowlist.tsv && rm gradle/dependency-checksum-fallback-allowlist.tsv.bak`
+   (the `.bak` suffix makes the command work with both GNU sed and the BSD sed of macOS),
    and keep the existing rationale. For a new artifact, write a rationale that says why a
    checksum is acceptable for it. Keep the file sorted, with tabs between the three columns.
 4. Run `./gradlew dependencySignatureReport`. Checksum-only artifacts without an allowlist
