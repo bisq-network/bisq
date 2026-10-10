@@ -25,6 +25,7 @@ import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
@@ -145,6 +146,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final OpenOfferManager openOfferManager;
+    private final OfferFilterService offerFilterService;
     private final ClosedTradableManager closedTradableManager;
     private final BsqSwapTradeManager bsqSwapTradeManager;
     private final FailedTradesManager failedTradesManager;
@@ -196,6 +198,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         BtcWalletService btcWalletService,
                         BsqWalletService bsqWalletService,
                         OpenOfferManager openOfferManager,
+                        OfferFilterService offerFilterService,
                         ClosedTradableManager closedTradableManager,
                         BsqSwapTradeManager bsqSwapTradeManager,
                         FailedTradesManager failedTradesManager,
@@ -217,6 +220,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.openOfferManager = openOfferManager;
+        this.offerFilterService = offerFilterService;
         this.closedTradableManager = closedTradableManager;
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.failedTradesManager = failedTradesManager;
@@ -550,7 +554,25 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return;
         }
 
-        offer.checkOfferAvailability(getOfferAvailabilityModel(offer, isTakerApiUser), resultHandler, errorMessageHandler);
+        checkAvailability(offer, getOfferAvailabilityModel(offer, isTakerApiUser), resultHandler, errorMessageHandler);
+    }
+
+    // Every take path asks through here, so the maker's answer is recorded once for all of
+    // them: USER_IGNORED closes the maker's other offers to us as well, AVAILABLE reopens
+    // them. The answer is on the offer when either handler runs.
+    private void checkAvailability(Offer offer,
+                                   OfferAvailabilityModel model,
+                                   ResultHandler resultHandler,
+                                   ErrorMessageHandler errorMessageHandler) {
+        offer.checkOfferAvailability(model,
+                () -> {
+                    offerFilterService.onAvailabilityAnswer(offer, offer.getAvailabilityResult());
+                    resultHandler.handleResult();
+                },
+                errorMessage -> {
+                    offerFilterService.onAvailabilityAnswer(offer, offer.getAvailabilityResult());
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                });
     }
 
     // First we check if offer is still available then we create the trade with the protocol
@@ -570,7 +592,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
         OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isTakerApiUser);
-        offer.checkOfferAvailability(model,
+        checkAvailability(offer, model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
                         Trade trade;
@@ -633,7 +655,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
         OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isTakerApiUser);
-        offer.checkOfferAvailability(model,
+        checkAvailability(offer, model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
                         BsqSwapTrade bsqSwapTrade;
