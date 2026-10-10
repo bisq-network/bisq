@@ -20,6 +20,7 @@ package bisq.core.app;
 import bisq.core.api.CoreContext;
 import bisq.core.btc.exceptions.InvalidHostException;
 import bisq.core.btc.exceptions.RejectedTxException;
+import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
@@ -39,6 +40,8 @@ import org.bitcoinj.store.ChainFileLockedException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -70,6 +73,7 @@ public class WalletAppSetup {
     private final FeeService feeService;
     private final Config config;
     private final Preferences preferences;
+    private final LocalBitcoinNode localBitcoinNode;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
@@ -93,13 +97,15 @@ public class WalletAppSetup {
                           WalletsSetup walletsSetup,
                           FeeService feeService,
                           Config config,
-                          Preferences preferences) {
+                          Preferences preferences,
+                          LocalBitcoinNode localBitcoinNode) {
         this.coreContext = coreContext;
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.feeService = feeService;
         this.config = config;
         this.preferences = preferences;
+        this.localBitcoinNode = localBitcoinNode;
         this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
     }
 
@@ -276,9 +282,10 @@ public class WalletAppSetup {
         });
     }
 
-    private String getBtcNetworkAsString() {
+    @VisibleForTesting
+    String getBtcNetworkAsString() {
         String postFix;
-        if (config.ignoreLocalBtcNode)
+        if (localBitcoinNode.shouldBeUsed())
             postFix = " " + Res.get("mainView.footer.localhostBitcoinNode");
         else if (preferences.getUseTorForBitcoinJ())
             postFix = " " + Res.get("mainView.footer.usingTor");
