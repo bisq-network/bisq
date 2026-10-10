@@ -644,9 +644,11 @@ public abstract class TradeStepView extends AnchorPane {
                 .headLine(headLine)
                 .instruction(message)
                 .actionButtonText(actionButtonText);
+        // Rejecting is disabled once we accepted: the peer has our signature, so it could not stop the payout
         popup.onAction(() -> onMediationResultAction(popup, disputeResult, this::acceptProposal))
                 .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.reject"))
                 .onSecondaryAction(() -> onMediationResultAction(popup, disputeResult, this::rejectProposal))
+                .setSecondaryButtonDisabledState(hasSelfAccepted())
                 .tertiaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
                 .onTertiaryAction(this::startArbitration)
                 .setTertiaryButtonDisabledState(remaining > 0)
