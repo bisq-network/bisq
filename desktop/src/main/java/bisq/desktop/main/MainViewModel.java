@@ -240,6 +240,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         GUIUtil.setFeeService(feeService);
         GUIUtil.setPreferences(preferences);
+        GUIUtil.setDaoPresentation(daoPresentation);
 
         setupHandlers();
         bisqSetup.addBisqSetupListener(this);

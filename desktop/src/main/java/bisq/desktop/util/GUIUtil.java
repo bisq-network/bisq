@@ -29,6 +29,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.presentation.DaoPresentation;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -169,6 +170,7 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBoxComboBox;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class GUIUtil {
@@ -191,8 +193,15 @@ public class GUIUtil {
     @Setter
     private static Preferences preferences;
 
+    // Set at startup by MainViewModel, like feeService and preferences
+    private static DaoPresentation daoPresentation;
+
     public static void setFeeService(FeeService feeService) {
         GUIUtil.feeService = feeService;
+    }
+
+    public static void setDaoPresentation(DaoPresentation daoPresentation) {
+        GUIUtil.daoPresentation = daoPresentation;
     }
 
     public static String getUserLanguage() {
@@ -979,9 +988,18 @@ public class GUIUtil {
         return true;
     }
 
+    // Gate for actions which create or take an offer or publish a DAO transaction
+    public static boolean isDaoStateInSyncOrShowPopup() {
+        return checkNotNull(daoPresentation, "daoPresentation must be set").isDaoStateInSyncOrShowPopup();
+    }
+
     public static boolean canCreateOrTakeOfferOrShowPopup(User user,
                                                           Navigation navigation,
                                                           @Nullable TradeCurrency currency) {
+        if (!isDaoStateInSyncOrShowPopup()) {
+            return false;
+        }
+
         if (currency != null && currency.getCode().equals("BSQ")) {
             return true;
         }

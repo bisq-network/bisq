@@ -314,7 +314,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void onSendBsq() {
-        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) ||
+                !GUIUtil.isDaoStateInSyncOrShowPopup()) {
             return;
         }
 
@@ -467,7 +468,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void onSendBtc() {
-        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (!GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) ||
+                !GUIUtil.isDaoStateInSyncOrShowPopup()) {
             return;
         }
 
@@ -569,6 +571,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         amountFormatter.formatCoinWithCode(receiverAmount)))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
+                    // Checked again, as the DAO state can need a resync since the action started
+                    if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+                        return;
+                    }
+
                     doWithdraw(txWithBtcFee, txType, new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
@@ -603,6 +610,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     private void sendFunds(Transaction txWithBtcFee, TxType txType, TxBroadcaster.Callback callback) {
+        // The wallet password window can be open a while
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         walletsManager.publishAndCommitBsqTx(txWithBtcFee, txType, callback);
     }
 }
