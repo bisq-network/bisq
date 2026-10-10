@@ -92,6 +92,8 @@ public class PriceFeedService {
     private Timer retryWithNewProviderTime;
     @Nullable
     private PriceRequest priceRequest;
+    // Callbacks queued on the user thread before shutDown can still call request or retryWithNewProvider.
+    private volatile boolean shutDownRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +120,7 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
+        shutDownRequested = true;
         if (requestTimer != null) {
             requestTimer.stop();
             requestTimer = null;
@@ -139,8 +142,8 @@ public class PriceFeedService {
         }
     }
 
-    public void initialRequestPriceFeed() {
-        request(false);
+    public void startRequestingPrices() {
+        request(true);
     }
 
     public boolean hasPrices() {
@@ -159,6 +162,9 @@ public class PriceFeedService {
     }
 
     private void request(boolean repeatRequests) {
+        if (shutDownRequested)
+            return;
+
         if (requestTs == 0)
             log.debug("request from provider {}",
                     priceFeedNodeAddressProvider.getBaseUrl());
@@ -235,6 +241,9 @@ public class PriceFeedService {
     }
 
     private void retryWithNewProvider() {
+        if (shutDownRequested)
+            return;
+
         // We increase retry delay each time until we reach PERIOD_SEC to not exceed requests.
 
         if (retryWithNewProviderTime != null) {

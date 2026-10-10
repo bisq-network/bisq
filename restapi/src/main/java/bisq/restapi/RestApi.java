@@ -129,13 +129,16 @@ public class RestApi extends ExecutableForAppWithP2p {
 
         accountAgeWitnessService.onAllServicesInitialized();
         priceFeedService.setCurrencyCodeOnInit();
-        priceFeedService.initialRequestPriceFeed();
+        priceFeedService.startRequestingPrices();
     }
 
     @Override
     protected void shutDownAdditionalServices() {
         if (stopServerHandler != null) {
             stopServerHandler.run();
+        }
+        if (priceFeedService != null) {
+            priceFeedService.shutDown();
         }
     }
 
