@@ -28,6 +28,8 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -50,9 +52,13 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
             OfferAvailabilityResponse offerAvailabilityResponse = model.getMessage();
 
-            if (offerAvailabilityResponse.getAvailabilityResult() != AvailabilityResult.AVAILABLE) {
+            // Null when the maker sent a value this version does not know.
+            AvailabilityResult availabilityResult = Optional.ofNullable(offerAvailabilityResponse.getAvailabilityResult())
+                    .orElse(AvailabilityResult.UNKNOWN_FAILURE);
+            offer.setAvailabilityResult(availabilityResult);
+            if (availabilityResult != AvailabilityResult.AVAILABLE) {
                 offer.setState(Offer.State.NOT_AVAILABLE);
-                failed(offerAvailabilityResponse.getAvailabilityResult().getDescription());
+                failed(availabilityResult.getDescription());
                 return;
             }
 
