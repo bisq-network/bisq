@@ -147,4 +147,51 @@ class SellerTradeConfirmPermittedTest {
 
         assertEquals(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT, trade.getTradeState());
     }
+
+    private void signMediatedPayout(boolean bySeller, boolean byBuyer) {
+        if (bySeller) {
+            trade.getProcessModel().setMediatedPayoutTxSignature(new byte[]{1});
+        }
+        if (byBuyer) {
+            trade.getProcessModel().getTradePeer().setMediatedPayoutTxSignature(new byte[]{2});
+        }
+    }
+
+    // The seller who accepted alone can still complete the trade, the buyer cannot publish the mediated payout
+    @Test
+    void permittedWithOnlyTheSellersMediatedPayoutSignature() {
+        closeMediation(SELLER_SECURITY_DEPOSIT, MediationResultState.SIG_MSG_ARRIVED);
+        signMediatedPayout(true, false);
+
+        assertTrue(trade.confirmPermitted());
+    }
+
+    @Test
+    void permittedWithOnlyTheBuyersMediatedPayoutSignature() {
+        closeMediation(SELLER_SECURITY_DEPOSIT, MediationResultState.RECEIVED_SIG_MSG);
+        signMediatedPayout(false, true);
+
+        assertTrue(trade.confirmPermitted());
+    }
+
+    // E.g. our node finalized the mediated payout but its broadcast failed
+    @Test
+    void refusedOnceBothTradersSignedTheMediatedPayout() {
+        closeMediation(SELLER_SECURITY_DEPOSIT, MediationResultState.MEDIATION_RESULT_ACCEPTED);
+        signMediatedPayout(true, true);
+
+        assertFalse(trade.confirmPermitted());
+    }
+
+    @Test
+    void confirmationAfterBothTradersSignedTheMediatedPayoutDoesNotStartThePayout() {
+        trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
+        closeMediation(SELLER_SECURITY_DEPOSIT, MediationResultState.MEDIATION_RESULT_ACCEPTED);
+        signMediatedPayout(true, true);
+
+        new SellerAsMakerProtocol(trade).onPaymentReceived(() -> fail("result handler called"),
+                errorMessage -> fail(errorMessage));
+
+        assertEquals(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG, trade.getTradeState());
+    }
 }

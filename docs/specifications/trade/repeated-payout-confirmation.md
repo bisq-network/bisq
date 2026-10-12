@@ -25,14 +25,17 @@ so creating the payout transaction again would fail although the payout is publi
 
 When the mediator proposes a result that does not penalize the seller, the seller can still confirm
 the payment receipt and complete the trade with the normal payout. This also applies after the
-seller accepted the proposal, as long as the mediated payout is not published.
+seller accepted the proposal alone, as long as the mediated payout is neither signed by both
+traders nor published.
 
-The mediated payout counts as published when the seller's node published it, received it from the
-buyer, or saw it in the network. From then on the seller cannot confirm the payment receipt any
-more. The mediated payout completes the trade, so there is no payout message to send again. A
-confirmation would also sign the buyer's account age witness (see
-[signed-witness-admission.md](../account/signed-witness-admission.md)), which the mediated payout
-does not do.
+Once the seller's node has the signatures of both traders, it can publish the mediated payout, so
+that payout is the agreed result. The mediated payout counts as published when the seller's node published it,
+received it from the buyer, or saw it in the network. From either point on the seller cannot
+confirm the payment receipt any more. A confirmation would publish a payout which conflicts with
+the signed one, or send the mediated payout in the normal payout message, which a buyer without a
+payout rejects when the amounts differ from the normal payout. It would also sign the buyer's
+account age witness (see [signed-witness-admission.md](../account/signed-witness-admission.md)),
+which the mediated payout does not do.
 
 ## Not covered
 
@@ -41,10 +44,8 @@ message can still be on its way. During a repeated confirmation the trade shows 
 the message arrives or is stored in the mailbox, and the hint can appear again. This specification
 only ensures that the repeated confirmation does not fail.
 
-If the seller's node finalized the mediated payout but could not publish it, the trade keeps that
-transaction as its payout. A confirmation then publishes and sends it as after a normal payout, and
-can sign the buyer's account age witness. Both traders signed that transaction, so the payout
-matches the mediation result.
+This specification does not define how a mediated payout which both traders signed gets
+published when nobody has published it yet.
 
 The API does not report a refused confirmation to the caller. This applies to every reason for
 refusing it.

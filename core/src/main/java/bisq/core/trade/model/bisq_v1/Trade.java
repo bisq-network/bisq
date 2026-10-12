@@ -997,6 +997,12 @@ public abstract class Trade extends TradeModel {
                 mediationResultState.ordinal() >= MediationResultState.PAYOUT_TX_PUBLISHED.ordinal();
     }
 
+    // With both signatures our node can publish the mediated payout, so it is the agreed result
+    public boolean isMediatedPayoutSignedByBothTraders() {
+        return processModel.getMediatedPayoutTxSignature() != null &&
+                processModel.getTradePeer().getMediatedPayoutTxSignature() != null;
+    }
+
     public boolean isWithdrawn() {
         return getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
