@@ -583,7 +583,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
                         @Override
                         public void onFailure(TxBroadcastException exception) {
-                            new Popup().warning(exception.toString()).show();
+                            // The cause holds the reason, e.g. a reject by the peers
+                            String errorMessage = exception.getCause() != null ?
+                                    exception.getCause().getMessage() :
+                                    exception.getMessage();
+                            new Popup().warning(Res.get("dao.wallet.send.broadcastFailed", errorMessage)).show();
                         }
                     });
                     resultHandler.handleResult();
