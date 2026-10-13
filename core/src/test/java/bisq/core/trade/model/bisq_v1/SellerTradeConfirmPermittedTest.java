@@ -157,7 +157,9 @@ class SellerTradeConfirmPermittedTest {
         }
     }
 
-    // The seller who accepted alone can still complete the trade, the buyer cannot publish the mediated payout
+    // The seller who accepted alone can still complete the trade. The buyer can publish the mediated payout with the
+    // seller's signature at the same time, but the proposal does not penalize the seller, so either payout gives the
+    // buyer at least the mediated amount.
     @Test
     void permittedWithOnlyTheSellersMediatedPayoutSignature() {
         closeMediation(SELLER_SECURITY_DEPOSIT, MediationResultState.SIG_MSG_ARRIVED);

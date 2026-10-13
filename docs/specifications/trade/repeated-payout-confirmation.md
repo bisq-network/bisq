@@ -28,14 +28,21 @@ the payment receipt and complete the trade with the normal payout. This also app
 seller accepted the proposal alone, as long as the mediated payout is neither signed by both
 traders nor published.
 
+After the seller accepted alone, the buyer can publish the mediated payout with the seller's
+signature while the seller confirms the payment receipt. With the normal split both payouts are the
+same transaction. With another split both spend the same deposit output and only one of them
+confirms. This is accepted: the proposal does not penalize the seller and both payouts pay out the
+same total, so the buyer receives at least the mediated amount with either payout.
+
 Once the seller's node has the signatures of both traders, it can publish the mediated payout, so
-that payout is the agreed result. The mediated payout counts as published when the seller's node published it,
-received it from the buyer, or saw it in the network. From either point on the seller cannot
-confirm the payment receipt any more. A confirmation would publish a payout which conflicts with
-the signed one, or send the mediated payout in the normal payout message, which a buyer without a
-payout rejects when the amounts differ from the normal payout. It would also sign the buyer's
-account age witness (see [signed-witness-admission.md](../account/signed-witness-admission.md)),
-which the mediated payout does not do.
+that payout is the agreed result. The mediated payout counts as published when the seller's node
+published it, received it from the buyer, or saw it in the network. From either point on the
+seller cannot confirm the payment receipt any more. A confirmation would publish a payout which
+conflicts with the signed one, or send the mediated payout in the normal payout message, which a
+buyer without a payout rejects when the amounts differ from the normal payout. It would also sign
+the buyer's account age witness (see
+[signed-witness-admission.md](../account/signed-witness-admission.md)), which the mediated payout
+does not do.
 
 ## Not covered
 
@@ -46,6 +53,10 @@ only ensures that the repeated confirmation does not fail.
 
 This specification does not define how a mediated payout which both traders signed gets
 published when nobody has published it yet.
+
+When the seller's normal payout and the buyer's mediated payout differ, this specification does not
+define the trade state of the node whose payout did not confirm. That node keeps its payout
+transaction as the payout of the trade.
 
 The API does not report a refused confirmation to the caller. This applies to every reason for
 refusing it.
