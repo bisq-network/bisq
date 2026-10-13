@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 
@@ -113,6 +114,52 @@ public class LocalBitcoinNodeTest {
                 .write("HTTP/1.1 400 Bad Request\r\n\r\n".getBytes(StandardCharsets.US_ASCII)));
 
         assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+    }
+
+    // The pruned node sends its answer a byte every 500 ms, so no single read waits long. The deadline
+    // still ends the wait, and the node is used as one that does not answer.
+    @Test
+    public void slowAnswerEndsAtTheDeadline() throws IOException {
+        startLocalNode(socket -> {
+            readVersion(socket);
+            VersionMessage versionMessage = new VersionMessage(PARAMS, 900_000);
+            versionMessage.localServices =
+                    VersionMessage.NODE_NETWORK_LIMITED | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM;
+            ByteArrayOutputStream answer = new ByteArrayOutputStream();
+            SERIALIZER.serialize(versionMessage, answer);
+            for (byte b : answer.toByteArray()) {
+                socket.getOutputStream().write(b);
+                socket.getOutputStream().flush();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        });
+
+        long start = System.currentTimeMillis();
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(System.currentTimeMillis() - start < 7_000);
+    }
+
+    // A version message has about 130 bytes. An announced size of 30 MB is refused at once, without
+    // allocating it and waiting for the payload until the deadline.
+    @Test
+    public void oversizedVersionMessageIsRefusedAtOnce() throws IOException {
+        startLocalNode(socket -> {
+            readVersion(socket);
+            byte[] header = new byte[4 + BitcoinSerializer.BitcoinPacketHeader.HEADER_LENGTH];
+            Utils.uint32ToByteArrayBE(PARAMS.getPacketMagic(), header, 0);
+            byte[] command = "version".getBytes(StandardCharsets.US_ASCII);
+            System.arraycopy(command, 0, header, 4, command.length);
+            Utils.uint32ToByteArrayLE(30_000_000, header, 16);
+            socket.getOutputStream().write(header);
+        });
+
+        long start = System.currentTimeMillis();
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(System.currentTimeMillis() - start < 2_000);
     }
 
     @Test

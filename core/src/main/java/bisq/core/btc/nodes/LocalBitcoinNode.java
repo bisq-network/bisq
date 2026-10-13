@@ -18,11 +18,13 @@ import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 import java.nio.ByteBuffer;
 
-import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +42,7 @@ public class LocalBitcoinNode {
 
     private static final Logger log = LoggerFactory.getLogger(LocalBitcoinNode.class);
     private static final int CONNECTION_TIMEOUT = 5000;
+    private static final int MAX_VERSION_MESSAGE_SIZE = 1024;
 
     private final Config config;
     private final NetworkParameters params;
@@ -140,24 +143,46 @@ public class LocalBitcoinNode {
 
     // A node answers the version message of a new peer with its own version message.
     private static VersionMessage readVersionMessage(NetworkParameters params, Socket socket) throws IOException {
-        socket.setSoTimeout(CONNECTION_TIMEOUT);
+        long deadline = System.currentTimeMillis() + CONNECTION_TIMEOUT;
         MessageSerializer serializer = params.getDefaultSerializer();
         serializer.serialize(new VersionMessage(params, 0), socket.getOutputStream());
 
-        DataInputStream in = new DataInputStream(socket.getInputStream());
+        InputStream in = socket.getInputStream();
         byte[] magic = new byte[4];
-        in.readFully(magic);
+        readFully(socket, in, magic, deadline);
         if (Utils.readUint32BE(magic, 0) != params.getPacketMagic()) {
             throw new ProtocolException("The answer is not a Bitcoin message of this network");
         }
         byte[] headerBytes = new byte[BitcoinSerializer.BitcoinPacketHeader.HEADER_LENGTH];
-        in.readFully(headerBytes);
+        readFully(socket, in, headerBytes, deadline);
         BitcoinSerializer.BitcoinPacketHeader header = serializer.deserializeHeader(ByteBuffer.wrap(headerBytes));
         if (!header.command.equals("version")) {
             throw new ProtocolException("Expected a version message, got " + header.command);
         }
+        // A version message has about 130 bytes, its user agent at most 256
+        if (header.size > MAX_VERSION_MESSAGE_SIZE) {
+            throw new ProtocolException("The version message announces " + header.size + " bytes");
+        }
         byte[] payload = new byte[header.size];
-        in.readFully(payload);
+        readFully(socket, in, payload, deadline);
         return (VersionMessage) serializer.deserializePayload(header, ByteBuffer.wrap(payload));
+    }
+
+    // The socket timeout applies to each read, so a node sending a byte now and then would keep us
+    // waiting. The deadline limits the time for the whole answer.
+    private static void readFully(Socket socket, InputStream in, byte[] buffer, long deadline) throws IOException {
+        int offset = 0;
+        while (offset < buffer.length) {
+            long remaining = deadline - System.currentTimeMillis();
+            if (remaining <= 0) {
+                throw new SocketTimeoutException("No complete version message within " + CONNECTION_TIMEOUT + " ms");
+            }
+            socket.setSoTimeout((int) remaining);
+            int read = in.read(buffer, offset, buffer.length - offset);
+            if (read < 0) {
+                throw new EOFException("The connection was closed before the version message was complete");
+            }
+            offset += read;
+        }
     }
 }

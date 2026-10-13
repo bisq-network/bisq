@@ -18,7 +18,8 @@ on the DAO regtest and DAO testnet networks. On `BTC_REGTEST` the node of the wa
   instead of `NODE_NETWORK`, and Bitcoin Core announces bloom filters only with
   `peerbloomfilters=1`.
 - If the node does not answer with a version message, for example because another service uses
-  the port, the node is used without this check.
+  the port, the node is used without this check. Bisq waits at most 5 seconds for the whole
+  answer, even when the answer arrives slowly.
 - The check is done when the local node is first needed, and its result is kept until the
   application is restarted.
 
