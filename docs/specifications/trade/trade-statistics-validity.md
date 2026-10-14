@@ -2,7 +2,8 @@
 
 ## Scope
 
-This specification defines which trade statistics a BISQ 1 node uses.
+This specification defines which trade statistics a BISQ 1 node uses, and which market prices can
+deactivate an open offer through its trigger price.
 
 ## Rules
 
@@ -18,6 +19,9 @@ This specification defines which trade statistics a BISQ 1 node uses.
    - the trade volume can be computed from the price and the amount, and it is greater than zero.
 3. A node checks the validity against its clock when it receives a statistic. Stored statistics are
    checked again at every startup.
+4. The trigger price of an open offer deactivates the offer only with a recent price from the price
+   feed (`MarketPrice.isRecentExternalPriceAvailable`). A price which a node derives from trade
+   statistics never deactivates an offer.
 
 ## Reasons
 
@@ -28,13 +32,16 @@ This specification defines which trade statistics a BISQ 1 node uses.
 - Rule 2, volume: the charts, the trades table and the average prices compute the volume from the
   price and the amount, and some of them divide by it. For values which no trade can have, this
   computation fails or gives zero.
+- Rule 4: a price derived from trade statistics is for display only. The state of an offer depends
+  only on the price feed.
 
 ## Compatibility
 
 No message, no persisted data and no hash change. Trade statistics are stored and relayed as
 before. All statistics in the bundled stores pass the date and volume checks. A node whose clock is
 more than one day behind does not use new statistics until its clock is corrected and it is
-restarted.
+restarted. While no recent price from the price feed is available, for example right after startup
+or during an outage of the price feed, no offer is deactivated by its trigger price.
 
 ## Not covered
 
