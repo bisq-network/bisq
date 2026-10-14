@@ -75,6 +75,13 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()));
     }
 
+    // A peer reported by another node during peer exchange gets the local time of reception as its date. The date sent
+    // by the other node is not used, as an honest node reports only peers which it has seen within the last 30 minutes.
+    public static Peer fromReportedProto(protobuf.Peer proto) {
+        return new Peer(NodeAddress.fromProto(proto.getNodeAddress()),
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
