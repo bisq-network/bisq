@@ -19,7 +19,12 @@ package bisq.core.trade.statistics;
 
 import bisq.core.locale.GlobalSettings;
 import bisq.core.monetary.Price;
+import bisq.core.provider.PriceFeedNodeAddressProvider;
+import bisq.core.provider.PriceHttpClient;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.Preferences;
+import bisq.core.util.PriceUtil;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -43,6 +48,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -131,6 +137,29 @@ public class TradeStatisticsManagerTest {
     @Test
     public void storedStatisticWithUnusableVolumeIsNotUsedAtStartup() {
         assertNotUsedAtStartup(statisticWithUnusableVolume(System.currentTimeMillis()));
+    }
+
+    // Such a price would be seeded as the market price, which cannot be converted back to a long
+    @Test
+    public void storedStatisticWithAPriceAboveTheCapIsNotUsedAtStartup() {
+        assertNotUsedAtStartup(usdStatistics(Long.MAX_VALUE, System.currentTimeMillis()));
+    }
+
+    // The consumers of the market price convert it back to a price. For the highest valid price this stays in the long
+    // range.
+    @Test
+    public void marketPriceSeededFromTheHighestValidPriceConvertsBack() {
+        TradeStatistics3 highest = usdStatistics(TradeStatistics3.MAX_PRICE, System.currentTimeMillis());
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData = new HashMap<>();
+        mapOfAllData.put(new P2PDataStorage.ByteArray(highest.getHash()), highest);
+        PriceFeedService priceFeedService = new PriceFeedService(mock(PriceHttpClient.class), mock(FeeService.class),
+                mock(PriceFeedNodeAddressProvider.class), mock(Preferences.class));
+
+        manager(mock(P2PDataStorage.class), priceFeedService, mapOfAllData).onAllServicesInitialized();
+
+        Price converted = assertDoesNotThrow(() ->
+                PriceUtil.marketPriceToPrice(priceFeedService.getMarketPrice("USD")));
+        assertEquals(TradeStatistics3.MAX_PRICE, converted.getValue());
     }
 
     private static void assertNotUsedWhenReceived(TradeStatistics3 tradeStatistics) {

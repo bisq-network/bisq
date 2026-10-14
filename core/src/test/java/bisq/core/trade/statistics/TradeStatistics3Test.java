@@ -294,6 +294,13 @@ public class TradeStatistics3Test {
         assertFalse(tradeStatistics.isValid());
     }
 
+    @Test
+    public void isValidRejectsPriceAboveTheCap() {
+        assertTrue(usdStatistics(TradeStatistics3.MAX_PRICE, System.currentTimeMillis()).isValid());
+        assertFalse(usdStatistics(TradeStatistics3.MAX_PRICE + 1, System.currentTimeMillis()).isValid());
+        assertFalse(usdStatistics(Long.MAX_VALUE, System.currentTimeMillis()).isValid());
+    }
+
     // The altcoin volume is amount * 10^8 / price, which is zero for a price above 10^8 times the amount
     @Test
     public void isValidRejectsAltcoinStatisticWithZeroVolume() {
@@ -358,8 +365,12 @@ public class TradeStatistics3Test {
     }
 
     private static TradeStatistics3 usdStatistics(long date) {
+        return usdStatistics(50_000_000, date);
+    }
+
+    private static TradeStatistics3 usdStatistics(long price, long date) {
         return new TradeStatistics3("USD",
-                50_000_000,
+                price,
                 Coin.parseCoin("0.25").value,
                 "SEPA",
                 date,

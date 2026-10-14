@@ -14,6 +14,8 @@ trigger price.
 2. A trade statistic is valid if all of the following hold:
    - the amount, the price and the date are greater than zero, and the currency and the payment
      method are not empty;
+   - the price value of the statistic is at most 10^18 (fiat prices have 4 decimals, altcoin prices
+     8);
    - for a statistic dated after 2021-11-01, the amount is at most 2 BTC and the currency is in the
      currency list;
    - the date is at most one day after the node's clock;
@@ -41,6 +43,9 @@ are therefore informational. They must not change an offer, a trade, a fee or th
   statistic is published. A statistic dated in the future would be the newest one of its currency
   until that date, also after a restart. One day covers differences between the clocks of nodes, as
   for account age witnesses and signed witnesses.
+- Rule 2, price: the limit is far above the price of any trade. Prices derived from a valid
+  statistic, such as the market price taken from the newest one, stay in the long range when they
+  are converted.
 - Rule 2, volume: the charts, the trades table and the average prices compute the volume from the
   price and the amount, and some of them divide by it. For values which no trade can have, this
   computation fails or gives zero.
@@ -52,10 +57,10 @@ are therefore informational. They must not change an offer, a trade, a fee or th
 ## Compatibility
 
 No message, no persisted data and no hash change. Trade statistics are stored and relayed as
-before. All statistics in the bundled stores pass the date and volume checks. A node whose clock is
-more than one day behind does not use new statistics until its clock is corrected and it is
-restarted. While no recent price from the price feed is available, for example right after startup
-or during an outage of the price feed, no offer is deactivated by its trigger price.
+before. All statistics in the bundled stores pass the date, price and volume checks. A node whose
+clock is more than one day behind does not use new statistics until its clock is corrected and it
+is restarted. While no recent price from the price feed is available, for example right after
+startup or during an outage of the price feed, no offer is deactivated by its trigger price.
 
 ## Known gaps
 
