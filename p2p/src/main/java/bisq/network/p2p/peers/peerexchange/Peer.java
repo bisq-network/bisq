@@ -69,9 +69,12 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
                 .build();
     }
 
+    // Reads a peer of the persisted peer list. Earlier versions stored dates sent by other nodes, so the date is
+    // limited to the range from 0 to the local time. A later date would keep the peer from aging out.
     public static Peer fromProto(protobuf.Peer proto) {
+        long date = Math.max(0, Math.min(proto.getDate(), new Date().getTime()));
         return new Peer(NodeAddress.fromProto(proto.getNodeAddress()),
-                proto.getDate(),
+                date,
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()));
     }
 
