@@ -130,9 +130,10 @@ public class ChartCalculations {
                     .mapToObj(i -> {
                         Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
                         long tickStartDate = pair.getKey().getTime();
-                        // If we don't have a price we take the previous one
-                        if (usdAveragePriceMap.containsKey(tickStartDate)) {
-                            averageUsdPrice.set(usdAveragePriceMap.get(tickStartDate));
+                        // If we don't have a price we take the previous one. 0 stands for no average.
+                        long tickAverageUsdPrice = usdAveragePriceMap.getOrDefault(tickStartDate, 0L);
+                        if (tickAverageUsdPrice > 0) {
+                            averageUsdPrice.set(tickAverageUsdPrice);
                         }
                         return getCandleData(i, pair.getValue(), averageUsdPrice.get(), tickUnit, currencyCode, itemsPerInterval);
                     })
@@ -299,11 +300,11 @@ public class ChartCalculations {
         if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
             isBullish = close < open;
             double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
-            averagePrice = MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume);
+            averagePrice = MathUtils.roundDoubleToLongOrZero(accumulatedAmountAsDouble / (double) accumulatedVolume);
         } else {
             isBullish = close > open;
             double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
-            averagePrice = MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
+            averagePrice = MathUtils.roundDoubleToLongOrZero(accumulatedVolumeAsDouble / (double) accumulatedAmount);
         }
 
         Date dateFrom = new Date(getTimeFromTickIndex(tickIndex, itemsPerInterval));
@@ -339,7 +340,7 @@ public class ChartCalculations {
 
         long getAveragePrice() {
             double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
-            return MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
+            return MathUtils.roundDoubleToLongOrZero(accumulatedVolumeAsDouble / (double) accumulatedAmount);
         }
     }
 }

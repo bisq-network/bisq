@@ -2,8 +2,9 @@
 
 ## Scope
 
-This specification defines which trade statistics a BISQ 1 node uses, and which market prices can
-deactivate an open offer through its trigger price.
+This specification defines which trade statistics a BISQ 1 node uses, how average prices computed
+from them handle extreme values, and which market prices can deactivate an open offer through its
+trigger price.
 
 ## Rules
 
@@ -22,6 +23,9 @@ deactivate an open offer through its trigger price.
 4. The trigger price of an open offer deactivates the offer only with a recent price from the price
    feed, which is at most 30 minutes old (`MarketPrice.isRecentExternalPriceAvailable`). A price
    which a node derives from trade statistics never deactivates an offer.
+5. An average price computed from valid statistics, in the market charts and for the average BSQ
+   price, does not fail for any values. An average which cannot be represented as a long is 0, which
+   stands for no average, as when there are no trades.
 
 ## Trust model
 
@@ -42,6 +46,8 @@ are therefore informational. They must not change an offer, a trade, a fee or th
   computation fails or gives zero.
 - Rule 4: a price derived from trade statistics is for display only. The state of an offer depends
   only on the price feed.
+- Rule 5: the validity rules bound single values (rule 2), not every combination of them. A view
+  must not fail because of the values of a statistic.
 
 ## Compatibility
 
