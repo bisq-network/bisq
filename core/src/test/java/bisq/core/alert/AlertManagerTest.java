@@ -37,6 +37,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigInteger;
 
@@ -187,8 +189,71 @@ public class AlertManagerTest {
         assertFalse(alertManager.hasAnyAlert());
     }
 
+    // An update alert with an invalid version is ignored, so it can never reach the version comparison at startup
+    @ParameterizedTest
+    @ValueSource(strings = {"", "1.10", "1.10.10.1", "1.x.10", "a.b.c", "1..10", "v1.10.10", "1.10.10-rc1",
+            "+1.10.10", "1.10.-1", "1.10.10.", "99999999999.1.1"})
+    void updateAlertWithInvalidVersionIsIgnored(String version) {
+        Alert updateAlert = signedAlert("update", true, false, version);
+
+        hashMapChangedListener.onAdded(List.of(protectedStorageEntry(updateAlert, 1)));
+
+        assertFalse(alertManager.hasAnyAlert());
+        assertNull(alertManager.alertMessageProperty().get());
+    }
+
+    @Test
+    void preReleaseAlertWithInvalidVersionIsIgnored() {
+        Alert preReleaseAlert = signedAlert("pre-release", false, true, "");
+
+        hashMapChangedListener.onAdded(List.of(protectedStorageEntry(preReleaseAlert, 1)));
+
+        assertFalse(alertManager.hasAnyAlert());
+    }
+
+    @Test
+    void updateAlertWithInvalidVersionFromBootstrapDataIsIgnoredAtStartup() {
+        Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> dataMap = new LinkedHashMap<>();
+        dataMap.put(new P2PDataStorage.ByteArray(new byte[]{1}),
+                protectedStorageEntry(signedAlert("update", true, false, ""), 1));
+        when(p2PService.getDataMap()).thenReturn(dataMap);
+
+        alertManager.onAllServicesInitialized();
+
+        assertFalse(alertManager.hasAnyAlert());
+        assertNull(alertManager.alertMessageProperty().get());
+    }
+
+    @Test
+    void newerUpdateAlertWithInvalidVersionDoesNotReplaceTheCurrentAlert() {
+        Alert currentAlert = signedAlert("current", true, false, "1.10.10");
+        Alert invalidAlert = signedAlert("newer", true, false, "1.10");
+        hashMapChangedListener.onAdded(List.of(protectedStorageEntry(currentAlert, 1)));
+
+        hashMapChangedListener.onAdded(List.of(protectedStorageEntry(invalidAlert, 2)));
+
+        assertSame(currentAlert, alertManager.alertMessageProperty().get());
+    }
+
+    // Positive control: a valid version is accepted, and a normal alert needs no version
+    @Test
+    void updateAlertWithValidVersionAndNormalAlertWithoutVersionAreAccepted() {
+        Alert updateAlert = signedAlert("update", true, false, "1.10.10");
+        Alert normalAlert = signedAlert("notice", false, false, "");
+
+        hashMapChangedListener.onAdded(List.of(protectedStorageEntry(updateAlert, 1)));
+        assertSame(updateAlert, alertManager.alertMessageProperty().get());
+
+        hashMapChangedListener.onAdded(List.of(protectedStorageEntry(normalAlert, 2)));
+        assertSame(normalAlert, alertManager.alertMessageProperty().get());
+    }
+
     private Alert signedAlert(String message) {
-        Alert alert = new Alert(message, false, false, "");
+        return signedAlert(message, false, false, "");
+    }
+
+    private Alert signedAlert(String message, boolean isUpdateInfo, boolean isPreReleaseInfo, String version) {
+        Alert alert = new Alert(message, isUpdateInfo, isPreReleaseInfo, version);
         ECKey signingKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(DevEnv.getDEV_PRIVILEGE_PRIV_KEY())));
         String alertMessageAsHex = Utils.HEX.encode(message.getBytes(StandardCharsets.UTF_8));
         String signatureAsBase64 = LowRSigningKey.from(signingKey).signMessage(alertMessageAsHex);

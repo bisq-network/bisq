@@ -83,6 +83,22 @@ public class Version {
             return false;
     }
 
+    // A version in the format major.minor.patch with decimal digits only, which getMajorVersion, getMinorVersion
+    // and getPatchVersion can parse
+    public static boolean isValid(String version) {
+        if (version == null || !version.matches("\\d+\\.\\d+\\.\\d+")) {
+            return false;
+        }
+        try {
+            getMajorVersion(version);
+            getMinorVersion(version);
+            getPatchVersion(version);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     private static int getSubVersion(String version, int index) {
         final String[] split = version.split("\\.");
         checkArgument(split.length == 3, "Version number must be in semantic version format (contain 2 '.'). version=" + version);

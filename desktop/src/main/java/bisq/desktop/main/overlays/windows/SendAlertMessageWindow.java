@@ -28,6 +28,7 @@ import bisq.core.alert.AlertManager;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
@@ -142,10 +143,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             final boolean isUpdate = (isSoftwareUpdateCheckBox.isSelected() && isUpdateCheckBox.isSelected());
             final boolean isPreRelease = (isSoftwareUpdateCheckBox.isSelected() && isPreReleaseCheckBox.isSelected());
             if (isUpdate || isPreRelease) {
-                final String[] split = version.split("\\.");
-                versionOK = split.length == 3;
+                versionOK = Version.isValid(version);
                 if (!versionOK) // Do not translate as only used by devs
-                    new Popup().warning("Version number must be in semantic version format (contain 2 '.'). version=" + version)
+                    new Popup().warning("Version number must be in the format major.minor.patch with decimal digits only. version=" + version)
                             .onClose(this::blurAgain)
                             .show();
             }
