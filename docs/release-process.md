@@ -258,6 +258,8 @@ If all was successful:
 
 * Start the Alert sender app (CMD + M)  remove the old version and send the update message. Check the checkbox for
   update, set the version number (e.g. 0.9.4) and add the short version of the release notes.
+  Send it from the new release: nodes ignore an alert without the alert signature, which earlier versions do not add
+  (see `docs/specifications/application/alert-admission.md`).
 
 * After sending the Update message leave it running for about 1 minute to give time for good propagation.
 

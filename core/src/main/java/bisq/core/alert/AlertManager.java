@@ -266,16 +266,10 @@ public class AlertManager {
         String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(StandardCharsets.UTF_8));
         String signatureAsBase64 = LowRSigningKey.from(alertSigningKey).signMessage(alertMessageAsHex);
         alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
+        alert.setAlertSignature(AlertSignature.sign(alert, alertSigningKey));
     }
 
     private boolean verifySignature(Alert alert) {
-        try {
-            String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(StandardCharsets.UTF_8));
-            ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(alertMessageAsHex, alert.getSignatureAsBase64());
-            return true;
-        } catch (Exception e) {
-            log.warn("verifySignature failed. alert={}", alert);
-            return false;
-        }
+        return AlertSignature.verify(alert, pubKeyAsHex);
     }
 }
