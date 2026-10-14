@@ -24,6 +24,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import org.bitcoinj.core.Coin;
@@ -33,6 +34,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +44,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,5 +93,104 @@ public class TradeStatisticsManagerTest {
         ArgumentCaptor<Map<String, Price>> captor = ArgumentCaptor.forClass(Map.class);
         verify(priceFeedService).applyInitialBisqMarketPrice(captor.capture());
         assertEquals(newer.getTradePrice().getValue(), captor.getValue().get("USD").getValue());
+    }
+
+    // A statistic dated more than a day ahead would stay the newest one of its currency
+    @Test
+    public void receivedStatisticDatedMoreThanOneDayAheadIsNotUsed() {
+        assertNotUsedWhenReceived(usdStatistics(Price.parse("USD", "1").getValue(),
+                System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30)));
+    }
+
+    @Test
+    public void receivedStatisticWithUnusableVolumeIsNotUsed() {
+        assertNotUsedWhenReceived(statisticWithUnusableVolume(System.currentTimeMillis()));
+    }
+
+    // Positive control for the two tests above
+    @Test
+    public void receivedValidStatisticIsUsed() {
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        TradeStatisticsManager manager = manager(p2PDataStorage, priceFeedService, new HashMap<>());
+        manager.onAllServicesInitialized();
+        TradeStatistics3 valid = usdStatistics(Price.parse("USD", "100").getValue(), System.currentTimeMillis());
+
+        appendOnlyDataStoreListener(p2PDataStorage).onAdded(valid);
+
+        assertEquals(Set.of(valid), manager.getObservableTradeStatisticsSet());
+        verify(priceFeedService).setBisqMarketPrice("USD", valid.getTradePrice());
+    }
+
+    @Test
+    public void storedStatisticDatedMoreThanOneDayAheadIsNotUsedAtStartup() {
+        assertNotUsedAtStartup(usdStatistics(Price.parse("USD", "1").getValue(),
+                System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30)));
+    }
+
+    @Test
+    public void storedStatisticWithUnusableVolumeIsNotUsedAtStartup() {
+        assertNotUsedAtStartup(statisticWithUnusableVolume(System.currentTimeMillis()));
+    }
+
+    private static void assertNotUsedWhenReceived(TradeStatistics3 tradeStatistics) {
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        TradeStatisticsManager manager = manager(p2PDataStorage, priceFeedService, new HashMap<>());
+        manager.onAllServicesInitialized();
+
+        appendOnlyDataStoreListener(p2PDataStorage).onAdded(tradeStatistics);
+
+        assertEquals(Set.of(), manager.getObservableTradeStatisticsSet());
+        verify(priceFeedService, never()).setBisqMarketPrice(any(), any());
+    }
+
+    // The statistic which is not valid is newer than the valid one, so it would be seeded as the market price
+    private static void assertNotUsedAtStartup(TradeStatistics3 tradeStatistics) {
+        TradeStatistics3 valid = usdStatistics(Price.parse("USD", "100").getValue(),
+                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData = new HashMap<>();
+        mapOfAllData.put(new P2PDataStorage.ByteArray(valid.getHash()), valid);
+        mapOfAllData.put(new P2PDataStorage.ByteArray(tradeStatistics.getHash()), tradeStatistics);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        TradeStatisticsManager manager = manager(mock(P2PDataStorage.class), priceFeedService, mapOfAllData);
+
+        manager.onAllServicesInitialized();
+
+        assertEquals(Set.of(valid), manager.getObservableTradeStatisticsSet());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Price>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(priceFeedService).applyInitialBisqMarketPrice(captor.capture());
+        assertEquals(Map.of("USD", valid.getTradePrice()), captor.getValue());
+    }
+
+    private static AppendOnlyDataStoreListener appendOnlyDataStoreListener(P2PDataStorage p2PDataStorage) {
+        ArgumentCaptor<AppendOnlyDataStoreListener> captor =
+                ArgumentCaptor.forClass(AppendOnlyDataStoreListener.class);
+        verify(p2PDataStorage).addAppendOnlyDataStoreListener(captor.capture());
+        return captor.getValue();
+    }
+
+    private static TradeStatisticsManager manager(
+            P2PDataStorage p2PDataStorage,
+            PriceFeedService priceFeedService,
+            Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData) {
+        TradeStatistics3StorageService storageService = mock(TradeStatistics3StorageService.class);
+        when(storageService.getMapOfAllData()).thenReturn(mapOfAllData);
+        P2PService p2PService = mock(P2PService.class);
+        when(p2PService.getP2PDataStorage()).thenReturn(p2PDataStorage);
+        return new TradeStatisticsManager(p2PService, priceFeedService,
+                storageService, mock(AppendOnlyDataStoreService.class), new File("."), false);
+    }
+
+    private static TradeStatistics3 usdStatistics(long price, long date) {
+        return new TradeStatistics3("USD", price, Coin.parseCoin("0.25").getValue(), "SEPA", date, null, null,
+                (TreeMap<String, String>) null);
+    }
+
+    // The fiat volume amount * price / 10^8 does not fit into a long
+    private static TradeStatistics3 statisticWithUnusableVolume(long date) {
+        return new TradeStatistics3("USD", Long.MAX_VALUE, TradeStatistics3.HISTORICAL_MAX_TRADE_AMOUNT, "SEPA", date,
+                null, null, (TreeMap<String, String>) null);
     }
 }

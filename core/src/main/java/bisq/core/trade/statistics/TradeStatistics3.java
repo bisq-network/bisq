@@ -65,6 +65,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -93,6 +94,10 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @JsonExclude
     @VisibleForTesting
     static final long HISTORICAL_MAX_TRADE_AMOUNT = Coin.COIN.multiply(2).value;
+    // A statistic carries the date of its trade, so it is ahead of the receiver's clock only by a clock difference
+    @JsonExclude
+    @VisibleForTesting
+    static final long FUTURE_DATE_TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
@@ -472,10 +477,22 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 validHistoricalTradeAmount &&
                 price > 0 &&
                 date > 0 &&
+                date <= System.currentTimeMillis() + FUTURE_DATE_TOLERANCE &&
                 paymentMethod != null &&
                 !paymentMethod.isEmpty() &&
                 !currency.isEmpty() &&
-                currencyFound;
+                currencyFound &&
+                hasPositiveTradeVolume();
+    }
+
+    // Consumers compute the volume from the price and the amount and divide by it. For values which no trade can have,
+    // the computation fails or gives zero. Nothing is cached here, as this runs for every stored statistic at startup.
+    private boolean hasPositiveTradeVolume() {
+        try {
+            return computeTradeVolume(Price.valueOf(currency, price)).getValue() > 0;
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     private static <T extends Comparable<? super T>> int nullsFirstCompare(T a, T b) {

@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Disabled;
@@ -251,6 +252,96 @@ public class TradeStatistics3Test {
         assertEquals(Set.of(), Sets.difference(paymentMethodCodes, wrapperCodes));
     }
 
+    @Test
+    public void isValidRejectsDateMoreThanOneDayAhead() {
+        long now = System.currentTimeMillis();
+        long tenMinutes = TimeUnit.MINUTES.toMillis(10);
+
+        assertTrue(usdStatistics(now + TradeStatistics3.FUTURE_DATE_TOLERANCE - tenMinutes).isValid());
+        assertFalse(usdStatistics(now + TradeStatistics3.FUTURE_DATE_TOLERANCE + tenMinutes).isValid());
+        assertFalse(usdStatistics(Long.MAX_VALUE).isValid());
+    }
+
+    // The fiat volume is amount * price / 10^8. It overflows for a price no trade can have, also within the cap
+    @Test
+    public void isValidRejectsFiatStatisticWhoseVolumeOverflows() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
+                Long.MAX_VALUE,
+                TradeStatistics3.HISTORICAL_MAX_TRADE_AMOUNT,
+                "SEPA",
+                System.currentTimeMillis(),
+                null,
+                null,
+                (TreeMap<String, String>) null);
+
+        assertThrows(ArithmeticException.class, tradeStatistics::getTradeVolume);
+        assertFalse(tradeStatistics.isValid());
+    }
+
+    // Before STRICT_FILTER_DATE neither the amount cap nor the currency list applies
+    @Test
+    public void isValidRejectsOldStatisticWhoseVolumeOverflows() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
+                Long.MAX_VALUE,
+                Long.MAX_VALUE,
+                "SEPA",
+                1_600_000_000_000L,
+                null,
+                null,
+                (TreeMap<String, String>) null);
+
+        assertThrows(ArithmeticException.class, tradeStatistics::getTradeVolume);
+        assertFalse(tradeStatistics.isValid());
+    }
+
+    // The altcoin volume is amount * 10^8 / price, which is zero for a price above 10^8 times the amount
+    @Test
+    public void isValidRejectsAltcoinStatisticWithZeroVolume() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("XMR",
+                200_000_000,
+                1,
+                "BLOCK_CHAINS",
+                System.currentTimeMillis(),
+                null,
+                null,
+                (TreeMap<String, String>) null);
+
+        assertEquals(0, tradeStatistics.getTradeVolume().getValue());
+        assertFalse(tradeStatistics.isValid());
+    }
+
+    // Nodes of earlier versions relay statistics which this version does not use. A rejection while parsing would count
+    // as a rule violation of the relaying peer, so parsing accepts them.
+    @Test
+    public void addPersistableNetworkPayloadMessageFromProtoAcceptsStatisticWhichIsNotValid() throws Exception {
+        TradeStatistics3 futureDated = usdStatistics(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30));
+        protobuf.AddPersistableNetworkPayloadMessage proto = protobuf.AddPersistableNetworkPayloadMessage.newBuilder()
+                .setPayload(futureDated.toProtoMessage())
+                .build();
+
+        AddPersistableNetworkPayloadMessage message = AddPersistableNetworkPayloadMessage.fromProto(proto,
+                new CoreNetworkProtoResolver(Clock.systemUTC()),
+                Version.getP2PMessageVersion());
+
+        assertEquals(futureDated, message.getPersistableNetworkPayload());
+        assertFalse(futureDated.isValid());
+    }
+
+    @Test
+    public void isValidAcceptsAltcoinStatistic() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("XMR",
+                500_000,
+                Coin.parseCoin("0.25").value,
+                "BLOCK_CHAINS",
+                System.currentTimeMillis(),
+                null,
+                null,
+                (TreeMap<String, String>) null);
+
+        assertTrue(tradeStatistics.isValid());
+        assertTrue(tradeStatistics.getTradeVolume().getValue() > 0);
+    }
+
     private static TradeStatistics3 tradeStatistics(String currency) {
         return tradeStatistics(currency, null);
     }
@@ -264,6 +355,17 @@ public class TradeStatistics3Test {
                 "mediator",
                 "refundAgent",
                 extraDataMap);
+    }
+
+    private static TradeStatistics3 usdStatistics(long date) {
+        return new TradeStatistics3("USD",
+                50_000_000,
+                Coin.parseCoin("0.25").value,
+                "SEPA",
+                date,
+                null,
+                null,
+                (TreeMap<String, String>) null);
     }
 
     private static TreeMap<String, String> extraDataMap() {
