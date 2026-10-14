@@ -436,12 +436,15 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     public Volume getTradeVolume() {
         Volume volume = this.volume;
         if (volume == null) {
-            Price price = getTradePrice();
-            this.volume = volume = price.getMonetary() instanceof Altcoin
-                    ? price.getVolumeByAmount(getTradeAmount())
-                    : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
+            this.volume = volume = computeTradeVolume(getTradePrice());
         }
         return volume;
+    }
+
+    private Volume computeTradeVolume(Price price) {
+        return price.getMonetary() instanceof Altcoin
+                ? price.getVolumeByAmount(getTradeAmount())
+                : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
     }
 
     public boolean isValid() {
