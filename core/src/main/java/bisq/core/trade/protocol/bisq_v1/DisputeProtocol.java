@@ -297,11 +297,9 @@ public class DisputeProtocol extends TradeProtocol {
 
     @VisibleForTesting
     public static boolean isMediatedPayoutReadyToFinalize(Trade trade) {
-        ProcessModel processModel = trade.getProcessModel();
         return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED &&
                 trade.getPayoutTx() == null &&
-                processModel.getMediatedPayoutTxSignature() != null &&
-                processModel.getTradePeer().getMediatedPayoutTxSignature() != null;
+                trade.isMediatedPayoutSignedByBothTraders();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
