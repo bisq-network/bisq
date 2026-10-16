@@ -215,6 +215,11 @@ public class CloneOfferView extends MutableOfferView<CloneOfferViewModel> {
     }
 
     private void onClone() {
+        // The clone is a new offer, so it needs the DAO state like creating an offer
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         if (model.dataModel.cannotActivateOffer()) {
             new Popup().warning(Res.get("cloneOffer.cannotActivateOffer"))
                     .actionButtonText(Res.get("shared.yes"))

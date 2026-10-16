@@ -40,7 +40,7 @@ hard to use while the actions that depend on the DAO state stayed available.
 
 While the condition holds, the following actions do not start. The user gets the warning instead:
 
-- creating or taking an offer, including BSQ swap offers;
+- creating, cloning or taking an offer, including BSQ swap offers;
 - publishing a DAO transaction: a proposal, a blind vote, a bond lockup or unlock, a proof of burn,
   a Burning Man burn, or an asset listing fee;
 - sending BSQ or BTC from the BSQ wallet.
