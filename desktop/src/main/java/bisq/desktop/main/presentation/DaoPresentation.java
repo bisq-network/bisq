@@ -17,8 +17,6 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.app.DevEnv;
-
 import com.google.common.annotations.VisibleForTesting;
 
 import javax.inject.Inject;
@@ -170,14 +168,10 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
     }
 
     // The popup waits in the popup queue while another popup is displayed. Only one resync popup is displayed or
-    // queued at a time, so they do not pile up while the user is away from the screen.
+    // queued at a time, so they do not pile up while the user is away from the screen. A needed resync leads to invalid
+    // states, so the popup is also shown when popups are ignored in dev mode.
     private void showResyncPopup() {
         resyncReminderHeight = daoStateService.getChainHeight();
-        if (DevEnv.isIgnorePopupsInDevMode()) {
-            log.warn("The DAO state needs a resync. The popup is ignored in dev mode.");
-            return;
-        }
-
         if (resyncPopup != null && isDisplayedOrQueued(resyncPopup)) {
             return;
         }

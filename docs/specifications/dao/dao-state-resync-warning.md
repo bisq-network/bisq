@@ -29,7 +29,9 @@ its own at most once per block, when the wallet has seen the same block as the D
 starts one of the blocked actions below gets the warning as well. While another popup is open, the
 warning waits behind it; if the queue of waiting popups is full, it comes again at a later block.
 Only one warning is open or waiting at a time, so the warnings do not pile up while the user is away
-from the screen; a user who closes it sees it again at a later block.
+from the screen; a user who closes it sees it again at a later block. The warning is also shown when
+a developer has chosen to ignore popups, because a DAO state that needs a resync leads to invalid
+states.
 
 Earlier versions showed the warning again 30 seconds after it was closed, which made the application
 hard to use while the actions that depend on the DAO state stayed available.

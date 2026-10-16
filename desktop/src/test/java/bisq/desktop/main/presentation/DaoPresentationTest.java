@@ -154,6 +154,20 @@ public class DaoPresentationTest {
         assertTrue(daoPresentation.isResyncReminderDue(101));
     }
 
+    // A needed resync leads to invalid states, so developers who ignore popups get the popup as well
+    @Test
+    public void popupIsShownWhenPopupsAreIgnoredInDevMode() {
+        DevEnv.setDevMode(true);
+        DevEnv.setIgnorePopupsInDevMode(true);
+        when(daoStateMonitoringService.isInConflictWithSeedNode()).thenReturn(true);
+        atChainHeight(100);
+
+        assertFalse(daoPresentation.isDaoStateInSyncOrShowPopup());
+        daoPresentation.onDaoStateHashesChanged();
+
+        assertEquals(1, daoPresentation.popups.size());
+    }
+
     private void atChainHeight(int chainHeight) {
         when(daoStateService.getChainHeight()).thenReturn(chainHeight);
         when(bsqWalletService.getBestChainHeight()).thenReturn(chainHeight);
