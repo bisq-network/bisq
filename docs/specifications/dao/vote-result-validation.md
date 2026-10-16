@@ -117,7 +117,9 @@ validation or failure boundaries.
 Each entry of a decrypted vote list names a proposal with an accept vote, a reject vote, or no vote.
 Only accept and reject votes are counted; a valid proposal that a voter's list does not name counts
 as a reject vote from that voter. A proposal that gets no accept or reject vote in the cycle
-produces no evaluated proposal: it is not accepted, and the result contains no entry for it.
+produces no evaluated proposal: it is not accepted, and the result contains no entry for it. If the
+issuance of the accepted proposals exceeds the issuance limit of the cycle, the cycle is invalid and
+the result contains only the proposals that would have been accepted, all as rejected.
 
 The evaluated proposals are part of the hashed DAO state. The recorded set must therefore depend
 only on chain data, the matched blind-vote data and the valid ballot universe defined by
@@ -131,11 +133,18 @@ a running node recorded the proposal while a node that parsed the result block d
 resync usually did not. The two groups computed different DAO state hashes from that block on.
 
 This rule has no activation height. The bundled mainnet resources through height `969 240` contain
-no evaluated proposal without an accept or reject vote, so no earlier result changes. The first
-result with such a proposal is the RESULT block `969 537`, where one reimbursement request got no
-accept or reject vote. Nodes that did not record it already match this rule; nodes that recorded it
-must rebuild their DAO state. Nodes on an earlier version still record such a proposal when they
-process a RESULT block while running, so they can diverge again in a later cycle.
+no evaluated proposal without an accept or reject vote, so replaying them gives the same results.
+The first known result in which running nodes recorded such a proposal is the RESULT block
+`969 537`, where one reimbursement request got no accept or reject vote. Nodes that did not record
+it already match this rule; nodes that recorded it must rebuild their DAO state. Nodes on an earlier
+version still record such a proposal when they process a RESULT block while running, so they can
+diverge again in a later cycle.
+
+A node is in conflict with the seed nodes as soon as one seed node reports a different hash, see
+[`seed-node-state-hashes.md`](seed-node-state-hashes.md). All seed nodes therefore need the DAO
+state without the entry at `969 537` and must run this rule before the next RESULT block. A seed
+node on an earlier version that records such a proposal would put every node with this rule that
+compares hashes with it in conflict, and a resync of those nodes would not resolve it.
 
 ## Historical compatibility audit
 
