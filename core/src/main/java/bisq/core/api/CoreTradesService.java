@@ -215,6 +215,16 @@ class CoreTradesService {
                                 trade.getId()));
             }
 
+            // The protocol carries this as a FluentProtocol precondition, which returns
+            // before the task runner holding our handlers is built, so the call would look
+            // successful while nothing was sent.
+            if (!trade.confirmPermitted()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment started message for trade '%s'%n"
+                                        + "while the trade is under arbitration",
+                                trade.getId()));
+            }
+
             // pass along counter currency tx proof info if provided
             if (txId != null && txKey != null && !txId.isEmpty() && !txKey.isEmpty()) {
                 trade.setCounterCurrencyTxId(txId);
@@ -250,6 +260,14 @@ class CoreTradesService {
                 throw new FailedPreconditionException(
                         format("cannot send a payment received confirmation message for trade '%s'%n"
                                         + "until after a trade payment started message has been sent",
+                                trade.getId()));
+            }
+
+            // Same reason as on the buyer side: the protocol precondition cannot report back.
+            if (!trade.confirmPermitted()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment received confirmation message for trade '%s'%n"
+                                        + "while the trade is in a dispute",
                                 trade.getId()));
             }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);

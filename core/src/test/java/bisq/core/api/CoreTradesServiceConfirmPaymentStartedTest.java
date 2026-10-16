@@ -63,6 +63,7 @@ class CoreTradesServiceConfirmPaymentStartedTest {
 
         when(trade.getId()).thenReturn(TRADE_ID);
         when(trade.isDepositConfirmed()).thenReturn(true);
+        when(trade.confirmPermitted()).thenReturn(true);
         when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(trade));
         when(tradeManager.getTradeProtocol(trade)).thenReturn(buyerProtocol);
 
