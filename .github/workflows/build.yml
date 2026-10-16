@@ -9,10 +9,14 @@ permissions:
 
 jobs:
   build:
+    # A repository can set BUILD_ON_PUSH to false to build pull requests only and avoid a second run per commit.
+    if: github.event_name != 'push' || vars.BUILD_ON_PUSH != 'false'
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: [ubuntu-24.04, macos-15, windows-2025]
+            # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of
+            # the two checked-in runner lists, so every runner label stays reviewed and verified.
+            os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15", "windows-2025"]') }}
             java: [ '21.0.6' ]
     name: Test Java ${{ matrix.java }}, ${{ matrix.os }}
     steps:
@@ -38,7 +42,7 @@ jobs:
         check-latest: false
 
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+      uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 # v3.5.0
       with:
         arguments: verifyReleaseBuild --scan
 
