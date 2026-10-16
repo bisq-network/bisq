@@ -39,5 +39,6 @@ payout without mediation, so such a trade now completes at the next start.
 ## Not covered
 
 The payout transaction received in the peer's message is checked as before, including its
-signatures. A mediated payout after a restart: the node watches the payout address for it only from
-accepting the mediation result until it stops. The delayed payout transaction and refunds.
+signatures. When the node watches for a mediated payout, also after a restart:
+[mediated-payout-detection.md](mediated-payout-detection.md). The delayed payout transaction and
+refunds.

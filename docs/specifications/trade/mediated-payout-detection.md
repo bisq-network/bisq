@@ -15,9 +15,9 @@ peer published the mediated payout.
 - The node watches from its acceptance until the payout is known, also across restarts. At startup
   it watches again for a trade in phase DEPOSIT_CONFIRMED, FIAT_SENT or FIAT_RECEIVED for which it
   has signed the mediated payout.
-- A wallet transaction counts as the mediated payout only if it spends the deposit and its outputs
-  pay the amounts of the mediation result to the traders' payout addresses. Then the node completes
-  the trade as it does after the message.
+- A wallet transaction counts as the mediated payout only if it passes the checks of
+  [payout-seen-in-network.md](payout-seen-in-network.md) for a mediated payout. Then the node
+  completes the trade as it does after the message.
 
 ## Compatibility
 
@@ -26,5 +26,5 @@ result was accepted with an older version.
 
 ## Not covered
 
-The checks of the payout transaction itself. In particular, a payout that the wallet first sees in
-a block has no witness data, and whether it is accepted depends on those checks.
+The checks of the payout transaction itself, which
+[payout-seen-in-network.md](payout-seen-in-network.md) defines.
