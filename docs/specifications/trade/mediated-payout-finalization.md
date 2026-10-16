@@ -22,6 +22,8 @@ mediation result is proposed (dispute state MEDIATION_CLOSED) and the payout is 
 - Both nodes can publish the mediated payout at the same time. It is the same transaction on both
   sides, so this does no harm. A node therefore also accepts the peer's
   MediatedPayoutTxPublishedMessage after its own payout was published, and keeps its own payout.
+  If the trade was closed without a payout of the node, for example by the refund agent, or while
+  its wallet does not know its payout yet, for example after a resync, the node rejects the message.
 
 Without the rule for a signature that arrives after the own acceptance, both traders could accept
 before the other's signature arrived. Then both nodes have both signatures, both show that they
@@ -40,4 +42,5 @@ with its accept button at the same moment, it rejects our message, which only lo
 
 Detecting a payout that the peer published while the node, which has only its own signature, was
 offline. Whether the seller can still confirm the payment receipt after accepting:
-[repeated-payout-confirmation.md](repeated-payout-confirmation.md).
+[repeated-payout-confirmation.md](repeated-payout-confirmation.md). A
+MediatedPayoutTxPublishedMessage that arrives while a refund request is open is processed as before.

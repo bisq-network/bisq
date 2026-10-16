@@ -208,7 +208,11 @@ public class DisputeProtocol extends TradeProtocol {
     protected void handle(MediatedPayoutTxPublishedMessage message, NodeAddress peer) {
         expect(anyPhase(MEDIATED_PAYOUT_TX_PUBLISHED_MSG_PHASES)
                 .with(message)
-                .from(peer))
+                .from(peer)
+                // In PAYOUT_PUBLISHED only if we have our own payout. Without it, the trade was closed otherwise, for
+                // example by the refund agent, or the wallet does not know our payout yet, and the message must not
+                // set a payout.
+                .preCondition(trade.getTradePhase() != Trade.Phase.PAYOUT_PUBLISHED || trade.getPayoutTx() != null))
                 .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
                 .executeTasks();
     }

@@ -34,7 +34,8 @@ import static org.mockito.Mockito.when;
  * exercised by this test.
  *
  * PAYOUT_PUBLISHED must be included: both traders can publish the mediated payout, so
- * the peer's message can arrive after our own payout was published.
+ * the peer's message can arrive after our own payout was published. In that phase the
+ * handler also requires our own payout, see MediatedPayoutTxPublishedMessageHandlingTest.
  */
 public class MediatedPayoutTxPublishedMessagePhaseTest {
     private enum TestEvent implements FluentProtocol.Event {
