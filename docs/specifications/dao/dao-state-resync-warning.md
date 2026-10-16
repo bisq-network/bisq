@@ -25,10 +25,11 @@ and this specification does not apply.
 
 While the condition holds, the user sees a warning that the DAO state needs a resync, with a button
 that opens the DAO network monitor, where the resync starts. The application shows the warning on
-its own at most once per block, when the wallet has seen the same block as the DAO state and no
-other popup is open or waiting; it does not queue behind another popup. A user who closes it or is
-away from the screen sees it again at a later block. In addition, the warning is shown each time the
-user starts one of the blocked actions below.
+its own at most once per block, when the wallet has seen the same block as the DAO state. A user who
+starts one of the blocked actions below gets the warning as well. While another popup is open, the
+warning waits behind it; if the queue of waiting popups is full, it comes again at a later block.
+Only one warning is open or waiting at a time, so the warnings do not pile up while the user is away
+from the screen; a user who closes it sees it again at a later block.
 
 Earlier versions showed the warning again 30 seconds after it was closed, which made the application
 hard to use while the actions that depend on the DAO state stayed available.

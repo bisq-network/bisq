@@ -33,8 +33,6 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.coin.BsqFormatter;
 
-import bisq.common.app.DevEnv;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
 
@@ -92,13 +90,10 @@ public class GUIUtilTest {
     @AfterEach
     public void tearDown() {
         GUIUtil.setDaoPresentation(null);
-        DevEnv.setDevMode(false);
     }
 
     @Test
     public void canCreateOrTakeOfferIsBlockedWhileDaoStateNeedsResync() {
-        DevEnv.setDevMode(true);
-        DevEnv.setIgnorePopupsInDevMode(true);
         // A user who passes all other checks
         User user = mock(User.class);
         when(user.hasAcceptedRefundAgents()).thenReturn(true);

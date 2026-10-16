@@ -44,9 +44,8 @@ public class PopupManager {
         return displayedPopup == null;
     }
 
-    // After a popup is hidden, the next queued popup is displayed with a short delay
-    public static boolean isNoPopupDisplayedOrQueued() {
-        return displayedPopup == null && popups.isEmpty();
+    public static boolean isDisplayedOrQueued(Popup popup) {
+        return displayedPopup == popup || popups.contains(popup);
     }
 
     public static void onHidden(Popup popup) {

@@ -37,6 +37,8 @@ import javafx.collections.MapChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 
 @Slf4j
 @Singleton
@@ -57,6 +59,9 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
     private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
     // Chain height at which the user was last reminded that the DAO state needs a resync
     private int resyncReminderHeight;
+    // The last resync popup. While it is displayed or waits in the popup queue, no new one is created.
+    @Nullable
+    private Popup resyncPopup;
 
     @Inject
     public DaoPresentation(Preferences preferences,
@@ -123,11 +128,7 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
 
         // We get called several times per block. While a resync is needed we remind the user once per block, so a user
         // who closed the popup sees it again at the next block.
-        // We do not queue behind another popup, which can be an earlier resync popup. Otherwise the popups would pile
-        // up while the user is away from the screen.
-        int chainHeight = daoStateService.getChainHeight();
-        if (isResyncReminderDue(chainHeight) && PopupManager.isNoPopupDisplayedOrQueued()) {
-            resyncReminderHeight = chainHeight;
+        if (isResyncReminderDue(daoStateService.getChainHeight())) {
             showResyncPopup();
         }
     }
@@ -168,17 +169,34 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
                         daoStateMonitoringService.isDaoStateBlockChainNotConnecting());
     }
 
+    // The popup waits in the popup queue while another popup is displayed. Only one resync popup is displayed or
+    // queued at a time, so they do not pile up while the user is away from the screen.
     private void showResyncPopup() {
+        resyncReminderHeight = daoStateService.getChainHeight();
         if (DevEnv.isIgnorePopupsInDevMode()) {
             log.warn("The DAO state needs a resync. The popup is ignored in dev mode.");
             return;
         }
 
-        new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+        if (resyncPopup != null && isDisplayedOrQueued(resyncPopup)) {
+            return;
+        }
+
+        resyncPopup = new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
                 .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
                 .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class,
-                        DaoStateMonitorView.class))
-                .show();
+                        DaoStateMonitorView.class));
+        show(resyncPopup);
+    }
+
+    @VisibleForTesting
+    void show(Popup popup) {
+        popup.show();
+    }
+
+    @VisibleForTesting
+    boolean isDisplayedOrQueued(Popup popup) {
+        return PopupManager.isDisplayedOrQueued(popup);
     }
 
     private void onUpdateAnyChainHeight() {

@@ -27,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -36,12 +37,10 @@ public class DaoPresentationTest {
     private final DaoStateService daoStateService = mock(DaoStateService.class);
     private final DaoStateMonitoringService daoStateMonitoringService = mock(DaoStateMonitoringService.class);
     private final BsqWalletService bsqWalletService = mock(BsqWalletService.class);
-    private DaoPresentation daoPresentation;
+    private DaoPresentationTestUtil.TestDaoPresentation daoPresentation;
 
     @BeforeEach
     public void setup() {
-        DevEnv.setDevMode(true);
-        DevEnv.setIgnorePopupsInDevMode(true);
         when(daoStateService.isParseBlockChainComplete()).thenReturn(true);
         daoPresentation = DaoPresentationTestUtil.daoPresentation(daoStateService,
                 daoStateMonitoringService,
@@ -51,6 +50,7 @@ public class DaoPresentationTest {
     @AfterEach
     public void tearDown() {
         DevEnv.setDevMode(false);
+        DevEnv.setIgnorePopupsInDevMode(true);
     }
 
     @Test
@@ -107,6 +107,51 @@ public class DaoPresentationTest {
         daoPresentation.onDaoStateHashesChanged();
 
         assertTrue(daoPresentation.isResyncReminderDue(100), "reminder is still due once the DAO state caught up");
+    }
+
+    // Another popup can be displayed, so the resync popup waits in the popup queue. It must not pile up there.
+    @Test
+    public void reminderAddsNoSecondPopupWhileOneIsDisplayedOrQueued() {
+        when(daoStateMonitoringService.isInConflictWithSeedNode()).thenReturn(true);
+        atChainHeight(100);
+        daoPresentation.onDaoStateHashesChanged();
+        assertEquals(1, daoPresentation.popups.size());
+
+        atChainHeight(101);
+        daoPresentation.onDaoStateHashesChanged();
+        assertEquals(1, daoPresentation.popups.size(), "no second popup while the first is not closed");
+
+        daoPresentation.closePopups();
+        atChainHeight(102);
+        daoPresentation.onDaoStateHashesChanged();
+        assertEquals(2, daoPresentation.popups.size(), "a new popup once the first was closed");
+    }
+
+    @Test
+    public void gateAddsNoSecondPopupWhileOneIsDisplayedOrQueued() {
+        when(daoStateMonitoringService.isInConflictWithSeedNode()).thenReturn(true);
+        atChainHeight(100);
+
+        assertFalse(daoPresentation.isDaoStateInSyncOrShowPopup());
+        assertFalse(daoPresentation.isDaoStateInSyncOrShowPopup());
+        assertEquals(1, daoPresentation.popups.size());
+
+        daoPresentation.closePopups();
+        assertFalse(daoPresentation.isDaoStateInSyncOrShowPopup());
+        assertEquals(2, daoPresentation.popups.size());
+    }
+
+    @Test
+    public void gatePopupCountsAsTheReminderOfTheBlock() {
+        when(daoStateMonitoringService.isInConflictWithSeedNode()).thenReturn(true);
+        atChainHeight(100);
+        assertFalse(daoPresentation.isDaoStateInSyncOrShowPopup());
+        daoPresentation.closePopups();
+
+        daoPresentation.onDaoStateHashesChanged();
+
+        assertEquals(1, daoPresentation.popups.size(), "no reminder after the gate popup in the same block");
+        assertTrue(daoPresentation.isResyncReminderDue(101));
     }
 
     private void atChainHeight(int chainHeight) {
