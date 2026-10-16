@@ -8,34 +8,24 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 public class SpecBuilder {
-    private final String appName;
-    private final String appVersion;
-    private final String appSummary;
-    private final String sourceFileName;
+    private final SpecMetadata metadata;
     private final Path installDistDir;
 
-    public SpecBuilder(String appName,
-                       String appVersion,
-                       String appSummary,
-                       String sourceFileName,
-                       Path installDistDir) {
-        this.appName = appName;
-        this.appVersion = appVersion;
-        this.appSummary = appSummary;
-        this.sourceFileName = sourceFileName;
+    public SpecBuilder(SpecMetadata metadata, Path installDistDir) {
+        this.metadata = metadata;
         this.installDistDir = installDistDir;
     }
 
     public String build() throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Name: ").append(appName).append('\n');
-        stringBuilder.append("Version: ").append(appVersion).append('\n');
+        stringBuilder.append("Name: ").append(metadata.appName()).append('\n');
+        stringBuilder.append("Version: ").append(metadata.appVersion()).append('\n');
         stringBuilder.append("Release: 1%{?dist}\n");
         stringBuilder.append("Vendor: Bisq\n");
-        stringBuilder.append("Summary: ").append(appSummary).append('\n');
+        stringBuilder.append("Summary: ").append(metadata.appSummary()).append('\n');
         stringBuilder.append("License: AGPLv3\n");
         stringBuilder.append("URL: https://github.com/bisq-network/bisq\n");
-        stringBuilder.append("Source0: ").append(sourceFileName).append('\n');
+        stringBuilder.append("Source0: ").append(metadata.sourceFileName()).append('\n');
         stringBuilder.append("\n");
         stringBuilder.append("Requires: java-21-openjdk\n");
         stringBuilder.append("\n");
