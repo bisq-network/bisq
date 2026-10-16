@@ -58,6 +58,15 @@ public class MediatedPayoutFinalizationConditionTest {
                                byte[] ownSignature,
                                byte[] peersSignature,
                                boolean payoutPublished) {
+        return trade(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG, disputeState, ownSignature,
+                peersSignature, payoutPublished);
+    }
+
+    private static Trade trade(Trade.State state,
+                               Trade.DisputeState disputeState,
+                               byte[] ownSignature,
+                               byte[] peersSignature,
+                               boolean payoutPublished) {
         Offer offer = make(a(OfferMaker.Offer, with(OfferMaker.direction, OfferDirection.SELL)));
         ProcessModel processModel = new ProcessModel(offer.getId(), "account-id",
                 new PubKeyRing(Sig.generateKeyPair().getPublic(), Encryption.generateKeyPair().getPublic()));
@@ -74,6 +83,7 @@ public class MediatedPayoutFinalizationConditionTest {
                 null /* btcWalletService */,
                 processModel,
                 "uid");
+        trade.setState(state);
         trade.setDisputeState(disputeState);
         if (payoutPublished) {
             Transaction payoutTx = mock(Transaction.class);
@@ -107,6 +117,14 @@ public class MediatedPayoutFinalizationConditionTest {
     public void notReadyOncePayoutIsPublished() {
         assertFalse(DisputeProtocol.isMediatedPayoutReadyToFinalize(
                 trade(Trade.DisputeState.MEDIATION_CLOSED, OWN_SIGNATURE, PEERS_SIGNATURE, true)));
+    }
+
+    // The trade is in step 4, but its payout is not known yet, for example while the wallet resyncs
+    @Test
+    public void notReadyInStepFourWithoutKnownPayout() {
+        assertFalse(DisputeProtocol.isMediatedPayoutReadyToFinalize(
+                trade(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG, Trade.DisputeState.MEDIATION_CLOSED,
+                        OWN_SIGNATURE, PEERS_SIGNATURE, false)));
     }
 
     @Test
