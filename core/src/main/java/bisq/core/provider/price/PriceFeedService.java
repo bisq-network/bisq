@@ -92,7 +92,8 @@ public class PriceFeedService {
     private Timer retryWithNewProviderTime;
     @Nullable
     private PriceRequest priceRequest;
-    // Callbacks queued on the user thread before shutDown can still call request or retryWithNewProvider.
+    // After shutDown a callback queued before it can still schedule a retry and callers can still ask for prices,
+    // so request checks it.
     private volatile boolean shutDownRequested;
 
 
@@ -241,9 +242,6 @@ public class PriceFeedService {
     }
 
     private void retryWithNewProvider() {
-        if (shutDownRequested)
-            return;
-
         // We increase retry delay each time until we reach PERIOD_SEC to not exceed requests.
 
         if (retryWithNewProviderTime != null) {
