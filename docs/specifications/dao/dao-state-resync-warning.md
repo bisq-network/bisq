@@ -18,8 +18,11 @@ holds:
   block of the chain.
 
 Both marks stay until the node restarts. The resync of the DAO state ends with a restart of the
-application. Before initial parsing is complete the node does not know whether its state is in sync,
-and this specification does not apply.
+application. If the hash of a seed node is wrong, the DAO state of the node can be correct, and a
+resync does not help as long as that seed node answers: the operator of the seed node fixes it, and
+the blocked actions become available again with the next restart of the application. Before initial
+parsing is complete the node does not know whether its state is in sync, and this specification does
+not apply.
 
 ## Warning
 
