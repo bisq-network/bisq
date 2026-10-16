@@ -39,7 +39,7 @@ the request failed with `UNKNOWN`, and it now fails with `UNAVAILABLE` as well.
 
 While the price providers answer, the returned price can be up to about one minute older than a
 price requested for the call. Before, the daemon requested prices once at its start, and repeated
-the requests only after the first market price request.
+the requests only after the first market price request or after a failed request at its start.
 
 ## Not covered
 
