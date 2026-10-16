@@ -17,8 +17,12 @@
 
 package bisq.desktop.main.overlays;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OverlayTest {
@@ -33,6 +37,17 @@ public class OverlayTest {
     @Test
     public void typeUnsafeCreation() {
         assertThrows(RuntimeException.class, B::new);
+    }
+
+    @Test
+    public void hyperlinksAreReplacedByReferences() {
+        List<String> hyperlinks = new ArrayList<>();
+
+        String text = Overlay.extractHyperlinks("See [HYPERLINK:https://bisq.wiki] and [HYPERLINK:https://bisq.network].",
+                hyperlinks);
+
+        assertEquals("See [1] and [2].", text);
+        assertEquals(List.of("https://bisq.wiki", "https://bisq.network"), hyperlinks);
     }
 
     private static class A extends Overlay<A> {

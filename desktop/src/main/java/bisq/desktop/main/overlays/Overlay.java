@@ -90,6 +90,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -923,19 +924,24 @@ public abstract class Overlay<T extends Overlay<T>> {
     // footer contains optional hyperlinks extracted from the message
     private void addFooter() {
         if (messageHyperlinks != null && messageHyperlinks.size() > 0) {
-            VBox footerBox = new VBox();
+            VBox footerBox = createHyperlinkFooter(messageHyperlinks);
             GridPane.setRowIndex(footerBox, ++rowIndex);
             GridPane.setColumnSpan(footerBox, 2);
             GridPane.setMargin(footerBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(footerBox);
-            for (int i = 0; i < messageHyperlinks.size(); i++) {
-                Label label = new Label(String.format("[%d]", i + 1));
-                Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
-                link.setOnAction(event -> GUIUtil.openWebPageNoPopup(link.getText()));
-                HBox.setMargin(link, new Insets(-2, 0, 0, 0));
-                footerBox.getChildren().addAll(new HBox(label, link));
-            }
         }
+    }
+
+    protected static VBox createHyperlinkFooter(List<String> hyperlinks) {
+        VBox footerBox = new VBox();
+        for (int i = 0; i < hyperlinks.size(); i++) {
+            Label label = new Label(String.format("[%d]", i + 1));
+            Hyperlink link = new Hyperlink(hyperlinks.get(i));
+            link.setOnAction(event -> GUIUtil.openWebPageNoPopup(link.getText()));
+            HBox.setMargin(link, new Insets(-2, 0, 0, 0));
+            footerBox.getChildren().addAll(new HBox(label, link));
+        }
+        return footerBox;
     }
 
     private void addReportErrorButtons() {
@@ -1091,24 +1097,28 @@ public abstract class Overlay<T extends Overlay<T>> {
         else truncatedMessage = Objects.requireNonNullElse(message, "");
     }
 
+    private void preProcessMessage(String message) {
+        ArrayList<String> hyperlinks = messageHyperlinks != null ? messageHyperlinks : new ArrayList<>();
+        this.message = extractHyperlinks(message, hyperlinks);
+        if (!hyperlinks.isEmpty())
+            messageHyperlinks = hyperlinks;
+        setTruncatedMessage();
+    }
+
     // separate a popup message from optional hyperlinks.  [bisq-network/bisq/pull/4637]
     // hyperlinks are distinguished by [HYPERLINK:] tag
     // referenced in order from within the message via [1], [2] etc.
     // e.g. [HYPERLINK:https://bisq.wiki]
-    private void preProcessMessage(String message) {
+    protected static String extractHyperlinks(String message, List<String> hyperlinks) {
         Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)\\]");
         Matcher matcher = pattern.matcher(message);
         String work = message;
         while (matcher.find()) {  // extract hyperlinks & store in array
-            if (messageHyperlinks == null) {
-                messageHyperlinks = new ArrayList<>();
-            }
-            messageHyperlinks.add(matcher.group(1));
+            hyperlinks.add(matcher.group(1));
             // replace hyperlink in message with [n] reference
-            work = work.replaceFirst(pattern.toString(), String.format("[%d]", messageHyperlinks.size()));
+            work = work.replaceFirst(pattern.toString(), String.format("[%d]", hyperlinks.size()));
         }
-        this.message = work;
-        setTruncatedMessage();
+        return work;
     }
 
     protected double getDuration(double duration) {

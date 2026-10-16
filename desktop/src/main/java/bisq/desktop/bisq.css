@@ -85,6 +85,18 @@
     -fx-alignment: center;
 }
 
+.success-box {
+    -fx-border-color: -bs-rd-green;
+    -fx-border-width: 2;
+    -fx-padding: 10;
+}
+
+.error-box {
+    -fx-border-color: -bs-rd-error-red;
+    -fx-border-width: 2;
+    -fx-padding: 10;
+}
+
 .warning {
     -fx-text-fill: -bs-yellow;
     -fx-fill: -bs-yellow;
