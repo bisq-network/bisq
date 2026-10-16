@@ -52,6 +52,13 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            if (trade.getPayoutTx() != null) {
+                // A repeated confirmation re-sends the payout tx. Its address entry might be released already.
+                log.info("We created the payout tx already and keep it. tradeId={}", trade.getId());
+                complete();
+                return;
+            }
+
             checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
 
             Offer offer = trade.getOffer();

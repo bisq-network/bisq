@@ -36,6 +36,7 @@ public class OfferMaker {
     public static final Property<Offer, Boolean> useMarketBasedPrice = new Property<>();
     public static final Property<Offer, Double> marketPriceMargin = new Property<>();
     public static final Property<Offer, String> id = new Property<>();
+    public static final Property<Offer, Long> sellerSecurityDeposit = new Property<>();
 
     public static final Instantiator<Offer> Offer = lookup -> new Offer(
             new OfferPayload(lookup.valueOf(id, "1234"),
@@ -65,7 +66,7 @@ public class OfferMaker {
                     0L,
                     false,
                     0L,
-                    0L,
+                    lookup.valueOf(sellerSecurityDeposit, 0L),
                     0L,
                     0L,
                     false,
