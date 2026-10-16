@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer.bisq_v1.takeoffer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.bisq_v1.OfferDataModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -186,7 +187,10 @@ class TakeOfferDataModel extends OfferDataModel {
                     false,
                     () -> {
                     },
-                    errorMessage -> new Popup().warning(errorMessage).show());
+                    errorMessage -> {
+                        if (!OfferViewUtil.isReportedByOfferState(offer))
+                            new Popup().warning(errorMessage).show();
+                    });
         }
     }
 
@@ -340,7 +344,8 @@ class TakeOfferDataModel extends OfferDataModel {
                     tradeResultHandler,
                     errorMessage -> {
                         log.warn(errorMessage);
-                        new Popup().warning(errorMessage).show();
+                        if (!OfferViewUtil.isReportedByOfferState(offer))
+                            new Popup().warning(errorMessage).show();
                     }
             );
         }

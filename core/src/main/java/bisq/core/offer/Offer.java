@@ -22,6 +22,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
@@ -105,6 +106,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @JsonExclude
     @Nullable
     transient private OfferAvailabilityProtocol availabilityProtocol;
+    // The maker's answer that produced the current state, so a NOT_AVAILABLE state can
+    // be explained. Cleared by every state change that is not such an answer.
+    @JsonExclude
+    @Nullable
+    transient private AvailabilityResult availabilityResult;
     @JsonExclude
     @Getter
     final transient private StringProperty errorMessageProperty = new SimpleStringProperty();
@@ -295,7 +301,14 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(Offer.State state) {
+        if (state != State.AVAILABLE && state != State.NOT_AVAILABLE)
+            availabilityResult = null;
         stateProperty().set(state);
+    }
+
+    // Set before the matching AVAILABLE / NOT_AVAILABLE state, so a state listener can read it.
+    public void setAvailabilityResult(@Nullable AvailabilityResult availabilityResult) {
+        this.availabilityResult = availabilityResult;
     }
 
     public ObjectProperty<Offer.State> stateProperty() {
@@ -426,6 +439,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();
+    }
+
+    @Nullable
+    public AvailabilityResult getAvailabilityResult() {
+        return availabilityResult;
     }
 
     public ReadOnlyStringProperty errorMessageProperty() {

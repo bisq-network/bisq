@@ -36,6 +36,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.availability.AvailabilityResult;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -57,9 +58,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // Shared utils for Views
 public class OfferViewUtil {
+
+    /**
+     * The warning for an offer in state NOT_AVAILABLE, from the maker's answer. Without an
+     * answer, or for OFFER_TAKEN, the wording depends on whether a take was already requested.
+     */
+    public static String getNotAvailableWarning(@Nullable AvailabilityResult result, boolean takeOfferRequested) {
+        if (result == null || result == AvailabilityResult.OFFER_TAKEN)
+            return Res.get(takeOfferRequested ? "takeOffer.failed.offerNotAvailable" : "takeOffer.failed.offerTaken");
+        return Res.get("takeOffer.failed.availabilityResult." + result.name());
+    }
+
+    /**
+     * Whether the take-offer view model reports a failed availability check from the offer state.
+     * The error handler of the check then only logs, so the maker's raw text is not a second popup.
+     */
+    public static boolean isReportedByOfferState(Offer offer) {
+        return offer.getState() == Offer.State.NOT_AVAILABLE || offer.getState() == Offer.State.MAKER_OFFLINE;
+    }
 
     public static Label createPopOverLabel(String text) {
         final Label label = new Label(text);
