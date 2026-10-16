@@ -39,4 +39,5 @@ with its accept button at the same moment, it rejects our message, which only lo
 ## Not covered
 
 Detecting a payout that the peer published while the node, which has only its own signature, was
-offline.
+offline. Whether the seller can still confirm the payment receipt after accepting:
+[repeated-payout-confirmation.md](repeated-payout-confirmation.md).
