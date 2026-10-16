@@ -20,30 +20,81 @@ package bisq.core.provider.price;
 import bisq.core.provider.PriceFeedNodeAddressProvider;
 import bisq.core.provider.PriceHttpClient;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.testutil.ManualTimer;
 import bisq.core.user.Preferences;
+
+import bisq.common.UserThread;
+
+import java.time.Instant;
 
 import java.io.IOException;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// After the shutdown the price feed must not start a request, whoever asks for it.
 public class PriceFeedServiceTest {
+    private static final String BASE_URL = "http://localhost:8078/";
+
+    private final PriceHttpClient httpClient = mock(PriceHttpClient.class);
+    private final PriceFeedNodeAddressProvider nodeAddressProvider = mock(PriceFeedNodeAddressProvider.class);
+    private PriceFeedService priceFeedService;
+
+    @BeforeEach
+    public void setUp() {
+        ManualTimer.clear();
+        UserThread.setTimerClass(ManualTimer.class);
+        when(httpClient.getBaseUrl()).thenReturn(BASE_URL);
+        when(nodeAddressProvider.getBaseUrl()).thenReturn(BASE_URL);
+        priceFeedService = new PriceFeedService(httpClient, mock(FeeService.class), nodeAddressProvider,
+                mock(Preferences.class));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        UserThread.resetForTests();
+        ManualTimer.clear();
+    }
+
+    // The API answers from the cache, so the price feed has to keep it recent without a caller asking.
+    @Test
+    public void startRequestingPricesRepeatsTheRequest() throws Exception {
+        when(httpClient.get(any(), any(), any())).thenReturn("{\"data\":[{\"currencyCode\":\"USD\",\"price\":50000.0," +
+                "\"timestampSec\":" + Instant.now().getEpochSecond() + ",\"provider\":\"test\"}],\"bitcoinFeesTs\":0}");
+        CountDownLatch responseApplied = new CountDownLatch(1);
+        UserThread.setExecutor(command -> {
+            command.run();
+            responseApplied.countDown();
+        });
+        priceFeedService.setCurrencyCode("USD");
+
+        priceFeedService.startRequestingPrices();
+        assertTrue(responseApplied.await(10, TimeUnit.SECONDS), "response was not applied");
+        ManualTimer.firePendingTimers();
+
+        verify(httpClient, timeout(1000).times(2)).get(any(), any(), any());
+        // The provider answered, so the repeat stays with it.
+        verify(nodeAddressProvider, never()).selectNextProviderBaseUrl();
+    }
+
+    // After the shutdown the price feed must not start a request, whoever asks for it. No request is started
+    // before the shutdown either, as PriceRequest.shutDown would stop the executor that all tests share.
     @Test
     public void noRequestIsStartedAfterShutDown() throws IOException {
-        PriceHttpClient httpClient = mock(PriceHttpClient.class);
-        PriceFeedNodeAddressProvider nodeAddressProvider = mock(PriceFeedNodeAddressProvider.class);
-        when(nodeAddressProvider.getBaseUrl()).thenReturn("http://localhost:8078/");
-        PriceFeedService priceFeedService = new PriceFeedService(httpClient, mock(FeeService.class),
-                nodeAddressProvider, mock(Preferences.class));
-
         priceFeedService.shutDown();
         priceFeedService.startRequestingPrices();
         priceFeedService.requestPriceFeed(price -> fail("no price expected"),
