@@ -49,7 +49,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
 
     protected abstract void setState();
 
-    protected abstract void validatePayoutTx(Transaction payoutTx);
+    protected abstract void validatePayoutTx(Transaction payoutTx, boolean isConfirmed);
 
     @Override
     protected void run() {
@@ -98,7 +98,8 @@ public abstract class SetupPayoutTxListener extends TradeTask {
     private boolean applyConfidence(TransactionConfidence confidence) {
         if (trade.getPayoutTx() == null) {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
-            if (!isPayoutTxValid(walletTx)) {
+            boolean isConfirmed = confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+            if (!isPayoutTxValid(walletTx, isConfirmed)) {
                 return false;
             }
             trade.setPayoutTx(walletTx);
@@ -116,9 +117,9 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         return true;
     }
 
-    private boolean isPayoutTxValid(Transaction payoutTx) {
+    private boolean isPayoutTxValid(Transaction payoutTx, boolean isConfirmed) {
         try {
-            validatePayoutTx(payoutTx);
+            validatePayoutTx(payoutTx, isConfirmed);
             return true;
         } catch (Exception e) {
             String txId = payoutTx != null ? payoutTx.getTxId().toString() : "null";

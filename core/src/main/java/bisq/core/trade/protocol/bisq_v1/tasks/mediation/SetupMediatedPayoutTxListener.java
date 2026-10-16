@@ -33,7 +33,7 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTx;
+import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTxSeenInNetwork;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -64,7 +64,7 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
     }
 
     @Override
-    protected void validatePayoutTx(Transaction payoutTx) {
+    protected void validatePayoutTx(Transaction payoutTx, boolean isConfirmed) {
         BtcWalletService btcWalletService = processModel.getBtcWalletService();
         TradingPeer tradingPeer = processModel.getTradePeer();
 
@@ -87,7 +87,7 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
         Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
         NetworkParameters params = btcWalletService.getParams();
 
-        checkPayoutTx(payoutTx,
+        checkPayoutTxSeenInNetwork(payoutTx,
                 depositTx,
                 buyerPayoutAmount,
                 sellerPayoutAmount,
@@ -95,6 +95,7 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
                 sellerPayoutAddressString,
                 buyerMultiSigPubKey,
                 sellerMultiSigPubKey,
-                params);
+                params,
+                isConfirmed);
     }
 }

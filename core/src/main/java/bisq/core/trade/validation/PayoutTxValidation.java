@@ -95,6 +95,53 @@ public final class PayoutTxValidation {
                                             byte[] buyerMultiSigPubKey,
                                             byte[] sellerMultiSigPubKey,
                                             NetworkParameters params) {
+        return checkPayoutTx(payoutTx,
+                depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString,
+                buyerMultiSigPubKey,
+                sellerMultiSigPubKey,
+                params,
+                true);
+    }
+
+    // A payout tx in a block has passed the consensus checks of its witness, and the transactions of a filtered
+    // block arrive without witness data. So the witness signatures are checked only while the payout tx is
+    // unconfirmed; its input and outputs are checked in both cases, and the tx id commits to them.
+    public static Transaction checkPayoutTxSeenInNetwork(Transaction payoutTx,
+                                                         Transaction depositTx,
+                                                         Coin buyerPayoutAmount,
+                                                         Coin sellerPayoutAmount,
+                                                         String buyerPayoutAddressString,
+                                                         String sellerPayoutAddressString,
+                                                         byte[] buyerMultiSigPubKey,
+                                                         byte[] sellerMultiSigPubKey,
+                                                         NetworkParameters params,
+                                                         boolean isConfirmed) {
+        return checkPayoutTx(payoutTx,
+                depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString,
+                buyerMultiSigPubKey,
+                sellerMultiSigPubKey,
+                params,
+                !isConfirmed);
+    }
+
+    private static Transaction checkPayoutTx(Transaction payoutTx,
+                                             Transaction depositTx,
+                                             Coin buyerPayoutAmount,
+                                             Coin sellerPayoutAmount,
+                                             String buyerPayoutAddressString,
+                                             String sellerPayoutAddressString,
+                                             byte[] buyerMultiSigPubKey,
+                                             byte[] sellerMultiSigPubKey,
+                                             NetworkParameters params,
+                                             boolean checkWitnessSignatures) {
         Transaction checkedPayoutTx = checkNotNull(payoutTx, "payoutTx must not be null");
         Transaction checkedDepositTx = checkNotNull(depositTx, "depositTx must not be null");
         Coin checkedBuyerPayoutAmount = checkIsNotNegative(buyerPayoutAmount, "buyerPayoutAmount");
@@ -133,7 +180,8 @@ public final class PayoutTxValidation {
                 depositOutput,
                 redeemScript,
                 checkedBuyerMultiSigPubKey,
-                checkedSellerMultiSigPubKey);
+                checkedSellerMultiSigPubKey,
+                checkWitnessSignatures);
 
         return checkedPayoutTx;
     }
@@ -340,7 +388,8 @@ public final class PayoutTxValidation {
                                                  TransactionOutput depositOutput,
                                                  Script redeemScript,
                                                  byte[] buyerMultiSigPubKey,
-                                                 byte[] sellerMultiSigPubKey) {
+                                                 byte[] sellerMultiSigPubKey,
+                                                 boolean checkWitnessSignatures) {
         Script depositOutputScript = depositOutput.getScriptPubKey();
         boolean isSegwitPayout = Arrays.equals(depositOutputScript.getProgram(),
                 ScriptBuilder.createP2WSHOutputScript(redeemScript).getProgram());
@@ -359,7 +408,9 @@ public final class PayoutTxValidation {
             throw new IllegalArgumentException("payoutTx input script does not spend depositTx output 0", t);
         }
 
-        checkP2wshSignatures(payoutTx, depositOutput, redeemScript, buyerMultiSigPubKey, sellerMultiSigPubKey);
+        if (checkWitnessSignatures) {
+            checkP2wshSignatures(payoutTx, depositOutput, redeemScript, buyerMultiSigPubKey, sellerMultiSigPubKey);
+        }
     }
 
     private static void checkP2wshSignatures(Transaction payoutTx,
