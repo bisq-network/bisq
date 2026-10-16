@@ -133,6 +133,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 import static bisq.core.trade.validation.InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest;
+import static bisq.core.trade.validation.MinerFeeValidation.checkTradeTxFeeIsInTolerance;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -568,6 +569,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             ErrorMessageHandler errorMessageHandler) {
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
+
+        // The maker drops a request with a trade tx fee outside this tolerance without a reply.
+        try {
+            checkTradeTxFeeIsInTolerance(txFee, provider.getFeeService());
+        } catch (IllegalArgumentException e) {
+            String errorMessage = Res.get("takeOffer.failed.tradeTxFeeNotAccepted");
+            errorMessageHandler.handleErrorMessage(errorMessage);
+            log.warn("Trade tx fee {} would not be accepted by the maker. {}", txFee.value, e.getMessage());
+            return;
+        }
 
         OfferAvailabilityModel model = getOfferAvailabilityModel(offer, isTakerApiUser);
         offer.checkOfferAvailability(model,
