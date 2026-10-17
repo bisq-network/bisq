@@ -17,12 +17,15 @@
 
 package bisq.core.btc.nodes;
 
+import bisq.common.config.Config;
+
 import org.bitcoinj.core.BitcoinSerializer;
 import org.bitcoinj.core.MessageSerializer;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -56,6 +59,9 @@ public class LocalBitcoinNodeTest {
         if (localNode != null) {
             localNode.close();
         }
+        // Config keeps the network and the data directory in static fields, which the other tests expect at the
+        // defaults
+        new Config();
     }
 
     @Test
@@ -63,7 +69,7 @@ public class LocalBitcoinNodeTest {
         startLocalNode(socket -> answerWithServices(socket,
                 VersionMessage.NODE_NETWORK | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM));
 
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
         assertTrue(versionReceived.get());
     }
 
@@ -72,7 +78,7 @@ public class LocalBitcoinNodeTest {
         startLocalNode(socket -> answerWithServices(socket,
                 VersionMessage.NODE_NETWORK_LIMITED | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM));
 
-        assertFalse(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertUnusable("pruned", LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
     }
 
     @Test
@@ -80,7 +86,7 @@ public class LocalBitcoinNodeTest {
         startLocalNode(socket -> answerWithServices(socket,
                 VersionMessage.NODE_NETWORK | VersionMessage.NODE_WITNESS));
 
-        assertFalse(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertUnusable("bloom filters", LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
     }
 
     @Test
@@ -88,14 +94,15 @@ public class LocalBitcoinNodeTest {
         startLocalNode(socket -> answerWithServices(socket,
                 VersionMessage.NODE_NETWORK | VersionMessage.NODE_BLOOM));
 
-        assertFalse(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertUnusable("witness", LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
     }
 
+    // A busy node can close the connection, so it is used as before
     @Test
     public void nodeThatClosesWithoutAnswerIsUsedAsBefore() throws IOException {
         startLocalNode(Socket::close);
 
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
     }
 
     @Test
@@ -105,7 +112,7 @@ public class LocalBitcoinNodeTest {
             SERIALIZER.serialize("verack", new byte[0], socket.getOutputStream());
         });
 
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
     }
 
     @Test
@@ -113,7 +120,7 @@ public class LocalBitcoinNodeTest {
         startLocalNode(socket -> socket.getOutputStream()
                 .write("HTTP/1.1 400 Bad Request\r\n\r\n".getBytes(StandardCharsets.US_ASCII)));
 
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
     }
 
     // The pruned node sends its answer a byte every 500 ms, so no single read waits long. The deadline
@@ -139,7 +146,7 @@ public class LocalBitcoinNodeTest {
         });
 
         long start = System.currentTimeMillis();
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
         assertTrue(System.currentTimeMillis() - start < 7_000);
     }
 
@@ -158,7 +165,7 @@ public class LocalBitcoinNodeTest {
         });
 
         long start = System.currentTimeMillis();
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
+        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
         assertTrue(System.currentTimeMillis() - start < 2_000);
     }
 
@@ -169,7 +176,64 @@ public class LocalBitcoinNodeTest {
             port = closed.getLocalPort();
         }
 
-        assertFalse(LocalBitcoinNode.detect(PARAMS, port));
+        assertFalse(LocalBitcoinNode.detect(PARAMS, port).found());
+    }
+
+    // The user decides whether the wallet continues without a node that was found but cannot serve it
+    @Test
+    public void unusableNodeGivesTheReasonForTheUser() throws IOException {
+        startLocalNode(socket -> answerWithServices(socket,
+                VersionMessage.NODE_NETWORK_LIMITED | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM));
+
+        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(new Config(), localNode.getLocalPort());
+
+        assertFalse(localBitcoinNode.shouldBeUsed());
+        assertTrue(localBitcoinNode.getUnusableReason().orElseThrow().contains("pruned"));
+    }
+
+    @Test
+    public void usableNodeGivesNoReason() throws IOException {
+        startLocalNode(socket -> answerWithServices(socket,
+                VersionMessage.NODE_NETWORK | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM));
+
+        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(new Config(), localNode.getLocalPort());
+
+        assertTrue(localBitcoinNode.shouldBeUsed());
+        assertTrue(localBitcoinNode.getUnusableReason().isEmpty());
+    }
+
+    // An ignored node is not contacted, so there is nothing to ask the user
+    @Test
+    public void ignoredNodeIsNotChecked() throws IOException {
+        startLocalNode(socket -> answerWithServices(socket,
+                VersionMessage.NODE_NETWORK_LIMITED | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM));
+
+        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(new Config("--ignoreLocalBtcNode=true"),
+                localNode.getLocalPort());
+
+        assertFalse(localBitcoinNode.shouldBeUsed());
+        assertTrue(localBitcoinNode.getUnusableReason().isEmpty());
+        assertFalse(versionReceived.get());
+    }
+
+    // On BTC_REGTEST the peer of the wallet is set with --bitcoinRegtestHost, so there is nothing to ask the user
+    @Test
+    public void unusableNodeGivesNoReasonOnRegtest() throws IOException {
+        NetworkParameters regtest = RegTestParams.get();
+        long pruned = VersionMessage.NODE_NETWORK_LIMITED | VersionMessage.NODE_WITNESS | VersionMessage.NODE_BLOOM;
+        startLocalNode(socket -> answerWithServices(socket, pruned, regtest));
+
+        LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(new Config("--baseCurrencyNetwork=BTC_REGTEST"),
+                localNode.getLocalPort());
+
+        assertFalse(localBitcoinNode.shouldBeUsed());
+        assertTrue(localBitcoinNode.getUnusableReason().isEmpty());
+    }
+
+    private static void assertUnusable(String reasonPart, LocalBitcoinNode.Detection detection) {
+        assertTrue(detection.found());
+        assertFalse(detection.isUsable());
+        assertTrue(detection.unusableReason().contains(reasonPart), detection.unusableReason());
     }
 
     private interface Answer {
@@ -191,28 +255,37 @@ public class LocalBitcoinNodeTest {
         thread.start();
     }
 
-    // Like Bitcoin Core, the fake node answers only after it got a valid version message.
     private void answerWithServices(Socket socket, long services) throws IOException {
-        readVersion(socket);
-        VersionMessage versionMessage = new VersionMessage(PARAMS, 900_000);
+        answerWithServices(socket, services, PARAMS);
+    }
+
+    // Like Bitcoin Core, the fake node answers only after it got a valid version message.
+    private void answerWithServices(Socket socket, long services, NetworkParameters params) throws IOException {
+        readVersion(socket, params);
+        VersionMessage versionMessage = new VersionMessage(params, 900_000);
         versionMessage.localServices = services;
-        SERIALIZER.serialize(versionMessage, socket.getOutputStream());
+        params.getDefaultSerializer().serialize(versionMessage, socket.getOutputStream());
     }
 
     private void readVersion(Socket socket) throws IOException {
+        readVersion(socket, PARAMS);
+    }
+
+    private void readVersion(Socket socket, NetworkParameters params) throws IOException {
+        MessageSerializer serializer = params.getDefaultSerializer();
         DataInputStream in = new DataInputStream(socket.getInputStream());
         byte[] magic = new byte[4];
         in.readFully(magic);
-        if (Utils.readUint32BE(magic, 0) != PARAMS.getPacketMagic()) {
+        if (Utils.readUint32BE(magic, 0) != params.getPacketMagic()) {
             throw new IOException("Unexpected magic");
         }
         byte[] headerBytes = new byte[BitcoinSerializer.BitcoinPacketHeader.HEADER_LENGTH];
         in.readFully(headerBytes);
-        BitcoinSerializer.BitcoinPacketHeader header = SERIALIZER.deserializeHeader(ByteBuffer.wrap(headerBytes));
+        BitcoinSerializer.BitcoinPacketHeader header = serializer.deserializeHeader(ByteBuffer.wrap(headerBytes));
         byte[] payload = new byte[header.size];
         in.readFully(payload);
         if (header.command.equals("version") &&
-                SERIALIZER.deserializePayload(header, ByteBuffer.wrap(payload)) instanceof VersionMessage) {
+                serializer.deserializePayload(header, ByteBuffer.wrap(payload)) instanceof VersionMessage) {
             versionReceived.set(true);
         } else {
             throw new IOException("Expected a version message, got " + header.command);

@@ -75,6 +75,13 @@ public class BisqHeadlessApp implements HeadlessApp {
             log.info("onDisplayTacHandler: We accept the tacs automatically in headless mode");
             acceptedHandler.run();
         });
+        bisqSetup.setLocalBitcoinNodeUnusableHandler((reason, continueWithoutLocalNode) -> {
+            // Without a user to ask we do not connect to other Bitcoin nodes
+            log.error("The wallet cannot use the local Bitcoin node: {}. Fix the node or start with " +
+                    "--ignoreLocalBtcNode=true to use other Bitcoin nodes. We shut down.", reason);
+            gracefulShutDownHandler.gracefulShutDown(() -> {
+            });
+        });
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> log.info("onDisplayTorNetworkSettingsHandler: show={}", show));
         bisqSetup.setSpvFileCorruptedHandler(msg -> log.error("onSpvFileCorruptedHandler: msg={}", msg));
         bisqSetup.setChainFileLockedExceptionHandler(msg -> log.error("onChainFileLockedExceptionHandler: msg={}", msg));

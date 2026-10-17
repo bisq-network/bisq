@@ -28,6 +28,7 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +51,7 @@ public class LocalBitcoinNode {
 
     private final Config config;
     @Nullable
-    private final CompletableFuture<Boolean> detection;
+    private final CompletableFuture<Detection> detection;
 
     @Inject
     public LocalBitcoinNode(Config config) {
@@ -99,13 +100,33 @@ public class LocalBitcoinNode {
     }
 
     /**
+     * Returns why the wallet cannot use the local Bitcoin node that was found, or empty if no node was found, it can be
+     * used, or it is ignored. On {@code BTC_REGTEST} the peer of the wallet is set with {@code --bitcoinRegtestHost},
+     * so the result is always empty there.
+     */
+    public Optional<String> getUnusableReason() {
+        if (detection == null || config.getBaseCurrencyNetwork().isRegtest()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(detection.join().unusableReason());
+    }
+
+    /**
      * Returns whether a usable local Bitcoin node was detected. No further monitoring is performed, so if the node
      * goes up or down in the meantime, this method will continue to return its original value. See
      * {@code MainViewModel#setupBtcNumPeersWatcher} to understand how disconnection and reconnection of the local
      * Bitcoin node is actually handled.
      */
     private boolean isUsable() {
-        return detection != null && detection.join();
+        return detection != null && detection.join().isUsable();
+    }
+
+    // The result of looking for a local node: whether one was found, and if the wallet cannot use it, why not
+    @VisibleForTesting
+    record Detection(boolean found, @Nullable String unusableReason) {
+        boolean isUsable() {
+            return found && unusableReason == null;
+        }
     }
 
     /**
@@ -113,29 +134,39 @@ public class LocalBitcoinNode {
      * to the node's port, and whether the wallet can use it as its only peer.
      */
     @VisibleForTesting
-    static boolean detect(NetworkParameters params, int port) {
-        try (Socket socket = new Socket()) {
-            var address = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
-            socket.connect(address, CONNECTION_TIMEOUT);
+    static Detection detect(NetworkParameters params, int port) {
+        Socket socket = new Socket();
+        try {
+            try {
+                socket.connect(new InetSocketAddress(InetAddress.getLoopbackAddress(), port), CONNECTION_TIMEOUT);
+            } catch (IOException ex) {
+                log.info("No local Bitcoin node detected on port {}.", port);
+                return new Detection(false, null);
+            }
             log.info("Local Bitcoin node detected on port {}", port);
-            return canServeWallet(params, socket);
-        } catch (IOException ex) {
-            log.info("No local Bitcoin node detected on port {}.", port);
-            return false;
+            return new Detection(true, findUnusableReason(params, socket));
+        } finally {
+            // The result is known at this point, a failure to close does not change it
+            try {
+                socket.close();
+            } catch (IOException ignore) {
+            }
         }
     }
 
     // The local node is the only peer of the wallet. bitcoinj downloads blocks only from a peer
     // that serves the full block chain and witness data, and it disconnects a peer without bloom
     // filters. A pruned node announces NODE_NETWORK_LIMITED instead of NODE_NETWORK.
-    private static boolean canServeWallet(NetworkParameters params, Socket socket) {
+    // Returns null if the wallet can use the node.
+    @Nullable
+    private static String findUnusableReason(NetworkParameters params, Socket socket) {
         VersionMessage versionMessage;
         try {
             versionMessage = readVersionMessage(params, socket);
         } catch (IOException | RuntimeException e) {
             log.warn("Could not read the version message of the local Bitcoin node, " +
                     "so we use it without knowing its services. {}", e.toString());
-            return true;
+            return null;
         }
         List<String> missing = new ArrayList<>();
         if (!versionMessage.hasBlockChain()) {
@@ -148,12 +179,12 @@ public class LocalBitcoinNode {
             missing.add("bloom filters are not enabled (peerbloomfilters=1)");
         }
         if (missing.isEmpty()) {
-            return true;
+            return null;
         }
-        log.warn("The local Bitcoin node cannot serve the wallet: {} (services: {}). " +
-                        "We do not use it and connect to the Bitcoin network instead.",
-                String.join("; ", missing), VersionMessage.toStringServices(versionMessage.localServices));
-        return false;
+        String reason = String.join("; ", missing);
+        log.warn("The local Bitcoin node cannot serve the wallet: {} (services: {}).",
+                reason, VersionMessage.toStringServices(versionMessage.localServices));
+        return reason;
     }
 
     // A node answers the version message of a new peer with its own version message.
