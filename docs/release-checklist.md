@@ -78,7 +78,6 @@ The script writes into `p2p/src/main/resources/`:
 | `SignedWitnessStore_BTC_MAINNET` | Overwritten |
 | `BurningManAccountingStore_v3_BTC_MAINNET` | Overwritten |
 | `ProposalStore_BTC_MAINNET` | Overwritten |
-| `TempProposalStore_BTC_MAINNET` | Overwritten |
 | `BlindVoteStore_BTC_MAINNET` | Overwritten |
 | `TradeStatistics3Store_<version>_BTC_MAINNET` | New file with the release version in the name |
 | `AccountAgeWitnessStore_<version>_BTC_MAINNET` | New file with the release version in the name |
@@ -513,7 +512,7 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 | `p2p/src/main/resources/BsqBlocks_BTC_MAINNET/` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/SignedWitnessStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/BurningManAccountingStore_v3_BTC_MAINNET` | Yes | `copy_dbs.sh` |
-| `p2p/src/main/resources/{Proposal,TempProposal,BlindVote}Store_BTC_MAINNET` | Yes | `copy_dbs.sh` |
+| `p2p/src/main/resources/{Proposal,BlindVote}Store_BTC_MAINNET` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/TradeStatistics3Store_<version>_BTC_MAINNET` | When a new snapshot is added | `copy_dbs.sh`, plus the entry in `HISTORICAL_RESOURCE_FILE_VERSION_TAGS` |
 | `p2p/src/main/resources/AccountAgeWitnessStore_<version>_BTC_MAINNET` | When a new snapshot is added | Same as above |
 | `p2p/src/main/resources/burningman/bm-addresses-vNNNN.json` | Yes | `--dumpBurningManData=true` |
