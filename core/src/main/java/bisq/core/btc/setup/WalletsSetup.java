@@ -499,6 +499,13 @@ public class WalletsSetup {
         return params;
     }
 
+    // Whether the wallet uses the Bitcoin node on this host: on regtest if the regtest host is localhost, and on every
+    // network if the local node is detected and not ignored, as bitcoinj then connects to it first (see WalletConfig)
+    public boolean usesLocalBitcoinNode() {
+        return params == RegTestParams.get() && regTestHost == RegTestHost.LOCALHOST ||
+                localBitcoinNode.shouldBeUsed();
+    }
+
     @Nullable
     public BlockChain getChain() {
         return walletConfig != null && walletConfig.stateStartingOrRunning() ? walletConfig.chain() : null;
