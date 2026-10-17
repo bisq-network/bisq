@@ -706,6 +706,14 @@ public abstract class WalletService {
         return walletsSetup.isChainHeightSyncedWithinTolerance();
     }
 
+    public boolean isDownloadComplete() {
+        return walletsSetup.isDownloadComplete();
+    }
+
+    public boolean hasSufficientPeersForBroadcast() {
+        return walletsSetup.hasSufficientPeersForBroadcast();
+    }
+
     public Transaction getClonedTransaction(Transaction tx) {
         return new Transaction(params, tx.bitcoinSerialize());
     }
