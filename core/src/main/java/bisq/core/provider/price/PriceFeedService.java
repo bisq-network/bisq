@@ -92,6 +92,9 @@ public class PriceFeedService {
     private Timer retryWithNewProviderTime;
     @Nullable
     private PriceRequest priceRequest;
+    // After shutDown a callback queued before it can still schedule a retry and callers can still ask for prices,
+    // so request checks it.
+    private volatile boolean shutDownRequested;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,6 +121,7 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
+        shutDownRequested = true;
         if (requestTimer != null) {
             requestTimer.stop();
             requestTimer = null;
@@ -139,8 +143,8 @@ public class PriceFeedService {
         }
     }
 
-    public void initialRequestPriceFeed() {
-        request(false);
+    public void startRequestingPrices() {
+        request(true);
     }
 
     public boolean hasPrices() {
@@ -159,6 +163,9 @@ public class PriceFeedService {
     }
 
     private void request(boolean repeatRequests) {
+        if (shutDownRequested)
+            return;
+
         if (requestTs == 0)
             log.debug("request from provider {}",
                     priceFeedNodeAddressProvider.getBaseUrl());

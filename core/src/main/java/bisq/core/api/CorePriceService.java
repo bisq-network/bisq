@@ -19,6 +19,7 @@ package bisq.core.api;
 
 import bisq.core.api.exception.NotAvailableException;
 import bisq.core.monetary.Price;
+import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -32,15 +33,12 @@ import javax.inject.Singleton;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static java.lang.String.format;
 
 @Singleton
-@Slf4j
 class CorePriceService {
 
     private final Predicate<String> isCurrencyCode = (c) -> isFiatCurrency(c) || isCryptoCurrency(c);
@@ -64,31 +62,19 @@ class CorePriceService {
         if (!isCurrencyCode.test(upperCaseCurrencyCode))
             throw new IllegalStateException(format("%s is not a valid currency code", upperCaseCurrencyCode));
 
-        if (!priceFeedService.hasPrices())
-            throw new IllegalStateException("price feed service has no prices");
+        // The price feed service keeps its cache refreshed, so a request does not wait for a provider.
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(upperCaseCurrencyCode);
+        if (marketPrice == null || !marketPrice.isRecentExternalPriceAvailable())
+            throw new NotAvailableException(format("%s price is not available", upperCaseCurrencyCode));
 
-        try {
-            priceFeedService.setCurrencyCode(upperCaseCurrencyCode);
-        } catch (Throwable throwable) {
-            log.warn("Could not set currency code in PriceFeedService", throwable);
-        }
-
-        priceFeedService.requestPriceFeed(price -> {
-                    if (price > 0) {
-                        log.info("{} price feed request returned {}", upperCaseCurrencyCode, price);
-                        if (isFiatCurrency(upperCaseCurrencyCode))
-                            resultHandler.accept(roundDouble(price, 4));
-                        else if (isCryptoCurrency(upperCaseCurrencyCode))
-                            resultHandler.accept(roundDouble(price, 8));
-                        else // should not happen, throw error if it does
-                            throw new IllegalStateException(
-                                    format("%s price feed request should not return data for unsupported currency code",
-                                            upperCaseCurrencyCode));
-                    } else {
-                        throw new NotAvailableException(format("%s price is not available", upperCaseCurrencyCode));
-                    }
-                },
-                log::warn);
+        double price = marketPrice.getPrice();
+        if (isFiatCurrency(upperCaseCurrencyCode))
+            resultHandler.accept(roundDouble(price, 4));
+        else if (isCryptoCurrency(upperCaseCurrencyCode))
+            resultHandler.accept(roundDouble(price, 8));
+        else // should not happen, throw error if it does
+            throw new IllegalStateException(
+                    format("%s price should not be available for an unsupported currency code", upperCaseCurrencyCode));
     }
 
     Tuple2<Price, Price> getAverageBsqTradePrice(int days) {

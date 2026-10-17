@@ -18,6 +18,12 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, controlled process exit, and the JVM shutdown-hook backstop. |
 
+### `api/`
+
+| Specification | Covers |
+|---|---|
+| [`api/market-price.md`](api/market-price.md) | How the API answers a market price request from the prices the node holds, without waiting for a price provider, and when a price is unavailable. |
+
 
 ### `account/`
 
