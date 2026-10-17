@@ -28,13 +28,17 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 /**
  * Detects whether a Bitcoin node is running on localhost and contains logic for when to
- * ignore it. The query methods lazily trigger the needed checks and cache the results.
+ * ignore it. The check starts when the instance is created, and its result is kept.
  * @see bisq.common.config.Config#ignoreLocalBtcNode
  */
 @Singleton
@@ -45,14 +49,29 @@ public class LocalBitcoinNode {
     private static final int MAX_VERSION_MESSAGE_SIZE = 1024;
 
     private final Config config;
-    private final NetworkParameters params;
-
-    private Boolean usable;
+    @Nullable
+    private final CompletableFuture<Boolean> detection;
 
     @Inject
     public LocalBitcoinNode(Config config) {
+        this(config, config.networkParameters.getPort());
+    }
+
+    // The check can take up to 10 seconds, so it starts at once on its own thread. The first caller waits only for
+    // the rest of it, and does not block the start of the application for the whole time.
+    @VisibleForTesting
+    LocalBitcoinNode(Config config, int port) {
         this.config = config;
-        this.params = config.networkParameters;
+        if (shouldBeIgnored()) {
+            detection = null;
+        } else {
+            NetworkParameters params = config.networkParameters;
+            detection = CompletableFuture.supplyAsync(() -> detect(params, port), runnable -> {
+                Thread thread = new Thread(runnable, "LocalBitcoinNode");
+                thread.setDaemon(true);
+                thread.start();
+            });
+        }
     }
 
     /**
@@ -80,17 +99,13 @@ public class LocalBitcoinNode {
     }
 
     /**
-     * Returns whether a usable local Bitcoin node was detected. The check is triggered in
-     * case it has not been performed. No further monitoring is performed, so if the node
-     * goes up or down in the meantime, this method will continue to return its original
-     * value. See {@code MainViewModel#setupBtcNumPeersWatcher} to understand how
-     * disconnection and reconnection of the local Bitcoin node is actually handled.
+     * Returns whether a usable local Bitcoin node was detected. No further monitoring is performed, so if the node
+     * goes up or down in the meantime, this method will continue to return its original value. See
+     * {@code MainViewModel#setupBtcNumPeersWatcher} to understand how disconnection and reconnection of the local
+     * Bitcoin node is actually handled.
      */
     private boolean isUsable() {
-        if (usable == null) {
-            usable = detect(params, params.getPort());
-        }
-        return usable;
+        return detection != null && detection.join();
     }
 
     /**
@@ -143,7 +158,7 @@ public class LocalBitcoinNode {
 
     // A node answers the version message of a new peer with its own version message.
     private static VersionMessage readVersionMessage(NetworkParameters params, Socket socket) throws IOException {
-        long deadline = System.currentTimeMillis() + CONNECTION_TIMEOUT;
+        long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(CONNECTION_TIMEOUT);
         MessageSerializer serializer = params.getDefaultSerializer();
         serializer.serialize(new VersionMessage(params, 0), socket.getOutputStream());
 
@@ -173,7 +188,7 @@ public class LocalBitcoinNode {
     private static void readFully(Socket socket, InputStream in, byte[] buffer, long deadline) throws IOException {
         int offset = 0;
         while (offset < buffer.length) {
-            long remaining = deadline - System.currentTimeMillis();
+            long remaining = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
             if (remaining <= 0) {
                 throw new SocketTimeoutException("No complete version message within " + CONNECTION_TIMEOUT + " ms");
             }
