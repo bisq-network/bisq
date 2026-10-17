@@ -379,7 +379,6 @@ class BundledDaoStateAuditTest {
                 readDelimitedEnvelope("/TradeStatistics3Store_1.10.5_BTC_MAINNET");
         protobuf.PersistableEnvelope blindVotes = readDelimitedEnvelope(BLIND_VOTE_RESOURCE);
         protobuf.PersistableEnvelope proposals = readDelimitedEnvelope("/ProposalStore_BTC_MAINNET");
-        protobuf.PersistableEnvelope tempProposals = readDelimitedEnvelope("/TempProposalStore_BTC_MAINNET");
         protobuf.PersistableEnvelope accounting =
                 readDelimitedEnvelope("/BurningManAccountingStore_v3_BTC_MAINNET");
 
@@ -388,7 +387,6 @@ class BundledDaoStateAuditTest {
         assertTrue(tradeStatistics.hasTradeStatistics3Store());
         assertTrue(blindVotes.hasBlindVoteStore());
         assertTrue(proposals.hasProposalStore());
-        assertTrue(tempProposals.hasTempProposalStore());
         assertTrue(accounting.hasBurningManAccountingStore());
 
         int accountAgeCount = accountAge.getAccountAgeWitnessStore().getItemsCount();
@@ -396,7 +394,6 @@ class BundledDaoStateAuditTest {
         int tradeStatisticsCount = tradeStatistics.getTradeStatistics3Store().getItemsCount();
         int blindVoteCount = blindVotes.getBlindVoteStore().getItemsCount();
         int proposalCount = proposals.getProposalStore().getItemsCount();
-        int tempProposalCount = tempProposals.getTempProposalStore().getItemsCount();
         List<protobuf.AccountingBlock> accountingBlocks = accounting.getBurningManAccountingStore().getBlocksList();
 
         assertTrue(accountAgeCount > 0);
@@ -404,7 +401,6 @@ class BundledDaoStateAuditTest {
         assertTrue(tradeStatisticsCount > 0);
         assertTrue(blindVoteCount > 0);
         assertTrue(proposalCount > 0);
-        assertTrue(tempProposalCount > 0);
         assertTrue(!accountingBlocks.isEmpty());
 
         Map<ByteString, Long> accountAgeDateByHash = new HashMap<>();
@@ -482,21 +478,7 @@ class BundledDaoStateAuditTest {
         }
         assertEquals(0, proposalsWithInvalidCommonDataFields,
                 "append-only proposal fails common data-field validation");
-        int tempProposalRoleCount = 0;
-        int tempProposalRoleTermMismatches = 0;
-        for (protobuf.ProtectedStorageEntry entry : tempProposals.getTempProposalStore().getItemsList()) {
-            assertTrue(entry.getStoragePayload().hasTempProposalPayload(),
-                    "TempProposalStore contains a different protected payload type");
-            protobuf.Proposal proposal = entry.getStoragePayload().getTempProposalPayload().getProposal();
-            if (proposal.hasRoleProposal()) {
-                tempProposalRoleCount++;
-                if (!hasCurrentRoleTerms(proposal.getRoleProposal())) {
-                    tempProposalRoleTermMismatches++;
-                }
-            }
-        }
         assertEquals(0, proposalRoleTermMismatches, "append-only role proposal terms differ from current constants");
-        assertEquals(0, tempProposalRoleTermMismatches, "temporary role proposal terms differ from current constants");
 
         int firstAccountingHeight = accountingBlocks.get(0).getHeight();
         int lastAccountingHeight = accountingBlocks.get(accountingBlocks.size() - 1).getHeight();
@@ -536,9 +518,6 @@ class BundledDaoStateAuditTest {
                 + proposalRoleTermMismatches + ", common-field failures="
                 + proposalsWithInvalidCommonDataFields + ", duplicate transaction ids="
                 + (proposalCount - proposalTxIds.size()) + ")"
-                + "\n  temporary proposals=" + tempProposalCount
-                + " (role proposals=" + tempProposalRoleCount + ", role-term mismatches="
-                + tempProposalRoleTermMismatches + ")"
                 + "\n  Burning Man accounting blocks=" + accountingBlocks.size()
                 + " (" + firstAccountingHeight + ".." + lastAccountingHeight + ")"
                 + "\n  bitcoinj wallet checkpoints=" + walletCheckpointCount
