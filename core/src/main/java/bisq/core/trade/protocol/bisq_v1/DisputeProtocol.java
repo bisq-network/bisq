@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
@@ -48,6 +49,9 @@ import bisq.common.UserThread;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.listeners.NewBestBlockListener;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import javafx.beans.value.ChangeListener;
@@ -66,6 +70,9 @@ public class DisputeProtocol extends TradeProtocol {
     // Set while a peer's signature of the mediated payout waits for our mediation result
     @Nullable
     private ChangeListener<Trade.DisputeState> mediationResultListener;
+    // Set while the publication of the mediated payout waits for the wallet
+    @Nullable
+    private NewBestBlockListener walletReadyListener;
 
     enum DisputeEvent implements FluentProtocol.Event {
         STARTUP,
@@ -104,7 +111,10 @@ public class DisputeProtocol extends TradeProtocol {
                 .preCondition(processModel.getMediatedPayoutTxSignature() != null))
                 .setup(tasks(SetupMediatedPayoutTxListener.class))
                 .executeTasks();
+    }
 
+    @Override
+    protected void onStartupMailboxMessagesHandled() {
         maybeFinalizeMediatedPayout();
     }
 
@@ -280,10 +290,27 @@ public class DisputeProtocol extends TradeProtocol {
 
     // A trader who has signed the mediated payout and has the peer's signature publishes it. The peer's
     // signature can arrive after our own acceptance, and a trade can be in that state at startup. The
-    // check runs after the current event is handled, at startup after the startup tasks of the trade.
+    // check runs after the current event is handled, at startup after the mailbox messages of the trade.
     private void maybeFinalizeMediatedPayout() {
         UserThread.execute(() -> {
             if (!isMediatedPayoutReadyToFinalize(trade)) {
+                return;
+            }
+
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            // The dispute managers apply their messages, such as a refund request of the peer, only with this
+            // wallet state (SupportManager.isReady). Before, the deposit tx can also be missing, for example after
+            // a resync.
+            if (!btcWalletService.isDownloadComplete() || !btcWalletService.hasSufficientPeersForBroadcast()) {
+                log.info("We have both signatures of the mediated payout and publish it once the wallet is synced. " +
+                        "tradeId={}", trade.getId());
+                checkAgainAtNextBlock(btcWalletService);
+                return;
+            }
+
+            if (isDelayedPayoutTxPublished(btcWalletService)) {
+                log.warn("We have both signatures of the mediated payout, but do not publish it as the delayed " +
+                        "payout tx is published. tradeId={}", trade.getId());
                 return;
             }
 
@@ -297,6 +324,28 @@ public class DisputeProtocol extends TradeProtocol {
                     errorMessage -> log.warn("Publishing the mediated payout failed. tradeId={}, errorMessage={}",
                             trade.getId(), errorMessage));
         });
+    }
+
+    private void checkAgainAtNextBlock(BtcWalletService btcWalletService) {
+        if (walletReadyListener != null) {
+            return;
+        }
+
+        // The trade protocols are initialized after the wallet, so the chain for the listener is there
+        walletReadyListener = block -> {
+            btcWalletService.removeNewBestBlockListener(walletReadyListener);
+            walletReadyListener = null;
+            maybeFinalizeMediatedPayout();
+        };
+        btcWalletService.addNewBestBlockListener(walletReadyListener);
+    }
+
+    // The wallet gets the delayed payout tx only once it is published: by us, or by the peer, who sends it to us
+    // with the PeerPublishedDelayedPayoutTxMessage.
+    private boolean isDelayedPayoutTxPublished(BtcWalletService btcWalletService) {
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        return delayedPayoutTx != null &&
+                btcWalletService.getConfidenceForTxId(delayedPayoutTx.getTxId().toString()) != null;
     }
 
     @VisibleForTesting

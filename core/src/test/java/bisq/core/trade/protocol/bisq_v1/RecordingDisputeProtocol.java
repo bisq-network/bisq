@@ -31,6 +31,8 @@ import java.util.List;
  */
 class RecordingDisputeProtocol extends DisputeProtocol {
     final List<Class<? extends Task<TradeModel>>> executedTasks = new ArrayList<>();
+    // Runs the result handler of a recorded task runner, as if its tasks had completed
+    boolean runResultHandlers;
 
     RecordingDisputeProtocol(Trade trade) {
         super(trade);
@@ -39,7 +41,7 @@ class RecordingDisputeProtocol extends DisputeProtocol {
     @Override
     protected FluentProtocol expect(FluentProtocol.Condition condition) {
         return new FluentProtocol(this) {
-            private Class<? extends Task<TradeModel>>[] tasks;
+            private Setup recordedSetup;
 
             {
                 condition(condition);
@@ -47,14 +49,20 @@ class RecordingDisputeProtocol extends DisputeProtocol {
 
             @Override
             public FluentProtocol setup(Setup setup) {
-                tasks = setup.getTasks();
+                recordedSetup = setup;
                 return this;
             }
 
             // Records the tasks only if the condition is met, as executeTasks would run them
             @Override
             public FluentProtocol executeTasks() {
-                return run(() -> executedTasks.addAll(List.of(tasks)));
+                return run(() -> {
+                    executedTasks.addAll(List.of(recordedSetup.getTasks()));
+                    if (runResultHandlers) {
+                        // Without added tasks the runner calls its result handler at once
+                        recordedSetup.getTaskRunner(condition.getMessage(), condition.getEvent()).run();
+                    }
+                });
             }
         };
     }
