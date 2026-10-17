@@ -24,6 +24,13 @@ mediation result is proposed (dispute state MEDIATION_CLOSED) and the payout is 
   ready, the node checks again at each new block. It does not publish the payout if its wallet knows
   the delayed payout tx: the wallet gets that tx only once a trader published it to request
   arbitration, and it spends the deposit output that the payout would spend.
+- If the publication without a click fails, the node logs it, and it is no error of the trade, as
+  the trader did not start it: the UI shows a trade error at once and offers to move the trade to
+  the failed trades. Unless the failed attempt had put the payout tx into the wallet for the
+  broadcast, the node tries again at the next start. Until the attempt has finalized the payout tx,
+  the trader can also use the accept button, which shows a failure of its own attempt, and a
+  signature of the peer that arrives starts another attempt. A payout tx in the wallet is announced
+  again by the wallet, and the next start closes the trade as mediated.
 - After publishing, the node sends the payout to the peer and closes the disputed trade, as after
   publishing it with the accept button.
 - Both nodes can publish the mediated payout at the same time. It is the same transaction on both

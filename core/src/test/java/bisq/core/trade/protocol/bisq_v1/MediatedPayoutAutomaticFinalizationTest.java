@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.filter.FilterPolicyService;
 import bisq.core.testutil.ManualTimer;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.Provider;
@@ -60,6 +61,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -86,6 +88,7 @@ class MediatedPayoutAutomaticFinalizationTest {
     private final Provider provider = mock(Provider.class);
     private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
     private final MailboxMessageService mailboxMessageService = mock(MailboxMessageService.class);
+    private final FilterPolicyService filterPolicyService = mock(FilterPolicyService.class);
     private Trade trade;
     private RecordingDisputeProtocol protocol;
 
@@ -244,6 +247,39 @@ class MediatedPayoutAutomaticFinalizationTest {
 
         assertEquals(List.of(ProcessMediatedPayoutSignatureMessage.class), protocol.executedTasks);
         verify(btcWalletService).addNewBestBlockListener(any());
+    }
+
+    // With the real tasks, SignMediatedPayoutTx fails without the deposit tx. The trader did not start the attempt, so
+    // the UI must not show it as an error of the trade.
+    @Test
+    void failedAttemptWithoutAClickIsNoTradeError() {
+        DisputeProtocol realProtocol = protocolWithRealTasks();
+
+        realProtocol.onStartupMailboxMessagesHandled();
+
+        // ApplyFilter ran, so the attempt was made
+        verify(filterPolicyService).isNodeAddressBanned(PEER);
+        assertNull(trade.getErrorMessage());
+        assertNull(trade.getPayoutTx());
+    }
+
+    // Positive control on the same tasks: the accept button shows the failure to the trader
+    @Test
+    void failedAttemptOfTheAcceptButtonIsATradeError() {
+        DisputeProtocol realProtocol = protocolWithRealTasks();
+
+        realProtocol.onFinalizeMediationResultPayout(() -> {
+        }, errorMessage -> {
+        });
+
+        assertTrue(trade.getErrorMessage().contains(SignMediatedPayoutTx.class.getSimpleName()));
+    }
+
+    // ApplyFilter passes, so the chain reaches SignMediatedPayoutTx
+    private DisputeProtocol protocolWithRealTasks() {
+        when(provider.getFilterPolicyService()).thenReturn(filterPolicyService);
+        trade.setTradingPeerNodeAddress(PEER);
+        return new DisputeProtocol(trade);
     }
 
     private MediatedPayoutTxSignatureMessage signatureMessage() {

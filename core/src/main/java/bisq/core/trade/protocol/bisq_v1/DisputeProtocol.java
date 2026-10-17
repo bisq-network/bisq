@@ -177,6 +177,13 @@ public class DisputeProtocol extends TradeProtocol {
 
     // Trader has already received the peer's signature and has clicked the accept button as well.
     public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        finalizeMediatedPayout(resultHandler, errorMessageHandler, true);
+    }
+
+    // Without tradeErrorOnFailure, for a publication that the trader did not start, a failed task is only logged
+    private void finalizeMediatedPayout(ResultHandler resultHandler,
+                                        ErrorMessageHandler errorMessageHandler,
+                                        boolean tradeErrorOnFailure) {
         DisputeEvent event = DisputeEvent.MEDIATION_RESULT_ACCEPTED;
         expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
                 Trade.Phase.FIAT_SENT,
@@ -197,7 +204,8 @@ public class DisputeProtocol extends TradeProtocol {
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(event, errorMessage);
-                                })))
+                                },
+                                tradeErrorOnFailure)))
                 .executeTasks();
     }
 
@@ -315,14 +323,16 @@ public class DisputeProtocol extends TradeProtocol {
             }
 
             log.info("We have both signatures of the mediated payout and publish it. tradeId={}", trade.getId());
-            onFinalizeMediationResultPayout(() -> {
+            // The trader did not start this, so a failure is no error of the trade
+            finalizeMediatedPayout(() -> {
                         if (trade.getPayoutTx() != null) {
                             processModel.getTradeManager().closeDisputedTrade(trade.getId(),
                                     Trade.DisputeState.MEDIATION_CLOSED);
                         }
                     },
-                    errorMessage -> log.warn("Publishing the mediated payout failed. tradeId={}, errorMessage={}",
-                            trade.getId(), errorMessage));
+                    errorMessage -> log.warn("Publishing the mediated payout without a click failed. tradeId={}, " +
+                            "errorMessage={}", trade.getId(), errorMessage),
+                    false);
         });
     }
 
