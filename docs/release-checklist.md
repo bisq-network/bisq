@@ -77,11 +77,11 @@ The script writes into `p2p/src/main/resources/`:
 | `BsqBlocks_BTC_MAINNET/` | Directory, new block files are added |
 | `SignedWitnessStore_BTC_MAINNET` | Overwritten |
 | `BurningManAccountingStore_v3_BTC_MAINNET` | Overwritten |
+| `ProposalStore_BTC_MAINNET` | Overwritten |
+| `TempProposalStore_BTC_MAINNET` | Overwritten |
+| `BlindVoteStore_BTC_MAINNET` | Overwritten |
 | `TradeStatistics3Store_<version>_BTC_MAINNET` | New file with the release version in the name |
 | `AccountAgeWitnessStore_<version>_BTC_MAINNET` | New file with the release version in the name |
-
-The following three are only copied when it is needed. The lines are commented out in the script:
-`ProposalStore_BTC_MAINNET`, `TempProposalStore_BTC_MAINNET`, `BlindVoteStore_BTC_MAINNET`.
 
 **If you commit the two new files that carry the version in the name, you must also add the version
 string to `HISTORICAL_RESOURCE_FILE_VERSION_TAGS` in
@@ -255,8 +255,9 @@ none of them has run when it fails.
      of the vote reveal phase of its cycle. After that phase it means that the voter did not reveal.
      Such a vote cannot enter the result. Name it in the pull request.
    - The failure "vote reveal has no bundled blind-vote payload" means that `BlindVoteStore_BTC_MAINNET`
-     is older than the bundled blocks. Copy that store from the synced node as well (its line in
-     `copy_dbs.sh` is commented out) and run the audit again.
+     lacks a payload whose vote reveal is in the bundled blocks. `copy_dbs.sh` copies that store
+     together with the blocks, so the synced node has not received the payload. Restart the node so
+     that it requests the missing data, run `copy_dbs.sh` again and run the audit again.
 4. Review the line `since height ...: lockups=..., unlock spends=..., evaluated role proposals=...`
    and the lockup totals per reason. A new `BONDED_ROLE` lockup or a new evaluated role proposal
    changes the bonded-role evidence and needs a closer review.
@@ -512,9 +513,9 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 | `p2p/src/main/resources/BsqBlocks_BTC_MAINNET/` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/SignedWitnessStore_BTC_MAINNET` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/BurningManAccountingStore_v3_BTC_MAINNET` | Yes | `copy_dbs.sh` |
+| `p2p/src/main/resources/{Proposal,TempProposal,BlindVote}Store_BTC_MAINNET` | Yes | `copy_dbs.sh` |
 | `p2p/src/main/resources/TradeStatistics3Store_<version>_BTC_MAINNET` | When a new snapshot is added | `copy_dbs.sh`, plus the entry in `HISTORICAL_RESOURCE_FILE_VERSION_TAGS` |
 | `p2p/src/main/resources/AccountAgeWitnessStore_<version>_BTC_MAINNET` | When a new snapshot is added | Same as above |
-| `p2p/src/main/resources/{Proposal,TempProposal,BlindVote}Store_BTC_MAINNET` | Only when needed | `copy_dbs.sh`, lines are commented out |
 | `p2p/src/main/resources/burningman/bm-addresses-vNNNN.json` | Yes | `--dumpBurningManData=true` |
 | `core/src/main/resources/wallet/checkpoints.txt` | Yes | `build-checkpoints` in the bitcoinj repository |
 | `core/src/main/resources/dao/daoStateHash.checkpoints` | Recommended | `--dumpDaoStateHashCheckpoints=true` |
