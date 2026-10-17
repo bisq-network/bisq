@@ -15,15 +15,17 @@ peer nor asks the user.
   cannot use it as its only peer. The version message of the node must announce the full block chain
   (`NODE_NETWORK`), witness data (`NODE_WITNESS`) and bloom filters (`NODE_BLOOM`).
 - A node without one of them is not used. A pruned node announces `NODE_NETWORK_LIMITED` instead of
-  `NODE_NETWORK`, and Bitcoin Core announces bloom filters only with `peerbloomfilters=1`.
+  `NODE_NETWORK`, and Bitcoin Core announces bloom filters only with `peerbloomfilters=1`. An answer
+  that is not a version message of the Bitcoin network in use, for example from another service on
+  the port, also means that the node is not used.
 - Before the wallet connects to other Bitcoin nodes instead of a local node that it cannot use, the
   desktop asks the user, and the start of the wallet and of the P2P network waits for the answer.
   The popup names what the node lacks; the user can shut down Bisq to fix the node, or continue
   without it. Closing the popup shuts down Bisq. The daemon cannot ask, so it shuts down with the
   reason in its log; with `--ignoreLocalBtcNode=true` it starts with other Bitcoin nodes.
-- If the node does not answer with a version message, for example because another service uses the
-  port, the node is used without this check. Bisq waits at most 5 seconds for the whole answer, even
-  when the answer arrives slowly.
+- If the node does not answer within 5 seconds or closes the connection, the node is used without
+  this check. Bisq waits at most 5 seconds for the whole answer, even when the answer arrives
+  slowly.
 - The check starts on its own thread when the application starts, and its result is kept until the
   application is restarted.
 
@@ -37,11 +39,11 @@ node decides whether the wallet uses them.
 
 No message and no persisted data change.
 
-A user whose local node is pruned or has bloom filters disabled is now asked at startup whether the
-wallet continues with other Bitcoin nodes, as with `--ignoreLocalBtcNode=true`. Before, the wallet
-did not synchronize while that node was running. A daemon with such a node now shuts down at
-startup. The connection that detects the local node now also sends a version message and reads the
-answer.
+A user whose local node is pruned or has bloom filters disabled, or who runs another service on the
+Bitcoin port, is now asked at startup whether the wallet continues with other Bitcoin nodes, as with
+`--ignoreLocalBtcNode=true`. Before, the wallet did not synchronize while that node or service was
+running. A daemon in that case now shuts down at startup. The connection that detects the local node
+now also sends a version message and reads the answer.
 
 ## Not covered
 

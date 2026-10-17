@@ -163,10 +163,15 @@ public class LocalBitcoinNode {
         VersionMessage versionMessage;
         try {
             versionMessage = readVersionMessage(params, socket);
-        } catch (IOException | RuntimeException e) {
+        } catch (IOException e) {
+            // A node that is busy can answer late or close the connection, so we cannot tell what it is.
             log.warn("Could not read the version message of the local Bitcoin node, " +
                     "so we use it without knowing its services. {}", e.toString());
             return null;
+        } catch (RuntimeException e) {
+            log.warn("The answer on the port of the local Bitcoin node is not a version message " +
+                    "of this Bitcoin network. {}", e.toString());
+            return "the answer on its port does not come from a Bitcoin node of this network";
         }
         List<String> missing = new ArrayList<>();
         if (!versionMessage.hasBlockChain()) {

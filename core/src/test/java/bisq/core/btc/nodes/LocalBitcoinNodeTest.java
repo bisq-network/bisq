@@ -106,21 +106,21 @@ public class LocalBitcoinNodeTest {
     }
 
     @Test
-    public void otherMessageThanVersionIsUsedAsBefore() throws IOException {
+    public void otherMessageThanVersionIsNotUsed() throws IOException {
         startLocalNode(socket -> {
             readVersion(socket);
             SERIALIZER.serialize("verack", new byte[0], socket.getOutputStream());
         });
 
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
+        assertUnusable("does not come from a Bitcoin node", LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
     }
 
     @Test
-    public void otherServiceOnThePortIsUsedAsBefore() throws IOException {
+    public void otherServiceOnThePortIsNotUsed() throws IOException {
         startLocalNode(socket -> socket.getOutputStream()
                 .write("HTTP/1.1 400 Bad Request\r\n\r\n".getBytes(StandardCharsets.US_ASCII)));
 
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
+        assertUnusable("does not come from a Bitcoin node", LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
     }
 
     // The pruned node sends its answer a byte every 500 ms, so no single read waits long. The deadline
@@ -151,7 +151,7 @@ public class LocalBitcoinNodeTest {
     }
 
     // A version message has about 130 bytes. An announced size of 30 MB is refused at once, without
-    // allocating it and waiting for the payload until the deadline.
+    // allocating it and waiting for the payload until the deadline, and no Bitcoin node sends it.
     @Test
     public void oversizedVersionMessageIsRefusedAtOnce() throws IOException {
         startLocalNode(socket -> {
@@ -165,7 +165,7 @@ public class LocalBitcoinNodeTest {
         });
 
         long start = System.currentTimeMillis();
-        assertTrue(LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()).isUsable());
+        assertUnusable("does not come from a Bitcoin node", LocalBitcoinNode.detect(PARAMS, localNode.getLocalPort()));
         assertTrue(System.currentTimeMillis() - start < 2_000);
     }
 
