@@ -29,3 +29,6 @@ mediator authentication, payout allocation rules, arbitration actions, network m
 persisted formats, or existing signatures. Validation and the decision must execute together
 without deferring the decision beyond the validation. Incoming results replace the result
 object; this rule does not introduce an in-place result-editing mechanism.
+
+A payout that both traders signed before a replacement arrived is published without a click
+([`../trade/mediated-payout-finalization.md`](../trade/mediated-payout-finalization.md)).
