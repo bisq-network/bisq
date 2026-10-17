@@ -68,10 +68,13 @@ Detecting a payout that the peer published while the node, which has only its ow
 offline. A delayed payout tx that the peer publishes at the same time, or whose
 PeerPublishedDelayedPayoutTxMessage has not arrived, as that tx pays nothing to the wallet and the
 wallet does not watch the deposit output. A refund request that reaches the node only after the
-check, for example in a later mailbox message. A MediatedPayoutTxPublishedMessage that the node
-received directly and rejected during a refund request because the payout was not confirmed yet: it
-is not handled again, and the trade stays in the refund request until the refund agent closes it. A
-mediated payout that pays nothing to the node: its wallet does not see it, so the message stays
-rejected during a refund request. Mailbox messages that arrive only after the startup, for example
-when the node starts without reaching a seed node. Whether the seller can still confirm the payment
-receipt after accepting: [repeated-payout-confirmation.md](repeated-payout-confirmation.md).
+check, for example in a later mailbox message. A mediation result that is replaced after both
+traders signed: the node publishes the payout that both signatures cover. The mediator's desktop
+fills the second ticket of a trade with the result of the first one and does not let it be changed.
+A MediatedPayoutTxPublishedMessage that the node received directly and rejected during a refund
+request because the payout was not confirmed yet: it is not handled again, and the trade stays in
+the refund request until the refund agent closes it. A mediated payout that pays nothing to the
+node: its wallet does not see it, so the message stays rejected during a refund request. Mailbox
+messages that arrive only after the startup, for example when the node starts without reaching a
+seed node. Whether the seller can still confirm the payment receipt after accepting:
+[repeated-payout-confirmation.md](repeated-payout-confirmation.md).
