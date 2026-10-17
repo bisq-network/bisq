@@ -263,7 +263,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
             addHashMapChangedListener();
-            onAdded(p2PDataStorage.getMap().values());
+            processMailboxEntries(p2PDataStorage.getMap().values(), () -> {
+            });
             maybeRepublishMailBoxMessages();
         }
     }
@@ -415,16 +416,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     @Override
     public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
         log.trace("## onAdded");
-        Collection<ProtectedMailboxStorageEntry> entries = protectedStorageEntries.stream()
-                .filter(e -> e instanceof ProtectedMailboxStorageEntry)
-                .map(e -> (ProtectedMailboxStorageEntry) e)
-                .filter(e -> networkNode.getNodeAddress() != null)
-                .collect(Collectors.toSet());
-        if (entries.size() > 1) {
-            threadedBatchProcessMailboxEntries(entries);
-        } else if (entries.size() == 1) {
-            processSingleMailboxEntry(entries);
-        }
+        processMailboxEntries(protectedStorageEntries, () -> {
+        });
     }
 
     @Override
@@ -450,6 +443,24 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         p2PDataStorage.addHashMapChangedListener(this);
     }
 
+    // The completeHandler runs on the user thread after the entries have been handled
+    private void processMailboxEntries(Collection<ProtectedStorageEntry> protectedStorageEntries,
+                                       Runnable completeHandler) {
+        Collection<ProtectedMailboxStorageEntry> entries = protectedStorageEntries.stream()
+                .filter(e -> e instanceof ProtectedMailboxStorageEntry)
+                .map(e -> (ProtectedMailboxStorageEntry) e)
+                .filter(e -> networkNode.getNodeAddress() != null)
+                .collect(Collectors.toSet());
+        if (entries.size() > 1) {
+            threadedBatchProcessMailboxEntries(entries, completeHandler);
+        } else {
+            if (entries.size() == 1) {
+                processSingleMailboxEntry(entries);
+            }
+            completeHandler.run();
+        }
+    }
+
     private void processSingleMailboxEntry(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
         checkArgument(protectedMailboxStorageEntries.size() == 1);
         var mailboxItems = new ArrayList<>(getMailboxItems(protectedMailboxStorageEntries));
@@ -460,7 +471,9 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     // We run the batch processing of all mailbox messages we have received at startup in a thread to not block the UI.
     // For about 1000 messages decryption takes about 1 sec.
-    private void threadedBatchProcessMailboxEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
+    private void threadedBatchProcessMailboxEntries(
+            Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries,
+            Runnable completeHandler) {
         long ts = System.currentTimeMillis();
         SettableFuture<Set<MailboxItem>> future = SettableFuture.create();
 
@@ -479,9 +492,13 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
-                UserThread.execute(() -> decryptedMailboxMessageWithEntries.forEach(e -> handleMailboxItem(e)));
+                UserThread.execute(() -> {
+                    decryptedMailboxMessageWithEntries.forEach(e -> handleMailboxItem(e));
+                    completeHandler.run();
+                });
             }
 
+            // The entries are not handled then, so the completeHandler does not run
             public void onFailure(@NotNull Throwable throwable) {
                 log.error(throwable.toString());
             }
