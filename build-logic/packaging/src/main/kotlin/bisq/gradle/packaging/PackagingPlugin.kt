@@ -1,5 +1,6 @@
 package bisq.gradle.packaging
 
+import bisq.gradle.packaging.jpackage.package_formats.PackageFormat
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -32,8 +33,13 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val jPackageTaskConfiguration = jPackageTaskConfiguration(installDistTask, jarTask, javaApplicationExtension)
 
         project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
-        project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
-        project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+        val debTask = project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
+        val rpmTask = project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+
+        val verifyDebTask = registerJavaRuntimeCheck(project, "verifyDebJavaRuntime", PackageFormat.DEB, debTask)
+        registerJavaRuntimeCheck(project, "verifyRpmJavaRuntime", PackageFormat.RPM, rpmTask)
+        // rpm deletes every installer artifact before it builds, so the DEB check has to run first
+        rpmTask.configure { mustRunAfter(verifyDebTask) }
 
         project.tasks.register<DebReproducibleTask>("reproducibleDeb") {
             appVersion.set(APP_VERSION)
@@ -41,6 +47,25 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             outputDirectory.set(project.layout.buildDirectory.dir("packaging"))
         }
 
+    }
+
+    private fun registerJavaRuntimeCheck(
+        project: Project,
+        name: String,
+        format: PackageFormat,
+        packageTask: TaskProvider<out JPackageTask>
+    ): TaskProvider<VerifyPackagedJavaRuntimeTask> {
+        val check = project.tasks.register<VerifyPackagedJavaRuntimeTask>(name) {
+            group = "verification"
+            description = "Verifies that the Java runtime in the ${format.name} package matches releaseBuild.javaVersion."
+            packageFormat.set(format)
+            expectedJavaVersion.set(project.providers.gradleProperty("releaseBuild.javaVersion"))
+            packagingDirectory.set(project.layout.buildDirectory.dir("packaging"))
+            // a failed package task skips the check instead of adding a second, misleading error
+            dependsOn(packageTask)
+        }
+        packageTask.configure { finalizedBy(check) }
+        return check
     }
 
     private fun jPackageTaskConfiguration(

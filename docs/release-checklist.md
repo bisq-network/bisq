@@ -322,6 +322,11 @@ releaseBuild.gradleVersion=9.0.0
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
 with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.6.
 
+`:desktop:deb` and `:desktop:rpm` are followed by `:desktop:verifyDebJavaRuntime` and
+`:desktop:verifyRpmJavaRuntime`. Each reads `opt/bisq/lib/runtime/release` from the package which the task built and
+fails if its `JAVA_VERSION` differs from `releaseBuild.javaVersion`. `verifyInstallerEvidenceBundle` does not run them:
+on Linux, `:desktop:generateInstallers` does not build DEB or RPM packages.
+
 1. Verify the build and produce the evidence files:
 
    ```
