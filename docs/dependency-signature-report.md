@@ -225,10 +225,10 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.mockito:mockito-core:5.23.0` | direct | PGP signed | 2 signed / 0 checksum | `147B691A19097624902F4EA9689CBE64F4BC997F`<br>Szczepan Faber<br>`szczepiq@gmail.com`<br>created 2021-02-14 |
 | `org.mockito:mockito-junit-jupiter:5.23.0` | direct | PGP signed | 2 signed / 0 checksum | `147B691A19097624902F4EA9689CBE64F4BC997F`<br>Szczepan Faber<br>`szczepiq@gmail.com`<br>created 2021-02-14 |
 | `org.objenesis:objenesis:3.3` | transitive | PGP signed | 2 signed / 0 checksum | `E85AED155021AF8A6C6B7A4A7C7D8456294423BA`<br>created 2010-05-13 |
-| `org.openjfx:javafx-base:21.0.10` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-controls:21.0.10` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-fxml:21.0.10` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-graphics:21.0.10` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-base:21.0.12` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-controls:21.0.12` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-fxml:21.0.12` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-graphics:21.0.12` | direct | PGP signed | 6 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
 | `org.opentest4j:opentest4j:1.3.0` | transitive | PGP signed | 2 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
 | `org.pcollections:pcollections:2.1.2` | transitive | PGP signed | 2 signed / 0 checksum | `908366594E746BF3C449F5622BE5D98F751F4136`<br>Harold Cooper<br>`harold@mit.edu`<br>created 2010-06-07 |

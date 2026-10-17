@@ -67,7 +67,7 @@ The standard `Build Bisq` workflow runs `verifyReleaseBuild --scan` on
 
 The manual `Installer Evidence` workflow has a macOS job on `macos-15`. It
 runs `verifyInstallerEvidenceBundle --scan` and uploads
-`installer-evidence-macos-15-java-21.0.6`.
+`installer-evidence-macos-15-java-21.0.12.1`.
 
 There is no dedicated macOS release-builder A/B workflow yet.
 

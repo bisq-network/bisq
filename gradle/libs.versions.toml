@@ -41,7 +41,7 @@ lombok = { strictly = '1.18.46' }
 mockito = { strictly = '5.23.0' }
 natpryce-make-it-easy = { strictly = '4.0.1' }
 netlayer = { strictly = '74230355ff2aa65596fff0f25138045e36b6014e' }
-javafx = { strictly = '21.0.10' }
+javafx = { strictly = '21.0.12' }
 openjfx-javafx-plugin = { strictly = '0.1.0' }
 protobuf = { strictly = '3.25.8' }
 protobuf-plugin = { strictly = '0.9.5' }

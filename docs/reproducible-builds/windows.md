@@ -78,7 +78,7 @@ The standard `Build Bisq` workflow runs `verifyReleaseBuild --scan` on
 The manual `Installer Evidence` workflow has a Windows job on `windows-2025`.
 It installs WiX Toolset with Chocolatey, runs
 `verifyInstallerEvidenceBundle --scan`, and uploads
-`installer-evidence-windows-2025-java-21.0.6`.
+`installer-evidence-windows-2025-java-21.0.12.1`.
 
 There is no dedicated Windows release-builder A/B workflow yet.
 
