@@ -140,8 +140,13 @@ class BundledDaoStateAuditTest {
         int evaluatedRoleProposals = 0;
         int acceptedRoleProposals = 0;
         int roleProposalsWithMismatchedTerms = 0;
+        int evaluatedProposalsWithoutCountedVotes = 0;
         for (protobuf.EvaluatedProposal evaluatedProposal : daoState.getEvaluatedProposalListList()) {
-            protobuf.Proposal proposal = evaluatedProposal.getProposalVoteResult().getProposal();
+            protobuf.ProposalVoteResult proposalVoteResult = evaluatedProposal.getProposalVoteResult();
+            if (proposalVoteResult.getNumAcceptedVotes() == 0 && proposalVoteResult.getNumRejectedVotes() == 0) {
+                evaluatedProposalsWithoutCountedVotes++;
+            }
+            protobuf.Proposal proposal = proposalVoteResult.getProposal();
             if (!proposal.hasRoleProposal()) {
                 continue;
             }
@@ -158,6 +163,11 @@ class BundledDaoStateAuditTest {
                 roleProposalsWithMismatchedTerms++;
             }
         }
+
+        // Vote results record no evaluated proposal without any accept or reject vote. The bundled history must
+        // contain none, otherwise that rule changed a historical result.
+        assertEquals(0, evaluatedProposalsWithoutCountedVotes,
+                "bundled history contains an evaluated proposal without counted votes");
 
         Map<String, LockupRecord> lockupsByOutputKey = new HashMap<>();
         Map<String, String> spenderTxIdByLockupOutputKey = new HashMap<>();

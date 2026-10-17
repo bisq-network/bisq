@@ -95,8 +95,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
 
     @Override
     public void start() {
-        // We must set the listeners initially and not on onParseBlockChainComplete as activeOrMyUnconfirmedProposals
-        // is used in voteResults which can be called earlier during sync.
+        // The lists are for display only and must not be used for consensus results.
         // To avoid unneeded upDateLists calls we delay one render frame so that once the proposalService is complete we
         // register out listeners.
         UserThread.execute(() -> {
