@@ -388,6 +388,16 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             new TacWindow().onAction(acceptedHandler).show();
         }, 1));
 
+        bisqSetup.setLocalBitcoinNodeUnusableHandler((reason, continueWithoutLocalNode) -> new Popup()
+                .warning(Res.get("popup.warning.localBitcoinNodeUnusable", reason))
+                .hideCloseButton()
+                .useShutDownButton()
+                .secondaryActionButtonText(Res.get("popup.warning.localBitcoinNodeUnusable.continue"))
+                .onSecondaryAction(continueWithoutLocalNode)
+                // Closing the window is no consent
+                .onClose(BisqApp.getShutDownHandler())
+                .show());
+
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
             if (show) {
                 torNetworkSettingsWindow.show();

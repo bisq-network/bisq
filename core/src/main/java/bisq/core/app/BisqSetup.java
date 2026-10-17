@@ -65,6 +65,8 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -92,6 +94,7 @@ import java.util.HashSet;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
@@ -158,6 +161,10 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<Runnable> displayTacHandler;
+    // Gets why the wallet cannot use the local Bitcoin node, and the next step for continuing without it
+    @Setter
+    @Nullable
+    private BiConsumer<String, Runnable> localBitcoinNodeUnusableHandler;
     @Setter
     @Nullable
     private Consumer<String> chainFileLockedExceptionHandler,
@@ -333,14 +340,30 @@ public class BisqSetup {
         maybeShowTac(this::step2);
     }
 
-    private void step2() {
-        readMapsFromResources(this::step3);
+    @VisibleForTesting
+    void step2() {
+        readMapsFromResources(() -> maybeAskToContinueWithoutLocalBitcoinNode(this::step3));
         checkForCorrectOSArchitecture();
         checkIfRunningOnQubesOS();
     }
 
     private void step3() {
         startP2pNetworkAndWallet(this::step4);
+    }
+
+    // Without a usable local node the wallet connects to other Bitcoin nodes, which learn the addresses of the wallet
+    // from its bloom filters. If a local node was found, the user decides before that happens.
+    @VisibleForTesting
+    void maybeAskToContinueWithoutLocalBitcoinNode(Runnable nextStep) {
+        Optional<String> unusableReason = localBitcoinNode.getUnusableReason();
+        if (unusableReason.isEmpty()) {
+            nextStep.run();
+        } else if (localBitcoinNodeUnusableHandler == null) {
+            log.error("The wallet cannot use the local Bitcoin node: {}. We do not continue without the consent " +
+                    "of the user.", unusableReason.get());
+        } else {
+            localBitcoinNodeUnusableHandler.accept(unusableReason.get(), nextStep);
+        }
     }
 
     private void step4() {
