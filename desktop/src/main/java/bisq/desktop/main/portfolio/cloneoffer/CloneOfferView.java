@@ -226,7 +226,12 @@ public class CloneOfferView extends MutableOfferView<CloneOfferViewModel> {
         }
     }
 
+    // Both ways to confirm the clone end here. A clone is a new offer and needs the DAO state like creating one.
     private void doClone() {
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         if (model.isPriceInRange()) {
             model.isNextButtonDisabled.setValue(true);
             cancelButton.setDisable(true);

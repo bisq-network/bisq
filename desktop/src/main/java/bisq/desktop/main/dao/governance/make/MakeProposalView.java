@@ -358,6 +358,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     private void doPublishMyProposal(Proposal proposal, Transaction transaction) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         //TODO it still happens that the user can click twice. Not clear why that can happen. Maybe we get updateButtonState
         // called in between which re-enables the button?
         makeProposalButton.setDisable(true);
@@ -507,7 +512,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void setMakeProposalButtonHandler() {
         makeProposalButton.setOnAction(event -> {
-            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) &&
+                    GUIUtil.isDaoStateInSyncOrShowPopup()) {
                 publishMyProposal(selectedProposalType);
             }
         });

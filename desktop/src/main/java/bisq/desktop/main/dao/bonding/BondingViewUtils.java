@@ -121,7 +121,8 @@ public class BondingViewUtils {
 
     private void lockupBond(byte[] hash, Coin lockupAmount, int lockupTime, LockupReason lockupReason,
                             Consumer<String> resultHandler) {
-        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) &&
+                GUIUtil.isDaoStateInSyncOrShowPopup()) {
             if (!DevEnv.isIgnorePopupsInDevMode()) {
                 try {
                     Tuple2<Coin, Integer> miningFeeAndTxVsize = daoFacade.getLockupTxMiningFeeAndTxVsize(lockupAmount, lockupTime, lockupReason, hash);
@@ -157,6 +158,11 @@ public class BondingViewUtils {
                                  LockupReason lockupReason,
                                  byte[] hash,
                                  Consumer<String> resultHandler) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
                 lockupReason,
@@ -177,7 +183,8 @@ public class BondingViewUtils {
     }
 
     public void unLock(String lockupTxId, Consumer<String> resultHandler) {
-        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) &&
+                GUIUtil.isDaoStateInSyncOrShowPopup()) {
             Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(lockupTxId);
             checkArgument(lockupTxOutput.isPresent(), "Lockup output must be present. TxId=" + lockupTxId);
             Coin unlockAmount = Coin.valueOf(lockupTxOutput.get().getValue());
@@ -216,6 +223,11 @@ public class BondingViewUtils {
     }
 
     private void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         daoFacade.publishUnlockTx(lockupTxId,
                 txId -> {
                     if (!DevEnv.isIgnorePopupsInDevMode())

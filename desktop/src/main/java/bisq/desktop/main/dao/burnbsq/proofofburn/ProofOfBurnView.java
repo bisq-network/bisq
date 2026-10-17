@@ -190,6 +190,10 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
 
         burnButton.setOnAction((event) -> {
+            if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+                return;
+            }
+
             String preImageAsString = preImageTextField.getText();
             if (!preImageAsString.equals(preImageAsString.trim())) {
                 new Popup().warning(Res.get("dao.proofOfBurn.preImage.notTrimmedWarning"))
@@ -328,6 +332,11 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     }
 
     private void doPublishFeeTx(Transaction transaction, String preImageAsString) {
+        // Checked again, as the DAO state can need a resync since the action started
+        if (!GUIUtil.isDaoStateInSyncOrShowPopup()) {
+            return;
+        }
+
         proofOfBurnService.publishTransaction(transaction, preImageAsString,
                 () -> {
                     if (!DevEnv.isIgnorePopupsInDevMode())

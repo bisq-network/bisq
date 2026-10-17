@@ -40,6 +40,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
 | [`dao/seed-node-state-hashes.md`](dao/seed-node-state-hashes.md) | Which connections the node trusts as seed nodes when DAO, proposal and blind vote state hashes are exchanged. |
+| [`dao/dao-state-resync-warning.md`](dao/dao-state-resync-warning.md) | The desktop warning when the DAO state needs a resync, how often it is shown, and which user actions do not start until the resync. |
 
 ### `dispute/`
 
