@@ -132,6 +132,9 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     private boolean isBootstrapped;
     private boolean allServicesInitialized;
     private boolean initAfterBootstrapped;
+    // Set once the mailbox messages in the P2P data at startup have been handled
+    private boolean startupMessagesHandled;
+    private final List<Runnable> startupMessagesHandledHandlers = new ArrayList<>();
 
     @Inject
     public MailboxMessageService(NetworkNode networkNode,
@@ -263,8 +266,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
             // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
             // after the hidden service was ready.
             addHashMapChangedListener();
-            processMailboxEntries(p2PDataStorage.getMap().values(), () -> {
-            });
+            processMailboxEntries(p2PDataStorage.getMap().values(), this::onStartupMessagesHandled);
             maybeRepublishMailBoxMessages();
         }
     }
@@ -408,6 +410,16 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         decryptedMailboxListeners.add(listener);
     }
 
+    // Runs the handler on the user thread once the mailbox messages in the P2P data at startup have been decrypted and
+    // given to the listeners, or at once if that has happened already. Decrypting many messages takes a while.
+    public void runOnceStartupMessagesHandled(Runnable handler) {
+        if (startupMessagesHandled) {
+            handler.run();
+        } else {
+            startupMessagesHandledHandlers.add(handler);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // HashMapChangedListener implementation for ProtectedStorageEntry items
@@ -441,6 +453,20 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     private void addHashMapChangedListener() {
         p2PDataStorage.addHashMapChangedListener(this);
+    }
+
+    private void onStartupMessagesHandled() {
+        startupMessagesHandled = true;
+        List<Runnable> handlers = new ArrayList<>(startupMessagesHandledHandlers);
+        startupMessagesHandledHandlers.clear();
+        // A failing handler must not keep the others from running
+        handlers.forEach(handler -> {
+            try {
+                handler.run();
+            } catch (Throwable t) {
+                log.error("A handler for the startup mailbox messages failed", t);
+            }
+        });
     }
 
     // The completeHandler runs on the user thread after the entries have been handled
