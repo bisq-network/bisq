@@ -3,8 +3,9 @@
 ## Scope
 
 This specification defines when a trader's node publishes the mediated payout after the mediator
-proposed a result, and what the trader can still do after accepting. It applies while the
-mediation result is proposed (dispute state MEDIATION_CLOSED) and the payout is not published.
+proposed a result, and what the trader can still do after accepting. It applies while the mediation
+result is proposed (dispute state MEDIATION_CLOSED) and the payout is not published, and to the
+peer's MediatedPayoutTxPublishedMessage also after that and during a refund request.
 
 ## Rules
 
@@ -35,9 +36,14 @@ mediation result is proposed (dispute state MEDIATION_CLOSED) and the payout is 
   publishing it with the accept button.
 - Both nodes can publish the mediated payout at the same time. It is the same transaction on both
   sides, so this does no harm. A node therefore also accepts the peer's
-  MediatedPayoutTxPublishedMessage after its own payout was published, and keeps its own payout.
-  If the trade was closed without a payout of the node, for example by the refund agent, or while
-  its wallet does not know its payout yet, for example after a resync, the node rejects the message.
+  MediatedPayoutTxPublishedMessage after its own payout was published, and keeps its own payout. If
+  the trade was closed without a payout of the node, for example by the refund agent, or while its
+  wallet does not know its payout yet, for example after a resync, the node rejects the message.
+  While a refund request or a legacy arbitration is open, it rejects the message in every phase,
+  unless its wallet has that payout as confirmed: the delayed payout tx is then published and spends
+  the same deposit output, so only a payout that confirmed spent it first, for example one that the
+  peer published before the delayed payout tx. A rejected mailbox message stays in the local mailbox
+  and is handled again at the next start.
 
 Without the rule for a signature that arrives after the own acceptance, both traders could accept
 before the other's signature arrived. Then both nodes have both signatures, both show that they
@@ -62,8 +68,10 @@ Detecting a payout that the peer published while the node, which has only its ow
 offline. A delayed payout tx that the peer publishes at the same time, or whose
 PeerPublishedDelayedPayoutTxMessage has not arrived, as that tx pays nothing to the wallet and the
 wallet does not watch the deposit output. A refund request that reaches the node only after the
-check, for example in a later mailbox message. Mailbox messages that arrive only after the startup,
-for example when the node starts without reaching a seed node. Whether the seller can still confirm
-the payment receipt after accepting:
-[repeated-payout-confirmation.md](repeated-payout-confirmation.md). A
-MediatedPayoutTxPublishedMessage that arrives while a refund request is open is processed as before.
+check, for example in a later mailbox message. A MediatedPayoutTxPublishedMessage that the node
+received directly and rejected during a refund request because the payout was not confirmed yet: it
+is not handled again, and the trade stays in the refund request until the refund agent closes it. A
+mediated payout that pays nothing to the node: its wallet does not see it, so the message stays
+rejected during a refund request. Mailbox messages that arrive only after the startup, for example
+when the node starts without reaching a seed node. Whether the seller can still confirm the payment
+receipt after accepting: [repeated-payout-confirmation.md](repeated-payout-confirmation.md).

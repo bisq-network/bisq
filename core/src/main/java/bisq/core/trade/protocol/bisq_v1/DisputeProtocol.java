@@ -50,6 +50,7 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.listeners.NewBestBlockListener;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -231,9 +232,28 @@ public class DisputeProtocol extends TradeProtocol {
                 // In PAYOUT_PUBLISHED only if we have our own payout. Without it, the trade was closed otherwise, for
                 // example by the refund agent, or the wallet does not know our payout yet, and the message must not
                 // set a payout.
-                .preCondition(trade.getTradePhase() != Trade.Phase.PAYOUT_PUBLISHED || trade.getPayoutTx() != null))
+                .preCondition(trade.getTradePhase() != Trade.Phase.PAYOUT_PUBLISHED || trade.getPayoutTx() != null)
+                // A refund request means that the delayed payout tx is published, which spends the deposit output of
+                // the mediated payout. Only a mediated payout that our wallet has as confirmed spent it first, for
+                // example if the peer published it before the delayed payout tx. isArbitrated also covers the legacy
+                // arbitration, which has no mediated payout.
+                .preCondition(!trade.getDisputeState().isArbitrated() || isConfirmedInWallet(message.getPayoutTx())))
                 .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
                 .executeTasks();
+    }
+
+    private boolean isConfirmedInWallet(byte[] serializedTx) {
+        try {
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Transaction tx = btcWalletService.getTxFromSerializedTx(serializedTx);
+            TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(tx.getTxId().toString());
+            return confidence != null &&
+                    confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+        } catch (RuntimeException e) {
+            log.warn("The payout tx in the MediatedPayoutTxPublishedMessage is invalid. tradeId={}, error={}",
+                    trade.getId(), e.toString());
+            return false;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
