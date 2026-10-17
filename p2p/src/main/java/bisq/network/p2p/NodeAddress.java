@@ -22,6 +22,7 @@ import bisq.common.crypto.Hash;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
@@ -89,7 +90,7 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload, Us
             .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

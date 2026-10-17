@@ -19,12 +19,13 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.bond.BondedAsset;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
-import bisq.common.encoding.canonical.Canonical;
-import bisq.common.encoding.canonical.CanonicalEncoder;
-import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.core.locale.Res;
 
 import bisq.common.crypto.Hash;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -114,7 +115,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
             .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

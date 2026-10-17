@@ -23,6 +23,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.persistable.PersistableList;
 
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public class MyProposalList extends PersistableList<Proposal> implements Consens
                             .repeatedCompose(1, MyProposalList::getList, Proposal.getProposalSchemaBuilder().build()));
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

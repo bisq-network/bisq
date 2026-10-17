@@ -29,11 +29,12 @@ import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.ParamChange;
+
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.encoding.canonical.LegacyCollectorsToMapIterator;
-
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
 
@@ -335,7 +336,7 @@ public class DaoState implements PersistablePayload, Canonical {
     public static final CanonicalSchema<DaoState> STATE_HASH_CHAIN_SCHEMA = createSchema(true);
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

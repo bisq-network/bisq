@@ -19,11 +19,12 @@ package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
+import bisq.common.Proto;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
-
-import bisq.common.Proto;
+import bisq.common.encoding.canonical.EncodingContext;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -73,7 +74,7 @@ public class MeritList implements Proto, ConsensusCritical, ImmutableDaoStateMod
             .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 }

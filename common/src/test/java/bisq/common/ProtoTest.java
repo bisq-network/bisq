@@ -19,6 +19,7 @@ package bisq.common;
 
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.EncodingContext;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.StringValue;
@@ -43,7 +44,7 @@ public class ProtoTest {
         }
 
         @Override
-        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
             return new byte[]{0x01, 0x02, 0x03};
         }
     }
