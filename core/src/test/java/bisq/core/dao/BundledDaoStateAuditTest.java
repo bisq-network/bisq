@@ -83,9 +83,9 @@ class BundledDaoStateAuditTest {
     private static final String BLIND_VOTE_RESOURCE = "/BlindVoteStore_BTC_MAINNET";
     private static final String BLOCK_RESOURCE_DIR = "/BsqBlocks_BTC_MAINNET/";
     private static final int MAINNET_GENESIS_HEIGHT = 571_747;
-    private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 963_120;
+    private static final int PREVIOUS_BOND_AUDIT_HEIGHT = 968_341;
     private static final int EXPECTED_BLIND_VOTE_COUNT = 963;
-    private static final int EXPECTED_REVEALED_BLIND_VOTE_COUNT = 948;
+    private static final int EXPECTED_REVEALED_BLIND_VOTE_COUNT = 951;
 
     @Test
     void bundledBlockHistoryAndRevealedBlindVotesAreInternallyConsistent() throws IOException {
