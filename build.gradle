@@ -1733,10 +1733,10 @@ tasks.register('verifyReleaseBuilderImage') {
         def trimmedLines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
         def fromLine = trimmedLines.find { it.startsWith('FROM ') }
         def snapshotLine = trimmedLines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
-        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaVersionValue}"
+        def expectedBaseImage = "eclipse-temurin:${expectedJavaVersionValue}_<build>-jdk-jammy"
         def violations = []
 
-        if (!(fromLine ==~ /^FROM --platform=linux\/amd64 ${java.util.regex.Pattern.quote(expectedBaseImage)}@sha256:[0-9a-f]{64}$/)) {
+        if (!(fromLine ==~ /^FROM --platform=linux\/amd64 eclipse-temurin:${java.util.regex.Pattern.quote(expectedJavaVersionValue)}_\d+-jdk-jammy@sha256:[0-9a-f]{64}$/)) {
             violations << "Dockerfile FROM must pin linux/amd64 ${expectedBaseImage} by lowercase sha256 digest"
         }
         if (!(snapshotLine ==~ /^ARG UBUNTU_APT_SNAPSHOT=\d{8}T\d{6}Z$/)) {
@@ -1753,9 +1753,6 @@ tasks.register('verifyReleaseBuilderImage') {
         }
         if (!text.contains('Legacy Ubuntu apt source must be snapshot-pinned')) {
             violations << 'Dockerfile must fail if an active legacy Ubuntu apt source remains without snapshot=yes'
-        }
-        if (!text.contains('rm -f /etc/apt/sources.list.d/zulu.list')) {
-            violations << 'Dockerfile must remove the unused Azul apt source before apt-get update'
         }
         if (!text.contains('apt-get install -y --no-install-recommends ca-certificates')) {
             violations << 'Dockerfile must bootstrap ca-certificates from the pinned HTTPS apt snapshot'
@@ -1895,7 +1892,7 @@ tasks.register('verifyGithubActionsSecurity') {
                     'name: Linux Release Builder',
                     '  workflow_dispatch:',
                     'runs-on: ubuntu-24.04',
-                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux',
+                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.12.1 docker/release-builder/linux',
                     'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
                     'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
                     'git -C build/release-builder-worktrees/a submodule update --init --recursive',
@@ -1912,8 +1909,8 @@ tasks.register('verifyGithubActionsSecurity') {
                     '-PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"',
                     '-PleftInstallerEvidence=build/reports/release/installer-evidence.zip \\',
                     '-PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"',
-                    'release-builder-linux-java-21.0.6',
-                    'release-builder-linux-installers-java-21.0.6',
+                    'release-builder-linux-java-21.0.12.1',
+                    'release-builder-linux-installers-java-21.0.12.1',
                     'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
                     'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
                     'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',

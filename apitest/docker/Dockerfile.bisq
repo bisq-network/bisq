@@ -14,7 +14,7 @@ RUN apt-get update \
 
 # Pre-fetch the Linux-classifier javafx jars (Gradle install-dist ships empty
 # placeholders). Cached unless JAVAFX_VERSION changes.
-ARG JAVAFX_VERSION=21.0.10
+ARG JAVAFX_VERSION=21.0.12
 RUN set -eux; \
     mkdir -p /opt/openjfx; \
     for mod in javafx-base javafx-graphics; do \
