@@ -81,7 +81,7 @@ The script writes into `p2p/src/main/resources/`:
 | `AccountAgeWitnessStore_<version>_BTC_MAINNET` | New file with the release version in the name |
 
 The following three are only copied when it is needed. The lines are commented out in the script:
-`ProposalStore_BTC_MAINNET`, `TempProposalStore_BTC_MAINNET`, `BlindVoteStore_BTC_MAINNET`.
+`ProposalStore_BTC_MAINNET`, `BlindVoteStore_BTC_MAINNET`.
 
 **If you commit the two new files that carry the version in the name, you must also add the version
 string to `HISTORICAL_RESOURCE_FILE_VERSION_TAGS` in
