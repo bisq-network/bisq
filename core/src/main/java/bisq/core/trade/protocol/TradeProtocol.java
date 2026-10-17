@@ -89,7 +89,14 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         UserThread.runAfter(() -> {
             mailboxMessageService.addDecryptedMailboxListener(this);
             handleMailboxCollection(mailboxMessageService.getMyDecryptedMailboxMessages());
+            // The decryption of the mailbox messages from the P2P data at startup may still be running at this point.
+            // Those messages reach our listener once it is done.
+            mailboxMessageService.runOnceStartupMessagesHandled(this::onStartupMailboxMessagesHandled);
         }, 100, TimeUnit.MILLISECONDS);
+    }
+
+    // Called once after the mailbox messages that were there at startup have been handled
+    protected void onStartupMailboxMessagesHandled() {
     }
 
     public void onWithdrawCompleted() {

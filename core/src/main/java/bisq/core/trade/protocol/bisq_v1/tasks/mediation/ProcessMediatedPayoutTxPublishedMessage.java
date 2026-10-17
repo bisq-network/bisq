@@ -104,7 +104,7 @@ public class ProcessMediatedPayoutTxPublishedMessage extends TradeTask {
                 UserThread.execute(() -> processModel.getTradeManager()
                         .closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED));
             } else {
-                log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
+                log.info("We have the payout tx already and do nothing here. trade ID={}", trade.getId());
             }
 
             processModel.getTradeManager().requestPersistence();

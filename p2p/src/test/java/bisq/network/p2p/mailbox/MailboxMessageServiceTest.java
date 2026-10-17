@@ -46,12 +46,19 @@ import java.time.Clock;
 
 import java.nio.charset.StandardCharsets;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -158,6 +165,82 @@ public class MailboxMessageServiceTest {
         mailboxMessageService.onAdded(Set.of(protectedMailboxStorageEntry));
 
         verify(p2PDataStorage).remove(updatedEntry, MY_NODE_ADDRESS);
+    }
+
+    // The trade protocols wait for this before they act on the state from their startup mailbox messages. With more
+    // than one entry, the entries are decrypted on another thread and reach the listeners later.
+    @Test
+    public void startupMessagesHandledRunsAfterTheStartupMessagesReachedTheListeners() throws Exception {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        when(networkNode.getNodeAddress()).thenReturn(MY_NODE_ADDRESS);
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        EncryptionService encryptionService = mock(EncryptionService.class);
+        Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = new HashMap<>();
+        for (String uid : List.of("uid-1", "uid-2")) {
+            ProtectedMailboxStorageEntry entry = mailboxEntryFromPeer(uid, encryptionService);
+            map.put(P2PDataStorage.get32ByteHashAsByteArray(entry.getMailboxStoragePayload()), entry);
+        }
+        when(p2PDataStorage.getMap()).thenReturn(map);
+        MailboxMessageService mailboxMessageService = newMailboxMessageService(networkNode,
+                p2PDataStorage,
+                encryptionService,
+                keyRing(TestUtils.generateKeyPair()));
+        List<String> events = new CopyOnWriteArrayList<>();
+        CountDownLatch handled = new CountDownLatch(1);
+        mailboxMessageService.addDecryptedMailboxListener((message, sender) -> events.add("message"));
+        mailboxMessageService.runOnceStartupMessagesHandled(() -> {
+            events.add("handled");
+            handled.countDown();
+        });
+
+        mailboxMessageService.onBootstrapped();
+        mailboxMessageService.onAllServicesInitialized();
+        mailboxMessageService.initAfterBootstrapped();
+
+        assertTrue(handled.await(10, TimeUnit.SECONDS));
+        assertEquals(List.of("message", "message", "handled"), events);
+    }
+
+    @Test
+    public void startupMessagesHandledRunsAtOnceOnceTheStartupMessagesAreHandled() throws Exception {
+        NetworkNode networkNode = mock(NetworkNode.class);
+        when(networkNode.getNodeAddress()).thenReturn(MY_NODE_ADDRESS);
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        when(p2PDataStorage.getMap()).thenReturn(new HashMap<>());
+        MailboxMessageService mailboxMessageService = newMailboxMessageService(networkNode,
+                p2PDataStorage,
+                mock(EncryptionService.class),
+                keyRing(TestUtils.generateKeyPair()));
+        List<String> events = new ArrayList<>();
+        mailboxMessageService.runOnceStartupMessagesHandled(() -> events.add("before"));
+
+        mailboxMessageService.onBootstrapped();
+        mailboxMessageService.onAllServicesInitialized();
+        assertTrue(events.isEmpty());
+        mailboxMessageService.initAfterBootstrapped();
+        mailboxMessageService.runOnceStartupMessagesHandled(() -> events.add("after"));
+
+        assertEquals(List.of("before", "after"), events);
+    }
+
+    private static ProtectedMailboxStorageEntry mailboxEntryFromPeer(String uid, EncryptionService encryptionService)
+            throws Exception {
+        ProtectedMailboxStorageEntry protectedMailboxStorageEntry = mock(ProtectedMailboxStorageEntry.class);
+        MailboxStoragePayload mailboxStoragePayload = mock(MailboxStoragePayload.class);
+        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mock(PrefixedSealedAndSignedMessage.class);
+        SealedAndSigned sealedAndSigned = mock(SealedAndSigned.class);
+        when(protectedMailboxStorageEntry.getMailboxStoragePayload()).thenReturn(mailboxStoragePayload);
+        when(protectedMailboxStorageEntry.getProtectedStoragePayload()).thenReturn(mailboxStoragePayload);
+        when(protectedMailboxStorageEntry.getReceiversPubKey()).thenReturn(TestUtils.generateKeyPair().getPublic());
+        when(mailboxStoragePayload.getPrefixedSealedAndSignedMessage()).thenReturn(prefixedSealedAndSignedMessage);
+        when(mailboxStoragePayload.encodeCanonical()).thenReturn(uid.getBytes(StandardCharsets.UTF_8));
+        when(prefixedSealedAndSignedMessage.getUid()).thenReturn(uid);
+        when(prefixedSealedAndSignedMessage.getSenderNodeAddress()).thenReturn(PEER_NODE_ADDRESS);
+        when(prefixedSealedAndSignedMessage.getSealedAndSigned()).thenReturn(sealedAndSigned);
+        when(encryptionService.decryptAndVerify(sealedAndSigned)).thenReturn(new DecryptedMessageWithPubKey(
+                new MockMailboxPayload(uid, PEER_NODE_ADDRESS),
+                TestUtils.generateKeyPair().getPublic()));
+        return protectedMailboxStorageEntry;
     }
 
     @SuppressWarnings("unchecked")

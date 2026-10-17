@@ -51,8 +51,8 @@ message can still be on its way. During a repeated confirmation the trade shows 
 the message arrives or is stored in the mailbox, and the hint can appear again. This specification
 only ensures that the repeated confirmation does not fail.
 
-This specification does not define how a mediated payout which both traders signed gets
-published when nobody has published it yet.
+How a mediated payout which both traders signed gets published when nobody has published it yet:
+[mediated-payout-finalization.md](mediated-payout-finalization.md).
 
 When the seller's normal payout and the buyer's mediated payout differ, this specification does not
 define the trade state of the node whose payout did not confirm. That node keeps its payout
