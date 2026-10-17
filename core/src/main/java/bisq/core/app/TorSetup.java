@@ -25,10 +25,13 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +42,9 @@ import static bisq.common.util.Preconditions.checkDir;
 @Slf4j
 @Singleton
 public class TorSetup {
+    // Files left in the Tor directory by older Tor versions, which are not used anymore.
+    private static final List<String> OBSOLETE_TOR_FILES = List.of("tor.real");
+
     private final File torDir;
 
     @Inject
@@ -58,6 +64,20 @@ public class TorSetup {
             log.error("cleanupTorFiles failed", e);
             if (errorMessageHandler != null)
                 errorMessageHandler.handleErrorMessage(e.toString());
+        }
+    }
+
+    // Deletes only known obsolete files, so it does not slow down Tor startup like cleanupTorFiles.
+    public void cleanupObsoleteTorFiles() {
+        for (String fileName : OBSOLETE_TOR_FILES) {
+            File file = new File(torDir, fileName);
+            try {
+                if (Files.deleteIfExists(file.toPath())) {
+                    log.info("Deleted obsolete Tor file {}", file.getAbsolutePath());
+                }
+            } catch (IOException e) {
+                log.warn("Could not delete obsolete Tor file {}", file.getAbsolutePath(), e);
+            }
         }
     }
 }
