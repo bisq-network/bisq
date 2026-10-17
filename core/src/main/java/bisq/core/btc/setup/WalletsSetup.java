@@ -117,6 +117,9 @@ public class WalletsSetup {
     public final BooleanProperty walletsSetupFailed = new SimpleBooleanProperty();
 
     private static final long STARTUP_TIMEOUT = 180;
+    // Covers WalletConfig.PEER_GROUP_STOP_TIMEOUT_SEC plus saving the wallets and closing the SPV file. Together with
+    // the open offer removal and the P2P shutdown it has to fit into the 10 sec. timeout in BisqExecutable.
+    private static final long SHUT_DOWN_TIMEOUT_SEC = WalletConfig.PEER_GROUP_STOP_TIMEOUT_SEC + 1;
     private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
     private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
@@ -343,10 +346,13 @@ public class WalletsSetup {
         if (walletConfig != null) {
             try {
                 walletConfig.stopAsync();
-                walletConfig.awaitTerminated(1, TimeUnit.SECONDS);
+                walletConfig.awaitTerminated(SHUT_DOWN_TIMEOUT_SEC, TimeUnit.SECONDS);
                 log.info("walletConfig shutDown completed");
-            } catch (Throwable ignore) {
-                log.info("walletConfig shutDown interrupted by timeout");
+            } catch (TimeoutException e) {
+                log.warn("walletConfig shutDown not completed after {} sec. We continue the shutdown.",
+                        SHUT_DOWN_TIMEOUT_SEC);
+            } catch (Throwable t) {
+                log.error("walletConfig shutDown failed", t);
             }
         }
 
@@ -462,6 +468,7 @@ public class WalletsSetup {
         new Thread(() -> {
             try {
                 Context.propagate(ctx);
+                walletConfig.setStopPeerGroupWithoutTimeout(true);
                 walletConfig.stopAsync();
                 walletConfig.awaitTerminated();
                 initialize(seed, resultHandler, exceptionHandler);
