@@ -18,6 +18,11 @@ peer published the mediated payout.
 - A wallet transaction counts as the mediated payout only if it passes the checks of
   [payout-seen-in-network.md](payout-seen-in-network.md) for a mediated payout. Then the node
   completes the trade as it does after the message.
+- While a refund request or a legacy arbitration is open, a mediated payout counts only once it is
+  confirmed, from the wallet as from the peer's message. The delayed payout tx is then published and
+  spends the same deposit output, so only a payout that confirmed spent it first, for example one
+  that the peer published before the delayed payout tx. While the refund request is open, the node
+  keeps watching an unconfirmed payout and completes the trade once it confirms.
 
 ## Compatibility
 
@@ -27,4 +32,6 @@ result was accepted with an older version.
 ## Not covered
 
 The checks of the payout transaction itself, which
-[payout-seen-in-network.md](payout-seen-in-network.md) defines.
+[payout-seen-in-network.md](payout-seen-in-network.md) defines. A refund request that the node
+learns of only after its wallet check at startup, for example from a mailbox message: until then an
+unconfirmed payout counts as in mediation.

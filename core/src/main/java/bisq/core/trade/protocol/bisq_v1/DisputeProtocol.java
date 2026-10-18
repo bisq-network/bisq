@@ -244,11 +244,9 @@ public class DisputeProtocol extends TradeProtocol {
                 // example by the refund agent, or the wallet does not know our payout yet, and the message must not
                 // set a payout.
                 .preCondition(trade.getTradePhase() != Trade.Phase.PAYOUT_PUBLISHED || trade.getPayoutTx() != null)
-                // A refund request means that the delayed payout tx is published, which spends the deposit output of
-                // the mediated payout. Only a mediated payout that our wallet has as confirmed spent it first, for
-                // example if the peer published it before the delayed payout tx. isArbitrated also covers the legacy
-                // arbitration, which has no mediated payout.
-                .preCondition(!trade.getDisputeState().isArbitrated() || isConfirmedInWallet(message.getPayoutTx())))
+                // During a refund request only a payout that our wallet has as confirmed
+                .preCondition(trade.getDisputeState().acceptsMediatedPayout(
+                        () -> isConfirmedInWallet(message.getPayoutTx()))))
                 .setup(tasks(ProcessMediatedPayoutTxPublishedMessage.class))
                 .executeTasks();
     }

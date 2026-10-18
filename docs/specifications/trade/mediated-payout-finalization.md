@@ -40,10 +40,10 @@ peer's MediatedPayoutTxPublishedMessage also after that and during a refund requ
   the trade was closed without a payout of the node, for example by the refund agent, or while its
   wallet does not know its payout yet, for example after a resync, the node rejects the message.
   While a refund request or a legacy arbitration is open, it rejects the message in every phase,
-  unless its wallet has that payout as confirmed: the delayed payout tx is then published and spends
-  the same deposit output, so only a payout that confirmed spent it first, for example one that the
-  peer published before the delayed payout tx. A rejected mailbox message stays in the local mailbox
-  and is handled again at the next start.
+  unless its wallet has that payout as confirmed, by the rule that
+  [mediated-payout-detection.md](mediated-payout-detection.md) defines for the payout seen in the
+  wallet as well. A rejected mailbox message stays in the local mailbox and is handled again at the
+  next start.
 
 Without the rule for a signature that arrives after the own acceptance, both traders could accept
 before the other's signature arrived. Then both nodes have both signatures, both show that they
@@ -71,11 +71,11 @@ check, for example in a later mailbox message. A mediation result that is replac
 traders signed: the node publishes the payout that both signatures cover. The mediator's desktop
 fills the second ticket of a trade with the result of the first one and does not let it be changed.
 A MediatedPayoutTxPublishedMessage that the node received directly and rejected during a refund
-request because the payout was not confirmed yet: it is not handled again, and the trade stays in
-the refund request until the refund agent closes it. A mediated payout that pays nothing to the
-node: its wallet does not see it, so the message stays rejected during a refund request. Mailbox
-messages that arrive only after the startup, for example when the node starts without reaching a
-seed node. Detecting a payout that the peer published while the node was offline:
+request because the payout was not confirmed yet: it is not handled again, but the wallet completes
+the trade if the payout confirms while the refund request is open. A mediated payout that pays
+nothing to the node: its wallet does not see it, so the message stays rejected during a refund
+request. Mailbox messages that arrive only after the startup, for example when the node starts
+without reaching a seed node. Detecting a payout that the peer published while the node was offline:
 [mediated-payout-detection.md](mediated-payout-detection.md). Whether the seller can still confirm
 the payment receipt after accepting:
 [repeated-payout-confirmation.md](repeated-payout-confirmation.md).

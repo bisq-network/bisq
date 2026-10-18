@@ -34,6 +34,7 @@ import org.bitcoinj.core.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTxSeenInNetwork;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -65,6 +66,11 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void validatePayoutTx(Transaction payoutTx, boolean isConfirmed) {
+        // As for the peer's message: during a refund request only once it is confirmed. Until then the listener stays.
+        checkArgument(trade.getDisputeState().acceptsMediatedPayout(() -> isConfirmed),
+                "A mediated payout counts during a refund request only once it is confirmed. disputeState=%s",
+                trade.getDisputeState());
+
         BtcWalletService btcWalletService = processModel.getBtcWalletService();
         TradingPeer tradingPeer = processModel.getTradePeer();
 

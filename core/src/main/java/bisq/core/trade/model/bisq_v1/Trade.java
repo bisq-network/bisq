@@ -66,6 +66,7 @@ import javafx.collections.ObservableList;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -260,6 +261,15 @@ public abstract class Trade extends TradeModel {
                     this == Trade.DisputeState.REFUND_REQUESTED ||
                     this == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
                     this == Trade.DisputeState.REFUND_REQUEST_CLOSED;
+        }
+
+        // A refund request means that the delayed payout tx is published, which spends the deposit output of the
+        // mediated payout. Only a confirmed mediated payout shows that it spent the output first, for example if the
+        // peer published it before the delayed payout tx. isArbitrated also covers the legacy arbitration, which has no
+        // mediated payout.
+        // The peer's MediatedPayoutTxPublishedMessage and the payout seen in the wallet both follow this rule.
+        public boolean acceptsMediatedPayout(BooleanSupplier isPayoutConfirmed) {
+            return !isArbitrated() || isPayoutConfirmed.getAsBoolean();
         }
     }
 
