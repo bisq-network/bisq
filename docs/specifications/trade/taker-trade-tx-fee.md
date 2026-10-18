@@ -20,17 +20,17 @@ protocol timeout.
 
 ## How the taker derives the fee
 
-The desktop taker estimates the vsize of its taker fee transaction from its wallet, or assumes
-233 vbytes if the wallet cannot fund the estimate. It adds 70 vbytes if it is set to pay the taker
-fee in BSQ, averages the result with the 233 vbytes of the deposit transaction and uses at least
-233 vbytes. The fee is that vsize times its fee rate. If the wallet is empty, the fee is 233
-vbytes times the fee rate. The API taker always uses 212 vbytes.
+The desktop taker derives the fee from an estimate of the vsize of its taker fee transaction, which
+grows with the number of wallet inputs that transaction needs (TxFeeEstimationService). The API
+taker states the fee that the maker expects at its own fee rate.
 
 The desktop taker fixes the fee when it shows the funding screen and does not update it afterwards.
+With an empty wallet it uses 233 vbytes and the fee rate from when it opened the take offer screen.
 
-The estimated vsize grows with the number of wallet inputs the taker fee transaction needs. With
-equal fee rates on both sides, a taker fee transaction from 617 vbytes on, about 8 or more inputs,
-results in a fee above what the maker accepts.
+With equal fee rates on both sides, an estimated taker fee transaction from 617 vbytes on gives a
+fee above what the maker accepts: with native segwit inputs that is about 8 inputs, with legacy
+inputs about 4. The estimate is normally within 20 % of the size that BitcoinJ reports for it; the
+transaction that is built later can differ more.
 
 ## Rule
 
@@ -56,10 +56,16 @@ funds", and the take offer screen closes, without a further warning that the off
 other checks before the request, for a banned currency, payment method, offer or maker, a required
 update and an offer that was already used in a trade, end the attempt in the same way.
 
+A buyer as taker checks the same fee again, with its fee rate at that time, when it verifies the
+delayed payout transaction, after its taker fee is published. The check before the request prevents
+most of these late failures, which cost the taker fee.
+
 ## Compatibility
 
-The rule is local to the taker. It changes no message, contract or persisted data, and it only
-stops take offer requests that a maker with the same fee rate would reject.
+The rule is local to the taker. It changes no message, contract or persisted data. Makers apply the
+same check since v1.10.0, and the GitHub release notes of v1.10.9 state that updating to that
+version is required to continue trading, so the taker only stops take offer requests that a maker
+with the same fee rate would reject.
 
 ## Not covered
 
@@ -67,6 +73,11 @@ stops take offer requests that a maker with the same fee rate would reject.
   still be rejected by the maker, and a request the taker stops could have been accepted.
 - A large change of the fee rate after the desktop taker fixed its fee also fails the check. The
   user then has to open the offer again.
+- The estimate uses the coins of the wallet, also when the user funds the trade from an external
+  wallet, so a wallet with many small amounts can cause a refusal although that trade would need one
+  input.
+- If a later version relaxes the maker's rule, takers of this version keep the stricter check until
+  they update.
 - The maker still drops an invalid take offer request without a reply.
 - The taker's fee is not reduced to fit the maker's range. Paying the miner fee of the taker fee
   transaction separately from the stated fee would remove the need to consolidate, but is a
