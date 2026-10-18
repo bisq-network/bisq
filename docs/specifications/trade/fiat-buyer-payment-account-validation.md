@@ -38,16 +38,17 @@ Before the seller broadcasts the fiat deposit transaction, two independent prere
 completed:
 
 - the buyer payment account has passed the authoritative validation above; and
-- the buyer has received the deposit and delayed-payout transaction message, so the buyer retains the
-  recovery transaction before funds are locked.
+- the buyer has acknowledged the deposit and delayed-payout transaction message, so the buyer retains
+  the recovery transaction before funds are locked
+  ([`deposit-message-delivery.md`](deposit-message-delivery.md)).
 
 The prerequisites may complete in either order. Completing either one must re-evaluate deposit
 publication, but publication must remain blocked until both are persisted as complete. Repeated
 messages and retries must not cause a second logical publication.
 
-Deferred publication belongs to fiat trades only. A crypto deposit is published as soon as the
-delayed-payout signature has been processed, so a buyer account reveal must not trigger publication
-for a crypto trade.
+Deferred publication belongs to fiat trades only. A crypto deposit is published as soon as the buyer
+has acknowledged the deposit and delayed-payout transaction message, so a buyer account reveal must
+not trigger publication for a crypto trade.
 
 Publication is single-flight per trade. The persisted trade phase advances only when the wallet
 reports the broadcast result, so it cannot express that a broadcast is still pending. A second
