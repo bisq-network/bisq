@@ -44,6 +44,8 @@ import org.bitcoinj.params.MainNetParams;
 
 import javafx.beans.property.SimpleObjectProperty;
 
+import java.time.Duration;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,6 +56,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -67,7 +72,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * The seller's task that sends the DepositTxAndDelayedPayoutTxMessage, followed by the publication of the deposit tx,
- * in a real task runner.
+ * in a real task runner. Only the buyer's ACK lets the deposit tx be published; the arrival of the message at the
+ * buyer's node does not show that the buyer processed and kept it.
  */
 class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
     private static final Transaction DEPOSIT_TX = new Transaction(MainNetParams.get());
@@ -85,26 +91,41 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
     }
 
     @Test
-    void duplicateDeliveryCallbacksDoNotPersistTheMarkerAgain() {
-        ProcessModel processModel = mock(ProcessModel.class);
-        TradeManager tradeManager = mock(TradeManager.class);
-        AtomicBoolean messageDelivered = new AtomicBoolean();
-        when(processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()).thenAnswer(
-                invocation -> messageDelivered.get());
-        doAnswer(invocation -> {
-            messageDelivered.set(invocation.getArgument(0));
-            return null;
-        }).when(processModel).setDepositTxAndDelayedPayoutTxMessageDelivered(true);
-        when(processModel.getTradeManager()).thenReturn(tradeManager);
-        Trade trade = mock(Trade.class);
-        when(trade.getProcessModel()).thenReturn(processModel);
-        TestTask task = new TestTask(mockTaskRunner(), trade);
+    void arrivalWithoutAckDoesNotPublishTheDepositTx() {
+        Fixture f = new Fixture(false);
+        f.run();
 
-        task.messageArrived();
-        task.messageArrived();
+        f.listeners.get(0).onArrived();
 
-        verify(processModel, times(1)).setDepositTxAndDelayedPayoutTxMessageDelivered(true);
-        verify(tradeManager, times(1)).requestPersistence();
+        assertFalse(f.delivered.get());
+        assertFalse(f.completed.get());
+        verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));
+        assertFalse(ManualTimer.latest().isStopped(), "the message is sent again if the ACK does not arrive");
+    }
+
+    @Test
+    void ackAfterArrivalPublishesTheDepositTx() {
+        Fixture f = new Fixture(false);
+        f.run();
+        f.listeners.get(0).onArrived();
+
+        f.messageState.set(MessageState.ACKNOWLEDGED);
+
+        assertTrue(f.delivered.get());
+        verify(f.tradeWalletService).broadcastTx(same(DEPOSIT_TX), any(TxBroadcaster.Callback.class));
+        assertTrue(ManualTimer.latest().isStopped());
+    }
+
+    // The buyer sends the ACK only after processing the message and sending its payment account to the seller
+    @Test
+    void afterArrivalTheMessageIsSentAgainOnlyAfterTheAckHadTime() {
+        Fixture f = new Fixture(false);
+        f.run();
+
+        f.listeners.get(0).onArrived();
+
+        assertTrue(ManualTimer.latest().getDelay().compareTo(Duration.ofSeconds(30)) >= 0,
+                "" + ManualTimer.latest().getDelay());
     }
 
     @Test
@@ -147,6 +168,51 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
 
         verify(f.tradeWalletService, times(1)).broadcastTx(same(DEPOSIT_TX), any(TxBroadcaster.Callback.class));
         verify(f.processModel, times(1)).setDepositTxAndDelayedPayoutTxMessageDelivered(true);
+    }
+
+    @Test
+    void nackNeitherPublishesNorFails() {
+        Fixture f = new Fixture(false);
+        f.run();
+        f.listeners.get(0).onArrived();
+
+        f.messageState.set(MessageState.FAILED);
+
+        assertFalse(f.completed.get());
+        assertNull(f.errorMessage.get());
+        verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));
+    }
+
+    @Test
+    void withoutAckAfterAllAttemptsTheTaskFailsWithoutPublication() {
+        Fixture f = new Fixture(false);
+        f.run();
+        for (int attempt = 0; attempt < 7; attempt++) {
+            f.listeners.get(attempt).onArrived();
+            assertNull(f.errorMessage.get(), "attempt " + attempt);
+            ManualTimer.latest().fire();
+        }
+        f.listeners.get(7).onArrived();
+
+        assertNotNull(f.errorMessage.get());
+        assertFalse(f.completed.get());
+        // The failed task no longer listens: a late ACK is not applied
+        f.messageState.set(MessageState.ACKNOWLEDGED);
+        assertFalse(f.delivered.get());
+        verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));
+    }
+
+    @Test
+    void fiatDepositTxWaitsForTheBuyerAccountValidationAfterTheAck() {
+        Fixture f = new Fixture(true);
+        f.run();
+        f.listeners.get(0).onArrived();
+
+        f.messageState.set(MessageState.ACKNOWLEDGED);
+
+        assertTrue(f.delivered.get());
+        assertTrue(f.completed.get());
+        verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));
     }
 
     // The publication of a crypto deposit tx completes in the broadcast callback, which the mocked wallet never calls,
@@ -202,21 +268,6 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
                     () -> completed.set(true), errorMessage::set);
             runner.addTasks(SellerSendsDepositTxAndDelayedPayoutTxMessage.class, SellerPublishesDepositTx.class);
             runner.run();
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static TaskRunner<Trade> mockTaskRunner() {
-        return mock(TaskRunner.class);
-    }
-
-    private static final class TestTask extends SellerSendsDepositTxAndDelayedPayoutTxMessage {
-        private TestTask(TaskRunner<Trade> taskHandler, Trade trade) {
-            super(taskHandler, trade);
-        }
-
-        private void messageArrived() {
-            setStateArrived();
         }
     }
 }

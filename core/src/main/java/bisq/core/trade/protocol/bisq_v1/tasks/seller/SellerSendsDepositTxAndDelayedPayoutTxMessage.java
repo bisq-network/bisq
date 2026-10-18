@@ -39,14 +39,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * We send the buyer the deposit and delayed payout tx. We wait to receive a ACK message back and resend the message
- * in case that does not happen in 4 seconds or if the message was stored in mailbox or failed. We keep repeating that
- * with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If never successful we fail and
- * do not continue the protocol with publishing the deposit tx. That way we avoid that a deposit tx is published but the
- * buyer does not have the delayed payout tx and would not be able to open arbitration.
+ * in case that does not happen in time after it reached the buyer's node, or if the message was stored in mailbox or
+ * failed. We keep repeating that with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If
+ * never successful we fail and do not continue the protocol with publishing the deposit tx. That way we avoid that a
+ * deposit tx is published but the buyer does not have the delayed payout tx and would not be able to open arbitration.
+ * Only the buyer's ACK shows that the buyer processed and kept the message; its arrival at the buyer's node does not.
  */
 @Slf4j
 public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMessageTask {
     private static final int MAX_RESEND_ATTEMPTS = 7;
+    // The buyer sends the ACK after processing the message and sending its payment account to us
+    private static final int MIN_DELAY_AFTER_ARRIVAL_SEC = 30;
     private int delayInSec = 4;
     private int resendCounter = 0;
     private DepositTxAndDelayedPayoutTxMessage message;
@@ -85,21 +88,19 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
 
     @Override
     protected void setStateArrived() {
-        markMessageDelivered();
         // we no longer set deprecated state (Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
         // see https://github.com/bisq-network/bisq/pull/5746#issuecomment-939879623
-
-        cleanup();
-        // Complete is called in base class
     }
 
-    // The ACK and the arrival can both end the task, only the first one does
+    // The message reached the buyer's node. We wait for the ACK and send it again if the ACK does not arrive in time.
     @Override
     protected void onArrived() {
         if (completed) {
             return;
         }
-        super.onArrived();
+        setStateArrived();
+        delayInSec = Math.max(delayInSec, MIN_DELAY_AFTER_ARRIVAL_SEC);
+        tryToSendAgainLater();
     }
 
     // We override the default behaviour for onStoredInMailbox and do not call complete
@@ -189,7 +190,8 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
             failed("We never received an ACK message when sending the msg to the peer. " +
-                    "We fail here and do not publish the deposit tx.");
+                    "We fail here and do not publish the deposit tx. " +
+                    "A restart of the application sends the message again.");
             return;
         }
 
