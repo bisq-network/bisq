@@ -40,11 +40,11 @@ offer: no taker fee is paid, no trade is created and the maker's offer is not af
 depends on the direction:
 
 - Above the range: the wallet holds many small amounts, or the fee rate has dropped since the fee
-  was fixed. The user is told to open the offer again if the fee rate has dropped, and otherwise to
-  send the funds to an address of the own wallet in one transaction and to open the offer again
+  was fixed. The user is told to take the offer again if the fee rate has dropped, and otherwise to
+  send the funds to an address of the own wallet in one transaction and to take the offer again
   after that transaction is confirmed.
 - Below the range or below 250 satoshi: the fee rate has risen since the fee was fixed, or it is
-  very low. The user is told to open the offer again, or to try again later.
+  very low. The user is told to take the offer again, or to try again later.
 
 The message names no desktop screen, as API users get it as well. An API taker gets the refusal as
 the only answer to its take offer call. The API passes on only the last line of an error message, so
@@ -72,7 +72,7 @@ with the same fee rate would reject.
 - The fee rates of taker and maker can differ, so a request that passes the taker's check can
   still be rejected by the maker, and a request the taker stops could have been accepted.
 - A large change of the fee rate after the desktop taker fixed its fee also fails the check. The
-  user then has to open the offer again.
+  user then has to take the offer again.
 - The estimate uses the coins of the wallet, also when the user funds the trade from an external
   wallet, so a wallet with many small amounts can cause a refusal although that trade would need one
   input.
