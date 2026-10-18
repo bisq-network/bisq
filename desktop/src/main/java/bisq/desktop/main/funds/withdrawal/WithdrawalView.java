@@ -401,7 +401,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             try {
                 Coin feeRate = Coin.valueOf(Integer.parseInt(transactionFeeInputTextField.getText()));
                 final String withdrawToAddress = withdrawToTextField.getText();
-                final Coin sendersAmount;
 
                 Transaction feeEstimationTransaction =
                         btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
@@ -411,20 +410,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 feeRate);
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
 
+                // The receiver gets the first output of the estimated transaction. A remainder that cannot be
+                // returned as change is part of the fee: bitcoinj adds a small one to the fee itself, getDust returns
+                // one that bitcoinj kept as an output below our dust limit.
                 Coin dust = btcWalletService.getDust(feeEstimationTransaction);
                 Coin fee = feeEstimationTransaction.getFee().add(dust);
-                Coin receiverAmount;
-                // amountAsCoin is what the user typed into the withdrawal field.
-                // this can be interpreted as either the senders amount or receivers amount depending
-                // on a radio button "fee excluded / fee included".
-                // therefore we calculate the actual sendersAmount and receiverAmount as follows:
-                if (feeExcluded) {
-                    receiverAmount = amountAsCoin;
-                    sendersAmount = receiverAmount.add(fee);
-                } else {
-                    sendersAmount = amountAsCoin.add(dust); // sendersAmount bumped up to UTXO size when dust is in play
-                    receiverAmount = sendersAmount.subtract(fee);
-                }
+                Coin receiverAmount = feeEstimationTransaction.getOutput(0).getValue();
+                final Coin sendersAmount = receiverAmount.add(fee);
                 if (dust.isPositive()) {
                     log.info("Dust output ({} satoshi) was detected, the dust amount has been added to the fee (was {}, now {})",
                             dust.value,
