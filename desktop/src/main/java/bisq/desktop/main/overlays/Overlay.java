@@ -63,6 +63,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -803,6 +804,14 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
 
+    protected void copyToClipboardWithTooltip(String text, MouseEvent mouseEvent) {
+        Utilities.copyToClipboard(text);
+        Tooltip tp = new Tooltip(Res.get("shared.copiedToClipboard"));
+        Node node = (Node) mouseEvent.getSource();
+        UserThread.runAfter(() -> tp.hide(), 1);
+        tp.show(node, mouseEvent.getScreenX() + Layout.PADDING, mouseEvent.getScreenY() + Layout.PADDING);
+    }
+
     protected void applyStyles() {
         Region rootContainer = getRootContainer();
         if (type.animationType == AnimationType.SlideDownFromCenterTop) {
@@ -822,11 +831,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     if (message != null) {
                         String forClipboard = headLineLabel.getText() + System.lineSeparator() + message
                                 + System.lineSeparator() + (messageHyperlinks == null ? "" : messageHyperlinks.toString());
-                        Utilities.copyToClipboard(forClipboard);
-                        Tooltip tp = new Tooltip(Res.get("shared.copiedToClipboard"));
-                        Node node = (Node) mouseEvent.getSource();
-                        UserThread.runAfter(() -> tp.hide(), 1);
-                        tp.show(node, mouseEvent.getScreenX() + Layout.PADDING, mouseEvent.getScreenY() + Layout.PADDING);
+                        copyToClipboardWithTooltip(forClipboard, mouseEvent);
                     }
                 });
             }
