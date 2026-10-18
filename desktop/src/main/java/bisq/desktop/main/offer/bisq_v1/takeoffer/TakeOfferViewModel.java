@@ -265,8 +265,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             trade.errorMessageProperty().addListener(tradeErrorListener);
             applyTradeErrorMessage(trade.getErrorMessage());
             takeOfferCompleted.set(true);
-        });
+        }, this::onTakeOfferRefused);
 
+        updateButtonDisableState();
+        updateSpinnerInfo();
+    }
+
+    // No trade was created. As with an offer that is not available, the view hides the confirmation window, shows
+    // the warning and closes the screen.
+    private void onTakeOfferRefused(String errorMessage) {
+        takeOfferRequested = false;
+        offerWarning.set(errorMessage);
         updateButtonDisableState();
         updateSpinnerInfo();
     }

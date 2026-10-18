@@ -685,12 +685,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .onAction(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetOfferWarning();
+                            // Closing the screen removes the offer from the offer book, which must not show
+                            // another warning
+                            offerWarningSubscription.unsubscribe();
                             close();
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
                         })
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetOfferWarning();
+                            offerWarningSubscription.unsubscribe();
                             close();
                         })
                         .show(), 100, TimeUnit.MILLISECONDS);
