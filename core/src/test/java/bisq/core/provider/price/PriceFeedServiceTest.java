@@ -75,12 +75,12 @@ public class PriceFeedServiceTest {
     public void startRequestingPricesRepeatsTheRequest() throws Exception {
         when(httpClient.get(any(), any(), any())).thenReturn("{\"data\":[{\"currencyCode\":\"USD\",\"price\":50000.0," +
                 "\"timestampSec\":" + Instant.now().getEpochSecond() + ",\"provider\":\"test\"}],\"bitcoinFeesTs\":0}");
-        CountDownLatch responseApplied = new CountDownLatch(1);
-        UserThread.setExecutor(command -> {
-            command.run();
-            responseApplied.countDown();
-        });
+        UserThread.setExecutor(Runnable::run);
         priceFeedService.setCurrencyCode("USD");
+        // Only the applied response counts: the UserThread is shared, so a command of another test can reach it first
+        CountDownLatch responseApplied = new CountDownLatch(1);
+        priceFeedService.updateCounterProperty().addListener((observable, oldValue, newValue) ->
+                responseApplied.countDown());
 
         priceFeedService.startRequestingPrices();
         assertTrue(responseApplied.await(10, TimeUnit.SECONDS), "response was not applied");
