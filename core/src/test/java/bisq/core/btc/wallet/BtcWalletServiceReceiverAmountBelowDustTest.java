@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -55,8 +56,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Checks that the fee estimation of a withdrawal rejects an amount that leaves the receiver below the dust limit with a
- * ReceiverAmountBelowDustException, for the amount itself and for the amount after the fee. It uses the real
- * BtcWalletService. The wallet funds each request with one input that leaves the requested fee.
+ * ReceiverAmountBelowDustException, for the amount itself and for the amount after the fee, and that with the fee
+ * excluded the receiver gets the amount. It uses the real BtcWalletService. The wallet funds each request with one
+ * input that leaves the requested fee.
  */
 class BtcWalletServiceReceiverAmountBelowDustTest {
     private static final NetworkParameters PARAMS = MainNetParams.get();
@@ -134,10 +136,36 @@ class BtcWalletServiceReceiverAmountBelowDustTest {
                 () -> estimateFromAddress(amountLeavingDust.subtract(Coin.SATOSHI)));
     }
 
+    // With the fee excluded the receiver gets the amount, which can be lower than the fee
+    @Test
+    void withTheFeeExcludedTheReceiverGetsTheAmount() throws Exception {
+        Coin amount = Restrictions.getMinNonDustOutput();
+
+        Transaction tx = estimateFeeExcluded(amount);
+
+        assertEquals(amount, tx.getOutput(0).getValue());
+        assertEquals(FEE_RATE.multiply(tx.getVsize()), tx.getFee());
+        assertTrue(tx.getFee().isGreaterThan(amount));
+    }
+
+    @Test
+    void withTheFeeExcludedAnAmountBelowDustIsRejected() {
+        assertThrows(ReceiverAmountBelowDustException.class,
+                () -> estimateFeeExcluded(Restrictions.getMinNonDustOutput().subtract(Coin.SATOSHI)));
+    }
+
     private Transaction estimateFromAddresses(Coin amount) throws Exception {
         return btcWalletService.getFeeEstimationTransactionForMultipleAddresses(Set.of(fromAddress.toString()),
                 toAddress,
                 amount,
+                FEE_RATE);
+    }
+
+    private Transaction estimateFeeExcluded(Coin amount) throws Exception {
+        return btcWalletService.getFeeEstimationTransactionForMultipleAddresses(Set.of(fromAddress.toString()),
+                toAddress,
+                amount,
+                true,
                 FEE_RATE);
     }
 

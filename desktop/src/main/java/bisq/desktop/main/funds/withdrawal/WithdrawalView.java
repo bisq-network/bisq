@@ -403,11 +403,12 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 final String withdrawToAddress = withdrawToTextField.getText();
                 final Coin sendersAmount;
 
-                // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
-                Transaction feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, withdrawToAddress, amountAsCoin, feeRate);
-                if (feeExcluded && feeEstimationTransaction != null) {
-                    feeEstimationTransaction = btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, withdrawToAddress, amountAsCoin.add(feeEstimationTransaction.getFee()), feeRate);
-                }
+                Transaction feeEstimationTransaction =
+                        btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
+                                withdrawToAddress,
+                                amountAsCoin,
+                                feeExcluded,
+                                feeRate);
                 checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
 
                 Coin dust = btcWalletService.getDust(feeEstimationTransaction);

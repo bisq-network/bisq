@@ -1083,6 +1083,20 @@ public class BtcWalletService extends WalletService {
                                                                        Coin amount,
                                                                        Coin txFeeForWithdrawalPerVbyte)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
+        return getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
+                toAddress,
+                amount,
+                false,
+                txFeeForWithdrawalPerVbyte);
+    }
+
+    // If feeExcluded is set, the receiver gets the amount and the fee is added to it
+    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
+                                                                       String toAddress,
+                                                                       Coin amount,
+                                                                       boolean feeExcluded,
+                                                                       Coin txFeeForWithdrawalPerVbyte)
+            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
                     Optional<AddressEntry> addressEntryOptional = findAddressEntry(address, AddressEntry.Context.AVAILABLE);
@@ -1107,7 +1121,13 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
-                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
+                Coin sendersAmount = feeExcluded ? amount.add(fee) : amount;
+                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses,
+                        toAddress,
+                        sendersAmount,
+                        fee,
+                        null,
+                        aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txVsize = tx.getVsize();
