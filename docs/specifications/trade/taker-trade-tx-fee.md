@@ -46,9 +46,9 @@ depends on the direction:
 - Below the range or below 250 satoshi: the fee rate has risen since the fee was fixed, or it is
   very low. The user is told to open the offer again, or to try again later.
 
-The message names no desktop screen, as API users get it as well. The API passes on only the last
-line of an error message, so the message below the range, which is the one an API taker gets in
-practice, is a single line.
+The message names no desktop screen, as API users get it as well. An API taker gets the refusal as
+the only answer to its take offer call. The API passes on only the last line of an error message, so
+the message below the range, which is the one an API taker gets in practice, is a single line.
 
 ## Compatibility
 
