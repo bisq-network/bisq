@@ -55,10 +55,10 @@ public abstract class SellerProtocol extends DisputeProtocol {
     @Override
     protected void onInitialized() {
         super.onInitialized();
+        // Fiat and crypto deposits both wait for the buyer's ACK of the DepositTxAndDelayedPayoutTxMessage
         given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(SellerEvent.STARTUP)
                 .preCondition(trade.getOffer() != null &&
-                        trade.getOffer().isFiatOffer() &&
                         processModel.getFinalizedDepositTx() != null &&
                         trade.getDelayedPayoutTxBytes() != null))
                 .setup(tasks(SellerProtocolTaskSets.afterInitialization(

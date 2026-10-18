@@ -32,17 +32,24 @@ import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerVerifyBuyerPaymentAccount;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.taskrunner.Task;
 
 import org.bitcoinj.core.Transaction;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -100,6 +107,30 @@ class SellerProtocolMessageHandlingTest {
                 setup.protocol.selectedTasks);
     }
 
+    // Until the buyer's ACK of the DepositTxAndDelayedPayoutTxMessage, a crypto deposit is not published either
+    @Test
+    void startupResendsAnUnacknowledgedCryptoDepositMessageBeforePublication() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, false);
+
+        setup.protocol.onInitialized();
+
+        assertEquals(List.of(SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                SellerPublishesDepositTx.class,
+                SellerPublishesTradeStatistics.class), setup.protocol.startupTasks);
+    }
+
+    @Test
+    void startupPublishesTheDepositOfAnAcknowledgedCryptoDepositMessage() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, true);
+
+        setup.protocol.onInitialized();
+
+        assertEquals(List.of(SellerPublishesDepositTx.class,
+                SellerPublishesTradeStatistics.class), setup.protocol.startupTasks);
+    }
+
     @Test
     void duplicatePaymentStartedMessageIsAcknowledgedAfterPayoutCreation() {
         TestSetup setup = new TestSetup();
@@ -127,6 +158,21 @@ class SellerProtocolMessageHandlingTest {
             when(processModel.getOfferId()).thenReturn(TRADE_ID);
             protocol = new TestSellerProtocol(trade);
         }
+
+        // A trade with the finalized deposit tx and delayed payout tx, whose deposit tx is not published yet
+        private void startupInTakerFeePublished(boolean isFiatOffer, boolean isDepositMessageAcknowledged) {
+            P2PService p2PService = mock(P2PService.class);
+            when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
+            when(processModel.getP2PService()).thenReturn(p2PService);
+            when(processModel.getFinalizedDepositTx()).thenReturn(new byte[]{1});
+            when(processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()).thenReturn(isDepositMessageAcknowledged);
+            Offer offer = mock(Offer.class);
+            when(offer.isFiatOffer()).thenReturn(isFiatOffer);
+            when(trade.getOffer()).thenReturn(offer);
+            when(trade.getTradePhase()).thenReturn(Trade.Phase.TAKER_FEE_PUBLISHED);
+            when(trade.getDelayedPayoutTxBytes()).thenReturn(new byte[]{1});
+            protocol.recordStartupTasks = true;
+        }
     }
 
     private static final class TestSellerProtocol extends SellerProtocol {
@@ -137,6 +183,8 @@ class SellerProtocolMessageHandlingTest {
         private boolean mailboxMessageRemoved;
         private boolean recordTaskSelection;
         private Class<? extends Task<TradeModel>>[] selectedTasks;
+        private boolean recordStartupTasks;
+        private final List<Class<? extends Task<TradeModel>>> startupTasks = new ArrayList<>();
 
         private TestSellerProtocol(SellerAsMakerTrade trade) {
             super(trade);
@@ -172,6 +220,32 @@ class SellerProtocolMessageHandlingTest {
                 @Override
                 public FluentProtocol executeTasks() {
                     return this;
+                }
+            };
+        }
+
+        // Records the tasks of a startup condition that holds, instead of running them
+        @Override
+        protected FluentProtocol given(FluentProtocol.Condition condition) {
+            if (!recordStartupTasks) {
+                return super.given(condition);
+            }
+            return new FluentProtocol(this) {
+                private Class<? extends Task<TradeModel>>[] tasks;
+
+                {
+                    condition(condition);
+                }
+
+                @Override
+                public FluentProtocol setup(Setup setup) {
+                    tasks = setup.getTasks();
+                    return this;
+                }
+
+                @Override
+                public FluentProtocol executeTasks() {
+                    return run(() -> startupTasks.addAll(List.of(tasks)));
                 }
             };
         }
