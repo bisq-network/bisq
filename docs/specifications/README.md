@@ -91,3 +91,9 @@ specification says so explicitly instead of describing the implementation as if 
 | [`trade/mediated-payout-peer-signature.md`](trade/mediated-payout-peer-signature.md) | How the peer's signature of the mediated payout is checked, and that a signature which arrives before the mediation result is kept until the result is applied. |
 | [`trade/mediated-payout-detection.md`](trade/mediated-payout-detection.md) | How a trader who accepted a mediation result detects the mediated payout: from the peer's message and from its wallet, which it watches again after a restart. |
 | [`trade/mediated-payout-finalization.md`](trade/mediated-payout-finalization.md) | When a trader's node publishes the mediated payout without a further click and what it waits for, why a signed acceptance cannot be rejected, and when the peer's payout message is accepted. |
+
+### `wallet/`
+
+| Specification | Covers |
+|---|---|
+| [`wallet/btc-withdrawal-amount.md`](wallet/btc-withdrawal-amount.md) | How the entered amount of a BTC withdrawal becomes the receiver's and the sender's amount with the fee included or excluded, the dust limit of the receiver's output, and the checks the desktop runs before the fee estimation. |
