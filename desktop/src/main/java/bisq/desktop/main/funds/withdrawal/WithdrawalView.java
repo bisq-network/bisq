@@ -33,6 +33,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.setup.WalletsSetup;
@@ -397,7 +398,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onWithdraw() {
-        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup) && areInputsValid()) {
             try {
                 Coin feeRate = Coin.valueOf(Integer.parseInt(transactionFeeInputTextField.getText()));
                 final String withdrawToAddress = withdrawToTextField.getText();
@@ -424,7 +425,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             fee.value);
                 }
 
-                if (areInputsValid(sendersAmount)) {
+                if (isAmountAvailable(sendersAmount)) {
                     int txVsize = feeEstimationTransaction.getVsize();
                     log.info("Fee for tx with size {}: {} " + Res.getBaseCurrencyCode() + "", txVsize, fee.toPlainString());
 
@@ -484,6 +485,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                     }
                 }
+            } catch (ReceiverAmountBelowDustException e) {
+                new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
             } catch (InsufficientFundsException e) {
                 new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds") + "\n\nError message:\n" + e.getMessage()).show();
             } catch (Throwable e) {
@@ -605,9 +608,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
     }
 
-    private boolean areInputsValid(Coin sendersAmount) {
-        if (!sendersAmount.isPositive()) {
-            new Popup().warning(Res.get("validation.negative")).show();
+    // The fee estimation fails on invalid inputs with an error that does not tell the user what to fix
+    private boolean areInputsValid() {
+        if (!totalAvailableAmountOfSelectedItems.isPositive()) {
+            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
+            return false;
+        }
+
+        // The receiver gets at most the entered amount
+        if (!Restrictions.isAboveDust(amountAsCoin)) {
+            new Popup().warning(Res.get("validation.amountBelowDust",
+                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
             return false;
         }
 
@@ -615,11 +626,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
             return false;
         }
-        if (!totalAvailableAmountOfSelectedItems.isPositive()) {
-            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
-            return false;
-        }
 
+        return true;
+    }
+
+    private boolean isAmountAvailable(Coin sendersAmount) {
         if (sendersAmount.compareTo(totalAvailableAmountOfSelectedItems) > 0) {
             new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
             return false;
