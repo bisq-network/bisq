@@ -507,6 +507,7 @@ public class WalletConfig extends AbstractIdleService {
     protected void shutDown() throws Exception {
         // Runs in a separate thread.
         boolean interrupted = false;
+        Exception peerGroupStopFailure = null;
         try {
             Context.propagate(context);
 
@@ -514,7 +515,9 @@ public class WalletConfig extends AbstractIdleService {
             // wallets while we save the wallets and close the SPV file. PeerGroup.stop has no timeout and can take
             // very long (10 sec. in a test), so we wait only for PEER_GROUP_STOP_TIMEOUT_SEC, unless
             // stopPeerGroupWithoutTimeout was set. After a timeout a block can still arrive until the PeerGroup has
-            // stopped and then hits the closed SPV file, as it did before for every shutdown.
+            // stopped and then hits the closed SPV file, as it did before for every shutdown. If the stop without
+            // timeout fails, we re-throw after closing the SPV file, so that this service fails and
+            // WalletsSetup.restoreSeedWords does not open the same files again.
             try {
                 if (vPeerGroup != null && vPeerGroup.isRunning()) {
                     if (stopPeerGroupWithoutTimeout) {
@@ -531,6 +534,13 @@ public class WalletConfig extends AbstractIdleService {
                         PEER_GROUP_STOP_TIMEOUT_SEC);
             } catch (ExecutionException | RuntimeException e) {
                 log.warn("PeerGroup stop failed. We save the wallets and close the SPV file anyway.", e);
+                if (stopPeerGroupWithoutTimeout) {
+                    if (e.getCause() instanceof InterruptedException) {
+                        // PeerGroup.stop wraps the InterruptedException and does not restore the interrupt flag.
+                        interrupted = true;
+                    }
+                    peerGroupStopFailure = e;
+                }
             } catch (InterruptedException e) {
                 // We still save and close, and restore the interrupt flag afterwards.
                 interrupted = true;
@@ -553,6 +563,10 @@ public class WalletConfig extends AbstractIdleService {
 
             vChain = null;
             vPeerGroup = null;
+
+            if (peerGroupStopFailure != null) {
+                throw peerGroupStopFailure;
+            }
         } catch (BlockStoreException e) {
             throw new IOException(e);
         } finally {

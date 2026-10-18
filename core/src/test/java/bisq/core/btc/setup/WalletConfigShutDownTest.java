@@ -23,6 +23,7 @@ import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.nio.file.Path;
@@ -40,9 +41,13 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InOrder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -69,12 +74,23 @@ class WalletConfigShutDownTest {
         btcWallet = mock(Wallet.class);
         bsqWallet = mock(Wallet.class);
 
-        walletConfig.vPeerGroup = peerGroup;
-        walletConfig.vStore = store;
-        walletConfig.vBtcWallet = btcWallet;
-        walletConfig.vBsqWallet = bsqWallet;
-        walletConfig.vBtcWalletFile = new File(tempDir.toFile(), "bisq_BTC.wallet");
-        walletConfig.vBsqWalletFile = new File(tempDir.toFile(), "bisq_BSQ.wallet");
+        setMocks(walletConfig);
+    }
+
+    private void setMocks(WalletConfig config) {
+        config.vPeerGroup = peerGroup;
+        config.vStore = store;
+        config.vBtcWallet = btcWallet;
+        config.vBsqWallet = bsqWallet;
+        config.vBtcWalletFile = new File(tempDir.toFile(), "bisq_BTC.wallet");
+        config.vBsqWalletFile = new File(tempDir.toFile(), "bisq_BSQ.wallet");
+    }
+
+    private void verifyWalletsSavedAndStoreClosed() throws Exception {
+        InOrder inOrder = inOrder(btcWallet, bsqWallet, store);
+        inOrder.verify(btcWallet).saveToFile(any(File.class));
+        inOrder.verify(bsqWallet).saveToFile(any(File.class));
+        inOrder.verify(store).close();
     }
 
     @Test
@@ -237,5 +253,59 @@ class WalletConfigShutDownTest {
         inOrder.verify(btcWallet).saveToFile(any(File.class));
         inOrder.verify(bsqWallet).saveToFile(any(File.class));
         inOrder.verify(store).close();
+    }
+
+    // WalletsSetup.restoreSeedWords waits with awaitTerminated() and only then opens the same wallet and SPV files
+    // again. PeerGroup.stop() wraps an InterruptedException in a RuntimeException.
+    @Test
+    void failsTerminationIfStopWithoutTimeoutIsInterrupted() throws Exception {
+        WalletConfig service = new WalletConfig(RegTestParams.get(), tempDir.toFile(), "bisq") {
+            @Override
+            protected void startUp() {
+            }
+        };
+        service.startAsync().awaitRunning();
+        setMocks(service);
+        when(peerGroup.isRunning()).thenReturn(true);
+        RuntimeException failure = new RuntimeException(new InterruptedException());
+        doThrow(failure).when(peerGroup).stop();
+
+        service.setStopPeerGroupWithoutTimeout(true);
+        service.stopAsync();
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, service::awaitTerminated);
+        assertSame(failure, e.getCause());
+        assertEquals(Service.State.FAILED, service.state());
+        verifyWalletsSavedAndStoreClosed();
+    }
+
+    @Test
+    void rethrowsInterruptedStopWithoutTimeoutAndKeepsInterruptFlag() throws Exception {
+        when(peerGroup.isRunning()).thenReturn(true);
+        RuntimeException failure = new RuntimeException(new InterruptedException());
+        doThrow(failure).when(peerGroup).stop();
+
+        walletConfig.setStopPeerGroupWithoutTimeout(true);
+        try {
+            assertSame(failure, assertThrows(RuntimeException.class, walletConfig::shutDown));
+            assertTrue(Thread.currentThread().isInterrupted(), "interrupt flag must be restored");
+        } finally {
+            Thread.interrupted();
+        }
+
+        verifyWalletsSavedAndStoreClosed();
+    }
+
+    @Test
+    void rethrowsFailedStopWithoutTimeoutAfterSavingWalletsAndClosingStore() throws Exception {
+        when(peerGroup.isRunning()).thenReturn(true);
+        RuntimeException failure = new IllegalStateException("stop failed");
+        doThrow(failure).when(peerGroup).stop();
+
+        walletConfig.setStopPeerGroupWithoutTimeout(true);
+
+        assertSame(failure, assertThrows(RuntimeException.class, walletConfig::shutDown));
+        assertFalse(Thread.currentThread().isInterrupted());
+        verifyWalletsSavedAndStoreClosed();
     }
 }
