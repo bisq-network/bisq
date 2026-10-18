@@ -64,8 +64,7 @@ with its accept button at the same moment, it rejects our message, which only lo
 
 ## Not covered
 
-Detecting a payout that the peer published while the node, which has only its own signature, was
-offline. A delayed payout tx that the peer publishes at the same time, or whose
+A delayed payout tx that the peer publishes at the same time, or whose
 PeerPublishedDelayedPayoutTxMessage has not arrived, as that tx pays nothing to the wallet and the
 wallet does not watch the deposit output. A refund request that reaches the node only after the
 check, for example in a later mailbox message. A mediation result that is replaced after both
@@ -76,5 +75,7 @@ request because the payout was not confirmed yet: it is not handled again, and t
 the refund request until the refund agent closes it. A mediated payout that pays nothing to the
 node: its wallet does not see it, so the message stays rejected during a refund request. Mailbox
 messages that arrive only after the startup, for example when the node starts without reaching a
-seed node. Whether the seller can still confirm the payment receipt after accepting:
+seed node. Detecting a payout that the peer published while the node was offline:
+[mediated-payout-detection.md](mediated-payout-detection.md). Whether the seller can still confirm
+the payment receipt after accepting:
 [repeated-payout-confirmation.md](repeated-payout-confirmation.md).
