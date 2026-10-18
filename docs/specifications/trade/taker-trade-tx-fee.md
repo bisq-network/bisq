@@ -34,11 +34,21 @@ results in a fee above what the maker accepts.
 
 ## Rule
 
-Before the taker contacts the maker, it checks its stated fee with the same check the maker
-applies, using its own current fee rate. If the check fails, the taker does not take the offer and
-tells the user to consolidate the wallet funds into fewer inputs, by sending them to an address of
-the own Bisq wallet, and to take the offer again after that transaction is confirmed. No taker fee
-is paid and the maker's offer is not affected.
+Before it sends the take offer request, the taker checks its stated fee with the same check the
+maker applies, using its own current fee rate. If the check fails, the taker does not take the
+offer: no taker fee is paid, no trade is created and the maker's offer is not affected. The message
+depends on the direction:
+
+- Above the range: the wallet holds many small amounts, or the fee rate has dropped since the fee
+  was fixed. The user is told to open the offer again if the fee rate has dropped, and otherwise to
+  send the funds to an address of the own wallet in one transaction and to open the offer again
+  after that transaction is confirmed.
+- Below the range or below 250 satoshi: the fee rate has risen since the fee was fixed, or it is
+  very low. The user is told to open the offer again, or to try again later.
+
+The message names no desktop screen, as API users get it as well. The API passes on only the last
+line of an error message, so the message below the range, which is the one an API taker gets in
+practice, is a single line.
 
 ## Compatibility
 
@@ -50,7 +60,7 @@ stops take offer requests that a maker with the same fee rate would reject.
 - The fee rates of taker and maker can differ, so a request that passes the taker's check can
   still be rejected by the maker, and a request the taker stops could have been accepted.
 - A large change of the fee rate after the desktop taker fixed its fee also fails the check. The
-  user then has to open the offer again instead of consolidating.
+  user then has to open the offer again.
 - The maker still drops an invalid take offer request without a reply.
 - The taker's fee is not reduced to fit the maker's range. Paying the miner fee of the taker fee
   transaction separately from the stated fee would remove the need to consolidate, but is a

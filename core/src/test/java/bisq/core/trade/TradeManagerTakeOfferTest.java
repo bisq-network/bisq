@@ -27,6 +27,7 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferFilterService;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
@@ -53,10 +54,14 @@ import bisq.common.persistence.PersistenceManager;
 
 import org.bitcoinj.core.Coin;
 
+import javax.annotation.Nullable;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -70,6 +75,7 @@ import static org.mockito.Mockito.when;
 class TradeManagerTakeOfferTest {
     private static final long TX_FEE_PER_VBYTE = 10;
 
+    private FeeService feeService;
     private TradeManager tradeManager;
     private BtcWalletService btcWalletService;
     private Preferences preferences;
@@ -84,7 +90,7 @@ class TradeManagerTakeOfferTest {
         // returns no DAO fee parameters, as before any FeeService exists
         DaoStateService daoStateService = mock(DaoStateService.class);
         when(daoStateService.getParamValueAsCoin(any(Param.class), anyInt())).thenReturn(Coin.ZERO);
-        FeeService feeService = new FeeService(daoStateService, mock(PeriodService.class));
+        feeService = new FeeService(daoStateService, mock(PeriodService.class));
         feeService.updateFeeInfo(TX_FEE_PER_VBYTE, 1);
         Provider provider = mock(Provider.class);
         when(provider.getFeeService()).thenReturn(feeService);
@@ -111,7 +117,8 @@ class TradeManagerTakeOfferTest {
 
     // The maker accepts up to 2 * 212 vbytes * fee rate. The taker averages its fee tx vsize
     // with the 233 vbytes deposit tx, so a fee tx from 617 vbytes on exceeds that.
-    // Paying the taker fee in BSQ adds 70 vbytes to the estimated fee tx vsize.
+    // The preference for the taker fee in BSQ adds 70 vbytes to the estimate; the check itself
+    // does not depend on the fee currency.
     @ParameterizedTest
     @CsvSource({
             "175, true, true",
@@ -131,12 +138,73 @@ class TradeManagerTakeOfferTest {
 
         takeOffer(tradeTxFee);
 
-        if (acceptedByMaker) {
+        assertRefusal(acceptedByMaker ? null : "takeOffer.failed.tradeTxFeeTooHigh");
+    }
+
+    // The fee is fixed when the screen shows it, so a later change of the fee rate can move it out
+    // of the maker's range in both directions.
+    @ParameterizedTest
+    @CsvSource({
+            "5, takeOffer.failed.tradeTxFeeTooHigh",
+            "6, ",
+            "21, ",
+            "22, takeOffer.failed.tradeTxFeeTooLow"
+    })
+    void feeRateChangeAfterTheEstimateMovesTheTradeTxFeeOutOfTheRange(long feeRateAtTakeOffer,
+                                                                      String refusalKey) throws Exception {
+        when(btcWalletService.getEstimatedFeeTxVsize(any(), any())).thenReturn(175);
+        when(preferences.isPayFeeInBtc()).thenReturn(true);
+        Coin tradeTxFee = txFeeEstimationService.getEstimatedFeeAndTxVsizeForTaker(Coin.valueOf(1_000_000),
+                Coin.valueOf(5_000)).first;
+        assertEquals(2_330, tradeTxFee.value);
+        feeService.updateFeeInfo(feeRateAtTakeOffer, 1);
+
+        takeOffer(tradeTxFee);
+
+        assertRefusal(refusalKey);
+    }
+
+    // The API states the fee that the maker expects, which is in the range unless it is below the
+    // absolute minimum of 250 sat, at a fee rate of 1 sat/vbyte.
+    @ParameterizedTest
+    @CsvSource({
+            "1, takeOffer.failed.tradeTxFeeTooLow",
+            "2, ",
+            "10, ",
+            "100, ",
+            "600, "
+    })
+    void apiTradeTxFeeIsInTheRange(long feeRate, String refusalKey) {
+        feeService.updateFeeInfo(feeRate, 1);
+        // As TakeOfferModel, which uses a fee tx vsize of 192 vbytes
+        Coin apiTradeTxFee = new OfferUtil(null, null, null, null, null, null, null, null)
+                .getTxFeeByVsize(feeService.getTxFeePerVbyte(), 192);
+
+        takeOffer(apiTradeTxFee);
+
+        assertRefusal(refusalKey);
+    }
+
+    // At 1 sat/vbyte the desktop states at least 233 sat, below the absolute minimum of 250 sat. That is
+    // a problem of the fee rate, not of the wallet.
+    @ParameterizedTest
+    @CsvSource({"233", "249"})
+    void tradeTxFeeBelowTheAbsoluteMinimumIsTooLow(long tradeTxFee) {
+        feeService.updateFeeInfo(1, 1);
+
+        takeOffer(Coin.valueOf(tradeTxFee));
+
+        assertRefusal("takeOffer.failed.tradeTxFeeTooLow");
+    }
+
+    private void assertRefusal(@Nullable String refusalKey) {
+        if (refusalKey == null) {
             verify(offer).checkOfferAvailability(any(), any(), any());
             verify(errorMessageHandler, never()).handleErrorMessage(anyString());
         } else {
-            verify(errorMessageHandler).handleErrorMessage(Res.get("takeOffer.failed.tradeTxFeeNotAccepted"));
+            verify(errorMessageHandler).handleErrorMessage(Res.get(refusalKey));
             verify(offer, never()).checkOfferAvailability(any(), any(), any());
+            assertTrue(tradeManager.getObservableList().isEmpty());
         }
     }
 

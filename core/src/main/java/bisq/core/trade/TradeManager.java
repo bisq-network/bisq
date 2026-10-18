@@ -134,6 +134,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 import static bisq.core.trade.validation.InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest;
+import static bisq.core.trade.validation.MinerFeeValidation.MIN_TRADE_TX_FEE_SAT;
 import static bisq.core.trade.validation.MinerFeeValidation.checkTradeTxFeeIsInTolerance;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -596,9 +597,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         try {
             checkTradeTxFeeIsInTolerance(txFee, provider.getFeeService());
         } catch (IllegalArgumentException e) {
-            String errorMessage = Res.get("takeOffer.failed.tradeTxFeeNotAccepted");
-            errorMessageHandler.handleErrorMessage(errorMessage);
             log.warn("Trade tx fee {} would not be accepted by the maker. {}", txFee.value, e.getMessage());
+            errorMessageHandler.handleErrorMessage(Res.get(isAboveTradeTxFeeRange(txFee) ?
+                    "takeOffer.failed.tradeTxFeeTooHigh" :
+                    "takeOffer.failed.tradeTxFeeTooLow"));
             return;
         }
 
@@ -652,6 +654,15 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 errorMessageHandler);
 
         requestPersistence();
+    }
+
+    // Above the range, a fragmented wallet or a dropped fee rate is the cause. Below it, including the absolute
+    // minimum, the fee rate has risen or is very low.
+    private boolean isAboveTradeTxFeeRange(Coin txFee) {
+        Coin txFeePerVbyte = provider.getFeeService().getTxFeePerVbyte();
+        return txFee.value >= MIN_TRADE_TX_FEE_SAT &&
+                txFeePerVbyte.isPositive() &&
+                txFee.isGreaterThan(TradeFeeFactory.getTradeTxFee(txFeePerVbyte));
     }
 
     public void onTakeBsqSwapOffer(Offer offer,
