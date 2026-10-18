@@ -93,6 +93,15 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         // Complete is called in base class
     }
 
+    // The ACK and the arrival can both end the task, only the first one does
+    @Override
+    protected void onArrived() {
+        if (completed) {
+            return;
+        }
+        super.onArrived();
+    }
+
     // We override the default behaviour for onStoredInMailbox and do not call complete
     @Override
     protected void onStoredInMailbox() {
@@ -137,12 +146,32 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         try {
             runInterceptHook();
 
+            if (listener == null) {
+                // One listener for all attempts. It is removed when the task completes or fails.
+                listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
+                processModel.getDepositTxMessageStateProperty().addListener(listener);
+                // The ACK can have been applied already, for example from the mailbox
+                onMessageStateChange(processModel.getDepositTxMessageStateProperty().get());
+                if (completed) {
+                    return;
+                }
+            }
             super.run();
         } catch (Throwable t) {
             failed(t);
-        } finally {
-            cleanup();
         }
+    }
+
+    @Override
+    protected void failed(Throwable t) {
+        cleanup();
+        super.failed(t);
+    }
+
+    @Override
+    protected void failed(String message) {
+        cleanup();
+        super.failed(message);
     }
 
     private void cleanup() {
@@ -155,8 +184,10 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     }
 
     private void tryToSendAgainLater() {
+        if (completed) {
+            return;
+        }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
-            cleanup();
             failed("We never received an ACK message when sending the msg to the peer. " +
                     "We fail here and do not publish the deposit tx.");
             return;
@@ -168,20 +199,13 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         }
         timer = UserThread.runAfter(this::run, delayInSec, TimeUnit.SECONDS);
 
-        if (resendCounter == 0) {
-            // We want to register listener only once
-            listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
-            processModel.getDepositTxMessageStateProperty().addListener(listener);
-            onMessageStateChange(processModel.getDepositTxMessageStateProperty().get());
-        }
-
         delayInSec = delayInSec * 2;
         resendCounter++;
     }
 
     private void onMessageStateChange(MessageState newValue) {
         // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
-        if (newValue == MessageState.ACKNOWLEDGED) {
+        if (newValue == MessageState.ACKNOWLEDGED && !completed) {
             // We treat a ACK like SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG
             // we no longer set deprecated state (Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
             // see https://github.com/bisq-network/bisq/pull/5746#issuecomment-939879623
