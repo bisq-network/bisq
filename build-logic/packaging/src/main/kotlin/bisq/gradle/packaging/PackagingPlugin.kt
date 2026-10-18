@@ -31,9 +31,18 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
         val jPackageTaskConfiguration = jPackageTaskConfiguration(installDistTask, jarTask, javaApplicationExtension)
 
-        project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
-        project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
-        project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+        val debTask = project.tasks.register<DebJpackageTask>("deb", jPackageTaskConfiguration)
+        val rpmTask = project.tasks.register<RpmJpackageTask>("rpm", jPackageTaskConfiguration)
+        if (getOS() == OS.LINUX) {
+            // On Linux the deb and rpm tasks build the packages, so generateInstallers runs both
+            project.tasks.register("generateInstallers") {
+                group = "distribution"
+                description = "Builds the DEB and RPM packages."
+                dependsOn(debTask, rpmTask)
+            }
+        } else {
+            project.tasks.register<JPackageTask>("generateInstallers", jPackageTaskConfiguration)
+        }
 
         project.tasks.register<DebReproducibleTask>("reproducibleDeb") {
             appVersion.set(APP_VERSION)

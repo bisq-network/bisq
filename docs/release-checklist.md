@@ -339,7 +339,7 @@ with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.6.
    ```
 
    The installer tasks are `:desktop:generateInstallers` (disk image on macOS, executable installer
-   on Windows), `:desktop:deb` and `:desktop:rpm`.
+   on Windows, DEB and RPM on Linux), `:desktop:deb` and `:desktop:rpm`.
    On Windows the WiX toolset must be installed and must be on the search path.
 
 3. Optional, for a second independent build in a container:
