@@ -50,6 +50,12 @@ The message names no desktop screen, as API users get it as well. An API taker g
 the only answer to its take offer call. The API passes on only the last line of an error message, so
 the message below the range, which is the one an API taker gets in practice, is a single line.
 
+In the desktop, a refusal before the trade exists ends the take offer attempt as an offer that is no
+longer available does: the confirmation window closes, the warning offers to go to "Funds/Send
+funds", and the take offer screen closes, without a further warning that the offer was removed. The
+other checks before the request, for a banned currency, payment method, offer or maker, a required
+update and an offer that was already used in a trade, end the attempt in the same way.
+
 ## Compatibility
 
 The rule is local to the taker. It changes no message, contract or persisted data, and it only
