@@ -127,6 +127,17 @@ only on chain data, the matched blind-vote data and the valid ballot universe de
 proposal lists kept for display, or on whether the node processed the result block while running or
 while parsing during startup or a resync.
 
+From the first block of the RESULT phase of its cycle, the vote result view and its JSON export show
+such a proposal as not accepted with no counted votes if the node has the vote result of the cycle:
+the decrypted ballots of the cycle are in the DAO state, or the cycle had no vote reveal transaction
+in its vote reveal phase. A node without the result, for example one that did not have the blind
+votes of the majority, shows no outcome for such a proposal. A proposal with accept or reject votes
+is not shown this way, also if the issuance limit left it out of the result. The view derives these
+entries for display from the validated proposals of the cycle that the node has. They never enter
+the DAO state. The API returns the evaluated proposals only, so a proposal without counted votes is
+absent there. A node that does not have the proposal's payload cannot show it, and the proposals
+view of the current cycle shows no result for it.
+
 Earlier versions recorded such a proposal as rejected with zero accept and reject votes when it was
 in a proposal list kept for display. That list is not refreshed per block during initial parsing, so
 a running node recorded the proposal while a node that parsed the result block during startup or a

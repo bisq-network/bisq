@@ -39,6 +39,7 @@ import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
+import bisq.core.dao.governance.voteresult.VoteResultPresentation;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -121,6 +122,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final VoteResultService voteResultService;
+    private final VoteResultPresentation voteResultPresentation;
     private final ProposalService proposalService;
     private final PeriodService periodService;
     private final BsqWalletService bsqWalletService;
@@ -162,6 +164,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                           DaoStateService daoStateService,
                           CycleService cycleService,
                           VoteResultService voteResultService,
+                          VoteResultPresentation voteResultPresentation,
                           ProposalService proposalService,
                           PeriodService periodService,
                           BsqWalletService bsqWalletService,
@@ -172,6 +175,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         this.daoStateService = daoStateService;
         this.cycleService = cycleService;
         this.voteResultService = voteResultService;
+        this.voteResultPresentation = voteResultPresentation;
         this.proposalService = proposalService;
         this.periodService = periodService;
         this.bsqWalletService = bsqWalletService;
@@ -401,9 +405,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
                             .collect(Collectors.toList());
 
-                    List<EvaluatedProposal> evaluatedProposalsForCycle = daoStateService.getEvaluatedProposalList().stream()
-                            .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
-                            .collect(Collectors.toList());
+                    // Also the proposals without counted votes, which have no EvaluatedProposal
+                    List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultPresentation.getVoteResultsForDisplay(cycle);
 
                     AtomicLong stakeAndMerit = new AtomicLong();
                     List<DecryptedBallotsWithMerits> decryptedVotesForCycle = daoStateService.getDecryptedBallotsWithMeritsList().parallelStream()
