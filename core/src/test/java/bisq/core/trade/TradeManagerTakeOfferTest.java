@@ -21,6 +21,7 @@ import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
@@ -57,6 +58,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -78,7 +80,11 @@ class TradeManagerTakeOfferTest {
     @BeforeEach
     void setUp() {
         Res.setup();
-        FeeService feeService = new FeeService(mock(DaoStateService.class), mock(PeriodService.class));
+        // FeeService keeps the DAO services in static fields that later tests read, so the mock
+        // returns no DAO fee parameters, as before any FeeService exists
+        DaoStateService daoStateService = mock(DaoStateService.class);
+        when(daoStateService.getParamValueAsCoin(any(Param.class), anyInt())).thenReturn(Coin.ZERO);
+        FeeService feeService = new FeeService(daoStateService, mock(PeriodService.class));
         feeService.updateFeeInfo(TX_FEE_PER_VBYTE, 1);
         Provider provider = mock(Provider.class);
         when(provider.getFeeService()).thenReturn(feeService);
