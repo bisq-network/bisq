@@ -332,12 +332,6 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         }
     }
 
-    public void maybeResetNumAllConnectionsLostEvents() {
-        if (!networkNode.getAllConnections().isEmpty()) {
-            numAllConnectionsLostEvents = 0;
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Peer

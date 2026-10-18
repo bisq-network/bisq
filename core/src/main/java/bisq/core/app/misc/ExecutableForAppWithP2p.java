@@ -334,10 +334,12 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         }
 
         checkConnectionLossTimer = UserThread.runPeriodically(() -> {
-            if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
+            int numAllConnectionsLostEvents = injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents();
+            if (numAllConnectionsLostEvents > 1) {
                 // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
                 // that can cause problems.
                 injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
+                log.warn("Shut down because PeerManager.numAllConnectionsLostEvents was > 1. numAllConnectionsLostEvents={}", numAllConnectionsLostEvents);
                 shutDown();
             }
         }, CHECK_CONNECTION_LOSS_SEC);
