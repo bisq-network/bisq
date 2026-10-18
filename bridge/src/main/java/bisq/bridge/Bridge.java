@@ -18,6 +18,7 @@
 package bisq.bridge;
 
 import bisq.core.app.BisqHeadlessApp;
+import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
 
 import com.google.inject.Injector;
 
@@ -32,9 +33,12 @@ import bisq.bridge.grpc.services.BurningmanGrpcService;
 @Slf4j
 public class Bridge extends BisqHeadlessApp {
     private BridgeGrpcServer bridgeGrpcServer;
+    private final GetInventoryRequestHandler getInventoryRequestHandler;
 
     public Bridge(Injector injector) {
         this.injector = injector;
+
+        getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
     }
 
     public void startApplication() {
@@ -47,6 +51,8 @@ public class Bridge extends BisqHeadlessApp {
     public void shutDown() {
         injector.getInstance(BsqBlockGrpcService.class).shutDown();
         injector.getInstance(BurningmanGrpcService.class).shutDown();
+
+        getInventoryRequestHandler.shutDown();
 
         if (bridgeGrpcServer != null) {
             bridgeGrpcServer.shutDown();
