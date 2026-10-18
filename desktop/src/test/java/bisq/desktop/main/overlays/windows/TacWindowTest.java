@@ -77,7 +77,8 @@ class TacWindowTest {
         String text = new TacWindow().getAgreementText();
 
         for (int section = 1; section <= numSections; section++) {
-            assertTrue(text.contains(section + ". " + Res.get("tacWindow.legal.section" + section + ".title")),
+            assertTrue(text.contains(section + ". " + Res.get("tacWindow.legal.section" + section + ".title") +
+                            System.lineSeparator() + Res.get("tacWindow.legal.section" + section + ".body")),
                     "section " + section);
         }
     }
