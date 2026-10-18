@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   linux-release-builder:
-    name: Linux release-builder evidence, Java 21.0.6
+    name: Linux release-builder evidence, Java 21.0.12.1
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,7 +31,7 @@ jobs:
 
     - name: Build Linux release-builder image
       shell: bash
-      run: docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+      run: docker build --pull=false -t bisq-release-builder-linux:java-21.0.12.1 docker/release-builder/linux
 
     - name: Prepare clean release-builder worktrees
       shell: bash
@@ -50,7 +50,7 @@ jobs:
           -v "$PWD/.git:$PWD/.git" \
           -v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a" \
           -w "$PWD/build/release-builder-worktrees/a" \
-          bisq-release-builder-linux:java-21.0.6 \
+          bisq-release-builder-linux:java-21.0.12.1 \
           ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 
     - name: Generate Linux evidence in release-builder worktree B
@@ -61,7 +61,7 @@ jobs:
           -v "$PWD/.git:$PWD/.git" \
           -v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b" \
           -w "$PWD/build/release-builder-worktrees/b" \
-          bisq-release-builder-linux:java-21.0.6 \
+          bisq-release-builder-linux:java-21.0.12.1 \
           ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 
     - name: Compare release-builder Java evidence
@@ -73,7 +73,7 @@ jobs:
           -v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a" \
           -v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro" \
           -w "$PWD/build/release-builder-worktrees/a" \
-          bisq-release-builder-linux:java-21.0.6 \
+          bisq-release-builder-linux:java-21.0.12.1 \
           ./gradlew compareReleaseEvidenceBundles \
             -PleftReleaseEvidence=build/reports/release/release-evidence.zip \
             -PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"
@@ -87,7 +87,7 @@ jobs:
           -v "$PWD/build/release-builder-worktrees/a:$PWD/build/release-builder-worktrees/a" \
           -v "$PWD/build/release-builder-worktrees/b:$PWD/build/release-builder-worktrees/b:ro" \
           -w "$PWD/build/release-builder-worktrees/a" \
-          bisq-release-builder-linux:java-21.0.6 \
+          bisq-release-builder-linux:java-21.0.12.1 \
           ./gradlew compareInstallerEvidenceBundles \
             -PleftInstallerEvidence=build/reports/release/installer-evidence.zip \
             -PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"
@@ -95,7 +95,7 @@ jobs:
     - name: Upload release-builder evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: release-builder-linux-java-21.0.6
+        name: release-builder-linux-java-21.0.12.1
         path: |
           build/release-builder-worktrees/a/build/reports/release/SHA256SUMS
           build/release-builder-worktrees/a/build/reports/release/release-manifest.tsv
@@ -106,7 +106,7 @@ jobs:
     - name: Upload release-builder installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: release-builder-linux-installers-java-21.0.6
+        name: release-builder-linux-installers-java-21.0.12.1
         path: |
           build/release-builder-worktrees/a/build/reports/release/INSTALLER-SHA256SUMS
           build/release-builder-worktrees/a/build/reports/release/installer-manifest.tsv

@@ -1,7 +1,8 @@
-# linux/amd64 manifest for docker.io/azul/zulu-openjdk:21.0.6.
-FROM --platform=linux/amd64 azul/zulu-openjdk:21.0.6@sha256:00a833d7f08952a436332df8c2ccced19e62e88cf49791dad23653443ab23833
+# linux/amd64 manifest for docker.io/library/eclipse-temurin:21.0.12.1_1-jdk-jammy.
+FROM --platform=linux/amd64 eclipse-temurin:21.0.12.1_1-jdk-jammy@sha256:074d6f95f1e69965dbd23750a37ec3b234025d0864e9821e0b1fba0763a3e853
 
-ARG UBUNTU_APT_SNAPSHOT=20260501T000000Z
+# The snapshot must not be older than the base image's own apt-get layer, or apt fails with unmet dependencies.
+ARG UBUNTU_APT_SNAPSHOT=20261017T010000Z
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -16,7 +17,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # signatures still authenticate package metadata and packages; the override is
 # removed and package lists are refreshed before installing the main toolchain.
 RUN set -eux; \
-    rm -f /etc/apt/sources.list.d/zulu.list; \
     if [ -f /etc/apt/sources.list ]; then \
         awk ' \
             BEGIN { ubuntu_snapshot_uri = "[[:space:]]https?://(archive|security)\\.ubuntu\\.com/ubuntu/?[[:space:]]" } \

@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   linux-installer-evidence:
-    name: Linux installer evidence, Java 21.0.6
+    name: Linux installer evidence, Java 21.0.12.1
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,10 +47,12 @@ jobs:
           zip
 
     - name: Set up JDK
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.6'
-        distribution: 'zulu'
+        java-version: '21.0.12.1+1'
+        distribution: 'temurin'
+        verify-signature: true
+        force-download: true
         check-latest: false
 
     - name: Build Linux installer evidence
@@ -61,7 +63,7 @@ jobs:
     - name: Upload Linux installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: installer-evidence-ubuntu-24.04-java-21.0.6
+        name: installer-evidence-ubuntu-24.04-java-21.0.12.1
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
@@ -73,7 +75,7 @@ jobs:
         if-no-files-found: error
 
   macos-installer-evidence:
-    name: macOS installer evidence, Java 21.0.6
+    name: macOS installer evidence, Java 21.0.12.1
     runs-on: macos-15
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -91,10 +93,12 @@ jobs:
         fi
 
     - name: Set up JDK
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.6'
-        distribution: 'zulu'
+        java-version: '21.0.12.1+1'
+        distribution: 'temurin'
+        verify-signature: true
+        force-download: true
         check-latest: false
 
     - name: Build macOS installer evidence
@@ -105,7 +109,7 @@ jobs:
     - name: Upload macOS installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: installer-evidence-macos-15-java-21.0.6
+        name: installer-evidence-macos-15-java-21.0.12.1
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
@@ -117,7 +121,7 @@ jobs:
         if-no-files-found: error
 
   windows-installer-evidence:
-    name: Windows installer evidence, Java 21.0.6
+    name: Windows installer evidence, Java 21.0.12.1
     runs-on: windows-2025
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -147,10 +151,12 @@ jobs:
         "$($wixDirectory.FullName)\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
     - name: Set up JDK
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.6'
-        distribution: 'zulu'
+        java-version: '21.0.12.1+1'
+        distribution: 'temurin'
+        verify-signature: true
+        force-download: true
         check-latest: false
 
     - name: Build Windows installer evidence
@@ -161,7 +167,7 @@ jobs:
     - name: Upload Windows installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: installer-evidence-windows-2025-java-21.0.6
+        name: installer-evidence-windows-2025-java-21.0.12.1
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
