@@ -19,6 +19,7 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
@@ -1239,8 +1240,9 @@ public class BtcWalletService extends WalletService {
             AddressEntryException {
         Transaction tx = new Transaction(params);
         final Coin receiverAmount = amount.subtract(fee);
-        Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
-                "The amount is too low (dust limit).");
+        if (!Restrictions.isAboveDust(receiverAmount)) {
+            throw new ReceiverAmountBelowDustException();
+        }
         tx.addOutput(receiverAmount, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
@@ -1269,8 +1271,9 @@ public class BtcWalletService extends WalletService {
             AddressFormatException, AddressEntryException {
         Transaction tx = new Transaction(params);
         final Coin netValue = amount.subtract(fee);
-        checkArgument(Restrictions.isAboveDust(netValue),
-                "The amount is too low (dust limit).");
+        if (!Restrictions.isAboveDust(netValue)) {
+            throw new ReceiverAmountBelowDustException();
+        }
 
         tx.addOutput(netValue, Address.fromString(params, toAddress));
 
