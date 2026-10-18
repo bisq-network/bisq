@@ -20,12 +20,18 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.locale.Res;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -40,6 +46,11 @@ import javafx.css.PseudoClass;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
 public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
     private static final double WINDOW_WIDTH = 900;
@@ -57,6 +68,8 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
             RULE_ROW_ICON_BOX_WIDTH -
             RULE_ROW_TEXT_GAP;
     private static final PseudoClass ERROR_PSEUDO_CLASS = PseudoClass.getPseudoClass("error");
+    @VisibleForTesting
+    static final List<String> RULES = List.of("trading", "fees", "mediation", "arbitration", "refund", "reimbursement");
 
     private StackPane rootContainer;
     private CheckBox acceptCheckBox;
@@ -236,7 +249,20 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
         titleBox.getChildren().add(title);
         // titleBox.getChildren().addAll(title, subtitle);
         HBox.setHgrow(titleBox, Priority.ALWAYS);
-        header.getChildren().addAll(/*iconBox, */titleBox);
+
+        copyIcon = new Label();
+        copyIcon.getStyleClass().add("popup-icon-information");
+        copyIcon.setPadding(new Insets(3));
+        copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
+        FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.1em");
+        copyIcon.addEventHandler(MOUSE_CLICKED,
+                mouseEvent -> copyToClipboardWithTooltip(getRulesText(), mouseEvent));
+
+        // Keeps the title centered
+        Region copyIconBalance = new Region();
+        copyIconBalance.minWidthProperty().bind(copyIcon.widthProperty());
+
+        header.getChildren().addAll(/*iconBox, */copyIconBalance, titleBox, copyIcon);
 
         Region divider = new Region();
         divider.getStyleClass().add("tac-agreement-header-divider");
@@ -248,37 +274,31 @@ public class TradeRulesWindow extends Overlay<TradeRulesWindow> {
     private VBox createRulesContent() {
         VBox content = new VBox();
         content.getStyleClass().add("trade-rules-list");
-        content.getChildren().addAll(
-                createRuleRow(1,
-                        Res.get("tradeRules.trading.title"),
-                        Res.get("tradeRules.trading.body")),
-                createRuleSeparator(),
-                createRuleRow(2,
-                        Res.get("tradeRules.fees.title"),
-                        Res.get("tradeRules.fees.body")),
-                createRuleSeparator(),
-
-                createRuleRow(3,
-                        Res.get("tradeRules.mediation.title"),
-                        Res.get("tradeRules.mediation.body")),
-                createRuleSeparator(),
-
-                createRuleRow(4,
-                        Res.get("tradeRules.arbitration.title"),
-                        Res.get("tradeRules.arbitration.body")),
-                createRuleSeparator(),
-
-                createRuleRow(5,
-                        Res.get("tradeRules.refund.title"),
-                        Res.get("tradeRules.refund.body")),
-                createRuleSeparator(),
-
-                createRuleRow(6,
-                        Res.get("tradeRules.reimbursement.title"),
-                        Res.get("tradeRules.reimbursement.body")),
-                createRuleSeparator()
-        );
+        for (int i = 0; i < RULES.size(); i++) {
+            content.getChildren().addAll(createRuleRow(i + 1, getRuleTitle(RULES.get(i)), getRuleBody(RULES.get(i))),
+                    createRuleSeparator());
+        }
         return content;
+    }
+
+    // The text of the rules in the order they show it, without the accept line and the buttons
+    @VisibleForTesting
+    String getRulesText() {
+        List<String> paragraphs = new ArrayList<>();
+        paragraphs.add(Res.get("tradeRules.headline"));
+        for (int i = 0; i < RULES.size(); i++) {
+            paragraphs.add((i + 1) + ". " + getRuleTitle(RULES.get(i)) + System.lineSeparator() +
+                    getRuleBody(RULES.get(i)));
+        }
+        return String.join(System.lineSeparator() + System.lineSeparator(), paragraphs);
+    }
+
+    private static String getRuleTitle(String rule) {
+        return Res.get("tradeRules." + rule + ".title");
+    }
+
+    private static String getRuleBody(String rule) {
+        return Res.get("tradeRules." + rule + ".body");
     }
 
     private HBox createRuleRow(int number, String title, String body) {
