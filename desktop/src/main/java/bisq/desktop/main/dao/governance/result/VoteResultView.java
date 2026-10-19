@@ -406,7 +406,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             .collect(Collectors.toList());
 
                     // Also the proposals without counted votes, which have no EvaluatedProposal
-                    List<EvaluatedProposal> evaluatedProposalsForCycle = voteResultPresentation.getVoteResultsForDisplay(cycle);
+                    List<EvaluatedProposal> evaluatedProposalsForCycle =
+                            voteResultPresentation.getVoteResultsForDisplay(cycle, proposalsForCycle);
 
                     AtomicLong stakeAndMerit = new AtomicLong();
                     List<DecryptedBallotsWithMerits> decryptedVotesForCycle = daoStateService.getDecryptedBallotsWithMeritsList().parallelStream()

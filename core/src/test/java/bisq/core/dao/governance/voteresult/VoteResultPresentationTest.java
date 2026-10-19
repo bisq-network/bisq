@@ -18,7 +18,6 @@
 package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.period.CycleService;
-import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Ballot;
@@ -57,11 +56,12 @@ class VoteResultPresentationTest {
     private static final int FIRST_BLOCK_OF_RESULT_PHASE = 109;
 
     private final DaoStateService daoStateService = mock(DaoStateService.class);
-    private final ProposalService proposalService = mock(ProposalService.class);
     private final CycleService cycleService = mock(CycleService.class);
     private final Proposal votedProposal = proposal("voted");
     private final Proposal proposalWithoutVotes = proposal("withoutVotes");
     private final Proposal proposalOfOtherCycle = proposal("otherCycle");
+    // As the view passes them
+    private final List<Proposal> validatedProposalsOfCycle = List.of(votedProposal, proposalWithoutVotes);
     private final EvaluatedProposal votedResult = new EvaluatedProposal(true,
             new ProposalVoteResult(votedProposal, 1000, 0, 1, 0, 0));
     private final EvaluatedProposal resultOfOtherCycle = new EvaluatedProposal(true,
@@ -75,9 +75,7 @@ class VoteResultPresentationTest {
         when(cycleService.isTxInCycle(any(Cycle.class), anyString()))
                 .thenAnswer(invocation -> cycleOfTx.get(invocation.<String>getArgument(1)) == invocation.getArgument(0));
         when(daoStateService.getEvaluatedProposalList()).thenReturn(List.of(votedResult, resultOfOtherCycle));
-        when(proposalService.getValidatedProposals())
-                .thenReturn(List.of(votedProposal, proposalWithoutVotes, proposalOfOtherCycle));
-        presentation = new VoteResultPresentation(daoStateService, proposalService, cycleService);
+        presentation = new VoteResultPresentation(daoStateService, cycleService);
     }
 
     // No revealed ballot contained the proposal, so it has no EvaluatedProposal in the DAO state
@@ -86,7 +84,7 @@ class VoteResultPresentationTest {
         withComputedVoteResult();
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        List<EvaluatedProposal> voteResults = presentation.getVoteResultsForDisplay(CYCLE);
+        List<EvaluatedProposal> voteResults = presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle);
 
         assertEquals(2, voteResults.size());
         assertSame(votedResult, voteResults.get(0));
@@ -104,7 +102,7 @@ class VoteResultPresentationTest {
         withComputedVoteResult();
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE - 1);
 
-        assertEquals(List.of(votedResult), presentation.getVoteResultsForDisplay(CYCLE));
+        assertEquals(List.of(votedResult), presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle));
     }
 
     // Without a vote reveal there is no vote, so every proposal of the cycle is not accepted
@@ -115,7 +113,7 @@ class VoteResultPresentationTest {
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of());
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        List<EvaluatedProposal> voteResults = presentation.getVoteResultsForDisplay(CYCLE);
+        List<EvaluatedProposal> voteResults = presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle);
 
         assertEquals(2, voteResults.size());
         assertFalse(voteResults.get(0).isAccepted());
@@ -132,7 +130,7 @@ class VoteResultPresentationTest {
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of(voteRevealOutput));
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        assertEquals(List.of(), presentation.getVoteResultsForDisplay(CYCLE));
+        assertEquals(List.of(), presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle));
     }
 
     // VoteResultService ignores a vote reveal outside the VOTE_REVEAL phase, so the cycle had no vote
@@ -144,7 +142,7 @@ class VoteResultPresentationTest {
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of(voteRevealOutput));
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        assertEquals(2, presentation.getVoteResultsForDisplay(CYCLE).size());
+        assertEquals(2, presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle).size());
     }
 
     // If the issuance limit was exceeded, the result contains only the proposals that would have been accepted
@@ -158,7 +156,7 @@ class VoteResultPresentationTest {
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of(voteRevealOutput));
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        List<EvaluatedProposal> voteResults = presentation.getVoteResultsForDisplay(CYCLE);
+        List<EvaluatedProposal> voteResults = presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle);
 
         assertEquals(1, voteResults.size());
         assertSame(proposalWithoutVotes, voteResults.get(0).getProposal());
@@ -172,7 +170,8 @@ class VoteResultPresentationTest {
         withComputedVoteResult();
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        assertEquals(List.of(votedResult, recordedWithoutVotes), presentation.getVoteResultsForDisplay(CYCLE));
+        assertEquals(List.of(votedResult, recordedWithoutVotes),
+                presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle));
     }
 
     @Test
@@ -184,7 +183,7 @@ class VoteResultPresentationTest {
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of(voteRevealOutput));
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        assertEquals(List.of(), presentation.getVoteResultsForDisplay(CYCLE));
+        assertEquals(List.of(), presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle));
     }
 
     @Test
@@ -196,7 +195,7 @@ class VoteResultPresentationTest {
         when(daoStateService.getVoteRevealOpReturnTxOutputs()).thenReturn(Set.of(voteRevealOutput));
         when(daoStateService.getChainHeight()).thenReturn(FIRST_BLOCK_OF_RESULT_PHASE);
 
-        assertEquals(2, presentation.getVoteResultsForDisplay(CYCLE).size());
+        assertEquals(2, presentation.getVoteResultsForDisplay(CYCLE, validatedProposalsOfCycle).size());
     }
 
     private void withComputedVoteResult() {

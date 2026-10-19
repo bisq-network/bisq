@@ -18,12 +18,12 @@
 package bisq.core.dao.governance.voteresult;
 
 import bisq.core.dao.governance.period.CycleService;
-import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ProposalVoteResult;
 
 import javax.inject.Inject;
@@ -43,19 +43,19 @@ import java.util.stream.Collectors;
  */
 public class VoteResultPresentation {
     private final DaoStateService daoStateService;
-    private final ProposalService proposalService;
     private final CycleService cycleService;
 
     @Inject
-    public VoteResultPresentation(DaoStateService daoStateService,
-                                  ProposalService proposalService,
-                                  CycleService cycleService) {
+    public VoteResultPresentation(DaoStateService daoStateService, CycleService cycleService) {
         this.daoStateService = daoStateService;
-        this.proposalService = proposalService;
         this.cycleService = cycleService;
     }
 
-    public List<EvaluatedProposal> getVoteResultsForDisplay(Cycle cycle) {
+    /**
+     * @param validatedProposalsOfCycle the validated proposals of the cycle, which the view has already, so that they
+     *                                  are not validated again
+     */
+    public List<EvaluatedProposal> getVoteResultsForDisplay(Cycle cycle, List<Proposal> validatedProposalsOfCycle) {
         List<EvaluatedProposal> voteResults = daoStateService.getEvaluatedProposalList().stream()
                 .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposalTxId()))
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -81,8 +81,7 @@ public class VoteResultPresentation {
         Set<String> evaluatedTxIds = voteResults.stream()
                 .map(EvaluatedProposal::getProposalTxId)
                 .collect(Collectors.toSet());
-        proposalService.getValidatedProposals().stream()
-                .filter(proposal -> cycleService.isTxInCycle(cycle, proposal.getTxId()))
+        validatedProposalsOfCycle.stream()
                 .filter(proposal -> !evaluatedTxIds.contains(proposal.getTxId()))
                 .filter(proposal -> decryptedVotesForCycle.stream()
                         .noneMatch(decryptedBallots -> decryptedBallots.getVote(proposal.getTxId()).isPresent()))
