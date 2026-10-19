@@ -5,15 +5,17 @@
 This specification defines how the amount entered for a BTC withdrawal from the Bisq wallet becomes
 the amount the receiver gets and the amount the sender spends, which amounts are refused, and when
 the desktop checks the inputs of a withdrawal. It covers the send funds screen of the desktop and
-the `sendbtc` API call. The dust rule also applies to the withdrawal of a trade payout, see
-[`../trade/withdrawal-completion.md`](../trade/withdrawal-completion.md).
+the `sendbtc` API call. The dust rule also applies to the withdrawal of a trade payout with the
+`withdrawfunds` API call. [`../trade/withdrawal-completion.md`](../trade/withdrawal-completion.md)
+defines when that withdrawal completes the trade.
 
 ## Dust limit
 
 The wallet refuses an output to the receiver below 546 satoshi on every network. This is bitcoinj's
 dust limit, the figure Bitcoin Core uses for a legacy output. A segwit output has a lower one. The
-wallet throws a `ReceiverAmountBelowDustException`, an `IllegalArgumentException` with the message
-used before, so that a caller which does not handle it gets the same error as before.
+refusal can be told apart from other errors, so that the desktop reports it as an amount that is too
+low. A caller that does not tell it apart, such as the API, gets the same error and message as
+before.
 
 ## Fee included or excluded
 
@@ -32,18 +34,22 @@ before it estimates the fee.
 ## Remainder of the inputs
 
 A remainder of the inputs that would be a change output below the dust limit is part of the fee.
-bitcoinj adds a remainder below its own change limit (537 satoshi for the segwit change address of
-the wallet) to the fee itself. The wallet adds a remainder that bitcoinj kept as a change output
-below 546 satoshi to the fee. The desktop and the API take the receiver's amount and the fee from the
-estimated transaction, so the desktop's confirmation shows what is sent. The confirmation notes the
-remainder in the fee, whether bitcoinj added it or kept it as a change output. With the fee
-included, the sender then spends the entered amount plus such a remainder.
+Such a remainder is left only when the selected addresses hold no further spendable coin, as the
+coin selection adds another input rather than leave a change below 546 satoshi. bitcoinj adds a
+remainder below its own change limit (537 satoshi for the segwit change address of the wallet) to
+the fee itself. The wallet adds a remainder that bitcoinj kept as a change output below 546 satoshi
+to the fee. The desktop and the API take the receiver's amount and the fee from the estimated
+transaction, so the desktop's confirmation shows what is sent. The confirmation notes the remainder
+in the fee, whether bitcoinj added it or kept it as a change output. With the fee included, the
+sender then spends the entered amount plus such a remainder.
 
-With the fee excluded, the selected inputs can exceed the amount plus the fee of a transaction with a
-change output by less than bitcoinj's change limit. The fee of a transaction without a change output
-would then leave a change output that this fee does not pay for. The withdrawal is a transaction
-without a change output, and its fee is the rest of the inputs, more than the chosen rate. A
-transaction without a change output whose fee pays at least the chosen rate ends the estimation.
+With the fee excluded, the selected inputs can exceed the amount plus the fee of a transaction with
+a change output by less than bitcoinj's change limit. The fee of a transaction without a change
+output would then leave a change output that this fee does not pay for. The withdrawal is a
+transaction without a change output, and its fee is the rest of the inputs, more than the chosen
+rate: the fee of a transaction with a change output and the remainder below the change limit, which
+the confirmation notes. A transaction without a change output whose fee pays at least the chosen
+rate ends the estimation.
 
 ## Checks on the desktop
 
@@ -57,3 +63,11 @@ below the dust limit is reported as lower than the fee and the dust limit.
 ## Not covered
 
 - The withdraw button is not disabled for invalid inputs. The checks run when it is pressed.
+- With the fee excluded, inputs that pay the amount and the fee only without a change output are
+  refused as insufficient funds. The estimation sizes the fee for a transaction with a change output
+  first. The same inputs can be withdrawn with the fee included.
+- With a change output that bitcoinj kept below 546 satoshi, the confirmation shows the size and the
+  fee rate of the estimated transaction, which has that output. The sent transaction has none, so it
+  is smaller and pays a higher rate.
+- The send selects the coins again. If the wallet changes while the confirmation is open, for
+  example when a new coin arrives, the sent transaction can differ from the confirmation.
