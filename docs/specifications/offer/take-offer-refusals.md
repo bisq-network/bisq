@@ -45,7 +45,17 @@ a required update, are shown before this one, as they apply to every user. The t
 shown after it, as no other payment account helps while the maker ignores the user. The user's own
 ignore list comes before these reasons.
 
-The node keeps this in memory for one hour after the last refusal. After that time it asks the
-maker again when the user takes one of the maker's offers. An "available" answer from that maker
-ends it at once. The node does not send requests to find such makers; it only records answers to
-requests that the user made.
+The node keeps this in memory for one hour after the last refusal, and a restart clears it. During
+that hour the offer book and the API do not let the user take that maker's offers, so the block
+normally lasts the full hour, also when the maker removes the user from the list in the meantime. An
+"available" answer, for example to a take screen that was already open, ends it earlier. After the
+hour the node asks the maker again when the user takes one of the maker's offers. The node does not
+send requests to find such makers; it only records answers to requests that the user made.
+
+## Not covered
+
+- The explanation shows no remaining time and offers no way to ask the maker again before the hour
+  ends.
+- The hour is measured with the system clock, so a change of the clock makes it shorter or longer.
+- Rows that the offer book shows when the answer arrives change only when the list changes or the
+  offer book is opened again. Until then they still open the take screen, which asks the maker.
