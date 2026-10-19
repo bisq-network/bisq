@@ -435,9 +435,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                             (double) fee.longValue() / txVsize,    // no risk of div/0 since txVsize is always positive
                             vkb,
                             formatter.formatCoinWithCode(receiverAmount));
-                    if (dust.isPositive()) {
+                    Coin changeBelowDust = withdrawalEstimate.getChangeBelowDust();
+                    if (changeBelowDust.isPositive()) {
                         messageText = Res.get("shared.sendFundsDetailsDust",
-                                dust.value, dust.value > 1 ? "s" : "")
+                                changeBelowDust.value, changeBelowDust.value > 1 ? "s" : "")
                                 + messageText;
                     }
 

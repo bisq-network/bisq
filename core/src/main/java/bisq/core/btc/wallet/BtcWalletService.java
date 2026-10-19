@@ -1126,7 +1126,7 @@ public class BtcWalletService extends WalletService {
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
-            return new WithdrawalEstimate(tx, getDust(tx));
+            return new WithdrawalEstimate(tx, fee, getDust(tx));
         } catch (InsufficientMoneyException e) {
             throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
                     "or the resulting output value is below the min. dust value:\n" +

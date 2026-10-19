@@ -34,10 +34,10 @@ before it estimates the fee.
 A remainder of the inputs that would be a change output below the dust limit is part of the fee.
 bitcoinj adds a remainder below its own change limit (537 satoshi for the segwit change address of
 the wallet) to the fee itself. The wallet adds a remainder that bitcoinj kept as a change output
-below 546 satoshi to the fee, and the desktop notes that in the confirmation. The desktop and the API
-take the receiver's amount and the fee from the estimated transaction, so the desktop's confirmation
-shows what is sent. With the fee included, the sender then spends the entered amount plus such a
-remainder.
+below 546 satoshi to the fee. The desktop and the API take the receiver's amount and the fee from the
+estimated transaction, so the desktop's confirmation shows what is sent. The confirmation notes the
+remainder in the fee, whether bitcoinj added it or kept it as a change output. With the fee
+included, the sender then spends the entered amount plus such a remainder.
 
 With the fee excluded, the selected inputs can exceed the amount plus the fee of a transaction with a
 change output by less than bitcoinj's change limit. The fee of a transaction without a change output

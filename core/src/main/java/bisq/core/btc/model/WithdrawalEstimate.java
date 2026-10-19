@@ -37,12 +37,16 @@ public class WithdrawalEstimate {
     private final Coin fee;
     // What the selected addresses spend: the receiver's amount and the fee
     private final Coin sendersAmount;
+    // The part of the fee that is a remainder of the inputs: what bitcoinj added to the fee and the dust
+    private final Coin changeBelowDust;
 
-    public WithdrawalEstimate(Transaction transaction, Coin dust) {
+    // requestedFee is the fee that the last round of the estimation asked bitcoinj for
+    public WithdrawalEstimate(Transaction transaction, Coin requestedFee, Coin dust) {
         this.transaction = transaction;
         this.dust = dust;
         receiverAmount = transaction.getOutput(0).getValue();
         fee = transaction.getFee().add(dust);
         sendersAmount = receiverAmount.add(fee);
+        changeBelowDust = transaction.getFee().subtract(requestedFee).add(dust);
     }
 }

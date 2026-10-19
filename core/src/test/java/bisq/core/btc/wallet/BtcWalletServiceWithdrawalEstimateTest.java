@@ -53,6 +53,7 @@ class BtcWalletServiceWithdrawalEstimateTest {
 
         assertAmounts(estimate, 2200, 5800, 8000);
         assertEquals(Coin.ZERO, estimate.getDust());
+        assertEquals(Coin.valueOf(300), estimate.getChangeBelowDust());
         assertSent(send(estimate), 2200, 5800, 1);
     }
 
@@ -65,6 +66,7 @@ class BtcWalletServiceWithdrawalEstimateTest {
 
         assertAmounts(estimate, 650, 7590, 8240);
         assertEquals(Coin.valueOf(540), estimate.getDust());
+        assertEquals(Coin.valueOf(540), estimate.getChangeBelowDust());
         assertSent(send(estimate), 650, 7590, 1);
     }
 
@@ -75,6 +77,7 @@ class BtcWalletServiceWithdrawalEstimateTest {
         WithdrawalEstimate estimate = estimate(Coin.valueOf(1000), true);
 
         assertAmounts(estimate, 1000, 7050, 8050);
+        assertEquals(Coin.ZERO, estimate.getChangeBelowDust());
         assertSent(send(estimate), 1000, 7050, 2);
     }
 
@@ -85,6 +88,7 @@ class BtcWalletServiceWithdrawalEstimateTest {
         WithdrawalEstimate estimate = estimate(Coin.valueOf(50_000), false);
 
         assertAmounts(estimate, 42_950, 7050, 50_000);
+        assertEquals(Coin.ZERO, estimate.getChangeBelowDust());
         assertSent(send(estimate), 42_950, 7050, 2);
     }
 
@@ -99,6 +103,7 @@ class BtcWalletServiceWithdrawalEstimateTest {
         WithdrawalEstimate estimate = estimate(Coin.valueOf(10_000), true);
 
         assertAmounts(estimate, 10_000, 7250, 17_250);
+        assertEquals(Coin.valueOf(200), estimate.getChangeBelowDust());
         assertEquals(1, estimate.getTransaction().getOutputs().size());
         assertEquals(2, fixture.getCompletedTxs());
         assertSent(send(estimate), 10_000, 7250, 1);
