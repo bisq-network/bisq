@@ -35,6 +35,11 @@ take: they are shown dimmed, a click explains the reason, and they are hidden wh
 shows only "Offers matching my accounts". The API refuses getoffer, getbsqswapoffer and takeoffer
 for them with the reason IS_IGNORED_BY_MAKER.
 
+The reasons from the filter, a ban of the offer, its currency, its payment method or the maker, and
+a required update, are shown before this one, as they apply to every user. The trade limits are
+shown after it, as no other payment account helps while the maker ignores the user. The user's own
+ignore list comes before these reasons.
+
 The node keeps this in memory for one hour after the last refusal. After that time it asks the
 maker again when the user takes one of the maker's offers. An "available" answer from that maker
 ends it at once. The node does not send requests to find such makers; it only records answers to

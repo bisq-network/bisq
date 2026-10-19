@@ -126,9 +126,6 @@ public class OfferFilterService {
         if (isIgnored(offer)) {
             return Result.IS_IGNORED;
         }
-        if (isIgnoredByMaker(offer)) {
-            return Result.IS_IGNORED_BY_MAKER;
-        }
         if (isOfferBanned(offer)) {
             return Result.IS_OFFER_BANNED;
         }
@@ -143,6 +140,11 @@ public class OfferFilterService {
         }
         if (requireUpdateToNewVersion()) {
             return Result.REQUIRE_UPDATE_TO_NEW_VERSION;
+        }
+        // The reasons from the filter apply to every user and come first. The trade limits come after, as no
+        // other payment account helps while the maker ignores us.
+        if (isIgnoredByMaker(offer)) {
+            return Result.IS_IGNORED_BY_MAKER;
         }
         if (isInsufficientCounterpartyTradeLimit(offer)) {
             return Result.IS_INSUFFICIENT_COUNTERPARTY_TRADE_LIMIT;
