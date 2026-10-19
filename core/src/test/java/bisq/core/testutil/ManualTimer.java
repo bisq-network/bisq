@@ -77,6 +77,10 @@ public class ManualTimer implements Timer {
         return timers.get(timers.size() - 1);
     }
 
+    public static int count() {
+        return timers.size();
+    }
+
     public static void firePendingTimers() {
         List.copyOf(timers).forEach(ManualTimer::fire);
     }

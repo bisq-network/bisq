@@ -175,6 +175,11 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         super.failed(message);
     }
 
+    @Override
+    protected void onCanceled() {
+        cleanup();
+    }
+
     private void cleanup() {
         if (timer != null) {
             timer.stop();
@@ -185,7 +190,8 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     }
 
     private void tryToSendAgainLater() {
-        if (completed) {
+        // A send that was under way can still report its outcome after the task completed or was canceled
+        if (completed || isCanceled()) {
             return;
         }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {

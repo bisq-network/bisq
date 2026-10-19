@@ -59,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -202,6 +203,28 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
         verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));
     }
 
+    // The trade is moved to the failed trades while the seller waits for the buyer's ACK
+    @Test
+    void aCanceledTaskNeitherSendsAgainNorPublishesTheDepositTx() {
+        Fixture f = new Fixture(false);
+        f.run();
+        f.listeners.get(0).onArrived();
+        ManualTimer resend = ManualTimer.latest();
+
+        f.runner.cancel();
+        // A send that was under way reports its outcome after the cancel, and the ACK arrives late
+        f.listeners.get(0).onStoredInMailbox();
+        f.listeners.get(0).onFault("fault");
+        f.messageState.set(MessageState.ACKNOWLEDGED);
+
+        assertTrue(resend.isStopped());
+        assertSame(resend, ManualTimer.latest(), "no send is scheduled after the cancel");
+        assertFalse(f.delivered.get());
+        assertFalse(f.completed.get());
+        assertNull(f.errorMessage.get());
+        verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));
+    }
+
     @Test
     void fiatDepositTxWaitsForTheBuyerAccountValidationAfterTheAck() {
         Fixture f = new Fixture(true);
@@ -226,6 +249,7 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
         final AtomicBoolean completed = new AtomicBoolean();
         final AtomicReference<String> errorMessage = new AtomicReference<>();
         final List<SendMailboxMessageListener> listeners = new ArrayList<>();
+        TaskRunner<TradeModel> runner;
 
         Fixture(boolean fiat) {
             Offer offer = mock(Offer.class);
@@ -264,7 +288,7 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
 
         @SuppressWarnings("unchecked")
         void run() {
-            TaskRunner<TradeModel> runner = new TaskRunner<>(trade, (Class<TradeModel>) (Class<?>) Trade.class,
+            runner = new TaskRunner<>(trade, (Class<TradeModel>) (Class<?>) Trade.class,
                     () -> completed.set(true), errorMessage::set);
             runner.addTasks(SellerSendsDepositTxAndDelayedPayoutTxMessage.class, SellerPublishesDepositTx.class);
             runner.run();
