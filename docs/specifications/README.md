@@ -72,6 +72,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`offer/take-offer-refusals.md`](offer/take-offer-refusals.md) | What the taker is told when the maker refuses an availability request, and what the client remembers about the maker afterwards. |
 | [`offer/offer-edit-and-removal.md`](offer/offer-edit-and-removal.md) | The completion contracts of offer edit and removal, and the preconditions they impose on wallet restore, wallet emptying and BSQ swap republishing. |
 
+### `support/`
+
+| Specification | Covers |
+|---|---|
+| [`support/chat-message-order.md`](support/chat-message-order.md) | The order and the times in which the trader chat and the dispute chat show their messages: the stored order, the sender's order within consecutive messages of the peer, and the local receive time of each received message. |
+
 ### `trade/`
 
 | Specification | Covers |
