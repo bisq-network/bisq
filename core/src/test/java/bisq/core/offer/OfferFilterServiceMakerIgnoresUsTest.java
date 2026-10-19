@@ -25,6 +25,11 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
+import bisq.common.crypto.Encryption;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+
+import java.security.KeyPair;
 
 import java.util.List;
 
@@ -41,13 +46,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class OfferFilterServiceMakerIgnoresUsTest {
+    private static final KeyPair MAKER_SIGNATURE_KEY_PAIR = Sig.generateKeyPair();
+    private static final KeyPair MAKER_ENCRYPTION_KEY_PAIR = Encryption.generateKeyPair();
+
     private long now;
     private Preferences preferences;
     private FilterPolicyService filterPolicyService;
     private OfferFilterService service;
-    private final Offer offerOfMaker = offerFrom("maker.onion:9999");
-    private final Offer otherOfferOfMaker = offerFrom("maker.onion:9999");
-    private final Offer offerOfOther = offerFrom("other.onion:9999");
+    private final Offer offerOfMaker = offerFrom("maker.onion:9999", makersKey());
+    private final Offer otherOfferOfMaker = offerFrom("maker.onion:9999", makersKey());
+    private final Offer offerOfOther = offerFrom("other.onion:9999", otherKey());
 
     @BeforeEach
     public void setUp() {
@@ -74,6 +82,24 @@ public class OfferFilterServiceMakerIgnoresUsTest {
         assertTrue(service.isIgnoredByMaker(offerOfMaker));
         assertTrue(service.isIgnoredByMaker(otherOfferOfMaker));
         assertFalse(service.isIgnoredByMaker(offerOfOther));
+    }
+
+    // The maker is recognised by the key of the offer, not by its address
+    @Test
+    public void theMakerIsRecognisedByTheKeyNotByTheAddress() {
+        Offer offerOfAnotherKey = offerFrom("maker.onion:9999", otherKey());
+
+        service.onAvailabilityAnswer(offerOfAnotherKey, AvailabilityResult.USER_IGNORED);
+
+        assertTrue(service.isIgnoredByMaker(offerOfAnotherKey));
+        assertFalse(service.isIgnoredByMaker(offerOfMaker));
+    }
+
+    @Test
+    public void anOfferWithTheMakersKeyAtAnotherAddressIsOfTheSameMaker() {
+        service.onAvailabilityAnswer(offerOfMaker, AvailabilityResult.USER_IGNORED);
+
+        assertTrue(service.isIgnoredByMaker(offerFrom("moved.onion:9999", makersKey())));
     }
 
     @Test
@@ -159,9 +185,19 @@ public class OfferFilterServiceMakerIgnoresUsTest {
         assertEquals(OfferFilterService.Result.IS_IGNORED_BY_MAKER, service.canTakeOffer(offerOfMaker, false));
     }
 
-    private static Offer offerFrom(String makerAddress) {
+    // A new instance with the maker's keys, as each offer carries its own
+    private static PubKeyRing makersKey() {
+        return new PubKeyRing(MAKER_SIGNATURE_KEY_PAIR.getPublic(), MAKER_ENCRYPTION_KEY_PAIR.getPublic());
+    }
+
+    private static PubKeyRing otherKey() {
+        return new PubKeyRing(Sig.generateKeyPair().getPublic(), Encryption.generateKeyPair().getPublic());
+    }
+
+    private static Offer offerFrom(String makerAddress, PubKeyRing pubKeyRing) {
         Offer offer = mock(Offer.class);
         when(offer.getMakerNodeAddress()).thenReturn(new NodeAddress(makerAddress));
+        when(offer.getPubKeyRing()).thenReturn(pubKeyRing);
         when(offer.getProtocolVersion()).thenReturn((long) Version.TRADE_PROTOCOL_VERSION);
         return offer;
     }

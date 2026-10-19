@@ -43,7 +43,10 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.ClockWatcher;
+import bisq.common.crypto.Encryption;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
@@ -66,8 +69,10 @@ import static org.mockito.Mockito.when;
 class TradeManagerAvailabilityAnswerTest {
     private OfferFilterService offerFilterService;
     private TradeManager tradeManager;
-    private final Offer offer = offerFrom("maker.onion:9999");
-    private final Offer otherOfferOfMaker = offerFrom("maker.onion:9999");
+    private final PubKeyRing makersKey = new PubKeyRing(Sig.generateKeyPair().getPublic(),
+            Encryption.generateKeyPair().getPublic());
+    private final Offer offer = offerFrom("maker.onion:9999", makersKey);
+    private final Offer otherOfferOfMaker = offerFrom("maker.onion:9999", makersKey);
 
     @SuppressWarnings("unchecked")
     @BeforeEach
@@ -128,9 +133,10 @@ class TradeManagerAvailabilityAnswerTest {
         });
     }
 
-    private static Offer offerFrom(String makerAddress) {
+    private static Offer offerFrom(String makerAddress, PubKeyRing pubKeyRing) {
         Offer offer = mock(Offer.class);
         when(offer.getMakerNodeAddress()).thenReturn(new NodeAddress(makerAddress));
+        when(offer.getPubKeyRing()).thenReturn(pubKeyRing);
         return offer;
     }
 }
