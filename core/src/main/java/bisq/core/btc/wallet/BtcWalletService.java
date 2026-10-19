@@ -956,7 +956,7 @@ public class BtcWalletService extends WalletService {
                             printTx("FeeEstimationTransaction", tx);
                             sendRequest.tx.getOutputs().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
                         }
-                        while (feeEstimationNotSatisfied(counter, tx));
+                        while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
 
                         if (counter == 10)
                             log.error("Could not calculate the fee. Tx=" + tx);
@@ -1067,7 +1067,7 @@ public class BtcWalletService extends WalletService {
                 txVsize = tx.getVsize();
                 printTx("FeeEstimationTransaction", tx);
             }
-            while (feeEstimationNotSatisfied(counter, tx));
+            while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -1134,7 +1134,7 @@ public class BtcWalletService extends WalletService {
                 txVsize = tx.getVsize();
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
             }
-            while (feeEstimationNotSatisfied(counter, tx));
+            while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -1146,8 +1146,8 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-    private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
-        return feeEstimationNotSatisfied(counter, tx.getFee().value, tx.getVsize(), getTxFeeForWithdrawalPerVbyte());
+    private boolean feeEstimationNotSatisfied(int counter, Transaction tx, Coin txFeeForWithdrawalPerVbyte) {
+        return feeEstimationNotSatisfied(counter, tx.getFee().value, tx.getVsize(), txFeeForWithdrawalPerVbyte);
     }
 
     private boolean feeEstimationNotSatisfied(int counter, long txFee, long txVsize, Coin txFeeForWithdrawalPerVbyte) {

@@ -82,6 +82,7 @@ class BtcWalletServiceWithdrawalEstimateTest {
     private final String toAddress = SegwitAddress.fromKey(PARAMS, ECKey.fromPrivate(BigInteger.valueOf(1_000_003)))
             .toString();
     private final Set<String> fromAddresses = Set.of(fromAddress.toString());
+    private final FeeService feeService = mock(FeeService.class);
     private SendStoppingWallet wallet;
     private BtcWalletService btcWalletService;
     private int fundingTxs;
@@ -107,7 +108,6 @@ class BtcWalletServiceWithdrawalEstimateTest {
         });
         Preferences preferences = mock(Preferences.class);
         when(preferences.getIgnoreDustThreshold()).thenReturn(546);
-        FeeService feeService = mock(FeeService.class);
         when(feeService.getTxFeePerVbyte()).thenReturn(FEE_RATE);
 
         btcWalletService = new BtcWalletService(walletsSetup, addressEntryList, preferences, feeService);
@@ -158,6 +158,19 @@ class BtcWalletServiceWithdrawalEstimateTest {
 
         assertAmounts(estimate, 42_950, 7050, 50_000);
         assertSent(send(estimate), 42_950, 7050, 2);
+    }
+
+    // The desktop and the API pass a rate that can differ from the rate of the preferences
+    @Test
+    void theEstimateIsCheckedWithTheRateItWasBuiltWith() throws Exception {
+        fund(100_000);
+        when(feeService.getTxFeePerVbyte()).thenReturn(Coin.valueOf(10));
+
+        WithdrawalEstimate estimate = estimate(Coin.valueOf(50_000), false);
+
+        assertAmounts(estimate, 42_950, 7050, 50_000);
+        // The first round has no fee, the second one has the fee for the size of the first one
+        assertEquals(2, wallet.completedTxs);
     }
 
     private WithdrawalEstimate estimate(Coin amount, boolean feeExcluded) throws Exception {
@@ -230,6 +243,8 @@ class BtcWalletServiceWithdrawalEstimateTest {
     // A send completes the transaction as a real send does, then stops before the transaction is committed or
     // broadcast
     private static class SendStoppingWallet extends Wallet {
+        // The rounds of the fee estimation
+        private int completedTxs;
         @Nullable
         private Transaction sentTx;
 
@@ -238,8 +253,14 @@ class BtcWalletServiceWithdrawalEstimateTest {
         }
 
         @Override
+        public void completeTx(SendRequest request) throws InsufficientMoneyException {
+            completedTxs++;
+            super.completeTx(request);
+        }
+
+        @Override
         public SendResult sendCoins(SendRequest request) throws InsufficientMoneyException {
-            completeTx(request);
+            super.completeTx(request);
             sentTx = request.tx;
             throw new SendStoppedException();
         }
