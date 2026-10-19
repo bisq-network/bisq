@@ -176,7 +176,9 @@ public class OfferFilterService {
         if (since == null)
             return false;
         if (now() - since > MAKER_IGNORES_US_TTL_MS) {
-            makersIgnoringUs.remove(maker, since);
+            if (makersIgnoringUs.remove(maker, since))
+                log.info("Offers of maker {} are open to us again, as their refusal is older than {} minutes",
+                        maker, TimeUnit.MILLISECONDS.toMinutes(MAKER_IGNORES_US_TTL_MS));
             return false;
         }
         return true;
@@ -188,10 +190,14 @@ public class OfferFilterService {
         if (result == null)
             return;
         String maker = offer.getMakerNodeAddress().getFullAddress();
-        if (result == AvailabilityResult.USER_IGNORED)
+        if (result == AvailabilityResult.USER_IGNORED) {
             makersIgnoringUs.put(maker, now());
-        else if (result == AvailabilityResult.AVAILABLE)
-            makersIgnoringUs.remove(maker);
+            log.info("Maker {} has us on their ignore list (offer {}). Their offers are closed to us for {} minutes",
+                    maker, offer.getId(), TimeUnit.MILLISECONDS.toMinutes(MAKER_IGNORES_US_TTL_MS));
+        } else if (result == AvailabilityResult.AVAILABLE && makersIgnoringUs.remove(maker) != null) {
+            log.info("Maker {} answered available (offer {}). Their offers are open to us again",
+                    maker, offer.getId());
+        }
     }
 
     @VisibleForTesting
