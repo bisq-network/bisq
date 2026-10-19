@@ -1079,18 +1079,6 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       String toAddress,
-                                                                       Coin amount,
-                                                                       Coin txFeeForWithdrawalPerVbyte)
-            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
-        return getWithdrawalEstimate(fromAddresses,
-                toAddress,
-                amount,
-                false,
-                txFeeForWithdrawalPerVbyte).getTransaction();
-    }
-
     // If feeExcluded is set, the receiver gets the amount and the fee is added to it
     public WithdrawalEstimate getWithdrawalEstimate(Set<String> fromAddresses,
                                                     String toAddress,

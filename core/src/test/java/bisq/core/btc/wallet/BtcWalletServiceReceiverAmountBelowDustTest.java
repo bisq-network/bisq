@@ -155,10 +155,11 @@ class BtcWalletServiceReceiverAmountBelowDustTest {
     }
 
     private Transaction estimateFromAddresses(Coin amount) throws Exception {
-        return btcWalletService.getFeeEstimationTransactionForMultipleAddresses(Set.of(fromAddress.toString()),
+        return btcWalletService.getWithdrawalEstimate(Set.of(fromAddress.toString()),
                 toAddress,
                 amount,
-                FEE_RATE);
+                false,
+                FEE_RATE).getTransaction();
     }
 
     private Transaction estimateFeeExcluded(Coin amount) throws Exception {
