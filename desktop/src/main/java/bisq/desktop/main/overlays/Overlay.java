@@ -164,6 +164,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
     protected boolean disableActionButton;
+    protected boolean disableSecondaryActionButton;
     protected boolean disableTertiaryActionButton;
 
     @Getter
@@ -527,6 +528,11 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T disableActionButton() {
         this.disableActionButton = true;
+        return cast();
+    }
+
+    public T setSecondaryButtonDisabledState(boolean disableState) {
+        this.disableSecondaryActionButton = disableState;
         return cast();
     }
 
@@ -1065,6 +1071,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 });
 
                 buttonBox.getChildren().add(secondaryActionButton);
+                secondaryActionButton.setDisable(disableSecondaryActionButton);
             }
 
             if (tertiaryActionButtonText != null && tertiaryActionHandlerOptional.isPresent()) {

@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v1.tasks;
 
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.common.taskrunner.Task;
@@ -30,12 +31,17 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class TradeTask extends Task<TradeModel> {
     protected final ProcessModel processModel;
     protected final Trade trade;
+    private final boolean tradeErrorOnFailure;
 
     protected TradeTask(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
 
         this.trade = trade;
         processModel = trade.getProcessModel();
+        // instanceof TradeTaskRunner does not compile on a TaskRunner<Trade>, as TradeTaskRunner is a
+        // TaskRunner<TradeModel>
+        tradeErrorOnFailure = !((TaskRunner<?>) taskHandler instanceof TradeTaskRunner tradeTaskRunner) ||
+                tradeTaskRunner.isTradeErrorOnFailure();
     }
 
     @Override
@@ -47,7 +53,7 @@ public abstract class TradeTask extends Task<TradeModel> {
 
     @Override
     protected void failed() {
-        trade.setErrorMessage(errorMessage);
+        setTradeErrorMessage();
         processModel.getTradeManager().requestPersistence();
 
         super.failed();
@@ -56,7 +62,7 @@ public abstract class TradeTask extends Task<TradeModel> {
     @Override
     protected void failed(String message) {
         appendToErrorMessage(message);
-        trade.setErrorMessage(errorMessage);
+        setTradeErrorMessage();
         processModel.getTradeManager().requestPersistence();
 
         super.failed();
@@ -66,9 +72,18 @@ public abstract class TradeTask extends Task<TradeModel> {
     protected void failed(Throwable t) {
         t.printStackTrace();
         appendExceptionToErrorMessage(t);
-        trade.setErrorMessage(errorMessage);
+        setTradeErrorMessage();
         processModel.getTradeManager().requestPersistence();
 
         super.failed();
+    }
+
+    private void setTradeErrorMessage() {
+        if (tradeErrorOnFailure) {
+            trade.setErrorMessage(errorMessage);
+        } else {
+            log.warn("{} failed in an attempt that the trader did not start. tradeId={}, errorMessage={}",
+                    getClass().getSimpleName(), trade.getId(), errorMessage);
+        }
     }
 }
