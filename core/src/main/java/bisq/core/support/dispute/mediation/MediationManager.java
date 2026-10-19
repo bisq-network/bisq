@@ -205,6 +205,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
+            chatMessage.setReceivedDate(System.currentTimeMillis());
             dispute.addAndPersistChatMessage(chatMessage);
         } else {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());

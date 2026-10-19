@@ -36,6 +36,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
+import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.Encryption;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -102,6 +104,41 @@ class MediationManagerAuthTest {
         verify(persistenceManager, never()).requestPersistence();
     }
 
+    @Test
+    void disputeResultMessageGetsTheLocalReceiveTime() {
+        PersistenceManager<MediationDisputeList> persistenceManager = persistenceManager();
+        MediationDisputeListService disputeListService = new MediationDisputeListService(persistenceManager);
+
+        PubKeyRing agentPubKeyRing = pubKeyRing();
+        Dispute dispute = dispute(agentPubKeyRing);
+        disputeListService.getDisputeList().add(dispute);
+        MediationManager manager = mediationManager(tradeManager(agentPubKeyRing), disputeListService);
+
+        ChatMessage chatMessage = new ChatMessage(SupportType.MEDIATION,
+                TRADE_ID,
+                TRADER_ID,
+                false,
+                "result",
+                PEER_NODE_ADDRESS);
+        // A receive time the agent could put into the message, it must not be kept
+        chatMessage.setReceivedDate(42);
+        DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
+        disputeResult.setChatMessage(chatMessage);
+        DisputeResultMessage message = new DisputeResultMessage(disputeResult,
+                PEER_NODE_ADDRESS,
+                "dispute-result-uid",
+                SupportType.MEDIATION,
+                null);
+
+        long before = System.currentTimeMillis();
+        manager.onDisputeResultMessage(message, agentPubKeyRing.getSignaturePubKey());
+
+        assertTrue(dispute.getChatMessages().contains(chatMessage));
+        long receivedDate = chatMessage.getReceivedDate();
+        assertTrue(receivedDate >= before && receivedDate <= System.currentTimeMillis(),
+                "receivedDate=" + receivedDate);
+    }
+
     private MediationManager mediationManager(TradeManager tradeManager,
                                              MediationDisputeListService disputeListService) {
         return new MediationManager(mockP2PService(),
@@ -143,6 +180,9 @@ class MediationManagerAuthTest {
     private static P2PService mockP2PService() {
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
+        NetworkNode networkNode = mock(NetworkNode.class);
+        when(networkNode.getNodeAddress()).thenReturn(new NodeAddress("trader.onion", 9999));
+        when(p2PService.getNetworkNode()).thenReturn(networkNode);
         return p2PService;
     }
 
