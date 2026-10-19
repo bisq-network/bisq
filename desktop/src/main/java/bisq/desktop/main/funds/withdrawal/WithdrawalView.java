@@ -36,6 +36,7 @@ import bisq.core.btc.exceptions.InsufficientFundsException;
 import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.WithdrawalEstimate;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -116,7 +117,6 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.*;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
@@ -403,21 +403,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 Coin feeRate = Coin.valueOf(Integer.parseInt(transactionFeeInputTextField.getText()));
                 final String withdrawToAddress = withdrawToTextField.getText();
 
-                Transaction feeEstimationTransaction =
-                        btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
-                                withdrawToAddress,
-                                amountAsCoin,
-                                feeExcluded,
-                                feeRate);
-                checkNotNull(feeEstimationTransaction, "feeEstimationTransaction must not be null");
-
-                // The receiver gets the first output of the estimated transaction. A remainder that cannot be
-                // returned as change is part of the fee: bitcoinj adds a small one to the fee itself, getDust returns
-                // one that bitcoinj kept as an output below our dust limit.
-                Coin dust = btcWalletService.getDust(feeEstimationTransaction);
-                Coin fee = feeEstimationTransaction.getFee().add(dust);
-                Coin receiverAmount = feeEstimationTransaction.getOutput(0).getValue();
-                final Coin sendersAmount = receiverAmount.add(fee);
+                WithdrawalEstimate withdrawalEstimate = btcWalletService.getWithdrawalEstimate(fromAddresses,
+                        withdrawToAddress,
+                        amountAsCoin,
+                        feeExcluded,
+                        feeRate);
+                Transaction feeEstimationTransaction = withdrawalEstimate.getTransaction();
+                Coin dust = withdrawalEstimate.getDust();
+                Coin fee = withdrawalEstimate.getFee();
+                Coin receiverAmount = withdrawalEstimate.getReceiverAmount();
+                final Coin sendersAmount = withdrawalEstimate.getSendersAmount();
                 if (dust.isPositive()) {
                     log.info("Dust output ({} satoshi) was detected, the dust amount has been added to the fee (was {}, now {})",
                             dust.value,

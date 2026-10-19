@@ -25,6 +25,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.model.WithdrawalEstimate;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -1083,19 +1084,19 @@ public class BtcWalletService extends WalletService {
                                                                        Coin amount,
                                                                        Coin txFeeForWithdrawalPerVbyte)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
-        return getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
+        return getWithdrawalEstimate(fromAddresses,
                 toAddress,
                 amount,
                 false,
-                txFeeForWithdrawalPerVbyte);
+                txFeeForWithdrawalPerVbyte).getTransaction();
     }
 
     // If feeExcluded is set, the receiver gets the amount and the fee is added to it
-    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       String toAddress,
-                                                                       Coin amount,
-                                                                       boolean feeExcluded,
-                                                                       Coin txFeeForWithdrawalPerVbyte)
+    public WithdrawalEstimate getWithdrawalEstimate(Set<String> fromAddresses,
+                                                    String toAddress,
+                                                    Coin amount,
+                                                    boolean feeExcluded,
+                                                    Coin txFeeForWithdrawalPerVbyte)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
@@ -1137,7 +1138,7 @@ public class BtcWalletService extends WalletService {
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
-            return tx;
+            return new WithdrawalEstimate(tx, getDust(tx));
         } catch (InsufficientMoneyException e) {
             throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
                     "or the resulting output value is below the min. dust value:\n" +
