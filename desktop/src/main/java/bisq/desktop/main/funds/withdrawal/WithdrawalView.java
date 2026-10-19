@@ -110,6 +110,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -599,26 +600,37 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
     }
 
-    // The fee estimation fails on invalid inputs with an error that does not tell the user what to fix
     private boolean areInputsValid() {
+        Optional<String> inputError = getInputError(totalAvailableAmountOfSelectedItems,
+                amountAsCoin,
+                withdrawToTextField.getText(),
+                btcAddressValidator,
+                formatter);
+        inputError.ifPresent(error -> new Popup().warning(error).show());
+        return inputError.isEmpty();
+    }
+
+    // The fee estimation fails on invalid inputs with an error that does not tell the user what to fix
+    static Optional<String> getInputError(Coin totalAvailableAmountOfSelectedItems,
+                                          Coin amount,
+                                          String withdrawToAddress,
+                                          BtcAddressValidator btcAddressValidator,
+                                          CoinFormatter formatter) {
         if (!totalAvailableAmountOfSelectedItems.isPositive()) {
-            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
-            return false;
+            return Optional.of(Res.get("funds.withdrawal.warn.noSourceAddressSelected"));
         }
 
         // The receiver gets at most the entered amount
-        if (!Restrictions.isAboveDust(amountAsCoin)) {
-            new Popup().warning(Res.get("validation.amountBelowDust",
-                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput()))).show();
-            return false;
+        if (!Restrictions.isAboveDust(amount)) {
+            return Optional.of(Res.get("validation.amountBelowDust",
+                    formatter.formatCoinWithCode(Restrictions.getMinNonDustOutput())));
         }
 
-        if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
-            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
-            return false;
+        if (!btcAddressValidator.validate(withdrawToAddress).isValid) {
+            return Optional.of(Res.get("validation.btc.invalidAddress"));
         }
 
-        return true;
+        return Optional.empty();
     }
 
     private boolean isAmountAvailable(Coin sendersAmount) {
