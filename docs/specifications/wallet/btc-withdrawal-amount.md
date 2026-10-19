@@ -38,6 +38,12 @@ below 546 satoshi to the fee and notes that in the confirmation. The desktop tak
 amount and the fee from the estimated transaction, so the confirmation shows what is sent. With the
 fee included, the sender then spends the entered amount plus such a remainder.
 
+With the fee excluded, the selected inputs can exceed the amount plus the fee of a transaction with a
+change output by less than bitcoinj's change limit. The fee of a transaction without a change output
+would then leave a change output that this fee does not pay for. The withdrawal is a transaction
+without a change output, and its fee is the rest of the inputs, more than the chosen rate. A
+transaction without a change output whose fee pays at least the chosen rate ends the estimation.
+
 Known deviation: the API adds a remainder of the inputs below 546 satoshi to the fee without adding
 it to the amount, whether bitcoinj absorbed it or kept it as a change output. The receiver then gets
 the remainder less. An absorbed remainder is paid twice in the fee, and a kept change output is
@@ -56,9 +62,3 @@ below the dust limit is reported as lower than the fee and the dust limit.
 ## Not covered
 
 - The withdraw button is not disabled for invalid inputs. The checks run when it is pressed.
-- With the fee excluded, if the selected inputs exceed the amount plus the fee by less than
-  bitcoinj's change limit, the estimation does not settle on a fee: the fee without a change output
-  leaves a change output, and the fee of a transaction with a change output leaves the remainder in
-  the fee. After ten rounds the estimation uses the transaction of its last round, which has no
-  change output, so the user pays the remainder plus the fee of a change output more than needed.
-  The confirmation shows that fee.

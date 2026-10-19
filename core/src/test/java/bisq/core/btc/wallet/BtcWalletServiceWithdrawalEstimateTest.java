@@ -160,6 +160,22 @@ class BtcWalletServiceWithdrawalEstimateTest {
         assertSent(send(estimate), 42_950, 7050, 2);
     }
 
+    // With the fee for a change output, the 7250 satoshi left of the inputs leave 200 satoshi of change, below
+    // bitcoinj's change limit. The fee for a transaction without a change output would leave a change output that
+    // this fee does not pay for, so the transaction without a change output and with the whole remainder in the fee
+    // is the result.
+    @Test
+    void withTheFeeExcludedARemainderThatCannotPayForAChangeOutputEndsTheEstimation() throws Exception {
+        fund(17_250);
+
+        WithdrawalEstimate estimate = estimate(Coin.valueOf(10_000), true);
+
+        assertAmounts(estimate, 10_000, 7250, 17_250);
+        assertEquals(1, estimate.getTransaction().getOutputs().size());
+        assertEquals(2, wallet.completedTxs);
+        assertSent(send(estimate), 10_000, 7250, 1);
+    }
+
     // The desktop and the API pass a rate that can differ from the rate of the preferences
     @Test
     void theEstimateIsCheckedWithTheRateItWasBuiltWith() throws Exception {

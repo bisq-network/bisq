@@ -1147,14 +1147,26 @@ public class BtcWalletService extends WalletService {
     }
 
     private boolean feeEstimationNotSatisfied(int counter, Transaction tx, Coin txFeeForWithdrawalPerVbyte) {
-        return feeEstimationNotSatisfied(counter, tx.getFee().value, tx.getVsize(), txFeeForWithdrawalPerVbyte);
+        // The transactions of the estimations have one output to the receiver and maybe a change output
+        boolean hasChangeOutput = tx.getOutputs().size() > 1;
+        return feeEstimationNotSatisfied(counter,
+                tx.getFee().value,
+                tx.getVsize(),
+                hasChangeOutput,
+                txFeeForWithdrawalPerVbyte);
     }
 
-    private boolean feeEstimationNotSatisfied(int counter, long txFee, long txVsize, Coin txFeeForWithdrawalPerVbyte) {
+    private boolean feeEstimationNotSatisfied(int counter,
+                                              long txFee,
+                                              long txVsize,
+                                              boolean hasChangeOutput,
+                                              Coin txFeeForWithdrawalPerVbyte) {
         long targetFee = txFeeForWithdrawalPerVbyte.multiply(txVsize).value;
         long higherThanTargetFee = txFee - targetFee;
+        // Without a change output, a fee above the target is a remainder of the inputs that cannot be returned. With
+        // a lower fee the remainder would become a change output that the lower fee does not pay for.
         return counter < 10 &&
-                (txFee < targetFee || higherThanTargetFee > 1000);
+                (txFee < targetFee || (hasChangeOutput && higherThanTargetFee > 1000));
     }
 
     public int getEstimatedFeeTxVsize(List<Coin> outputValues, Coin txFee)
