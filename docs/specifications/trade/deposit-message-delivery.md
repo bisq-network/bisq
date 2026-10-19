@@ -34,6 +34,9 @@ A negative acknowledgement does not count as delivery; the seller keeps sending 
 After a restart, a seller whose deposit transaction is not published yet sends the message again if
 it was not acknowledged, and then evaluates the publication. This applies to fiat and crypto trades.
 
+A seller who moves the trade to the failed trades stops sending the message, and an acknowledgement
+that arrives then publishes nothing, see [`failed-trade-protocol.md`](failed-trade-protocol.md).
+
 ## Compatibility
 
 No message changes. Buyers since v1.4.0 acknowledge the message after processing it and acknowledge
@@ -49,7 +52,3 @@ before.
   start without waiting for an acknowledgement.
 - A buyer with a modified client can publish the deposit transaction it received; the seller's gate
   does not prevent that.
-- A seller can move a trade to failed trades while the message is still sent again, for example
-  after the protocol timeout set an error because the buyer's payment account arrived late. Moving
-  the trade does not stop the sending, so an acknowledgement that arrives then still publishes the
-  deposit transaction of the failed trade. This applies to fiat trades as well.
