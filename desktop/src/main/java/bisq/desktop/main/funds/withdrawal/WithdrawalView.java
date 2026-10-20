@@ -67,6 +67,7 @@ import org.bitcoinj.wallet.Wallet;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 
 import org.apache.commons.lang3.StringUtils;
@@ -612,6 +613,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     // The fee estimation fails on invalid inputs with an error that does not tell the user what to fix
+    @VisibleForTesting
     static Optional<String> getInputError(Coin totalAvailableAmountOfSelectedItems,
                                           Coin amount,
                                           String withdrawToAddress,
