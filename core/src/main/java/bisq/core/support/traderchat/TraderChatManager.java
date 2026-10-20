@@ -158,6 +158,8 @@ public class TraderChatManager extends SupportManager {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
             if (message instanceof ChatMessage chatMessage) {
+                // Only this node adds system messages to a trade chat, so a received one is a message of the peer
+                chatMessage.setSystemMessage(false);
                 onChatMessage(chatMessage, senderSignaturePubKey);
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);

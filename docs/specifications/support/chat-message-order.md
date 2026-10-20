@@ -63,9 +63,11 @@ of a message is the side of its author: the client of the chat, which is the tak
 chat and the trader in a dispute chat, or the other side. The copy of a dispute chat to the
 clipboard and the text export of the disputes of an agent name the author by the same rule.
 
-A system message is shown in the style of a system message, also one that the node received, as
-some come from the peer, for example the message of the agent in the dispute that it sends to the
-other trader.
+A system message is shown in the style of a system message. In a dispute chat a system message can
+come from the peer, for example the message of the agent in the dispute that it sends to the other
+trader. In the trader chat only the node itself adds system messages, so a message that the node
+receives in the trader chat is a message of the peer and never a system message, whatever the peer
+put into it.
 
 ## Compatibility
 
@@ -80,8 +82,9 @@ No hash or signature covers the field. The signature of a dispute summary covers
 message, not its stored form.
 
 A message stored by an older version has no receive time, so its sender decides its author, as
-before. The format of messages and of stored data does not change. The node only stops trusting the
-sender of a received message.
+before. A message that an older version received as a system message in the trader chat stays one.
+The format of messages and of stored data does not change. The node only stops trusting the sender
+of a received message and, in the trader chat, its system flag.
 
 ## Not covered
 
@@ -95,8 +98,9 @@ sender of a received message.
   when the node is ready again. A message that arrived directly and still waits when the node stops
   is lost, as the sender saw it arrive. Reacting to the readiness, as the dispute chats do, would
   remove most of this.
-- A received system message is shown as a system message, as some come from the peer. Either side
-  can therefore send a message that the other side's chat shows as a system message.
+- A dispute chat shows a received system message as a system message, as the agent and the trader
+  both send some. Either side can therefore send a message that the other side's chat shows as a
+  system message.
 - The counters of unread messages, which in a dispute also decide whether it is shown as open and
   whether a closed dispute is reopened at the start, and the agent's check of the health of a
   dispute still decide by the sender and the displayed flag that the peer put into a message. A peer
