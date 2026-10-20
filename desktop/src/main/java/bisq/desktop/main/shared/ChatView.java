@@ -314,8 +314,7 @@ public class ChatView extends AnchorPane {
                             AnchorPane.setTopAnchor(messageLabel, 25d);
                             AnchorPane.setTopAnchor(copyIcon, 25d);
 
-                            boolean senderIsTrader = message.isSenderIsTrader();
-                            boolean isMyMsg = supportSession.isClient() == senderIsTrader;
+                            boolean isMyMsg = !ChatMessageOrder.isFromPeer(message, supportSession.isClient());
 
                             arrow.setVisible(!message.isSystemMessage());
                             arrow.setManaged(!message.isSystemMessage());
@@ -374,7 +373,7 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setRightAnchor(messageLabel, msgLabelPaddingRight);
                                 AnchorPane.setRightAnchor(copyIcon, padding);
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
-                            } else if (senderIsTrader) {
+                            } else if (ChatMessageOrder.isFromClient(message, supportSession.isClient())) {
                                 AnchorPane.setLeftAnchor(headerLabel, padding + arrowWidth);
                                 AnchorPane.setLeftAnchor(bg, border + arrowWidth);
                                 AnchorPane.setRightAnchor(bg, border);
@@ -493,7 +492,7 @@ public class ChatView extends AnchorPane {
             ChatMessageOrder.inDisplayOrder(chatMessages, session.isClient()).forEach(i -> {
                 String metaData = DisplayUtils.formatDateTime(new Date(ChatMessageOrder.getDisplayDate(i)));
                 metaData = metaData + (i.isSystemMessage() ? " (System message)" :
-                        (i.isSenderIsTrader() ? " (from Trader)" : " (from Agent)"));
+                        (ChatMessageOrder.isFromClient(i, session.isClient()) ? " (from Trader)" : " (from Agent)"));
                 stringBuilder.append(metaData).append("\n").append(i.getMessage()).append("\n\n");
             });
             Utilities.copyToClipboard(stringBuilder.toString());

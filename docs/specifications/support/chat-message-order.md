@@ -3,7 +3,8 @@
 ## Scope
 
 This specification defines the order and the times in which the Bisq v1 desktop shows the messages
-of the trader chat and of the dispute chat, on the side of a trader and of a dispute agent.
+of the trader chat and of the dispute chat, and which of them it shows as messages of the peer, on
+the side of a trader and of a dispute agent.
 
 ## Stored order
 
@@ -52,6 +53,20 @@ stored.
 
 The stored list keeps its order. Only the display is ordered.
 
+## Author
+
+A message of the peer, as defined above, is shown as a message of the peer: in the style of the
+peer, on the side of the peer and with the label "Received" and the name of the peer. Every other
+message that is not a system message is shown as an own message, with the label "Sent". A received
+message is therefore never shown as an own message, whatever sender the peer put into it. The side
+of a message is the side of its author: the client of the chat, which is the taker in the trader
+chat and the trader in a dispute chat, or the other side. The copy of a dispute chat to the
+clipboard and the text export of the disputes of an agent name the author by the same rule.
+
+A system message is shown in the style of a system message, also one that the node received, as
+some come from the peer, for example the message of the agent in the dispute that it sends to the
+other trader.
+
 ## Compatibility
 
 The receive time is a new field of the chat message (field 17), stored with the trade or the
@@ -63,6 +78,10 @@ sends, as the other local fields of the message are, for example when an agent s
 the opener again. A receiver always replaces it, and older versions ignore it in a received message.
 No hash or signature covers the field. The signature of a dispute summary covers the text of a chat
 message, not its stored form.
+
+A message stored by an older version has no receive time, so its sender decides its author, as
+before. The format of messages and of stored data does not change. The node only stops trusting the
+sender of a received message.
 
 ## Not covered
 
@@ -76,3 +95,9 @@ message, not its stored form.
   when the node is ready again. A message that arrived directly and still waits when the node stops
   is lost, as the sender saw it arrive. Reacting to the readiness, as the dispute chats do, would
   remove most of this.
+- A received system message is shown as a system message, as some come from the peer. Either side
+  can therefore send a message that the other side's chat shows as a system message.
+- The counters of unread messages, which in a dispute also decide whether it is shown as open and
+  whether a closed dispute is reopened at the start, and the agent's check of the health of a
+  dispute still decide by the sender and the displayed flag that the peer put into a message. A peer
+  can change only how its own messages count.

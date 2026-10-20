@@ -23,7 +23,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * The order in which a chat shows its messages and the time it shows for each.
+ * The order in which a chat shows its messages, the time it shows for each and whether it shows a message as one of
+ * the peer.
  * <p>
  * The stored list of a chat is in the order in which this node added the messages: own messages when they were
  * written, received messages when they were processed. That order is kept, so no clock of either side can move a
@@ -32,7 +33,8 @@ import java.util.List;
  * of their sender's dates, because they can arrive together or out of order, for example from the mailbox after the
  * node was offline.
  * <p>
- * A received message shows the time it was received, other messages show their date.
+ * A received message shows the time it was received, other messages show their date. A received message is always
+ * shown as a message of the peer, whatever sender the peer put into it.
  */
 public final class ChatMessageOrder {
     private ChatMessageOrder() {
@@ -68,11 +70,29 @@ public final class ChatMessageOrder {
         fromPeer.clear();
     }
 
-    // A message stored by an older version has no receive time, so its sender tells. A local system message, such as
-    // the trade chat rules, may carry either sender flag and is never counted as a message of the peer.
-    private static boolean isFromPeer(ChatMessage chatMessage, boolean isClient) {
+    /**
+     * Whether the message is one of the peer. A received message always is. A message stored by an older version has
+     * no receive time, so its sender tells. A local system message, such as the trade chat rules, may carry either
+     * sender flag and is never counted as a message of the peer.
+     *
+     * @param isClient true on the side of the client of the chat,
+     *                 see {@link bisq.core.support.SupportSession#isClient()}
+     */
+    public static boolean isFromPeer(ChatMessage chatMessage, boolean isClient) {
         return isReceived(chatMessage) ||
                 (!chatMessage.isSystemMessage() && chatMessage.isSenderIsTrader() != isClient);
+    }
+
+    /**
+     * Whether the message is one of the client of the chat: the taker in the trade chat, the trader in a dispute chat.
+     * A received message is one of the peer. A message without a receive time, also a system message, tells by its
+     * sender flag.
+     *
+     * @param isClient true on the side of the client of the chat,
+     *                 see {@link bisq.core.support.SupportSession#isClient()}
+     */
+    public static boolean isFromClient(ChatMessage chatMessage, boolean isClient) {
+        return isReceived(chatMessage) ? !isClient : chatMessage.isSenderIsTrader();
     }
 
     private static boolean isReceived(ChatMessage chatMessage) {

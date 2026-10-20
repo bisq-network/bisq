@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // The lists are given in the stored order: own messages when they were written, received ones when they were received.
 // Unless a test says otherwise, we are the taker in a trade chat, so our own messages have senderIsTrader set.
@@ -228,8 +230,76 @@ class ChatMessageOrderTest {
         assertEquals(NOW, ChatMessageOrder.getDisplayDate(question));
     }
 
-    private static void assertOrder(List<ChatMessage> stored, ChatMessage... expected) {
-        assertOrder(TAKER, stored, expected);
+    // The chat shows a message as own or of the peer, and on the side of the client or of the other side, by the same
+    // rule as the order
+    @Test
+    void onTheSideOfTheTakerItsOwnMessagesAreOfTheClient() {
+        ChatMessage question = own("question", NOW);
+        ChatMessage answer = received("answer", NOW, NOW);
+
+        assertFalse(ChatMessageOrder.isFromPeer(question, TAKER));
+        assertTrue(ChatMessageOrder.isFromClient(question, TAKER));
+        assertTrue(ChatMessageOrder.isFromPeer(answer, TAKER));
+        assertFalse(ChatMessageOrder.isFromClient(answer, TAKER));
+    }
+
+    @Test
+    void onTheSideOfTheMakerTheMessagesOfTheTakerAreOfTheClient() {
+        ChatMessage question = message("question", !TAKER, NOW);
+        ChatMessage answer = message("answer", TAKER, NOW);
+        answer.setReceivedDate(NOW);
+
+        assertFalse(ChatMessageOrder.isFromPeer(question, !TAKER));
+        assertFalse(ChatMessageOrder.isFromClient(question, !TAKER));
+        assertTrue(ChatMessageOrder.isFromPeer(answer, !TAKER));
+        assertTrue(ChatMessageOrder.isFromClient(answer, !TAKER));
+    }
+
+    @Test
+    void aReceivedMessageThatClaimsToBeOwnIsShownAsAMessageOfThePeer() {
+        ChatMessage claimsToBeOwn = message("I have received your payment", TAKER, NOW);
+        claimsToBeOwn.setReceivedDate(NOW);
+
+        assertTrue(ChatMessageOrder.isFromPeer(claimsToBeOwn, TAKER));
+        assertFalse(ChatMessageOrder.isFromClient(claimsToBeOwn, TAKER));
+    }
+
+    // In the text export of the disputes, the message is named as one of the trader
+    @Test
+    void onTheSideOfTheAgentAMessageOfTheTraderThatClaimsToBeTheAgentsIsOfTheTrader() {
+        ChatMessage claimsToBeTheAgents = message("claims to be the agent's", AGENT, NOW);
+        claimsToBeTheAgents.setReceivedDate(NOW);
+
+        assertTrue(ChatMessageOrder.isFromPeer(claimsToBeTheAgents, AGENT));
+        assertTrue(ChatMessageOrder.isFromClient(claimsToBeTheAgents, AGENT));
+    }
+
+    @Test
+    void aMessageStoredByAnOlderVersionIsShownByItsSender() {
+        ChatMessage question = own("question", NOW);
+        ChatMessage answer = receivedByAnOlderVersion("answer", NOW);
+
+        assertFalse(ChatMessageOrder.isFromPeer(question, TAKER));
+        assertTrue(ChatMessageOrder.isFromPeer(answer, TAKER));
+        assertFalse(ChatMessageOrder.isFromClient(answer, TAKER));
+    }
+
+    // The trader's message about a change of the disputed trade, stored by an older version on the side of the agent
+    @Test
+    void aSystemMessageWithoutAReceiveTimeIsOfTheClientByItsSender() {
+        ChatMessage tradeUpdate = message("trade update", !AGENT, NOW);
+        tradeUpdate.setSystemMessage(true);
+        ChatMessage priceInfo = message("price info", AGENT, NOW);
+        priceInfo.setSystemMessage(true);
+
+        assertTrue(ChatMessageOrder.isFromClient(tradeUpdate, AGENT));
+        assertFalse(ChatMessageOrder.isFromClient(priceInfo, AGENT));
+    }
+
+    @Test
+    void aLocalSystemMessageIsNotOfThePeer() {
+        assertFalse(ChatMessageOrder.isFromPeer(rules(NOW), TAKER));
+        assertFalse(ChatMessageOrder.isFromPeer(rules(NOW), !TAKER));
     }
 
     // The peer sets the sender flag. A received message that claims to be an own message is a message of the peer:
@@ -242,6 +312,10 @@ class ChatMessageOrderTest {
         claimsToBeOwn.setReceivedDate(NOW + MINUTE + 1000);
 
         assertOrder(List.of(question, answer, claimsToBeOwn), question, claimsToBeOwn, answer);
+    }
+
+    private static void assertOrder(List<ChatMessage> stored, ChatMessage... expected) {
+        assertOrder(TAKER, stored, expected);
     }
 
     private static void assertOrder(boolean isClient, List<ChatMessage> stored, ChatMessage... expected) {
