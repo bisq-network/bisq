@@ -24,6 +24,7 @@ import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -34,6 +35,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublished
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerVerifyBuyerPaymentAccount;
 
+import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class SellerProtocol extends DisputeProtocol {
     enum SellerEvent implements FluentProtocol.Event {
         STARTUP,
+        DEPOSIT_MESSAGE_ACKNOWLEDGED,
         PAYMENT_RECEIVED
     }
 
@@ -56,8 +59,24 @@ public abstract class SellerProtocol extends DisputeProtocol {
     protected void onInitialized() {
         super.onInitialized();
         // Fiat and crypto deposits both wait for the buyer's ACK of the DepositTxAndDelayedPayoutTxMessage
+        resumeDepositPublication(SellerEvent.STARTUP);
+    }
+
+    @Override
+    protected void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
+        super.onAckMessage(ackMessage, peer);
+        // The task that sends the deposit message marks it delivered on this ACK. If it is still not marked, the task
+        // gave up before, and the ACK resumes the trade as a restart does.
+        if (ackMessage.isSuccess() &&
+                ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName()) &&
+                !processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()) {
+            resumeDepositPublication(SellerEvent.DEPOSIT_MESSAGE_ACKNOWLEDGED);
+        }
+    }
+
+    private void resumeDepositPublication(SellerEvent event) {
         given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
-                .with(SellerEvent.STARTUP)
+                .with(event)
                 .preCondition(trade.getOffer() != null &&
                         processModel.getFinalizedDepositTx() != null &&
                         trade.getDelayedPayoutTxBytes() != null))
@@ -96,9 +115,10 @@ public abstract class SellerProtocol extends DisputeProtocol {
     }
 
     protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
-        // Only fiat publication waits for the validated buyer account. A crypto deposit is published by the
-        // delayed-payout task runner once the buyer has acknowledged the deposit message, so adding the publisher
-        // here could broadcast the same transaction a second time while the first broadcast is still pending.
+        // Only fiat publication waits for the validated buyer account. A crypto deposit is published once the buyer
+        // has acknowledged the deposit message, by the delayed-payout task runner, at a restart or on a late ACK, so
+        // adding the publisher here could broadcast the same transaction a second time while the first broadcast is
+        // still pending.
         boolean publishDepositAfterValidation = trade.getOffer() != null &&
                 trade.getOffer().isFiatOffer() &&
                 !trade.isDepositPublished() &&

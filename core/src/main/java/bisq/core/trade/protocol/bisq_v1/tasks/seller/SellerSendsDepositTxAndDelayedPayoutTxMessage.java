@@ -196,8 +196,8 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
             failed("We never received an ACK message when sending the msg to the peer. " +
-                    "We fail here and do not publish the deposit tx. " +
-                    "A restart of the application sends the message again.");
+                    "We do not publish the deposit tx before the peer acknowledges the message, " +
+                    "and a restart of the application sends the message again.");
             return;
         }
 

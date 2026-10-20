@@ -25,9 +25,9 @@ after 30 seconds, as the buyer acknowledges only after sending its own payment a
 seller; otherwise, at the first attempt, after 4 seconds. Each interval doubles, so after an arrival
 it stays at 30 seconds or more. The buyer acknowledges a repeated message again, and processes it
 again only if it has not stored its data yet. After seven repetitions without acknowledgement the
-seller stops with an error and does not publish the deposit transaction. The buyer's trade then
-waits for a deposit transaction that the seller publishes only after a restart and a new
-acknowledgement.
+seller stops sending with an error and does not publish the deposit transaction. An acknowledgement
+that arrives later resumes the trade as a restart does: the seller counts the message as delivered
+and evaluates the publication. A restart sends the message again.
 
 A negative acknowledgement does not count as delivery; the seller keeps sending the message again.
 
@@ -47,8 +47,6 @@ before.
 
 ## Not covered
 
-- An acknowledgement that arrives after the seller stopped with an error is not applied; a restart
-  of the seller sends the message again.
 - A trade that an older version left with the message arrived but the deposit transaction not
   published counts the message as delivered, as the older version did, and is published at the next
   start without waiting for an acknowledgement.

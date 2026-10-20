@@ -197,7 +197,8 @@ class SellerSendsDepositTxAndDelayedPayoutTxMessageTest {
 
         assertNotNull(f.errorMessage.get());
         assertFalse(f.completed.get());
-        // The failed task no longer listens: a late ACK is not applied
+        // The failed task no longer listens. A late ACK resumes the trade through the protocol, see
+        // SellerProtocolMessageHandlingTest.
         f.messageState.set(MessageState.ACKNOWLEDGED);
         assertFalse(f.delivered.get());
         verify(f.tradeWalletService, never()).broadcastTx(any(Transaction.class), any(TxBroadcaster.Callback.class));

@@ -24,6 +24,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
@@ -35,6 +36,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatist
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerVerifyBuyerPaymentAccount;
 
+import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
@@ -129,6 +131,71 @@ class SellerProtocolMessageHandlingTest {
 
         assertEquals(List.of(SellerPublishesDepositTx.class,
                 SellerPublishesTradeStatistics.class), setup.protocol.startupTasks);
+    }
+
+    // Older versions stored the finalized deposit tx only for fiat trades
+    @Test
+    void startupResumesNothingWithoutAStoredDepositTx() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, false);
+        when(setup.processModel.getFinalizedDepositTx()).thenReturn(null);
+
+        setup.protocol.onInitialized();
+
+        assertEquals(List.of(), setup.protocol.startupTasks);
+    }
+
+    // The task that sends the deposit message gave up, and the buyer acknowledges the message later
+    @Test
+    void aLateAckOfTheDepositMessageResumesTheTradeAsARestartDoes() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, false);
+
+        setup.protocol.onAckMessage(ack(DepositTxAndDelayedPayoutTxMessage.class, true), null);
+
+        assertEquals(List.of(SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                SellerPublishesDepositTx.class,
+                SellerPublishesTradeStatistics.class), setup.protocol.startupTasks);
+    }
+
+    // The running task marked the message delivered on this ACK and continues itself
+    @Test
+    void anAckThatTheSendingTaskAppliedResumesNothing() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, true);
+
+        setup.protocol.onAckMessage(ack(DepositTxAndDelayedPayoutTxMessage.class, true), null);
+
+        assertEquals(List.of(), setup.protocol.startupTasks);
+    }
+
+    @Test
+    void aNackOrTheAckOfAnotherMessageResumesNothing() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, false);
+
+        setup.protocol.onAckMessage(ack(DepositTxAndDelayedPayoutTxMessage.class, false), null);
+        setup.protocol.onAckMessage(ack(CounterCurrencyTransferStartedMessage.class, true), null);
+
+        assertEquals(List.of(), setup.protocol.startupTasks);
+    }
+
+    @Test
+    void aLateAckAfterThePublicationResumesNothing() {
+        TestSetup setup = new TestSetup();
+        setup.startupInTakerFeePublished(false, false);
+        when(setup.trade.getTradePhase()).thenReturn(Trade.Phase.DEPOSIT_PUBLISHED);
+
+        setup.protocol.onAckMessage(ack(DepositTxAndDelayedPayoutTxMessage.class, true), null);
+
+        assertEquals(List.of(), setup.protocol.startupTasks);
+    }
+
+    private static AckMessage ack(Class<?> sourceMessageClass, boolean success) {
+        AckMessage ackMessage = mock(AckMessage.class);
+        when(ackMessage.getSourceMsgClassName()).thenReturn(sourceMessageClass.getSimpleName());
+        when(ackMessage.isSuccess()).thenReturn(success);
+        return ackMessage;
     }
 
     @Test
