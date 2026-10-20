@@ -1,9 +1,9 @@
-FROM azul/zulu-openjdk:11.0.20-11.66.15 as build
+FROM azul/zulu-openjdk:21.0.6-21.40 as build
 
 COPY '{{ ARCHIVE_PATH }}' /
 RUN tar xvf /seednode.tar
 
-FROM gcr.io/distroless/java11-debian11
+FROM gcr.io/distroless/java21-debian12
 COPY --from=build /seednode /seednode
 
 ENTRYPOINT ["java", "-classpath", "'{{ CLASS_PATH }}'", "'{{ MAIN_CLASS }}'"]
