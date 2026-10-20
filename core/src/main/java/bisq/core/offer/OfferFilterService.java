@@ -26,6 +26,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.common.app.Version;
+import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
 
@@ -56,12 +57,14 @@ public class OfferFilterService {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
     private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
-    // Makers whose last answer to one of our availability requests was USER_IGNORED, by node
-    // address, with the time of that answer. A maker's ignore list is private to the maker, so
-    // this answer is the only way to know that all offers of the maker are closed to us. Entries
-    // expire, so a maker who removed us from the list is asked again; an AVAILABLE answer
-    // removes the entry at once. The API reads it on its own threads.
-    private final Map<String, Long> makersIgnoringUs = new ConcurrentHashMap<>();
+    // Makers whose last answer to one of our availability requests was USER_IGNORED, by the key of
+    // their offers, with the time of that answer. Only the maker's node can publish offers with that
+    // key, and the answer counts only if it is signed with it, so an entry closes the offers of the
+    // node that answered. A maker's ignore list is private to the maker, so this answer is the only
+    // way to know that all offers of the maker are closed to us. Entries expire, so a maker who
+    // removed us from the list is asked again; an AVAILABLE answer removes the entry at once. The
+    // API reads it on its own threads.
+    private final Map<PubKeyRing, Long> makersIgnoringUs = new ConcurrentHashMap<>();
     public static final long MAKER_IGNORES_US_TTL_MS = TimeUnit.HOURS.toMillis(1);
 
     @Inject
@@ -126,9 +129,6 @@ public class OfferFilterService {
         if (isIgnored(offer)) {
             return Result.IS_IGNORED;
         }
-        if (isIgnoredByMaker(offer)) {
-            return Result.IS_IGNORED_BY_MAKER;
-        }
         if (isOfferBanned(offer)) {
             return Result.IS_OFFER_BANNED;
         }
@@ -143,6 +143,11 @@ public class OfferFilterService {
         }
         if (requireUpdateToNewVersion()) {
             return Result.REQUIRE_UPDATE_TO_NEW_VERSION;
+        }
+        // The reasons from the filter apply to every user and come first. The trade limits come after, as no
+        // other payment account helps while the maker ignores us.
+        if (isIgnoredByMaker(offer)) {
+            return Result.IS_IGNORED_BY_MAKER;
         }
         if (isInsufficientCounterpartyTradeLimit(offer)) {
             return Result.IS_INSUFFICIENT_COUNTERPARTY_TRADE_LIMIT;
@@ -169,12 +174,14 @@ public class OfferFilterService {
     }
 
     public boolean isIgnoredByMaker(Offer offer) {
-        String maker = offer.getMakerNodeAddress().getFullAddress();
+        PubKeyRing maker = offer.getPubKeyRing();
         Long since = makersIgnoringUs.get(maker);
         if (since == null)
             return false;
         if (now() - since > MAKER_IGNORES_US_TTL_MS) {
-            makersIgnoringUs.remove(maker, since);
+            if (makersIgnoringUs.remove(maker, since))
+                log.info("Offers of maker {} are open to us again, as their refusal is older than {} minutes",
+                        offer.getMakerNodeAddress(), TimeUnit.MILLISECONDS.toMinutes(MAKER_IGNORES_US_TTL_MS));
             return false;
         }
         return true;
@@ -185,11 +192,16 @@ public class OfferFilterService {
     public void onAvailabilityAnswer(Offer offer, @Nullable AvailabilityResult result) {
         if (result == null)
             return;
-        String maker = offer.getMakerNodeAddress().getFullAddress();
-        if (result == AvailabilityResult.USER_IGNORED)
+        PubKeyRing maker = offer.getPubKeyRing();
+        if (result == AvailabilityResult.USER_IGNORED) {
             makersIgnoringUs.put(maker, now());
-        else if (result == AvailabilityResult.AVAILABLE)
-            makersIgnoringUs.remove(maker);
+            log.info("Maker {} has us on their ignore list (offer {}). Their offers are closed to us for {} minutes",
+                    offer.getMakerNodeAddress(), offer.getId(),
+                    TimeUnit.MILLISECONDS.toMinutes(MAKER_IGNORES_US_TTL_MS));
+        } else if (result == AvailabilityResult.AVAILABLE && makersIgnoringUs.remove(maker) != null) {
+            log.info("Maker {} answered available (offer {}). Their offers are open to us again",
+                    offer.getMakerNodeAddress(), offer.getId());
+        }
     }
 
     @VisibleForTesting
