@@ -74,6 +74,17 @@ class SellerPublishesDepositTxTest {
         verify(processModel, never()).getTradeWalletService();
     }
 
+    // Every task set runs the task that waits for the ACK first, the publication checks the delivery itself as well
+    @Test
+    void cryptoDepositIsNotBroadcastBeforeDepositMessageDelivery() {
+        ProcessModel processModel = processModel(false, false);
+        TaskResult result = runTask(trade(processModel, false));
+
+        assertTrue(result.completed());
+        assertNull(result.errorMessage());
+        verify(processModel, never()).getTradeWalletService();
+    }
+
     @Test
     void fiatDepositIsBroadcastWhenBothGatesComplete() {
         ProcessModel processModel = processModel(true, true);
