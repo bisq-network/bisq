@@ -16,11 +16,19 @@ show.
 
 ## Receive time
 
-The node records the local time at which it receives a message from the peer, on every path such a
-message arrives: as a chat message directly or from the mailbox, as the message of a dispute result,
-and as the messages of a dispute that the opener sent to the agent or that the agent sent to the
-other trader. A receive time that the peer put into the message is replaced. Own messages and
-messages that the node creates itself, such as system messages, have no receive time.
+The node records the local time at which it processes and stores a message from the peer, on every
+path such a message arrives: as a chat message directly or from the mailbox, as the message of a
+dispute result, and as the messages of a dispute that the opener sent to the agent or that the agent
+sent to the other trader. A receive time that the peer put into the message is replaced. Own
+messages and messages that the node creates itself, such as system messages, have no receive time.
+
+The node processes a received message only when it is ready: its services are initialized, the P2P
+network is bootstrapped, the wallet download is complete and it has enough Bitcoin peers to
+broadcast a transaction. The last condition can become false at any time. A message that arrives
+meanwhile waits and gets the time at which it is processed: in a dispute chat when the node is ready
+again, in the trader chat when the next message for the node arrives, or, for a message from the
+mailbox, at the next start. The order is not affected, as the message is shown only when it is
+stored.
 
 ## Order and times
 
@@ -46,8 +54,11 @@ The receive time is a new field of the chat message (field 17), stored with the 
 dispute. Older versions ignore it and drop it when they store the trade or the dispute again. A
 message stored by an older version, also after a downgrade, has no receive time and shows its date,
 as before. Older versions stored the chat in the same order, so a chat stored by an older version is
-shown by the same rule instead of by date. No hash or signature covers the field. The signature of a
-dispute summary covers the text of a chat message, not its stored form.
+shown by the same rule instead of by date. The field is also part of a chat message that a node
+sends, as the other local fields of the message are, for example when an agent sends the dispute of
+the opener again. A receiver always replaces it, and older versions ignore it in a received message.
+No hash or signature covers the field. The signature of a dispute summary covers the text of a chat
+message, not its stored form.
 
 ## Not covered
 
@@ -56,6 +67,8 @@ dispute summary covers the text of a chat message, not its stored form.
   that the peer wrote later. Its receive time shows when it arrived.
 - Within messages of the peer that follow each other, the peer's dates decide the order. A peer that
   changes its clock or chooses its dates can change the order of these messages, but cannot move a
-  message across an own message.
-- A message that arrives while the node is still starting gets the time at which the node processes
-  it.
+  message across an own message. The receive times shown for these messages can then go backwards.
+- The trader chat processes a waiting message only when the next message for the node arrives, not
+  when the node is ready again. A message that arrived directly and still waits when the node stops
+  is lost, as the sender saw it arrive. Reacting to the readiness, as the dispute chats do, would
+  remove most of this.
