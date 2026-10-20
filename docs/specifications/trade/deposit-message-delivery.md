@@ -31,8 +31,10 @@ acknowledgement.
 
 A negative acknowledgement does not count as delivery; the seller keeps sending the message again.
 
-After a restart, a seller whose deposit transaction is not published yet sends the message again if
-it was not acknowledged, and then evaluates the publication. This applies to fiat and crypto trades.
+The seller stores its finalized deposit transaction before it sends the message, for fiat and crypto
+trades. After a restart, a seller whose deposit transaction is not published yet restores that
+transaction, sends the message again if it was not acknowledged, and then evaluates the
+publication.
 
 A seller who moves the trade to the failed trades stops sending the message, and an acknowledgement
 that arrives then publishes nothing, see [`failed-trade-protocol.md`](failed-trade-protocol.md).
@@ -50,5 +52,7 @@ before.
 - A trade that an older version left with the message arrived but the deposit transaction not
   published counts the message as delivered, as the older version did, and is published at the next
   start without waiting for an acknowledgement.
+- Older versions stored the finalized deposit transaction only for fiat trades. A crypto trade that
+  an older version left before the publication is not resumed at a restart, as before.
 - A buyer with a modified client can publish the deposit transaction it received; the seller's gate
   does not prevent that.
