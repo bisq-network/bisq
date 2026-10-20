@@ -64,6 +64,7 @@ public class SpecBuilder {
 
         stringBuilder.append("\n");
         stringBuilder.append("%files\n");
+        stringBuilder.append("%defattr(-,root,root,-)\n");
         stringBuilder.append("/opt/bisq\n");
         stringBuilder.append("\n");
         stringBuilder.append("%changelog\n");
@@ -76,6 +77,7 @@ public class SpecBuilder {
     private Stream<String> buildInstallCmdsForDirChildren(Path dirPath, String permissionMode) throws IOException {
         @SuppressWarnings("resource") Stream<Path> childrenStream = Files.list(dirPath);
         return childrenStream.filter(Files::isRegularFile)
+                .sorted()
                 .map(installDistDir::relativize)
                 .map(path -> {
                     // "install -m 0755 bin/desktop %{buildroot}/opt/bisq/bin/desktop\n"
