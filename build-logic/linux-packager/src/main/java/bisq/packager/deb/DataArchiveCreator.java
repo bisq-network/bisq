@@ -42,7 +42,7 @@ public class DataArchiveCreator {
                 .create();
     }
 
-    static long getSourceDateEpoch() {
+    public static long getSourceDateEpoch() {
         String sourceDateEpoch = System.getenv("SOURCE_DATE_EPOCH");
         if (sourceDateEpoch == null || sourceDateEpoch.trim().isEmpty()) {
             throw new IllegalStateException("SOURCE_DATE_EPOCH environment variable is not set.");

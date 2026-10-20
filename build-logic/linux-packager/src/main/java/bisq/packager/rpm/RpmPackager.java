@@ -13,10 +13,12 @@ import java.util.concurrent.TimeUnit;
 
 
 import bisq.packager.Packager;
+import bisq.packager.deb.DataArchiveCreator;
 
 public class RpmPackager implements Packager {
     private static final String SOURCES_DIR_NAME = "SOURCES";
     private static final String SPECS_DIR_NAME = "SPECS";
+    private static final String SOURCE_DATE_EPOCH = "SOURCE_DATE_EPOCH";
 
     private final Path workingDirectory;
     private final Path tarballPath;
@@ -77,14 +79,25 @@ public class RpmPackager implements Packager {
         try {
             List<String> command = List.of("rpmbuild",
                     "--define", "_topdir " + workingDirectory.toAbsolutePath(),
-                    "-ba", specFile.getAbsolutePath());
+                    "--define", "_buildhost bisq-release-builder",
+                    "--define", "use_source_date_epoch_as_buildtime 1",
+                    "--define", "clamp_mtime_to_source_date_epoch 1",
+                    "--define", "source_date_epoch_from_changelog 0",
+                    "--define", "_binary_payload w9.gzdio",
+                    "--define", "_build_id_links none",
+                    "--define", "__os_install_post %{nil}",
+                    "-bb", specFile.getAbsolutePath());
+
             Path logFile = workingDirectory.resolve("log.txt");
 
-            Process process = new ProcessBuilder(command)
+            ProcessBuilder processBuilder = new ProcessBuilder(command)
                     .redirectErrorStream(true)
-                    .redirectOutput(logFile.toFile())
-                    .start();
+                    .redirectOutput(logFile.toFile());
 
+            long sourceDateEpoch = DataArchiveCreator.getSourceDateEpoch();
+            processBuilder.environment().put(SOURCE_DATE_EPOCH, String.valueOf(sourceDateEpoch));
+
+            Process process = processBuilder.start();
             boolean exited = process.waitFor(15, TimeUnit.MINUTES);
             if (!exited) {
                 throw new IllegalStateException("rpmbuild process still running after 15 minutes.");
