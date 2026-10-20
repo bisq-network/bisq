@@ -22,7 +22,9 @@ OPTIONS
         The destination BTC address for the send transaction.
 
 --amount
-		The amount of BTC to send.
+		The amount of BTC to send, including the transaction fee. The receiver gets the
+		amount minus the fee. A remainder of the wallet's coins that would be a change
+		output below the dust limit of 546 satoshis is paid to the fee on top.
 
 --tx-fee-rate
         An optional transaction fee rate (sats/byte) for the transaction.  The user is
