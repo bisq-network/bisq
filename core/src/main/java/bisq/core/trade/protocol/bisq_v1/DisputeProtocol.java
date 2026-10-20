@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMess
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
@@ -139,12 +140,15 @@ public class DisputeProtocol extends TradeProtocol {
 
     @Override
     protected void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
-        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
-        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
+        // We handle the ack for CounterCurrencyTransferStartedMessage, DepositTxAndDelayedPayoutTxMessage and
+        // ShareBuyerPaymentAccountMessage as we support automatic re-send of the msg in case it was not ACKed after a
+        // certain time
         if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
             processModel.setPaymentStartedAckMessage(ackMessage);
         } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
             processModel.setDepositTxSentAckMessage(ackMessage);
+        } else if (ackMessage.getSourceMsgClassName().equals(ShareBuyerPaymentAccountMessage.class.getSimpleName())) {
+            processModel.setShareBuyerPaymentAccountAckMessage(ackMessage);
         }
 
         if (ackMessage.isSuccess()) {

@@ -85,7 +85,7 @@ class BuyerSendsShareBuyerPaymentAccountMessageCancelTest {
         when(processModel.getMyNodeAddress()).thenReturn(new NodeAddress("buyer.onion", 9999));
         when(processModel.getPaymentAccountPayload(trade)).thenReturn(mock(PaymentAccountPayload.class));
         when(processModel.getTradeManager()).thenReturn(tradeManager);
-        when(processModel.getDepositTxMessageStateProperty()).thenReturn(messageState);
+        when(processModel.getShareBuyerPaymentAccountMessageStateProperty()).thenReturn(messageState);
         TradingPeer tradingPeer = new TradingPeer();
         tradingPeer.setPubKeyRing(new PubKeyRing(Sig.generateKeyPair().getPublic(),
                 Encryption.generateKeyPair().getPublic()));

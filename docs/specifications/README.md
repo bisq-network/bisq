@@ -78,6 +78,7 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`trade/altcoin-volume-precision.md`](trade/altcoin-volume-precision.md) | Rounding of altcoin trade volumes to the asset's chain precision, and the rejection of volumes that round to zero. |
 | [`trade/deposit-message-delivery.md`](trade/deposit-message-delivery.md) | When the seller counts the deposit transaction message as delivered to the buyer: on the buyer's acknowledgement, with repeated sending until then, before the deposit transaction is published. |
+| [`trade/buyer-payment-account-delivery.md`](trade/buyer-payment-account-delivery.md) | When the buyer counts its payment account message to the seller as delivered: on arrival or on the seller's acknowledgement, with repeated sending until then. |
 | [`trade/deposit-transaction-liveness.md`](trade/deposit-transaction-liveness.md) | The block-explorer evidence rules for classifying a deposit transaction as dead and for authorizing the move to failed trades. |
 | [`trade/failed-trade-protocol.md`](trade/failed-trade-protocol.md) | What the protocol of a trade stops when the trader moves the trade to the failed trades, and the new protocol of a trade that returns to the pending trades. |
 | [`trade/delayed-payout-receivers.md`](trade/delayed-payout-receivers.md) | Proposal authenticity, address-list versioning, and fail-closed receiver rules for Burning Man delayed payout transactions. |

@@ -7,6 +7,8 @@ transaction message (DepositTxAndDelayedPayoutTxMessage) as delivered to the buy
 gates the publication of the deposit transaction. It applies to fiat and crypto trades, whether the
 seller is maker or taker. The fiat-only prerequisite of a validated buyer account is defined in
 [`fiat-buyer-payment-account-validation.md`](fiat-buyer-payment-account-validation.md).
+The delivery of the payment account that the buyer sends before it acknowledges is defined in
+[`buyer-payment-account-delivery.md`](buyer-payment-account-delivery.md).
 
 ## Rules
 

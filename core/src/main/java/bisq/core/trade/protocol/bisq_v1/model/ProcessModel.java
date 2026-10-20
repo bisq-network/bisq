@@ -109,6 +109,11 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
+    // MessageState of the payment account that the buyer sends to the seller after the deposit message. It is not
+    // persisted, as the task that waits for the ACK does not run after a restart.
+    transient private final ObjectProperty<MessageState> shareBuyerPaymentAccountMessageStateProperty =
+            new SimpleObjectProperty<>(MessageState.UNDEFINED);
+
     // depositTx is not set for maker as buyer. A finalized seller deposit can be restored from
     // finalizedDepositTx while the publication is deferred.
     @Nullable
@@ -387,6 +392,12 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 MessageState.ACKNOWLEDGED :
                 MessageState.FAILED;
         setDepositTxMessageState(messageState);
+    }
+
+    public void setShareBuyerPaymentAccountAckMessage(AckMessage ackMessage) {
+        shareBuyerPaymentAccountMessageStateProperty.set(ackMessage.isSuccess() ?
+                MessageState.ACKNOWLEDGED :
+                MessageState.FAILED);
     }
 
     public void setDepositTxMessageState(MessageState messageState) {
