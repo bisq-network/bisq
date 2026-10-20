@@ -76,7 +76,7 @@ specification says so explicitly instead of describing the implementation as if 
 
 | Specification | Covers |
 |---|---|
-| [`support/chat-message-order.md`](support/chat-message-order.md) | The order, the times and the author with which the trader chat and the dispute chat show their messages: the stored order, the sender's order within consecutive messages of the peer, the local receive time of each received message, and that a received message is never shown as own and, in the trader chat, never as a system message. |
+| [`support/chat-message-order.md`](support/chat-message-order.md) | The order, the times and the author with which the trader chat and the dispute chat show their messages: the stored order, the sender's order within consecutive messages of the peer, the local receive time of each received message, that a received message is never shown as own and, in the trader chat, never as a system message, and which chat message the summary of an option trade may include. |
 
 ### `trade/`
 

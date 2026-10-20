@@ -69,6 +69,12 @@ trader. In the trader chat only the node itself adds system messages, so a messa
 receives in the trader chat is a message of the peer and never a system message, whatever the peer
 put into it.
 
+The summary that an agent signs for an option trade includes the second message of the dispute only
+if the agent's node added it as a system message: the mediator's price information, or at the refund
+agent the mediator's summary that the opener's request carries or a notice of the refund agent's
+node. A message received by this version is never included. The agent's node adds the mediator's
+summary from the opener's request only to a refund dispute.
+
 ## Compatibility
 
 The receive time is a new field of the chat message (field 17), stored with the trade or the
@@ -82,9 +88,12 @@ No hash or signature covers the field. The signature of a dispute summary covers
 message, not its stored form.
 
 A message stored by an older version has no receive time, so its sender decides its author, as
-before. A message that an older version received as a system message in the trader chat stays one.
-The format of messages and of stored data does not change. The node only stops trusting the sender
-of a received message and, in the trader chat, its system flag.
+before. A message that an older version received as a system message in the trader chat stays one,
+and in a dispute stored by an older version a received system message counts as one that the node
+added, so the summary of an option trade includes it as before. The format of messages and of stored
+data does not change. The node only stops trusting the sender of a received message, in the trader
+chat its system flag, and in the summary of an option trade the system flag of a received message,
+and it adds the mediator's summary from the opener's request only to a refund dispute.
 
 ## Not covered
 
@@ -101,6 +110,12 @@ of a received message and, in the trader chat, its system flag.
 - A dispute chat shows a received system message as a system message, as the agent and the trader
   both send some. Either side can therefore send a message that the other side's chat shows as a
   system message.
+- The refund agent's node shows the mediator's summary that the opener's request carries as a
+  system message of its own, and its summary for an option trade includes it, as before. The opener
+  can change that text.
+- The price information is included only when it is the second message. When the price feed had no
+  price while the dispute arrived, it is added later or not at all, and the summary of an option
+  trade does not include it.
 - The counters of unread messages, which in a dispute also decide whether it is shown as open and
   whether a closed dispute is reopened at the start, and the agent's check of the health of a
   dispute still decide by the sender and the displayed flag that the peer put into a message. A peer

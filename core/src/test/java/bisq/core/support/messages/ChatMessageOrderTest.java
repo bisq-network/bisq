@@ -302,6 +302,17 @@ class ChatMessageOrderTest {
         assertFalse(ChatMessageOrder.isFromPeer(rules(NOW), !TAKER));
     }
 
+    @Test
+    void aLocalSystemMessageIsOneThatTheNodeAdded() {
+        ChatMessage tradeUpdate = message("trade update", !AGENT, NOW);
+        tradeUpdate.setSystemMessage(true);
+        tradeUpdate.setReceivedDate(NOW);
+
+        assertTrue(ChatMessageOrder.isLocalSystemMessage(rules(NOW)));
+        assertFalse(ChatMessageOrder.isLocalSystemMessage(tradeUpdate));
+        assertFalse(ChatMessageOrder.isLocalSystemMessage(own("question", NOW)));
+    }
+
     // The peer sets the sender flag. A received message that claims to be an own message is a message of the peer:
     // it is ordered with the other messages of the peer and cannot move across an own message.
     @Test

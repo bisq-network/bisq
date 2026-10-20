@@ -95,6 +95,14 @@ public final class ChatMessageOrder {
         return isReceived(chatMessage) ? !isClient : chatMessage.isSenderIsTrader();
     }
 
+    /**
+     * Whether the message is a system message that this node added itself. A received system message is not one, also
+     * when it comes from the agent. A message stored by an older version has no receive time and counts as one.
+     */
+    public static boolean isLocalSystemMessage(ChatMessage chatMessage) {
+        return chatMessage.isSystemMessage() && !isReceived(chatMessage);
+    }
+
     private static boolean isReceived(ChatMessage chatMessage) {
         return chatMessage.getReceivedDate() > 0;
     }
