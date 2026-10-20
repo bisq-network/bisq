@@ -352,11 +352,16 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
-        if (!chatMessages.contains(chatMessage)) {
+        if (!hasChatMessage(chatMessage)) {
             chatMessages.add(chatMessage);
         } else {
             log.error("disputeDirectMessage already exists");
         }
+    }
+
+    // A copy of a message, received again or from the mailbox, is another object with the same uid
+    public boolean hasChatMessage(ChatMessage chatMessage) {
+        return chatMessages.stream().anyMatch(m -> m.getUid().equals(chatMessage.getUid()));
     }
 
     public boolean removeAllChatMessages() {

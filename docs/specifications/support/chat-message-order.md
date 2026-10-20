@@ -19,8 +19,11 @@ show.
 The node records the local time at which it processes and stores a message from the peer, on every
 path such a message arrives: as a chat message directly or from the mailbox, as the message of a
 dispute result, and as the messages of a dispute that the opener sent to the agent or that the agent
-sent to the other trader. A receive time that the peer put into the message is replaced. Own
-messages and messages that the node creates itself, such as system messages, have no receive time.
+sent to the other trader. A receive time that the peer put into the message is replaced. A copy of a
+message that the node has stored already, for example the same message directly and from the
+mailbox, is not stored again and does not change the receive time. A copy of a dispute result is
+only acknowledged and not applied again. Own messages and messages that the node creates itself,
+such as system messages, have no receive time.
 
 The node processes a received message only when it is ready: its services are initialized, the P2P
 network is bootstrapped, the wallet download is complete and it has enough Bitcoin peers to

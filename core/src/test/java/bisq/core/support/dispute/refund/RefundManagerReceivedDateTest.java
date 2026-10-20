@@ -41,12 +41,16 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.network.NetworkNode;
 
+import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.persistence.PersistenceManager;
+
+import java.security.PublicKey;
 
 import java.time.Instant;
 
@@ -55,6 +59,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -96,6 +102,54 @@ class RefundManagerReceivedDateTest {
         long receivedDate = chatMessage.getReceivedDate();
         assertTrue(receivedDate >= before && receivedDate <= System.currentTimeMillis(),
                 "receivedDate=" + receivedDate);
+    }
+
+    // The agent's node can send the result directly and store it in the mailbox as well, so a second copy arrives.
+    // The copy is not stored and not applied again.
+    @Test
+    void aSecondCopyOfTheResultIsNotStoredAgain() {
+        // The message version, which the application sets at startup, is needed for the proto
+        int baseCurrencyNetwork = Version.getBaseCurrencyNetwork();
+        Version.setBaseCryptoNetworkId(BaseCurrencyNetwork.BTC_REGTEST.ordinal());
+        try {
+            PubKeyRing agentPubKeyRing = pubKeyRing();
+            RefundDisputeListService disputeListService = refundDisputeListService();
+            Dispute dispute = dispute(agentPubKeyRing);
+            disputeListService.getDisputeList().add(dispute);
+            RefundManager manager = refundManager(tradeManager(agentPubKeyRing), disputeListService);
+            ChatMessage chatMessage = new ChatMessage(SupportType.REFUND,
+                    TRADE_ID,
+                    TRADER_ID,
+                    false,
+                    "result",
+                    PEER_NODE_ADDRESS);
+            ChatMessage copy = ChatMessage.fromProto(chatMessage.toProtoNetworkEnvelope().getChatMessage(),
+                    chatMessage.getMessageVersion());
+            PublicKey agentKey = agentPubKeyRing.getSignaturePubKey();
+            int numStoredMessages = dispute.getChatMessages().size();
+
+            manager.onDisputeResultMessage(resultMessage(chatMessage, SupportType.REFUND), agentKey);
+            long receivedDate = chatMessage.getReceivedDate();
+            DisputeResult firstResult = dispute.disputeResultProperty().get();
+            manager.onDisputeResultMessage(resultMessage(copy, SupportType.REFUND), agentKey);
+
+            assertEquals(numStoredMessages + 1, dispute.getChatMessages().size());
+            assertSame(chatMessage, dispute.getChatMessages().get(numStoredMessages));
+            assertEquals(receivedDate, chatMessage.getReceivedDate());
+            assertSame(firstResult, dispute.disputeResultProperty().get());
+        } finally {
+            Version.setBaseCryptoNetworkId(baseCurrencyNetwork);
+        }
+    }
+
+    private static DisputeResultMessage resultMessage(ChatMessage chatMessage, SupportType supportType) {
+        DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
+        disputeResult.setChatMessage(chatMessage);
+        return new DisputeResultMessage(disputeResult,
+                PEER_NODE_ADDRESS,
+                "dispute-result-uid",
+                supportType,
+                null);
     }
 
     private static RefundManager refundManager(TradeManager tradeManager,

@@ -38,6 +38,8 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 import bisq.network.p2p.network.NetworkNode;
 
+import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.KeyRing;
@@ -49,12 +51,16 @@ import bisq.common.persistence.PersistenceManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.security.PublicKey;
+
 import java.io.File;
 
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -137,6 +143,58 @@ class MediationManagerAuthTest {
         long receivedDate = chatMessage.getReceivedDate();
         assertTrue(receivedDate >= before && receivedDate <= System.currentTimeMillis(),
                 "receivedDate=" + receivedDate);
+    }
+
+    // The agent's node can send the result directly and store it in the mailbox as well, so a second copy arrives.
+    // The copy is not stored and not applied again.
+    @Test
+    void aSecondCopyOfTheResultIsNotStoredAgain() {
+        // The message version, which the application sets at startup, is needed for the proto
+        int baseCurrencyNetwork = Version.getBaseCurrencyNetwork();
+        Version.setBaseCryptoNetworkId(BaseCurrencyNetwork.BTC_REGTEST.ordinal());
+        try {
+            PersistenceManager<MediationDisputeList> persistenceManager = persistenceManager();
+            MediationDisputeListService disputeListService = new MediationDisputeListService(persistenceManager);
+            PubKeyRing agentPubKeyRing = pubKeyRing();
+            Dispute dispute = dispute(agentPubKeyRing);
+            disputeListService.getDisputeList().add(dispute);
+            MediationManager manager = mediationManager(tradeManager(agentPubKeyRing), disputeListService);
+            ChatMessage chatMessage = new ChatMessage(SupportType.MEDIATION,
+                    TRADE_ID,
+                    TRADER_ID,
+                    false,
+                    "result",
+                    PEER_NODE_ADDRESS);
+            ChatMessage copy = ChatMessage.fromProto(chatMessage.toProtoNetworkEnvelope().getChatMessage(),
+                    chatMessage.getMessageVersion());
+            PublicKey agentKey = agentPubKeyRing.getSignaturePubKey();
+            int numStoredMessages = dispute.getChatMessages().size();
+
+            manager.onDisputeResultMessage(resultMessage(chatMessage, SupportType.MEDIATION), agentKey);
+            long receivedDate = chatMessage.getReceivedDate();
+            DisputeResult firstResult = dispute.disputeResultProperty().get();
+            // The trader closed the ticket meanwhile
+            dispute.setIsClosed();
+            manager.onDisputeResultMessage(resultMessage(copy, SupportType.MEDIATION), agentKey);
+
+            assertEquals(numStoredMessages + 1, dispute.getChatMessages().size());
+            assertSame(chatMessage, dispute.getChatMessages().get(numStoredMessages));
+            assertEquals(receivedDate, chatMessage.getReceivedDate());
+            assertSame(firstResult, dispute.disputeResultProperty().get());
+            assertTrue(dispute.isClosed());
+        } finally {
+            Version.setBaseCryptoNetworkId(baseCurrencyNetwork);
+        }
+    }
+
+    private static DisputeResultMessage resultMessage(ChatMessage chatMessage, SupportType supportType) {
+        DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
+        disputeResult.setChatMessage(chatMessage);
+        return new DisputeResultMessage(disputeResult,
+                PEER_NODE_ADDRESS,
+                "dispute-result-uid",
+                supportType,
+                null);
     }
 
     private MediationManager mediationManager(TradeManager tradeManager,
