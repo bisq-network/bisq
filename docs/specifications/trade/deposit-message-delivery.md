@@ -15,10 +15,12 @@ payment account. The buyer needs all three: the delayed payout transaction to re
 and the seller's payment account to pay. The seller publishes the deposit transaction only after the
 message is delivered, so that the buyer has them before funds are locked.
 
-The message counts as delivered only when the buyer acknowledges it. The buyer sends the
-acknowledgement after processing and storing the message. The arrival of the message at the buyer's
-node is not enough: the buyer can fail to process it, or stop before it stored the trade, and a
-message that arrived directly is not kept in the mailbox.
+The message counts as delivered only when the buyer acknowledges it. An acknowledgement means that
+the buyer has stored the deposit transaction, the delayed payout transaction and the seller's
+payment account: the buyer acknowledges the message after processing it, and acknowledges a repeated
+message once it has stored them, also if a later step of its first processing failed. The arrival of
+the message at the buyer's node is not enough: the buyer can fail to process it, or stop before it
+stored the trade, and a message that arrived directly is not kept in the mailbox.
 
 Until the acknowledgement, the seller sends the message again: after it arrived, at the earliest
 after 30 seconds, as the buyer acknowledges only after sending its own payment account to the
@@ -29,7 +31,9 @@ seller stops sending with an error and does not publish the deposit transaction.
 that arrives later resumes the trade as a restart does: the seller counts the message as delivered
 and evaluates the publication. A restart sends the message again.
 
-A negative acknowledgement does not count as delivery; the seller keeps sending the message again.
+A negative acknowledgement does not count as delivery: the seller keeps sending the message again,
+and the buyer acknowledges a repeated message once it has stored the data. A buyer that cannot
+process the message refuses each repetition, and the seller stops after seven.
 
 The seller stores its finalized deposit transaction before it sends the message, for fiat and crypto
 trades. After a restart, a seller whose deposit transaction is not published yet restores that
