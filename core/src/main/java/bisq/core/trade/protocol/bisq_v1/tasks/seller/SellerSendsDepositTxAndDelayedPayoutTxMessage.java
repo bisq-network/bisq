@@ -48,6 +48,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMessageTask {
     private static final int MAX_RESEND_ATTEMPTS = 7;
+    // The error of a task that gave up. The ACK that comes later or after a restart removes it.
+    private static final String NO_ACK_ERROR = "We never received an ACK message when sending the msg to the peer. " +
+            "We do not publish the deposit tx before the peer acknowledges the message, " +
+            "and a restart of the application sends the message again.";
+    // The same error of version 1.10.9 and before, whose trades a restart resumes as well
+    private static final String LEGACY_NO_ACK_ERROR = "We never received an ACK message when sending the msg to " +
+            "the peer. We fail here and do not publish the deposit tx.";
     // The buyer sends the ACK after processing the message and sending its payment account to us
     private static final int MIN_DELAY_AFTER_ARRIVAL_SEC = 30;
     private int delayInSec = 4;
@@ -195,9 +202,7 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
             return;
         }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
-            failed("We never received an ACK message when sending the msg to the peer. " +
-                    "We do not publish the deposit tx before the peer acknowledges the message, " +
-                    "and a restart of the application sends the message again.");
+            failed(NO_ACK_ERROR);
             return;
         }
 
@@ -227,6 +232,11 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     private void markMessageDelivered() {
         if (!processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()) {
             processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
+            String tradeErrorMessage = trade.getErrorMessage();
+            if (tradeErrorMessage != null &&
+                    (tradeErrorMessage.endsWith(NO_ACK_ERROR) || tradeErrorMessage.endsWith(LEGACY_NO_ACK_ERROR))) {
+                trade.setErrorMessage(null);
+            }
             processModel.getTradeManager().requestPersistence();
         }
     }

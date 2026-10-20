@@ -29,7 +29,9 @@ it stays at 30 seconds or more. The buyer acknowledges a repeated message again,
 again only if it has not stored its data yet. After seven repetitions without acknowledgement the
 seller stops sending with an error and does not publish the deposit transaction. An acknowledgement
 that arrives later resumes the trade as a restart does: the seller counts the message as delivered
-and evaluates the publication. A restart sends the message again.
+and evaluates the publication. A restart sends the message again. When the message is acknowledged
+after the seller stopped, later or after a restart, the error of the stop is removed, also the one
+an older version wrote; another error of the trade stays.
 
 A negative acknowledgement does not count as delivery: the seller keeps sending the message again,
 and the buyer acknowledges a repeated message once it has stored the data. A buyer that cannot
