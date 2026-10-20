@@ -232,6 +232,18 @@ class ChatMessageOrderTest {
         assertOrder(TAKER, stored, expected);
     }
 
+    // The peer sets the sender flag. A received message that claims to be an own message is a message of the peer:
+    // it is ordered with the other messages of the peer and cannot move across an own message.
+    @Test
+    void aReceivedMessageThatClaimsToBeOwnIsAMessageOfThePeer() {
+        ChatMessage question = own("Q1", NOW);
+        ChatMessage answer = received("A1", NOW + 2 * MINUTE, NOW + MINUTE);
+        ChatMessage claimsToBeOwn = message("A2", TAKER, NOW - 60 * MINUTE);
+        claimsToBeOwn.setReceivedDate(NOW + MINUTE + 1000);
+
+        assertOrder(List.of(question, answer, claimsToBeOwn), question, claimsToBeOwn, answer);
+    }
+
     private static void assertOrder(boolean isClient, List<ChatMessage> stored, ChatMessage... expected) {
         assertEquals(texts(List.of(expected)), texts(ChatMessageOrder.inDisplayOrder(stored, isClient)));
     }

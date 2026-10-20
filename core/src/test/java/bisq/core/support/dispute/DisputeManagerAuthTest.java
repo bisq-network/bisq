@@ -495,11 +495,13 @@ class DisputeManagerAuthTest {
         NetworkNode networkNode = mock(NetworkNode.class);
         when(networkNode.getNodeAddress()).thenReturn(BUYER_NODE_ADDRESS);
         when(p2PService.getNetworkNode()).thenReturn(networkNode);
+        TestDisputeList disputeList = new TestDisputeList();
         TestDisputeManager manager = new TestDisputeManager(p2PService,
                 tradeManager,
                 closedTradableManager,
                 failedTradesManager,
-                keyStorageDir);
+                keyStorageDir,
+                disputeListService(disputeList));
         PubKeyRing agentPubKeyRing = pubKeyRing();
         Trade localTrade = trade(TRADE_ID, agentPubKeyRing);
         when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(localTrade));
@@ -514,6 +516,9 @@ class DisputeManagerAuthTest {
         long before = System.currentTimeMillis();
         manager.onPeerOpenedDispute(message, agentPubKeyRing.getSignaturePubKey());
 
+        // The dispute is stored with the message and its receive time
+        assertEquals(1, disputeList.size());
+        assertTrue(disputeList.getList().get(0).getChatMessages().contains(agentsMessage));
         assertReceivedSince(before, agentsMessage);
     }
 
