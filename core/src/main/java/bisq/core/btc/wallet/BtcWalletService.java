@@ -1183,16 +1183,17 @@ public class BtcWalletService extends WalletService {
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // The receiver gets sendersAmount minus the fee
     public String sendFunds(String fromAddress,
                             String toAddress,
-                            Coin receiverAmount,
+                            Coin sendersAmount,
                             Coin fee,
                             @Nullable KeyParameter aesKey,
                             @SuppressWarnings("SameParameterValue") AddressEntry.Context context,
                             @Nullable String memo,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
-        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
+        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, sendersAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
         // The callback is attached before the memo is set: an already completed broadcast
@@ -1210,9 +1211,10 @@ public class BtcWalletService extends WalletService {
         return sendResult.tx.getTxId().toString();
     }
 
+    // The receiver gets sendersAmount minus the fee
     public Transaction sendFundsForMultipleAddresses(Set<String> fromAddresses,
                                                      String toAddress,
-                                                     Coin receiverAmount,
+                                                     Coin sendersAmount,
                                                      Coin fee,
                                                      @Nullable String changeAddress,
                                                      @Nullable KeyParameter aesKey,
@@ -1220,7 +1222,7 @@ public class BtcWalletService extends WalletService {
                                                      FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
-        SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
+        SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, sendersAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
         // The callback is attached before the memo is set: an already completed broadcast
