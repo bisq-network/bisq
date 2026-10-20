@@ -57,17 +57,30 @@ class BtcWalletServiceWithdrawalEstimateTest {
         assertSent(send(estimate), 2200, 5800, 1);
     }
 
-    // The 540 satoshi left of the inputs are above bitcoinj's change limit of 537 but below our dust limit
+    // The 540 satoshi left of the inputs are above bitcoinj's change limit of 537 but below our dust limit. The send
+    // has no change output, so the fee is for the size without it, and the 540 satoshi are paid on top.
     @Test
     void withTheFeeIncludedTheSenderSpendsAChangeOutputBelowOurDustLimit() throws Exception {
         fixture.fund(8240);
 
         WithdrawalEstimate estimate = estimate(Coin.valueOf(7700), false);
 
-        assertAmounts(estimate, 650, 7590, 8240);
-        assertEquals(Coin.valueOf(540), estimate.getDust());
+        assertAmounts(estimate, 2200, 6040, 8240);
+        assertEquals(1, estimate.getTransaction().getOutputs().size());
+        assertEquals(Coin.ZERO, estimate.getDust());
         assertEquals(Coin.valueOf(540), estimate.getChangeBelowDust());
-        assertSent(send(estimate), 650, 7590, 1);
+        assertSent(send(estimate), 2200, 6040, 1);
+    }
+
+    // With a fee for a change output, the receiver would get 50 satoshi, below the dust limit
+    @Test
+    void aChangeBelowOurDustLimitDoesNotRefuseAnAmountThatTheSentTransactionPays() throws Exception {
+        fixture.fund(7640);
+
+        WithdrawalEstimate estimate = estimate(Coin.valueOf(7100), false);
+
+        assertAmounts(estimate, 1600, 6040, 7640);
+        assertSent(send(estimate), 1600, 6040, 1);
     }
 
     @Test
@@ -79,6 +92,20 @@ class BtcWalletServiceWithdrawalEstimateTest {
         assertAmounts(estimate, 1000, 7050, 8050);
         assertEquals(Coin.ZERO, estimate.getChangeBelowDust());
         assertSent(send(estimate), 1000, 7050, 2);
+    }
+
+    // With the fee excluded, the 540 satoshi left after the fee for a change output stay as a change output below our
+    // dust limit in the estimate. The send has no change output and pays them to the fee.
+    @Test
+    void withTheFeeExcludedAChangeOutputBelowOurDustLimitIsPartOfTheFee() throws Exception {
+        fixture.fund(17_590);
+
+        WithdrawalEstimate estimate = estimate(Coin.valueOf(10_000), true);
+
+        assertAmounts(estimate, 10_000, 7590, 17_590);
+        assertEquals(Coin.valueOf(540), estimate.getDust());
+        assertEquals(Coin.valueOf(540), estimate.getChangeBelowDust());
+        assertSent(send(estimate), 10_000, 7590, 1);
     }
 
     @Test

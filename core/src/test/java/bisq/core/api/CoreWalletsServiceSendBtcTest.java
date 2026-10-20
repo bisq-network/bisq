@@ -91,7 +91,7 @@ class CoreWalletsServiceSendBtcTest {
 
         Transaction sentTx = sendBtc("0.000077");
 
-        assertSent(sentTx, 650, 7590, 1);
+        assertSent(sentTx, 2200, 6040, 1);
     }
 
     @Test

@@ -1103,14 +1103,17 @@ public class BtcWalletService extends WalletService {
             throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
 
         try {
-            Coin fee;
+            Coin feeForSize;
             int counter = 0;
             int txVsize = 0;
+            // With the fee included, a change output below our dust limit that bitcoinj keeps is paid to the fee
+            Coin changeBelowDust = Coin.ZERO;
             Transaction tx;
             do {
                 counter++;
-                fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
-                Coin sendersAmount = feeExcluded ? amount.add(fee) : amount;
+                feeForSize = txFeeForWithdrawalPerVbyte.multiply(txVsize);
+                Coin fee = feeForSize.add(changeBelowDust);
+                Coin sendersAmount = feeExcluded ? amount.add(fee) : amount.add(changeBelowDust);
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses,
                         toAddress,
                         sendersAmount,
@@ -1121,12 +1124,22 @@ public class BtcWalletService extends WalletService {
                 tx = sendRequest.tx;
                 txVsize = tx.getVsize();
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
+                // The remainder does not depend on the fee here, so the first round shows it. The estimation starts
+                // again for the transaction without the change output, which the send creates. The first round asks
+                // for no fee, so it never ends the estimation.
+                if (!feeExcluded && changeBelowDust.isZero()) {
+                    Coin dust = getDust(tx);
+                    if (dust.isPositive()) {
+                        changeBelowDust = dust;
+                        txVsize = 0;
+                    }
+                }
             }
             while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
-            return new WithdrawalEstimate(tx, fee, getDust(tx));
+            return new WithdrawalEstimate(tx, feeForSize, getDust(tx));
         } catch (InsufficientMoneyException e) {
             throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
                     "or the resulting output value is below the min. dust value:\n" +

@@ -25,7 +25,9 @@ import lombok.Getter;
 /**
  * The amounts of a withdrawal, taken from its fee estimation transaction, so that the amounts shown are the amounts
  * sent. A remainder of the inputs that cannot be returned as change is part of the fee: bitcoinj adds a small one to
- * the fee of the transaction itself, and a change output that bitcoinj kept below our dust limit is added here.
+ * the fee of the transaction itself. A change output that bitcoinj keeps below our dust limit is not sent: with the
+ * fee included, the estimation adds it to the fee of the transaction without it, with the fee excluded it is added
+ * here.
  */
 @Getter
 public class WithdrawalEstimate {
@@ -37,16 +39,17 @@ public class WithdrawalEstimate {
     private final Coin fee;
     // What the selected addresses spend: the receiver's amount and the fee
     private final Coin sendersAmount;
-    // The part of the fee that is a remainder of the inputs: what bitcoinj added to the fee and the dust
+    // The part of the fee that is a remainder of the inputs: what was added to the fee that the last round of the
+    // estimation asked for, and the dust
     private final Coin changeBelowDust;
 
-    // requestedFee is the fee that the last round of the estimation asked bitcoinj for
-    public WithdrawalEstimate(Transaction transaction, Coin requestedFee, Coin dust) {
+    // feeForSize is the fee for the size of the transaction that the last round of the estimation asked for
+    public WithdrawalEstimate(Transaction transaction, Coin feeForSize, Coin dust) {
         this.transaction = transaction;
         this.dust = dust;
         receiverAmount = transaction.getOutput(0).getValue();
         fee = transaction.getFee().add(dust);
         sendersAmount = receiverAmount.add(fee);
-        changeBelowDust = transaction.getFee().subtract(requestedFee).add(dust);
+        changeBelowDust = transaction.getFee().subtract(feeForSize).add(dust);
     }
 }
