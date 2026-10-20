@@ -83,6 +83,21 @@ class BtcWalletServiceWithdrawalEstimateTest {
         assertSent(send(estimate), 1600, 6040, 1);
     }
 
+    // At 2 sat/vB the 300 satoshi left of the inputs pay the fee for the size of the transaction already
+    @Test
+    void aRemainderThatPaysTheRateLeavesTheReceiverTheWholeAmount() throws Exception {
+        fixture.fund(8000);
+
+        WithdrawalEstimate estimate = fixture.getBtcWalletService().getWithdrawalEstimate(fixture.getFromAddresses(),
+                fixture.getToAddress(),
+                Coin.valueOf(7700),
+                false,
+                Coin.valueOf(2));
+
+        assertAmounts(estimate, 7700, 300, 8000);
+        assertSent(send(estimate), 7700, 300, 1);
+    }
+
     @Test
     void withTheFeeExcludedTheReceiverGetsTheAmountAndTheChangeIsReturned() throws Exception {
         fixture.fund(10_000);

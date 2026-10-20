@@ -42,7 +42,9 @@ sent either: with the fee included, the fee is estimated for the transaction wit
 and the remainder is paid on top; with the fee excluded, the wallet adds the output to the fee. The
 desktop and the API take the receiver's amount and the fee from the estimated transaction, so the
 desktop's confirmation shows what is sent. The confirmation notes the remainder in the fee. With the
-fee included, the sender then spends the entered amount plus such a remainder.
+fee included, the sender then spends the entered amount plus such a remainder. If the remainder
+alone pays the fee for the size of the transaction at the chosen rate, the receiver gets the entered
+amount.
 
 With the fee excluded, the selected inputs can exceed the amount plus the fee of a transaction with
 a change output by less than bitcoinj's change limit. The fee of a transaction without a change
