@@ -187,6 +187,64 @@ class MediationManagerAuthTest {
         }
     }
 
+    // The cleanup of sensitive data removes the message of the result from the chat of a closed dispute. A copy that
+    // arrives later, from the mailbox, is still recognized by the stored result.
+    @Test
+    void aCopyOfTheResultAfterTheCleanupOfTheChatIsNotAppliedAgain() {
+        // The message version, which the application sets at startup, is needed for the proto
+        int baseCurrencyNetwork = Version.getBaseCurrencyNetwork();
+        Version.setBaseCryptoNetworkId(BaseCurrencyNetwork.BTC_REGTEST.ordinal());
+        try {
+            PersistenceManager<MediationDisputeList> persistenceManager = persistenceManager();
+            MediationDisputeListService disputeListService = new MediationDisputeListService(persistenceManager);
+            PubKeyRing agentPubKeyRing = pubKeyRing();
+            Dispute dispute = dispute(agentPubKeyRing);
+            // The cleanup keeps the first message of a chat
+            dispute.addAndPersistChatMessage(chatMessage("first message"));
+            disputeListService.getDisputeList().add(dispute);
+            MediationManager manager = mediationManager(tradeManager(agentPubKeyRing), disputeListService);
+            ChatMessage chatMessage = chatMessage("result");
+            ChatMessage copy = ChatMessage.fromProto(chatMessage.toProtoNetworkEnvelope().getChatMessage(),
+                    chatMessage.getMessageVersion());
+            PublicKey agentKey = agentPubKeyRing.getSignaturePubKey();
+
+            manager.onDisputeResultMessage(resultMessage(chatMessage, SupportType.MEDIATION), agentKey);
+            DisputeResult firstResult = dispute.disputeResultProperty().get();
+            dispute.setIsClosed();
+            assertTrue(dispute.removeAllChatMessages());
+            manager.onDisputeResultMessage(resultMessage(copy, SupportType.MEDIATION), agentKey);
+
+            assertEquals(1, dispute.getChatMessages().size());
+            assertSame(firstResult, dispute.disputeResultProperty().get());
+            assertTrue(dispute.isClosed());
+        } finally {
+            Version.setBaseCryptoNetworkId(baseCurrencyNetwork);
+        }
+    }
+
+    // The agent sets its result before it stores the message of the result, which must still be stored
+    @Test
+    void theAgentStoresTheMessageOfItsOwnResult() {
+        Dispute dispute = dispute(pubKeyRing());
+        ChatMessage chatMessage = chatMessage("result");
+        DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
+        dispute.setDisputeResult(disputeResult);
+        disputeResult.setChatMessage(chatMessage);
+
+        dispute.addAndPersistChatMessage(chatMessage);
+
+        assertTrue(dispute.getChatMessages().contains(chatMessage));
+    }
+
+    private static ChatMessage chatMessage(String text) {
+        return new ChatMessage(SupportType.MEDIATION,
+                TRADE_ID,
+                TRADER_ID,
+                false,
+                text,
+                PEER_NODE_ADDRESS);
+    }
+
     private static DisputeResultMessage resultMessage(ChatMessage chatMessage, SupportType supportType) {
         DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
         disputeResult.setChatMessage(chatMessage);

@@ -22,8 +22,9 @@ dispute result, and as the messages of a dispute that the opener sent to the age
 sent to the other trader. A receive time that the peer put into the message is replaced. A copy of a
 message that the node has stored already, for example the same message directly and from the
 mailbox, is not stored again and does not change the receive time. A copy of a dispute result is
-only acknowledged and not applied again. Own messages and messages that the node creates itself,
-such as system messages, have no receive time.
+only acknowledged and not applied again, also after the cleanup of sensitive data removed the
+message of the result from the chat, as the stored result keeps it. Own messages and messages that
+the node creates itself, such as system messages, have no receive time.
 
 The node processes a received message only when it is ready: its services are initialized, the P2P
 network is bootstrapped, the wallet download is complete and it has enough Bitcoin peers to

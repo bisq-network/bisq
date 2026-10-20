@@ -364,6 +364,16 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         return chatMessages.stream().anyMatch(m -> m.getUid().equals(chatMessage.getUid()));
     }
 
+    // The message of a result stays with the stored result when the cleanup of sensitive data removes it from the
+    // chat. Only for a received result: the agent sets its result before it stores the message of the result.
+    public boolean hasResultMessage(ChatMessage chatMessage) {
+        DisputeResult disputeResult = disputeResultProperty.get();
+        return hasChatMessage(chatMessage) ||
+                (disputeResult != null &&
+                        disputeResult.getChatMessage() != null &&
+                        disputeResult.getChatMessage().getUid().equals(chatMessage.getUid()));
+    }
+
     public boolean removeAllChatMessages() {
         if (chatMessages.size() > 1) {
             // removes all chat except the initial guidelines message.
