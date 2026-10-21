@@ -54,6 +54,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -62,6 +63,7 @@ import static org.mockito.Mockito.when;
 class MakerCreatesDepositTxTest {
     private static final NetworkParameters PARAMS = MainNetParams.get();
     private static final String OFFER_ID = "offer-id";
+    private static final String MAKER_FEE_TX_ID = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private static final Coin BUYER_SECURITY_DEPOSIT = Coin.valueOf(60_000);
     private static final Coin SELLER_SECURITY_DEPOSIT = Coin.valueOf(60_000);
     private static final Coin OFFER_AMOUNT = Coin.valueOf(300_000);
@@ -76,6 +78,7 @@ class MakerCreatesDepositTxTest {
         TaskResult result = fixture.run();
 
         assertTrue(result.completed(), result.errorMessage());
+        fixture.verifyDepositTxIsCreatedFromMakerFeeTx();
         verify(fixture.processModel).setPreparedDepositTx(any());
     }
 
@@ -88,6 +91,19 @@ class MakerCreatesDepositTxTest {
 
         assertFalse(result.completed());
         assertTrue(result.errorMessage().contains("Maker input value mismatch"), result.errorMessage());
+        verify(fixture.processModel, never()).setPreparedDepositTx(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void makerFailsWithoutItsMakerFeeTx(boolean makerIsBuyer) throws Exception {
+        Fixture fixture = new Fixture(makerIsBuyer, reservedFunds(makerIsBuyer));
+        when(fixture.walletService.getTransaction(MAKER_FEE_TX_ID)).thenReturn(null);
+
+        TaskResult result = fixture.run();
+
+        assertFalse(result.completed());
+        assertTrue(result.errorMessage().contains("makerFeeTx must not be null"), result.errorMessage());
         verify(fixture.processModel, never()).setPreparedDepositTx(any());
     }
 
@@ -106,6 +122,9 @@ class MakerCreatesDepositTxTest {
     private static class Fixture {
         private final boolean makerIsBuyer;
         private final ProcessModel processModel = mock(ProcessModel.class);
+        private final BtcWalletService walletService = mock(BtcWalletService.class);
+        private final TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+        private final Transaction makerFeeTx = new Transaction(PARAMS);
         private final Trade trade = mock(Trade.class);
 
         private Fixture(boolean makerIsBuyer, Coin makerInputValue) throws Exception {
@@ -113,12 +132,13 @@ class MakerCreatesDepositTxTest {
 
             Offer offer = mock(Offer.class);
             when(offer.getId()).thenReturn(OFFER_ID);
+            when(offer.getOfferFeePaymentTxId()).thenReturn(MAKER_FEE_TX_ID);
             when(offer.isBuyOffer()).thenReturn(makerIsBuyer);
             when(offer.getBuyerSecurityDeposit()).thenReturn(BUYER_SECURITY_DEPOSIT);
             when(offer.getSellerSecurityDeposit()).thenReturn(SELLER_SECURITY_DEPOSIT);
             when(offer.getAmount()).thenReturn(OFFER_AMOUNT);
 
-            BtcWalletService walletService = mock(BtcWalletService.class);
+            when(walletService.getTransaction(MAKER_FEE_TX_ID)).thenReturn(makerFeeTx);
             when(walletService.getTxFromSerializedTx(any()))
                     .thenAnswer(invocation -> new Transaction(PARAMS, invocation.getArgument(0)));
             when(walletService.isP2WPKH(any())).thenReturn(true);
@@ -143,10 +163,9 @@ class MakerCreatesDepositTxTest {
             PreparedDepositTxAndMakerInputs depositTxAndMakerInputs = new PreparedDepositTxAndMakerInputs(
                     new ArrayList<>(rawInputs(makerInputValue)),
                     new byte[]{});
-            TradeWalletService tradeWalletService = mock(TradeWalletService.class);
-            when(tradeWalletService.buyerAsMakerCreatesAndSignsDepositTx(any(), any(), any(), any(), any(), any(), any()))
+            when(tradeWalletService.buyerAsMakerCreatesAndSignsDepositTx(any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(depositTxAndMakerInputs);
-            when(tradeWalletService.sellerAsMakerCreatesDepositTx(any(), any(), any(), any(), any(), any(), any()))
+            when(tradeWalletService.sellerAsMakerCreatesDepositTx(any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(depositTxAndMakerInputs);
 
             when(processModel.getOffer()).thenReturn(offer);
@@ -161,6 +180,16 @@ class MakerCreatesDepositTxTest {
             when(trade.getAmount()).thenReturn(TRADE_AMOUNT);
             when(trade.getTradeTxFee()).thenReturn(TRADE_TX_FEE);
             when(trade.getContractAsJson()).thenReturn("{}");
+        }
+
+        private void verifyDepositTxIsCreatedFromMakerFeeTx() throws Exception {
+            if (makerIsBuyer) {
+                verify(tradeWalletService).buyerAsMakerCreatesAndSignsDepositTx(same(makerFeeTx),
+                        any(), any(), any(), any(), any(), any(), any());
+            } else {
+                verify(tradeWalletService).sellerAsMakerCreatesDepositTx(same(makerFeeTx),
+                        any(), any(), any(), any(), any(), any(), any());
+            }
         }
 
         @SuppressWarnings("unchecked")

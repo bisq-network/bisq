@@ -32,6 +32,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import java.util.Arrays;
 import java.util.List;
@@ -86,6 +87,8 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     expectedTakersInputAmount,
                     walletService,
                     "Taker");
+            Transaction makerFeeTx = checkNotNull(walletService.getTransaction(offer.getOfferFeePaymentTxId()),
+                    "makerFeeTx must not be null");
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
@@ -95,6 +98,7 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     "sellerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().sellerAsMakerCreatesDepositTx(
+                    makerFeeTx,
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,
