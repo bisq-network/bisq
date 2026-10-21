@@ -94,6 +94,8 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerChangeAddress,
                     buyerPubKey,
                     sellerPubKey);
+            // We check our inputs as the taker does, so we fail here rather than send inputs the taker rejects.
+            DepositTxValidation.checkMakersRawTransactionInputs(result.rawMakerInputs, walletService, offer);
 
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);
