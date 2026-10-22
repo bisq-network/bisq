@@ -2,7 +2,7 @@
 
 cd $(dirname $0)/../../../
 
-version="1.10.9"
+version="1.10.10"
 
 # Set BISQ_DIR as environment var to the path of your locally synced Bisq data directory e.g.
 # BISQ_DIR=~/Library/Application\ Support/bisq-BTC_MAINNET_Dev-full-dao-bm-node
@@ -21,5 +21,4 @@ cp "$dbDir/DaoStateStore" "$resDir/DaoStateStore_BTC_MAINNET"
 cp "$dbDir/BurningManAccountingStore_v3" "$resDir/BurningManAccountingStore_v3_BTC_MAINNET"
 cp -a "$dbDir/BsqBlocks/." "$resDir/BsqBlocks_BTC_MAINNET/"
 cp "$dbDir/ProposalStore" "$resDir/ProposalStore_BTC_MAINNET"
-cp "$dbDir/TempProposalStore" "$resDir/TempProposalStore_BTC_MAINNET"
 cp "$dbDir/BlindVoteStore" "$resDir/BlindVoteStore_BTC_MAINNET"

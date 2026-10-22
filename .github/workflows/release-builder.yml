@@ -93,7 +93,7 @@ jobs:
             -PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"
 
     - name: Upload release-builder evidence
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: release-builder-linux-java-21.0.6
         path: |
@@ -104,7 +104,7 @@ jobs:
         if-no-files-found: error
 
     - name: Upload release-builder installer evidence
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: release-builder-linux-installers-java-21.0.6
         path: |

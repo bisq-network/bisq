@@ -3,7 +3,7 @@ set -e
 
 cd ../../../
 
-version="1.10.9"
+version="1.10.10"
 
 target_dir="desktop/releases/$version"
 
@@ -61,8 +61,6 @@ cd "$script_working_directory"
 
 # sig key Alejandro García
 cp -v "./desktop/package/E222AA02.asc" "$target_dir/"
-# sig key Gabriel Bernard
-cp -v "./desktop/package/4A133008.asc" "$target_dir/"
 # sig key Henrik Jannsen
 cp -v "./desktop/package/387C8307.asc" "$target_dir/"
 # signing key

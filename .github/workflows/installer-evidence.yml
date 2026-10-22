@@ -47,7 +47,7 @@ jobs:
           zip
 
     - name: Set up JDK
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
         java-version: '21.0.6'
         distribution: 'zulu'
@@ -59,7 +59,7 @@ jobs:
         arguments: verifyInstallerEvidenceBundle --scan
 
     - name: Upload Linux installer evidence
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: installer-evidence-ubuntu-24.04-java-21.0.6
         path: |
@@ -91,7 +91,7 @@ jobs:
         fi
 
     - name: Set up JDK
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
         java-version: '21.0.6'
         distribution: 'zulu'
@@ -103,7 +103,7 @@ jobs:
         arguments: verifyInstallerEvidenceBundle --scan
 
     - name: Upload macOS installer evidence
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: installer-evidence-macos-15-java-21.0.6
         path: |
@@ -147,7 +147,7 @@ jobs:
         "$($wixDirectory.FullName)\bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
     - name: Set up JDK
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
         java-version: '21.0.6'
         distribution: 'zulu'
@@ -159,7 +159,7 @@ jobs:
         arguments: verifyInstallerEvidenceBundle --scan
 
     - name: Upload Windows installer evidence
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: installer-evidence-windows-2025-java-21.0.6
         path: |
