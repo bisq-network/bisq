@@ -17,12 +17,22 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.model.PreparedDepositTxAndMakerInputs;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.offer.Offer;
+import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.CloneAddressEntryForSharedMakerFee;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
+import bisq.common.persistence.PersistenceManager;
+import bisq.common.taskrunner.TaskRunner;
+
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
@@ -30,21 +40,31 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.WalletTransaction;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,21 +77,23 @@ class TradeWalletServiceMakerDepositTxTest {
     private static final Coin TRADE_TX_FEE = Coin.valueOf(2_700);
     private static final Coin OTHER_COINS = Coin.valueOf(5_321_500);
 
-    private final ECKey reservedKey = new ECKey();
-    private final Address reservedAddress = SegwitAddress.fromKey(PARAMS, reservedKey);
     private final Address changeAddress = SegwitAddress.fromKey(PARAMS, new ECKey());
     private final byte[] buyerPubKey = new ECKey().getPubKey();
     private final byte[] sellerPubKey = new ECKey().getPubKey();
+    private DeterministicKey reservedKey;
+    private Address reservedAddress;
     private Wallet wallet;
+    private WalletsSetup walletsSetup;
     private TradeWalletService tradeWalletService;
 
     @BeforeEach
     void setUp() {
-        // Wallet.createBasic needs a context of PARAMS on the thread, and another test may leave a RegTest one
+        // Wallet creation needs a context of PARAMS on the thread, and another test may leave a RegTest one
         Context.propagate(new Context(PARAMS));
-        wallet = Wallet.createBasic(PARAMS);
-        wallet.importKey(reservedKey);
-        WalletsSetup walletsSetup = mock(WalletsSetup.class);
+        wallet = Wallet.createDeterministic(PARAMS, Script.ScriptType.P2WPKH);
+        reservedKey = wallet.freshReceiveKey();
+        reservedAddress = SegwitAddress.fromKey(PARAMS, reservedKey);
+        walletsSetup = mock(WalletsSetup.class);
         when(walletsSetup.getBtcWallet()).thenReturn(wallet);
         tradeWalletService = new TradeWalletService(walletsSetup, mock(Preferences.class));
         ArgumentCaptor<Runnable> setupCompletedHandler = ArgumentCaptor.forClass(Runnable.class);
@@ -79,9 +101,10 @@ class TradeWalletServiceMakerDepositTxTest {
         setupCompletedHandler.getValue().run();
     }
 
-    @Test
-    void buyerAsMakerSpendsOnlyTheReservedOutputOfTheMakerFeeTx() throws Exception {
-        Transaction makerFeeTx = makerFeeTx(BUYER_SECURITY_DEPOSIT);
+    @ParameterizedTest
+    @ValueSource(ints = {0, 6})
+    void buyerAsMakerSpendsOnlyTheReservedOutputOfTheMakerFeeTx(int confirmations) throws Exception {
+        Transaction makerFeeTx = makerFeeTx(BUYER_SECURITY_DEPOSIT, confirmations);
         // Older and larger coins on the reserved address have more coin age, so a plain coin selection prefers them
         addToWallet(tx(OTHER_COINS, reservedAddress), 1_000);
 
@@ -92,20 +115,13 @@ class TradeWalletServiceMakerDepositTxTest {
         assertEquals(1, new Transaction(PARAMS, result.depositTransaction).getOutputs().size());
     }
 
-    @Test
-    void sellerAsMakerSpendsOnlyTheReservedOutputOfTheMakerFeeTx() throws Exception {
-        Transaction makerFeeTx = makerFeeTx(SELLER_SECURITY_DEPOSIT.add(OFFER_AMOUNT));
+    @ParameterizedTest
+    @ValueSource(ints = {0, 6})
+    void sellerAsMakerSpendsOnlyTheReservedOutputOfTheMakerFeeTx(int confirmations) throws Exception {
+        Transaction makerFeeTx = makerFeeTx(SELLER_SECURITY_DEPOSIT.add(OFFER_AMOUNT), confirmations);
         addToWallet(tx(OTHER_COINS, reservedAddress), 1_000);
-        Coin makerInputAmount = SELLER_SECURITY_DEPOSIT.add(TRADE_AMOUNT);
 
-        PreparedDepositTxAndMakerInputs result = tradeWalletService.sellerAsMakerCreatesDepositTx(makerFeeTx,
-                makerInputAmount,
-                makerInputAmount.add(TRADE_TX_FEE).add(BUYER_SECURITY_DEPOSIT),
-                takerInputs(BUYER_SECURITY_DEPOSIT.add(TRADE_TX_FEE.multiply(2))),
-                reservedAddress,
-                changeAddress,
-                buyerPubKey,
-                sellerPubKey);
+        PreparedDepositTxAndMakerInputs result = sellerAsMakerCreatesDepositTx(makerFeeTx);
 
         assertSpendsOnlyReservedOutput(result, makerFeeTx);
         // The part of the offer amount which is not traded goes back to the maker
@@ -114,13 +130,122 @@ class TradeWalletServiceMakerDepositTxTest {
         assertEquals(changeAddress, change.getScriptPubKey().getToAddress(PARAMS));
     }
 
+    @ParameterizedTest
+    @CsvSource({"true, true", "true, false", "false, true", "false, false"})
+    void makerSpendsOnlyTheReservedOutputOfBsqFeeTx(boolean makerIsBuyer, boolean hasBsqChange) throws Exception {
+        ECKey fundingKey = new ECKey();
+        Address fundingAddress = SegwitAddress.fromKey(PARAMS, fundingKey);
+        wallet.importKey(fundingKey);
+        addToWallet(tx(OTHER_COINS, fundingAddress), 6);
+        addToWallet(tx(OTHER_COINS, reservedAddress), 1_000);
+
+        Wallet bsqWallet = Wallet.createBasic(PARAMS);
+        ECKey bsqKey = new ECKey();
+        bsqWallet.importKey(bsqKey);
+        Address bsqAddress = SegwitAddress.fromKey(PARAMS, bsqKey);
+        Transaction bsqFundingTx = tx(Coin.valueOf(50_000), bsqAddress);
+        Transaction preparedBsqTx = new Transaction(PARAMS);
+        preparedBsqTx.addInput(bsqFundingTx.getOutput(0));
+        if (hasBsqChange) {
+            preparedBsqTx.addOutput(Coin.valueOf(30_000), bsqAddress);
+        }
+
+        Coin reservedFunds = makerIsBuyer ? BUYER_SECURITY_DEPOSIT : SELLER_SECURITY_DEPOSIT.add(OFFER_AMOUNT);
+        // Like CreateMakerFeeTx, we use an address of our wallet for the change. Without BSQ change it also receives
+        // output 0.
+        Address feeTxChangeAddress = wallet.freshReceiveAddress();
+        Transaction feeTx = tradeWalletService.completeBsqTradingFeeTx(preparedBsqTx,
+                fundingAddress,
+                reservedAddress,
+                feeTxChangeAddress,
+                reservedFunds,
+                false,
+                TRADE_TX_FEE);
+        WalletService.signTransactionInput(bsqWallet, null, feeTx, feeTx.getInput(0), 0);
+        WalletService.checkAllScriptSignaturesForTx(feeTx);
+        bsqWallet.commitTx(feeTx);
+        // CreateMakerFeeTx commits a separate instance to the BTC wallet after committing to the BSQ wallet
+        tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(feeTx));
+        Transaction makerFeeTx = tradeWalletService.getWalletTx(feeTx.getTxId());
+
+        PreparedDepositTxAndMakerInputs result = makerIsBuyer ?
+                buyerAsMakerCreatesDepositTx(makerFeeTx) : sellerAsMakerCreatesDepositTx(makerFeeTx);
+
+        assertSpendsOnlyReservedOutput(result, makerFeeTx);
+        assertEquals(reservedFunds.value, result.rawMakerInputs.get(0).value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void clonedMakerSpendsSharedReserveAfterOriginalOfferIsRemoved(boolean makerIsBuyer) throws Exception {
+        Coin reservedFunds = makerIsBuyer ? BUYER_SECURITY_DEPOSIT : SELLER_SECURITY_DEPOSIT.add(OFFER_AMOUNT);
+        Transaction originalMakerFeeTx = makerFeeTx(reservedFunds, 6);
+        AddressEntry originalReserve = new AddressEntry(reservedKey,
+                AddressEntry.Context.RESERVED_FOR_TRADE, "original-offer", true);
+        @SuppressWarnings("unchecked")
+        PersistenceManager<AddressEntryList> persistenceManager = mock(PersistenceManager.class);
+        AddressEntryList addressEntries = new AddressEntryList(persistenceManager);
+        addressEntries.addAddressEntry(originalReserve);
+        when(walletsSetup.getParams()).thenReturn(PARAMS);
+        when(walletsSetup.getChain()).thenReturn(mock(BlockChain.class));
+        BtcWalletService btcWalletService = new BtcWalletService(walletsSetup,
+                addressEntries, mock(Preferences.class), mock(FeeService.class));
+        ArgumentCaptor<Runnable> setupCompletedHandler = ArgumentCaptor.forClass(Runnable.class);
+        verify(walletsSetup, times(2)).addSetupCompletedHandler(setupCompletedHandler.capture());
+        setupCompletedHandler.getValue().run();
+
+        Offer clonedOffer = mock(Offer.class);
+        when(clonedOffer.getId()).thenReturn("cloned-offer");
+        when(clonedOffer.getOfferFeePaymentTxId()).thenReturn(originalMakerFeeTx.getTxId().toString());
+        PlaceOfferModel model = mock(PlaceOfferModel.class);
+        when(model.getOffer()).thenReturn(clonedOffer);
+        when(model.getWalletService()).thenReturn(btcWalletService);
+        AtomicBoolean completed = new AtomicBoolean();
+        AtomicReference<String> errorMessage = new AtomicReference<>();
+        TaskRunner<PlaceOfferModel> taskRunner = new TaskRunner<>(model,
+                () -> completed.set(true), errorMessage::set);
+        taskRunner.addTasks(CloneAddressEntryForSharedMakerFee.class);
+        taskRunner.run();
+        assertTrue(completed.get(), errorMessage.get());
+
+        // Removing the original offer keeps its entries while the clone is open. cleanUpAddressEntries resets them at
+        // the next start.
+        btcWalletService.resetAddressEntriesForOpenOffer(originalReserve.getOfferId());
+        AddressEntry clonedReserve = btcWalletService.getAddressEntry(clonedOffer.getId(),
+                AddressEntry.Context.RESERVED_FOR_TRADE).orElseThrow();
+        assertEquals(originalReserve.getAddress(), clonedReserve.getAddress());
+        Transaction makerFeeTx = btcWalletService.getTransaction(clonedOffer.getOfferFeePaymentTxId());
+        addToWallet(tx(OTHER_COINS, reservedAddress), 1_000);
+
+        PreparedDepositTxAndMakerInputs result = makerIsBuyer ?
+                buyerAsMakerCreatesDepositTx(makerFeeTx, clonedReserve.getAddress()) :
+                sellerAsMakerCreatesDepositTx(makerFeeTx, clonedReserve.getAddress());
+
+        assertSpendsOnlyReservedOutput(result, originalMakerFeeTx);
+    }
+
     @Test
     void makerDoesNotUseOtherCoinsWhenTheReservedOutputIsSpent() {
-        Transaction makerFeeTx = makerFeeTx(BUYER_SECURITY_DEPOSIT);
+        Transaction makerFeeTx = makerFeeTx(BUYER_SECURITY_DEPOSIT, 6);
         addToWallet(tx(OTHER_COINS, reservedAddress), 1_000);
         TransactionOutput reservedOutput = makerFeeTx.getOutput(1);
         reservedOutput.markAsSpent(new Transaction(PARAMS).addInput(reservedOutput));
 
+        assertRejectsMakerFeeTx(makerFeeTx);
+    }
+
+    @Test
+    void makerRejectsMultipleUnspentOutputsToTheReservedAddress() {
+        Transaction makerFeeTx = tx(Coin.valueOf(5_000), SegwitAddress.fromKey(PARAMS, new ECKey()));
+        makerFeeTx.addOutput(BUYER_SECURITY_DEPOSIT, reservedAddress);
+        makerFeeTx.addOutput(Coin.valueOf(1_000), reservedAddress);
+        addToWallet(makerFeeTx, 6);
+        addToWallet(tx(OTHER_COINS, reservedAddress), 1_000);
+
+        assertRejectsMakerFeeTx(makerFeeTx);
+    }
+
+    private void assertRejectsMakerFeeTx(Transaction makerFeeTx) {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> buyerAsMakerCreatesDepositTx(makerFeeTx));
 
@@ -129,11 +254,33 @@ class TradeWalletServiceMakerDepositTxTest {
     }
 
     private PreparedDepositTxAndMakerInputs buyerAsMakerCreatesDepositTx(Transaction makerFeeTx) throws Exception {
+        return buyerAsMakerCreatesDepositTx(makerFeeTx, reservedAddress);
+    }
+
+    private PreparedDepositTxAndMakerInputs buyerAsMakerCreatesDepositTx(Transaction makerFeeTx,
+                                                                        Address makerAddress) throws Exception {
         return tradeWalletService.buyerAsMakerCreatesAndSignsDepositTx(makerFeeTx,
                 BUYER_SECURITY_DEPOSIT,
                 BUYER_SECURITY_DEPOSIT.add(TRADE_TX_FEE).add(SELLER_SECURITY_DEPOSIT).add(TRADE_AMOUNT),
                 takerInputs(SELLER_SECURITY_DEPOSIT.add(TRADE_AMOUNT).add(TRADE_TX_FEE.multiply(2))),
-                reservedAddress,
+                makerAddress,
+                changeAddress,
+                buyerPubKey,
+                sellerPubKey);
+    }
+
+    private PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Transaction makerFeeTx) throws Exception {
+        return sellerAsMakerCreatesDepositTx(makerFeeTx, reservedAddress);
+    }
+
+    private PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Transaction makerFeeTx,
+                                                                         Address makerAddress) throws Exception {
+        Coin makerInputAmount = SELLER_SECURITY_DEPOSIT.add(TRADE_AMOUNT);
+        return tradeWalletService.sellerAsMakerCreatesDepositTx(makerFeeTx,
+                makerInputAmount,
+                makerInputAmount.add(TRADE_TX_FEE).add(BUYER_SECURITY_DEPOSIT),
+                takerInputs(BUYER_SECURITY_DEPOSIT.add(TRADE_TX_FEE.multiply(2))),
+                makerAddress,
                 changeAddress,
                 buyerPubKey,
                 sellerPubKey);
@@ -149,20 +296,24 @@ class TradeWalletServiceMakerDepositTxTest {
 
     // Like CreateMakerFeeTx, the maker fee tx pays the trade fee, the reserved funds and the change. The change goes to
     // our wallet as well, so only the address tells the reserved output apart.
-    private Transaction makerFeeTx(Coin reservedFunds) {
-        ECKey changeKey = new ECKey();
-        wallet.importKey(changeKey);
+    private Transaction makerFeeTx(Coin reservedFunds, int confirmations) {
         Transaction makerFeeTx = tx(Coin.valueOf(5_000), SegwitAddress.fromKey(PARAMS, new ECKey()));
         makerFeeTx.addOutput(reservedFunds, reservedAddress);
-        makerFeeTx.addOutput(Coin.valueOf(100_000), SegwitAddress.fromKey(PARAMS, changeKey));
-        return addToWallet(makerFeeTx, 6);
+        makerFeeTx.addOutput(Coin.valueOf(100_000), wallet.freshReceiveAddress());
+        return addToWallet(makerFeeTx, confirmations);
     }
 
     // The confidence is looked up by the tx id, so we set it only after the tx is complete
     private Transaction addToWallet(Transaction tx, int depthInBlocks) {
-        tx.getConfidence().setAppearedAtChainHeight(100);
-        tx.getConfidence().setDepthInBlocks(depthInBlocks);
-        wallet.addWalletTransaction(new WalletTransaction(WalletTransaction.Pool.UNSPENT, tx));
+        if (depthInBlocks == 0) {
+            tx.getConfidence().setSource(TransactionConfidence.Source.SELF);
+            tx.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.PENDING);
+            wallet.addWalletTransaction(new WalletTransaction(WalletTransaction.Pool.PENDING, tx));
+        } else {
+            tx.getConfidence().setAppearedAtChainHeight(100);
+            tx.getConfidence().setDepthInBlocks(depthInBlocks);
+            wallet.addWalletTransaction(new WalletTransaction(WalletTransaction.Pool.UNSPENT, tx));
+        }
         return tx;
     }
 
