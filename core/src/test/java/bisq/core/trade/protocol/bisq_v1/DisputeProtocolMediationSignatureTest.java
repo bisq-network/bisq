@@ -20,17 +20,21 @@ package bisq.core.trade.protocol.bisq_v1;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
+import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.mediation.ProcessMediatedPayoutSignatureMessage;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.Task;
 
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,17 +136,47 @@ class DisputeProtocolMediationSignatureTest {
         assertEquals(List.of(kept), setup.protocol.removedMailboxMessages);
     }
 
+    // The trade is moved to the failed trades while a signature of the peer waits for the mediation result
+    @Test
+    void theProtocolOfAFailedTradeDoesNotHandleTheKeptSignature() {
+        TestSetup setup = new TestSetup(Trade.DisputeState.MEDIATION_STARTED_BY_PEER);
+        setup.withP2PService();
+        setup.protocol.onMailboxMessage(signatureMessage("uid"), PEER);
+
+        setup.protocol.shutDown();
+        assertEquals(0, setup.disputeState.numListeners);
+        setup.disputeState.set(Trade.DisputeState.MEDIATION_CLOSED);
+
+        assertTrue(setup.protocol.handledMessages.isEmpty());
+    }
+
+    // The mediation result arrives, and the kept signature is handled later on the user thread
+    @Test
+    void aKeptSignatureDeferredBeforeTheShutDownIsNotHandled() {
+        TestSetup setup = new TestSetup(Trade.DisputeState.MEDIATION_STARTED_BY_PEER);
+        setup.withP2PService();
+        List<Runnable> deferred = new ArrayList<>();
+        UserThread.setExecutor(deferred::add);
+        setup.protocol.onMailboxMessage(signatureMessage("uid"), PEER);
+        setup.disputeState.set(Trade.DisputeState.MEDIATION_CLOSED);
+
+        setup.protocol.shutDown();
+        deferred.forEach(Runnable::run);
+
+        assertTrue(setup.protocol.handledMessages.isEmpty());
+    }
+
     private static MediatedPayoutTxSignatureMessage signatureMessage(String uid) {
         return new MediatedPayoutTxSignatureMessage(new byte[]{1}, TRADE_ID, PEER, uid);
     }
 
     private static final class TestSetup {
-        private final SimpleObjectProperty<Trade.DisputeState> disputeState;
+        private final ListenerCountingProperty disputeState;
         private final ProcessModel processModel;
         private final TestDisputeProtocol protocol;
 
         private TestSetup(Trade.DisputeState initialDisputeState) {
-            disputeState = new SimpleObjectProperty<>(initialDisputeState);
+            disputeState = new ListenerCountingProperty(initialDisputeState);
             processModel = new ProcessModel(TRADE_ID, "account-id", null);
             Trade trade = mock(Trade.class);
             when(trade.getProcessModel()).thenReturn(processModel);
@@ -151,6 +185,35 @@ class DisputeProtocolMediationSignatureTest {
             when(trade.disputeStateProperty()).thenReturn(disputeState);
             when(trade.getDisputeState()).thenAnswer(invocation -> disputeState.get());
             protocol = new TestDisputeProtocol(trade);
+        }
+
+        // For the shut down, which removes the listeners of the protocol
+        private void withP2PService() {
+            P2PService p2PService = mock(P2PService.class);
+            when(p2PService.getMailboxMessageService()).thenReturn(mock(MailboxMessageService.class));
+            Provider provider = mock(Provider.class);
+            when(provider.getP2PService()).thenReturn(p2PService);
+            processModel.applyTransient(provider, null, null);
+        }
+    }
+
+    private static final class ListenerCountingProperty extends SimpleObjectProperty<Trade.DisputeState> {
+        private int numListeners;
+
+        private ListenerCountingProperty(Trade.DisputeState initialValue) {
+            super(initialValue);
+        }
+
+        @Override
+        public void addListener(ChangeListener<? super Trade.DisputeState> listener) {
+            numListeners++;
+            super.addListener(listener);
+        }
+
+        @Override
+        public void removeListener(ChangeListener<? super Trade.DisputeState> listener) {
+            numListeners--;
+            super.removeListener(listener);
         }
     }
 

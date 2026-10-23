@@ -47,10 +47,14 @@ public class SellerPublishesDepositTx extends TradeTask {
                 complete();
                 return;
             }
-            if (checkNotNull(trade.getOffer()).isFiatOffer() &&
-                    (!processModel.isBuyerPaymentAccountValidated() ||
-                            !processModel.isDepositTxAndDelayedPayoutTxMessageDelivered())) {
-                log.info("Not publishing fiat deposit until the buyer account is validated and the deposit message is delivered");
+            // Every deposit waits for the buyer's ACK of the deposit message, a fiat deposit also for the buyer account
+            if (!processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()) {
+                log.info("Not publishing the deposit until the deposit message is delivered");
+                complete();
+                return;
+            }
+            if (checkNotNull(trade.getOffer()).isFiatOffer() && !processModel.isBuyerPaymentAccountValidated()) {
+                log.info("Not publishing fiat deposit until the buyer account is validated");
                 complete();
                 return;
             }

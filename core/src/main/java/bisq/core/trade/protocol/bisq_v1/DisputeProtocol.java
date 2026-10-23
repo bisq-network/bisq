@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMess
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
@@ -119,6 +120,19 @@ public class DisputeProtocol extends TradeProtocol {
         maybeFinalizeMediatedPayout();
     }
 
+    @Override
+    public void shutDown() {
+        super.shutDown();
+        if (mediationResultListener != null) {
+            trade.disputeStateProperty().removeListener(mediationResultListener);
+            mediationResultListener = null;
+        }
+        if (walletReadyListener != null) {
+            processModel.getBtcWalletService().removeNewBestBlockListener(walletReadyListener);
+            walletReadyListener = null;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol implementation
@@ -126,12 +140,15 @@ public class DisputeProtocol extends TradeProtocol {
 
     @Override
     protected void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
-        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
-        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
+        // We handle the ack for CounterCurrencyTransferStartedMessage, DepositTxAndDelayedPayoutTxMessage and
+        // ShareBuyerPaymentAccountMessage as we support automatic re-send of the msg in case it was not ACKed after a
+        // certain time
         if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
             processModel.setPaymentStartedAckMessage(ackMessage);
         } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
             processModel.setDepositTxSentAckMessage(ackMessage);
+        } else if (ackMessage.getSourceMsgClassName().equals(ShareBuyerPaymentAccountMessage.class.getSimpleName())) {
+            processModel.setShareBuyerPaymentAccountAckMessage(ackMessage);
         }
 
         if (ackMessage.isSuccess()) {
@@ -300,6 +317,10 @@ public class DisputeProtocol extends TradeProtocol {
     // A newer signature can be handled before the kept one. Once a signature of the peer has passed the check and is
     // stored, the kept message is not needed anymore.
     private void handleKeptMessage(MediatedPayoutTxSignatureMessage message, NodeAddress peer) {
+        // Deferred, so the trade can have left the pending trades meanwhile
+        if (isShutDown()) {
+            return;
+        }
         if (processModel.getTradePeer().getMediatedPayoutTxSignature() != null) {
             log.info("We drop the kept MediatedPayoutTxSignatureMessage as we have stored a signature of the peer " +
                     "already. tradeId={}", trade.getId());
@@ -319,7 +340,8 @@ public class DisputeProtocol extends TradeProtocol {
     // check runs after the current event is handled, at startup after the mailbox messages of the trade.
     private void maybeFinalizeMediatedPayout() {
         UserThread.execute(() -> {
-            if (!isMediatedPayoutReadyToFinalize(trade)) {
+            // Deferred, so the trade can have left the pending trades meanwhile
+            if (isShutDown() || !isMediatedPayoutReadyToFinalize(trade)) {
                 return;
             }
 

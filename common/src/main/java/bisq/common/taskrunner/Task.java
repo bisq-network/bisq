@@ -29,6 +29,7 @@ public abstract class Task<T extends Model> {
     protected final T model;
     protected String errorMessage = "An error occurred at task: " + getClass().getSimpleName();
     protected boolean completed;
+    private boolean canceled;
 
     public Task(TaskRunner taskHandler, T model) {
         this.taskHandler = taskHandler;
@@ -56,6 +57,21 @@ public abstract class Task<T extends Model> {
     protected void complete() {
         completed = true;
         taskHandler.handleComplete();
+    }
+
+    // Called by the task runner when it is canceled, also if this task has completed already
+    void cancel() {
+        canceled = true;
+        onCanceled();
+    }
+
+    protected boolean isCanceled() {
+        return canceled;
+    }
+
+    // A task that keeps a timer or a listener after run() stops it here. A callback of an operation that is already
+    // under way, such as the broadcast of a transaction, still records its result.
+    protected void onCanceled() {
     }
 
     protected void failed(String message) {

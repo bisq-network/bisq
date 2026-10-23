@@ -34,6 +34,7 @@ public class ManualTimer implements Timer {
     private static final List<ManualTimer> timers = new ArrayList<>();
 
     private Runnable action;
+    private Duration delay;
     private boolean stopped;
 
     public ManualTimer() {
@@ -42,6 +43,7 @@ public class ManualTimer implements Timer {
 
     @Override
     public Timer runLater(Duration delay, Runnable action) {
+        this.delay = delay;
         this.action = action;
         return this;
     }
@@ -67,8 +69,16 @@ public class ManualTimer implements Timer {
         return stopped;
     }
 
+    public Duration getDelay() {
+        return delay;
+    }
+
     public static ManualTimer latest() {
         return timers.get(timers.size() - 1);
+    }
+
+    public static int count() {
+        return timers.size();
     }
 
     public static void firePendingTimers() {

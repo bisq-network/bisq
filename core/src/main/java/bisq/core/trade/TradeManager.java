@@ -462,6 +462,19 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 });
     }
 
+    // A trade that returns from the failed trades gets a new protocol in place of its shut-down protocol
+    private TradeProtocol getTradeProtocolToInitialize(TradeModel trade) {
+        TradeProtocol tradeProtocol = getTradeProtocol(trade);
+        if (!tradeProtocol.isShutDown()) {
+            return tradeProtocol;
+        }
+        TradeProtocol newTradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
+        tradeProtocolByTradeUid.put(trade.getUid(), newTradeProtocol);
+        // A newer trade with the same offer id keeps its protocol
+        pendingTradeProtocolByTradeId.replace(trade.getId(), tradeProtocol, newTradeProtocol);
+        return newTradeProtocol;
+    }
+
     public TradeProtocol getTradeProtocol(TradeModel trade) {
         String uid = trade.getUid();
         if (tradeProtocolByTradeUid.containsKey(uid)) {
@@ -519,7 +532,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             // We remove the trade from the list after iterations in initPersistedTrades
             return false;
         }
-        initTradeAndProtocol(tradeModel, getTradeProtocol(tradeModel));
+        initTradeAndProtocol(tradeModel, getTradeProtocolToInitialize(tradeModel));
 
         if (tradeModel instanceof Trade) {
             ((Trade) tradeModel).updateDepositTxFromWallet();
@@ -905,10 +918,17 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void onMoveInvalidTradeToFailedTrades(Trade trade) {
         removeTrade(trade);
         failedTradesManager.add(trade);
+        // A failed trade is not driven by its protocol. The shut-down protocol stays registered, so that a service
+        // that still asks for the protocol of the trade gets one that does nothing.
+        TradeProtocol tradeProtocol = tradeProtocolByTradeUid.get(trade.getUid());
+        if (tradeProtocol != null) {
+            tradeProtocol.shutDown();
+        }
     }
 
     public void addTradeToPendingTrades(Trade trade) {
-        if (!trade.isInitialized()) {
+        // A trade that was moved to the failed trades in this session is initialized, but its protocol is shut down
+        if (!trade.isInitialized() || getTradeProtocol(trade).isShutDown()) {
             initPersistedTrade(trade);
         }
         addTrade(trade);

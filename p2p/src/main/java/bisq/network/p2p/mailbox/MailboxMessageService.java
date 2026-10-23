@@ -410,6 +410,10 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         decryptedMailboxListeners.add(listener);
     }
 
+    public void removeDecryptedMailboxListener(DecryptedMailboxListener listener) {
+        decryptedMailboxListeners.remove(listener);
+    }
+
     // Runs the handler on the user thread once the mailbox messages in the P2P data at startup have been decrypted and
     // given to the listeners, or at once if that has happened already. Decrypting many messages takes a while.
     public void runOnceStartupMessagesHandled(Runnable handler) {

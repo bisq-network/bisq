@@ -52,6 +52,11 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * We send the seller our payment account after we stored the deposit and delayed payout tx. The message counts as
+ * delivered when it reached the seller's node or when the seller acknowledged it. Until then we resend it with a
+ * doubling interval while the deposit tx is not confirmed, and fail if MAX_RESEND_ATTEMPTS resends did not deliver it.
+ */
 @Slf4j
 public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessageTask {
     private static final int MAX_RESEND_ATTEMPTS = 7;
@@ -89,6 +94,15 @@ public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessag
         // Complete is called in base class
     }
 
+    // The ACK and the arrival can both end the task, only the first one does
+    @Override
+    protected void onArrived() {
+        if (completed) {
+            return;
+        }
+        super.onArrived();
+    }
+
     // We override the default behaviour for onStoredInMailbox and do not call complete
     @Override
     protected void onStoredInMailbox() {
@@ -120,12 +134,37 @@ public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessag
         try {
             runInterceptHook();
 
+            if (listener == null) {
+                // One listener for all attempts. It is removed when the task completes, fails or is canceled.
+                listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
+                processModel.getShareBuyerPaymentAccountMessageStateProperty().addListener(listener);
+                // The ACK can have been applied before the task started
+                onMessageStateChange(processModel.getShareBuyerPaymentAccountMessageStateProperty().get());
+                if (completed) {
+                    return;
+                }
+            }
             super.run();
         } catch (Throwable t) {
             failed(t);
-        } finally {
-            cleanup();
         }
+    }
+
+    @Override
+    protected void failed(Throwable t) {
+        cleanup();
+        super.failed(t);
+    }
+
+    @Override
+    protected void failed(String message) {
+        cleanup();
+        super.failed(message);
+    }
+
+    @Override
+    protected void onCanceled() {
+        cleanup();
     }
 
     private void cleanup() {
@@ -133,15 +172,17 @@ public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessag
             timer.stop();
         }
         if (listener != null) {
-            processModel.getDepositTxMessageStateProperty().removeListener(listener);
+            processModel.getShareBuyerPaymentAccountMessageStateProperty().removeListener(listener);
         }
     }
 
     private void tryToSendAgainLater() {
+        // A send that was under way can still report its outcome after the task was canceled or completed
+        if (isCanceled() || completed) {
+            return;
+        }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
-            cleanup();
-            failed("We never received an ACK message when sending the msg to the peer. " +
-                    "We fail here and do not publish the deposit tx.");
+            failed("We never received an ACK message when sending our payment account to the peer.");
             return;
         }
 
@@ -151,20 +192,13 @@ public class BuyerSendsShareBuyerPaymentAccountMessage extends SendMailboxMessag
         }
         timer = UserThread.runAfter(this::run, delayInSec, TimeUnit.SECONDS);
 
-        if (resendCounter == 0) {
-            // We want to register listener only once
-            listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
-            processModel.getDepositTxMessageStateProperty().addListener(listener);
-            onMessageStateChange(processModel.getDepositTxMessageStateProperty().get());
-        }
-
         delayInSec = delayInSec * 2;
         resendCounter++;
     }
 
     private void onMessageStateChange(MessageState newValue) {
         // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
-        if (newValue == MessageState.ACKNOWLEDGED) {
+        if (newValue == MessageState.ACKNOWLEDGED && !completed) {
             processModel.getTradeManager().requestPersistence();
             cleanup();
             complete();

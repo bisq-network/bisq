@@ -38,16 +38,17 @@ Before the seller broadcasts the fiat deposit transaction, two independent prere
 completed:
 
 - the buyer payment account has passed the authoritative validation above; and
-- the buyer has received the deposit and delayed-payout transaction message, so the buyer retains the
-  recovery transaction before funds are locked.
+- the buyer has acknowledged the deposit and delayed-payout transaction message, so the buyer retains
+  the recovery transaction before funds are locked
+  ([`deposit-message-delivery.md`](deposit-message-delivery.md)).
 
 The prerequisites may complete in either order. Completing either one must re-evaluate deposit
 publication, but publication must remain blocked until both are persisted as complete. Repeated
 messages and retries must not cause a second logical publication.
 
-Deferred publication belongs to fiat trades only. A crypto deposit is published as soon as the
-delayed-payout signature has been processed, so a buyer account reveal must not trigger publication
-for a crypto trade.
+Deferral for the buyer account validation belongs to fiat trades only. A crypto deposit is published
+as soon as the buyer has acknowledged the deposit and delayed-payout transaction message, so a buyer
+account reveal must not trigger publication for a crypto trade.
 
 Publication is single-flight per trade. The persisted trade phase advances only when the wallet
 reports the broadcast result, so it cannot express that a broadcast is still pending. A second
@@ -56,12 +57,14 @@ and the first attempt stays responsible for recording the transaction on the tra
 second broadcast of a transaction that is already being broadcast must never disturb the pending
 broadcast; otherwise the transaction can reach the blockchain while the trade keeps no record of it.
 
-The seller must persist the finalized deposit transaction before publication can be deferred. If the
-seller restarts while either prerequisite is still pending, it must restore the exact transaction,
-resume delivery of the deposit and delayed-payout transaction message when necessary, and
-idempotently re-evaluate publication. A stored buyer-account reveal must be processed through the
-same validation path as a directly delivered reveal. Restart recovery must not depend on the buyer
-resending a reveal that the seller already received.
+The seller must persist the finalized deposit transaction before publication can be deferred. Crypto
+trades defer it too, until the buyer acknowledges the deposit message (see
+[`deposit-message-delivery.md`](deposit-message-delivery.md)). If the seller restarts while either
+prerequisite is still pending, it must restore the exact transaction, resume delivery of the deposit
+and delayed-payout transaction message when necessary, and idempotently re-evaluate publication. A
+stored buyer-account reveal must be processed through the same validation path as a directly
+delivered reveal. Restart recovery must not depend on the buyer resending a reveal that the seller
+already received.
 
 The buyer receives a fully signed deposit transaction as part of this exchange and can broadcast it
 with a modified client. The seller therefore must also enforce the validation state at settlement;
