@@ -81,6 +81,11 @@ public final class ChatMessage extends SupportMessage {
     @Setter
     private boolean wasDisplayed;
 
+    // Local time when this node received the message, 0 for own messages and for messages stored by an older version.
+    // Set on receipt, a value sent by the peer is never kept.
+    @Setter
+    private long receivedDate;
+
     //todo move to base class
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
@@ -189,7 +194,8 @@ public final class ChatMessage extends SupportMessage {
                 .setIsSystemMessage(isSystemMessage)
                 .setUid(uid)
                 .setAcknowledged(acknowledgedProperty.get())
-                .setWasDisplayed(wasDisplayed);
+                .setWasDisplayed(wasDisplayed)
+                .setReceivedDate(receivedDate);
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
@@ -219,6 +225,7 @@ public final class ChatMessage extends SupportMessage {
                 proto.getAckError().isEmpty() ? null : proto.getAckError(),
                 proto.getWasDisplayed());
         chatMessage.setSystemMessage(proto.getIsSystemMessage());
+        chatMessage.setReceivedDate(proto.getReceivedDate());
         return chatMessage;
     }
 
@@ -339,6 +346,7 @@ public final class ChatMessage extends SupportMessage {
                 ",\n     date=" + date +
                 ",\n     isSystemMessage=" + isSystemMessage +
                 ",\n     wasDisplayed=" + wasDisplayed +
+                ",\n     receivedDate=" + receivedDate +
                 ",\n     arrivedProperty=" + arrivedProperty +
                 ",\n     storedInMailboxProperty=" + storedInMailboxProperty +
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +

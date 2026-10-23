@@ -158,6 +158,8 @@ public class TraderChatManager extends SupportManager {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
             if (message instanceof ChatMessage chatMessage) {
+                // Only this node adds system messages to a trade chat, so a received one is a message of the peer
+                chatMessage.setSystemMessage(false);
                 onChatMessage(chatMessage, senderSignaturePubKey);
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
@@ -166,8 +168,7 @@ public class TraderChatManager extends SupportManager {
     }
 
     public void addSystemMsg(Trade trade) {
-        // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
-        // by date.
+        // The rules message is stored first, so the chat shows it first. Its time is the trade date.
         ChatMessage chatMessage = new ChatMessage(
                 getSupportType(),
                 trade.getId(),

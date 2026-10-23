@@ -52,6 +52,7 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.messages.ChatMessageOrder;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -913,8 +914,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                         .append(dispute.getTraderId())
                         .append("\n*******************************************************************************************\n")
                         .append("\n");
+                boolean isTrader = disputeManager.isTrader(dispute);
                 dispute.getChatMessages().forEach(m -> {
-                    String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
+                    String role = ChatMessageOrder.isFromClient(m, isTrader) ?
+                            ">> Trader's msg: " : "<< Arbitrator's msg: ";
                     stringBuilder.append(role)
                             .append(m.getMessage())
                             .append("\n");
