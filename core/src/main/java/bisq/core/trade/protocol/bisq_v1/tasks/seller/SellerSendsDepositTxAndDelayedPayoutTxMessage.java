@@ -39,14 +39,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * We send the buyer the deposit and delayed payout tx. We wait to receive a ACK message back and resend the message
- * in case that does not happen in 4 seconds or if the message was stored in mailbox or failed. We keep repeating that
- * with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If never successful we fail and
- * do not continue the protocol with publishing the deposit tx. That way we avoid that a deposit tx is published but the
- * buyer does not have the delayed payout tx and would not be able to open arbitration.
+ * in case that does not happen in time after it reached the buyer's node, or if the message was stored in mailbox or
+ * failed. We keep repeating that with doubling the interval each time and until the MAX_RESEND_ATTEMPTS is reached. If
+ * never successful we fail and do not continue the protocol with publishing the deposit tx. That way we avoid that a
+ * deposit tx is published but the buyer does not have the delayed payout tx and would not be able to open arbitration.
+ * Only the buyer's ACK shows that the buyer processed and kept the message; its arrival at the buyer's node does not.
  */
 @Slf4j
 public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMessageTask {
     private static final int MAX_RESEND_ATTEMPTS = 7;
+    // The error of a task that gave up. The ACK that comes later or after a restart removes it.
+    private static final String NO_ACK_ERROR = "We never received an ACK message when sending the msg to the peer. " +
+            "We do not publish the deposit tx before the peer acknowledges the message, " +
+            "and a restart of the application sends the message again.";
+    // The same error of version 1.10.9 and before, whose trades a restart resumes as well
+    private static final String LEGACY_NO_ACK_ERROR = "We never received an ACK message when sending the msg to " +
+            "the peer. We fail here and do not publish the deposit tx.";
+    // The buyer sends the ACK after processing the message and sending its payment account to us
+    private static final int MIN_DELAY_AFTER_ARRIVAL_SEC = 30;
     private int delayInSec = 4;
     private int resendCounter = 0;
     private DepositTxAndDelayedPayoutTxMessage message;
@@ -85,12 +95,19 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
 
     @Override
     protected void setStateArrived() {
-        markMessageDelivered();
         // we no longer set deprecated state (Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
         // see https://github.com/bisq-network/bisq/pull/5746#issuecomment-939879623
+    }
 
-        cleanup();
-        // Complete is called in base class
+    // The message reached the buyer's node. We wait for the ACK and send it again if the ACK does not arrive in time.
+    @Override
+    protected void onArrived() {
+        if (completed) {
+            return;
+        }
+        setStateArrived();
+        delayInSec = Math.max(delayInSec, MIN_DELAY_AFTER_ARRIVAL_SEC);
+        tryToSendAgainLater();
     }
 
     // We override the default behaviour for onStoredInMailbox and do not call complete
@@ -137,12 +154,37 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         try {
             runInterceptHook();
 
+            if (listener == null) {
+                // One listener for all attempts. It is removed when the task completes or fails.
+                listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
+                processModel.getDepositTxMessageStateProperty().addListener(listener);
+                // The ACK can have been applied already, for example from the mailbox
+                onMessageStateChange(processModel.getDepositTxMessageStateProperty().get());
+                if (completed) {
+                    return;
+                }
+            }
             super.run();
         } catch (Throwable t) {
             failed(t);
-        } finally {
-            cleanup();
         }
+    }
+
+    @Override
+    protected void failed(Throwable t) {
+        cleanup();
+        super.failed(t);
+    }
+
+    @Override
+    protected void failed(String message) {
+        cleanup();
+        super.failed(message);
+    }
+
+    @Override
+    protected void onCanceled() {
+        cleanup();
     }
 
     private void cleanup() {
@@ -155,10 +197,12 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     }
 
     private void tryToSendAgainLater() {
+        // A send that was under way can still report its outcome after the task completed or was canceled
+        if (completed || isCanceled()) {
+            return;
+        }
         if (resendCounter >= MAX_RESEND_ATTEMPTS) {
-            cleanup();
-            failed("We never received an ACK message when sending the msg to the peer. " +
-                    "We fail here and do not publish the deposit tx.");
+            failed(NO_ACK_ERROR);
             return;
         }
 
@@ -168,20 +212,13 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
         }
         timer = UserThread.runAfter(this::run, delayInSec, TimeUnit.SECONDS);
 
-        if (resendCounter == 0) {
-            // We want to register listener only once
-            listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
-            processModel.getDepositTxMessageStateProperty().addListener(listener);
-            onMessageStateChange(processModel.getDepositTxMessageStateProperty().get());
-        }
-
         delayInSec = delayInSec * 2;
         resendCounter++;
     }
 
     private void onMessageStateChange(MessageState newValue) {
         // Once we receive an ACK from our msg we know the peer has received the msg and we stop.
-        if (newValue == MessageState.ACKNOWLEDGED) {
+        if (newValue == MessageState.ACKNOWLEDGED && !completed) {
             // We treat a ACK like SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG
             // we no longer set deprecated state (Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
             // see https://github.com/bisq-network/bisq/pull/5746#issuecomment-939879623
@@ -195,6 +232,11 @@ public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends SendMailboxMe
     private void markMessageDelivered() {
         if (!processModel.isDepositTxAndDelayedPayoutTxMessageDelivered()) {
             processModel.setDepositTxAndDelayedPayoutTxMessageDelivered(true);
+            String tradeErrorMessage = trade.getErrorMessage();
+            if (tradeErrorMessage != null &&
+                    (tradeErrorMessage.endsWith(NO_ACK_ERROR) || tradeErrorMessage.endsWith(LEGACY_NO_ACK_ERROR))) {
+                trade.setErrorMessage(null);
+            }
             processModel.getTradeManager().requestPersistence();
         }
     }

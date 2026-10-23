@@ -64,8 +64,7 @@ public abstract class SendMailboxMessageTask extends TradeTask {
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            setStateArrived();
-                            complete();
+                            SendMailboxMessageTask.this.onArrived();
                         }
 
                         @Override
@@ -86,6 +85,11 @@ public abstract class SendMailboxMessageTask extends TradeTask {
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    protected void onArrived() {
+        setStateArrived();
+        complete();
     }
 
     protected void onStoredInMailbox() {
