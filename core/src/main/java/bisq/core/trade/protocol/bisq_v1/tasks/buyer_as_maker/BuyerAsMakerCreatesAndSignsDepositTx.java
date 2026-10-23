@@ -31,6 +31,7 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import java.util.Arrays;
 import java.util.List;
@@ -78,6 +79,8 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     expectedTakersInputAmount,
                     walletService,
                     "Taker");
+            Transaction makerFeeTx = checkNotNull(walletService.getTransaction(offer.getOfferFeePaymentTxId()),
+                    "makerFeeTx must not be null");
             Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
             byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
@@ -87,6 +90,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     "buyerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().buyerAsMakerCreatesAndSignsDepositTx(
+                    makerFeeTx,
                     makerInputAmount,
                     msOutputAmount,
                     takerRawTransactionInputs,
@@ -94,6 +98,8 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerChangeAddress,
                     buyerPubKey,
                     sellerPubKey);
+            // We check our inputs as the taker does, so we fail here rather than send inputs the taker rejects.
+            DepositTxValidation.checkMakersRawTransactionInputs(result.rawMakerInputs, walletService, offer);
 
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);
