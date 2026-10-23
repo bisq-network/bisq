@@ -106,6 +106,8 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected void startApplication() {
+        injector.getInstance(TorSetup.class).cleanupObsoleteTorFiles();
+
         // Pin that as it is used in PaymentMethods and verification in TradeStatistics
         tradeLimits = injector.getInstance(TradeLimits.class);
 

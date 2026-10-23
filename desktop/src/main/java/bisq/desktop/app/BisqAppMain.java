@@ -166,10 +166,12 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void startApplication() {
+        TorSetup torSetup = injector.getInstance(TorSetup.class);
+        torSetup.cleanupObsoleteTorFiles();
         Cookie cookie = injector.getInstance(User.class).getCookie();
         cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
             if (cleanTorDirAtRestart) {
-                injector.getInstance(TorSetup.class).cleanupTorFiles(() ->
+                torSetup.cleanupTorFiles(() ->
                                 cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART),
                         log::error);
             }
