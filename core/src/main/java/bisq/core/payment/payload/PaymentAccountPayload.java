@@ -24,6 +24,7 @@ import bisq.common.crypto.CryptoUtils;
 import bisq.common.crypto.Hash;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
@@ -34,13 +35,13 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
 
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.payment.payload.PaymentAccountPayloadExcludeFromJsonMap.Keys.*;
+import static bisq.core.payment.payload.PaymentAccountPayloadExcludeFromJsonMap.Keys.HOLDER_NAME;
+import static bisq.core.payment.payload.PaymentAccountPayloadExcludeFromJsonMap.Keys.SALT;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // That class is used in the contract for creating the contract json. Any change will break the contract.
@@ -165,7 +166,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     }
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return PaymentAccountPayloadCanonicalSchemas.encode(this, canonicalEncoder);
     }
 }

@@ -18,15 +18,15 @@
 package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
+
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
-
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -76,7 +76,7 @@ public final class SpentInfo implements PersistablePayload, ImmutableDaoStateMod
             .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

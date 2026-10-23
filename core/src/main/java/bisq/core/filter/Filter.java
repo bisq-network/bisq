@@ -23,6 +23,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
@@ -649,7 +650,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                             .bool(40, Filter::isDisableBsqSwap));
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 
