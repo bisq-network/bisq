@@ -10,8 +10,6 @@ import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
-import org.gradle.jvm.toolchain.JvmImplementation
-import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.register
 import java.io.File
 import javax.inject.Inject
@@ -234,8 +232,6 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
     private fun getJavaExecutable(): Provider<RegularFile> =
         javaToolchainService.launcherFor {
             languageVersion.set(JavaLanguageVersion.of(21))
-            vendor.set(JvmVendorSpec.AZUL)
-            implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }.map { it.executablePath }
 
     private fun createBisqUserArgs(

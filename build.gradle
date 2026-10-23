@@ -1733,14 +1733,14 @@ tasks.register('verifyReleaseBuilderImage') {
         def trimmedLines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
         def fromLine = trimmedLines.find { it.startsWith('FROM ') }
         def snapshotLine = trimmedLines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
-        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaVersionValue}"
+        def expectedBaseImage = "eclipse-temurin:${expectedJavaVersionValue}_<build>-jdk-jammy"
         def violations = []
 
-        if (!(fromLine ==~ /^FROM --platform=linux\/amd64 ${java.util.regex.Pattern.quote(expectedBaseImage)}@sha256:[0-9a-f]{64}$/)) {
+        if (!(fromLine ==~ /^FROM --platform=linux\/amd64 eclipse-temurin:${java.util.regex.Pattern.quote(expectedJavaVersionValue)}_\d+-jdk-jammy@sha256:[0-9a-f]{64}$/)) {
             violations << "Dockerfile FROM must pin linux/amd64 ${expectedBaseImage} by lowercase sha256 digest"
         }
         if (!(snapshotLine ==~ /^ARG UBUNTU_APT_SNAPSHOT=\d{8}T\d{6}Z$/)) {
-            violations << 'Dockerfile must define UBUNTU_APT_SNAPSHOT as an exact UTC timestamp, for example 20260501T000000Z'
+            violations << 'Dockerfile must define UBUNTU_APT_SNAPSHOT as an exact UTC timestamp, for example 20261017T010000Z'
         }
         if (!text.contains('APT::Snapshot "%s";') || !text.contains('$UBUNTU_APT_SNAPSHOT')) {
             violations << 'Dockerfile must write apt snapshot configuration from UBUNTU_APT_SNAPSHOT'
@@ -1753,9 +1753,6 @@ tasks.register('verifyReleaseBuilderImage') {
         }
         if (!text.contains('Legacy Ubuntu apt source must be snapshot-pinned')) {
             violations << 'Dockerfile must fail if an active legacy Ubuntu apt source remains without snapshot=yes'
-        }
-        if (!text.contains('rm -f /etc/apt/sources.list.d/zulu.list')) {
-            violations << 'Dockerfile must remove the unused Azul apt source before apt-get update'
         }
         if (!text.contains('apt-get install -y --no-install-recommends ca-certificates')) {
             violations << 'Dockerfile must bootstrap ca-certificates from the pinned HTTPS apt snapshot'
@@ -1831,10 +1828,13 @@ tasks.register('verifyGithubActionsSecurity') {
     }
 
     inputs.files(workflowFiles)
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
     outputs.upToDateWhen { false }
 
     doLast {
         def violations = []
+        def expectedJavaVersion = expectedReleaseJavaVersion.get()
+        def expectedJavaVersionPattern = java.util.regex.Pattern.quote(expectedJavaVersion)
         workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
             def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
             lines.eachWithIndex { line, index ->
@@ -1864,6 +1864,34 @@ tasks.register('verifyGithubActionsSecurity') {
                             violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses actions/checkout without persist-credentials: false"
                         }
                     }
+
+                    if (actionRef.startsWith('actions/setup-java@')) {
+                        def setupJavaStepLines = []
+                        for (int nextLineIndex = index + 1; nextLineIndex < lines.size(); nextLineIndex++) {
+                            def nextLine = lines[nextLineIndex]
+                            if (nextLine ==~ /^\s*-\s+(name|uses):\s+.*/) {
+                                break
+                            }
+                            setupJavaStepLines << nextLine
+                        }
+
+                        def location = "${relativeToProjectDirectory(workflowFile)}:${lineNumber}"
+                        if (!setupJavaStepLines.any { it ==~ /^\s*distribution:\s*['"]?temurin['"]?\s*$/ }) {
+                            violations << "${location} uses actions/setup-java without distribution: temurin"
+                        }
+                        if (!setupJavaStepLines.any { it ==~ /^\s*verify-signature:\s*true\s*$/ }) {
+                            violations << "${location} uses actions/setup-java without verify-signature: true"
+                        }
+                        if (!setupJavaStepLines.any { it ==~ /^\s*force-download:\s*true\s*$/ }) {
+                            violations << "${location} uses actions/setup-java without force-download: true"
+                        }
+                        def javaVersionLine = setupJavaStepLines.find { it ==~ /^\s*java-version:.*/ }
+                        if (javaVersionLine == null) {
+                            violations << "${location} uses actions/setup-java without java-version"
+                        } else if (!(javaVersionLine ==~ /^\s*java-version:\s*(['"]${expectedJavaVersionPattern}\+\d+['"]|\$\{\{\s*matrix\.java\s*}})\s*$/)) {
+                            violations << "${location} must set java-version to releaseBuild.javaVersion with its build number, for example '${expectedJavaVersion}+1': ${javaVersionLine.trim()}"
+                        }
+                    }
                 }
 
                 if (line ==~ /(?i).*\b(ubuntu|macos|windows)-latest\b.*/) {
@@ -1876,6 +1904,8 @@ tasks.register('verifyGithubActionsSecurity') {
 
                 if (line ==~ /^\s*java:\s*\[\s*['"]?\d+['"]?\s*\]\s*$/) {
                     violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
+                } else if (line ==~ /^\s*java:\s*\[.*/ && !(line ==~ /^\s*java:\s*\[\s*['"]${expectedJavaVersionPattern}\+\d+['"]\s*\]\s*$/)) {
+                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} must set the Java matrix to releaseBuild.javaVersion with its build number: ${line.trim()}"
                 }
 
                 if (line ==~ /^\s*check-latest:\s*true\s*$/) {
@@ -1895,7 +1925,7 @@ tasks.register('verifyGithubActionsSecurity') {
                     'name: Linux Release Builder',
                     '  workflow_dispatch:',
                     'runs-on: ubuntu-24.04',
-                    'docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux',
+                    "docker build --pull=false -t bisq-release-builder-linux:java-${expectedJavaVersion} docker/release-builder/linux",
                     'git worktree add --detach build/release-builder-worktrees/a "$GITHUB_SHA"',
                     'git worktree add --detach build/release-builder-worktrees/b "$GITHUB_SHA"',
                     'git -C build/release-builder-worktrees/a submodule update --init --recursive',
@@ -1912,8 +1942,8 @@ tasks.register('verifyGithubActionsSecurity') {
                     '-PrightReleaseEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/release-evidence.zip"',
                     '-PleftInstallerEvidence=build/reports/release/installer-evidence.zip \\',
                     '-PrightInstallerEvidence="$PWD/build/release-builder-worktrees/b/build/reports/release/installer-evidence.zip"',
-                    'release-builder-linux-java-21.0.6',
-                    'release-builder-linux-installers-java-21.0.6',
+                    "release-builder-linux-java-${expectedJavaVersion}",
+                    "release-builder-linux-installers-java-${expectedJavaVersion}",
                     'build/release-builder-worktrees/a/build/reports/release/release-evidence.zip',
                     'build/release-builder-worktrees/a/build/reports/release/installer-evidence.zip',
                     'build/release-builder-worktrees/a/build/reports/release/installer-structure-summary.txt',

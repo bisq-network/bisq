@@ -314,13 +314,13 @@ Document: [reproducible-builds/](reproducible-builds/) and
 The build environment is pinned in `gradle.properties`:
 
 ```
-releaseBuild.javaVersion=21.0.6
-releaseBuild.javaVendor=Azul Systems, Inc.
+releaseBuild.javaVersion=21.0.12.1
+releaseBuild.javaVendor=Eclipse Adoptium
 releaseBuild.gradleVersion=9.0.0
 ```
 
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
-with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.6.
+with the Java toolchain. Run Gradle itself with Eclipse Temurin 21.0.12.1.
 
 1. Verify the build and produce the evidence files:
 
@@ -345,10 +345,10 @@ with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.6.
 3. Optional, for a second independent build in a container:
 
    ```
-   docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+   docker build --pull=false -t bisq-release-builder-linux:java-21.0.12.1 docker/release-builder/linux
    docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" \
      -v "$PWD:/workspace" -w /workspace \
-     bisq-release-builder-linux:java-21.0.6 \
+     bisq-release-builder-linux:java-21.0.12.1 \
      ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
    ```
 

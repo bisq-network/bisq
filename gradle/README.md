@@ -12,7 +12,7 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Java **21.0.6** from **Azul Systems, Inc.**
+Currently pinned: **Gradle 9.0.0**, Java **21.0.12.1** from **Eclipse Adoptium** (Temurin)
 The Gradle and Java values are also pinned in `gradle.properties`
 (`releaseBuild.gradleVersion`, `releaseBuild.javaVersion`, `releaseBuild.javaVendor`)
 and repeated in `docs/release-checklist.md`.

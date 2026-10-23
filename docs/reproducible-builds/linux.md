@@ -24,16 +24,17 @@ Remaining gaps:
 
 ```bash
 docker build --pull=false \
-  -t bisq-release-builder-linux:java-21.0.6 \
+  -t bisq-release-builder-linux:java-21.0.12.1 \
   docker/release-builder/linux
 ```
 
-To test a newer Ubuntu package snapshot before changing the Dockerfile default:
+To test a newer Ubuntu package snapshot before changing the Dockerfile default (the snapshot must not be older than
+the base image's own `apt-get` layer, so a new base image digest usually needs a newer snapshot too):
 
 ```bash
 docker build --pull=false \
-  --build-arg UBUNTU_APT_SNAPSHOT=20260501T000000Z \
-  -t bisq-release-builder-linux:java-21.0.6 \
+  --build-arg UBUNTU_APT_SNAPSHOT=<YYYYMMDDTHHMMSSZ> \
+  -t bisq-release-builder-linux:java-21.0.12.1 \
   docker/release-builder/linux
 ```
 
@@ -46,7 +47,7 @@ docker run --rm --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
   -v "$PWD:/workspace" \
   -w /workspace \
-  bisq-release-builder-linux:java-21.0.6 \
+  bisq-release-builder-linux:java-21.0.12.1 \
   ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 ```
 
@@ -70,14 +71,14 @@ docker run --rm --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
   -v "$REPO_PARENT:$REPO_PARENT" \
   -w "$REPO_PARENT/bisq-release-a" \
-  bisq-release-builder-linux:java-21.0.6 \
+  bisq-release-builder-linux:java-21.0.12.1 \
   ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 
 docker run --rm --platform linux/amd64 \
   --user "$(id -u):$(id -g)" \
   -v "$REPO_PARENT:$REPO_PARENT" \
   -w "$REPO_PARENT/bisq-release-b" \
-  bisq-release-builder-linux:java-21.0.6 \
+  bisq-release-builder-linux:java-21.0.12.1 \
   ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
 ```
 
@@ -102,14 +103,14 @@ The GitHub Actions workflow is `Linux Release Builder`. It is
 The workflow:
 
 1. Checks out the selected commit with submodules.
-2. Builds `bisq-release-builder-linux:java-21.0.6`.
+2. Builds `bisq-release-builder-linux:java-21.0.12.1`.
 3. Creates clean worktrees `a` and `b` at `$GITHUB_SHA`.
 4. Runs `./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle` in
    both worktrees inside the Docker image.
 5. Runs `compareReleaseEvidenceBundles`.
 6. Runs `compareInstallerEvidenceBundles`.
-7. Uploads `release-builder-linux-java-21.0.6`.
-8. Uploads `release-builder-linux-installers-java-21.0.6`.
+7. Uploads `release-builder-linux-java-21.0.12.1`.
+8. Uploads `release-builder-linux-installers-java-21.0.12.1`.
 
 This workflow is the current strongest CI signal for Linux reproducibility.
 

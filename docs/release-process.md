@@ -76,11 +76,10 @@ Use VirtualBox > 6.1 with following configuration:
 #### For every OS
 
 * Install the latest security updates
-* Install/Upgrade to the latest Java 21 SDK
-    * macOS (brew option): `brew upgrade zulu21`
-    * Ubuntu (apt option): `sudo apt-get install zulu21-jdk`
-    * Windows: Download the latest version
-      from https://www.azul.com/downloads/?version=java-21-lts&os=windows&architecture=x86-64-bit&package=jdk
+* Install exactly the Java version and vendor pinned in `gradle.properties` (`releaseBuild.javaVersion`,
+  `releaseBuild.javaVendor`), currently Eclipse Temurin 21.0.12.1, from
+  https://github.com/adoptium/temurin21-binaries/releases/tag/jdk-21.0.12.1%2B1. Check the download against its
+  `.sha256.txt` and `.sig` files before installing. `./gradlew verifyReleaseBuild` fails with any other JDK.
 
 #### For Windows
 
