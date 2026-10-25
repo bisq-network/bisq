@@ -338,13 +338,13 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     injector.getInstance(MissingDataRequestService.class).reRepublishAllGovernanceData();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.T, keyEvent)) {
                     // Toggle between show tor logs and only show warnings. Helpful in case of connection problems
-                    String pattern = "org.berndpruenster.netlayer";
+                    String pattern = "bisq.network.tor";
                     Level logLevel = ((Logger) LoggerFactory.getLogger(pattern)).getLevel();
                     if (logLevel != Level.DEBUG) {
-                        log.info("Set log level for org.berndpruenster.netlayer classes to DEBUG");
+                        log.info("Set log level for bisq.network.tor classes to DEBUG");
                         Log.setCustomLogLevel(pattern, Level.DEBUG);
                     } else {
-                        log.info("Set log level for org.berndpruenster.netlayer classes to WARN");
+                        log.info("Set log level for bisq.network.tor classes to WARN");
                         Log.setCustomLogLevel(pattern, Level.WARN);
                     }
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.J, keyEvent)) {

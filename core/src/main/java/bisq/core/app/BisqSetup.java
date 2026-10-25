@@ -414,9 +414,9 @@ public class BisqSetup {
             else if (displayTorNetworkSettingsHandler != null)
                 displayTorNetworkSettingsHandler.accept(true);
 
-            log.info("Set log level for org.berndpruenster.netlayer classes to DEBUG to show more details for " +
+            log.info("Set log level for bisq.network.tor classes to DEBUG to show more details for " +
                     "Tor network connection issues");
-            Log.setCustomLogLevel("org.berndpruenster.netlayer", Level.DEBUG);
+            Log.setCustomLogLevel("bisq.network.tor", Level.DEBUG);
 
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 

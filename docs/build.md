@@ -140,6 +140,9 @@ above: it overwrites both local URLs with the URL from `.gitmodules`.
 If you do not have JDK 21 installed, check out scripts in the [scripts](../scripts) directory or download it manually
 from https://jdk.java.net/archive/.
 
+3. On Linux, Bisq runs the `tor` executable of the system, which must be on the `PATH`. Install the tor package of your
+   distribution, for example with `sudo apt install tor`. On macOS and Windows, Bisq brings its own Tor.
+
 ## Running Bisq
 
 Once Bisq is installed, its executables will be available in the `scripts` folder under the root project directory. Run **Bisq Desktop** as follows:

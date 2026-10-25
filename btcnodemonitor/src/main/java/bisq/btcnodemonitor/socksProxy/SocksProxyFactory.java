@@ -18,8 +18,7 @@
 package bisq.btcnodemonitor.socksProxy;
 
 import bisq.network.p2p.network.Socks5ProxyInternalFactory;
-
-import org.berndpruenster.netlayer.tor.Tor;
+import bisq.network.tor.TorService;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -30,24 +29,19 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class SocksProxyFactory implements Socks5ProxyInternalFactory {
-    private final String torControlHost;
     @Setter
     @Nullable
-    private Tor tor;
+    private TorService torService;
     private Socks5Proxy socksProxy;
-
-    public SocksProxyFactory(String torControlHost) {
-        this.torControlHost = torControlHost;
-    }
 
     @Override
     public Socks5Proxy getSocksProxy() {
-        if (tor == null) {
+        if (torService == null) {
             return null;
         } else {
             try {
                 if (socksProxy == null) {
-                    socksProxy = tor.getProxy(torControlHost, null);
+                    socksProxy = torService.getSocks5Proxy();
                 }
                 return socksProxy;
             } catch (Throwable t) {

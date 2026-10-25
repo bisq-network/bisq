@@ -17,39 +17,146 @@
 
 package bisq.network.p2p.network;
 
-import org.berndpruenster.netlayer.tor.NativeTor;
+import bisq.network.tor.TorService;
+import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+
+import java.nio.file.Files;
 
 import java.io.File;
+import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.mockito.MockedConstruction;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class NewTorTest {
 
     @Test
-    void leavesNativeTorShutdownToBisq(@TempDir File torDir) {
-        var context = new AtomicReference<MockedConstruction.Context>();
-        try (var construction = mockConstruction(NativeTor.class,
-                (mock, constructionContext) -> context.set(constructionContext))) {
+    void doesNotStartTorWhenBridgesAreConfigured(@TempDir File torDir) {
+        try (var construction = mockConstruction(TorService.class)) {
+            var newTor = new NewTor(torDir, null, "", () -> List.of("obfs4 192.0.2.1:443 cert=x iat-mode=0"));
+
+            var exception = assertThrows(IllegalStateException.class, newTor::getTor);
+
+            assertEquals(NewTor.BRIDGES_NOT_SUPPORTED, exception.getMessage());
+            assertEquals(0, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void startsTorWithTheTorDirAndTheTorrcOverrides(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            var newTor = new NewTor(torDir, null, "SocksPort 9150", List::of);
+
+            var torService = newTor.getTor();
+
+            assertSame(construction.constructed().get(0), torService);
+            assertEquals(torDir.toPath(), config.get().getDataDirPath());
+            assertEquals(Map.of("SocksPort", "9150"), config.get().getTorrcOverrides());
+            assertFalse(config.get().isUseExternalTor());
+        }
+    }
+
+    @Test
+    void stopsTorWhenTheStartFails(@TempDir File torDir) {
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new IllegalStateException("bootstrap failed")))) {
             var newTor = new NewTor(torDir, null, "", List::of);
 
-            var tor = assertDoesNotThrow(newTor::getTor);
+            assertThrows(IllegalStateException.class, newTor::getTor);
 
-            assertEquals(1, construction.constructed().size());
-            assertSame(construction.constructed().get(0), tor);
-            assertEquals(4, context.get().arguments().size());
-            assertFalse((Boolean) context.get().arguments().get(3));
+            verify(construction.constructed().get(0)).shutdown();
         }
+    }
+
+    @Test
+    void startsTorAgainWithoutItsFilesWhenItDoesNotBootstrap(@TempDir File torDir) throws IOException {
+        Files.createDirectories(torDir.toPath().resolve("hiddenservice"));
+        Files.writeString(torDir.toPath().resolve("external_tor.config"), "");
+        var startAttempts = new AtomicInteger();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            int attempt = startAttempts.incrementAndGet();
+            Files.writeString(torDir.toPath().resolve("cached-microdescs" + attempt), "");
+            if (attempt < 3) {
+                when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")));
+            } else {
+                when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+            }
+        })) {
+            var newTor = new NewTor(torDir, null, "", List::of);
+
+            var torService = newTor.getTor();
+
+            assertEquals(3, construction.constructed().size());
+            assertSame(construction.constructed().get(2), torService);
+            verify(construction.constructed().get(0)).shutdown();
+            verify(construction.constructed().get(1)).shutdown();
+            verify(construction.constructed().get(2), never()).shutdown();
+            Set<String> fileNames = Arrays.stream(torDir.list()).collect(Collectors.toSet());
+            assertEquals(Set.of("hiddenservice", "external_tor.config", "cached-microdescs3"), fileNames);
+        }
+    }
+
+    @Test
+    void givesUpAfterFiveStartsWithoutBootstrap(@TempDir File torDir) {
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds"))))) {
+            var newTor = new NewTor(torDir, null, "", List::of);
+
+            assertThrows(CompletionException.class, newTor::getTor);
+
+            assertEquals(5, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void ignoresBridgeLinesOfTenCharactersOrLess() {
+        String bridge = "obfs4 192.0.2.1:443 cert=x iat-mode=0";
+
+        assertEquals(List.of(), NewTor.getBridgeLines(null));
+        assertEquals(List.of(), NewTor.getBridgeLines(List.of("", "  ", "1.2.3.4:1")));
+        assertEquals(List.of(bridge), NewTor.getBridgeLines(Arrays.asList("", bridge, null)));
+    }
+
+    @Test
+    void dropsTheTorrcEntriesWhichTheTorLibraryNeeds() {
+        Map<String, String> torrcOverrides = NewTor.getTorrcOverrides(null, "SocksPort 9150, " +
+                "datadirectory /tmp/tor, ControlPort 9051, ControlPortWriteToFile /tmp/control, " +
+                "HashedControlPassword 16:00, Log notice stdout");
+
+        assertEquals(Map.of("SocksPort", "9150", "Log", "notice stdout"), torrcOverrides);
+    }
+
+    @Test
+    void dropsAbbreviationsOfTheTorrcEntriesWhichTheTorLibraryNeeds() {
+        Map<String, String> torrcOverrides = NewTor.getTorrcOverrides(null,
+                "DataDir /tmp/tor, controlportwriteto /tmp/control, SocksPort 9150");
+
+        assertEquals(Map.of("SocksPort", "9150"), torrcOverrides);
     }
 }

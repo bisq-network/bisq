@@ -119,6 +119,34 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenTorControlPortOptionIsSet_thenConfigExceptionIsThrown() {
+        Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt(TOR_CONTROL_PORT, 9051)));
+
+        assertTrue(exception.getMessage().contains("option 'torControlPort' is not supported anymore"));
+        assertTrue(exception.getMessage().contains("external_tor.config"));
+    }
+
+    @Test
+    public void whenTorControlUseSafeCookieAuthFlagIsSet_thenConfigExceptionIsThrown() {
+        Exception exception = assertThrows(ConfigException.class,
+                () -> configWithOpts(opt(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)));
+
+        assertTrue(exception.getMessage().contains("option 'torControlUseSafeCookieAuth' is not supported anymore"));
+    }
+
+    @Test
+    public void whenTorControlOptionIsSetInConfigFile_thenConfigExceptionIsThrown() throws IOException {
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(TOR_CONTROL_HOST, "bisq-tor"));
+        }
+        Exception exception = assertThrows(ConfigException.class,
+                () -> configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath())));
+
+        assertTrue(exception.getMessage().contains("option 'torControlHost' is not supported anymore"));
+    }
+
+    @Test
     public void whenUnrecognizedOptionIsSetInConfigFile_thenNoExceptionIsThrown() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         try (PrintWriter writer = new PrintWriter(configFile)) {

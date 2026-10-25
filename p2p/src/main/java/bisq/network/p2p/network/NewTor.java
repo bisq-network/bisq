@@ -17,17 +17,23 @@
 
 package bisq.network.p2p.network;
 
-import org.berndpruenster.netlayer.tor.NativeTor;
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-import org.berndpruenster.netlayer.tor.Torrc;
+import bisq.network.tor.TorService;
+import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+
+import com.google.common.base.Throwables;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,18 +41,34 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 /**
- * This class creates a brand new instance of the Tor onion router.
+ * This class starts Tor with the Tor library.
  *
  * When asked, the class checks, whether command line parameters such as
  * --torrcFile and --torrcOptions are set and if so, takes these settings into
- * account. Then, a fresh set of Tor binaries is installed and Tor is launched.
- * Finally, a {@link Tor} instance is returned for further use.
+ * account. Then the Tor library starts Tor, or connects to a running Tor if
+ * external_tor.config in the Tor directory or the environment variable
+ * TOR_SKIP_LAUNCH says so, or on Whonix. Finally, the {@link TorService} is
+ * returned for further use.
  *
  * @author Florian Reimair
  *
  */
 @Slf4j
 public class NewTor extends TorMode {
+    private static final int BOOTSTRAP_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(4);
+    // netlayer waited for the upload of the onion service descriptor without a time limit. Tor keeps trying to upload
+    // it, so giving up early would leave a node which cannot be reached.
+    private static final int HS_UPLOAD_TIMEOUT = Integer.MAX_VALUE;
+    // netlayer started Tor up to 5 times, because Tor sometimes does not bootstrap with the files of an earlier run,
+    // and deleted these files before each new attempt.
+    private static final int START_ATTEMPTS = 5;
+    // The Tor library needs these torrc entries for its control connection and the Tor data. Tor accepts option
+    // names in any case and as abbreviation.
+    private static final Set<String> PROTECTED_TORRC_KEYS = Set.of("datadirectory", "controlport",
+            "controlportwritetofile", "hashedcontrolpassword");
+    static final String BRIDGES_NOT_SUPPORTED = "Bisq cannot use the configured Tor bridges yet and does not " +
+            "connect without them, because your network could then see that you use Tor, and Tor may be blocked. " +
+            "To connect without bridges, remove them in the Tor network settings.";
 
     private final File torrcFile;
     private final String torrcOptions;
@@ -60,32 +82,77 @@ public class NewTor extends TorMode {
     }
 
     @Override
-    public Tor getTor() throws IOException, TorCtlException {
+    public TorService getTor() {
         long ts1 = new Date().getTime();
 
-        Collection<String> bridgeEntries = bridgeAddressProvider.getBridgeAddresses();
-        if (bridgeEntries != null && !bridgeEntries.isEmpty())
-            log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
+        if (!getBridgeLines(bridgeAddressProvider.getBridgeAddresses()).isEmpty()) {
+            // TODO Use the bridges once the Tor library supports bridges and pluggable transports. Until then Tor
+            //  must not start: the user relies on the bridges to get around a block or to hide the use of Tor.
+            throw new IllegalStateException(BRIDGES_NOT_SUPPORTED);
+        }
 
+        TorTransportConfig transportConfig = new TorTransportConfig(torDir.toPath(),
+                BOOTSTRAP_TIMEOUT,
+                HS_UPLOAD_TIMEOUT,
+                false,
+                Set.of(),
+                getTorrcOverrides(torrcFile, torrcOptions),
+                false);
+        for (int attempt = 1; ; attempt++) {
+            TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
+            log.info("Starting tor");
+            try {
+                torService.initialize().join();
+                log.info(
+                        "\n################################################################\n"
+                                + "Tor started after {} ms. Start publishing hidden service.\n"
+                                + "################################################################",
+                        (new Date().getTime() - ts1)); // takes usually a few seconds
+                return torService;
+            } catch (RuntimeException e) {
+                // TorService does not stop the Tor process it started if a later step of the start fails.
+                torService.shutdown()
+                        .exceptionally(throwable -> {
+                            log.warn("Could not stop Tor after the failed start", throwable);
+                            return false;
+                        })
+                        .join();
+                if (attempt == START_ATTEMPTS ||
+                        !(Throwables.getRootCause(e) instanceof TorBootstrapFailedException)) {
+                    throw e;
+                }
+                log.warn("Tor did not bootstrap at attempt {} of {}. We delete the Tor files and start Tor again.",
+                        attempt, START_ATTEMPTS, e);
+                try {
+                    deleteTorFiles(torDir);
+                } catch (IOException ioException) {
+                    throw new UncheckedIOException(ioException);
+                }
+            }
+        }
+    }
+
+    // netlayer used only bridge lines with more than 10 characters, so an empty line of the custom bridges is no
+    // bridge.
+    static List<String> getBridgeLines(@Nullable Collection<String> bridgeAddresses) {
+        if (bridgeAddresses == null) {
+            return List.of();
+        }
+        return bridgeAddresses.stream()
+                .filter(line -> line != null && line.trim().length() > 10)
+                .collect(Collectors.toList());
+    }
+
+    static LinkedHashMap<String, String> getTorrcOverrides(@Nullable File torrcFile, String torrcOptions) {
         LinkedHashMap<String, String> torrcOverrides = TorrcOverrides.parse(torrcFile, torrcOptions);
-        Torrc override = torrcOverrides.isEmpty() ? null : new Torrc(torrcOverrides);
-
-        log.info("Starting tor");
-        // Bisq owns Tor teardown through its graceful-shutdown flow. Letting netlayer register an
-        // additional JVM shutdown hook would race that flow for the same control connection.
-        NativeTor result = new NativeTor(torDir, bridgeEntries, override, false);
-        log.info(
-                "\n################################################################\n"
-                        + "Tor started after {} ms. Start publishing hidden service.\n"
-                        + "################################################################",
-                (new Date().getTime() - ts1)); // takes usually a few seconds
-
-        return result;
+        torrcOverrides.keySet().removeIf(key -> {
+            String lowerCaseKey = key.toLowerCase(Locale.ROOT);
+            boolean isProtected = PROTECTED_TORRC_KEYS.stream().anyMatch(name -> name.startsWith(lowerCaseKey));
+            if (isProtected) {
+                log.warn("Ignoring the custom torrc entry {}, because Bisq needs its own value.", key);
+            }
+            return isProtected;
+        });
+        return torrcOverrides;
     }
-
-    @Override
-    public String getHiddenServiceDirectory() {
-        return "";
-    }
-
 }

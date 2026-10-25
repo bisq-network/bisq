@@ -84,6 +84,21 @@ sudo service bisq restart
 sudo journalctl --unit bisq --follow
 ```
 
+#### Upgrading to the Tor library
+
+Since Bisq uses the Tor library of the `tor/` submodule instead of netlayer, the options `--torControlPort`,
+`--torControlCookieFile` and `--torControlUseSafeCookieAuth` stop the seed node at the start. The new `bisq.service`
+writes the settings of the system tor to `external_tor.config` in the Tor directory instead, and starts after tor.
+Before you restart the upgraded seed node, install the new unit and reload systemd:
+```bash
+sudo install -c -m 644 /bisq/bisq/seednode/bisq.service /etc/systemd/system/bisq.service
+sudo sed -i -e "s/__BISQ_REPO_NAME__/bisq/" -e "s!__BISQ_HOME__!/bisq!" /etc/systemd/system/bisq.service
+sudo systemctl daemon-reload
+```
+Adapt the paths if your installation differs, and apply the changes which `install_seednode_debian.sh` makes for the
+`bitcoin.service` dependency again. `BISQ_EXTERNAL_TOR_CONTROL_USE_COOKIE` in `/etc/default/bisq.env` is no longer used:
+the Tor library authenticates with the plain cookie method.
+
 ### Uninstall
 
 If you need to start over, you can run the uninstall script in this repo
