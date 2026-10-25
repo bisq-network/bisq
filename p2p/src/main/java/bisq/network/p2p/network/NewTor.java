@@ -23,10 +23,8 @@ import org.berndpruenster.netlayer.tor.TorCtlException;
 import org.berndpruenster.netlayer.tor.Torrc;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -69,40 +67,8 @@ public class NewTor extends TorMode {
         if (bridgeEntries != null && !bridgeEntries.isEmpty())
             log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
-        Torrc override = null;
-
-        // check if the user wants to provide his own torrc file
-        if (torrcFile != null) {
-            try {
-                override = new Torrc(new FileInputStream(torrcFile));
-            } catch (IOException e) {
-                log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
-            }
-        }
-
-        // check if the user wants to temporarily add to the default torrc file
-        LinkedHashMap<String, String> torrcOptionsMap = new LinkedHashMap<>();
-        if (!"".equals(torrcOptions)) {
-            Arrays.asList(torrcOptions.split(",")).forEach(line -> {
-                line = line.trim();
-                if (line.matches("^[^\\s]+\\s.+")) {
-                    String[] tmp = line.split("\\s", 2);
-                    torrcOptionsMap.put(tmp[0].trim(), tmp[1].trim());
-                } else {
-                    log.error("custom torrc override parse error ('{}'). Proceeding without custom overrides.", line);
-                    torrcOptionsMap.clear();
-                }
-            });
-        }
-
-        // assemble final override options
-        if (!torrcOptionsMap.isEmpty())
-            // check for custom torrcFile
-            if (override != null)
-                // and merge the contents
-                override = new Torrc(override.getInputStream$tor_native(), torrcOptionsMap);
-            else
-                override = new Torrc(torrcOptionsMap);
+        LinkedHashMap<String, String> torrcOverrides = TorrcOverrides.parse(torrcFile, torrcOptions);
+        Torrc override = torrcOverrides.isEmpty() ? null : new Torrc(torrcOverrides);
 
         log.info("Starting tor");
         // Bisq owns Tor teardown through its graceful-shutdown flow. Letting netlayer register an
