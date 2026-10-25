@@ -41,7 +41,6 @@ import java.io.IOException;
 
 import java.util.HexFormat;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -159,41 +158,29 @@ public class TorNetworkNode extends NetworkNode {
         super.shutDown(() -> shutDownTor(shutDownCompleteHandler));
     }
 
-    @Override
-    void shutDownServer(Server server) {
-        // Serialize HiddenServiceSocket.close(), which sends DEL_ONION, with the subsequent Tor
-        // shutdown commands while keeping both operations off the UserThread.
-        server.shutDown(executor);
-    }
-
     private void shutDownTor(@Nullable Runnable shutDownCompleteHandler) {
         if (shutDownCompleted.get() || !torShutDownStarted.compareAndSet(false, true)) {
             return;
         }
 
-        try {
-            // Tor shutdown waits for the Tor process to exit. Keep the UserThread available for the
-            // bounded shutdown timeout and the persistence flush which follows it.
-            executor.execute(() -> {
-                try {
-                    TorService currentTorService = torService;
-                    if (currentTorService != null) {
-                        currentTorService.shutdown().join();
-                        torService = null;
-                        log.info("Tor shutdown completed");
-                    }
-                } catch (Throwable e) {
-                    log.error("Shutdown torNetworkNode failed with exception", e);
-                } finally {
-                    UserThread.execute(() -> completeShutDown(shutDownCompleteHandler));
-                }
-            });
-        } catch (RejectedExecutionException e) {
-            if (!shutDownCompleted.get()) {
-                log.error("Could not schedule Tor shutdown", e);
-            }
+        TorService currentTorService = torService;
+        torService = null;
+        if (currentTorService == null) {
+            // A Tor which is still starting is stopped by the start, which checks shutDownInProgress.
             completeShutDown(shutDownCompleteHandler);
+            return;
         }
+
+        // TorService stops Tor on another thread and waits for the Tor process to exit. The UserThread stays
+        // available for the bounded shutdown timeout and the persistence flush which follows it.
+        currentTorService.shutdown().whenComplete((result, throwable) -> {
+            if (throwable != null) {
+                log.error("Shutdown torNetworkNode failed with exception", throwable);
+            } else {
+                log.info("Tor shutdown completed");
+            }
+            UserThread.execute(() -> completeShutDown(shutDownCompleteHandler));
+        });
     }
 
     private void completeShutDown(@Nullable Runnable shutDownCompleteHandler) {

@@ -373,7 +373,7 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             if (server != null) {
-                shutDownServer(server);
+                server.shutDown();
                 server = null;
             }
 
@@ -487,10 +487,6 @@ public abstract class NetworkNode implements MessageListener, Socks5ProxyInterna
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void shutDownServer(Server server) {
-        server.shutDown();
-    }
 
     void startServer(ServerSocket serverSocket) {
         ConnectionListener connectionListener = new ConnectionListener() {
