@@ -25,10 +25,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.nio.file.Paths;
-
 import java.io.File;
 import java.io.IOException;
+
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +39,10 @@ import static bisq.common.util.Preconditions.checkDir;
 @Slf4j
 @Singleton
 public class TorSetup {
+    // The onion service key and the user's configuration of an external Tor, which the Tor library reads from the
+    // Tor directory.
+    private static final Set<String> KEPT_FILE_NAMES = Set.of("hiddenservice", "external_tor.config");
+
     private final File torDir;
 
     @Inject
@@ -48,10 +52,16 @@ public class TorSetup {
 
     // Should only be called if needed. Slows down Tor startup from about 5 sec. to 30 sec. if it gets deleted.
     public void cleanupTorFiles(@Nullable Runnable resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
         try {
-            FileUtil.deleteDirectory(torDir, hiddenservice, true);
-            log.info("All Tor files except hiddenservice directory got deleted");
+            File[] files = torDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (!KEPT_FILE_NAMES.contains(file.getName())) {
+                        FileUtil.deleteDirectory(file, null, true);
+                    }
+                }
+            }
+            log.info("All Tor files except the hiddenservice directory and external_tor.config got deleted");
             if (resultHandler != null)
                 resultHandler.run();
         } catch (IOException e) {
