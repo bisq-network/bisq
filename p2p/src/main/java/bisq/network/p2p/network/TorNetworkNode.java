@@ -18,6 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.onionservice.OnionServiceKey;
 
@@ -40,6 +41,7 @@ import java.net.Socket;
 import java.io.IOException;
 
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -307,6 +309,15 @@ public class TorNetworkNode extends NetworkNode {
 
     private static String getErrorMessage(Throwable throwable) {
         Throwable rootCause = Throwables.getRootCause(throwable);
+        // Its message names the running Tor, the cause and what the user can do. The root cause alone, for example
+        // "Connection refused", does not say that Bisq was configured to use a running Tor.
+        Optional<ExternalTorUnavailableException> externalTorUnavailable = Throwables.getCausalChain(throwable).stream()
+                .filter(ExternalTorUnavailableException.class::isInstance)
+                .map(ExternalTorUnavailableException.class::cast)
+                .findFirst();
+        if (externalTorUnavailable.isPresent()) {
+            return externalTorUnavailable.get().getMessage();
+        }
         return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
     }
 }

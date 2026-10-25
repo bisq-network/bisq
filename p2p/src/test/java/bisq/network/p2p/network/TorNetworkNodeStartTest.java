@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
@@ -96,6 +97,26 @@ class TorNetworkNodeStartTest {
             verify(torService).shutdown();
             assertNull(getTorService(networkNode));
             assertEquals(1, listener.published.getCount());
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void reportsWhyTheRunningTorCannotBeUsed() throws Exception {
+        String message = "Bisq is configured to use a Tor which runs outside Bisq, but it cannot use the Tor at " +
+                "127.0.0.1:9051: Connection refused.";
+        TorMode torMode = mock(TorMode.class);
+        when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
+        when(torMode.getTor()).thenThrow(new CompletionException(new ExternalTorUnavailableException(message)));
+        var networkNode = new TorNetworkNode(8080, mock(NetworkProtoResolver.class), false, torMode, null, 2);
+        var listener = new RecordingSetupListener();
+
+        try {
+            networkNode.start(listener);
+
+            assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
+            assertEquals(message, listener.failure.get().getMessage());
         } finally {
             shutDownExecutors(networkNode);
         }
