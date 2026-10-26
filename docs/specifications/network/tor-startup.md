@@ -71,7 +71,8 @@ the onion service completes at the start or at the end of the upload of its desc
 onion-grater deliver only the end in a form which the node accepts.
 
 Before it uses the running Tor, the node waits until that Tor has bootstrapped, at most 4 minutes, as netlayer did. It
-does not change the configuration of the running Tor.
+does not change the configuration of the running Tor. The restarts with fresh files, which the node does for its own
+Tor, do not apply to a running Tor: if it does not bootstrap in time, the start fails at once.
 
 If the node cannot use the running Tor, the start fails with an error which names the host and port and the cause. The
 node never starts its own Tor instead. The user may rely on the running Tor, for example for its bridges, and the own

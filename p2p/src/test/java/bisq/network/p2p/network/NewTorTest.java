@@ -18,6 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -152,6 +154,25 @@ class NewTorTest {
             assertThrows(CompletionException.class, newTor::getTor);
 
             assertEquals(5, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void doesNotStartTorAgainWhenTheRunningTorDoesNotBootstrap(@TempDir File torDir) throws IOException {
+        // The library reports a running Tor which did not bootstrap in time with ExternalTorUnavailableException,
+        // whose message names the timeout. Fresh files and four more waits of 4 minutes cannot help a running Tor.
+        Files.writeString(torDir.toPath().resolve("external_tor.config"), "UseExternalTor 1");
+        Files.writeString(torDir.toPath().resolve("tor-stdout.log"), "");
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new ExternalTorUnavailableException(
+                        "Bisq is configured to use a Tor which runs outside Bisq, but it cannot use the Tor at " +
+                                "127.0.0.1:9051: The external Tor did not bootstrap within 240 seconds.")))) {
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+
+            assertThrows(ExternalTorUnavailableException.class, newTor::getTor);
+
+            assertEquals(1, construction.constructed().size());
+            assertTrue(Files.exists(torDir.toPath().resolve("tor-stdout.log")));
         }
     }
 

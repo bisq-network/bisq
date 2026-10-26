@@ -18,6 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -99,8 +100,7 @@ public class NewTor extends TorMode {
                 return torService;
             } catch (RuntimeException e) {
                 // TorService stops the Tor process it started when a later step of the start fails.
-                if (attempt == START_ATTEMPTS ||
-                        !(Throwables.getRootCause(e) instanceof TorBootstrapFailedException)) {
+                if (attempt == START_ATTEMPTS || !canStartAgain(e)) {
                     throw e;
                 }
                 log.warn("Tor did not bootstrap at attempt {} of {}. We delete the Tor files and start Tor again.",
@@ -112,6 +112,14 @@ public class NewTor extends TorMode {
                 }
             }
         }
+    }
+
+    // Only the Tor which the node starts can be started again with fresh files. A running Tor which did not bootstrap
+    // in time fails with ExternalTorUnavailableException, and waiting for it four more times and deleting the files of
+    // the node's own Tor in between cannot help; the start fails at once, as specified.
+    static boolean canStartAgain(RuntimeException e) {
+        return Throwables.getCausalChain(e).stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
+                Throwables.getRootCause(e) instanceof TorBootstrapFailedException;
     }
 
     // The library uses the bridges only for the Tor which it starts. A running Tor uses its own bridges.
