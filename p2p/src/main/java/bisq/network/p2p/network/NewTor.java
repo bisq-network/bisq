@@ -19,9 +19,12 @@ package bisq.network.p2p.network;
 
 import bisq.network.tor.BridgeConfig;
 import bisq.network.tor.ExternalTorUnavailableException;
+import bisq.network.tor.TorSandboxConfig;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+
+import bisq.common.config.Config;
 
 import com.google.common.base.Throwables;
 
@@ -64,15 +67,28 @@ public class NewTor extends TorMode {
     // and deleted these files before each new attempt.
     private static final int START_ATTEMPTS = 5;
 
+    static final String SANDBOX_OPT_OUT_HINT = "Start Bisq with the option --" + Config.USE_TOR_SANDBOX +
+            "=false to run Tor without the sandbox.";
+
     private final File torrcFile;
     private final String torrcOptions;
     private final BridgeAddressProvider bridgeAddressProvider;
+    private final boolean useTorSandbox;
 
     public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
+        this(torWorkingDirectory, torrcFile, torrcOptions, bridgeAddressProvider, false);
+    }
+
+    public NewTor(File torWorkingDirectory,
+                  @Nullable File torrcFile,
+                  String torrcOptions,
+                  BridgeAddressProvider bridgeAddressProvider,
+                  boolean useTorSandbox) {
         super(torWorkingDirectory);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
         this.bridgeAddressProvider = bridgeAddressProvider;
+        this.useTorSandbox = useTorSandbox;
     }
 
     @Override
@@ -86,7 +102,8 @@ public class NewTor extends TorMode {
                 Set.of(),
                 getTorrcOverrides(torrcFile, torrcOptions),
                 false,
-                getBridgeConfig(bridgeAddressProvider));
+                getBridgeConfig(bridgeAddressProvider),
+                getSandboxConfig(useTorSandbox));
         for (int attempt = 1; ; attempt++) {
             TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
             log.info("Starting tor");
@@ -120,6 +137,19 @@ public class NewTor extends TorMode {
     static boolean canStartAgain(RuntimeException e) {
         return Throwables.getCausalChain(e).stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
                 Throwables.getRootCause(e) instanceof TorBootstrapFailedException;
+    }
+
+    // In its sandbox Tor has a network of its own on every platform, so it reaches the onion service of the node only
+    // through a port which sandy forwards; the library refuses a sandboxed start without them. A Bisq 1 node publishes
+    // one onion service. The sandbox lets Tor start no pluggable transports, so bridges which need them fail the
+    // sandboxed start. A running Tor runs without the sandbox.
+    static TorSandboxConfig getSandboxConfig(boolean useTorSandbox) {
+        return new TorSandboxConfig(useTorSandbox,
+                true,
+                false,
+                1,
+                "bisq1",
+                SANDBOX_OPT_OUT_HINT);
     }
 
     // The library uses the bridges only for the Tor which it starts. A running Tor uses its own bridges.

@@ -23,6 +23,7 @@ import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 
 import bisq.common.FrameRateTimer;
 import bisq.common.UserThread;
@@ -34,6 +35,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
+
+import java.io.IOException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -123,6 +126,27 @@ class TorNetworkNodeStartTest {
             // Bridges of the Tor network settings do not help a running Tor, which uses its own.
             waitForTheUserThread();
             assertEquals(1, listener.bridgesRequested.getCount());
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void reportsWhyTorCannotRunInTheSandbox() throws Exception {
+        var sandboxUnavailable = new SandboxUnavailableException("This build of Bisq contains no sandy binary.",
+                NewTor.SANDBOX_OPT_OUT_HINT, new IOException("Missing resource"));
+        TorMode torMode = mock(TorMode.class);
+        when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
+        when(torMode.getTor()).thenThrow(new CompletionException(sandboxUnavailable));
+        var networkNode = new TorNetworkNode(8080, mock(NetworkProtoResolver.class), false, torMode, null, 2);
+        var listener = new RecordingSetupListener();
+
+        try {
+            networkNode.start(listener);
+
+            assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
+            assertEquals(sandboxUnavailable.getMessage(), listener.failure.get().getMessage());
+            assertTrue(listener.failure.get().getMessage().contains("--useTorSandbox=false"));
         } finally {
             shutDownExecutors(networkNode);
         }

@@ -69,6 +69,26 @@ class NewTorTest {
     }
 
     @Test
+    void passesTheSandboxOptionToTheTorLibrary(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, null, "", BridgeAddressProvider.NONE, true).getTor();
+
+            assertTrue(config.get().getSandboxConfig().isEnabled());
+            // The library refuses a sandboxed start without forwarded onion service ports.
+            assertTrue(config.get().getSandboxConfig().isForwardOnionServicePorts());
+            assertFalse(config.get().getSandboxConfig().isAllowPluggableTransports());
+            assertEquals("bisq1", config.get().getSandboxConfig().getApplicationId());
+            assertTrue(config.get().getSandboxConfig().getOptOutHint().contains("--useTorSandbox=false"));
+        }
+        // Applications without the option, such as btcnodemonitor, run Tor without the sandbox.
+        assertFalse(NewTor.getSandboxConfig(false).isEnabled());
+    }
+
+    @Test
     void mapsTheTorNetworkSettingsToTheBridgesOfTheTorLibrary() {
         String bridge = "obfs4 192.0.2.1:443 cert=x iat-mode=0";
 

@@ -128,6 +128,12 @@ public class ConfigTests {
     }
 
     @Test
+    public void theTorSandboxIsOnUnlessTheOptionTurnsItOff() {
+        assertTrue(new Config().useTorSandbox);
+        assertFalse(configWithOpts(opt(USE_TOR_SANDBOX, "false")).useTorSandbox);
+    }
+
+    @Test
     public void onWhonixTheTorControlOptionsOfTheWhonixGuideAreIgnored() {
         // On a Whonix-Workstation the Tor library uses the Tor of the Whonix-Gateway and never starts its own Tor.
         File configFile = new File("bisq.properties");

@@ -117,6 +117,7 @@ public class Config {
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
+    public static final String USE_TOR_SANDBOX = "useTorSandbox";
     public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
     public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
     public static final String SEND_MSG_THROTTLE_TRIGGER = "sendMsgThrottleTrigger";
@@ -240,6 +241,7 @@ public class Config {
     public final File torrcFile;
     public final String torrcOptions;
     public final boolean torStreamIsolation;
+    public final boolean useTorSandbox;
     public final int msgThrottlePerSec;
     public final int msgThrottlePer10Sec;
     public final int sendMsgThrottleTrigger;
@@ -636,6 +638,13 @@ public class Config {
         OptionSpecBuilder torStreamIsolationOpt =
                 parser.accepts(TOR_STREAM_ISOLATION, "Use stream isolation for Tor [experimental!].");
 
+        ArgumentAcceptingOptionSpec<Boolean> useTorSandboxOpt =
+                parser.accepts(USE_TOR_SANDBOX, "Run the Tor which Bisq starts in the sandbox of the operating " +
+                                "system with sandy. If the sandbox cannot be enforced, the start fails.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(true);
+
         ArgumentAcceptingOptionSpec<Integer> msgThrottlePerSecOpt =
                 parser.accepts(MSG_THROTTLE_PER_SEC, "Message throttle per sec for connection class")
                         .withRequiredArg()
@@ -1003,6 +1012,7 @@ public class Config {
                     .map(optionSpec -> optionSpec.options().get(0))
                     .collect(toList());
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
+            this.useTorSandbox = options.valueOf(useTorSandboxOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevModeHeader = options.valueOf(useDevModeHeaderOpt);

@@ -53,7 +53,7 @@ which the node writes to `tor-stdout.log` in the Tor directory; above 10 MiB it 
 before the next start.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
-sandbox program). The torrc, the logs, `external_tor.config` and the `hiddenservice` directory with the
+sandbox program, see "Sandbox"). The torrc, the logs, `external_tor.config` and the `hiddenservice` directory with the
 key of the onion service lie in the Tor directory itself, outside the directory which Tor writes. Before a start of its
 own Tor, the node moves the state of Tor of the layout before into `data/`, deletes only the files of the old layout
 which it knows, and keeps everything else. The `hiddenservice` directory, its key backups and files of the user stay
@@ -142,6 +142,37 @@ Tor network settings so that the user can choose bridges, as with netlayer.
 
 The node does not log bridge lines, because a bridge which a user got privately is blocked once it is known.
 
+### Sandbox
+
+The node runs the Tor which it starts in the sandbox of the operating system with sandy, unless it is started with
+`--useTorSandbox=false`. Every build contains the sandy binary of its platform, which the Tor build checks against its
+pinned SHA-256 hash.
+
+The base level of the sandbox is the maximum lockdown. Tor may read its torrc and the bundle and write only its data
+directory; on Linux and macOS every other path looks missing to it. Tor has a network of its own: the node reaches the
+control and SOCKS listeners through ports which sandy relays, Tor reaches the onion service of the node only through a
+port which sandy forwards, and Tor connects out only through the egress broker of sandy, which reaches public
+addresses only. Tor cannot start other processes, cannot signal processes outside the sandbox, and ends when the node
+ends. Where the system cannot enforce the base level, sandy selects a weaker level of the policy: below Linux 6.12 a
+PID namespace isolates the signals of Tor, and where unprivileged user namespaces are restricted or off, Tor gets the
+network of the system. The node logs the level, with a warning for a level with the network of the system or without
+isolated signals.
+
+Pluggable transports are programs which Tor starts for bridges. The sandbox does not let Tor start them, so bridges
+which need them fail the sandboxed start.
+
+If the sandbox is on, the start fails with an error which names the reason and the option to turn the sandbox off, and
+the node never starts Tor without the sandbox instead, when:
+
+- the bridges need pluggable transports;
+- a torrc entry of the user sets a proxy option, or without bridges sets `ClientTransportPlugin` or
+  `ServerTransportPlugin`;
+- the system can enforce no level of the sandbox, for example Linux without Landlock, or the build contains no sandy;
+- sandy cannot tell now whether the system enforces the sandbox.
+
+A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
+`hiddenservice`: the node sends the key of the onion service to Tor over the control connection.
+
 ## Rationale
 
 Users configure bridges to get around a block of Tor or to hide from their network that they use Tor. Connecting
@@ -153,9 +184,16 @@ A running Tor is configured in the same file as in Bisq 2, because both use the 
 The node runs the Tor of the bundle on Linux as well, so that every platform runs the tor version and the pluggable
 transports which the build verified, independent of the version and the patch level which a distribution packages.
 
+Tor parses data from the network, and the sandbox keeps a compromised Tor away from the wallet and the keys of the
+node. A start which cannot get the sandbox fails instead of running Tor without it, so that the user does not lose the
+sandbox without being told.
+
 ## Known gaps
 
 - On Linux ARM64 the node runs the Tor of an alpha release of Tor Browser, because no stable release has a Tor expert
   bundle for Linux ARM64. The build pins that bundle by its hash and requires the tor version of the stable bundle.
+- At a level with the network of the system, the sandbox does not keep Tor from connecting to local services of the
+  user, for example a local Bitcoin node or the API of the daemon; their own authentication protects them. Tor cannot
+  read the wallet and the keys of the node.
 - A running Tor on another host reaches the onion service of the node only at `127.0.0.1` of its own host, for example
   in a shared network namespace or on Whonix, where onion-grater rewrites the target.
