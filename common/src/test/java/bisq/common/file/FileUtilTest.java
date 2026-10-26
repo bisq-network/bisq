@@ -68,6 +68,22 @@ public class FileUtilTest {
     }
 
     @Test
+    public void copyDirectorySkipsTheGivenDirectories(@TempDir Path tmp) throws IOException {
+        File source = tmp.resolve("source").toFile();
+        File torDir = new File(source, "btc_mainnet/tor");
+        File torDataDir = new File(torDir, "data");
+        assertTrue(torDataDir.mkdirs());
+        Files.write(new File(torDir, "hiddenservice").toPath(), "key".getBytes(StandardCharsets.UTF_8));
+        Files.write(new File(torDataDir, "state").toPath(), "state".getBytes(StandardCharsets.UTF_8));
+
+        File destination = tmp.resolve("backup").toFile();
+        FileUtil.copyDirectory(source, destination, Set.of(torDataDir));
+
+        assertTrue(new File(destination, "btc_mainnet/tor/hiddenservice").exists());
+        assertFalse(new File(destination, "btc_mainnet/tor/data").exists());
+    }
+
+    @Test
     public void copyDirectoryCreatesACopyWhichOnlyTheOwnerCanAccess(@TempDir Path tmp) throws IOException {
         assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
         Path source = Files.createDirectories(tmp.resolve("source"));
@@ -133,21 +149,24 @@ public class FileUtilTest {
     }
 
     @Test
-    public void copyDirectoryFollowsASourceWhichIsALink(@TempDir Path tmp) throws IOException {
+    public void copyDirectoryFollowsASourceWhichIsALinkAndStillSkipsTheGivenDirectories(@TempDir Path tmp)
+            throws IOException {
         // For example a data directory which the user moved to another drive
         Path realSource = Files.createDirectories(tmp.resolve("drive").resolve("Bisq"));
-        Path torDir = Files.createDirectories(realSource.resolve("btc_mainnet/tor"));
-        Files.write(torDir.resolve("state"), "state".getBytes(StandardCharsets.UTF_8));
+        Path torDataDir = Files.createDirectories(realSource.resolve("btc_mainnet/tor/data"));
+        Files.write(torDataDir.resolve("state"), "state".getBytes(StandardCharsets.UTF_8));
         Files.write(realSource.resolve("bisq.properties"), "top".getBytes(StandardCharsets.UTF_8));
         Path source = tmp.resolve("Bisq");
         createSymbolicLinkOrSkip(source, realSource);
 
         File destination = tmp.resolve("backup").toFile();
-        List<File> notCopied = FileUtil.copyDirectory(source.toFile(), destination);
+        List<File> notCopied = FileUtil.copyDirectory(source.toFile(), destination,
+                Set.of(source.resolve("btc_mainnet/tor/data").toFile()));
 
         assertTrue(notCopied.isEmpty());
         assertTrue(new File(destination, "bisq.properties").exists());
-        assertTrue(new File(destination, "btc_mainnet/tor/state").exists());
+        assertTrue(new File(destination, "btc_mainnet/tor").exists());
+        assertFalse(new File(destination, "btc_mainnet/tor/data").exists());
     }
 
     private static void createSymbolicLinkOrSkip(Path link, Path target) {

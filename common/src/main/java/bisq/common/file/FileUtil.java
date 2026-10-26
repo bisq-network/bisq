@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -271,6 +272,16 @@ public class FileUtil {
      * @return the entries of {@code source} which are not copied, so that the caller can tell the user
      */
     public static List<File> copyDirectory(File source, File destination) throws IOException {
+        return copyDirectory(source, destination, Set.of());
+    }
+
+    /**
+     * Like {@link #copyDirectory(File, File)}, but skips the given directories. A directory which another process may
+     * write, such as the data directory of a sandboxed Tor, must not be copied: the process could put a link or a
+     * named pipe there.
+     */
+    public static List<File> copyDirectory(File source, File destination, Set<File> skippedDirectories)
+            throws IOException {
         // Match commons-io's copyDirectory input validation.
         if (!source.exists()) {
             throw new FileNotFoundException("Source '" + source.getAbsolutePath() + "' does not exist");
@@ -285,13 +296,19 @@ public class FileUtil {
         // endlessly copy the destination into itself. Mirrors commons-io's copyDirectory,
         // which builds the same exclusion rather than rejecting such destinations. The walk
         // does not follow links, so it visits real paths below the real source.
-        Path excludedPath = destinationRoot.toRealPath();
+        Set<Path> excludedPaths = new HashSet<>();
+        excludedPaths.add(destinationRoot.toRealPath());
+        for (File skippedDirectory : skippedDirectories) {
+            if (skippedDirectory.exists()) {
+                excludedPaths.add(skippedDirectory.toPath().toRealPath());
+            }
+        }
         List<File> notCopied = new ArrayList<>();
         java.nio.file.Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes)
                     throws IOException {
-                if (directory.equals(excludedPath)) {
+                if (excludedPaths.contains(directory)) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 if (attributes.isOther()) {

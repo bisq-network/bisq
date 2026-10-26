@@ -27,6 +27,8 @@ import bisq.core.support.dispute.mediation.logs.LogFilesFinder;
 import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.network.TorMode;
+
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
@@ -55,6 +57,7 @@ import java.io.IOException;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -65,6 +68,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
     private final File dataDir, logFile;
+    private final File torDataDir;
     private int gridRow = 0;
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
@@ -82,6 +86,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         super();
         this.preferences = preferences;
         dataDir = new File(config.appDataDir.getPath());
+        torDataDir = TorMode.getTorDataDir(config.torDir);
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 
@@ -150,7 +155,9 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     try {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
-                        List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination));
+                        // A sandboxed Tor may write its data directory, and a backup does not need it.
+                        List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination),
+                                Set.of(torDataDir));
                         if (notCopied.isEmpty()) {
                             new Popup().feedback(Res.get("account.backup.success", destination)).show();
                         } else {

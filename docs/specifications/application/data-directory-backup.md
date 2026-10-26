@@ -11,6 +11,9 @@ key of its onion service ([`../network/onion-service-identity.md`](../network/on
 The backup copies the data directory into a new directory named after the time of the backup. Before it copies, the
 node writes all data to disk.
 
+The backup does not copy the data directory of the Tor which the node starts. A sandboxed Tor may write this
+directory, so it could put links or named pipes there, and Tor recreates its content.
+
 The backup copies only regular files and directories. It does not follow symbolic links or junctions of Windows, and it
 does not read special files such as named pipes or devices. If the data directory itself is a link, for example to
 another drive, the backup follows it. When an entry is not copied, the backup still completes and tells the user
@@ -28,7 +31,7 @@ these permissions, such as FAT on a USB drive or the file system of Windows, kee
 A link inside the data directory could make the backup copy files from elsewhere into a directory which the user may
 keep on a shared drive, and reading a named pipe would block the backup. Whoever can create links in the data
 directory can usually read the files of the user anyway, so the rule mainly protects against a writer with less
-rights and against mistakes. Telling the user about every entry which is
+rights, such as a compromised Tor in its sandbox, and against mistakes. Telling the user about every entry which is
 not copied keeps the backup from silently missing data, for example a wallet directory which the user moved to
 another drive and replaced by a link.
 
