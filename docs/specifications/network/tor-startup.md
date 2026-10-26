@@ -12,7 +12,7 @@ the start fails. The key of the onion service is covered by
 
 On every operating system, the node runs the Tor of the Tor expert bundle which the Bisq build downloaded and verified:
 its PGP signature, the SHA-256 hash which the build pins for the platform, and the version of its tor. The node installs
-the bundle into the Tor directory and never runs a `tor` of the system; the Linux packages of Bisq do not
+the bundle into `bin/` of the Tor directory and never runs a `tor` of the system; the Linux packages of Bisq do not
 depend on the `tor` package. Linux x86_64, macOS and Windows x86_64 get the bundle of a stable Tor Browser release.
 Linux ARM64 gets the bundle of an alpha release with the same tor version, because no stable release has a bundle for
 Linux ARM64. On Linux, the bundled Tor needs glibc 2.17 or newer (2.27 on ARM64) and the zlib library of the system
@@ -27,7 +27,7 @@ staying unreachable until their periodic restart. At the shutdown, the node wait
 library asks Tor to exit and kills it after 3 seconds, which takes at most about 6 seconds, and the node waits at most
 8 seconds for the close of its connections and the stop of Tor.
 
-The node starts its Tor in a session of its own with the `setsid` program of the system, if the
+The node starts its Tor, or sandy with Tor, in a session of its own with the `setsid` program of the system, if the
 system has one, as Linux does. A Ctrl+C in the terminal which started the node then reaches only the node, whose
 shutdown still uses Tor, for example to remove the offers of the user, and stops Tor at its end. macOS has no `setsid`:
 there Tor stays in the process group of the node, and a Ctrl+C in the terminal ends Tor at once. For the same reason,
@@ -48,7 +48,18 @@ files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in 
 otherwise read its configuration there and could load modules from it.
 
 The node logs the version which the running Tor reports. The commands, replies and events of the control connection
-are logged at debug level only, because they contain onion addresses.
+are logged at debug level only, because they contain onion addresses. Tor writes its own log to its standard output,
+which the node writes to `tor-stdout.log` in the Tor directory; above 10 MiB it moves the log to `tor-stdout.log.1`
+before the next start.
+
+The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
+sandbox program). The torrc, the logs, `external_tor.config` and the `hiddenservice` directory with the
+key of the onion service lie in the Tor directory itself, outside the directory which Tor writes. Before a start of its
+own Tor, the node moves the state of Tor of the layout before into `data/`, deletes only the files of the old layout
+which it knows, and keeps everything else. The `hiddenservice` directory, its key backups and files of the user stay
+where they are, also after a reset which deleted `data/`. The node chooses the ports of the control and SOCKS
+listeners itself and checks with the hash of the control password, and after the bootstrap with the SOCKS listener,
+that it talks to the Tor of this start.
 
 ### Running Tor
 

@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 454 configurations of this build and of the included builds build-logic, tor, tor/build-logic.
+Generated from `gradle/verification-metadata.xml` after resolving 457 configurations of this build and of the included builds build-logic, tor, tor/build-logic.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
