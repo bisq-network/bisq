@@ -1,3 +1,6 @@
 [submodule "bitcoind"]
 	path = bitcoind
 	url = https://github.com/bisq-network/bitcoind.git
+[submodule "tor"]
+	path = tor
+	url = https://github.com/bisq-network/tor.git
