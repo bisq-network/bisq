@@ -64,6 +64,7 @@ class TorNetworkNodeStartTest {
 
     @BeforeEach
     void setUp() {
+        UserThread.resetForTests();
         userThreadExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("TorNetworkNodeStartTest-UserThread");
         UserThread.setExecutor(userThreadExecutor);
         UserThread.setTimerClass(FrameRateTimer.class);
@@ -71,8 +72,7 @@ class TorNetworkNodeStartTest {
 
     @AfterEach
     void tearDown() {
-        UserThread.setExecutor(Runnable::run);
-        UserThread.setTimerClass(FrameRateTimer.class);
+        UserThread.resetForTests();
         userThreadExecutor.shutdownNow();
     }
 
