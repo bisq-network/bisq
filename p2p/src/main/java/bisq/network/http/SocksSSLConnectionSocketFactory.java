@@ -50,6 +50,11 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
     @Override
     public Socket createSocket(final HttpContext context) throws IOException {
         InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
+        String streamId = (String) context.getAttribute(IsolatingSocksSocket.STREAM_ID_ATTRIBUTE);
+        if (streamId != null) {
+            // TLS runs over this socket after the handshake, and the host name of the request is verified
+            return new IsolatingSocksSocket(socksaddr, streamId);
+        }
         Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
         return new Socket(proxy);
     }
