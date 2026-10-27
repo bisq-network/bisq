@@ -211,7 +211,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
             return;
         }
-        chatMessage.setReceivedDate(System.currentTimeMillis());
+        markReceived(chatMessage);
         dispute.addAndPersistChatMessage(chatMessage);
         dispute.setState(Dispute.State.RESULT_PROPOSED);
 

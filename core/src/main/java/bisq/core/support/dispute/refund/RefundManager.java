@@ -320,7 +320,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
             return;
         }
-        chatMessage.setReceivedDate(System.currentTimeMillis());
+        markReceived(chatMessage);
         dispute.addAndPersistChatMessage(chatMessage);
         dispute.setIsClosed();
 

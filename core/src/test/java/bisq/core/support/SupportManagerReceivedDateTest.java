@@ -57,6 +57,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -151,6 +152,40 @@ class SupportManagerReceivedDateTest {
         } finally {
             Version.setBaseCryptoNetworkId(baseCurrencyNetwork);
         }
+    }
+
+    // Only the node itself adds system messages to a trade chat
+    @Test
+    void aDirectSystemMessageOfThePeerIsStoredAsAMessageOfThePeer() {
+        ChatMessage chatMessage = chatMessageFromPeer();
+        chatMessage.setSystemMessage(true);
+
+        receiveDirectly(chatMessage);
+
+        assertFalse(chatMessage.isSystemMessage());
+        assertEquals(List.of(chatMessage), receivedChatMessages());
+    }
+
+    @Test
+    void aSystemMessageOfThePeerFromTheMailboxIsStoredAsAMessageOfThePeer() {
+        ChatMessage chatMessage = chatMessageFromPeer();
+        chatMessage.setSystemMessage(true);
+
+        receiveFromTheMailbox(chatMessage);
+
+        assertFalse(chatMessage.isSystemMessage());
+        assertEquals(List.of(chatMessage), receivedChatMessages());
+    }
+
+    // Only this node knows whether it showed a message
+    @Test
+    void theDisplayedFlagOfAReceivedMessageIsReset() {
+        ChatMessage chatMessage = chatMessageFromPeer();
+        chatMessage.setWasDisplayed(true);
+
+        receiveDirectly(chatMessage);
+
+        assertFalse(chatMessage.isWasDisplayed());
     }
 
     private void receiveDirectly(ChatMessage chatMessage) {

@@ -161,12 +161,20 @@ public abstract class SupportManager {
             return;
         }
 
-        chatMessage.setReceivedDate(System.currentTimeMillis());
+        markReceived(chatMessage);
         addAndPersistChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
         sendAckMessage(chatMessage, senderPubKeyRing, true, null);
+    }
+
+    // The peer sets these fields too. Only this node knows when it received and showed a message, and a message that
+    // the peer sends on its own is never a system message. The messages that come with a dispute keep their flags.
+    protected static void markReceived(ChatMessage chatMessage) {
+        chatMessage.setReceivedDate(System.currentTimeMillis());
+        chatMessage.setSystemMessage(false);
+        chatMessage.setWasDisplayed(false);
     }
 
     private void onAckMessage(AckMessage ackMessage, PublicKey senderSignaturePubKey) {

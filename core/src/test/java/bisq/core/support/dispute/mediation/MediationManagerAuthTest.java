@@ -31,6 +31,7 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.NodeAddress;
@@ -51,6 +52,7 @@ import bisq.common.persistence.PersistenceManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.security.KeyPair;
 import java.security.PublicKey;
 
 import java.io.File;
@@ -126,8 +128,10 @@ class MediationManagerAuthTest {
                 false,
                 "result",
                 PEER_NODE_ADDRESS);
-        // A receive time the agent could put into the message, it must not be kept
+        // A receive time and flags the agent could put into the message, they must not be kept
         chatMessage.setReceivedDate(42);
+        chatMessage.setSystemMessage(true);
+        chatMessage.setWasDisplayed(true);
         DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
         disputeResult.setChatMessage(chatMessage);
         DisputeResultMessage message = new DisputeResultMessage(disputeResult,
@@ -143,6 +147,8 @@ class MediationManagerAuthTest {
         long receivedDate = chatMessage.getReceivedDate();
         assertTrue(receivedDate >= before && receivedDate <= System.currentTimeMillis(),
                 "receivedDate=" + receivedDate);
+        assertFalse(chatMessage.isSystemMessage());
+        assertFalse(chatMessage.isWasDisplayed());
     }
 
     // The agent's node can send the result directly and store it in the mailbox as well, so a second copy arrives.
@@ -236,6 +242,39 @@ class MediationManagerAuthTest {
         assertTrue(dispute.getChatMessages().contains(chatMessage));
     }
 
+    // The trader sends the mediator a notice about a change of the disputed trade as a system message. A chat message
+    // of the peer is never a system message, so the mediator sees it as a message of the trader.
+    @Test
+    void theMediatorSeesASystemMessageOfTheTraderAsAMessageOfTheTrader() {
+        PersistenceManager<MediationDisputeList> persistenceManager = persistenceManager();
+        MediationDisputeListService disputeListService = new MediationDisputeListService(persistenceManager);
+        KeyPair traderSignatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing traderPubKeyRing = new PubKeyRing(traderSignatureKeyPair.getPublic(),
+                Encryption.generateKeyPair().getPublic());
+        Contract contract = mock(Contract.class);
+        when(contract.getBuyerPubKeyRing()).thenReturn(traderPubKeyRing);
+        when(contract.getBuyerNodeAddress()).thenReturn(PEER_NODE_ADDRESS);
+        // The mediation manager loads the same key ring, so we are the mediator of the dispute
+        PubKeyRing mediatorPubKeyRing = new KeyRing(new KeyStorage(keyStorageDir)).getPubKeyRing();
+        Dispute dispute = dispute(traderPubKeyRing, contract, mediatorPubKeyRing);
+        disputeListService.getDisputeList().add(dispute);
+        MediationManager manager = mediationManager(tradeManager(mediatorPubKeyRing), disputeListService);
+        ChatMessage tradeUpdate = new ChatMessage(SupportType.MEDIATION,
+                TRADE_ID,
+                TRADER_ID,
+                true,
+                "trade update",
+                PEER_NODE_ADDRESS);
+        tradeUpdate.setSystemMessage(true);
+        tradeUpdate.setWasDisplayed(true);
+
+        manager.onSupportMessage(tradeUpdate, traderSignatureKeyPair.getPublic());
+
+        assertEquals(List.of(tradeUpdate), dispute.getChatMessages());
+        assertFalse(tradeUpdate.isSystemMessage());
+        assertFalse(tradeUpdate.isWasDisplayed());
+    }
+
     private static ChatMessage chatMessage(String text) {
         return new ChatMessage(SupportType.MEDIATION,
                 TRADE_ID,
@@ -303,16 +342,20 @@ class MediationManagerAuthTest {
     }
 
     private static Dispute dispute(PubKeyRing agentPubKeyRing) {
+        return dispute(pubKeyRing(), null, agentPubKeyRing);
+    }
+
+    private static Dispute dispute(PubKeyRing traderPubKeyRing, Contract contract, PubKeyRing agentPubKeyRing) {
         return new Dispute(
                 0,
                 TRADE_ID,
                 TRADER_ID,
                 true,
                 true,
-                pubKeyRing(),
+                traderPubKeyRing,
                 0,
                 0,
-                null,
+                contract,
                 null,
                 null,
                 null,

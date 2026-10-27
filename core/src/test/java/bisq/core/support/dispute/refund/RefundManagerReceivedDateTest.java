@@ -60,6 +60,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -85,8 +86,10 @@ class RefundManagerReceivedDateTest {
                 false,
                 "result",
                 PEER_NODE_ADDRESS);
-        // A receive time the agent could put into the message, it must not be kept
+        // A receive time and flags the agent could put into the message, they must not be kept
         chatMessage.setReceivedDate(42);
+        chatMessage.setSystemMessage(true);
+        chatMessage.setWasDisplayed(true);
         DisputeResult disputeResult = new DisputeResult(TRADE_ID, TRADER_ID);
         disputeResult.setChatMessage(chatMessage);
         DisputeResultMessage message = new DisputeResultMessage(disputeResult,
@@ -102,6 +105,8 @@ class RefundManagerReceivedDateTest {
         long receivedDate = chatMessage.getReceivedDate();
         assertTrue(receivedDate >= before && receivedDate <= System.currentTimeMillis(),
                 "receivedDate=" + receivedDate);
+        assertFalse(chatMessage.isSystemMessage());
+        assertFalse(chatMessage.isWasDisplayed());
     }
 
     // The agent's node can send the result directly and store it in the mailbox as well, so a second copy arrives.

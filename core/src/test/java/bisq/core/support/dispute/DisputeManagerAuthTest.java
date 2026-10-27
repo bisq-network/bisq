@@ -507,6 +507,9 @@ class DisputeManagerAuthTest {
         when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(localTrade));
         Dispute dispute = dispute(TRADE_ID, agentPubKeyRing);
         ChatMessage agentsMessage = chatMessageWithReceivedDateFromPeer(SupportType.MEDIATION);
+        // The agent's message in the dispute it sends to the other trader is a system message
+        agentsMessage.setSystemMessage(true);
+        agentsMessage.setWasDisplayed(true);
         dispute.getChatMessages().add(agentsMessage);
         PeerOpenedDisputeMessage message = new PeerOpenedDisputeMessage(dispute,
                 PEER_NODE_ADDRESS,
@@ -520,6 +523,8 @@ class DisputeManagerAuthTest {
         assertEquals(1, disputeList.size());
         assertTrue(disputeList.getList().get(0).getChatMessages().contains(agentsMessage));
         assertReceivedSince(before, agentsMessage);
+        assertTrue(agentsMessage.isSystemMessage());
+        assertTrue(agentsMessage.isWasDisplayed());
     }
 
     @Test
