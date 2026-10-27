@@ -14,6 +14,9 @@ class LinuxPackages(private val resourcesPath: Path) : JPackagePackageFormatConf
                 "--linux-package-name", "bisq",
                 "--linux-app-release", "1",
 
+                // On Linux, Bisq runs the tor of the system.
+                "--linux-package-deps", "tor",
+
                 "--linux-menu-group", "Network",
                 "--linux-shortcut",
         )

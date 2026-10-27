@@ -142,6 +142,9 @@ from https://jdk.java.net/archive/.
 
 3. On Linux, Bisq runs the `tor` executable of the system, which must be on the `PATH`. Install the tor package of your
    distribution, for example with `sudo apt install tor`. On macOS and Windows, Bisq brings its own Tor.
+   On Debian and Ubuntu, the tor package also enables and starts the Tor service of the system, which then runs at every
+   boot, also when Bisq does not run. Bisq starts its own Tor and uses that service only if `external_tor.config` tells
+   it to, as the seed node does. Otherwise you can turn it off with `sudo systemctl disable --now tor`.
 
 ## Running Bisq
 
