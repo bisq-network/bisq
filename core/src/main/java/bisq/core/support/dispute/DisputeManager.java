@@ -31,6 +31,7 @@ import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportManager;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -1199,7 +1200,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
     private void addMediationResultMessage(Dispute dispute) {
         // In case of refundAgent we add a message with the mediatorsDisputeSummary. Only visible for refundAgent.
-        if (dispute.getMediatorsDisputeResult() != null) {
+        // The opener sets the summary, and only a refund dispute carries one.
+        if (getSupportType() == SupportType.REFUND && dispute.getMediatorsDisputeResult() != null) {
             String mediatorsDisputeResult = Res.get("support.mediatorsDisputeSummary", dispute.getMediatorsDisputeResult());
             ChatMessage mediatorsDisputeResultMessage = new ChatMessage(
                     getSupportType(),

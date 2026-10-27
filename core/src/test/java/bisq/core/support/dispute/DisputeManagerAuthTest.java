@@ -469,8 +469,6 @@ class DisputeManagerAuthTest {
             dispute.setBurningManSelectionHeight(1);
             ChatMessage openersMessage = chatMessageWithReceivedDateFromPeer(SupportType.MEDIATION);
             dispute.getChatMessages().add(openersMessage);
-            // Makes the agent add its own system message after the dispute arrived
-            dispute.setMediatorsDisputeResult("summary");
             OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
                     BUYER_NODE_ADDRESS,
                     "open-dispute-uid",
@@ -481,12 +479,45 @@ class DisputeManagerAuthTest {
 
             assertSame(dispute, disputeList.getList().get(0));
             assertReceivedSince(before, openersMessage);
+            // The price info that the agent adds after the dispute arrived
             ChatMessage ownMessage = dispute.getChatMessages().get(dispute.getChatMessages().size() - 1);
             assertNotSame(openersMessage, ownMessage);
             assertEquals(0, ownMessage.getReceivedDate());
         } finally {
             Version.setBaseCryptoNetworkId(baseCurrencyNetwork);
         }
+    }
+
+    // Only a refund dispute carries the mediator's summary. The mediator does not turn a text of the opener into a
+    // system message of its own.
+    @Test
+    void theMediatorAddsNoSystemMessageWithTheSummaryOfTheOpener() {
+        TestDisputeList disputeList = new TestDisputeList();
+        TestDisputeManager manager = new TestDisputeManager(mockP2PService(),
+                tradeManager,
+                closedTradableManager,
+                failedTradesManager,
+                keyStorageDir,
+                disputeListService(disputeList),
+                mock(DaoFacade.class),
+                localP2PConfig());
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        Dispute dispute = validDispute(TRADE_ID,
+                0,
+                buyerPubKeyRing,
+                manager.getPubKeyRing(),
+                validContract(TRADE_ID, buyerPubKeyRing, pubKeyRing()));
+        dispute.setBurningManSelectionHeight(1);
+        dispute.setMediatorsDisputeResult("text of the opener");
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                BUYER_NODE_ADDRESS,
+                "open-dispute-uid",
+                SupportType.MEDIATION);
+
+        manager.onOpenNewDispute(message, buyerPubKeyRing.getSignaturePubKey());
+
+        assertSame(dispute, disputeList.getList().get(0));
+        assertTrue(dispute.getChatMessages().stream().noneMatch(m -> m.getMessage().contains("text of the opener")));
     }
 
     @Test
@@ -1020,8 +1051,17 @@ class DisputeManagerAuthTest {
             return pubKeyRing;
         }
 
+        // A local system message as the mediator's price info, without the price feed
         @Override
         protected void addPriceInfoMessage(Dispute dispute, int counter) {
+            ChatMessage priceInfo = new ChatMessage(getSupportType(),
+                    dispute.getTradeId(),
+                    getPubKeyRing().hashCode(),
+                    false,
+                    "price info",
+                    MEDIATOR_NODE_ADDRESS);
+            priceInfo.setSystemMessage(true);
+            dispute.addAndPersistChatMessage(priceInfo);
         }
 
         @Override
