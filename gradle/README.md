@@ -376,9 +376,8 @@ stale, or when an entry has no rationale.
 An allowlist entry names an exact version and an exact artifact file name. Changing the
 version of a checksum-only dependency therefore makes the old entries stale and the new
 artifacts unapproved. This is the normal case for the Bisq-maintained JitPack dependencies
-(`netlayer`, `tor-binary`, `bitcoinj`, `jsocks` and others), because they are pinned to a Git
-commit and every update changes the commit. A `netlayer` update usually changes the
-`tor-binary` commit as well.
+(`bitcoinj` and `jsonrpc4j`), because they are pinned to a Git commit or a Bisq release
+version and every update changes it.
 **Updating `verification-metadata.xml` without updating the allowlist turns `verifyReleaseBuild`
 red, including every open pull request.** The failure looks like this:
 
@@ -387,10 +386,10 @@ Execution failed for task ':verifyDependencySignaturePolicy'.
 > Dependency signature policy failed.
 
   Unapproved checksum-only dependency artifacts:
-   - com.github.bisq-network.netlayer:tor:<new-commit>	tor-<new-commit>.jar
+   - com.github.bisq-network:bitcoinj:<new-commit>	bitcoinj-<new-commit>.jar
    ...
   Allowlist entries that are no longer checksum-only artifacts:
-   - com.github.bisq-network.netlayer:tor:<old-commit>	tor-<old-commit>.jar
+   - com.github.bisq-network:bitcoinj:<old-commit>	bitcoinj-<old-commit>.jar
    ...
 ```
 
