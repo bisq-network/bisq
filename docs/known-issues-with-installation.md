@@ -57,4 +57,5 @@ so we can improve it.
 C:\Users<username>\AppData\Local\Bisq
 
 [2] Data directory (contains all Bisq data including wallet):
-C:\Users<username>\AppData\Roaming\Bisq\btc_mainnet\tor (you can delete everything except the hiddenservice directory)
+C:\Users<username>\AppData\Roaming\Bisq\btc_mainnet\tor (you can delete everything except the hiddenservice directory
+and the external_tor.config file, which holds your settings for a running Tor; without it, Bisq starts its own Tor)
