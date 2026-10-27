@@ -126,6 +126,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final BisqSetup bisqSetup;
@@ -389,7 +391,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
             if (show) {
-                torNetworkSettingsWindow.show();
+                torNetworkSettingsWindow.startFailure(bisqSetup.getTorNetworkSettingsFailure()).show();
             } else if (torNetworkSettingsWindow.isDisplayed()) {
                 torNetworkSettingsWindow.hide();
             }
@@ -879,6 +881,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     StringProperty getP2pNetworkWarnMsg() {
         return bisqSetup.getP2pNetworkWarnMsg();
+    }
+
+    @Nullable
+    String getTorNetworkSettingsFailure() {
+        return bisqSetup.getTorNetworkSettingsFailure();
     }
 
     StringProperty getP2PNetworkIconId() {

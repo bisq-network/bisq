@@ -776,8 +776,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
         model.getP2pNetworkWarnMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
-                p2PNetworkWarnMsgPopup.show();
+                // The Tor network settings open with a failure which they can fix; a popup would lie behind them
+                if (model.getTorNetworkSettingsFailure() == null) {
+                    p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
+                    p2PNetworkWarnMsgPopup.show();
+                }
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();
             }

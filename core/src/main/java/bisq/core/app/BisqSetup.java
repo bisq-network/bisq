@@ -863,6 +863,11 @@ public class BisqSetup {
         return p2PNetworkSetup.getP2pNetworkWarnMsg();
     }
 
+    @Nullable
+    public String getTorNetworkSettingsFailure() {
+        return p2PNetworkSetup.getTorNetworkSettingsFailure();
+    }
+
     public StringProperty getP2PNetworkIconId() {
         return p2PNetworkSetup.getP2PNetworkIconId();
     }

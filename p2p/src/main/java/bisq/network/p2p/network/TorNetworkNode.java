@@ -299,8 +299,11 @@ public class TorNetworkNode extends NetworkNode {
                 }
                 String errorMessage = getErrorMessage(throwable);
                 boolean canBridgesHelp = canBridgesHelp(throwable);
+                RuntimeException failure = canBridgesHelp ?
+                        new BridgesCanHelpException(errorMessage) :
+                        new RuntimeException(errorMessage);
                 UserThread.execute(() -> {
-                    setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(errorMessage)));
+                    setupListeners.forEach(s -> s.onSetupFailed(failure));
                     if (canBridgesHelp) {
                         // As with netlayer: the network may block Tor, so the user can choose bridges.
                         setupListeners.forEach(SetupListener::onRequestCustomBridges);
@@ -362,13 +365,13 @@ public class TorNetworkNode extends NetworkNode {
         String bridges = "Tor did not start, because the bridges of the Tor network settings use the pluggable " +
                 "transports " + String.join(", ", transportNames) + ", which are programs that Tor starts. ";
         if (isWindows) {
-            return bridges + "On Windows, Tor cannot start them in its sandbox. Choose bridges without pluggable " +
-                    "transports, or start Bisq with the option --" + Config.USE_TOR_SANDBOX + "=false to run Tor " +
-                    "without the sandbox. Without the sandbox, a security bug in Tor gives an attacker access to all " +
-                    "your files, including your Bisq keys.";
+            return bridges + "On Windows, Tor cannot start them in its sandbox. Choose \"Don't use bridges\" or " +
+                    "bridges without pluggable transports, or start Bisq with the option --" + Config.USE_TOR_SANDBOX +
+                    "=false to run Tor without the sandbox. Without the sandbox, a security bug in Tor gives an " +
+                    "attacker access to all your files, including your Bisq keys.";
         }
         return bridges + "Tor may start them in its sandbox only if you allow it: turn on \"Allow pluggable " +
-                "transports in the Tor sandbox\" in the Tor network settings and restart Bisq, or choose bridges " +
-                "without pluggable transports.";
+                "transports in the Tor sandbox\" in the Tor network settings, or choose \"Don't use bridges\" or " +
+                "bridges without pluggable transports there, and restart Bisq.";
     }
 }

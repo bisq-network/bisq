@@ -145,7 +145,8 @@ A running Tor uses the bridges of its own configuration. The node then ignores t
 warning.
 
 If Tor cannot connect, or the chosen bridges cannot be used, the start fails, and the desktop application opens the
-Tor network settings so that the user can choose bridges, as with netlayer.
+Tor network settings so that the user can choose bridges, as with netlayer. The settings then show the error at their
+top, and no popup shows it as well, because it would lie behind them.
 
 The node does not log bridge lines, because a bridge which a user got privately is blocked once it is known.
 
@@ -189,8 +190,9 @@ the node never starts Tor without the sandbox instead, when:
 
 When the bridges need pluggable transports which the sandbox does not allow, the error names the transports and,
 instead of the option, the switch of the Tor network settings which allows them, or on Windows the option to turn the
-sandbox off, because the switch is disabled there. The desktop application then opens the Tor network settings, as
-for bridges which cannot be used, so that the user can allow the transports or choose other bridges.
+sandbox off, because the switch is disabled there, and the choice of no bridges or of bridges without pluggable
+transports. The desktop application then opens the Tor network settings with the error, as for bridges which cannot be
+used, so that the user can allow the transports or choose other bridges.
 
 A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
 `hiddenservice`: the node sends the key of the onion service to Tor over the control connection.

@@ -25,6 +25,7 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
@@ -75,6 +76,10 @@ public class P2PNetworkSetup {
     final BooleanProperty dataReceived = new SimpleBooleanProperty();
     @Getter
     final BooleanProperty p2pNetworkFailed = new SimpleBooleanProperty();
+    // The message of a failed start which other bridges can fix, for the Tor network settings
+    @Getter
+    @Nullable
+    private String torNetworkSettingsFailure;
     final FilterPolicyService filterPolicyService;
 
     @Inject
@@ -211,6 +216,11 @@ public class P2PNetworkSetup {
             @Override
             public void onSetupFailed(Throwable throwable) {
                 log.error("onSetupFailed");
+                // Set before the warning: the desktop application shows no popup for a failure which the Tor
+                // network settings show
+                torNetworkSettingsFailure = throwable instanceof BridgesCanHelpException ?
+                        throwable.getMessage() :
+                        null;
                 p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailed", throwable.getMessage()));
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));

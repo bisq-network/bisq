@@ -76,6 +76,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
@@ -95,6 +97,9 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private BridgeOption selectedBridgeOption = BridgeOption.NONE;
     private BridgeTransport selectedTorTransport = BridgeTransport.OBFS_4;
     private String customBridges = "";
+    // Why the start of Tor failed, if these settings can fix it
+    @Nullable
+    private String startFailure;
 
     @Inject
     public TorNetworkSettingsWindow(Preferences preferences,
@@ -133,6 +138,11 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             applyStyles();
             display();
         }
+    }
+
+    public TorNetworkSettingsWindow startFailure(@Nullable String startFailure) {
+        this.startFailure = startFailure;
+        return this;
     }
 
     protected void addButtons() {
@@ -202,6 +212,15 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     }
 
     private void addContent() {
+        if (startFailure != null) {
+            Label startFailureLabel = addLabel(gridPane, ++rowIndex, startFailure);
+            startFailureLabel.setWrapText(true);
+            startFailureLabel.getStyleClass().add("error-text");
+            GridPane.setColumnSpan(startFailureLabel, 2);
+            GridPane.setHalignment(startFailureLabel, HPos.LEFT);
+            GridPane.setMargin(startFailureLabel, new Insets(0, 0, Layout.FIRST_ROW_DISTANCE, 0));
+        }
+
         addTitledGroupBg(gridPane, ++rowIndex, 2, Res.get("torNetworkSettingWindow.deleteFiles.header"));
 
         Label deleteFilesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.deleteFiles.info"), Layout.TWICE_FIRST_ROW_DISTANCE);

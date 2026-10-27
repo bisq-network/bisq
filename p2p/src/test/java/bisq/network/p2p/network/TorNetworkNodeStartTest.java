@@ -127,6 +127,7 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(message, listener.failure.get().getMessage());
             // Bridges of the Tor network settings do not help a running Tor, which uses its own.
+            assertFalse(listener.failure.get() instanceof BridgesCanHelpException);
             waitForTheUserThread();
             assertEquals(1, listener.bridgesRequested.getCount());
         } finally {
@@ -171,7 +172,8 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"),
                     Utilities.isWindows()), listener.failure.get().getMessage());
-            // The window has the switch for the transports and the choice of the bridges
+            // The window has the switch for the transports and the choice of the bridges, and shows the failure
+            assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
             assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
         } finally {
             shutDownExecutors(networkNode);
@@ -183,11 +185,13 @@ class TorNetworkNodeStartTest {
         String message = TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4", "snowflake"), false);
         assertTrue(message.contains("obfs4, snowflake"));
         assertTrue(message.contains("Allow pluggable transports in the Tor sandbox"));
+        assertTrue(message.contains("Don't use bridges"));
         assertFalse(message.contains("sandbox configuration"));
 
         String windowsMessage = TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), true);
         // The switch is disabled on Windows
         assertFalse(windowsMessage.contains("Allow pluggable transports in the Tor sandbox"));
+        assertTrue(windowsMessage.contains("Don't use bridges"));
         assertTrue(windowsMessage.contains("--useTorSandbox=false"));
     }
 
@@ -205,6 +209,7 @@ class TorNetworkNodeStartTest {
 
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals("Could not bootstrap Tor in 240 seconds", listener.failure.get().getMessage());
+            assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
             assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
         } finally {
             shutDownExecutors(networkNode);
