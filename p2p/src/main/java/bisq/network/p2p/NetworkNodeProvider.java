@@ -24,6 +24,7 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.TorMode;
 import bisq.network.p2p.network.TorNetworkNode;
+import bisq.network.p2p.network.TorrcSettings;
 
 import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -49,7 +50,9 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.NODE_PORT) int port,
                                @Named(Config.TOR_DIR) File torDir,
                                @Nullable @Named(Config.TORRC_FILE) File torrcFile,
+                               @Named(Config.TORRC_FILE_SET_ON_COMMAND_LINE) boolean torrcFileSetOnCommandLine,
                                @Named(Config.TORRC_OPTIONS) String torrcOptions,
+                               @Named(Config.TORRC_OPTIONS_SET_ON_COMMAND_LINE) boolean torrcOptionsSetOnCommandLine,
                                @Named(Config.TOR_STREAM_ISOLATION) boolean streamIsolation,
                                @Named(Config.USE_TOR_SANDBOX) boolean useTorSandbox,
                                @Named(Config.ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX)
@@ -57,7 +60,10 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
         if (useLocalhostForP2P) {
             networkNode = new LocalhostNetworkNode(port, networkProtoResolver, banFilter, maxConnections);
         } else {
-            TorMode torMode = new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider, useTorSandbox,
+            TorMode torMode = new NewTor(torDir,
+                    new TorrcSettings(torrcFile, torrcFileSetOnCommandLine, torrcOptions, torrcOptionsSetOnCommandLine),
+                    bridgeAddressProvider,
+                    useTorSandbox,
                     allowPluggableTransportsInTorSandbox);
             networkNode = new TorNetworkNode(port, networkProtoResolver, streamIsolation, torMode, banFilter, maxConnections);
         }

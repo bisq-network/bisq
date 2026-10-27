@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,7 +46,7 @@ class TorrcOverridesTest {
                 "UseBridges 1",
                 "UseBridges 0");
 
-        Map<String, String> torrcOverrides = TorrcOverrides.parse(torrcFile, "");
+        Map<String, String> torrcOverrides = parseFromCommandLine(torrcFile, "");
 
         assertEquals(Map.of("SocksPort", "9150", "UseBridges", "0"), torrcOverrides);
     }
@@ -54,7 +55,7 @@ class TorrcOverridesTest {
     void optionsOverrideTheTorrcFile(@TempDir Path tempDir) throws IOException {
         File torrcFile = writeTorrcFile(tempDir, "SocksPort 9150", "Log notice stdout");
 
-        Map<String, String> torrcOverrides = TorrcOverrides.parse(torrcFile, "SocksPort 9250, AvoidDiskWrites 1");
+        Map<String, String> torrcOverrides = parseFromCommandLine(torrcFile, "SocksPort 9250, AvoidDiskWrites 1");
 
         assertEquals(List.of("SocksPort", "Log", "AvoidDiskWrites"), List.copyOf(torrcOverrides.keySet()));
         assertEquals("9250", torrcOverrides.get("SocksPort"));
@@ -66,12 +67,12 @@ class TorrcOverridesTest {
     void ignoresAMissingTorrcFile(@TempDir Path tempDir) {
         File missingFile = tempDir.resolve("missing").toFile();
 
-        assertEquals(Map.of("SocksPort", "9150"), TorrcOverrides.parse(missingFile, "SocksPort 9150"));
+        assertEquals(Map.of("SocksPort", "9150"), parseFromCommandLine(missingFile, "SocksPort 9150"));
     }
 
     @Test
     void anInvalidOptionDropsTheOptionsBeforeIt() {
-        Map<String, String> torrcOverrides = TorrcOverrides.parse(null, "SocksPort 9150,invalid,AvoidDiskWrites 1");
+        Map<String, String> torrcOverrides = parseFromCommandLine(null, "SocksPort 9150,invalid,AvoidDiskWrites 1");
 
         assertEquals(Map.of("AvoidDiskWrites", "1"), torrcOverrides);
     }
@@ -80,12 +81,54 @@ class TorrcOverridesTest {
     void rejectsAKeyWithWhitespace(@TempDir Path tempDir) throws IOException {
         File torrcFile = writeTorrcFile(tempDir, "Log\tnotice stdout");
 
-        assertThrows(IllegalArgumentException.class, () -> TorrcOverrides.parse(torrcFile, ""));
+        assertThrows(IllegalArgumentException.class, () -> parseFromCommandLine(torrcFile, ""));
     }
 
     @Test
     void returnsNoEntriesWithoutFileAndOptions() {
-        assertTrue(TorrcOverrides.parse(null, "").isEmpty());
+        assertTrue(parseFromCommandLine(null, "").isEmpty());
+    }
+
+    @Test
+    void acceptsEntriesWhichStartAProgramOnlyFromTheCommandLine(@TempDir Path tempDir) throws IOException {
+        String torrcOptions = "ClientTransportPlugin obfs4 exec /usr/bin/lyrebird";
+        File torrcFile = writeTorrcFile(tempDir, "ServerTransportPlugin obfs4 exec /usr/bin/lyrebird");
+
+        assertEquals("obfs4 exec /usr/bin/lyrebird", parseFromCommandLine(null, torrcOptions)
+                .get("ClientTransportPlugin"));
+        assertEquals("obfs4 exec /usr/bin/lyrebird", parseFromCommandLine(torrcFile, "")
+                .get("ServerTransportPlugin"));
+
+        var fromConfigFileOptions = assertThrows(IllegalArgumentException.class,
+                () -> TorrcOverrides.parse(new TorrcSettings(null, false, torrcOptions, false)));
+        assertTrue(fromConfigFileOptions.getMessage().contains("ClientTransportPlugin"));
+        assertTrue(fromConfigFileOptions.getMessage().contains("only on the command line"));
+        // The command line names a torrc file, but the options come from a config file
+        assertThrows(IllegalArgumentException.class,
+                () -> TorrcOverrides.parse(new TorrcSettings(torrcFile, true, torrcOptions, false)));
+        // A config file names the torrc file
+        assertThrows(IllegalArgumentException.class,
+                () -> TorrcOverrides.parse(new TorrcSettings(torrcFile, false, "", true)));
+        // Other entries of a config file are accepted
+        assertEquals(Map.of("AvoidDiskWrites", "1"),
+                TorrcOverrides.parse(new TorrcSettings(null, false, "AvoidDiskWrites 1", false)));
+    }
+
+    @Test
+    void entriesWhichStartAProgramAreFoundInAnyCaseAndAsAbbreviation() {
+        // Tor ignores the case of option names and accepts the start of a name
+        assertTrue(TorrcOverrides.startsAProgram("ClientTransportPlugin"));
+        assertTrue(TorrcOverrides.startsAProgram("clienttransportplugin"));
+        assertTrue(TorrcOverrides.startsAProgram("ClientTransportPlug"));
+        assertTrue(TorrcOverrides.startsAProgram("SERVERTRANSPORT"));
+        assertFalse(TorrcOverrides.startsAProgram("ClientOnly"));
+        assertFalse(TorrcOverrides.startsAProgram("ClientTransportPluginX"));
+        assertFalse(TorrcOverrides.startsAProgram("UseBridges"));
+        assertFalse(TorrcOverrides.startsAProgram(""));
+    }
+
+    private static Map<String, String> parseFromCommandLine(File torrcFile, String torrcOptions) {
+        return TorrcOverrides.parse(TorrcSettings.fromCommandLine(torrcFile, torrcOptions));
     }
 
     private static File writeTorrcFile(Path dir, String... lines) throws IOException {

@@ -272,7 +272,9 @@ public class InventoryMonitor implements SetupListener {
                 9999,
                 torDir,
                 null,
+                true,
                 "",
+                true,
                 false,
                 false,
                 false)

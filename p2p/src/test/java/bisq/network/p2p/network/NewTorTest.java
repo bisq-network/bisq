@@ -75,7 +75,7 @@ class NewTorTest {
             config.set((TorTransportConfig) context.arguments().get(0));
             when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
         })) {
-            new NewTor(torDir, null, "", BridgeAddressProvider.NONE, true, false).getTor();
+            new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE, true, false).getTor();
 
             assertTrue(config.get().getSandboxConfig().isEnabled());
             // The library refuses a sandboxed start without forwarded onion service ports.

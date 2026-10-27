@@ -70,25 +70,24 @@ public class NewTor extends TorMode {
     static final String SANDBOX_OPT_OUT_HINT = "Start Bisq with the option --" + Config.USE_TOR_SANDBOX +
             "=false to run Tor without the sandbox.";
 
-    private final File torrcFile;
-    private final String torrcOptions;
+    private final TorrcSettings torrcSettings;
     private final BridgeAddressProvider bridgeAddressProvider;
     private final boolean useTorSandbox;
     private final boolean allowPluggableTransportsInTorSandbox;
 
+    // For applications which set the torrc entries themselves, not from a config file
     public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
-        this(torWorkingDirectory, torrcFile, torrcOptions, bridgeAddressProvider, false, false);
+        this(torWorkingDirectory, TorrcSettings.fromCommandLine(torrcFile, torrcOptions), bridgeAddressProvider, false,
+                false);
     }
 
     public NewTor(File torWorkingDirectory,
-                  @Nullable File torrcFile,
-                  String torrcOptions,
+                  TorrcSettings torrcSettings,
                   BridgeAddressProvider bridgeAddressProvider,
                   boolean useTorSandbox,
                   boolean allowPluggableTransportsInTorSandbox) {
         super(torWorkingDirectory);
-        this.torrcFile = torrcFile;
-        this.torrcOptions = torrcOptions;
+        this.torrcSettings = torrcSettings;
         this.bridgeAddressProvider = bridgeAddressProvider;
         this.useTorSandbox = useTorSandbox;
         this.allowPluggableTransportsInTorSandbox = allowPluggableTransportsInTorSandbox;
@@ -103,7 +102,7 @@ public class NewTor extends TorMode {
                 HS_UPLOAD_TIMEOUT,
                 false,
                 Set.of(),
-                getTorrcOverrides(torrcFile, torrcOptions),
+                getTorrcOverrides(torrcSettings),
                 false,
                 getBridgeConfig(bridgeAddressProvider),
                 getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox));
@@ -187,7 +186,7 @@ public class NewTor extends TorMode {
 
     // The Tor library ignores the entries which it needs for its control connection, the Tor data and the stream
     // isolation, in any case and as the abbreviations which Tor accepts.
-    static LinkedHashMap<String, String> getTorrcOverrides(@Nullable File torrcFile, String torrcOptions) {
-        return TorrcOverrides.parse(torrcFile, torrcOptions);
+    static LinkedHashMap<String, String> getTorrcOverrides(TorrcSettings torrcSettings) {
+        return TorrcOverrides.parse(torrcSettings);
     }
 }

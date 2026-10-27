@@ -141,6 +141,24 @@ public class ConfigTests {
     }
 
     @Test
+    public void recordsWhetherTheCommandLineSetsTheTorrcOptions() throws IOException {
+        // Torrc entries which make Tor start a program are accepted only from the command line
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(TORRC_OPTIONS, "AvoidDiskWrites 1"));
+        }
+        Config fromConfigFile = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertThat(fromConfigFile.torrcOptions, equalTo("AvoidDiskWrites 1"));
+        assertFalse(fromConfigFile.torrcOptionsSetOnCommandLine);
+        assertFalse(fromConfigFile.torrcFileSetOnCommandLine);
+
+        Config fromCommandLine = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()),
+                opt(TORRC_OPTIONS, "AvoidDiskWrites 0"));
+        assertThat(fromCommandLine.torrcOptions, equalTo("AvoidDiskWrites 0"));
+        assertTrue(fromCommandLine.torrcOptionsSetOnCommandLine);
+    }
+
+    @Test
     public void onlyTheCommandLineOptionOfPluggableTransportsOverridesTheSwitch() throws IOException {
         // The switch of the Tor network settings writes the option into the config file
         File configFile = File.createTempFile("bisq", "properties");

@@ -118,6 +118,13 @@ accepts, because the node needs its own values to control Tor, and because a `So
 `NoIsolateSOCKSAuth` would let streams of different peers share circuits. The Tor library applies this rule. An entry
 for another key which the node sets, such as `Log`, replaces the value of the node in any case of the name.
 
+An entry which makes Tor start a program, `ClientTransportPlugin` or `ServerTransportPlugin` in any case of the name
+and as an abbreviation which Tor accepts, is accepted only if the command line sets the option which brings it. If
+such an entry comes from `--torrcOptions` in a config file, or from a torrc file which a config file names, the start
+fails with an explanation which names the entry. The node writes `bisq.properties` itself, and whoever can change a
+config file in the data directory could otherwise run a program with the rights of the user at the next start of
+Tor, also with the sandbox off.
+
 ### Bridges
 
 The user chooses in the Tor network settings: no bridges, the provided bridges of a type (obfs4, snowflake or meek), or
@@ -175,8 +182,8 @@ the node never starts Tor without the sandbox instead, when:
 
 - the bridges need pluggable transports and `--allowPluggableTransportsInTorSandbox` is not `true`, or the system is
   Windows;
-- a torrc entry of the user sets a proxy option, or without bridges sets `ClientTransportPlugin` or
-  `ServerTransportPlugin`;
+- a torrc entry of the user sets a proxy option or `ServerTransportPlugin`, or without bridges sets
+  `ClientTransportPlugin`, also as an abbreviation of the option name, which Tor accepts;
 - the system can enforce no level of the sandbox, for example Linux without Landlock, or the build contains no sandy;
 - sandy cannot tell now whether the system enforces the sandbox.
 
