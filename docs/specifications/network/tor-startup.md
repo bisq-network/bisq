@@ -27,7 +27,9 @@ library asks Tor to exit and kills it after 3 seconds, which takes at most about
 The node starts its Tor in a session of its own with the `setsid` program of the system, if the
 system has one, as Linux does. A Ctrl+C in the terminal which started the node then reaches only the node, whose
 shutdown still uses Tor, for example to remove the offers of the user, and stops Tor at its end. macOS has no `setsid`:
-there Tor stays in the process group of the node, and a Ctrl+C in the terminal ends Tor at once.
+there Tor stays in the process group of the node, and a Ctrl+C in the terminal ends Tor at once. For the same reason,
+the systemd unit of the seed node sends the stop signal only to the node; systemd kills the processes which are left
+after the node exited, or after the stop timeout.
 
 If Tor does not bootstrap within 4 minutes, the node stops it, deletes the files in the Tor directory except the
 `hiddenservice` directory and `external_tor.config`, and starts Tor again, up to 5 starts. Tor sometimes cannot
