@@ -187,6 +187,11 @@ the node never starts Tor without the sandbox instead, when:
 - the system can enforce no level of the sandbox, for example Linux without Landlock, or the build contains no sandy;
 - sandy cannot tell now whether the system enforces the sandbox.
 
+When the bridges need pluggable transports which the sandbox does not allow, the error names the transports and,
+instead of the option, the switch of the Tor network settings which allows them, or on Windows the option to turn the
+sandbox off, because the switch is disabled there. The desktop application then opens the Tor network settings, as
+for bridges which cannot be used, so that the user can allow the transports or choose other bridges.
+
 A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
 `hiddenservice`: the node sends the key of the onion service to Tor over the control connection.
 

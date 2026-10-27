@@ -23,12 +23,14 @@ import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.network.tor.sandbox.SandboxUnavailableException;
 
 import bisq.common.FrameRateTimer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.SingleThreadExecutorUtils;
+import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -38,6 +40,7 @@ import java.net.ServerSocket;
 
 import java.io.IOException;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
@@ -150,6 +153,42 @@ class TorNetworkNodeStartTest {
         } finally {
             shutDownExecutors(networkNode);
         }
+    }
+
+    @Test
+    void opensTheTorNetworkSettingsWhenTheSandboxRefusesTheTransportsOfTheBridges() throws Exception {
+        TorMode torMode = mock(TorMode.class);
+        when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
+        when(torMode.getTor()).thenThrow(new CompletionException(new PluggableTransportsNotAllowedException(
+                "The bridges use the pluggable transports obfs4. ... allowPluggableTransports of the sandbox " +
+                        "configuration is true.", NewTor.SANDBOX_OPT_OUT_HINT, List.of("obfs4"))));
+        var networkNode = new TorNetworkNode(8080, mock(NetworkProtoResolver.class), false, torMode, null, 2);
+        var listener = new RecordingSetupListener();
+
+        try {
+            networkNode.start(listener);
+
+            assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
+            assertEquals(TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"),
+                    Utilities.isWindows()), listener.failure.get().getMessage());
+            // The window has the switch for the transports and the choice of the bridges
+            assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void theRefusalOfTheTransportsNamesWhatTheUserOfBisq1CanDo() {
+        String message = TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4", "snowflake"), false);
+        assertTrue(message.contains("obfs4, snowflake"));
+        assertTrue(message.contains("Allow pluggable transports in the Tor sandbox"));
+        assertFalse(message.contains("sandbox configuration"));
+
+        String windowsMessage = TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), true);
+        // The switch is disabled on Windows
+        assertFalse(windowsMessage.contains("Allow pluggable transports in the Tor sandbox"));
+        assertTrue(windowsMessage.contains("--useTorSandbox=false"));
     }
 
     @Test

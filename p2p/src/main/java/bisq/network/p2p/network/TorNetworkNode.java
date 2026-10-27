@@ -23,12 +23,15 @@ import bisq.network.tor.TorService;
 import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.network.tor.sandbox.SandboxUnavailableException;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.SingleThreadExecutorUtils;
+import bisq.common.util.Utilities;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.UserPasswordAuthentication;
@@ -317,16 +320,28 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     // Tor could not connect, or the chosen bridges cannot be used. Other bridges can help, but not with a running Tor,
-    // which uses the bridges of its own configuration.
+    // which uses the bridges of its own configuration. The Tor network settings also have the switch which allows
+    // the pluggable transports of the bridges in the sandbox.
     static boolean canBridgesHelp(Throwable throwable) {
         List<Throwable> causalChain = Throwables.getCausalChain(throwable);
         return causalChain.stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
                 causalChain.stream().anyMatch(cause -> cause instanceof TorBootstrapFailedException ||
-                        cause instanceof BridgesUnavailableException);
+                        cause instanceof BridgesUnavailableException ||
+                        cause instanceof PluggableTransportsNotAllowedException);
     }
 
     private static String getErrorMessage(Throwable throwable) {
         Throwable rootCause = Throwables.getRootCause(throwable);
+        // The message of the Tor library names the configuration of Bisq 2
+        Optional<PluggableTransportsNotAllowedException> transportsNotAllowed = Throwables.getCausalChain(throwable)
+                .stream()
+                .filter(PluggableTransportsNotAllowedException.class::isInstance)
+                .map(PluggableTransportsNotAllowedException.class::cast)
+                .findFirst();
+        if (transportsNotAllowed.isPresent()) {
+            return getPluggableTransportsNotAllowedMessage(transportsNotAllowed.get().getTransportNames(),
+                    Utilities.isWindows());
+        }
         // Their messages name the running Tor or the sandbox, the cause and what the user can do. The root cause
         // alone, for example "Connection refused", does not say that.
         Optional<RuntimeException> explainedFailure = Throwables.getCausalChain(throwable).stream()
@@ -338,5 +353,22 @@ public class TorNetworkNode extends NetworkNode {
             return explainedFailure.get().getMessage();
         }
         return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
+    }
+
+    // The Tor network settings, which open with the error, have the switch for the transports. On Windows the sandbox
+    // cannot run them, so the switch is disabled there.
+    @VisibleForTesting
+    static String getPluggableTransportsNotAllowedMessage(List<String> transportNames, boolean isWindows) {
+        String bridges = "Tor did not start, because the bridges of the Tor network settings use the pluggable " +
+                "transports " + String.join(", ", transportNames) + ", which are programs that Tor starts. ";
+        if (isWindows) {
+            return bridges + "On Windows, Tor cannot start them in its sandbox. Choose bridges without pluggable " +
+                    "transports, or start Bisq with the option --" + Config.USE_TOR_SANDBOX + "=false to run Tor " +
+                    "without the sandbox. Without the sandbox, a security bug in Tor gives an attacker access to all " +
+                    "your files, including your Bisq keys.";
+        }
+        return bridges + "Tor may start them in its sandbox only if you allow it: turn on \"Allow pluggable " +
+                "transports in the Tor sandbox\" in the Tor network settings and restart Bisq, or choose bridges " +
+                "without pluggable transports.";
     }
 }
