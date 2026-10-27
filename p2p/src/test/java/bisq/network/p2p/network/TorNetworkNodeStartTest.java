@@ -19,7 +19,9 @@ package bisq.network.p2p.network;
 
 import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
+import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
 
 import bisq.common.FrameRateTimer;
@@ -47,6 +49,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -117,9 +120,39 @@ class TorNetworkNodeStartTest {
 
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(message, listener.failure.get().getMessage());
+            // Bridges of the Tor network settings do not help a running Tor, which uses its own.
+            waitForTheUserThread();
+            assertEquals(1, listener.bridgesRequested.getCount());
         } finally {
             shutDownExecutors(networkNode);
         }
+    }
+
+    @Test
+    void asksForBridgesWhenTorCannotConnect() throws Exception {
+        TorMode torMode = mock(TorMode.class);
+        when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
+        when(torMode.getTor()).thenThrow(new CompletionException(
+                new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")));
+        var networkNode = new TorNetworkNode(8080, mock(NetworkProtoResolver.class), false, torMode, null, 2);
+        var listener = new RecordingSetupListener();
+
+        try {
+            networkNode.start(listener);
+
+            assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
+            assertEquals("Could not bootstrap Tor in 240 seconds", listener.failure.get().getMessage());
+            assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void otherBridgesCanHelpWhenTheChosenBridgesCannotBeUsed() {
+        assertTrue(TorNetworkNode.canBridgesHelp(new CompletionException(
+                new BridgesUnavailableException("The program lyrebird of the pluggable transports obfs4 is missing."))));
+        assertFalse(TorNetworkNode.canBridgesHelp(new CompletionException(new IllegalStateException("no"))));
     }
 
     @Test
@@ -194,6 +227,12 @@ class TorNetworkNodeStartTest {
         }
     }
 
+    private static void waitForTheUserThread() throws InterruptedException {
+        var executed = new CountDownLatch(1);
+        UserThread.execute(executed::countDown);
+        assertTrue(executed.await(5, TimeUnit.SECONDS));
+    }
+
     private static boolean waitUntilClosed(ServerSocket serverSocket) throws InterruptedException {
         for (int i = 0; i < 50 && !serverSocket.isClosed(); i++) {
             Thread.sleep(100);
@@ -221,6 +260,7 @@ class TorNetworkNodeStartTest {
     private static final class RecordingSetupListener implements SetupListener {
         private final CountDownLatch published = new CountDownLatch(1);
         private final CountDownLatch failed = new CountDownLatch(1);
+        private final CountDownLatch bridgesRequested = new CountDownLatch(1);
         private final AtomicReference<Throwable> failure = new AtomicReference<>();
 
         @Override
@@ -240,6 +280,7 @@ class TorNetworkNodeStartTest {
 
         @Override
         public void onRequestCustomBridges() {
+            bridgesRequested.countDown();
         }
     }
 }

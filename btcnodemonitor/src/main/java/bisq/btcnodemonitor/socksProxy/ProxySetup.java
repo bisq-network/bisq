@@ -18,6 +18,7 @@
 package bisq.btcnodemonitor.socksProxy;
 
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.NewTor;
 import bisq.network.tor.TorService;
 
@@ -30,7 +31,6 @@ import java.nio.file.Paths;
 
 import java.io.File;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +65,7 @@ public class ProxySetup {
         }
         checkArgument(torService == null);
         return CompletableFuture.supplyAsync(() -> {
-            torMode = new NewTor(torDir, null, "", ArrayList::new);
+            torMode = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
             // blocking
             torService = torMode.getTor();
             socksProxyFactory.setTorService(torService);

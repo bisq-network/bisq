@@ -29,7 +29,9 @@ import bisq.core.app.TorSetup;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.network.p2p.network.DefaultPluggableTransports;
+import bisq.network.p2p.network.BridgeOption;
+import bisq.network.p2p.network.BridgeTransport;
+import bisq.network.p2p.network.BuiltInBridges;
 import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.UserThread;
@@ -66,6 +68,7 @@ import java.net.URI;
 import java.io.IOException;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -76,27 +79,14 @@ import static bisq.desktop.util.FormBuilder.*;
 @Singleton
 public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> {
 
-    public enum BridgeOption {
-        NONE,
-        PROVIDED,
-        CUSTOM
-    }
-
-    public enum Transport {
-        OBFS_4,
-        OBFS_3,
-        MEEK_AMAZON,
-        MEEK_AZURE
-    }
-
     private final Preferences preferences;
     private final NetworkNode networkNode;
     private final TorSetup torSetup;
     private Label enterBridgeLabel;
-    private ComboBox<Transport> transportTypeComboBox;
+    private ComboBox<BridgeTransport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
     private BridgeOption selectedBridgeOption = BridgeOption.NONE;
-    private Transport selectedTorTransportOrdinal = Transport.OBFS_4;
+    private BridgeTransport selectedTorTransport = BridgeTransport.OBFS_4;
     private String customBridges = "";
 
     @Inject
@@ -250,21 +240,15 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         RadioButton providedBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.providedBridges"));
         providedBridgesRadioButton.setUserData(BridgeOption.PROVIDED);
         transportTypeComboBox = addComboBox(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.transportType"));
-        transportTypeComboBox.setItems(FXCollections.observableArrayList(Arrays.asList(
-                Transport.OBFS_4,
-                Transport.OBFS_3,
-                Transport.MEEK_AMAZON,
-                Transport.MEEK_AZURE)));
+        transportTypeComboBox.setItems(FXCollections.observableArrayList(BridgeTransport.values()));
         transportTypeComboBox.setConverter(new StringConverter<>() {
             @Override
-            public String toString(Transport transport) {
+            public String toString(BridgeTransport transport) {
                 switch (transport) {
-                    case OBFS_3:
-                        return Res.get("torNetworkSettingWindow.obfs3");
-                    case MEEK_AMAZON:
-                        return Res.get("torNetworkSettingWindow.meekAmazon");
-                    case MEEK_AZURE:
-                        return Res.get("torNetworkSettingWindow.meekAzure");
+                    case SNOWFLAKE:
+                        return Res.get("torNetworkSettingWindow.snowflake");
+                    case MEEK:
+                        return Res.get("torNetworkSettingWindow.meek");
                     default:
                     case OBFS_4:
                         return Res.get("torNetworkSettingWindow.obfs4");
@@ -272,7 +256,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             }
 
             @Override
-            public Transport fromString(String string) {
+            public BridgeTransport fromString(String string) {
                 return null;
             }
         });
@@ -281,7 +265,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         RadioButton customBridgesRadioButton = addRadioButton(gridPane, ++rowIndex, toggleGroup, Res.get("torNetworkSettingWindow.customBridges"));
         customBridgesRadioButton.setUserData(BridgeOption.CUSTOM);
 
-        final Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgePrompt"));
+        final Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.enterBridge"), Res.get("torNetworkSettingWindow.enterBridgeLinePrompt"));
         enterBridgeLabel = labelTextAreaTuple2.first;
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
         bridgeEntriesTextArea.setPrefHeight(60);
@@ -294,8 +278,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         GridPane.setMargin(label2, new Insets(10, 10, 20, 0));
 
         // init persisted values
-        selectedBridgeOption = BridgeOption.values()[preferences.getBridgeOptionOrdinal()];
-        selectedTorTransportOrdinal = Transport.values()[preferences.getTorTransportOrdinal()];
+        selectedBridgeOption = preferences.getBridgeOption();
+        selectedTorTransport = preferences.getBridgeTransport();
         customBridges = preferences.getCustomBridges();
         switch (selectedBridgeOption) {
             case PROVIDED:
@@ -311,7 +295,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         }
         applyToggleSelection();
 
-        transportTypeComboBox.getSelectionModel().select(selectedTorTransportOrdinal);
+        transportTypeComboBox.getSelectionModel().select(selectedTorTransport);
         bridgeEntriesTextArea.setText(customBridges);
 
         toggleGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
@@ -320,8 +304,8 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
             applyToggleSelection();
         });
         transportTypeComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            selectedTorTransportOrdinal = newValue;
-            preferences.setTorTransportOrdinal(selectedTorTransportOrdinal.ordinal());
+            selectedTorTransport = newValue;
+            preferences.setTorTransportOrdinal(selectedTorTransport.ordinal());
             setBridgeAddressesByTransport();
         });
         bridgeEntriesTextArea.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -369,22 +353,11 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         }
     }
 
+    // The node uses the built-in bridges of the installed Tor bundle and reads only the selected type. An older version
+    // reads only the stored bridge lines, so they are stored for a downgrade.
     private void setBridgeAddressesByTransport() {
-        switch (selectedTorTransportOrdinal) {
-            case OBFS_3:
-                preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_3);
-                break;
-            case MEEK_AMAZON:
-                preferences.setBridgeAddresses(DefaultPluggableTransports.MEEK_AMAZON);
-                break;
-            case MEEK_AZURE:
-                preferences.setBridgeAddresses(DefaultPluggableTransports.MEEK_AZURE);
-                break;
-            default:
-            case OBFS_4:
-                preferences.setBridgeAddresses(DefaultPluggableTransports.OBFS_4);
-                break;
-        }
+        List<String> builtInBridges = BuiltInBridges.readInstalled(torSetup.getTorDir(), selectedTorTransport);
+        preferences.setBridgeAddresses(builtInBridges.isEmpty() ? null : builtInBridges);
     }
 
     private void setBridgeAddressesByCustomBridges() {

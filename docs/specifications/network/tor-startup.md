@@ -95,10 +95,27 @@ for another key which the node sets, such as `Log`, replaces the value of the no
 
 ### Bridges
 
-As long as the node cannot use bridges and pluggable transports, it must not start Tor if the user configured
-bridges. The start fails with an error which explains the risk of connecting without bridges and tells the user to
-remove them in the Tor network settings to do so. Bridge lines of 10 characters or fewer, for example the empty line
-of an empty custom bridge field, are no bridges, as in netlayer.
+The user chooses in the Tor network settings: no bridges, the provided bridges of a type (obfs4, snowflake or meek), or
+custom bridge lines. The provided bridges are the built-in bridges of the Tor Browser version of the bundled Tor, so
+they change with the Tor version. The node reads the choice at every start. It does not use the bridge lines which an
+earlier version stored for the provided bridges, because they become outdated. The settings store the type as a number.
+Earlier versions stored obfs4, obfs3, meek-amazon or meek-azure. obfs3 is read as snowflake and both meek types as
+meek, because obfs3 has no bridges anymore and the old meek fronts stopped working. The settings still store the bridge
+lines of the choice, because versions before the Tor library read only these lines.
+
+With bridges, the Tor of the node connects only through them. The programs of the pluggable transports come with the
+Tor bundle: the node installs them on macOS, Windows and Linux x86_64. On Linux ARM64 they must be in `PATH`. If the
+node cannot use the chosen bridges, for example because a transport has no program, the start fails. The node never
+connects without the chosen bridges. Custom bridge lines of 10 characters or fewer, for example the empty line of an
+empty custom bridge field, are no bridges, as in netlayer. If no line remains, the node connects without bridges.
+
+A running Tor uses the bridges of its own configuration. The node then ignores the bridges of its settings and logs a
+warning.
+
+If Tor cannot connect, or the chosen bridges cannot be used, the start fails, and the desktop application opens the
+Tor network settings so that the user can choose bridges, as with netlayer.
+
+The node does not log bridge lines, because a bridge which a user got privately is blocked once it is known.
 
 ## Rationale
 
@@ -110,6 +127,6 @@ A running Tor is configured in the same file as in Bisq 2, because both use the 
 
 ## Known gaps
 
-- Bridges and pluggable transports are not supported.
+- On Linux ARM64 the Tor bundle has no programs for the pluggable transports, so the user has to install them.
 - A running Tor on another host reaches the onion service of the node only at `127.0.0.1` of its own host, for example
   in a shared network namespace or on Whonix, where onion-grater rewrites the target.
