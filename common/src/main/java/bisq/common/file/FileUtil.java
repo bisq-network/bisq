@@ -27,23 +27,34 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import java.nio.channels.Channels;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -238,7 +249,7 @@ public class FileUtil {
 
     /**
      * Recursively copies {@code source} into {@code destination} using stream based file
-     * copying (via {@link Files#copy}, backed by a {@link java.io.FileInputStream}).
+     * copying (reading with a {@link java.io.FileInputStream}).
      * <p>
      * This intentionally does not use {@code org.apache.commons.io.FileUtils.copyDirectory}.
      * Since commons-io 2.7 that delegates to NIO {@code java.nio.file.Files.copy}, which on
@@ -248,8 +259,18 @@ public class FileUtil {
      * the file" and aborts the whole backup. bitcoinj holds such a lock on
      * {@code bisq.spvchain} while running. A plain {@code FileInputStream} read tolerates the
      * lock, restoring the behaviour Bisq relied on before the commons-io upgrade.
+     * <p>
+     * Symbolic links, junctions of Windows and special files such as named pipes inside {@code source} are neither
+     * followed nor read: a link could make the copy read files outside {@code source}, and a named pipe would block it.
+     * A {@code source} which is itself a link is followed.
+     * <p>
+     * The copy is a backup of the data directory with the keys of the user, so on a file system with POSIX
+     * permissions the directories which it creates are accessible only by the owner (0700) and its files are readable
+     * and writable only by the owner (0600), whatever the permissions in {@code source} and the umask are.
+     *
+     * @return the entries of {@code source} which are not copied, so that the caller can tell the user
      */
-    public static void copyDirectory(File source, File destination) throws IOException {
+    public static List<File> copyDirectory(File source, File destination) throws IOException {
         // Match commons-io's copyDirectory input validation.
         if (!source.exists()) {
             throw new FileNotFoundException("Source '" + source.getAbsolutePath() + "' does not exist");
@@ -257,43 +278,92 @@ public class FileUtil {
         if (!source.isDirectory()) {
             throw new IllegalArgumentException("Source '" + source.getAbsolutePath() + "' exists but is not a directory");
         }
+        Path sourceRoot = source.toPath().toRealPath();
+        Path destinationRoot = destination.toPath();
+        createOwnerOnlyDirectories(destinationRoot);
         // When the destination lies inside the source, exclude it from the walk so we don't
         // endlessly copy the destination into itself. Mirrors commons-io's copyDirectory,
-        // which builds the same exclusion rather than rejecting such destinations.
-        String excludedPath = null;
-        String sourcePath = source.getCanonicalPath() + File.separator;
-        String destinationPath = destination.getCanonicalPath() + File.separator;
-        if (destinationPath.startsWith(sourcePath)) {
-            excludedPath = destination.getCanonicalPath();
-        }
-        doCopyDirectory(source, destination, excludedPath);
-    }
-
-    private static void doCopyDirectory(File source, File destination, @Nullable String excludedPath) throws IOException {
-        if (source.isDirectory()) {
-            if (!destination.exists() && !destination.mkdirs()) {
-                throw new IOException("Failed to create directory: " + destination.getAbsolutePath());
-            }
-            File[] files = source.listFiles();
-            if (files == null) {
-                // listFiles() returns null on an I/O error; treat it as a hard failure rather
-                // than a silently empty directory, matching commons-io.
-                throw new IOException("Failed to list contents of directory: " + source.getAbsolutePath());
-            }
-            for (File file : files) {
-                if (excludedPath != null && file.getCanonicalPath().equals(excludedPath)) {
-                    continue;
+        // which builds the same exclusion rather than rejecting such destinations. The walk
+        // does not follow links, so it visits real paths below the real source.
+        Path excludedPath = destinationRoot.toRealPath();
+        List<File> notCopied = new ArrayList<>();
+        java.nio.file.Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes)
+                    throws IOException {
+                if (directory.equals(excludedPath)) {
+                    return FileVisitResult.SKIP_SUBTREE;
                 }
-                doCopyDirectory(file, new File(destination, file.getName()), excludedPath);
+                if (attributes.isOther()) {
+                    // A junction of Windows, which walkFileTree reports as a directory and would enter
+                    notCopied.add(directory.toFile());
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                createOwnerOnlyDirectories(toDestination(directory));
+                return FileVisitResult.CONTINUE;
             }
-            preserveLastModified(source, destination);
-        } else {
-            Files.copy(source, destination);
-            preserveLastModified(source, destination);
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                if (!attributes.isRegularFile()) {
+                    notCopied.add(file.toFile());
+                    return FileVisitResult.CONTINUE;
+                }
+                Path destinationFile = toDestination(file);
+                copyToOwnerOnlyFile(file.toFile(), destinationFile);
+                preserveLastModified(file.toFile(), destinationFile.toFile());
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path directory, IOException e) throws IOException {
+                if (e != null) {
+                    // A directory which cannot be read is a hard failure rather than a silently
+                    // incomplete copy, matching commons-io.
+                    throw e;
+                }
+                preserveLastModified(directory.toFile(), toDestination(directory).toFile());
+                return FileVisitResult.CONTINUE;
+            }
+
+            private Path toDestination(Path path) {
+                return destinationRoot.resolve(sourceRoot.relativize(path));
+            }
+        });
+        notCopied.forEach(file -> log.warn("The copy of {} does not contain {}, which is a link or a special file",
+                source, file));
+        return notCopied;
+    }
+
+    // The permissions apply when a directory is created. A file system without them, for example FAT on a USB drive,
+    // ignores them.
+    private static void createOwnerOnlyDirectories(Path directory) throws IOException {
+        java.nio.file.Files.createDirectories(directory, ownerOnly("rwx------"));
+    }
+
+    // Reads with a FileInputStream, see copyDirectory. The permissions apply when the file is created, so the content
+    // is never readable by others.
+    private static void copyToOwnerOnlyFile(File source, Path destination) throws IOException {
+        Set<StandardOpenOption> options = Set.of(StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE);
+        try (InputStream inputStream = new FileInputStream(source);
+             OutputStream outputStream = Channels.newOutputStream(
+                     java.nio.file.Files.newByteChannel(destination, options, ownerOnly("rw-------")))) {
+            inputStream.transferTo(outputStream);
         }
     }
 
-    // Guava's Files.copy copies bytes only; restore the last-modified time (for both files and
+    // No attribute on a file system without POSIX permissions, such as the one of Windows
+    private static FileAttribute<?>[] ownerOnly(String posixPermissions) {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            return new FileAttribute<?>[0];
+        }
+        return new FileAttribute<?>[]{
+                PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString(posixPermissions))};
+    }
+
+    // The copy copies bytes only; restore the last-modified time (for both files and
     // directories) so the backup matches commons-io's preserveFileDate behaviour.
     private static void preserveLastModified(File source, File destination) {
         if (!destination.setLastModified(source.lastModified())) {

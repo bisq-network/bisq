@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -149,8 +150,17 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     try {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
-                        FileUtil.copyDirectory(dataDir, new File(destination));
-                        new Popup().feedback(Res.get("account.backup.success", destination)).show();
+                        List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination));
+                        if (notCopied.isEmpty()) {
+                            new Popup().feedback(Res.get("account.backup.success", destination)).show();
+                        } else {
+                            // For example a link to a wallet directory on another drive: the user has to copy it
+                            String entries = notCopied.stream()
+                                    .map(File::getAbsolutePath)
+                                    .collect(Collectors.joining("\n"));
+                            new Popup().warning(Res.get("account.backup.success.entriesNotCopied", destination,
+                                    entries)).show();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         log.error(e.getMessage());
