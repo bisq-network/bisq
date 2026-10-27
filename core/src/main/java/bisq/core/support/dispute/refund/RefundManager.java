@@ -313,11 +313,15 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         }
 
         cleanupRetryMap(uid);
-        if (!dispute.getChatMessages().contains(chatMessage)) {
-            dispute.addAndPersistChatMessage(chatMessage);
-        } else {
+        // A copy of a result that we applied already, for example from the mailbox after the direct message, is only
+        // acknowledged, so that it does not set the dispute back
+        if (dispute.hasResultMessage(chatMessage)) {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
+            sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
+            return;
         }
+        markReceived(chatMessage);
+        dispute.addAndPersistChatMessage(chatMessage);
         dispute.setIsClosed();
 
         if (dispute.disputeResultProperty().get() != null) {
