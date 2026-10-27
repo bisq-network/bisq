@@ -274,6 +274,7 @@ public class InventoryMonitor implements SetupListener {
                 null,
                 "",
                 false,
+                false,
                 false)
                 .get();
     }

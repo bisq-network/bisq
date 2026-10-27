@@ -74,21 +74,24 @@ public class NewTor extends TorMode {
     private final String torrcOptions;
     private final BridgeAddressProvider bridgeAddressProvider;
     private final boolean useTorSandbox;
+    private final boolean allowPluggableTransportsInTorSandbox;
 
     public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
-        this(torWorkingDirectory, torrcFile, torrcOptions, bridgeAddressProvider, false);
+        this(torWorkingDirectory, torrcFile, torrcOptions, bridgeAddressProvider, false, false);
     }
 
     public NewTor(File torWorkingDirectory,
                   @Nullable File torrcFile,
                   String torrcOptions,
                   BridgeAddressProvider bridgeAddressProvider,
-                  boolean useTorSandbox) {
+                  boolean useTorSandbox,
+                  boolean allowPluggableTransportsInTorSandbox) {
         super(torWorkingDirectory);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
         this.bridgeAddressProvider = bridgeAddressProvider;
         this.useTorSandbox = useTorSandbox;
+        this.allowPluggableTransportsInTorSandbox = allowPluggableTransportsInTorSandbox;
     }
 
     @Override
@@ -103,7 +106,7 @@ public class NewTor extends TorMode {
                 getTorrcOverrides(torrcFile, torrcOptions),
                 false,
                 getBridgeConfig(bridgeAddressProvider),
-                getSandboxConfig(useTorSandbox));
+                getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox));
         for (int attempt = 1; ; attempt++) {
             TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
             log.info("Starting tor");
@@ -141,12 +144,12 @@ public class NewTor extends TorMode {
 
     // In its sandbox Tor has a network of its own on every platform, so it reaches the onion service of the node only
     // through a port which sandy forwards; the library refuses a sandboxed start without them. A Bisq 1 node publishes
-    // one onion service. The sandbox lets Tor start no pluggable transports, so bridges which need them fail the
-    // sandboxed start. A running Tor runs without the sandbox.
-    static TorSandboxConfig getSandboxConfig(boolean useTorSandbox) {
+    // one onion service. Unless the option allows them, the sandbox lets Tor start no pluggable transports, so bridges
+    // which need them fail the sandboxed start. A running Tor runs without the sandbox.
+    static TorSandboxConfig getSandboxConfig(boolean useTorSandbox, boolean allowPluggableTransports) {
         return new TorSandboxConfig(useTorSandbox,
                 true,
-                false,
+                allowPluggableTransports,
                 1,
                 "bisq1",
                 SANDBOX_OPT_OUT_HINT);

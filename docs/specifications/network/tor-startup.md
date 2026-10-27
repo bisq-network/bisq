@@ -158,13 +158,23 @@ PID namespace isolates the signals of Tor, and where unprivileged user namespace
 network of the system. The node logs the level, with a warning for a level with the network of the system or without
 isolated signals.
 
-Pluggable transports are programs which Tor starts for bridges. The sandbox does not let Tor start them, so bridges
-which need them fail the sandboxed start.
+Pluggable transports are programs which Tor starts for bridges. The sandbox lets Tor start them only with
+`--allowPluggableTransportsInTorSandbox=true`; the option is off by default. The Tor network settings have a switch for
+it, which asks for a confirmation before it allows them, writes the option into `bisq.properties` of the data
+directory (and removes it when turned off), and takes effect after a restart; the switch is disabled while the sandbox
+is off, on Windows, and while the option is given on the command line, which overrides `bisq.properties`; a note then
+names the value of the command line. With the option, Tor may start the programs of the transports of the chosen bridges, and they
+end with Tor. On Linux, obfs4 keeps the network of the sandbox and connects through the egress broker; with meek,
+webtunnel, snowflake or conjure, Tor and its transports get the network of the system. On macOS every transport gets
+the network of the system, and the sandbox lets Tor and its transports reach the certificate verifier of the system
+(the Mach service `com.apple.trustd.agent`), with which webtunnel verifies its server. On Windows Tor cannot start
+pluggable transports in its sandbox.
 
 If the sandbox is on, the start fails with an error which names the reason and the option to turn the sandbox off, and
 the node never starts Tor without the sandbox instead, when:
 
-- the bridges need pluggable transports;
+- the bridges need pluggable transports and `--allowPluggableTransportsInTorSandbox` is not `true`, or the system is
+  Windows;
 - a torrc entry of the user sets a proxy option, or without bridges sets `ClientTransportPlugin` or
   `ServerTransportPlugin`;
 - the system can enforce no level of the sandbox, for example Linux without Landlock, or the build contains no sandy;
@@ -186,14 +196,18 @@ transports which the build verified, independent of the version and the patch le
 
 Tor parses data from the network, and the sandbox keeps a compromised Tor away from the wallet and the keys of the
 node. A start which cannot get the sandbox fails instead of running Tor without it, so that the user does not lose the
-sandbox without being told.
+sandbox without being told. Pluggable transports stay off by default, because with them Tor may start processes and,
+with most transports, reaches the network of the system, including its local services.
 
 ## Known gaps
 
 - On Linux ARM64 the node runs the Tor of an alpha release of Tor Browser, because no stable release has a Tor expert
   bundle for Linux ARM64. The build pins that bundle by its hash and requires the tor version of the stable bundle.
-- At a level with the network of the system, the sandbox does not keep Tor from connecting to local services of the
-  user, for example a local Bitcoin node or the API of the daemon; their own authentication protects them. Tor cannot
-  read the wallet and the keys of the node.
+- Bridges with pluggable transports need the sandbox off on Windows.
+- On Windows Tor runs in its sandbox only in a desktop session. In session 0, where services and logins over SSH run,
+  Tor ends at once when it starts in its sandbox; the report of sandy in the log of the node says so.
+- At a level with the network of the system, and with pluggable transports other than obfs4 on Linux, the sandbox
+  does not keep Tor from connecting to local services of the user, for example a local Bitcoin node or the API of the
+  daemon; their own authentication protects them. Tor cannot read the wallet and the keys of the node.
 - A running Tor on another host reaches the onion service of the node only at `127.0.0.1` of its own host, for example
   in a shared network namespace or on Whonix, where onion-grater rewrites the target.

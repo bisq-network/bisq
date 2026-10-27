@@ -75,7 +75,7 @@ class NewTorTest {
             config.set((TorTransportConfig) context.arguments().get(0));
             when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
         })) {
-            new NewTor(torDir, null, "", BridgeAddressProvider.NONE, true).getTor();
+            new NewTor(torDir, null, "", BridgeAddressProvider.NONE, true, false).getTor();
 
             assertTrue(config.get().getSandboxConfig().isEnabled());
             // The library refuses a sandboxed start without forwarded onion service ports.
@@ -85,7 +85,8 @@ class NewTorTest {
             assertTrue(config.get().getSandboxConfig().getOptOutHint().contains("--useTorSandbox=false"));
         }
         // Applications without the option, such as btcnodemonitor, run Tor without the sandbox.
-        assertFalse(NewTor.getSandboxConfig(false).isEnabled());
+        assertFalse(NewTor.getSandboxConfig(false, false).isEnabled());
+        assertTrue(NewTor.getSandboxConfig(true, true).isAllowPluggableTransports());
     }
 
     @Test

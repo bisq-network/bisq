@@ -35,6 +35,8 @@ import bisq.network.p2p.network.BuiltInBridges;
 import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.UserThread;
+import bisq.common.config.Config;
+import bisq.common.config.ConfigFileEditor;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
@@ -48,6 +50,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
@@ -82,6 +85,10 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     private final Preferences preferences;
     private final NetworkNode networkNode;
     private final TorSetup torSetup;
+    private final Config config;
+    private final ConfigFileEditor configFileEditor;
+    // The value which the next start uses, unless a command line option overrides the config file
+    private boolean allowPluggableTransports;
     private Label enterBridgeLabel;
     private ComboBox<BridgeTransport> transportTypeComboBox;
     private TextArea bridgeEntriesTextArea;
@@ -92,10 +99,14 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
     @Inject
     public TorNetworkSettingsWindow(Preferences preferences,
                                     NetworkNode networkNode,
-                                    TorSetup torSetup) {
+                                    TorSetup torSetup,
+                                    Config config) {
         this.preferences = preferences;
         this.networkNode = networkNode;
         this.torSetup = torSetup;
+        this.config = config;
+        this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
+        this.allowPluggableTransports = config.allowPluggableTransportsInTorSandbox;
 
         type = Type.Attention;
 
@@ -219,7 +230,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         });
 
 
-        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++rowIndex, 8, Res.get("torNetworkSettingWindow.bridges.header"), Layout.GROUP_DISTANCE);
+        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++rowIndex, 10, Res.get("torNetworkSettingWindow.bridges.header"), Layout.GROUP_DISTANCE);
         titledGroupBg.getStyleClass().add("last");
 
         Label bridgesLabel = addLabel(gridPane, rowIndex, Res.get("torNetworkSettingWindow.bridges.info"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
@@ -270,6 +281,33 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         bridgeEntriesTextArea = labelTextAreaTuple2.second;
         bridgeEntriesTextArea.setPrefHeight(60);
 
+        // Tor reads the option when it starts, as it reads the bridges.
+        ToggleButton allowPluggableTransportsToggle = addSlideToggleButton(gridPane, ++rowIndex,
+                Res.get("torNetworkSettingWindow.allowPluggableTransports"), 10);
+        GridPane.setColumnSpan(allowPluggableTransportsToggle, 2);
+        allowPluggableTransportsToggle.setSelected(allowPluggableTransports);
+        Label allowPluggableTransportsInfo = addLabel(gridPane, ++rowIndex, getAllowPluggableTransportsInfo());
+        allowPluggableTransportsInfo.setWrapText(true);
+        GridPane.setColumnSpan(allowPluggableTransportsInfo, 2);
+        GridPane.setHalignment(allowPluggableTransportsInfo, HPos.LEFT);
+        // Without the sandbox Tor starts the transports anyway, and on Windows the Tor library refuses them in the
+        // sandbox. An option on the command line overrides what the switch writes into the config file.
+        allowPluggableTransportsToggle.setDisable(!config.useTorSandbox || Utilities.isWindows() ||
+                config.allowPluggableTransportsInTorSandboxSetOnCommandLine);
+        allowPluggableTransportsToggle.setOnAction(e -> {
+            if (allowPluggableTransportsToggle.isSelected()) {
+                // Only the action button allows them. Closing the popup, also with Escape or Enter, keeps them off.
+                new Popup().warning(Res.get("torNetworkSettingWindow.allowPluggableTransports.warn"))
+                        .actionButtonText(Res.get("torNetworkSettingWindow.allowPluggableTransports.warn.accept"))
+                        .onAction(() -> setAllowPluggableTransports(true))
+                        .closeButtonText(Res.get("torNetworkSettingWindow.allowPluggableTransports.warn.cancel"))
+                        .onClose(() -> allowPluggableTransportsToggle.setSelected(false))
+                        .show();
+            } else {
+                setAllowPluggableTransports(false);
+            }
+        });
+
         Label label2 = addLabel(gridPane, ++rowIndex, Res.get("torNetworkSettingWindow.restartInfo"));
         label2.setWrapText(true);
         GridPane.setColumnSpan(label2, 2);
@@ -314,6 +352,30 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                     setBridgeAddressesByCustomBridges();
                 }
         );
+    }
+
+    private String getAllowPluggableTransportsInfo() {
+        if (!config.useTorSandbox) {
+            return Res.get("torNetworkSettingWindow.allowPluggableTransports.sandboxDisabled");
+        }
+        if (Utilities.isWindows()) {
+            return Res.get("torNetworkSettingWindow.allowPluggableTransports.windows");
+        }
+        if (config.allowPluggableTransportsInTorSandboxSetOnCommandLine) {
+            return Res.get("torNetworkSettingWindow.allowPluggableTransports.commandLine",
+                    config.allowPluggableTransportsInTorSandbox);
+        }
+        return Res.get("torNetworkSettingWindow.allowPluggableTransports.info");
+    }
+
+    // Only this option, and off by clearing it, so that the config file keeps following its default
+    private void setAllowPluggableTransports(boolean allow) {
+        allowPluggableTransports = allow;
+        if (allow) {
+            configFileEditor.setOption(Config.ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "true");
+        } else {
+            configFileEditor.clearOption(Config.ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX);
+        }
     }
 
     private void cleanTorDir(Runnable resultHandler) {

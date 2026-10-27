@@ -134,6 +134,32 @@ public class ConfigTests {
     }
 
     @Test
+    public void theTorSandboxAllowsNoPluggableTransportsUnlessTheOptionAllowsThem() {
+        assertFalse(new Config().allowPluggableTransportsInTorSandbox);
+        assertTrue(configWithOpts(opt(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "true"))
+                .allowPluggableTransportsInTorSandbox);
+    }
+
+    @Test
+    public void onlyTheCommandLineOptionOfPluggableTransportsOverridesTheSwitch() throws IOException {
+        // The switch of the Tor network settings writes the option into the config file
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "true"));
+        }
+        Config fromConfigFile = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertTrue(fromConfigFile.allowPluggableTransportsInTorSandbox);
+        assertFalse(fromConfigFile.allowPluggableTransportsInTorSandboxSetOnCommandLine);
+
+        Config fromCommandLine = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()),
+                opt(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "false"));
+        assertFalse(fromCommandLine.allowPluggableTransportsInTorSandbox);
+        assertTrue(fromCommandLine.allowPluggableTransportsInTorSandboxSetOnCommandLine);
+
+        assertFalse(new Config().allowPluggableTransportsInTorSandboxSetOnCommandLine);
+    }
+
+    @Test
     public void onWhonixTheTorControlOptionsOfTheWhonixGuideAreIgnored() {
         // On a Whonix-Workstation the Tor library uses the Tor of the Whonix-Gateway and never starts its own Tor.
         File configFile = new File("bisq.properties");

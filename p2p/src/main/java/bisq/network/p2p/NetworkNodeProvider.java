@@ -51,11 +51,14 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Nullable @Named(Config.TORRC_FILE) File torrcFile,
                                @Named(Config.TORRC_OPTIONS) String torrcOptions,
                                @Named(Config.TOR_STREAM_ISOLATION) boolean streamIsolation,
-                               @Named(Config.USE_TOR_SANDBOX) boolean useTorSandbox) {
+                               @Named(Config.USE_TOR_SANDBOX) boolean useTorSandbox,
+                               @Named(Config.ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX)
+                               boolean allowPluggableTransportsInTorSandbox) {
         if (useLocalhostForP2P) {
             networkNode = new LocalhostNetworkNode(port, networkProtoResolver, banFilter, maxConnections);
         } else {
-            TorMode torMode = new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider, useTorSandbox);
+            TorMode torMode = new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider, useTorSandbox,
+                    allowPluggableTransportsInTorSandbox);
             networkNode = new TorNetworkNode(port, networkProtoResolver, streamIsolation, torMode, banFilter, maxConnections);
         }
     }

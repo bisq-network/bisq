@@ -118,6 +118,7 @@ public class Config {
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
     public static final String USE_TOR_SANDBOX = "useTorSandbox";
+    public static final String ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX = "allowPluggableTransportsInTorSandbox";
     public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
     public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
     public static final String SEND_MSG_THROTTLE_TRIGGER = "sendMsgThrottleTrigger";
@@ -242,6 +243,9 @@ public class Config {
     public final String torrcOptions;
     public final boolean torStreamIsolation;
     public final boolean useTorSandbox;
+    public final boolean allowPluggableTransportsInTorSandbox;
+    // The command line overrides the config file, which the Tor network settings write
+    public final boolean allowPluggableTransportsInTorSandboxSetOnCommandLine;
     public final int msgThrottlePerSec;
     public final int msgThrottlePer10Sec;
     public final int sendMsgThrottleTrigger;
@@ -645,6 +649,15 @@ public class Config {
                         .ofType(Boolean.class)
                         .defaultsTo(true);
 
+        ArgumentAcceptingOptionSpec<Boolean> allowPluggableTransportsInTorSandboxOpt =
+                parser.accepts(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "Let the Tor in the sandbox start the " +
+                                "pluggable transports of the bridges. Weakens the sandbox: Tor may start processes, " +
+                                "and with every transport except obfs4 on Linux it gets the network of the host. " +
+                                "Not supported on Windows.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(false);
+
         ArgumentAcceptingOptionSpec<Integer> msgThrottlePerSecOpt =
                 parser.accepts(MSG_THROTTLE_PER_SEC, "Message throttle per sec for connection class")
                         .withRequiredArg()
@@ -1013,6 +1026,9 @@ public class Config {
                     .collect(toList());
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
             this.useTorSandbox = options.valueOf(useTorSandboxOpt);
+            this.allowPluggableTransportsInTorSandbox = options.valueOf(allowPluggableTransportsInTorSandboxOpt);
+            this.allowPluggableTransportsInTorSandboxSetOnCommandLine =
+                    cliOpts.has(allowPluggableTransportsInTorSandboxOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevModeHeader = options.valueOf(useDevModeHeaderOpt);
