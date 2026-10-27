@@ -66,6 +66,19 @@ class ExecutableForAppWithP2pTest {
     }
 
     @Test
+    void failedP2PSetupShutsDownWithFailureExitStatus() {
+        TestExecutable executable = new TestExecutable();
+        AtomicInteger completionCount = new AtomicInteger();
+
+        executable.onP2PSetupFailed();
+        executable.gracefulShutDown(completionCount::incrementAndGet);
+
+        assertEquals(BisqExecutable.EXIT_FAILURE, executable.exitStatus);
+        assertEquals(1, executable.additionalShutDownCalls);
+        assertEquals(1, completionCount.get());
+    }
+
+    @Test
     void laterNormalRequestDoesNotReplaceFailureExitStatus() {
         TestExecutable executable = new TestExecutable();
         AtomicInteger completionCount = new AtomicInteger();
