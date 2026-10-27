@@ -31,4 +31,6 @@ dependencies {
     implementation(libs.google.guice) {
         exclude(module: 'guava')
     }
+    // SeedNodeSystemdUnitTest parses the external_tor.config which bisq.service writes as the Tor library does
+    testImplementation 'tor:tor'
 }

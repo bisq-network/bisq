@@ -158,6 +158,27 @@ class NewTorTest {
     }
 
     @Test
+    void doesNotStartTorAgainWhenTheShutdownInterruptsTheStart(@TempDir File torDir) {
+        // At the shutdown, TorNetworkNode interrupts the thread which runs getTor. The library then fails the start,
+        // here the second one after a start which did not bootstrap, with the InterruptedException as the cause.
+        var startAttempts = new AtomicInteger();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            if (startAttempts.incrementAndGet() == 1) {
+                when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")));
+            } else {
+                when(mock.initialize()).thenThrow(new TorBootstrapFailedException(new InterruptedException()));
+            }
+        })) {
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+
+            assertThrows(TorBootstrapFailedException.class, newTor::getTor);
+
+            assertEquals(2, construction.constructed().size());
+        }
+    }
+
+    @Test
     void doesNotStartTorAgainWhenTheRunningTorDoesNotBootstrap(@TempDir File torDir) throws IOException {
         // The library reports a running Tor which did not bootstrap in time with ExternalTorUnavailableException,
         // whose message names the timeout. Fresh files and four more waits of 4 minutes cannot help a running Tor.
