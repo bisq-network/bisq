@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: zulu
-          java-version: '21.0.6'
+          java-version: '21.0.13'
           check-latest: false
 
       # Cache Gradle deps + wrapper. Single biggest speedup per re-run (~2 min).
