@@ -1,5 +1,7 @@
 package bisq.common.config;
 
+import bisq.network.tor.common.platform.LinuxDistribution;
+
 import org.bitcoinj.core.NetworkParameters;
 
 import joptsimple.AbstractOptionSpec;
@@ -30,6 +32,7 @@ import java.util.stream.Stream;
 import ch.qos.logback.classic.Level;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -56,6 +59,7 @@ import static java.util.stream.Collectors.toList;
  * @see #Config(String...)
  * @see #Config(String, File, String...)
  */
+@Slf4j
 public class Config {
 
     // Option name constants
@@ -617,14 +621,15 @@ public class Config {
 
         // Bisq connected to a running Tor with these options. The Tor library reads the settings of a running Tor
         // from external_tor.config in the Tor directory instead. The options are still accepted, so that a config
-        // file which sets one fails with an explanation instead of silently starting another Tor.
+        // file which sets one fails with an explanation instead of silently starting another Tor. On Whonix they are
+        // ignored, see checkUnsupportedTorControlOptions.
         List<OptionSpec<String>> unsupportedTorControlOpts = Stream.of(TOR_CONTROL_HOST,
                         TOR_CONTROL_PORT,
                         TOR_CONTROL_PASSWORD,
                         TOR_CONTROL_COOKIE_FILE,
                         TOR_CONTROL_USE_SAFE_COOKIE_AUTH)
                 .map(option -> parser.accepts(option, "Not supported anymore. Configure a running Tor in " +
-                                "external_tor.config in the Tor directory instead.")
+                                "external_tor.config in the Tor directory instead. Ignored on Whonix.")
                         .withOptionalArg())
                 .collect(toList());
 
@@ -1091,15 +1096,44 @@ public class Config {
         this.torDir = mkdir(btcNetworkDir, "tor");
         this.walletDir = mkdir(btcNetworkDir, "wallet");
 
-        if (!givenUnsupportedTorControlOptions.isEmpty()) {
-            throw new ConfigException("option '%s' is not supported anymore. To use a running Tor, configure it in %s",
-                    givenUnsupportedTorControlOptions.get(0), new File(torDir, "external_tor.config"));
-        }
+        checkUnsupportedTorControlOptions(givenUnsupportedTorControlOptions, configFile, torDir,
+                LinuxDistribution.isWhonix(), LinuxDistribution.isWhonixGateway());
 
         // Assign values to special-case static fields
         APP_DATA_DIR_VALUE = appDataDir;
         BASE_CURRENCY_NETWORK_VALUE = baseCurrencyNetwork;
         TRADE_STATISTICS_MAX_ITEMS_VALUE = tradeStatistics3MaxItems;
+    }
+
+    /**
+     * On a Whonix-Workstation the Tor library always uses the Tor of the Whonix-Gateway and never starts its own Tor, so
+     * the options which the Whonix guide for Bisq passes (--torControlPort=9051 --torControlPassword=notrequired) are
+     * ignored there instead of stopping the start. On a Whonix-Gateway, which has the markers of Whonix too, the Tor
+     * library refuses to start and names the Workstation, so the options are ignored there as well: an error about
+     * external_tor.config would send the user the wrong way. The rule which tells them apart is the one of the Tor
+     * library. The message names the config file, because users of the desktop application set these options there.
+     */
+    static void checkUnsupportedTorControlOptions(List<String> givenOptions,
+                                                  File configFile,
+                                                  File torDir,
+                                                  boolean isWhonix,
+                                                  boolean isWhonixGateway) {
+        if (givenOptions.isEmpty()) {
+            return;
+        }
+        if (isWhonixGateway) {
+            log.warn("Bisq ignores the options {} on Whonix. It does not run on a Whonix-Gateway: the start of Tor " +
+                    "fails there.", givenOptions);
+            return;
+        }
+        if (isWhonix) {
+            log.warn("Bisq ignores the options {}, because it uses the Tor of the Whonix-Gateway without them.",
+                    givenOptions);
+            return;
+        }
+        throw new ConfigException("option '%s' is not supported anymore. Remove it from the command line or from " +
+                        "the config file %s. To use a running Tor, configure it in %s",
+                givenOptions.get(0), configFile, new File(torDir, "external_tor.config"));
     }
 
     private static File absoluteConfigFile(File parentDir, String relativeConfigFilePath) {

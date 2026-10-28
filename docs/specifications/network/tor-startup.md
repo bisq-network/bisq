@@ -53,9 +53,9 @@ are logged at debug level only, because they contain onion addresses.
 ### Running Tor
 
 The node uses a running Tor instead of its own if `external_tor.config` in its Tor directory sets `UseExternalTor 1`,
-if the environment variable `TOR_SKIP_LAUNCH` is `1`, `true` or `yes`, or if it runs on Whonix. `external_tor.config`
-sets the host and port of the control port and whether a cookie authenticates the controller. The node uses the SOCKS
-port which the running Tor reports, on the host of the control port.
+if the environment variable `TOR_SKIP_LAUNCH` is `1`, `true` or `yes`, or if it runs on a Whonix-Workstation.
+`external_tor.config` sets the host and port of the control port and whether a cookie authenticates the controller.
+The node uses the SOCKS port which the running Tor reports, on the host of the control port.
 
 With a cookie, the node authenticates with the SAFECOOKIE method: Tor first proves that it knows the cookie, and the
 node never sends the cookie. A process which listens on the control port instead of Tor gets neither the cookie nor the
@@ -66,12 +66,17 @@ the control port cannot prove that it is Tor, so the cookie is the better choice
 and a password, the node sends an empty authentication, which only fits a control port that other processes cannot
 reach, such as the filtered control port of Whonix.
 
-On Whonix, the node always uses the Tor of the Whonix-Gateway. onion-grater filters the control port of the Gateway and
-needs the profile of Bisq there (`sudo onion-grater-add 40_bisq`). onion-grater accepts only the empty authentication,
-so the node uses it there also with `CookieAuthentication 1`; the cookie of a Whonix-Workstation is a dummy. The node
-listens on all addresses, because the Tor of the Gateway connects to the address of the Workstation. The publication of
-the onion service completes at the start or at the end of the upload of its descriptor, because older profiles of
-onion-grater deliver only the end in a form which the node accepts.
+On a Whonix-Workstation, the node always uses the Tor of the Whonix-Gateway. onion-grater filters the control port of
+the Gateway and needs the profile of Bisq there (`sudo onion-grater-add 40_bisq`). onion-grater accepts only the empty
+authentication, so the node uses it there also with `CookieAuthentication 1`; the cookie of a Whonix-Workstation is a
+dummy. The node listens on all addresses, because the Tor of the Gateway connects to the address of the Workstation.
+The publication of the onion service completes at the start or at the end of the upload of its descriptor, because
+older profiles of onion-grater deliver only the end in a form which the node accepts.
+
+On a Whonix-Gateway, whose Tor serves the Workstations behind it, the node does not run: the start of Tor fails before
+anything else with an error which says to run Bisq on a Whonix-Workstation. Both systems have the markers of Whonix,
+`/usr/share/whonix/marker` and `/usr/share/anon-dist/marker`; a Gateway also has
+`/usr/share/anon-gw-base-files/gateway`. The node and the Tor library decide with one rule, the one of the library.
 
 Before it uses the running Tor, the node waits until that Tor has bootstrapped, at most 4 minutes, as netlayer did. It
 does not change the configuration of the running Tor. The restarts with fresh files, which the node does for its own
@@ -83,8 +88,13 @@ Tor would connect directly to the Tor network.
 
 The options `--torControlHost`, `--torControlPort`, `--torControlPassword`, `--torControlCookieFile` and
 `--torControlUseSafeCookieAuth`, which configured a running Tor before, stop the start with an explanation which
-names `external_tor.config`. This applies on the command line and in a config file. The options must not be ignored,
-because the node would then start its own Tor instead of the one the operator configured.
+names `external_tor.config` and the config file. This applies on the command line and in a config file. The desktop
+application shows the explanation in a dialog, because it is usually started without a terminal. The options must not be ignored,
+because the node would then start its own Tor instead of the one the operator configured. On a Whonix-Workstation, the
+node ignores them with a warning, because there it always uses the Tor of the Whonix-Gateway and never starts its own
+Tor. The Whonix guide for Bisq passes `--torControlPort=9051 --torControlPassword=notrequired`. On a Whonix-Gateway the
+node ignores them too, so that the start reaches the refusal which names the Workstation instead of an error which
+points to `external_tor.config`.
 
 Deleting the outdated Tor files keeps `external_tor.config`, because it is a setting of the user.
 
