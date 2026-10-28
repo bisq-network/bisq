@@ -29,6 +29,7 @@ import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.network.ExplainedStartFailureException;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
@@ -226,7 +227,11 @@ public class P2PNetworkSetup {
                 torNetworkSettingsFailure = throwable instanceof BridgesCanHelpException ?
                         throwable.getMessage() :
                         null;
-                p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailed", throwable.getMessage()));
+                // Checking the internet connection or restarting does not help with a failure which says what helps
+                String warnMsgKey = throwable instanceof ExplainedStartFailureException ?
+                        "mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice" :
+                        "mainView.p2pNetworkWarnMsg.connectionToP2PFailed";
+                p2pNetworkWarnMsg.set(Res.get(warnMsgKey, throwable.getMessage()));
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));
                 p2pNetworkLabelId.set("splash-error-state-msg");

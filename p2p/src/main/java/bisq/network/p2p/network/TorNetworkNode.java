@@ -23,7 +23,9 @@ import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+import bisq.network.tor.common.platform.LinuxDistribution;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorStartupFailedException;
 import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.network.tor.sandbox.SandboxUnavailableException;
 
@@ -307,9 +309,14 @@ public class TorNetworkNode extends NetworkNode {
                 }
                 String errorMessage = getErrorMessage(throwable);
                 boolean canBridgesHelp = canBridgesHelp(throwable);
-                RuntimeException failure = canBridgesHelp ?
-                        new BridgesCanHelpException(errorMessage) :
-                        new RuntimeException(errorMessage);
+                RuntimeException failure;
+                if (canBridgesHelp) {
+                    failure = new BridgesCanHelpException(errorMessage);
+                } else if (isExplained(throwable, LinuxDistribution.isWhonixGateway())) {
+                    failure = new ExplainedStartFailureException(errorMessage);
+                } else {
+                    failure = new RuntimeException(errorMessage);
+                }
                 UserThread.execute(() -> {
                     setupListeners.forEach(s -> s.onSetupFailed(failure));
                     if (canBridgesHelp) {
@@ -328,6 +335,17 @@ public class TorNetworkNode extends NetworkNode {
         } catch (IOException e) {
             log.debug("Could not close the server socket", e);
         }
+    }
+
+    // The Tor library explains these failures and says what the user can do: the sandbox or the running Tor cannot be
+    // used, or Bisq runs on a Whonix-Gateway, where the library fails every start before anything else with a
+    // TorStartupFailedException without cause.
+    static boolean isExplained(Throwable throwable, boolean isWhonixGateway) {
+        boolean isSandboxOrRunningTorUnavailable = Throwables.getCausalChain(throwable).stream()
+                .anyMatch(cause -> cause instanceof ExternalTorUnavailableException ||
+                        cause instanceof SandboxUnavailableException);
+        return isSandboxOrRunningTorUnavailable ||
+                isWhonixGateway && Throwables.getRootCause(throwable) instanceof TorStartupFailedException;
     }
 
     // Tor could not connect, or the chosen bridges cannot be used. Other bridges can help, but not with a running Tor,

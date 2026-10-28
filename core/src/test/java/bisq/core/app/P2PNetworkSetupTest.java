@@ -26,6 +26,7 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.BridgesCanHelpException;
+import bisq.network.p2p.network.ExplainedStartFailureException;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.tor.TorSandboxStatus;
@@ -108,6 +109,26 @@ class P2PNetworkSetupTest {
         listener.onTorNodeReady();
 
         assertEquals(List.of(), torSandboxNotices);
+    }
+
+    @Test
+    void showsAFailureWhichSaysWhatHelpsWithoutTheAdviceToCheckTheInternetConnection() {
+        String message = "Bisq does not run on a Whonix-Gateway, whose Tor serves the Whonix-Workstations behind it. " +
+                "Run Bisq on a Whonix-Workstation, which uses the Tor of the Gateway.";
+
+        listener.onSetupFailed(new ExplainedStartFailureException(message));
+
+        assertEquals(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice", message),
+                p2PNetworkSetup.getP2pNetworkWarnMsg().get());
+        assertNull(p2PNetworkSetup.getTorNetworkSettingsFailure());
+    }
+
+    @Test
+    void showsAnotherFailureWithTheAdviceToCheckTheInternetConnection() {
+        listener.onSetupFailed(new RuntimeException("Connection reset"));
+
+        assertEquals(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailed", "Connection reset"),
+                p2PNetworkSetup.getP2pNetworkWarnMsg().get());
     }
 
     @Test

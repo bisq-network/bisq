@@ -178,6 +178,10 @@ If Tor cannot connect, or the chosen bridges cannot be used, the start fails, an
 Tor network settings so that the user can choose bridges, as with netlayer. The settings then show the error at their
 top, and no popup shows it as well, because it would lie behind them.
 
+The desktop application shows every other failed start in a popup. When the error says itself what the user can do,
+as the refusals of the sandbox, of a running Tor which the node cannot use and of a Whonix-Gateway do, the popup leaves
+out the generic advice to check the internet connection or to restart the application, which does not help with them.
+
 The node does not log bridge lines, because a bridge which a user got privately is blocked once it is known.
 
 ### Sandbox

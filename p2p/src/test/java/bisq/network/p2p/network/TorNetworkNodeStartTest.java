@@ -23,6 +23,7 @@ import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorStartupFailedException;
 import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.network.tor.sandbox.SandboxUnavailableException;
 
@@ -128,6 +129,8 @@ class TorNetworkNodeStartTest {
             assertEquals(message, listener.failure.get().getMessage());
             // Bridges of the Tor network settings do not help a running Tor, which uses its own.
             assertFalse(listener.failure.get() instanceof BridgesCanHelpException);
+            // The message says what to change, so the desktop application leaves out its generic advice
+            assertTrue(listener.failure.get() instanceof ExplainedStartFailureException);
             waitForTheUserThread();
             assertEquals(1, listener.bridgesRequested.getCount());
         } finally {
@@ -151,6 +154,7 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(sandboxUnavailable.getMessage(), listener.failure.get().getMessage());
             assertTrue(listener.failure.get().getMessage().contains("--useTorSandbox=false"));
+            assertTrue(listener.failure.get() instanceof ExplainedStartFailureException);
         } finally {
             shutDownExecutors(networkNode);
         }
@@ -214,6 +218,22 @@ class TorNetworkNodeStartTest {
         } finally {
             shutDownExecutors(networkNode);
         }
+    }
+
+    @Test
+    void theFailuresWhichTheTorLibraryExplainsAreTheRefusalsOfTheSandboxTheRunningTorAndTheWhonixGateway() {
+        assertTrue(TorNetworkNode.isExplained(new CompletionException(new SandboxUnavailableException(
+                "sandy cannot tell now whether this system enforces the sandbox of Tor.",
+                NewTor.SANDBOX_OPT_OUT_HINT)), false));
+        assertTrue(TorNetworkNode.isExplained(new ExternalTorUnavailableException("Bisq is configured to use a Tor " +
+                "which runs outside Bisq, but it cannot use the Tor at 127.0.0.1:9051: ..."), false));
+        // The Tor library refuses every start on a Whonix-Gateway before anything else
+        var gatewayRefusal = new TorStartupFailedException("Bisq does not run on a Whonix-Gateway, ...");
+        assertTrue(TorNetworkNode.isExplained(gatewayRefusal, true));
+        assertFalse(TorNetworkNode.isExplained(gatewayRefusal, false));
+        assertFalse(TorNetworkNode.isExplained(new IOException("Could not read the key"), true));
+        assertFalse(TorNetworkNode.isExplained(new CompletionException(
+                new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")), false));
     }
 
     @Test
