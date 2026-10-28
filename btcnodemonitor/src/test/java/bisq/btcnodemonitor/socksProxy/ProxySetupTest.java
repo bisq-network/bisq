@@ -25,12 +25,16 @@ import bisq.common.config.Config;
 
 import java.nio.file.Path;
 
+import java.io.File;
+
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockConstruction;
@@ -52,6 +56,24 @@ class ProxySetupTest {
                 "--" + Config.USE_TOR_SANDBOX + "=false"));
 
         assertFalse(sandboxConfig.isEnabled());
+    }
+
+    @Test
+    void usesTheTorDirectoryOfTheNetworkAlsoInATurkishDefaultLocale(@TempDir Path userDataDir) {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // In Turkish, the I of BTC_MAINNET becomes a dotless i when it is lower-cased
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            Config config = new Config("--" + Config.USER_DATA_DIR + "=" + userDataDir,
+                    "--" + Config.BASE_CURRENCY_NETWORK + "=BTC_MAINNET");
+
+            File torDir = new ProxySetup(config).getTorDir();
+
+            assertEquals(config.torDir, torDir);
+            assertEquals("btc_mainnet", torDir.getParentFile().getName());
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     private static TorSandboxConfig getSandboxConfig(Config config) {

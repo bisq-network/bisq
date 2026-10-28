@@ -30,8 +30,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.nio.file.Paths;
-
 import java.io.File;
 
 import java.util.Optional;
@@ -57,8 +55,9 @@ public class ProxySetup {
         socksProxyFactory = new SocksProxyFactory();
         Socks5ProxyProvider socks5ProxyProvider = new Socks5ProxyProvider("", "");
         socks5ProxyProvider.setSocks5ProxyInternal(socksProxyFactory);
-        String networkDirName = config.getBaseCurrencyNetwork().name().toLowerCase();
-        torDir = Paths.get(config.appDataDir.getPath(), networkDirName, "tor").toFile();
+        // The Tor directory of the network, as in every Bisq application. A name lower-cased here in the default locale
+        // would differ from it in a Turkish locale, in which the I of BTC_MAINNET becomes a dotless i.
+        torDir = config.torDir;
     }
 
     public CompletableFuture<Optional<Socks5Proxy>> createSocksProxy() {

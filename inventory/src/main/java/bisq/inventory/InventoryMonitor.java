@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -105,7 +106,9 @@ public class InventoryMonitor implements SetupListener {
         networkNode = getNetworkNode(torDir, useTorSandbox);
         getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
 
-        String networkName = network.name().toLowerCase();
+        // The seed node files are named after the network in lower case. In the default locale, a Turkish one would
+        // turn the I of BTC_MAINNET into a dotless i.
+        String networkName = network.name().toLowerCase(Locale.ROOT);
         String fileName = network.isMainnet() ? "inv_" + networkName : networkName;
         seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(fileName));
         addJsonFileManagers(seedNodes);

@@ -21,12 +21,15 @@ import bisq.common.config.BaseCurrencyNetwork;
 
 import java.io.File;
 
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InventoryMonitorTest {
     // InventoryMonitorMain passes a handler which shuts the monitor down with the failure exit status
@@ -39,5 +42,23 @@ class InventoryMonitorTest {
         inventoryMonitor.onSetupFailed(new RuntimeException("Tor did not start"));
 
         assertEquals(1, setupFailedHandlerCalls.get());
+    }
+
+    // The monitor keeps a directory of JSON files for each seed node of the file of its network
+    @Test
+    void findsTheSeedNodesOfItsNetworkAlsoInATurkishDefaultLocale(@TempDir File appDir) {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+
+            new InventoryMonitor(appDir, true, BaseCurrencyNetwork.BTC_MAINNET, 120, false, true, () -> {
+            });
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+
+        String[] seedNodeJsonDirs = new File(appDir, "json").list();
+        assertNotNull(seedNodeJsonDirs);
+        assertTrue(seedNodeJsonDirs.length > 0);
     }
 }
