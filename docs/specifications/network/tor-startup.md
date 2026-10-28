@@ -22,10 +22,12 @@ The node owns the Tor it starts. Tor gets the process ID of the node as its owni
 stops. If the start fails after Tor was launched, including the publication of the onion service, the node stops that
 Tor, so that no node remains which reaches peers but cannot be reached. A shutdown during the start also stops the
 Tor which the start launches. When the start of Tor or of the onion service fails, the seed, statistics, bridge and
-REST nodes shut down with the failure exit status, so that systemd or their start script starts them again, instead of
-staying unreachable until their periodic restart. At the shutdown, the node waits for the stop of its Tor: the Tor
-library asks Tor to exit and kills it after 3 seconds, which takes at most about 6 seconds, and the node waits at most
-8 seconds for the close of its connections and the stop of Tor.
+REST nodes and the inventory monitor shut down with the failure exit status, so that systemd or their start script
+starts them again, instead of staying unreachable until their periodic restart. The BTC node monitor, which has no
+onion service, does the same when its Tor does not start, and logs the reason, instead of keeping its HTTP server
+running without Tor. At the shutdown, the node waits for
+the stop of its Tor: the Tor library asks Tor to exit and kills it after 3 seconds, which takes at most about 6
+seconds, and the node waits at most 8 seconds for the close of its connections and the stop of Tor.
 
 The node starts its Tor, or sandy with Tor, in a session of its own with the `setsid` program of the system, if the
 system has one, as Linux does. A Ctrl+C in the terminal which started the node then reaches only the node, whose

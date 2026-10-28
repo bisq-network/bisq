@@ -32,7 +32,8 @@ If `shutdownIntervalDays` is 0 the app will not be shut down. Otherwise, it's th
 script need to ensure the node gets started again).
 
 The inventory monitor runs its Tor in the sandbox, as every Bisq application does. Only `0` as `useTorSandbox` turns
-the sandbox off.
+the sandbox off. If Tor or its onion service cannot start, the inventory monitor exits with status 1, so that the run
+script can start it again.
 
 Values: `Integer 0|1 Integer Integer 0|1 BTC_MAINNET|BTC_TESTNET|BTC_REGTEST 0|1`
 

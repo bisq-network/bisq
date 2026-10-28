@@ -74,6 +74,7 @@ public class InventoryMonitor implements SetupListener {
     private final int intervalSec;
     private final NetworkNode networkNode;
     private final GetInventoryRequestManager getInventoryRequestManager;
+    private final Runnable setupFailedHandler;
 
     private final List<NodeAddress> seedNodes;
     private InventoryWebServer inventoryWebServer;
@@ -89,10 +90,12 @@ public class InventoryMonitor implements SetupListener {
                             BaseCurrencyNetwork network,
                             int intervalSec,
                             boolean cleanupTorFiles,
-                            boolean useTorSandbox) {
+                            boolean useTorSandbox,
+                            Runnable setupFailedHandler) {
         this.appDir = appDir;
         this.useLocalhostForP2P = useLocalhostForP2P;
         this.intervalSec = intervalSec;
+        this.setupFailedHandler = setupFailedHandler;
 
         File torDir = new File(appDir, "tor");
         if (!torDir.exists() && !torDir.mkdir()) {
@@ -148,8 +151,13 @@ public class InventoryMonitor implements SetupListener {
     public void onHiddenServicePublished() {
     }
 
+    // Nothing retries a failed start of Tor or of the onion service. Without Tor the monitor would report every seed
+    // node as unreachable until its periodic restart.
     @Override
     public void onSetupFailed(Throwable throwable) {
+        log.error("The start of Tor or of the onion service failed. We shut down, so that the inventory monitor " +
+                "gets restarted.");
+        setupFailedHandler.run();
     }
 
     @Override

@@ -125,6 +125,10 @@ public class PeerGroupService {
     }
 
     public CompletableFuture<Void> shutdown() {
+        if (peerConnections == null) {
+            // The start failed before the peer connections were created, for example because Tor did not start
+            return CompletableFuture.completedFuture(null);
+        }
         return CompletableFuture.runAsync(() -> {
             log.info("Shutdown all peerConnections");
             Context.propagate(context);

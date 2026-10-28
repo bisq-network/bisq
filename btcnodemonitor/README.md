@@ -26,4 +26,5 @@ And then run:
 ### Tor
 
 With `--useTorForBtcMonitor=true`, the default, the monitor connects to the Bitcoin nodes through its own Tor, which it
-runs in the sandbox, as every Bisq application does. `--useTorSandbox=false` turns the sandbox off.
+runs in the sandbox, as every Bisq application does. `--useTorSandbox=false` turns the sandbox off. If its Tor does not
+start, for example because the system cannot run the sandbox, the monitor logs the reason and exits with status 1.
