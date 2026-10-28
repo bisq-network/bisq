@@ -23,3 +23,7 @@ And then run:
 ./bisq-btcnodemonitor
 ```
 
+### Tor
+
+With `--useTorForBtcMonitor=true`, the default, the monitor connects to the Bitcoin nodes through its own Tor, which it
+runs in the sandbox, as every Bisq application does. `--useTorSandbox=false` turns the sandbox off.

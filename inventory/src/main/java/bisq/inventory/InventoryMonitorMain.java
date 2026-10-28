@@ -61,6 +61,7 @@ public class InventoryMonitorMain {
         int shutdownIntervalDays = 5;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
+        boolean useTorSandbox = true;
 
        /* port = 8080;
         useLocalhostForP2P = true;
@@ -84,6 +85,10 @@ public class InventoryMonitorMain {
         if (args.length > 5) {
             network = BaseCurrencyNetwork.valueOf(args[5]);
         }
+        if (args.length > 6) {
+            // Only an explicit 0 turns the sandbox off
+            useTorSandbox = !args[6].equals("0");
+        }
 
         String appName = "bisq-inventory-monitor-" + network;
         File appDir = new File(Utilities.getUserDataDir(), appName);
@@ -93,7 +98,8 @@ public class InventoryMonitorMain {
 
         setup(network, appDir);
 
-        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, cleanupTorFiles);
+        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, cleanupTorFiles,
+                useTorSandbox);
         inventoryMonitor.start(port);
         // We shut down after 5 days to avoid potential memory leak issue.
         // The start script will restart the app.

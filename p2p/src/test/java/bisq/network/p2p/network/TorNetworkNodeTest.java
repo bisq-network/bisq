@@ -54,7 +54,8 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
+                new NewTor(new File("torNode_" + port), TorrcSettings.fromCommandLine(null, ""),
+                        BridgeAddressProvider.NONE, false, false), null, 12);
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -81,7 +82,8 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
+                new NewTor(new File("torNode_" + port), TorrcSettings.fromCommandLine(null, ""),
+                        BridgeAddressProvider.NONE, false, false), null, 12);
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -139,7 +141,8 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(2);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
+                new NewTor(new File("torNode_" + port), TorrcSettings.fromCommandLine(null, ""),
+                        BridgeAddressProvider.NONE, false, false), null, 12);
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -165,7 +168,8 @@ public class TorNetworkNodeTest {
 
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
+                new NewTor(new File("torNode_" + port), TorrcSettings.fromCommandLine(null, ""),
+                        BridgeAddressProvider.NONE, false, false), null, 12);
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {

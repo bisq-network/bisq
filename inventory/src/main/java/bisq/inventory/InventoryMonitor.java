@@ -28,11 +28,14 @@ import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.util.JsonUtil;
 
-import bisq.network.p2p.NetworkNodeProvider;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.BridgeAddressProvider;
+import bisq.network.p2p.network.LocalhostNetworkNode;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.NewTor;
 import bisq.network.p2p.network.SetupListener;
+import bisq.network.p2p.network.TorNetworkNode;
+import bisq.network.p2p.network.TorrcSettings;
 
 import bisq.common.UserThread;
 import bisq.common.config.BaseCurrencyNetwork;
@@ -59,6 +62,11 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class InventoryMonitor implements SetupListener {
+    // The arguments of InventoryMonitorMain are positional, so the error of an unusable sandbox names the argument
+    // instead of the option --useTorSandbox of the other applications.
+    static final String TOR_SANDBOX_OPT_OUT_HINT = "Start the inventory monitor with 0 as the seventh argument " +
+            "(useTorSandbox) to run Tor without the sandbox.";
+
     private final Map<NodeAddress, JsonFileManager> jsonFileManagerByNodeAddress = new HashMap<>();
     private final Map<NodeAddress, List<RequestInfo>> requestInfoListByNode = new HashMap<>();
     private final File appDir;
@@ -80,7 +88,8 @@ public class InventoryMonitor implements SetupListener {
                             boolean useLocalhostForP2P,
                             BaseCurrencyNetwork network,
                             int intervalSec,
-                            boolean cleanupTorFiles) {
+                            boolean cleanupTorFiles,
+                            boolean useTorSandbox) {
         this.appDir = appDir;
         this.useLocalhostForP2P = useLocalhostForP2P;
         this.intervalSec = intervalSec;
@@ -90,7 +99,7 @@ public class InventoryMonitor implements SetupListener {
             log.warn("make torDir failed");
         }
 
-        networkNode = getNetworkNode(torDir);
+        networkNode = getNetworkNode(torDir, useTorSandbox);
         getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
 
         String networkName = network.name().toLowerCase();
@@ -262,23 +271,19 @@ public class InventoryMonitor implements SetupListener {
         });
     }
 
-    private NetworkNode getNetworkNode(File torDir) {
+    // As every Bisq application, the inventory monitor runs its Tor in the sandbox unless the user turns it off.
+    private NetworkNode getNetworkNode(File torDir, boolean useTorSandbox) {
         CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
-        return new NetworkNodeProvider(networkProtoResolver,
+        if (useLocalhostForP2P) {
+            return new LocalhostNetworkNode(9999, networkProtoResolver, null, 12);
+        }
+        NewTor torMode = new NewTor(torDir,
+                TorrcSettings.fromCommandLine(null, ""),
                 BridgeAddressProvider.NONE,
-                null,
-                12,
-                useLocalhostForP2P,
-                9999,
-                torDir,
-                null,
-                true,
-                "",
-                true,
+                useTorSandbox,
                 false,
-                false,
-                false)
-                .get();
+                TOR_SANDBOX_OPT_OUT_HINT);
+        return new TorNetworkNode(9999, networkProtoResolver, false, torMode, null, 12);
     }
 
     private String getShortAddress(NodeAddress nodeAddress, boolean useLocalhostForP2P) {

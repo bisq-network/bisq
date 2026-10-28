@@ -67,6 +67,7 @@ public class NewTor extends TorMode {
     // and deleted these files before each new attempt.
     private static final int START_ATTEMPTS = 5;
 
+    // How the user turns the sandbox off in the applications which read the options of Config
     static final String SANDBOX_OPT_OUT_HINT = "Start Bisq with the option --" + Config.USE_TOR_SANDBOX +
             "=false to run Tor without the sandbox.";
 
@@ -74,23 +75,35 @@ public class NewTor extends TorMode {
     private final BridgeAddressProvider bridgeAddressProvider;
     private final boolean useTorSandbox;
     private final boolean allowPluggableTransportsInTorSandbox;
-
-    // For applications which set the torrc entries themselves, not from a config file
-    public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
-        this(torWorkingDirectory, TorrcSettings.fromCommandLine(torrcFile, torrcOptions), bridgeAddressProvider, false,
-                false);
-    }
+    private final String sandboxOptOutHint;
 
     public NewTor(File torWorkingDirectory,
                   TorrcSettings torrcSettings,
                   BridgeAddressProvider bridgeAddressProvider,
                   boolean useTorSandbox,
                   boolean allowPluggableTransportsInTorSandbox) {
+        this(torWorkingDirectory, torrcSettings, bridgeAddressProvider, useTorSandbox,
+                allowPluggableTransportsInTorSandbox, SANDBOX_OPT_OUT_HINT);
+    }
+
+    /**
+     * For an application which does not read the options of Config.
+     *
+     * @param sandboxOptOutHint how the user of the application turns the sandbox off; the error of an unusable sandbox
+     *                          names it
+     */
+    public NewTor(File torWorkingDirectory,
+                  TorrcSettings torrcSettings,
+                  BridgeAddressProvider bridgeAddressProvider,
+                  boolean useTorSandbox,
+                  boolean allowPluggableTransportsInTorSandbox,
+                  String sandboxOptOutHint) {
         super(torWorkingDirectory);
         this.torrcSettings = torrcSettings;
         this.bridgeAddressProvider = bridgeAddressProvider;
         this.useTorSandbox = useTorSandbox;
         this.allowPluggableTransportsInTorSandbox = allowPluggableTransportsInTorSandbox;
+        this.sandboxOptOutHint = sandboxOptOutHint;
     }
 
     @Override
@@ -105,7 +118,7 @@ public class NewTor extends TorMode {
                 getTorrcOverrides(torrcSettings),
                 false,
                 getBridgeConfig(bridgeAddressProvider),
-                getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox));
+                getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox, sandboxOptOutHint));
         for (int attempt = 1; ; attempt++) {
             TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
             log.info("Starting tor");
@@ -145,13 +158,15 @@ public class NewTor extends TorMode {
     // through a port which sandy forwards; the library refuses a sandboxed start without them. A Bisq 1 node publishes
     // one onion service. Unless the option allows them, the sandbox lets Tor start no pluggable transports, so bridges
     // which need them fail the sandboxed start. A running Tor runs without the sandbox.
-    static TorSandboxConfig getSandboxConfig(boolean useTorSandbox, boolean allowPluggableTransports) {
+    static TorSandboxConfig getSandboxConfig(boolean useTorSandbox,
+                                             boolean allowPluggableTransports,
+                                             String optOutHint) {
         return new TorSandboxConfig(useTorSandbox,
                 true,
                 allowPluggableTransports,
                 1,
                 "bisq1",
-                SANDBOX_OPT_OUT_HINT);
+                optOutHint);
     }
 
     // The library uses the bridges only for the Tor which it starts. A running Tor uses its own bridges.

@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -42,17 +43,39 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * bisq.service writes the settings of the system Tor from bisq.env into external_tor.config with a command of
- * ExecStartPre. The tests run that command as systemd does: systemd passes the text between the quotes to bash and
- * leaves the variables to bash.
+ * By default the seed node starts its own Tor. For a running Tor, bisq.service writes its settings from bisq.env into
+ * external_tor.config with a command of ExecStartPre. The tests run that command as systemd does: systemd passes the
+ * text between the quotes to bash and leaves the variables to bash.
  */
 @EnabledOnOs({OS.LINUX, OS.MAC})
 class SeedNodeSystemdUnitTest {
     private static final String EXEC_START_PRE_BASH = "ExecStartPre=/bin/bash -c \"";
 
     @Test
-    void writesTheSystemTorOfBisqEnvIntoTheTorDirectoryOfTheNode(@TempDir Path bisqHome) throws Exception {
+    void runsItsOwnTorByDefault(@TempDir Path bisqHome) throws Exception {
         Map<String, String> environment = readBisqEnv(bisqHome);
+
+        runExternalTorConfigCommand(environment);
+
+        assertEquals("-1", environment.get("BISQ_EXTERNAL_TOR_PORT"));
+        assertFalse(Files.exists(getExternalTorConfigPathOfTheNode(environment)));
+    }
+
+    // Without the tor package, a unit which requires a unit of the tor service would not start.
+    @Test
+    void doesNotRequireTheTorServiceOfTheSystem() throws IOException {
+        List<String> torServiceLines = Files.readAllLines(Path.of("bisq.service")).stream()
+                .filter(line -> !line.startsWith("#"))
+                .filter(line -> line.contains("tor@") || line.contains("tor.service"))
+                .toList();
+
+        assertEquals(List.of(), torServiceLines);
+    }
+
+    @Test
+    void writesTheRunningTorOfBisqEnvIntoTheTorDirectoryOfTheNode(@TempDir Path bisqHome) throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BISQ_EXTERNAL_TOR_PORT", "9051");
 
         runExternalTorConfigCommand(environment);
 
@@ -60,7 +83,7 @@ class SeedNodeSystemdUnitTest {
                 Files.readString(getExternalTorConfigPathOfTheNode(environment)));
         assertEquals(Optional.of(true), externalTorConfig.getUseExternalTor());
         assertEquals("127.0.0.1", externalTorConfig.getControlHost());
-        assertEquals(Integer.parseInt(environment.get("BISQ_EXTERNAL_TOR_PORT")), externalTorConfig.getControlPort());
+        assertEquals(9051, externalTorConfig.getControlPort());
         assertTrue(externalTorConfig.isCookieAuthentication());
         assertEquals(Optional.of(Path.of(environment.get("BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE"))),
                 externalTorConfig.getCookieAuthFile());
@@ -69,6 +92,7 @@ class SeedNodeSystemdUnitTest {
     @Test
     void removesTheFileWhenTheNodeRunsItsOwnTor(@TempDir Path bisqHome) throws Exception {
         Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BISQ_EXTERNAL_TOR_PORT", "9051");
         runExternalTorConfigCommand(environment);
         assertTrue(Files.exists(getExternalTorConfigPathOfTheNode(environment)));
 

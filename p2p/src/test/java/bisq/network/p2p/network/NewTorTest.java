@@ -62,7 +62,7 @@ class NewTorTest {
         })) {
             var bridges = new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.SNOWFLAKE, null);
 
-            new NewTor(torDir, null, "", bridges).getTor();
+            createNewTor(torDir, "", bridges).getTor();
 
             assertEquals(BridgeConfig.builtIn("snowflake"), config.get().getBridgeConfig());
         }
@@ -84,9 +84,25 @@ class NewTorTest {
             assertEquals("bisq1", config.get().getSandboxConfig().getApplicationId());
             assertTrue(config.get().getSandboxConfig().getOptOutHint().contains("--useTorSandbox=false"));
         }
-        // Applications without the option, such as btcnodemonitor, run Tor without the sandbox.
-        assertFalse(NewTor.getSandboxConfig(false, false).isEnabled());
-        assertTrue(NewTor.getSandboxConfig(true, true).isAllowPluggableTransports());
+        // --useTorSandbox=false turns the sandbox off.
+        assertFalse(NewTor.getSandboxConfig(false, false, NewTor.SANDBOX_OPT_OUT_HINT).isEnabled());
+        assertTrue(NewTor.getSandboxConfig(true, true, NewTor.SANDBOX_OPT_OUT_HINT).isAllowPluggableTransports());
+    }
+
+    @Test
+    void passesTheSandboxOptOutOfAnApplicationWithoutConfig(@TempDir File torDir) {
+        String optOutHint = "Start the application with 0 as its last argument to run Tor without the sandbox.";
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE, true, false,
+                    optOutHint).getTor();
+
+            assertTrue(config.get().getSandboxConfig().isEnabled());
+            assertEquals(optOutHint, config.get().getSandboxConfig().getOptOutHint());
+        }
     }
 
     @Test
@@ -114,7 +130,7 @@ class NewTorTest {
             config.set((TorTransportConfig) context.arguments().get(0));
             when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
         })) {
-            var newTor = new NewTor(torDir, null, "SocksPort 9150", BridgeAddressProvider.NONE);
+            var newTor = createNewTor(torDir, "SocksPort 9150", BridgeAddressProvider.NONE);
 
             var torService = newTor.getTor();
 
@@ -129,7 +145,7 @@ class NewTorTest {
     void doesNotStartTorAgainAfterAnotherFailure(@TempDir File torDir) {
         try (var construction = mockConstruction(TorService.class,
                 (mock, context) -> when(mock.initialize()).thenThrow(new IllegalStateException("bootstrap failed")))) {
-            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
 
             assertThrows(IllegalStateException.class, newTor::getTor);
 
@@ -152,7 +168,7 @@ class NewTorTest {
                 when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
             }
         })) {
-            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
 
             var torService = newTor.getTor();
 
@@ -170,7 +186,7 @@ class NewTorTest {
         try (var construction = mockConstruction(TorService.class,
                 (mock, context) -> when(mock.initialize()).thenThrow(new CompletionException(
                         new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds"))))) {
-            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
 
             assertThrows(CompletionException.class, newTor::getTor);
 
@@ -191,7 +207,7 @@ class NewTorTest {
                 when(mock.initialize()).thenThrow(new TorBootstrapFailedException(new InterruptedException()));
             }
         })) {
-            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
 
             assertThrows(TorBootstrapFailedException.class, newTor::getTor);
 
@@ -209,7 +225,7 @@ class NewTorTest {
                 (mock, context) -> when(mock.initialize()).thenThrow(new ExternalTorUnavailableException(
                         "Bisq is configured to use a Tor which runs outside Bisq, but it cannot use the Tor at " +
                                 "127.0.0.1:9051: The external Tor did not bootstrap within 240 seconds.")))) {
-            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
 
             assertThrows(ExternalTorUnavailableException.class, newTor::getTor);
 
@@ -225,5 +241,11 @@ class NewTorTest {
         assertEquals(List.of(), NewTor.getBridgeLines(null));
         assertEquals(List.of(), NewTor.getBridgeLines(List.of("", "  ", "1.2.3.4:1")));
         assertEquals(List.of(bridge), NewTor.getBridgeLines(Arrays.asList("", bridge, null)));
+    }
+
+    // The tests mock TorService, so the sandbox setting does not matter for them.
+    private static NewTor createNewTor(File torDir, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
+        return new NewTor(torDir, TorrcSettings.fromCommandLine(null, torrcOptions), bridgeAddressProvider, false,
+                false);
     }
 }

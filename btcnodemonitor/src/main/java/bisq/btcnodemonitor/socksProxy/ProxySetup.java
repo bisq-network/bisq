@@ -20,12 +20,15 @@ package bisq.btcnodemonitor.socksProxy;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.NewTor;
+import bisq.network.p2p.network.TorrcSettings;
 import bisq.network.tor.TorService;
 
 import bisq.common.config.Config;
 import bisq.common.util.SingleThreadExecutorUtils;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.nio.file.Paths;
 
@@ -65,12 +68,19 @@ public class ProxySetup {
         }
         checkArgument(torService == null);
         return CompletableFuture.supplyAsync(() -> {
-            torMode = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+            torMode = createTorMode();
             // blocking
             torService = torMode.getTor();
             socksProxyFactory.setTorService(torService);
             return Optional.of(socksProxyFactory.getSocksProxy());
         }, SingleThreadExecutorUtils.getSingleThreadExecutor("ProxySetup.start"));
+    }
+
+    // As every Bisq application, the monitor runs its Tor in the sandbox unless --useTorSandbox=false turns it off.
+    @VisibleForTesting
+    NewTor createTorMode() {
+        return new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE,
+                config.useTorSandbox, config.allowPluggableTransportsInTorSandbox);
     }
 
     public CompletableFuture<Void> shutdown() {

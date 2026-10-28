@@ -90,14 +90,16 @@ echo "[*] Cloning Bisq repo"
 sudo -H -i -u "${ROOT_USER}" git config --global advice.detachedHead false
 sudo -H -i -u "${ROOT_USER}" git clone --branch "${BISQ_REPO_TAG}" "${BISQ_REPO_URL}" "${ROOT_HOME}/${BISQ_REPO_NAME}"
 
-echo "[*] Installing Tor"
-sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get update -q
-sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${TOR_PKG}
-
-echo "[*] Installing Tor configuration"
-sudo -H -i -u "${ROOT_USER}" install -c -m 644 "${ROOT_HOME}/${BISQ_REPO_NAME}/seednode/torrc" "${TOR_HOME}/torrc"
-
 if [ "${BITCOIN_INSTALL}" = true ];then
+
+	# Bitcoin connects through the tor of the system (onion=127.0.0.1:9050 in bitcoin.conf) and publishes its onion
+	# service with it. The seed node runs its own Tor and needs neither that tor nor its group.
+	echo "[*] Installing Tor"
+	sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get update -q
+	sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt-get install -qq -y ${TOR_PKG}
+
+	echo "[*] Installing Tor configuration"
+	sudo -H -i -u "${ROOT_USER}" install -c -m 644 "${ROOT_HOME}/${BISQ_REPO_NAME}/seednode/torrc" "${TOR_HOME}/torrc"
 
 	echo "[*] Creating Bitcoin user with Tor access"
 	sudo -H -i -u "${ROOT_USER}" useradd -d "${BITCOIN_HOME}" -G "${TOR_GROUP}" "${BITCOIN_USER}"
@@ -135,8 +137,8 @@ if [ "${BITCOIN_INSTALL}" = true ];then
 
 fi
 
-echo "[*] Creating Bisq user with Tor access"
-sudo -H -i -u "${ROOT_USER}" useradd -d "${BISQ_HOME}" -G "${TOR_GROUP}" "${BISQ_USER}"
+echo "[*] Creating Bisq user"
+sudo -H -i -u "${ROOT_USER}" useradd -d "${BISQ_HOME}" "${BISQ_USER}"
 
 echo "[*] Creating Bisq homedir"
 sudo -H -i -u "${ROOT_USER}" mkdir -p "${BISQ_HOME}"
@@ -187,9 +189,9 @@ sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradl
 
 echo "[*] Updating systemd daemon configuration"
 sudo -H -i -u "${ROOT_USER}" systemctl daemon-reload
-sudo -H -i -u "${ROOT_USER}" systemctl enable tor.service
 sudo -H -i -u "${ROOT_USER}" systemctl enable bisq.service
 if [ "${BITCOIN_INSTALL}" = true ];then
+	sudo -H -i -u "${ROOT_USER}" systemctl enable tor.service
 	sudo -H -i -u "${ROOT_USER}" systemctl enable bitcoin.service
 fi
 
@@ -197,10 +199,10 @@ echo "[*] Preparing firewall"
 sudo -H -i -u "${ROOT_USER}" ufw default deny incoming
 sudo -H -i -u "${ROOT_USER}" ufw default allow outgoing
 
-echo "[*] Starting Tor"
-sudo -H -i -u "${ROOT_USER}" systemctl start tor
-
 if [ "${BITCOIN_INSTALL}" = true ];then
+	echo "[*] Starting Tor"
+	sudo -H -i -u "${ROOT_USER}" systemctl start tor
+
 	echo "[*] Starting Bitcoin"
 	sudo -H -i -u "${ROOT_USER}" systemctl start bitcoin
 	sudo -H -i -u "${ROOT_USER}" journalctl --no-pager --unit bitcoin

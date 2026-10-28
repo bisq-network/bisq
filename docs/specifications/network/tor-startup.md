@@ -153,8 +153,10 @@ The node does not log bridge lines, because a bridge which a user got privately 
 ### Sandbox
 
 The node runs the Tor which it starts in the sandbox of the operating system with sandy, unless it is started with
-`--useTorSandbox=false`. Every build contains the sandy binary of its platform, which the Tor build checks against its
-pinned SHA-256 hash.
+`--useTorSandbox=false`. This applies to every Bisq application which starts Tor: the desktop application, the daemon,
+the seed, statistics, bridge and REST nodes and the BTC node monitor. The inventory monitor takes positional arguments;
+only `0` as its seventh argument turns the sandbox off, and its errors name that argument instead of the option. Every
+build contains the sandy binary of its platform, which the Tor build checks against its pinned SHA-256 hash.
 
 The base level of the sandbox is the maximum lockdown. Tor may read its torrc and the bundle and write only its data
 directory; on Linux and macOS every other path looks missing to it. Tor has a network of its own: the node reaches the
