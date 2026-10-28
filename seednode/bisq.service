@@ -46,9 +46,12 @@ Restart=on-failure
 # The Tor library of Bisq reads the settings of a running Tor from external_tor.config in the Tor directory. With
 # BISQ_EXTERNAL_TOR_PORT=-1, the default, the node starts its own Tor. README.md describes the drop-in which starts the
 # node after a running Tor of the system.
-ExecStartPre=/bin/bash -c "if [ $BISQ_EXTERNAL_TOR_PORT != -1 ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/tor && (echo UseExternalTor 1; echo CookieAuthentication 1; echo CookieAuthFile $BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE; echo ControlPort 127.0.0.1:$BISQ_EXTERNAL_TOR_PORT) > $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/tor/external_tor.config;else rm -f $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/tor/external_tor.config;fi"
-ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
-ExecStopPost=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+# The node lower-cases the network for the name of its directory, whatever case --baseCurrencyNetwork has, so these
+# commands lower-case BISQ_BASE_CURRENCY with tr in the C locale, as the node does in every locale. They use no ${...}:
+# systemd replaces that itself, and would turn ${BISQ_BASE_CURRENCY,,} into an empty string.
+ExecStartPre=/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_EXTERNAL_TOR_PORT != -1 ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/tor && (echo UseExternalTor 1; echo CookieAuthentication 1; echo CookieAuthFile $BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE; echo ControlPort 127.0.0.1:$BISQ_EXTERNAL_TOR_PORT) > $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;else rm -f $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;fi"
+ExecStartPre=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
+ExecStopPost=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
 
 User=bisq
 Group=bisq

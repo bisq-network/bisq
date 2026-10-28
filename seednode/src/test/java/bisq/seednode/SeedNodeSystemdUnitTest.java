@@ -25,6 +25,7 @@ import bisq.common.config.Config;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.HashMap;
@@ -44,12 +45,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * By default the seed node starts its own Tor. For a running Tor, bisq.service writes its settings from bisq.env into
- * external_tor.config with a command of ExecStartPre. The tests run that command as systemd does: systemd passes the
- * text between the quotes to bash and leaves the variables to bash.
+ * external_tor.config with a command of ExecStartPre. The tests run the commands of the unit as systemd does: systemd
+ * passes the text between the quotes to bash and leaves variables in the form $NAME to bash. ${...} systemd replaces
+ * itself, and an expression of bash such as ${NAME,,} becomes an empty string, so the commands must not use it.
  */
 @EnabledOnOs({OS.LINUX, OS.MAC})
 class SeedNodeSystemdUnitTest {
     private static final String EXEC_START_PRE_BASH = "ExecStartPre=/bin/bash -c \"";
+    private static final String EXEC_START_PRE_BASH_AS_ROOT = "ExecStartPre=+/bin/bash -c \"";
+    private static final String EXEC_STOP_POST_BASH_AS_ROOT = "ExecStopPost=+/bin/bash -c \"";
 
     @Test
     void runsItsOwnTorByDefault(@TempDir Path bisqHome) throws Exception {
@@ -102,6 +106,41 @@ class SeedNodeSystemdUnitTest {
         assertFalse(Files.exists(getExternalTorConfigPathOfTheNode(environment)));
     }
 
+    // --baseCurrencyNetwork takes the network in any case, and the node lower-cases it for its directory
+    @Test
+    void writesTheRunningTorIntoTheTorDirectoryOfTheNodeForANetworkInUpperCase(@TempDir Path bisqHome)
+            throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BISQ_BASE_CURRENCY", "BTC_MAINNET");
+        environment.put("BISQ_EXTERNAL_TOR_PORT", "9051");
+
+        runExternalTorConfigCommand(environment);
+
+        assertTrue(Files.exists(getExternalTorConfigPathOfTheNode(environment)));
+    }
+
+    // The stubs of mount and umount record the directory, which is the last argument of both
+    @Test
+    void mountsTheTmpfsForTheDaoJsonFilesOnTheJsonDirectoryOfTheNode(@TempDir Path bisqHome, @TempDir Path stubs)
+            throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BISQ_BASE_CURRENCY", "BTC_MAINNET");
+        environment.put("BISQ_DUMP_BLOCKCHAIN", "true");
+        Path calls = stubs.resolve("calls");
+        for (String program : List.of("mount", "umount")) {
+            Path stub = stubs.resolve(program);
+            Files.writeString(stub, "#!/bin/bash\necho \"" + program + " ${@: -1}\" >> " + calls + "\n");
+            assertTrue(stub.toFile().setExecutable(true));
+        }
+        environment.put("PATH", stubs + ":" + environment.get("PATH"));
+
+        runUnitCommand(EXEC_START_PRE_BASH_AS_ROOT, "db/json", environment);
+        runUnitCommand(EXEC_STOP_POST_BASH_AS_ROOT, "db/json", environment);
+
+        String jsonDir = new File(createConfigOfTheNode(environment).storageDir, "json").getPath();
+        assertEquals(List.of("mount " + jsonDir, "umount " + jsonDir), Files.readAllLines(calls));
+    }
+
     private static Map<String, String> readBisqEnv(Path bisqHome) throws IOException {
         Map<String, String> environment = new HashMap<>();
         Files.readAllLines(Path.of("bisq.env")).stream()
@@ -117,12 +156,18 @@ class SeedNodeSystemdUnitTest {
     }
 
     private static void runExternalTorConfigCommand(Map<String, String> environment) throws Exception {
+        runUnitCommand(EXEC_START_PRE_BASH, "external_tor.config", environment);
+    }
+
+    private static void runUnitCommand(String commandPrefix, String marker, Map<String, String> environment)
+            throws Exception {
         String unitLine = Files.readAllLines(Path.of("bisq.service")).stream()
-                .filter(line -> line.startsWith(EXEC_START_PRE_BASH) && line.contains("external_tor.config"))
+                .filter(line -> line.startsWith(commandPrefix) && line.contains(marker))
                 .findFirst()
                 .orElseThrow();
         assertTrue(unitLine.endsWith("\""));
-        String command = unitLine.substring(EXEC_START_PRE_BASH.length(), unitLine.length() - 1);
+        String command = unitLine.substring(commandPrefix.length(), unitLine.length() - 1);
+        assertFalse(command.contains("${"), command);
 
         ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", command)
                 .redirectErrorStream(true)
@@ -136,9 +181,13 @@ class SeedNodeSystemdUnitTest {
 
     // The Tor directory which the node gets from the options of ExecStart
     private static Path getExternalTorConfigPathOfTheNode(Map<String, String> environment) {
-        Config config = new Config("--" + Config.USER_DATA_DIR + "=" + environment.get("BISQ_HOME"),
+        return new TorDirectories(createConfigOfTheNode(environment).torDir.toPath()).getExternalTorConfigPath();
+    }
+
+    // The directories of the node as it derives them from the options of ExecStart
+    private static Config createConfigOfTheNode(Map<String, String> environment) {
+        return new Config("--" + Config.USER_DATA_DIR + "=" + environment.get("BISQ_HOME"),
                 "--" + Config.APP_NAME + "=" + environment.get("BISQ_APP_NAME"),
                 "--" + Config.BASE_CURRENCY_NETWORK + "=" + environment.get("BISQ_BASE_CURRENCY"));
-        return new TorDirectories(config.torDir.toPath()).getExternalTorConfigPath();
     }
 }
