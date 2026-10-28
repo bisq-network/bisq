@@ -34,10 +34,15 @@ or OSX. Consider to use a dedicated non-Windows system when dealing with cryptoc
 Hint for Debian users:
 If you have problems starting Bisq on Debian use: `/opt/bisq/bin/Bisq`
 
-Bisq runs the Tor of your Linux distribution, so the Bisq package depends on the tor package. On Debian and Ubuntu,
-installing the tor package also enables and starts the Tor service of the system, which then connects to the Tor
-network at every boot, also when Bisq does not run. Bisq starts its own Tor and does not use that service, unless you
-configured it in `external_tor.config`. To turn the service off, run `sudo systemctl disable --now tor`.
+Bisq brings its own Tor on Linux, as on macOS and Windows, and does not need the tor package of your distribution. Its
+Tor needs glibc 2.17 or newer (2.27 on ARM64) and the zlib library of the system (`libz.so.1`, the package `zlib1g` on
+Debian and Ubuntu).
+
+Some development builds before the release of 1.10.11 depended on the tor package; no release did. After an upgrade
+from such a build, the tor package stays installed, and on Debian and Ubuntu its Tor service keeps connecting to the Tor
+network at every boot, also when Bisq does not run. Bisq does not use that service, unless you configured it in
+`external_tor.config`. To turn the service off, run `sudo systemctl disable --now tor`, or remove the package with
+`sudo apt remove tor` if nothing else uses it.
 
 If your Linux distro does not support `.deb` files please follow this instruction:
 

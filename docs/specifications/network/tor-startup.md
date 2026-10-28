@@ -10,10 +10,13 @@ the start fails. The key of the onion service is covered by
 
 ### Tor of the node
 
-On macOS and Windows, the node runs the Tor of the Tor expert bundle which the Bisq build downloaded and whose PGP
-signature it verified. On Linux, the node runs the `tor` executable of the system, found on the `PATH`; the Linux
-packages of Bisq depend on the `tor` package. If no `tor` executable is found, the start fails with an error which says
-that Tor is not installed.
+On every operating system, the node runs the Tor of the Tor expert bundle which the Bisq build downloaded and verified:
+its PGP signature, the SHA-256 hash which the build pins for the platform, and the version of its tor. The node installs
+the bundle into the Tor directory and never runs a `tor` of the system; the Linux packages of Bisq do not
+depend on the `tor` package. Linux x86_64, macOS and Windows x86_64 get the bundle of a stable Tor Browser release.
+Linux ARM64 gets the bundle of an alpha release with the same tor version, because no stable release has a bundle for
+Linux ARM64. On Linux, the bundled Tor needs glibc 2.17 or newer (2.27 on ARM64) and the zlib library of the system
+(`libz.so.1`).
 
 The node owns the Tor it starts. Tor gets the process ID of the node as its owning controller and stops when the node
 stops. If the start fails after Tor was launched, including the publication of the onion service, the node stops that
@@ -39,10 +42,10 @@ The node waits for the upload of its onion service descriptor without a time lim
 keeps trying to upload it.
 
 Tor must not read a configuration file outside the Tor directory of the node. The node therefore also passes the torrc
-which it generates as the defaults torrc, instead of the built-in default location. The bundled Tor of macOS and
-Windows has the paths of its build below `/var/tmp/dist` compiled in, which other local users can create. The node
-therefore sets the GeoIP files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in the Tor
-directory, because OpenSSL would otherwise read its configuration there and could load modules from it.
+which it generates as the defaults torrc, instead of the built-in default location. The bundled Tor has the paths of
+its build below `/var/tmp/dist` compiled in, which other local users can create. The node therefore sets the GeoIP
+files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in the Tor directory, because OpenSSL would
+otherwise read its configuration there and could load modules from it.
 
 The node logs the version which the running Tor reports. The commands, replies and events of the control connection
 are logged at debug level only, because they contain onion addresses.
@@ -105,10 +108,10 @@ meek, because obfs3 has no bridges anymore and the old meek fronts stopped worki
 lines of the choice, because versions before the Tor library read only these lines.
 
 With bridges, the Tor of the node connects only through them. The programs of the pluggable transports come with the
-Tor bundle: the node installs them on macOS, Windows and Linux x86_64. On Linux ARM64 they must be in `PATH`. If the
-node cannot use the chosen bridges, for example because a transport has no program, the start fails. The node never
-connects without the chosen bridges. Custom bridge lines of 10 characters or fewer, for example the empty line of an
-empty custom bridge field, are no bridges, as in netlayer. If no line remains, the node connects without bridges.
+Tor bundle, which the node installs on every operating system; programs on the `PATH` are not used. If the node cannot
+use the chosen bridges, for example because a transport has no program, the start fails. The node never connects
+without the chosen bridges. Custom bridge lines of 10 characters or fewer, for example the empty line of an empty
+custom bridge field, are no bridges, as in netlayer. If no line remains, the node connects without bridges.
 
 A running Tor uses the bridges of its own configuration. The node then ignores the bridges of its settings and logs a
 warning.
@@ -126,8 +129,12 @@ decision to the user.
 
 A running Tor is configured in the same file as in Bisq 2, because both use the same Tor library.
 
+The node runs the Tor of the bundle on Linux as well, so that every platform runs the tor version and the pluggable
+transports which the build verified, independent of the version and the patch level which a distribution packages.
+
 ## Known gaps
 
-- On Linux ARM64 the Tor bundle has no programs for the pluggable transports, so the user has to install them.
+- On Linux ARM64 the node runs the Tor of an alpha release of Tor Browser, because no stable release has a Tor expert
+  bundle for Linux ARM64. The build pins that bundle by its hash and requires the tor version of the stable bundle.
 - A running Tor on another host reaches the onion service of the node only at `127.0.0.1` of its own host, for example
   in a shared network namespace or on Whonix, where onion-grater rewrites the target.

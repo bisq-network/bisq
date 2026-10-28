@@ -140,11 +140,14 @@ above: it overwrites both local URLs with the URL from `.gitmodules`.
 If you do not have JDK 21 installed, check out scripts in the [scripts](../scripts) directory or download it manually
 from https://jdk.java.net/archive/.
 
-3. On Linux, Bisq runs the `tor` executable of the system, which must be on the `PATH`. Install the tor package of your
-   distribution, for example with `sudo apt install tor`. On macOS and Windows, Bisq brings its own Tor.
-   On Debian and Ubuntu, the tor package also enables and starts the Tor service of the system, which then runs at every
-   boot, also when Bisq does not run. Bisq starts its own Tor and uses that service only if `external_tor.config` tells
-   it to, as the seed node does. Otherwise you can turn it off with `sudo systemctl disable --now tor`.
+3. Bisq brings its own Tor on every operating system. The build downloads the Tor expert bundle from
+   archive.torproject.org and verifies it; Bisq does not use the tor package of your Linux distribution. On Linux, this
+   Tor needs glibc 2.17 or newer (2.27 on ARM64) and the zlib library of the system (`libz.so.1`, the package `zlib1g`
+   on Debian and Ubuntu).
+   Development versions of these instructions asked Linux users to install the tor package. If you installed it, it
+   stays installed, and on Debian and Ubuntu its Tor service keeps running at every boot, also when Bisq does not run.
+   Bisq uses that service only if `external_tor.config` tells it to. Otherwise you can turn it off with
+   `sudo systemctl disable --now tor`, or remove the package with `sudo apt remove tor` if nothing else uses it.
 
 ## Running Bisq
 
