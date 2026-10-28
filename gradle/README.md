@@ -262,11 +262,16 @@ needs. Only a refresh of the keyring turns the key servers on, see below.
 `resolveAndVerifyDependencies` resolves every resolvable configuration, including the
 buildscript configurations, of every project in the root build. Gradle gives the root build
 no access to the projects of an included build, so the task first runs the task of the same
-name of the included build `build-logic`, which resolves the configurations of its projects;
-`verifyDependencySignaturePolicy` runs it as well. Gradle verifies the artifacts of an included
-build with the metadata of the root build. The included build `bitcoind` is not
-part of the audit: it has no such task. `dependencySignatureReport` lists the modules of
-the root build only.
+name of the included builds `build-logic` and `tor`, which resolve the configurations of
+their projects; the task of `tor` also resolves the `build-logic` of `tor`.
+`verifyDependencySignaturePolicy` and `dependencySignatureReport` run them as well. Gradle
+verifies the artifacts of an included build with the metadata of the root build. The tasks
+write the modules which they resolved to `.gradle/dependency-verification/inventory.tsv` of
+`build-logic`, `tor` and `tor/build-logic`, in the format of the inventories of Bisq 2, and
+`dependencySignatureReport` lists them next to the modules of the root build. The tasks of
+the included builds are marked as incompatible with the configuration cache, as the task of
+the root build is, so Gradle runs them but stores no configuration cache entry. The included
+build `bitcoind` is not part of the audit or the report yet: it has no such task.
 
 ### Verifying and refreshing build dependencies
 
