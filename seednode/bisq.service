@@ -5,8 +5,8 @@ Description=Bisq Node
 After=network.target
 #Requires=bitcoin.service
 #BindsTo=bitcoin.service
-# Bisq authenticates to the system tor with its cookie, so no other process may hold the control port first.
-# Start after tor and restart with it.
+# Bisq authenticates to the system tor with SAFECOOKIE, so a process which holds the control port instead of tor gets
+# no secret, and the start fails. Start after tor and restart with it, so that this does not happen at boot.
 After=tor@default.service
 Requires=tor@default.service
 

@@ -42,10 +42,8 @@ public class ControlArchiveCreator {
                 .append("Description: A decentralized bitcoin exchange network.\n");
 
         // Structure: "Depends: libasound2, libbsd0, libc6\n"
-        // On Linux, Bisq runs the tor of the system.
         stringBuilder.append("Depends: ")
                 .append(jrePackage)
-                .append(", tor")
                 .append('\n');
 
         stringBuilder.append("\n\n");

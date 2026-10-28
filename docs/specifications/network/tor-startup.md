@@ -44,15 +44,38 @@ Windows has the paths of its build below `/var/tmp/dist` compiled in, which othe
 therefore sets the GeoIP files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in the Tor
 directory, because OpenSSL would otherwise read its configuration there and could load modules from it.
 
-The commands, replies and events of the control connection are logged at debug level only, because they contain onion
-addresses.
+The node logs the version which the running Tor reports. The commands, replies and events of the control connection
+are logged at debug level only, because they contain onion addresses.
 
 ### Running Tor
 
 The node uses a running Tor instead of its own if `external_tor.config` in its Tor directory sets `UseExternalTor 1`,
 if the environment variable `TOR_SKIP_LAUNCH` is `1`, `true` or `yes`, or if it runs on Whonix. `external_tor.config`
-sets the control port and whether a cookie authenticates the controller. If the node cannot connect to the running
-Tor, it starts its own Tor, except on Whonix, where the start fails.
+sets the host and port of the control port and whether a cookie authenticates the controller. The node uses the SOCKS
+port which the running Tor reports, on the host of the control port.
+
+With a cookie, the node authenticates with the SAFECOOKIE method: Tor first proves that it knows the cookie, and the
+node never sends the cookie. A process which listens on the control port instead of Tor gets neither the cookie nor the
+key of the onion service, and the start fails. A cookie file which does not hold the 32 bytes of a Tor cookie fails the
+start. `ControlPassword` in `external_tor.config` sets the password of a running Tor which uses `HashedControlPassword`
+instead of a cookie; setting it together with `CookieAuthentication 1` fails the start. With a password, the process on
+the control port cannot prove that it is Tor, so the cookie is the better choice on the same system. Without a cookie
+and a password, the node sends an empty authentication, which only fits a control port that other processes cannot
+reach, such as the filtered control port of Whonix.
+
+On Whonix, the node always uses the Tor of the Whonix-Gateway. onion-grater filters the control port of the Gateway and
+needs the profile of Bisq there (`sudo onion-grater-add 40_bisq`). onion-grater accepts only the empty authentication,
+so the node uses it there also with `CookieAuthentication 1`; the cookie of a Whonix-Workstation is a dummy. The node
+listens on all addresses, because the Tor of the Gateway connects to the address of the Workstation. The publication of
+the onion service completes at the start or at the end of the upload of its descriptor, because older profiles of
+onion-grater deliver only the end in a form which the node accepts.
+
+Before it uses the running Tor, the node waits until that Tor has bootstrapped, at most 4 minutes, as netlayer did. It
+does not change the configuration of the running Tor.
+
+If the node cannot use the running Tor, the start fails with an error which names the host and port and the cause. The
+node never starts its own Tor instead. The user may rely on the running Tor, for example for its bridges, and the own
+Tor would connect directly to the Tor network.
 
 The options `--torControlHost`, `--torControlPort`, `--torControlPassword`, `--torControlCookieFile` and
 `--torControlUseSafeCookieAuth`, which configured a running Tor before, stop the start with an explanation which
@@ -88,8 +111,5 @@ A running Tor is configured in the same file as in Bisq 2, because both use the 
 ## Known gaps
 
 - Bridges and pluggable transports are not supported.
-- A running Tor must be reachable on the local host and must accept a cookie or no authentication. A password, the
-  SAFECOOKIE method and a remote host are not supported. With the plain cookie method, a process which holds the
-  control port while the running Tor does not receives the cookie and the key of the onion service.
-- If the running Tor cannot be reached or authentication fails, the Tor library starts its own Tor instead, with only a
-  log entry.
+- A running Tor on another host reaches the onion service of the node only at `127.0.0.1` of its own host, for example
+  in a shared network namespace or on Whonix, where onion-grater rewrites the target.

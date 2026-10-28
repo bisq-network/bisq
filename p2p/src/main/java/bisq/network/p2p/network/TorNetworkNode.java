@@ -18,7 +18,6 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.tor.TorNotInstalledException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.onionservice.OnionServiceKey;
 
@@ -308,9 +307,6 @@ public class TorNetworkNode extends NetworkNode {
 
     private static String getErrorMessage(Throwable throwable) {
         Throwable rootCause = Throwables.getRootCause(throwable);
-        if (rootCause instanceof TorNotInstalledException) {
-            return "Tor is not installed. Please install the tor package of your Linux distribution.";
-        }
         return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
     }
 }

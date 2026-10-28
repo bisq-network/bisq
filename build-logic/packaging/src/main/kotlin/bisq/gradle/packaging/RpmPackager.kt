@@ -111,7 +111,6 @@ class RpmPackager(private val jPackagePath: Path, private val jPackageConfig: JP
             BuildArch: x86_64
             AutoReqProv: no
             Requires: xdg-utils
-            Requires: tor
             Provides: bisq
 
             %description
