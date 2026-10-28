@@ -28,6 +28,8 @@ import io.grpc.stub.StreamObserver;
 
 import org.slf4j.Logger;
 
+import java.util.Locale;
+
 import lombok.Getter;
 
 import static bisq.proto.grpc.TradesGrpc.getTakeOfferMethod;
@@ -127,7 +129,7 @@ public class GrpcErrorMessageHandler implements ErrorMessageHandler {
 
     private AvailabilityResult getAvailabilityResult(String errorMessage) {
         return stream(AvailabilityResult.values())
-                .filter((e) -> errorMessage.toUpperCase().contains(e.name()))
+                .filter((e) -> errorMessage.toUpperCase(Locale.ROOT).contains(e.name()))
                 .findFirst().orElseThrow(() ->
                         new IllegalArgumentException(
                                 format("Could not find an AvailabilityResult in error message:%n%s", errorMessage)));

@@ -19,11 +19,12 @@ package bisq.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CryptoCurrencyUtil {
 
     public static boolean apiDoesSupportCryptoCurrency(String currencyCode) {
-        return getSupportedCryptoCurrencies().contains(currencyCode.toUpperCase());
+        return getSupportedCryptoCurrencies().contains(currencyCode.toUpperCase(Locale.ROOT));
     }
 
     public static List<String> getSupportedCryptoCurrencies() {
