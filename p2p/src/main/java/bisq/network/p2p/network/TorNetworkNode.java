@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.tor.ExternalTorUnavailableException;
+import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -143,6 +144,13 @@ public class TorNetworkNode extends NetworkNode {
                 peerNodeAddress.getPort(),
                 PEER_CONNECTION_STREAM_ID,
                 CREATE_SOCKET_TIMEOUT);
+    }
+
+    // Whether the Tor of this node runs in its sandbox and in which level, for the user. Final for a start once the
+    // setup listeners got onTorNodeReady.
+    public TorSandboxStatus getTorSandboxStatus() {
+        TorService currentTorService = torService;
+        return currentTorService != null ? currentTorService.getSandboxStatus() : TorSandboxStatus.NOT_STARTED;
     }
 
     @Override

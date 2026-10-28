@@ -168,6 +168,15 @@ PID namespace isolates the signals of Tor, and where unprivileged user namespace
 network of the system. The node logs the level, with a warning for a level with the network of the system or without
 isolated signals.
 
+For a level with the network of the system or without isolated signals, the desktop application also shows a notice
+once per start, after its splash screen. It names the level, what the level gives up, and when Tor gets the stronger
+protection: the network of its own without bridges whose pluggable transports need the network of the system, and on
+Linux only where the sandbox may use unprivileged user namespaces with a kernel that has the fix of Landlock erratum 3;
+the isolated signals on Linux 6.12 and newer, or where the sandbox may use unprivileged user namespaces. "Don't show
+again" hides the notice only for the same combination of weaknesses, so that a new weakness shows it again. A sandbox
+which the user turned off and a running Tor get no notice: the user chose them, and the log names them. The other
+applications only log the status.
+
 Pluggable transports are programs which Tor starts for bridges. The sandbox lets Tor start them only with
 `--allowPluggableTransportsInTorSandbox=true`; the option is off by default. The Tor network settings have a switch for
 it, which asks for a confirmation before it allows them, writes the option into `bisq.properties` of the data

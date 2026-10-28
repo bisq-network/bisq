@@ -471,6 +471,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show());
+        bisqSetup.setDisplayTorSandboxNoticeHandler(notice -> popupQueue.add(new Popup()
+                .headLine(Res.get("popup.torSandbox.weakLevel.headline"))
+                .warning(notice.getMessage())
+                .dontShowAgainId(notice.getDontShowAgainKey())));
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isIgnorePopupsInDevMode()) {
                 Popup popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))

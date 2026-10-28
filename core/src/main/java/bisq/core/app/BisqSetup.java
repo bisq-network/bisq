@@ -171,6 +171,9 @@ public class BisqSetup {
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
     @Setter
     @Nullable
+    private Consumer<TorSandboxNotice> displayTorSandboxNoticeHandler;
+    @Setter
+    @Nullable
     private Runnable showFirstPopupIfResyncSPVRequestedHandler;
     @Setter
     @Nullable
@@ -422,7 +425,8 @@ public class BisqSetup {
 
         log.info("Init P2P network");
         bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
-        p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
+        p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler,
+                this::maybeShowTorSandboxNotice);
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
@@ -790,6 +794,12 @@ public class BisqSetup {
                             a.getPaymentAccountPayload())).equals(state));
         }
         return false;
+    }
+
+    private void maybeShowTorSandboxNotice(TorSandboxNotice notice) {
+        if (displayTorSandboxNoticeHandler != null && preferences.showAgain(notice.getDontShowAgainKey())) {
+            displayTorSandboxNoticeHandler.accept(notice);
+        }
     }
 
     private void maybeTriggerDisplayHandler(String key, Consumer<String> displayHandler, boolean signingStateFound) {

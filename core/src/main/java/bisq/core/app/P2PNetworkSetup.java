@@ -29,6 +29,7 @@ import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
 import javax.inject.Inject;
@@ -97,7 +98,8 @@ public class P2PNetworkSetup {
     }
 
     BooleanProperty init(Runnable initWalletServiceHandler,
-                         @Nullable Consumer<Boolean> displayTorNetworkSettingsHandler) {
+                         @Nullable Consumer<Boolean> displayTorNetworkSettingsHandler,
+                         Consumer<TorSandboxNotice> torSandboxNoticeHandler) {
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
@@ -155,6 +157,9 @@ public class P2PNetworkSetup {
                 log.debug("onTorNodeReady");
                 bootstrapState.set(Res.get("mainView.bootstrapState.torNodeCreated"));
                 p2PNetworkIconId.set("image-connection-tor");
+                if (p2PService.getNetworkNode() instanceof TorNetworkNode torNetworkNode) {
+                    TorSandboxNotice.from(torNetworkNode.getTorSandboxStatus()).ifPresent(torSandboxNoticeHandler);
+                }
 
                 if (preferences.getUseTorForBitcoinJ())
                     initWalletServiceHandler.run();

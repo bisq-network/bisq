@@ -26,11 +26,14 @@ import bisq.core.user.Preferences;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.BridgesCanHelpException;
-import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.P2PDataStorage;
+import bisq.network.tor.TorSandboxStatus;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -48,13 +51,16 @@ import static org.mockito.Mockito.when;
 class P2PNetworkSetupTest {
     private P2PNetworkSetup p2PNetworkSetup;
     private P2PServiceListener listener;
+    private TorNetworkNode torNetworkNode;
+    private final List<TorSandboxNotice> torSandboxNotices = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
         Res.setup();
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getP2PDataStorage()).thenReturn(mock(P2PDataStorage.class));
-        when(p2PService.getNetworkNode()).thenReturn(mock(NetworkNode.class));
+        torNetworkNode = mock(TorNetworkNode.class);
+        when(p2PService.getNetworkNode()).thenReturn(torNetworkNode);
         when(p2PService.getNumConnectedPeers()).thenReturn(new SimpleIntegerProperty());
         WalletsSetup walletsSetup = mock(WalletsSetup.class);
         when(walletsSetup.numPeersProperty()).thenReturn(new SimpleIntegerProperty());
@@ -62,7 +68,7 @@ class P2PNetworkSetupTest {
                 mock(Preferences.class), mock(FilterPolicyService.class));
 
         p2PNetworkSetup.init(() -> {
-        }, null);
+        }, null, torSandboxNotices::add);
 
         ArgumentCaptor<P2PServiceListener> listenerCaptor = ArgumentCaptor.forClass(P2PServiceListener.class);
         verify(p2PService).start(listenerCaptor.capture());
@@ -82,6 +88,26 @@ class P2PNetworkSetupTest {
         assertEquals("Tor did not start, because the bridges use obfs4.",
                 p2PNetworkSetup.getTorNetworkSettingsFailure());
         assertNotNull(p2PNetworkSetup.getP2pNetworkWarnMsg().get());
+    }
+
+    // The sandbox status of a start is final once Tor is ready
+    @Test
+    void reportsATorInAWeakLevelOfItsSandboxWhenTorIsReady() {
+        TorSandboxStatus status = TorSandboxStatus.sandboxed("host-network", false, true);
+        when(torNetworkNode.getTorSandboxStatus()).thenReturn(status);
+
+        listener.onTorNodeReady();
+
+        assertEquals(List.of(TorSandboxNotice.from(status).orElseThrow()), torSandboxNotices);
+    }
+
+    @Test
+    void reportsNoTorWhoseSandboxTheUserTurnedOff() {
+        when(torNetworkNode.getTorSandboxStatus()).thenReturn(TorSandboxStatus.DISABLED);
+
+        listener.onTorNodeReady();
+
+        assertEquals(List.of(), torSandboxNotices);
     }
 
     @Test
