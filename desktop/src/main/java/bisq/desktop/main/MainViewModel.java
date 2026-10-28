@@ -78,6 +78,7 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.BridgesCanHelpException;
 
 import bisq.common.ClockWatcher;
 import bisq.common.Timer;
@@ -391,7 +392,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
             if (show) {
-                torNetworkSettingsWindow.startFailure(bisqSetup.getTorNetworkSettingsFailure()).show();
+                torNetworkSettingsWindow.show();
             } else if (torNetworkSettingsWindow.isDisplayed()) {
                 torNetworkSettingsWindow.hide();
             }
@@ -888,8 +889,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     }
 
     @Nullable
-    String getTorNetworkSettingsFailure() {
-        return bisqSetup.getTorNetworkSettingsFailure();
+    BridgesCanHelpException getBridgesCanHelpFailure() {
+        return bisqSetup.getBridgesCanHelpFailure();
     }
 
     StringProperty getP2PNetworkIconId() {

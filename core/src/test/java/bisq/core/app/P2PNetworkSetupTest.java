@@ -30,6 +30,7 @@ import bisq.network.p2p.network.ExplainedStartFailureException;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.tor.TorSandboxStatus;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -45,6 +46,7 @@ import org.mockito.ArgumentCaptor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,7 +71,7 @@ class P2PNetworkSetupTest {
                 mock(Preferences.class), mock(FilterPolicyService.class));
 
         p2PNetworkSetup.init(() -> {
-        }, null, torSandboxNotices::add);
+        }, torSandboxNotices::add);
 
         ArgumentCaptor<P2PServiceListener> listenerCaptor = ArgumentCaptor.forClass(P2PServiceListener.class);
         verify(p2PService).start(listenerCaptor.capture());
@@ -77,18 +79,20 @@ class P2PNetworkSetupTest {
     }
 
     @Test
-    void keepsAFailureWhichOtherBridgesCanFixForTheTorNetworkSettingsBeforeTheWarning() {
-        // The desktop application decides with it whether the warning gets a popup
-        var failureAtTheWarning = new AtomicReference<String>();
+    void keepsAFailureWhichOtherBridgesCanFixBeforeTheWarningWhichPointsToTheTorSettings() {
+        // The desktop application chooses the popup of the warning with it
+        var failureAtTheWarning = new AtomicReference<BridgesCanHelpException>();
         p2PNetworkSetup.getP2pNetworkWarnMsg().addListener((observable, oldValue, newValue) ->
-                failureAtTheWarning.set(p2PNetworkSetup.getTorNetworkSettingsFailure()));
+                failureAtTheWarning.set(p2PNetworkSetup.getBridgesCanHelpFailure()));
+        var failure = new BridgesCanHelpException("Could not bootstrap Tor in 120 seconds",
+                new TorBootstrapFailedException("Could not bootstrap Tor in 120 seconds"));
 
-        listener.onSetupFailed(new BridgesCanHelpException("Tor did not start, because the bridges use obfs4."));
+        listener.onSetupFailed(failure);
 
-        assertEquals("Tor did not start, because the bridges use obfs4.", failureAtTheWarning.get());
-        assertEquals("Tor did not start, because the bridges use obfs4.",
-                p2PNetworkSetup.getTorNetworkSettingsFailure());
-        assertNotNull(p2PNetworkSetup.getP2pNetworkWarnMsg().get());
+        assertSame(failure, failureAtTheWarning.get());
+        assertSame(failure, p2PNetworkSetup.getBridgesCanHelpFailure());
+        assertEquals(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailedBridgesCanHelp",
+                "Could not bootstrap Tor in 120 seconds"), p2PNetworkSetup.getP2pNetworkWarnMsg().get());
     }
 
     // The sandbox status of a start is final once Tor is ready
@@ -120,7 +124,7 @@ class P2PNetworkSetupTest {
 
         assertEquals(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice", message),
                 p2PNetworkSetup.getP2pNetworkWarnMsg().get());
-        assertNull(p2PNetworkSetup.getTorNetworkSettingsFailure());
+        assertNull(p2PNetworkSetup.getBridgesCanHelpFailure());
     }
 
     @Test
@@ -132,10 +136,10 @@ class P2PNetworkSetupTest {
     }
 
     @Test
-    void keepsNoOtherFailureForTheTorNetworkSettings() {
+    void keepsNoOtherFailureAsOneWhichOtherBridgesCanFix() {
         listener.onSetupFailed(new RuntimeException("Tor is not installed."));
 
-        assertNull(p2PNetworkSetup.getTorNetworkSettingsFailure());
+        assertNull(p2PNetworkSetup.getBridgesCanHelpFailure());
         assertNotNull(p2PNetworkSetup.getP2pNetworkWarnMsg().get());
     }
 }

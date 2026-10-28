@@ -78,10 +78,10 @@ public class P2PNetworkSetup {
     final BooleanProperty dataReceived = new SimpleBooleanProperty();
     @Getter
     final BooleanProperty p2pNetworkFailed = new SimpleBooleanProperty();
-    // The message of a failed start which other bridges can fix, for the Tor network settings
+    // A failed start which other bridges can fix, for the popup which leads to the fix
     @Getter
     @Nullable
-    private String torNetworkSettingsFailure;
+    private BridgesCanHelpException bridgesCanHelpFailure;
     final FilterPolicyService filterPolicyService;
 
     @Inject
@@ -99,7 +99,6 @@ public class P2PNetworkSetup {
     }
 
     BooleanProperty init(Runnable initWalletServiceHandler,
-                         @Nullable Consumer<Boolean> displayTorNetworkSettingsHandler,
                          Consumer<TorSandboxNotice> torSandboxNoticeHandler) {
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
@@ -222,26 +221,24 @@ public class P2PNetworkSetup {
             @Override
             public void onSetupFailed(Throwable throwable) {
                 log.error("onSetupFailed");
-                // Set before the warning: the desktop application shows no popup for a failure which the Tor
-                // network settings show
-                torNetworkSettingsFailure = throwable instanceof BridgesCanHelpException ?
-                        throwable.getMessage() :
+                // Set before the warning: the desktop application chooses its popup with it
+                bridgesCanHelpFailure = throwable instanceof BridgesCanHelpException bridgesCanHelp ?
+                        bridgesCanHelp :
                         null;
-                // Checking the internet connection or restarting does not help with a failure which says what helps
-                String warnMsgKey = throwable instanceof ExplainedStartFailureException ?
-                        "mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice" :
-                        "mainView.p2pNetworkWarnMsg.connectionToP2PFailed";
+                // A failure which says what helps gets no advice to check the internet connection or to restart
+                String warnMsgKey;
+                if (bridgesCanHelpFailure != null) {
+                    warnMsgKey = "mainView.p2pNetworkWarnMsg.connectionToP2PFailedBridgesCanHelp";
+                } else if (throwable instanceof ExplainedStartFailureException) {
+                    warnMsgKey = "mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice";
+                } else {
+                    warnMsgKey = "mainView.p2pNetworkWarnMsg.connectionToP2PFailed";
+                }
                 p2pNetworkWarnMsg.set(Res.get(warnMsgKey, throwable.getMessage()));
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));
                 p2pNetworkLabelId.set("splash-error-state-msg");
                 p2pNetworkFailed.set(true);
-            }
-
-            @Override
-            public void onRequestCustomBridges() {
-                if (displayTorNetworkSettingsHandler != null)
-                    displayTorNetworkSettingsHandler.accept(true);
             }
         });
 

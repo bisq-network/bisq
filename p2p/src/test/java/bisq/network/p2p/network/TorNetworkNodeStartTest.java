@@ -161,7 +161,7 @@ class TorNetworkNodeStartTest {
     }
 
     @Test
-    void opensTheTorNetworkSettingsWhenTheSandboxRefusesTheTransportsOfTheBridges() throws Exception {
+    void namesTheTransportsWhichTheSandboxRefusedForTheBridges() throws Exception {
         TorMode torMode = mock(TorMode.class);
         when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
         when(torMode.getTor()).thenThrow(new CompletionException(new PluggableTransportsNotAllowedException(
@@ -176,8 +176,10 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"),
                     Utilities.isWindows()), listener.failure.get().getMessage());
-            // The window has the switch for the transports and the choice of the bridges, and shows the failure
+            // The desktop application offers to allow these transports or to use no bridges
             assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
+            assertEquals(List.of("obfs4"),
+                    ((BridgesCanHelpException) listener.failure.get()).getNotAllowedTransportNames());
             assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
         } finally {
             shutDownExecutors(networkNode);
@@ -214,6 +216,8 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals("Could not bootstrap Tor in 240 seconds", listener.failure.get().getMessage());
             assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
+            assertEquals(List.of(),
+                    ((BridgesCanHelpException) listener.failure.get()).getNotAllowedTransportNames());
             assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
         } finally {
             shutDownExecutors(networkNode);

@@ -17,12 +17,27 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+
+import com.google.common.base.Throwables;
+
+import java.util.List;
+
 /**
- * A failed start of Tor which other bridges, or allowing their pluggable transports, can fix. The node requests custom
- * bridges after it, and the desktop application shows the message in the Tor network settings, which open for it.
+ * A failed start of Tor which other bridges, or allowing their pluggable transports, can fix. The desktop application
+ * shows it in a popup which leads to the fix.
  */
 public class BridgesCanHelpException extends RuntimeException {
-    public BridgesCanHelpException(String message) {
-        super(message);
+    public BridgesCanHelpException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    // The pluggable transports of the bridges which the sandbox refused, empty for the other failures
+    public List<String> getNotAllowedTransportNames() {
+        return Throwables.getCausalChain(this).stream()
+                .filter(PluggableTransportsNotAllowedException.class::isInstance)
+                .map(cause -> ((PluggableTransportsNotAllowedException) cause).getTransportNames())
+                .findFirst()
+                .orElse(List.of());
     }
 }

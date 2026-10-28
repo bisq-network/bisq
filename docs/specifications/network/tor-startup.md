@@ -174,9 +174,9 @@ custom bridge field, are no bridges, as in netlayer. If no line remains, the nod
 A running Tor uses the bridges of its own configuration. The node then ignores the bridges of its settings and logs a
 warning.
 
-If Tor cannot connect, or the chosen bridges cannot be used, the start fails, and the desktop application opens the
-Tor network settings so that the user can choose bridges, as with netlayer. The settings then show the error at their
-top, and no popup shows it as well, because it would lie behind them.
+If Tor cannot connect, or the chosen bridges cannot be used, the start fails, and the desktop application shows the
+error in a popup which says that other bridges can help, with a button which opens the Tor network settings. The
+settings do not open by themselves, as they did with netlayer, because they covered the popup with the error.
 
 The desktop application shows every other failed start in a popup. When the error says itself what the user can do,
 as the refusals of the sandbox, of a running Tor which the node cannot use and of a Whonix-Gateway do, the popup leaves
@@ -262,11 +262,15 @@ not parse what a compromised sandboxed Tor may have written there. Tor then choo
 directory again. A start in the sandbox keeps `data/`, because the sandboxed Tor is confined whatever it parses. A
 `data/` without a record counts as written in the sandbox.
 
-When the bridges need pluggable transports which the sandbox does not allow, the error names the transports and,
-instead of the option, the switch of the Tor network settings which allows them, or on Windows the option to turn the
-sandbox off, because the switch is disabled there, and the choice of no bridges or of bridges without pluggable
-transports. The desktop application then opens the Tor network settings with the error, as for bridges which cannot be
-used, so that the user can allow the transports or choose other bridges.
+When the bridges need pluggable transports which the sandbox does not allow, the error names the transports and, instead
+of the option, the switch of the Tor network settings which allows them, or on Windows the option to turn the sandbox
+off, because the switch is disabled there, and the choice of no bridges or of bridges without pluggable transports. The
+desktop application shows a popup of its own instead: it names the transports, says that allowing them weakens the
+sandbox, without the details of this section, which may change with the sandbox, and offers to allow them and shut down,
+to use no bridges and shut down, or to open the Tor network settings, which is also what closing it does, because the
+node has nothing else to do without Tor. Its text replaces the confirmation of the switch. Where the switch is disabled,
+on Windows and while the option is given on the command line, the popup has no button which allows them and names the
+option instead.
 
 A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
 `hiddenservice`: the node sends the key of the onion service to Tor over the control connection.

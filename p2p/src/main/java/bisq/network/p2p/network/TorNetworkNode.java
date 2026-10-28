@@ -311,7 +311,7 @@ public class TorNetworkNode extends NetworkNode {
                 boolean canBridgesHelp = canBridgesHelp(throwable);
                 RuntimeException failure;
                 if (canBridgesHelp) {
-                    failure = new BridgesCanHelpException(errorMessage);
+                    failure = new BridgesCanHelpException(errorMessage, throwable);
                 } else if (isExplained(throwable, LinuxDistribution.isWhonixGateway())) {
                     failure = new ExplainedStartFailureException(errorMessage);
                 } else {
@@ -384,8 +384,9 @@ public class TorNetworkNode extends NetworkNode {
         return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
     }
 
-    // The Tor network settings, which open with the error, have the switch for the transports. On Windows the sandbox
-    // cannot run them, so the switch is disabled there.
+    // The Tor network settings have the switch for the transports. On Windows the sandbox cannot run them, so the
+    // switch is disabled there. The desktop application shows a popup of its own for this failure, which offers the
+    // fixes.
     @VisibleForTesting
     static String getPluggableTransportsNotAllowedMessage(List<String> transportNames, boolean isWindows) {
         String bridges = "Tor did not start, because the bridges of the Tor network settings use the pluggable " +

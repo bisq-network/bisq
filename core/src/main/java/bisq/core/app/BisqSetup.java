@@ -52,6 +52,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.utils.Utils;
 
@@ -425,8 +426,7 @@ public class BisqSetup {
 
         log.info("Init P2P network");
         bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
-        p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler,
-                this::maybeShowTorSandboxNotice);
+        p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, this::maybeShowTorSandboxNotice);
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
@@ -874,8 +874,8 @@ public class BisqSetup {
     }
 
     @Nullable
-    public String getTorNetworkSettingsFailure() {
-        return p2PNetworkSetup.getTorNetworkSettingsFailure();
+    public BridgesCanHelpException getBridgesCanHelpFailure() {
+        return p2PNetworkSetup.getBridgesCanHelpFailure();
     }
 
     public StringProperty getP2PNetworkIconId() {
