@@ -22,10 +22,12 @@ import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorSandboxConfig;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 
 import bisq.common.config.Config;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 
 import java.io.File;
@@ -43,6 +45,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * This class starts Tor with the Tor library.
@@ -76,6 +80,8 @@ public class NewTor extends TorMode {
     private final boolean useTorSandbox;
     private final boolean allowPluggableTransportsInTorSandbox;
     private final String sandboxOptOutHint;
+    // Empty for the Tor network
+    private final Set<DirectoryAuthority> testNetworkDirectoryAuthorities;
 
     public NewTor(File torWorkingDirectory,
                   TorrcSettings torrcSettings,
@@ -98,12 +104,36 @@ public class NewTor extends TorMode {
                   boolean useTorSandbox,
                   boolean allowPluggableTransportsInTorSandbox,
                   String sandboxOptOutHint) {
+        this(torWorkingDirectory, torrcSettings, bridgeAddressProvider, useTorSandbox,
+                allowPluggableTransportsInTorSandbox, sandboxOptOutHint, Set.of());
+    }
+
+    private NewTor(File torWorkingDirectory,
+                   TorrcSettings torrcSettings,
+                   BridgeAddressProvider bridgeAddressProvider,
+                   boolean useTorSandbox,
+                   boolean allowPluggableTransportsInTorSandbox,
+                   String sandboxOptOutHint,
+                   Set<DirectoryAuthority> testNetworkDirectoryAuthorities) {
         super(torWorkingDirectory);
         this.torrcSettings = torrcSettings;
         this.bridgeAddressProvider = bridgeAddressProvider;
         this.useTorSandbox = useTorSandbox;
         this.allowPluggableTransportsInTorSandbox = allowPluggableTransportsInTorSandbox;
         this.sandboxOptOutHint = sandboxOptOutHint;
+        this.testNetworkDirectoryAuthorities = testNetworkDirectoryAuthorities;
+    }
+
+    /**
+     * A Tor which joins the private Tor network of the given directory authorities instead of the Tor network, for
+     * example a network of tor-local-network on this host. The library refuses such a network in the sandbox levels
+     * whose egress broker reaches public addresses only, so this Tor runs without the sandbox.
+     */
+    @VisibleForTesting
+    static NewTor forTestNetwork(File torWorkingDirectory, Set<DirectoryAuthority> directoryAuthorities) {
+        checkArgument(!directoryAuthorities.isEmpty(), "A test network needs its directory authorities");
+        return new NewTor(torWorkingDirectory, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE,
+                false, false, SANDBOX_OPT_OUT_HINT, directoryAuthorities);
     }
 
     @Override
@@ -113,8 +143,8 @@ public class NewTor extends TorMode {
         TorTransportConfig transportConfig = new TorTransportConfig(torDir.toPath(),
                 BOOTSTRAP_TIMEOUT,
                 HS_UPLOAD_TIMEOUT,
-                false,
-                Set.of(),
+                !testNetworkDirectoryAuthorities.isEmpty(),
+                testNetworkDirectoryAuthorities,
                 getTorrcOverrides(torrcSettings),
                 false,
                 getBridgeConfig(bridgeAddressProvider),

@@ -1,5 +1,6 @@
 plugins {
     id 'bisq.java-conventions'
+    id 'bisq.java-integration-tests'
     id 'bisq.javafx'
 }
 
@@ -39,4 +40,6 @@ dependencies {
     testImplementation libs.logback.classic
     testImplementation libs.logback.core
     testImplementation libs.apache.commons.lang3
+    // The Tor node test runs the nodes on a private Tor network on this host
+    integrationTestImplementation 'tor:tor-local-network'
 }
