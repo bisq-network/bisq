@@ -21,8 +21,6 @@ import bisq.network.tor.PlatformServices;
 
 import java.nio.file.FileSystems;
 
-import java.util.stream.Stream;
-
 /**
  * Passes the platform operations which the Tor library needs. Bisq 2 implements the same interface with its JDK
  * facade, because bisq-mobile runs the library on Android.
@@ -31,11 +29,6 @@ class BisqTorPlatformServices implements PlatformServices {
     @Override
     public String getMyPid() {
         return String.valueOf(ProcessHandle.current().pid());
-    }
-
-    @Override
-    public Stream<String> getProcessCommandStream() {
-        return ProcessHandle.allProcesses().map(processHandle -> processHandle.info().command().orElse(""));
     }
 
     @Override
