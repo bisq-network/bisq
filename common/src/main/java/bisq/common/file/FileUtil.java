@@ -276,11 +276,11 @@ public class FileUtil {
     }
 
     /**
-     * Like {@link #copyDirectory(File, File)}, but skips the given directories. A directory which another process may
-     * write, such as the data directory of a sandboxed Tor, must not be copied: the process could put a link or a
-     * named pipe there.
+     * Like {@link #copyDirectory(File, File)}, but skips the given directories and files. A directory which another
+     * process may write, such as the data directory of a sandboxed Tor, must not be copied: the process could put a
+     * link or a named pipe there.
      */
-    public static List<File> copyDirectory(File source, File destination, Set<File> skippedDirectories)
+    public static List<File> copyDirectory(File source, File destination, Set<File> skippedEntries)
             throws IOException {
         // Match commons-io's copyDirectory input validation.
         if (!source.exists()) {
@@ -298,9 +298,9 @@ public class FileUtil {
         // does not follow links, so it visits real paths below the real source.
         Set<Path> excludedPaths = new HashSet<>();
         excludedPaths.add(destinationRoot.toRealPath());
-        for (File skippedDirectory : skippedDirectories) {
-            if (skippedDirectory.exists()) {
-                excludedPaths.add(skippedDirectory.toPath().toRealPath());
+        for (File skippedEntry : skippedEntries) {
+            if (skippedEntry.exists()) {
+                excludedPaths.add(skippedEntry.toPath().toRealPath());
             }
         }
         List<File> notCopied = new ArrayList<>();
@@ -322,6 +322,9 @@ public class FileUtil {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                if (excludedPaths.contains(file)) {
+                    return FileVisitResult.CONTINUE;
+                }
                 if (!attributes.isRegularFile()) {
                     notCopied.add(file.toFile());
                     return FileVisitResult.CONTINUE;

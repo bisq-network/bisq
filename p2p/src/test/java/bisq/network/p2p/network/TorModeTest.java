@@ -66,6 +66,14 @@ class TorModeTest {
     }
 
     @Test
+    void aBackupLeavesOutTheDataDirectoryOfTorAndItsRecord(@TempDir Path torDir) {
+        Set<File> entries = TorMode.getTorEntriesLeftOutOfBackup(torDir.toFile());
+
+        // The Tor library records in data-mode whether a sandboxed Tor wrote data/
+        assertEquals(Set.of(torDir.resolve("data").toFile(), torDir.resolve("data-mode").toFile()), entries);
+    }
+
+    @Test
     void deletesASymbolicLinkButNotItsTarget(@TempDir Path dir) throws IOException {
         Path torDir = Files.createDirectories(dir.resolve("tor"));
         Path outside = Files.createDirectories(dir.resolve("outside"));

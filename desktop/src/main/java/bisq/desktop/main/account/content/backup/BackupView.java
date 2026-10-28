@@ -69,7 +69,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
     private final File dataDir, logFile;
-    private final File torDataDir;
+    private final Set<File> torEntriesLeftOutOfBackup;
     private final List<File> torLogFiles;
     private int gridRow = 0;
     private final Preferences preferences;
@@ -88,7 +88,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         super();
         this.preferences = preferences;
         dataDir = new File(config.appDataDir.getPath());
-        torDataDir = TorMode.getTorDataDir(config.torDir);
+        torEntriesLeftOutOfBackup = TorMode.getTorEntriesLeftOutOfBackup(config.torDir);
         torLogFiles = TorMode.getTorLogFiles(config.torDir);
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
@@ -160,7 +160,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                         String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
                         // A sandboxed Tor may write its data directory, and a backup does not need it.
                         List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination),
-                                Set.of(torDataDir));
+                                torEntriesLeftOutOfBackup);
                         if (notCopied.isEmpty()) {
                             new Popup().feedback(Res.get("account.backup.success", destination)).show();
                         } else {

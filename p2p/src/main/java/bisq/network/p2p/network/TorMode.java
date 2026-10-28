@@ -97,6 +97,17 @@ public abstract class TorMode {
         return new TorDirectories(torDir.toPath()).getDataDirPath().toFile();
     }
 
+    /**
+     * The entries of the Tor directory which a backup leaves out: the data directory of Tor, which a sandboxed Tor may
+     * write, and the record of the Tor library whether a sandboxed Tor wrote it. Copied back next to another data
+     * directory, the record would describe that one, and a Tor without the sandbox could then read what a sandboxed
+     * Tor wrote there instead of starting on a cleared data directory.
+     */
+    public static Set<File> getTorEntriesLeftOutOfBackup(File torDir) {
+        TorDirectories torDirectories = new TorDirectories(torDir.toPath());
+        return Set.of(torDirectories.getDataDirPath().toFile(), torDirectories.getDataModePath().toFile());
+    }
+
     // Tor logs to its standard output. The Tor library writes it and the standard error of Tor, where sandy reports
     // why it refuses to start Tor, to these files outside the data directory of Tor. It moves a large log aside to
     // the earlier log at the next start.

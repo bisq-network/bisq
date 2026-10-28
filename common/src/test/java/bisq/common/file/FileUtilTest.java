@@ -84,6 +84,24 @@ public class FileUtilTest {
     }
 
     @Test
+    public void copyDirectorySkipsTheGivenFiles(@TempDir Path tmp) throws IOException {
+        File source = tmp.resolve("source").toFile();
+        File torDir = new File(source, "btc_mainnet/tor");
+        assertTrue(torDir.mkdirs());
+        File dataModeRecord = new File(torDir, "data-mode");
+        Files.write(dataModeRecord.toPath(), "unsandboxed".getBytes(StandardCharsets.UTF_8));
+        Files.write(new File(torDir, "torrc").toPath(), "torrc".getBytes(StandardCharsets.UTF_8));
+
+        File destination = tmp.resolve("backup").toFile();
+        List<File> notCopied = FileUtil.copyDirectory(source, destination, Set.of(dataModeRecord));
+
+        assertTrue(new File(destination, "btc_mainnet/tor/torrc").exists());
+        assertFalse(new File(destination, "btc_mainnet/tor/data-mode").exists());
+        // A skipped entry is left out on purpose, so the user is not told about it
+        assertTrue(notCopied.isEmpty());
+    }
+
+    @Test
     public void copyDirectoryCreatesACopyWhichOnlyTheOwnerCanAccess(@TempDir Path tmp) throws IOException {
         assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
         Path source = Files.createDirectories(tmp.resolve("source"));

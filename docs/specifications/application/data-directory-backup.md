@@ -12,7 +12,12 @@ The backup copies the data directory into a new directory named after the time o
 node writes all data to disk.
 
 The backup does not copy the data directory of the Tor which the node starts. A sandboxed Tor may write this
-directory, so it could put links or named pipes there, and Tor recreates its content.
+directory, so it could put links or named pipes there, and Tor recreates its content. The backup does not copy
+`data-mode` of the Tor directory either, the record of the Tor library whether a sandboxed Tor wrote that data
+directory ([`../network/tor-startup.md`](../network/tor-startup.md)): copied back next to another data directory, the
+record would describe that one, and the next Tor without the sandbox could read what a sandboxed Tor wrote there
+instead of starting on a cleared data directory. Without the record, the Tor library treats an existing data directory
+as written in the sandbox. Entries which the backup leaves out on purpose are not named to the user.
 
 The backup copies only regular files and directories. It does not follow symbolic links or junctions of Windows, and it
 does not read special files such as named pipes or devices. If the data directory itself is a link, for example to
