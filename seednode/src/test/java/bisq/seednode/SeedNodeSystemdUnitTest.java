@@ -178,6 +178,20 @@ class SeedNodeSystemdUnitTest {
         assertFalse(config.useTorSandbox);
     }
 
+    // The patch of bisq-monitor's install script, which added the option to the old unit, does not apply to this unit,
+    // so a monitored node sets it in bisq.properties
+    @Test
+    void keepsTheReportingServerOfTheMonitoringInTheConfigFile(@TempDir Path bisqHome) throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        Path configFile = bisqHome.resolve(environment.get("BISQ_APP_NAME")).resolve("bisq.properties");
+        Files.createDirectories(configFile.getParent());
+        Files.writeString(configFile, "seedNodeReportingServerUrl=http://localhost:13003\n");
+
+        runUnitCommand(EXEC_START_PRE_BASH_SINGLE_QUOTED, "bisq.properties", environment);
+
+        assertEquals("http://localhost:13003", createConfigOfTheNode(environment).seedNodeReportingServerUrl);
+    }
+
     private static Map<String, String> readBisqEnv(Path bisqHome) throws IOException {
         Map<String, String> environment = new HashMap<>();
         Files.readAllLines(Path.of("bisq.env")).stream()

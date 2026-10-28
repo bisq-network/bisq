@@ -119,6 +119,17 @@ bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq-monitor/refs/
 ```
 Follow the instruction given by the script and report your public key to the [Bisq monitoring maintainer](https://github.com/bisq-network/roles/issues/10)!
 
+The script adds the option `--seedNodeReportingServerUrl` to `bisq.service` with a patch which fits only the unit of
+Bisq 1.10.10 and earlier. On the current unit the patch fails without an error, and the node sends no reports. Set the
+option in `bisq.properties` in the data directory of the node instead, which `bisq.service` keeps, and restart the
+node:
+```bash
+echo "seedNodeReportingServerUrl=http://localhost:13003" | sudo -u bisq tee -a /bisq/bisq-seednode/bisq.properties
+sudo systemctl restart bisq
+```
+Take the URL of `BISQ_REPORTINGSERVERURL` in `/etc/default/bisq.env` if it differs. The node then sends a report every
+minute, and its log `bisq.log` in the data directory shows "Going to send report to monitor server".
+
 ### Upgrading
 
 To upgrade your seednode to a new tag, for example v1.2.5
@@ -166,7 +177,8 @@ sudo sed -i -e "s/__BISQ_REPO_NAME__/bisq/" -e "s!__BISQ_HOME__!/bisq!" /etc/sys
 sudo systemctl daemon-reload
 ```
 Adapt the paths if your installation differs, and apply the changes which `install_seednode_debian.sh` makes for the
-`bitcoin.service` dependency again.
+`bitcoin.service` dependency again. The new unit drops `--seedNodeReportingServerUrl`, which the monitoring script
+added to the old unit: on a monitored node, set the option in `bisq.properties` as "Monitoring" describes.
 
 Switch the seed node to the Tor of the Bisq build in the sandbox at this upgrade (see "Tor" above); new installations
 run it already. An installed `/etc/default/bisq.env` still sets `BISQ_EXTERNAL_TOR_PORT=9051`, with which the new unit
