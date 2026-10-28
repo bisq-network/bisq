@@ -24,6 +24,7 @@ BISQ_REPO_TAG=master
 BISQ_LATEST_RELEASE=$(curl -s https://api.github.com/repos/bisq-network/bisq/releases/latest|grep tag_name|head -1|cut -d '"' -f4)
 BISQ_HOME=/bisq
 BISQ_USER=bisq
+BISQ_GROUP=bisq
 
 # by default, this script will build and setup bitcoin fullnode
 # if you want to use an existing bitcoin fullnode, see next section
@@ -123,7 +124,8 @@ if [ "${BITCOIN_INSTALL}" = true ];then
 	sudo -H -i -u "${ROOT_USER}" sh -c "cd ${BITCOIN_HOME}/${BITCOIN_REPO_NAME} && make install >/dev/null"
 
 	echo "[*] Installing Bitcoin configuration"
-	sudo -H -i -u "${ROOT_USER}" install -c -o "${BITCOIN_USER}" -g "${BITCOIN_GROUP}" -m 644 "${ROOT_HOME}/${BISQ_REPO_NAME}/seednode/bitcoin.conf" "${BITCOIN_HOME}/bitcoin.conf"
+	# bitcoin.conf gets the RPC password, so only bitcoind and bitcoin-cli, which run as the Bitcoin user, may read it
+	sudo -H -i -u "${ROOT_USER}" install -c -o "${BITCOIN_USER}" -g "${BITCOIN_GROUP}" -m 600 "${ROOT_HOME}/${BISQ_REPO_NAME}/seednode/bitcoin.conf" "${BITCOIN_HOME}/bitcoin.conf"
 	sudo -H -i -u "${ROOT_USER}" install -c -o "${BITCOIN_USER}" -g "${BITCOIN_GROUP}" -m 755 "${ROOT_HOME}/${BISQ_REPO_NAME}/seednode/blocknotify.sh" "${BITCOIN_HOME}/blocknotify.sh"
 
 	echo "[*] Generating Bitcoin RPC credentials"
@@ -141,8 +143,10 @@ echo "[*] Creating Bisq user"
 sudo -H -i -u "${ROOT_USER}" useradd -d "${BISQ_HOME}" "${BISQ_USER}"
 
 echo "[*] Creating Bisq homedir"
-sudo -H -i -u "${ROOT_USER}" mkdir -p "${BISQ_HOME}"
-sudo -H -i -u "${ROOT_USER}" chown "${BISQ_USER}":"${BISQ_GROUP}" ${BISQ_HOME}
+# The data directory of the node in it holds the keys, the wallets, the logs and bisq.properties with the secrets of
+# the node, and the node writes its files with the default umask. Other users may not enter it; README.md describes
+# how a reader of the JSON files of a BSQ explorer or of the markets gets access to these files only.
+sudo -H -i -u "${ROOT_USER}" install -d -o "${BISQ_USER}" -g "${BISQ_GROUP}" -m 700 "${BISQ_HOME}"
 
 echo "[*] Moving Bisq repo"
 sudo -H -i -u "${ROOT_USER}" mv "${ROOT_HOME}/${BISQ_REPO_NAME}" "${BISQ_HOME}/${BISQ_REPO_NAME}"
@@ -166,7 +170,9 @@ BISQ_BM_ORACLE_NODE_PRIVKEY=$(echo "$key" | openssl ec -text -noout 2>/dev/null 
 BISQ_BM_ORACLE_NODE_PUBKEY=$(echo "$key" | openssl ec -pubout -conv_form compressed -outform DER 2>/dev/null | tail -c 33 | xxd -p | tr -d '\n')
 
 echo "[*] Installing Bisq environment file"
-sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seednode/bisq.env" "${SYSTEMD_ENV_HOME}/bisq.env"
+# bisq.env gets the RPC password and the private key of the BM oracle. systemd reads it as root for bisq.service, so
+# no other user needs to read it.
+sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 600 "${BISQ_HOME}/${BISQ_REPO_NAME}/seednode/bisq.env" "${SYSTEMD_ENV_HOME}/bisq.env"
 sudo sed -i -e "s!__JAVA_HOME__!${JAVA_HOME}!" "${SYSTEMD_ENV_HOME}/bisq.env"
 sudo sed -i -e "s/__BITCOIN_P2P_HOST__/${BITCOIN_P2P_HOST}/" "${SYSTEMD_ENV_HOME}/bisq.env"
 sudo sed -i -e "s/__BITCOIN_P2P_PORT__/${BITCOIN_P2P_PORT}/" "${SYSTEMD_ENV_HOME}/bisq.env"

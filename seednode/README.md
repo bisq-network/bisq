@@ -26,6 +26,16 @@ This will install and configure Bitcoin and Bisq-Seednode services to start on b
 installs and configures the tor package of the distribution: `bitcoin.conf` connects through it
 (`onion=127.0.0.1:9050`), and Bitcoin publishes its onion service with it. The seed node does not use it.
 
+`/etc/default/bisq.env` holds the Bitcoin RPC password and the private key of the Burning Man oracle, and
+`/bitcoin/bitcoin.conf` holds the RPC password. The script installs both with mode 600: `bisq.env` owned by root,
+because systemd reads it as root, and `bitcoin.conf` owned by the user `bitcoin`, which runs bitcoind and
+`bitcoin-cli`. The node does not get the two secrets on its command line, which every local user can read: at every
+start, `bisq.service` writes `rpcPassword` and `bmOracleNodePrivKey` from `bisq.env` into `bisq.properties` in the data
+directory of the node, for example `/bisq/bisq-seednode/bisq.properties`, with mode 600 for the user `bisq`. It
+replaces these two lines there and keeps all other lines, so set the two values in `bisq.env` only. The script creates
+`/bisq`, the home of the user `bisq` with the data directory of the node, with mode 700: the node writes its wallets
+and logs readable by every user who can enter the directory. Only its key ring in `keys/` is owner-only by itself.
+
 ### Tor
 
 Seed nodes run the Tor of the Bisq build in the sandbox, as every Bisq application does: the seed node starts that Tor
@@ -122,6 +132,28 @@ exit
 sudo service bisq restart
 sudo journalctl --unit bisq --follow
 ```
+
+#### Files with secrets
+
+Earlier versions of `install_seednode_debian.sh` installed `/etc/default/bisq.env` and `/bitcoin/bitcoin.conf` with
+mode 644, so every local user can read the RPC password and the private key of the Burning Man oracle. Make both files
+readable by their owner only; the owners stay as they are:
+```bash
+sudo chmod 600 /etc/default/bisq.env /bitcoin/bitcoin.conf
+```
+If the script did not install Bitcoin, protect the configuration of your Bitcoin node in the same way. The unit of
+earlier versions also passed both secrets on the command line of the node, where every local user can read them while
+the node runs; the new unit of "Upgrading to the Tor library" passes them through `bisq.properties` instead.
+
+Earlier versions of the script also created `/bisq` with mode 755, so every local user can read the wallets and logs
+of the node, and, until its first start with Bisq 1.10.11, its key ring in `keys/` of its data directory and the
+backups of the keys. Make the directory private:
+```bash
+sudo chmod 700 /bisq
+```
+If a program of another user reads the JSON files which the node writes for a BSQ explorer (`BISQ_DUMP_BLOCKCHAIN`) or
+for the markets (`BISQ_DUMP_STATISTICS`), give that user access to these files only, for example with ACLs, instead of
+opening the whole directory.
 
 #### Upgrading to the Tor library
 

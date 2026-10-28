@@ -24,10 +24,12 @@ import bisq.common.config.Config;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EnabledOnOs({OS.LINUX, OS.MAC})
 class SeedNodeSystemdUnitTest {
     private static final String EXEC_START_PRE_BASH = "ExecStartPre=/bin/bash -c \"";
+    private static final String EXEC_START_PRE_BASH_SINGLE_QUOTED = "ExecStartPre=/bin/bash -c '";
     private static final String EXEC_START_PRE_BASH_AS_ROOT = "ExecStartPre=+/bin/bash -c \"";
     private static final String EXEC_STOP_POST_BASH_AS_ROOT = "ExecStopPost=+/bin/bash -c \"";
 
@@ -141,6 +144,40 @@ class SeedNodeSystemdUnitTest {
         assertEquals(List.of("mount " + jsonDir, "umount " + jsonDir), Files.readAllLines(calls));
     }
 
+    // Every local user can read the command line of a process in /proc
+    @Test
+    void passesNoSecretOnTheCommandLineOfTheNode() throws IOException {
+        String execStart = String.join(" ", readExecStart());
+
+        for (String secret : List.of("rpcPassword", "BITCOIN_RPC_PASS", "bmOracleNodePrivKey",
+                "BISQ_BM_ORACLE_NODE_PRIVKEY")) {
+            assertFalse(execStart.contains(secret), secret);
+        }
+    }
+
+    @Test
+    void writesTheSecretsIntoTheConfigFileOfTheNodeForItsUserOnly(@TempDir Path bisqHome) throws Exception {
+        Map<String, String> environment = readBisqEnv(bisqHome);
+        environment.put("BITCOIN_RPC_PASS", "pass word*with=signs");
+        environment.put("BISQ_BM_ORACLE_NODE_PRIVKEY", "0123456789abcdef");
+        Path configFile = bisqHome.resolve(environment.get("BISQ_APP_NAME")).resolve("bisq.properties");
+        Files.createDirectories(configFile.getParent());
+        Files.writeString(configFile, "useTorSandbox=false\n  rpcPassword=old\nbmOracleNodePrivKey=old\n");
+        Files.setPosixFilePermissions(configFile, PosixFilePermissions.fromString("rw-r--r--"));
+
+        // The unit runs the command at every start
+        runUnitCommand(EXEC_START_PRE_BASH_SINGLE_QUOTED, "bisq.properties", environment);
+        runUnitCommand(EXEC_START_PRE_BASH_SINGLE_QUOTED, "bisq.properties", environment);
+
+        assertEquals(List.of("useTorSandbox=false", "rpcPassword=pass word*with=signs",
+                "bmOracleNodePrivKey=0123456789abcdef"), Files.readAllLines(configFile));
+        assertEquals(PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(configFile));
+        Config config = createConfigOfTheNode(environment);
+        assertEquals("pass word*with=signs", config.rpcPassword);
+        assertEquals("0123456789abcdef", config.bmOracleNodePrivKey);
+        assertFalse(config.useTorSandbox);
+    }
+
     private static Map<String, String> readBisqEnv(Path bisqHome) throws IOException {
         Map<String, String> environment = new HashMap<>();
         Files.readAllLines(Path.of("bisq.env")).stream()
@@ -159,13 +196,14 @@ class SeedNodeSystemdUnitTest {
         runUnitCommand(EXEC_START_PRE_BASH, "external_tor.config", environment);
     }
 
+    // The prefix ends with the quote which encloses the command
     private static void runUnitCommand(String commandPrefix, String marker, Map<String, String> environment)
             throws Exception {
         String unitLine = Files.readAllLines(Path.of("bisq.service")).stream()
                 .filter(line -> line.startsWith(commandPrefix) && line.contains(marker))
                 .findFirst()
                 .orElseThrow();
-        assertTrue(unitLine.endsWith("\""));
+        assertTrue(unitLine.endsWith(commandPrefix.substring(commandPrefix.length() - 1)));
         String command = unitLine.substring(commandPrefix.length(), unitLine.length() - 1);
         assertFalse(command.contains("${"), command);
 
@@ -177,6 +215,19 @@ class SeedNodeSystemdUnitTest {
         Process process = processBuilder.start();
         assertTrue(process.waitFor(30, TimeUnit.SECONDS));
         assertEquals(0, process.exitValue());
+    }
+
+    // The line of ExecStart and the lines which continue it
+    private static List<String> readExecStart() throws IOException {
+        List<String> execStart = new ArrayList<>();
+        for (String line : Files.readAllLines(Path.of("bisq.service"))) {
+            if (line.startsWith("ExecStart=") || (!execStart.isEmpty() &&
+                    execStart.get(execStart.size() - 1).endsWith("\\"))) {
+                execStart.add(line);
+            }
+        }
+        assertFalse(execStart.isEmpty());
+        return execStart;
     }
 
     // The Tor directory which the node gets from the options of ExecStart
