@@ -256,6 +256,13 @@ def loadSignerMetadata = { File keyringFile ->
     signers
 }
 
+// Gradle gives this build no access to the projects of its included builds, so each of them resolves its own
+// configurations in its task resolveAndVerifyDependencies, and Gradle verifies their artifacts with the metadata of
+// this build. The submodule bitcoind is left out: it has no such task.
+def includedBuildDependencyAudits = ['build-logic'].collect { name ->
+    gradle.includedBuild(name).task(':resolveAndVerifyDependencies')
+}
+
 def resolvableConfigurations = {
     allprojects.collectMany { project ->
         (project.configurations + project.buildscript.configurations).findAll { it.canBeResolved }.collect { configuration ->
@@ -353,7 +360,8 @@ def readChecksumFallbackAllowlist = { File allowlistFile ->
 
 tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
-    description = 'Resolves every resolvable configuration so Gradle dependency verification checks all dependency artifacts.'
+    description = 'Resolves every resolvable configuration, also of the included build build-logic, for dependency verification.'
+    dependsOn includedBuildDependencyAudits
 
     // Resolving every configuration of every project needs the project model while the task runs.
     // The configuration cache does not allow that, so it is turned off for this task.
@@ -367,7 +375,9 @@ tasks.register('resolveAndVerifyDependencies') {
 
 tasks.register('verifyDependencySignaturePolicy') {
     group = 'verification'
-    description = 'Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed.'
+    description = 'Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed ' +
+            'or if the metadata does not turn the key servers off.'
+    dependsOn includedBuildDependencyAudits
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyChecksumFallbackAllowlist)
@@ -388,6 +398,12 @@ tasks.register('verifyDependencySignaturePolicy') {
         def allowedEntries = allowlist.entries
 
         def metadata = new XmlSlurper(false, false).parse(metadataFile)
+        // Builds take every key from the committed keyring. Gradle removes the element when it writes the metadata
+        // with the key servers on, as a refresh of the keyring needs them.
+        if (metadata.configuration.'key-servers'.@enabled.text() != 'false') {
+            throw new GradleException("${metadataFile} does not turn the key servers off. Add " +
+                    "<key-servers enabled=\"false\"/> after <keyring-format>, as gradle/README.md describes.")
+        }
         def checksumFallbackEntries = new TreeSet<String>()
         metadata.components.component.each { component ->
             def id = "${component.@group}:${component.@name}:${component.@version}".toString()
@@ -422,13 +438,21 @@ tasks.register('verifyDependencySignaturePolicy') {
 
 tasks.register('refreshDependencyVerificationKeyring') {
     group = 'verification'
-    description = 'Refreshes dependency verification PGP public keys from key servers and exports the armored keyring.'
+    description = 'Refreshes dependency verification PGP public keys from key servers and exports the armored keyring. ' +
+            'Needs the key servers turned on in the metadata, see gradle/README.md.'
 
     inputs.file(dependencyVerificationMetadata)
     outputs.file(dependencyVerificationKeyring)
     outputs.upToDateWhen { false }
 
     doLast {
+        // With the key servers off, as committed, Gradle would export the keyring unchanged and refresh nothing
+        def metadataFile = dependencyVerificationMetadata.asFile
+        if (new XmlSlurper(false, false).parse(metadataFile).configuration.'key-servers'.@enabled.text() == 'false') {
+            throw new GradleException("${metadataFile} turns the key servers off. Turn them on for the refresh " +
+                    "as gradle/README.md describes.")
+        }
+
         def keyringFile = dependencyVerificationKeyring.asFile
         def previousModified = keyringFile.exists() ? keyringFile.lastModified() : 0L
         def process = new ProcessBuilder(

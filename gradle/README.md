@@ -247,13 +247,26 @@ Bisq 1 uses Gradle dependency verification with:
 - `verify-metadata`
 - `verify-signatures`
 - armored keyring format
+- key servers off (`<key-servers enabled="false"/>`)
 
 The committed verification files are `verification-metadata.xml`,
 `verification-keyring.keys` and `dependency-checksum-fallback-allowlist.tsv`.
 
+With the key servers off, Gradle takes every PGP key from `verification-keyring.keys` and
+never asks a key server. A build does not wait for a slow key server and cannot use a key
+which was not committed. A missing key fails the build with "Key servers are disabled, this
+can indicate that you need to update the local keyring with the missing key", so
+`resolveAndVerifyDependencies` also proves that the keyring holds every key which the build
+needs. Only a refresh of the keyring turns the key servers on, see below.
+
 `resolveAndVerifyDependencies` resolves every resolvable configuration, including the
-buildscript configurations, of every project in the root build. The included builds
-`build-logic` and `bitcoind` are not part of it.
+buildscript configurations, of every project in the root build. Gradle gives the root build
+no access to the projects of an included build, so the task first runs the task of the same
+name of the included build `build-logic`, which resolves the configurations of its projects;
+`verifyDependencySignaturePolicy` runs it as well. Gradle verifies the artifacts of an included
+build with the metadata of the root build. The included build `bitcoind` is not
+part of the audit: it has no such task. `dependencySignatureReport` lists the modules of
+the root build only.
 
 ### Verifying and refreshing build dependencies
 
@@ -264,14 +277,29 @@ To verify the current metadata without rewriting it:
 ./gradlew verifyDependencySignaturePolicy
 ```
 
-To refresh dependency verification metadata:
+To refresh dependency verification metadata, turn the key servers on for the refresh: in
+`verification-metadata.xml`, change `<key-servers enabled="false"/>` to
+`<key-servers enabled="true"/>`. Then run:
 
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
 ./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+```
+
+Writing the metadata with the key servers on removes the `<key-servers>` line. Add
+`<key-servers enabled="false"/>` after `<keyring-format>` again, review the keys which the
+refresh added to `verification-keyring.keys`, and run:
+
+```bash
+./gradlew resolveAndVerifyDependencies
 ./gradlew verifyDependencySignaturePolicy
 ./gradlew dependencySignatureReport
 ```
+
+With the key servers off again, `resolveAndVerifyDependencies` fails if the keyring lacks a
+key, and `verifyDependencySignaturePolicy` fails if the `<key-servers enabled="false"/>` line
+is missing. `refreshDependencyVerificationKeyring` refuses to run while the key servers are
+off, because Gradle would then export the keyring unchanged.
 
 `dependencySignatureReport` writes `docs/dependency-signature-report.md`. To update only the
 checksums, without PGP signature metadata, use `--write-verification-metadata sha256`
@@ -296,13 +324,13 @@ so Gradle writes it with the current result. Do not remove reasons by hand:
 ./gradlew help --refresh-keys --export-keys
 ```
 
-It refreshes the keys from the configured key servers and exports the armored keyring to
-`verification-keyring.keys`, which provides the public keys for signature verification and
-the signer names, emails and key creation dates used by the report. Some Gradle and Bouncy
-Castle combinations may write the keyring and then fail while finishing key export; the task
-accepts that case only if `verification-keyring.keys` was updated. A binary keyring
-(`verification-keyring.gpg`) is not used. The project does not contain one, and the task
-warns if one appears.
+With the key servers turned on, it refreshes the keys from Gradle's key servers and exports
+the armored keyring to `verification-keyring.keys`, which provides the public keys for
+signature verification and the signer names, emails and key creation dates used by the
+report. Some Gradle and Bouncy Castle combinations may write the keyring and then fail while
+finishing key export; the task accepts that case only if `verification-keyring.keys` was
+updated. A binary keyring (`verification-keyring.gpg`) is not used. The project does not
+contain one, and the task warns if one appears.
 
 ### Sources and Javadoc requested by the IDE
 
