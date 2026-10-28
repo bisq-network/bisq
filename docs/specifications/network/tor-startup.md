@@ -50,7 +50,9 @@ otherwise read its configuration there and could load modules from it.
 The node logs the version which the running Tor reports. The commands, replies and events of the control connection
 are logged at debug level only, because they contain onion addresses. Tor writes its own log to its standard output,
 which the node writes to `tor-stdout.log` in the Tor directory; above 10 MiB it moves the log to `tor-stdout.log.1`
-before the next start.
+before the next start. The standard error of Tor, where sandy also reports why it did not start Tor, goes to
+`tor-stderr.log`. "Zip log files" of the desktop application adds these three files, if they exist, to the logs of
+the node, because warnings of Tor, for example about the clock or the bridges, are only there.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
 sandbox program, see "Sandbox"). The torrc, the logs, `external_tor.config` and the `hiddenservice` directory with the

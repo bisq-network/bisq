@@ -20,9 +20,11 @@ package bisq.network.p2p.network;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -48,6 +51,18 @@ class TorModeTest {
         Set<String> fileNames = Arrays.stream(torDir.toFile().list()).collect(Collectors.toSet());
         assertEquals(Set.of("hiddenservice", "external_tor.config"), fileNames);
         assertTrue(Files.exists(torDir.resolve("hiddenservice").resolve("private_key")));
+    }
+
+    @Test
+    void theLogsOfTorAreInTheTorDirectoryOutsideTheDataDirectoryOfTor(@TempDir Path torDir) {
+        List<File> logFiles = TorMode.getTorLogFiles(torDir.toFile());
+
+        assertEquals(List.of(torDir.resolve("tor-stdout.log").toFile(),
+                        torDir.resolve("tor-stdout.log.1").toFile(),
+                        torDir.resolve("tor-stderr.log").toFile()),
+                logFiles);
+        Path torDataDir = TorMode.getTorDataDir(torDir.toFile()).toPath();
+        logFiles.forEach(logFile -> assertFalse(logFile.toPath().startsWith(torDataDir)));
     }
 
     @Test

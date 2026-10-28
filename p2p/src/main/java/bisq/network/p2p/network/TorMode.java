@@ -32,6 +32,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
@@ -94,6 +95,16 @@ public abstract class TorMode {
     // The data directory of the Tor which the node starts, which a sandboxed Tor may write
     public static File getTorDataDir(File torDir) {
         return new TorDirectories(torDir.toPath()).getDataDirPath().toFile();
+    }
+
+    // Tor logs to its standard output. The Tor library writes it and the standard error of Tor, where sandy reports
+    // why it refuses to start Tor, to these files outside the data directory of Tor. It moves a large log aside to
+    // the earlier log at the next start.
+    public static List<File> getTorLogFiles(File torDir) {
+        TorDirectories torDirectories = new TorDirectories(torDir.toPath());
+        return List.of(torDirectories.getStdoutLogPath().toFile(),
+                torDirectories.getRotatedStdoutLogPath().toFile(),
+                torDirectories.getStderrLogPath().toFile());
     }
 
     /**

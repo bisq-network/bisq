@@ -55,6 +55,7 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +70,7 @@ import static bisq.desktop.util.FormBuilder.*;
 public class BackupView extends ActivatableView<GridPane, Void> {
     private final File dataDir, logFile;
     private final File torDataDir;
+    private final List<File> torLogFiles;
     private int gridRow = 0;
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
@@ -87,6 +89,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         this.preferences = preferences;
         dataDir = new File(config.appDataDir.getPath());
         torDataDir = TorMode.getTorDataDir(config.torDir);
+        torLogFiles = TorMode.getTorLogFiles(config.torDir);
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 
@@ -239,7 +242,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
             File appDataDir = Config.appDataDir();
             LogFilesFinder logFilesFinder = new LogFilesFinder(appDataDir);
-            List<File> logFiles = logFilesFinder.find();
+            List<File> logFiles = new ArrayList<>(logFilesFinder.find());
+            // Warnings of Tor, for example about the clock or the bridges, are only in its own log. A running Tor
+            // writes no log there.
+            torLogFiles.stream().filter(File::isFile).forEach(logFiles::add);
 
             Date now = new Date();
             String currentTimeAndDate = new SimpleDateFormat("yyyyMMdd_HHmmss").format(now);
