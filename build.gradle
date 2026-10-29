@@ -1242,6 +1242,8 @@ def installerEvidenceRequiredEntries = [
 ]
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
+def expectedReleaseJavaRuntimeVersion = providers.gradleProperty('releaseBuild.javaRuntimeVersion')
+def expectedReleaseJavaVendorVersion = providers.gradleProperty('releaseBuild.javaVendorVersion')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
 
 def validateReleaseEvidenceBundle = { File bundle ->
@@ -1637,6 +1639,8 @@ tasks.register('verifyReleaseEnvironment') {
 
     inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
     inputs.property('expectedReleaseJavaVendor', expectedReleaseJavaVendor)
+    inputs.property('expectedReleaseJavaRuntimeVersion', expectedReleaseJavaRuntimeVersion)
+    inputs.property('expectedReleaseJavaVendorVersion', expectedReleaseJavaVendorVersion)
     inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
     outputs.upToDateWhen { false }
 
@@ -1647,9 +1651,13 @@ tasks.register('verifyReleaseEnvironment') {
     doLast {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
+        def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
+        def expectedJavaVendorVersion = expectedReleaseJavaVendorVersion.get()
         def expectedGradleVersion = expectedReleaseGradleVersion.get()
         def actualJavaVersion = System.getProperty('java.version')
         def actualJavaVendor = System.getProperty('java.vendor')
+        def actualJavaRuntimeVersion = System.getProperty('java.runtime.version')
+        def actualJavaVendorVersion = System.getProperty('java.vendor.version')
         def violations = []
 
         if (actualJavaVersion != expectedJavaVersion) {
@@ -1657,6 +1665,12 @@ tasks.register('verifyReleaseEnvironment') {
         }
         if (actualJavaVendor != expectedJavaVendorValue) {
             violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
+        }
+        if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
+            violations << "Java runtime version expected ${expectedJavaRuntimeVersion} but was ${actualJavaRuntimeVersion}"
+        }
+        if (actualJavaVendorVersion != expectedJavaVendorVersion) {
+            violations << "Java vendor version expected ${expectedJavaVendorVersion} but was ${actualJavaVendorVersion}"
         }
         if (actualGradleVersion != expectedGradleVersion) {
             violations << "Gradle version expected ${expectedGradleVersion} but was ${actualGradleVersion}"
@@ -1885,10 +1899,18 @@ tasks.register('verifyGithubActionsSecurity') {
     }
 
     inputs.files(workflowFiles)
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
+    inputs.property('expectedReleaseJavaRuntimeVersion', expectedReleaseJavaRuntimeVersion)
     outputs.upToDateWhen { false }
 
     doLast {
         def violations = []
+        def expectedJavaVersion = expectedReleaseJavaVersion.get()
+        def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
+        def expectedJavaBuildVersion = expectedJavaRuntimeVersion.replaceFirst(/-LTS$/, '')
+        if (!expectedJavaBuildVersion.startsWith("${expectedJavaVersion}+")) {
+            violations << 'releaseBuild.javaRuntimeVersion does not match releaseBuild.javaVersion'
+        }
         workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
             def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
             lines.eachWithIndex { line, index ->
@@ -1924,12 +1946,28 @@ tasks.register('verifyGithubActionsSecurity') {
                     violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
                 }
 
-                if (line ==~ /^\s*java-version:\s*['"]?\d+['"]?\s*$/) {
-                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
+                def javaVersionMatcher = line =~ /^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$/
+                if (javaVersionMatcher.matches()) {
+                    def javaVersion = javaVersionMatcher.group(1).trim().replaceAll(/^['"]|['"]$/, '')
+                    if (!javaVersion.startsWith('${{')) {
+                        if (!(javaVersion ==~ /\d+(?:\.\d+){2,}\+\d+/)) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java version: ${line.trim()}"
+                        } else if (javaVersion != expectedJavaBuildVersion) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java version ${javaVersion} but releaseBuild.javaRuntimeVersion is ${expectedJavaRuntimeVersion}"
+                        }
+                    }
                 }
 
-                if (line ==~ /^\s*java:\s*\[\s*['"]?\d+['"]?\s*\]\s*$/) {
-                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
+                def javaMatrixMatcher = line =~ /^\s*java:\s*\[([^]]+)]\s*(?:#.*)?$/
+                if (javaMatrixMatcher.matches()) {
+                    javaMatrixMatcher.group(1).split(',').each { value ->
+                        def javaVersion = value.trim().replaceAll(/^['"]|['"]$/, '')
+                        if (!(javaVersion ==~ /\d+(?:\.\d+){2,}\+\d+/)) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java matrix version: ${javaVersion}"
+                        } else if (javaVersion != expectedJavaBuildVersion) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java matrix version ${javaVersion} but releaseBuild.javaRuntimeVersion is ${expectedJavaRuntimeVersion}"
+                        }
+                    }
                 }
 
                 if (line ==~ /^\s*check-latest:\s*true\s*$/) {

@@ -12,10 +12,11 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Java **21.0.13** from **Azul Systems, Inc.**
-The Gradle and Java values are also pinned in `gradle.properties`
-(`releaseBuild.gradleVersion`, `releaseBuild.javaVersion`, `releaseBuild.javaVendor`)
-and repeated in `docs/release-checklist.md`.
+Currently pinned: **Gradle 9.0.0**, Azul Zulu Java **21.0.13+9**.
+The Java update, runtime build, vendor, and Zulu distribution build are pinned in `gradle.properties`
+(`releaseBuild.javaVersion`, `releaseBuild.javaRuntimeVersion`, `releaseBuild.javaVendor`,
+`releaseBuild.javaVendorVersion`). GitHub Actions requests the same build. A Java update version alone can select
+different Zulu builds, so update the workflow pin and these properties together. The release checklist repeats them.
 
 ## How to upgrade the Gradle version
 
