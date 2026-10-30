@@ -501,6 +501,19 @@ public class OptionParsersTest {
     // gettrades opt parser tests
 
     @Test
+    public void testGetTradesCategoryWithUnicodeCaseVariants() {
+        for (String category : new String[]{"failed", "FAILED", "FaIlEd", "FA\u0130LED", "FA\u0131LED"}) {
+            String[] args = new String[]{
+                    PASSWORD_OPT,
+                    gettrades.name(),
+                    "--" + OPT_CATEGORY + "=" + category
+            };
+            var parser = new GetTradesOptionParser(args).parse();
+            assertEquals(GetTradesRequest.Category.FAILED, parser.getCategory(), category);
+        }
+    }
+
+    @Test
     public void testGetTradesCategoryInUpperCaseInATurkishDefaultLocale() {
         Locale defaultLocale = Locale.getDefault();
         try {
