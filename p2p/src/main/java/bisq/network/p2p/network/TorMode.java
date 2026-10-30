@@ -22,10 +22,18 @@ import bisq.network.tor.onionservice.OnionServiceKey;
 
 import bisq.common.file.FileUtil;
 
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+
 import java.io.File;
 import java.io.IOException;
 
 import java.util.Set;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Holds information on how tor should be created and delivers a respective
@@ -34,6 +42,7 @@ import java.util.Set;
  * @author Florian Reimair
  *
  */
+@Slf4j
 public abstract class TorMode {
 
     /**
@@ -94,9 +103,52 @@ public abstract class TorMode {
         if (files != null) {
             for (File file : files) {
                 if (!KEPT_FILE_NAMES.contains(file.getName())) {
-                    FileUtil.deleteDirectory(file, null, true);
+                    deleteWithoutFollowingLinks(file.toPath());
                 }
             }
+        }
+    }
+
+    // A symbolic link is deleted itself, so that no file outside the Tor directory is deleted. As before, a file which
+    // cannot be deleted, for example one which a running Tor keeps open on Windows, is skipped.
+    private static void deleteWithoutFollowingLinks(Path path) throws IOException {
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
+                if (attributes.isOther()) {
+                    // A junction of Windows, which Files.walkFileTree reports as a directory and would enter. Tor
+                    // may write its data directory, so it could point a junction there to another directory.
+                    deleteOrLog(directory);
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                deleteOrLog(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                log.info("Could not read {}: {}", file, e.toString());
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path directory, IOException e) {
+                deleteOrLog(directory);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private static void deleteOrLog(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            log.info("Could not delete {}: {}", path, e.toString());
         }
     }
 

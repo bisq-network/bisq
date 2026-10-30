@@ -18,12 +18,21 @@
 package bisq.common.file;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import java.time.Duration;
+
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -32,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -55,6 +65,97 @@ public class FileUtilTest {
         assertTrue(copiedTop.exists());
         assertTrue(copiedWallet.exists());
         assertArrayEquals(walletData, Files.readAllBytes(copiedWallet.toPath()));
+    }
+
+    @Test
+    public void copyDirectoryCreatesACopyWhichOnlyTheOwnerCanAccess(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path source = Files.createDirectories(tmp.resolve("source"));
+        Path hiddenServiceDir = Files.createDirectories(source.resolve("btc_mainnet/tor/hiddenservice"));
+        Path privateKey = Files.write(hiddenServiceDir.resolve("private_key"), "key".getBytes(StandardCharsets.UTF_8));
+        // Files of the data directory which others can read, as Bisq creates them with the default umask
+        Files.setPosixFilePermissions(source.resolve("btc_mainnet"), PosixFilePermissions.fromString("rwxr-xr-x"));
+        Files.setPosixFilePermissions(privateKey, PosixFilePermissions.fromString("rw-r--r--"));
+
+        Path destination = tmp.resolve("backups").resolve("bisq_backup");
+        FileUtil.copyDirectory(source.toFile(), destination.toFile());
+
+        Set<PosixFilePermission> ownerOnlyDirectory = PosixFilePermissions.fromString("rwx------");
+        assertEquals(ownerOnlyDirectory, Files.getPosixFilePermissions(destination));
+        assertEquals(ownerOnlyDirectory, Files.getPosixFilePermissions(destination.resolve("btc_mainnet")));
+        assertEquals(PosixFilePermissions.fromString("rw-------"),
+                Files.getPosixFilePermissions(destination.resolve("btc_mainnet/tor/hiddenservice/private_key")));
+        assertEquals("key", Files.readString(destination.resolve("btc_mainnet/tor/hiddenservice/private_key")));
+    }
+
+    @Test
+    public void copyDirectoryDoesNotFollowALinkAndReportsIt(@TempDir Path tmp) throws IOException {
+        Path source = Files.createDirectories(tmp.resolve("source"));
+        Files.write(source.resolve("bisq.properties"), "top".getBytes(StandardCharsets.UTF_8));
+        Path outside = Files.createDirectories(tmp.resolve("outside"));
+        Files.write(outside.resolve("id_rsa"), "secret".getBytes(StandardCharsets.UTF_8));
+        Path directoryLink = source.resolve("wallet");
+        Path fileLink = source.resolve("key");
+        createSymbolicLinkOrSkip(directoryLink, outside);
+        createSymbolicLinkOrSkip(fileLink, outside.resolve("id_rsa"));
+
+        File destination = tmp.resolve("backup").toFile();
+        List<File> notCopied = FileUtil.copyDirectory(source.toFile(), destination);
+
+        assertTrue(new File(destination, "bisq.properties").exists());
+        assertFalse(Files.exists(destination.toPath().resolve("wallet"), LinkOption.NOFOLLOW_LINKS));
+        assertFalse(Files.exists(destination.toPath().resolve("key"), LinkOption.NOFOLLOW_LINKS));
+        Path realSource = source.toRealPath();
+        assertEquals(Set.of(realSource.resolve("wallet").toFile(), realSource.resolve("key").toFile()),
+                Set.copyOf(notCopied));
+        assertEquals("secret", Files.readString(outside.resolve("id_rsa")));
+    }
+
+    @Test
+    public void copyDirectoryDoesNotReadANamedPipe(@TempDir Path tmp) throws Exception {
+        Path source = Files.createDirectories(tmp.resolve("source"));
+        Path namedPipe = source.resolve("pipe");
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        try {
+            Process mkfifo = new ProcessBuilder("mkfifo", namedPipe.toString()).start();
+            assumeTrue(mkfifo.waitFor() == 0);
+        } catch (IOException e) {
+            assumeTrue(false, "mkfifo is not available: " + e);
+        }
+
+        File destination = tmp.resolve("backup").toFile();
+        // Reading the pipe would block until another process writes to it
+        List<File> notCopied = assertTimeoutPreemptively(Duration.ofSeconds(10),
+                () -> FileUtil.copyDirectory(source.toFile(), destination));
+
+        assertEquals(List.of(namedPipe.toRealPath().toFile()), notCopied);
+        assertFalse(Files.exists(destination.toPath().resolve("pipe"), LinkOption.NOFOLLOW_LINKS));
+    }
+
+    @Test
+    public void copyDirectoryFollowsASourceWhichIsALink(@TempDir Path tmp) throws IOException {
+        // For example a data directory which the user moved to another drive
+        Path realSource = Files.createDirectories(tmp.resolve("drive").resolve("Bisq"));
+        Path torDir = Files.createDirectories(realSource.resolve("btc_mainnet/tor"));
+        Files.write(torDir.resolve("state"), "state".getBytes(StandardCharsets.UTF_8));
+        Files.write(realSource.resolve("bisq.properties"), "top".getBytes(StandardCharsets.UTF_8));
+        Path source = tmp.resolve("Bisq");
+        createSymbolicLinkOrSkip(source, realSource);
+
+        File destination = tmp.resolve("backup").toFile();
+        List<File> notCopied = FileUtil.copyDirectory(source.toFile(), destination);
+
+        assertTrue(notCopied.isEmpty());
+        assertTrue(new File(destination, "bisq.properties").exists());
+        assertTrue(new File(destination, "btc_mainnet/tor/state").exists());
+    }
+
+    private static void createSymbolicLinkOrSkip(Path link, Path target) {
+        try {
+            Files.createSymbolicLink(link, target);
+        } catch (UnsupportedOperationException | IOException e) {
+            assumeTrue(false, "Symbolic links are not supported: " + e);
+        }
     }
 
     @Test

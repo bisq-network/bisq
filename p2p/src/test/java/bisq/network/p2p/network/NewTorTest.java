@@ -141,21 +141,4 @@ class NewTorTest {
         assertEquals(List.of(), NewTor.getBridgeLines(List.of("", "  ", "1.2.3.4:1")));
         assertEquals(List.of(bridge), NewTor.getBridgeLines(Arrays.asList("", bridge, null)));
     }
-
-    @Test
-    void dropsTheTorrcEntriesWhichTheTorLibraryNeeds() {
-        Map<String, String> torrcOverrides = NewTor.getTorrcOverrides(null, "SocksPort 9150, " +
-                "datadirectory /tmp/tor, ControlPort 9051, ControlPortWriteToFile /tmp/control, " +
-                "HashedControlPassword 16:00, Log notice stdout");
-
-        assertEquals(Map.of("SocksPort", "9150", "Log", "notice stdout"), torrcOverrides);
-    }
-
-    @Test
-    void dropsAbbreviationsOfTheTorrcEntriesWhichTheTorLibraryNeeds() {
-        Map<String, String> torrcOverrides = NewTor.getTorrcOverrides(null,
-                "DataDir /tmp/tor, controlportwriteto /tmp/control, SocksPort 9150");
-
-        assertEquals(Map.of("SocksPort", "9150"), torrcOverrides);
-    }
 }

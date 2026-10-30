@@ -48,4 +48,5 @@ permissions of an existing `private_key` at every start, as netlayer did. Symbol
 `hostname` are refused, so that the key is not read from or written to another location.
 
 The node keeps a rolling backup of `private_key` in the `hiddenservice` directory. Deleting the outdated Tor files
-keeps the `hiddenservice` directory.
+keeps the `hiddenservice` directory. The backup of the data directory keeps the key accessible only by the owner
+([`../application/data-directory-backup.md`](../application/data-directory-backup.md)).

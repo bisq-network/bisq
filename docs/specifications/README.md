@@ -17,6 +17,8 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, controlled process exit, and the JVM shutdown-hook backstop. |
+| [`application/data-directory-backup.md`](application/data-directory-backup.md) | What "Backup now" copies from the data directory, how it treats links and special files, and who can read the backup. |
+| [`application/key-ring-storage.md`](application/key-ring-storage.md) | Who can read the private keys of the key ring and their rolling backups. |
 
 
 ### `account/`
@@ -58,6 +60,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`network/owner-disconnect-backdating.md`](network/owner-disconnect-backdating.md) | Backdating of offers when the connection to their owner is lost, allowed only for outbound connections. |
 | [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
 | [`network/tor-startup.md`](network/tor-startup.md) | Starting Tor or connecting to a running Tor, the torrc entries of the user, and failing the start when bridges are configured. |
+| [`network/tor-stream-isolation.md`](network/tor-stream-isolation.md) | Which connections may share a Tor circuit, and what `--torStreamIsolation` changes for the HTTP requests. |
 
 ### `offer/`
 

@@ -24,6 +24,13 @@ staying unreachable until their periodic restart. At the shutdown, the node wait
 library asks Tor to exit and kills it after 3 seconds, which takes at most about 6 seconds, and the node waits at most
 8 seconds for the close of its connections and the stop of Tor.
 
+The node starts its Tor in a session of its own with the `setsid` program of the system, if the
+system has one, as Linux does. A Ctrl+C in the terminal which started the node then reaches only the node, whose
+shutdown still uses Tor, for example to remove the offers of the user, and stops Tor at its end. macOS has no `setsid`:
+there Tor stays in the process group of the node, and a Ctrl+C in the terminal ends Tor at once. For the same reason,
+the systemd unit of the seed node sends the stop signal only to the node; systemd kills the processes which are left
+after the node exited, or after the stop timeout.
+
 If Tor does not bootstrap within 4 minutes, the node stops it, deletes the files in the Tor directory except the
 `hiddenservice` directory and `external_tor.config`, and starts Tor again, up to 5 starts. Tor sometimes cannot
 bootstrap with the files of an earlier run; netlayer retried the same way.
@@ -32,7 +39,13 @@ The node waits for the upload of its onion service descriptor without a time lim
 keeps trying to upload it.
 
 Tor must not read a configuration file outside the Tor directory of the node. The node therefore also passes the torrc
-which it generates as the defaults torrc, instead of the built-in default location.
+which it generates as the defaults torrc, instead of the built-in default location. The bundled Tor of macOS and
+Windows has the paths of its build below `/var/tmp/dist` compiled in, which other local users can create. The node
+therefore sets the GeoIP files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in the Tor
+directory, because OpenSSL would otherwise read its configuration there and could load modules from it.
+
+The commands, replies and events of the control connection are logged at debug level only, because they contain onion
+addresses.
 
 ### Running Tor
 
@@ -51,9 +64,11 @@ Deleting the outdated Tor files keeps `external_tor.config`, because it is a set
 ### Torrc entries of the user
 
 `--torrcFile` and `--torrcOptions` add entries to the torrc. An entry of `--torrcOptions` overrides an entry of the
-file with the same key. Entries for `DataDirectory`, `ControlPort`, `ControlPortWriteToFile` and
-`HashedControlPassword` are ignored, in any case of the name and as the abbreviations which Tor accepts, because the
-node needs its own values to control Tor.
+file with the same key. Entries for `DataDirectory`, `ControlPort`, `ControlPortWriteToFile`, `HashedControlPassword`,
+`SocksPort` and `DisableNetwork` are ignored with a warning, in any case of the name and as the abbreviations which Tor
+accepts, because the node needs its own values to control Tor, and because a `SocksPort` entry with flags such as
+`NoIsolateSOCKSAuth` would let streams of different peers share circuits. The Tor library applies this rule. An entry
+for another key which the node sets, such as `Log`, replaces the value of the node in any case of the name.
 
 ### Bridges
 

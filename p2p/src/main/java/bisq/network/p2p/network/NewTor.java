@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -62,10 +61,6 @@ public class NewTor extends TorMode {
     // netlayer started Tor up to 5 times, because Tor sometimes does not bootstrap with the files of an earlier run,
     // and deleted these files before each new attempt.
     private static final int START_ATTEMPTS = 5;
-    // The Tor library needs these torrc entries for its control connection and the Tor data. Tor accepts option
-    // names in any case and as abbreviation.
-    private static final Set<String> PROTECTED_TORRC_KEYS = Set.of("datadirectory", "controlport",
-            "controlportwritetofile", "hashedcontrolpassword");
     static final String BRIDGES_NOT_SUPPORTED = "Bisq cannot use the configured Tor bridges yet and does not " +
             "connect without them, because your network could then see that you use Tor, and Tor may be blocked. " +
             "To connect without bridges, remove them in the Tor network settings.";
@@ -137,16 +132,9 @@ public class NewTor extends TorMode {
                 .collect(Collectors.toList());
     }
 
+    // The Tor library ignores the entries which it needs for its control connection, the Tor data and the stream
+    // isolation, in any case and as the abbreviations which Tor accepts.
     static LinkedHashMap<String, String> getTorrcOverrides(@Nullable File torrcFile, String torrcOptions) {
-        LinkedHashMap<String, String> torrcOverrides = TorrcOverrides.parse(torrcFile, torrcOptions);
-        torrcOverrides.keySet().removeIf(key -> {
-            String lowerCaseKey = key.toLowerCase(Locale.ROOT);
-            boolean isProtected = PROTECTED_TORRC_KEYS.stream().anyMatch(name -> name.startsWith(lowerCaseKey));
-            if (isProtected) {
-                log.warn("Ignoring the custom torrc entry {}, because Bisq needs its own value.", key);
-            }
-            return isProtected;
-        });
-        return torrcOverrides;
+        return TorrcOverrides.parse(torrcFile, torrcOptions);
     }
 }
