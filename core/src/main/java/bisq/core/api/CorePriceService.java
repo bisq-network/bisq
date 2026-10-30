@@ -29,6 +29,7 @@ import bisq.common.util.Tuple2;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -59,7 +60,7 @@ class CorePriceService {
     }
 
     void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
-        String upperCaseCurrencyCode = currencyCode.toUpperCase();
+        String upperCaseCurrencyCode = currencyCode.toUpperCase(Locale.ROOT);
 
         if (!isCurrencyCode.test(upperCaseCurrencyCode))
             throw new IllegalStateException(format("%s is not a valid currency code", upperCaseCurrencyCode));

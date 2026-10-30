@@ -38,6 +38,7 @@ import javax.inject.Singleton;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -156,7 +157,7 @@ class CoreDisputeAgentsService {
     }
 
     private Optional<SupportType> getSupportType(String disputeAgentType) {
-        switch (disputeAgentType.toLowerCase()) {
+        switch (disputeAgentType.toLowerCase(Locale.ROOT)) {
             case "arbitrator":
                 return Optional.of(ARBITRATION);
             case "mediator":

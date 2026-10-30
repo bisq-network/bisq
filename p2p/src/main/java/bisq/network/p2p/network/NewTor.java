@@ -110,13 +110,7 @@ public class NewTor extends TorMode {
                         (new Date().getTime() - ts1)); // takes usually a few seconds
                 return torService;
             } catch (RuntimeException e) {
-                // TorService does not stop the Tor process it started if a later step of the start fails.
-                torService.shutdown()
-                        .exceptionally(throwable -> {
-                            log.warn("Could not stop Tor after the failed start", throwable);
-                            return false;
-                        })
-                        .join();
+                // TorService stops the Tor process it started when a later step of the start fails.
                 if (attempt == START_ATTEMPTS ||
                         !(Throwables.getRootCause(e) instanceof TorBootstrapFailedException)) {
                     throw e;

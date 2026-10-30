@@ -18,7 +18,11 @@ that Tor is not installed.
 The node owns the Tor it starts. Tor gets the process ID of the node as its owning controller and stops when the node
 stops. If the start fails after Tor was launched, including the publication of the onion service, the node stops that
 Tor, so that no node remains which reaches peers but cannot be reached. A shutdown during the start also stops the
-Tor which the start launches.
+Tor which the start launches. When the start of Tor or of the onion service fails, the seed, statistics, bridge and
+REST nodes shut down with the failure exit status, so that systemd or their start script starts them again, instead of
+staying unreachable until their periodic restart. At the shutdown, the node waits for the stop of its Tor: the Tor
+library asks Tor to exit and kills it after 3 seconds, which takes at most about 6 seconds, and the node waits at most
+8 seconds for the close of its connections and the stop of Tor.
 
 If Tor does not bootstrap within 4 minutes, the node stops it, deletes the files in the Tor directory except the
 `hiddenservice` directory and `external_tor.config`, and starts Tor again, up to 5 starts. Tor sometimes cannot

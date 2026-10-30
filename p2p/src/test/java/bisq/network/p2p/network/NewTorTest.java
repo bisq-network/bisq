@@ -81,14 +81,14 @@ class NewTorTest {
     }
 
     @Test
-    void stopsTorWhenTheStartFails(@TempDir File torDir) {
+    void doesNotStartTorAgainAfterAnotherFailure(@TempDir File torDir) {
         try (var construction = mockConstruction(TorService.class,
                 (mock, context) -> when(mock.initialize()).thenThrow(new IllegalStateException("bootstrap failed")))) {
             var newTor = new NewTor(torDir, null, "", List::of);
 
             assertThrows(IllegalStateException.class, newTor::getTor);
 
-            verify(construction.constructed().get(0)).shutdown();
+            assertEquals(1, construction.constructed().size());
         }
     }
 
@@ -113,9 +113,8 @@ class NewTorTest {
 
             assertEquals(3, construction.constructed().size());
             assertSame(construction.constructed().get(2), torService);
-            verify(construction.constructed().get(0)).shutdown();
-            verify(construction.constructed().get(1)).shutdown();
-            verify(construction.constructed().get(2), never()).shutdown();
+            // TorService stops the Tor of a failed start itself.
+            construction.constructed().forEach(mock -> verify(mock, never()).shutdown());
             Set<String> fileNames = Arrays.stream(torDir.list()).collect(Collectors.toSet());
             assertEquals(Set.of("hiddenservice", "external_tor.config", "cached-microdescs3"), fileNames);
         }

@@ -11,6 +11,7 @@ import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -400,6 +401,23 @@ public class ConfigTests {
             return;
         }
         configWithOpts(opt(APP_DATA_DIR, symlink));
+    }
+
+
+    // seednode/bisq.env gives the network in lower case
+    @Test
+    public void whenBaseCurrencyNetworkIsNotInUpperCase_thenItIsParsedAlsoInATurkishDefaultLocale() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+
+            assertThat(configWithOpts(opt(BASE_CURRENCY_NETWORK, "btc_mainnet")).getBaseCurrencyNetwork(),
+                    is(BaseCurrencyNetwork.BTC_MAINNET));
+            assertThat(configWithOpts(opt(BASE_CURRENCY_NETWORK, "Btc_Mainnet")).getBaseCurrencyNetwork(),
+                    is(BaseCurrencyNetwork.BTC_MAINNET));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
 

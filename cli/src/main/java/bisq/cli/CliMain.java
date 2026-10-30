@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -195,7 +196,7 @@ public class CliMain {
                     }
                     var currencyCode = opts.getCurrencyCode();
                     var balances = client.getBalances(currencyCode);
-                    switch (currencyCode.toUpperCase()) {
+                    switch (currencyCode.toUpperCase(Locale.ROOT)) {
                         case "BSQ":
                             new TableBuilder(BSQ_BALANCE_TBL, balances.getBsq()).build().print(out);
                             break;
@@ -667,7 +668,7 @@ public class CliMain {
                     }
                     var paymentMethodId = opts.getPaymentMethodId();
                     String jsonString = client.getPaymentAcctFormAsJson(paymentMethodId);
-                    File jsonFile = saveFileToDisk(paymentMethodId.toLowerCase(),
+                    File jsonFile = saveFileToDisk(paymentMethodId.toLowerCase(Locale.ROOT),
                             ".json",
                             jsonString);
                     out.printf("payment account form %s%nsaved to %s%n",
@@ -812,7 +813,7 @@ public class CliMain {
                     var opts = new DaoCommandOptionParser(args).parse();
                     if (opts.isForHelp()) { out.println(client.getMethodHelp(method)); return; }
                     bisq.proto.grpc.GetProposalsRequest.Filter filter;
-                    switch (opts.getFilter().toLowerCase()) {
+                    switch (opts.getFilter().toLowerCase(Locale.ROOT)) {
                         case "my":        filter = bisq.proto.grpc.GetProposalsRequest.Filter.MY; break;
                         case "all":       filter = bisq.proto.grpc.GetProposalsRequest.Filter.ALL; break;
                         case "for-cycle": filter = bisq.proto.grpc.GetProposalsRequest.Filter.FOR_CYCLE; break;
@@ -949,7 +950,7 @@ public class CliMain {
         // TODO if we use const type for enum we need add some mapping.  Even if we don't
         //  change now it is handy to have flexibility in case we change internal code
         //  and don't want to break user commands.
-        return Method.valueOf(methodName.toLowerCase());
+        return Method.valueOf(methodName.toLowerCase(Locale.ROOT));
     }
 
     @SuppressWarnings("SameParameterValue")

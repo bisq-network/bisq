@@ -30,6 +30,7 @@ import bisq.common.util.SingleThreadExecutorUtils;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.UserPasswordAuthentication;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 
 import java.security.SecureRandom;
@@ -40,7 +41,10 @@ import java.net.Socket;
 import java.io.IOException;
 
 import java.util.HexFormat;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +55,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TorNetworkNode extends NetworkNode {
-    private static final long SHUT_DOWN_TIMEOUT = 2;
+    // The connections close within 1.5 s (NetworkNode.shutDown). The Tor library then stops Tor within about 6 s: it
+    // waits 3 s for Tor to exit after SIGTERM, and 3 s after SIGKILL. A shorter wait lets the application exit while
+    // the library still stops Tor.
+    private static final long SHUT_DOWN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(8);
     // Tor puts streams with different SOCKS credentials on different circuits. All peer connections use the same
     // credentials, as they all used netlayer's unauthenticated SOCKS connection before.
     private static final String PEER_CONNECTION_STREAM_ID = "bisq-p2p";
@@ -66,7 +73,10 @@ public class TorNetworkNode extends NetworkNode {
     private volatile boolean shutDownInProgress;
     private final AtomicBoolean torShutDownStarted = new AtomicBoolean();
     private final AtomicBoolean shutDownCompleted = new AtomicBoolean();
+    // The handlers of all shutDown calls. A call during the shutdown joins it (graceful-shutdown.md).
+    private final Queue<Runnable> shutDownCompleteHandlers = new ConcurrentLinkedQueue<>();
     private final ExecutorService executor;
+    private final long shutDownTimeoutMillis;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,9 +89,22 @@ public class TorNetworkNode extends NetworkNode {
                           TorMode torMode,
                           @Nullable BanFilter banFilter,
                           int maxConnections) {
+        this(servicePort, networkProtoResolver, useStreamIsolation, torMode, banFilter, maxConnections,
+                SHUT_DOWN_TIMEOUT_MILLIS);
+    }
+
+    @VisibleForTesting
+    TorNetworkNode(int servicePort,
+                   NetworkProtoResolver networkProtoResolver,
+                   boolean useStreamIsolation,
+                   TorMode torMode,
+                   @Nullable BanFilter banFilter,
+                   int maxConnections,
+                   long shutDownTimeoutMillis) {
         super(servicePort, networkProtoResolver, banFilter, maxConnections);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
+        this.shutDownTimeoutMillis = shutDownTimeoutMillis;
 
         executor = SingleThreadExecutorUtils.getSingleThreadExecutor("StartTor");
     }
@@ -144,21 +167,27 @@ public class TorNetworkNode extends NetworkNode {
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
         log.info("TorNetworkNode shutdown started");
+        if (shutDownCompleteHandler != null) {
+            shutDownCompleteHandlers.add(shutDownCompleteHandler);
+        }
         if (shutDownInProgress) {
-            log.warn("We got shutDown already called");
+            log.info("The shutdown is already in progress. The handler runs when it completes.");
+            if (shutDownCompleted.get()) {
+                runShutDownCompleteHandlers();
+            }
             return;
         }
         shutDownInProgress = true;
 
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
-            completeShutDown(shutDownCompleteHandler);
-        }, SHUT_DOWN_TIMEOUT);
+            completeShutDown();
+        }, shutDownTimeoutMillis, TimeUnit.MILLISECONDS);
 
-        super.shutDown(() -> shutDownTor(shutDownCompleteHandler));
+        super.shutDown(this::shutDownTor);
     }
 
-    private void shutDownTor(@Nullable Runnable shutDownCompleteHandler) {
+    private void shutDownTor() {
         if (shutDownCompleted.get() || !torShutDownStarted.compareAndSet(false, true)) {
             return;
         }
@@ -167,7 +196,7 @@ public class TorNetworkNode extends NetworkNode {
         torService = null;
         if (currentTorService == null) {
             // A Tor which is still starting is stopped by the start, which checks shutDownInProgress.
-            completeShutDown(shutDownCompleteHandler);
+            completeShutDown();
             return;
         }
 
@@ -179,11 +208,11 @@ public class TorNetworkNode extends NetworkNode {
             } else {
                 log.info("Tor shutdown completed");
             }
-            UserThread.execute(() -> completeShutDown(shutDownCompleteHandler));
+            UserThread.execute(this::completeShutDown);
         });
     }
 
-    private void completeShutDown(@Nullable Runnable shutDownCompleteHandler) {
+    private void completeShutDown() {
         if (!shutDownCompleted.compareAndSet(false, true)) {
             return;
         }
@@ -194,9 +223,15 @@ public class TorNetworkNode extends NetworkNode {
             }
             executor.shutdownNow();
         } finally {
-            if (shutDownCompleteHandler != null) {
-                shutDownCompleteHandler.run();
-            }
+            runShutDownCompleteHandlers();
+        }
+    }
+
+    // Runs each handler once, also the handler of a shutDown call which joins after the completion.
+    private void runShutDownCompleteHandlers() {
+        Runnable handler;
+        while ((handler = shutDownCompleteHandlers.poll()) != null) {
+            handler.run();
         }
     }
 

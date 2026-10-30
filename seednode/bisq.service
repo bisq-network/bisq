@@ -37,6 +37,10 @@ ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --bmOracleNodePrivKey=${BISQ_BM_ORACLE_NODE_PRIVKEY} \
 
 ExecStop=/bin/kill ${MAINPID} ; sleep 5
+# Bisq runs its graceful shutdown in a shutdown hook of the JVM, and after SIGTERM the JVM exits with 143 (128 + 15)
+# once its hooks ran. Without this line every stop would leave the unit failed. Bisq exits with 1 when it wants to be
+# restarted.
+SuccessExitStatus=143
 Restart=on-failure
 
 # The Tor library of Bisq reads the settings of a running Tor from external_tor.config in the Tor directory

@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import java.lang.reflect.Field;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,17 +50,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class TorNetworkNodeShutdownTest {
+    private ExecutorService userThreadExecutor;
+
+    // The shutdown posts its steps and its timeout to the UserThread, whose executor and timer are static.
+    @BeforeEach
+    void setUp() {
+        UserThread.resetForTests();
+        userThreadExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("TorNetworkNodeShutdownTest-UserThread");
+        UserThread.setExecutor(userThreadExecutor);
+        UserThread.setTimerClass(FrameRateTimer.class);
+    }
+
+    @AfterEach
+    void tearDown() {
+        UserThread.resetForTests();
+        userThreadExecutor.shutdownNow();
+    }
 
     @Test
     void shutdownClosesTheServerSocketAndStopsTor() throws Exception {
-        ExecutorService userThreadExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor(
-                "TorNetworkNodeShutdownTest-UserThread");
         var shutdownCompleted = new CountDownLatch(1);
         TorService torService = mock(TorService.class);
         doAnswer(invocation -> CompletableFuture.completedFuture(true)).when(torService).shutdown();
 
-        UserThread.setExecutor(userThreadExecutor);
-        UserThread.setTimerClass(FrameRateTimer.class);
         var networkNode = new TorNetworkNode(8080,
                 mock(NetworkProtoResolver.class),
                 false,
@@ -77,9 +91,6 @@ class TorNetworkNodeShutdownTest {
             verify(torService).shutdown();
         } finally {
             serverSocket.close();
-            UserThread.setExecutor(Runnable::run);
-            UserThread.setTimerClass(FrameRateTimer.class);
-            userThreadExecutor.shutdownNow();
             shutDownTorExecutor(networkNode);
             shutDownExecutors(networkNode);
         }
@@ -87,8 +98,6 @@ class TorNetworkNodeShutdownTest {
 
     @Test
     void shutdownTimeoutRemainsResponsiveWhenTorControlBlocks() throws Exception {
-        ExecutorService userThreadExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor(
-                "TorNetworkNodeShutdownTest-UserThread");
         var torShutdownStarted = new CountDownLatch(1);
         var allowTorShutdown = new CountDownLatch(1);
         var torShutdownReturned = new CountDownLatch(1);
@@ -107,14 +116,13 @@ class TorNetworkNodeShutdownTest {
             });
         }).when(torService).shutdown();
 
-        UserThread.setExecutor(userThreadExecutor);
-        UserThread.setTimerClass(FrameRateTimer.class);
         var networkNode = new TorNetworkNode(8080,
                 mock(NetworkProtoResolver.class),
                 false,
                 mock(TorMode.class),
                 null,
-                2);
+                2,
+                500);
         setTorService(networkNode, torService);
 
         try {
@@ -140,9 +148,88 @@ class TorNetworkNodeShutdownTest {
             assertEquals(1, completionCount.get());
         } finally {
             allowTorShutdown.countDown();
-            UserThread.setExecutor(Runnable::run);
-            UserThread.setTimerClass(FrameRateTimer.class);
-            userThreadExecutor.shutdownNow();
+            shutDownTorExecutor(networkNode);
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void waitsForTheStopOfTorWhichTakesLongerThanTwoSeconds() throws Exception {
+        // The Tor library waits up to 3 s for Tor to exit after SIGTERM before it kills Tor
+        var torShutdownReturned = new CountDownLatch(1);
+        var shutdownCompleted = new CountDownLatch(1);
+        TorService torService = mock(TorService.class);
+        doAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
+            Uninterruptibles.sleepUninterruptibly(3, TimeUnit.SECONDS);
+            torShutdownReturned.countDown();
+            return true;
+        })).when(torService).shutdown();
+
+        var networkNode = new TorNetworkNode(8080,
+                mock(NetworkProtoResolver.class),
+                false,
+                mock(TorMode.class),
+                null,
+                2);
+        setTorService(networkNode, torService);
+
+        try {
+            UserThread.execute(() -> networkNode.shutDown(shutdownCompleted::countDown));
+
+            assertTrue(shutdownCompleted.await(6, TimeUnit.SECONDS));
+            assertEquals(0, torShutdownReturned.getCount());
+        } finally {
+            shutDownTorExecutor(networkNode);
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void aSecondShutDownJoinsTheRunningShutdown() throws Exception {
+        // For example the Tor network settings window stops the node first, and then the application shutdown stops
+        // it again through P2PService. graceful-shutdown.md requires that the second call joins the first.
+        var allowTorShutdown = new CountDownLatch(1);
+        var firstCompletions = new AtomicInteger();
+        var secondCompletions = new AtomicInteger();
+        var bothCompleted = new CountDownLatch(2);
+        var lateCompleted = new CountDownLatch(1);
+        TorService torService = mock(TorService.class);
+        doAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
+            Uninterruptibles.awaitUninterruptibly(allowTorShutdown);
+            return true;
+        })).when(torService).shutdown();
+
+        var networkNode = new TorNetworkNode(8080,
+                mock(NetworkProtoResolver.class),
+                false,
+                mock(TorMode.class),
+                null,
+                2);
+        setTorService(networkNode, torService);
+
+        try {
+            UserThread.execute(() -> {
+                networkNode.shutDown(() -> {
+                    firstCompletions.incrementAndGet();
+                    bothCompleted.countDown();
+                });
+                networkNode.shutDown(() -> {
+                    secondCompletions.incrementAndGet();
+                    bothCompleted.countDown();
+                });
+            });
+
+            assertFalse(bothCompleted.await(200, TimeUnit.MILLISECONDS));
+            allowTorShutdown.countDown();
+            assertTrue(bothCompleted.await(4, TimeUnit.SECONDS));
+            verify(torService).shutdown();
+
+            UserThread.execute(() -> networkNode.shutDown(lateCompleted::countDown));
+            assertTrue(lateCompleted.await(1, TimeUnit.SECONDS));
+            assertEquals(1, firstCompletions.get());
+            assertEquals(1, secondCompletions.get());
+        } finally {
+            allowTorShutdown.countDown();
             shutDownTorExecutor(networkNode);
             shutDownExecutors(networkNode);
         }
