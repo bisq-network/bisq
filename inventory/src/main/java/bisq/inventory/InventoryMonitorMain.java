@@ -39,6 +39,7 @@ import ch.qos.logback.classic.Level;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.app.BisqExecutable.EXIT_FAILURE;
 import static bisq.core.app.BisqExecutable.EXIT_SUCCESS;
 
 
@@ -61,6 +62,7 @@ public class InventoryMonitorMain {
         int shutdownIntervalDays = 5;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
+        boolean useTorSandbox = true;
 
        /* port = 8080;
         useLocalhostForP2P = true;
@@ -84,6 +86,10 @@ public class InventoryMonitorMain {
         if (args.length > 5) {
             network = BaseCurrencyNetwork.valueOf(args[5]);
         }
+        if (args.length > 6) {
+            // Only an explicit 0 turns the sandbox off
+            useTorSandbox = !args[6].equals("0");
+        }
 
         String appName = "bisq-inventory-monitor-" + network;
         File appDir = new File(Utilities.getUserDataDir(), appName);
@@ -93,7 +99,8 @@ public class InventoryMonitorMain {
 
         setup(network, appDir);
 
-        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, cleanupTorFiles);
+        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, cleanupTorFiles,
+                useTorSandbox, () -> shutDown(EXIT_FAILURE));
         inventoryMonitor.start(port);
         // We shut down after 5 days to avoid potential memory leak issue.
         // The start script will restart the app.
@@ -123,8 +130,18 @@ public class InventoryMonitorMain {
     }
 
     private static void shutDown() {
+        shutDown(EXIT_SUCCESS);
+    }
+
+    // Runs on the UserThread. The first request decides the exit status, so that a stop signal during the shutdown
+    // after a failed start of Tor cannot turn the failure status, with which the run script restarts the monitor, into
+    // a success.
+    private static void shutDown(int exitStatus) {
+        if (stopped) {
+            return;
+        }
         stopped = true;
-        inventoryMonitor.shutDown(() -> System.exit(EXIT_SUCCESS));
+        inventoryMonitor.shutDown(() -> System.exit(exitStatus));
     }
 
     private static void keepRunning() {

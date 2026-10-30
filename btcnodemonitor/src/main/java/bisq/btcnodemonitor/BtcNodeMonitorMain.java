@@ -18,6 +18,8 @@
 package bisq.btcnodemonitor;
 
 
+import bisq.core.app.BisqExecutable;
+
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -50,7 +52,12 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
         configUserThread();
 
         btcNodeMonitor = new BtcNodeMonitor(config);
-        btcNodeMonitor.start().join();
+        try {
+            btcNodeMonitor.start().join();
+        } catch (RuntimeException e) {
+            onStartFailed(e);
+            return;
+        }
         keepRunning();
     }
 
@@ -59,8 +66,22 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
         this.btcNodeMonitor = btcNodeMonitor;
     }
 
+    // Without Tor the monitor reaches none of the Bitcoin nodes, and nothing starts it again. Its HTTP server would keep
+    // the process running, with the reason, for example a refusal of the Tor sandbox, only on the standard error. As
+    // the other headless nodes, it logs the reason and exits with the failure status instead.
+    @VisibleForTesting
+    void onStartFailed(Throwable throwable) {
+        log.error("The start of the monitor failed. We shut down.", throwable);
+        gracefulShutDown(() -> {
+        }, BisqExecutable.EXIT_FAILURE);
+    }
+
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
+        gracefulShutDown(resultHandler, BisqExecutable.EXIT_SUCCESS);
+    }
+
+    private void gracefulShutDown(ResultHandler resultHandler, int exitStatus) {
         log.info("gracefulShutDown");
         try {
             getShutDownFuture().join();
@@ -73,7 +94,7 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
         try {
             resultHandler.handleResult();
         } finally {
-            exitAfterShutDown();
+            exitAfterShutDown(exitStatus);
         }
     }
 
@@ -88,9 +109,10 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
         return shutDownFuture;
     }
 
+    // The first request decides the exit status, see CommonSetup.exitAfter.
     @VisibleForTesting
-    void exitAfterShutDown() {
-        CommonSetup.exitAfter(0, 0, TimeUnit.MILLISECONDS);
+    void exitAfterShutDown(int exitStatus) {
+        CommonSetup.exitAfter(exitStatus, 0, TimeUnit.MILLISECONDS);
     }
 
     private void keepRunning() {

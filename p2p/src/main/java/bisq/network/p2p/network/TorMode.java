@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.tor.TorService;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorDirectories;
 
 import bisq.common.file.FileUtil;
 
@@ -31,6 +32,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
 import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
@@ -90,13 +92,39 @@ public abstract class TorMode {
         FileUtil.rollingBackup(new File(torDir, HIDDEN_SERVICE_DIRECTORY), "private_key", 20);
     }
 
+    // The data directory of the Tor which the node starts, which a sandboxed Tor may write
+    public static File getTorDataDir(File torDir) {
+        return new TorDirectories(torDir.toPath()).getDataDirPath().toFile();
+    }
+
+    /**
+     * The entries of the Tor directory which a backup leaves out: the data directory of Tor, which a sandboxed Tor may
+     * write, and the record of the Tor library whether a sandboxed Tor wrote it. Copied back next to another data
+     * directory, the record would describe that one, and a Tor without the sandbox could then read what a sandboxed
+     * Tor wrote there instead of starting on a cleared data directory.
+     */
+    public static Set<File> getTorEntriesLeftOutOfBackup(File torDir) {
+        TorDirectories torDirectories = new TorDirectories(torDir.toPath());
+        return Set.of(torDirectories.getDataDirPath().toFile(), torDirectories.getDataModePath().toFile());
+    }
+
+    // Tor logs to its standard output. The Tor library writes it and the standard error of Tor, where sandy reports
+    // why it refuses to start Tor, to these files outside the data directory of Tor. It moves a large log aside to
+    // the earlier log at the next start.
+    public static List<File> getTorLogFiles(File torDir) {
+        TorDirectories torDirectories = new TorDirectories(torDir.toPath());
+        return List.of(torDirectories.getStdoutLogPath().toFile(),
+                torDirectories.getRotatedStdoutLogPath().toFile(),
+                torDirectories.getStderrLogPath().toFile());
+    }
+
     /**
      * Deletes the files of Tor in the Tor directory, except the key of the onion
      * service and <code>external_tor.config</code>. Tor creates them again at the
-     * next start.
+     * next start. An entry which cannot be deleted is skipped and logged.
      *
      * @param torDir the Tor directory
-     * @throws IOException if a file cannot be deleted
+     * @throws IOException if the Tor directory cannot be walked
      */
     public static void deleteTorFiles(File torDir) throws IOException {
         File[] files = torDir.listFiles();

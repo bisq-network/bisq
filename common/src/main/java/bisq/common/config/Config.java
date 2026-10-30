@@ -111,12 +111,17 @@ public class Config {
     public static final String ALLOW_CLEARNET_HTTP_REQUESTS = "allowClearnetHttpRequests";
     public static final String TORRC_FILE = "torrcFile";
     public static final String TORRC_OPTIONS = "torrcOptions";
+    // Not options: whether the command line, not a config file, sets TORRC_FILE and TORRC_OPTIONS
+    public static final String TORRC_FILE_SET_ON_COMMAND_LINE = "torrcFileSetOnCommandLine";
+    public static final String TORRC_OPTIONS_SET_ON_COMMAND_LINE = "torrcOptionsSetOnCommandLine";
     public static final String TOR_CONTROL_HOST = "torControlHost";
     public static final String TOR_CONTROL_PORT = "torControlPort";
     public static final String TOR_CONTROL_PASSWORD = "torControlPassword";
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
     public static final String TOR_CONTROL_USE_SAFE_COOKIE_AUTH = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
+    public static final String USE_TOR_SANDBOX = "useTorSandbox";
+    public static final String ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX = "allowPluggableTransportsInTorSandbox";
     public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
     public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
     public static final String SEND_MSG_THROTTLE_TRIGGER = "sendMsgThrottleTrigger";
@@ -239,7 +244,14 @@ public class Config {
     public final String socks5ProxyHttpAddress;
     public final File torrcFile;
     public final String torrcOptions;
+    // Torrc entries which make Tor start a program are accepted only from the command line
+    public final boolean torrcFileSetOnCommandLine;
+    public final boolean torrcOptionsSetOnCommandLine;
     public final boolean torStreamIsolation;
+    public final boolean useTorSandbox;
+    public final boolean allowPluggableTransportsInTorSandbox;
+    // The command line overrides the config file, which the Tor network settings write
+    public final boolean allowPluggableTransportsInTorSandboxSetOnCommandLine;
     public final int msgThrottlePerSec;
     public final int msgThrottlePer10Sec;
     public final int sendMsgThrottleTrigger;
@@ -606,7 +618,8 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Path> torrcFileOpt =
                 parser.accepts(TORRC_FILE, "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
-                                "which are critical to Bisq's correct operation, cannot be overwritten.")
+                                "which are critical to Bisq's correct operation, cannot be overwritten. Entries which " +
+                                "make Tor start a program are accepted only if this option is given on the command line.")
                         .withRequiredArg()
                         .describedAs("File")
                         .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
@@ -614,6 +627,7 @@ public class Config {
         ArgumentAcceptingOptionSpec<String> torrcOptionsOpt =
                 parser.accepts(TORRC_OPTIONS, "A list of torrc-entries to amend to Bisq's torrc. Note that " +
                                 "torrc-entries, which are critical to Bisq's flawless operation, cannot be overwritten. " +
+                                "Entries which make Tor start a program are accepted only on the command line. " +
                                 "[torrc options line, torrc option, ...]")
                         .withRequiredArg()
                         .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))
@@ -635,6 +649,22 @@ public class Config {
 
         OptionSpecBuilder torStreamIsolationOpt =
                 parser.accepts(TOR_STREAM_ISOLATION, "Use stream isolation for Tor [experimental!].");
+
+        ArgumentAcceptingOptionSpec<Boolean> useTorSandboxOpt =
+                parser.accepts(USE_TOR_SANDBOX, "Run the Tor which Bisq starts in the sandbox of the operating " +
+                                "system with sandy. If the sandbox cannot be enforced, the start fails.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(true);
+
+        ArgumentAcceptingOptionSpec<Boolean> allowPluggableTransportsInTorSandboxOpt =
+                parser.accepts(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "Let the Tor in the sandbox start the " +
+                                "pluggable transports of the bridges. Weakens the sandbox: Tor may start processes, " +
+                                "and with every transport except obfs4 on Linux it gets the network of the host. " +
+                                "Not supported on Windows.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Integer> msgThrottlePerSecOpt =
                 parser.accepts(MSG_THROTTLE_PER_SEC, "Message throttle per sec for connection class")
@@ -998,11 +1028,17 @@ public class Config {
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
+            this.torrcFileSetOnCommandLine = cliOpts.has(torrcFileOpt);
+            this.torrcOptionsSetOnCommandLine = cliOpts.has(torrcOptionsOpt);
             givenUnsupportedTorControlOptions = unsupportedTorControlOpts.stream()
                     .filter(options::has)
                     .map(optionSpec -> optionSpec.options().get(0))
                     .collect(toList());
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
+            this.useTorSandbox = options.valueOf(useTorSandboxOpt);
+            this.allowPluggableTransportsInTorSandbox = options.valueOf(allowPluggableTransportsInTorSandboxOpt);
+            this.allowPluggableTransportsInTorSandboxSetOnCommandLine =
+                    cliOpts.has(allowPluggableTransportsInTorSandboxOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
             this.useDevModeHeader = options.valueOf(useDevModeHeaderOpt);

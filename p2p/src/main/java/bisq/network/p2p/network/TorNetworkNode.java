@@ -19,15 +19,22 @@ package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.tor.ExternalTorUnavailableException;
+import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+import bisq.network.tor.common.platform.LinuxDistribution;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorStartupFailedException;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.SingleThreadExecutorUtils;
+import bisq.common.util.Utilities;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.UserPasswordAuthentication;
@@ -139,6 +146,13 @@ public class TorNetworkNode extends NetworkNode {
                 peerNodeAddress.getPort(),
                 PEER_CONNECTION_STREAM_ID,
                 CREATE_SOCKET_TIMEOUT);
+    }
+
+    // Whether the Tor of this node runs in its sandbox and in which level, for the user. Final for a start once the
+    // setup listeners got onTorNodeReady.
+    public TorSandboxStatus getTorSandboxStatus() {
+        TorService currentTorService = torService;
+        return currentTorService != null ? currentTorService.getSandboxStatus() : TorSandboxStatus.NOT_STARTED;
     }
 
     @Override
@@ -295,8 +309,16 @@ public class TorNetworkNode extends NetworkNode {
                 }
                 String errorMessage = getErrorMessage(throwable);
                 boolean canBridgesHelp = canBridgesHelp(throwable);
+                RuntimeException failure;
+                if (canBridgesHelp) {
+                    failure = new BridgesCanHelpException(errorMessage, throwable);
+                } else if (isExplained(throwable, LinuxDistribution.isWhonixGateway())) {
+                    failure = new ExplainedStartFailureException(errorMessage);
+                } else {
+                    failure = new RuntimeException(errorMessage);
+                }
                 UserThread.execute(() -> {
-                    setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(errorMessage)));
+                    setupListeners.forEach(s -> s.onSetupFailed(failure));
                     if (canBridgesHelp) {
                         // As with netlayer: the network may block Tor, so the user can choose bridges.
                         setupListeners.forEach(SetupListener::onRequestCustomBridges);
@@ -315,26 +337,68 @@ public class TorNetworkNode extends NetworkNode {
         }
     }
 
+    // The Tor library explains these failures and says what the user can do: the sandbox or the running Tor cannot be
+    // used, or Bisq runs on a Whonix-Gateway, where the library fails every start before anything else with a
+    // TorStartupFailedException without cause.
+    static boolean isExplained(Throwable throwable, boolean isWhonixGateway) {
+        boolean isSandboxOrRunningTorUnavailable = Throwables.getCausalChain(throwable).stream()
+                .anyMatch(cause -> cause instanceof ExternalTorUnavailableException ||
+                        cause instanceof SandboxUnavailableException);
+        return isSandboxOrRunningTorUnavailable ||
+                isWhonixGateway && Throwables.getRootCause(throwable) instanceof TorStartupFailedException;
+    }
+
     // Tor could not connect, or the chosen bridges cannot be used. Other bridges can help, but not with a running Tor,
-    // which uses the bridges of its own configuration.
+    // which uses the bridges of its own configuration. The Tor network settings also have the switch which allows
+    // the pluggable transports of the bridges in the sandbox.
     static boolean canBridgesHelp(Throwable throwable) {
         List<Throwable> causalChain = Throwables.getCausalChain(throwable);
         return causalChain.stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
                 causalChain.stream().anyMatch(cause -> cause instanceof TorBootstrapFailedException ||
-                        cause instanceof BridgesUnavailableException);
+                        cause instanceof BridgesUnavailableException ||
+                        cause instanceof PluggableTransportsNotAllowedException);
     }
 
     private static String getErrorMessage(Throwable throwable) {
         Throwable rootCause = Throwables.getRootCause(throwable);
-        // Its message names the running Tor, the cause and what the user can do. The root cause alone, for example
-        // "Connection refused", does not say that Bisq was configured to use a running Tor.
-        Optional<ExternalTorUnavailableException> externalTorUnavailable = Throwables.getCausalChain(throwable).stream()
-                .filter(ExternalTorUnavailableException.class::isInstance)
-                .map(ExternalTorUnavailableException.class::cast)
+        // The message of the Tor library names the configuration of Bisq 2
+        Optional<PluggableTransportsNotAllowedException> transportsNotAllowed = Throwables.getCausalChain(throwable)
+                .stream()
+                .filter(PluggableTransportsNotAllowedException.class::isInstance)
+                .map(PluggableTransportsNotAllowedException.class::cast)
                 .findFirst();
-        if (externalTorUnavailable.isPresent()) {
-            return externalTorUnavailable.get().getMessage();
+        if (transportsNotAllowed.isPresent()) {
+            return getPluggableTransportsNotAllowedMessage(transportsNotAllowed.get().getTransportNames(),
+                    Utilities.isWindows());
+        }
+        // Their messages name the running Tor or the sandbox, the cause and what the user can do. The root cause
+        // alone, for example "Connection refused", does not say that.
+        Optional<RuntimeException> explainedFailure = Throwables.getCausalChain(throwable).stream()
+                .filter(cause -> cause instanceof ExternalTorUnavailableException ||
+                        cause instanceof SandboxUnavailableException)
+                .map(RuntimeException.class::cast)
+                .findFirst();
+        if (explainedFailure.isPresent()) {
+            return explainedFailure.get().getMessage();
         }
         return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
+    }
+
+    // The Tor network settings have the switch for the transports. On Windows the sandbox cannot run them, so the
+    // switch is disabled there. The desktop application shows a popup of its own for this failure, which offers the
+    // fixes.
+    @VisibleForTesting
+    static String getPluggableTransportsNotAllowedMessage(List<String> transportNames, boolean isWindows) {
+        String bridges = "Tor did not start, because the bridges of the Tor network settings use the pluggable " +
+                "transports " + String.join(", ", transportNames) + ", which are programs that Tor starts. ";
+        if (isWindows) {
+            return bridges + "On Windows, Tor cannot start them in its sandbox. Choose \"Don't use bridges\" or " +
+                    "bridges without pluggable transports, or start Bisq with the option --" + Config.USE_TOR_SANDBOX +
+                    "=false to run Tor without the sandbox. Without the sandbox, a security bug in Tor gives an " +
+                    "attacker access to all your files, including your Bisq keys.";
+        }
+        return bridges + "Tor may start them in its sandbox only if you allow it: turn on \"Allow pluggable " +
+                "transports in the Tor sandbox\" in the Tor network settings, or choose \"Don't use bridges\" or " +
+                "bridges without pluggable transports there, and restart Bisq.";
     }
 }

@@ -27,6 +27,8 @@ import bisq.core.support.dispute.mediation.logs.LogFilesFinder;
 import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.network.TorMode;
+
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
@@ -53,8 +55,10 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -65,6 +69,8 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
     private final File dataDir, logFile;
+    private final Set<File> torEntriesLeftOutOfBackup;
+    private final List<File> torLogFiles;
     private int gridRow = 0;
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
@@ -82,6 +88,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         super();
         this.preferences = preferences;
         dataDir = new File(config.appDataDir.getPath());
+        torEntriesLeftOutOfBackup = TorMode.getTorEntriesLeftOutOfBackup(config.torDir);
+        torLogFiles = TorMode.getTorLogFiles(config.torDir);
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 
@@ -150,7 +158,9 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     try {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
-                        List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination));
+                        // A sandboxed Tor may write its data directory, and a backup does not need it.
+                        List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination),
+                                torEntriesLeftOutOfBackup);
                         if (notCopied.isEmpty()) {
                             new Popup().feedback(Res.get("account.backup.success", destination)).show();
                         } else {
@@ -232,7 +242,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
             File appDataDir = Config.appDataDir();
             LogFilesFinder logFilesFinder = new LogFilesFinder(appDataDir);
-            List<File> logFiles = logFilesFinder.find();
+            List<File> logFiles = new ArrayList<>(logFilesFinder.find());
+            // Warnings of Tor, for example about the clock or the bridges, are only in its own log. A running Tor
+            // writes no log there.
+            torLogFiles.stream().filter(File::isFile).forEach(logFiles::add);
 
             Date now = new Date();
             String currentTimeAndDate = new SimpleDateFormat("yyyyMMdd_HHmmss").format(now);

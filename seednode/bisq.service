@@ -5,10 +5,6 @@ Description=Bisq Node
 After=network.target
 #Requires=bitcoin.service
 #BindsTo=bitcoin.service
-# Bisq authenticates to the system tor with SAFECOOKIE, so a process which holds the control port instead of tor gets
-# no secret, and the start fails. Start after tor and restart with it, so that this does not happen at boot.
-After=tor@default.service
-Requires=tor@default.service
 
 [Service]
 SyslogIdentifier=bisq
@@ -29,12 +25,10 @@ ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --rpcHost=${BITCOIN_RPC_HOST} \
           --rpcPort=${BITCOIN_RPC_PORT} \
           --rpcUser=${BITCOIN_RPC_USER} \
-          --rpcPassword=${BITCOIN_RPC_PASS} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
           --dumpStatistics=${BISQ_DUMP_STATISTICS} \
           --isBmFullNode=${BISQ_BM_FULLNODE} \
           --bmOracleNodePubKey=${BISQ_BM_ORACLE_NODE_PUBKEY} \
-          --bmOracleNodePrivKey=${BISQ_BM_ORACLE_NODE_PRIVKEY} \
 
 # Only Bisq gets SIGTERM: its shutdown still uses Tor and stops the Tor which Bisq started at its end. systemd kills
 # the processes which are left after Bisq exited, or after TimeoutStopSec. After SIGTERM, Bisq waits at most 2 minutes
@@ -47,10 +41,22 @@ TimeoutStopSec=150
 SuccessExitStatus=143
 Restart=on-failure
 
-# The Tor library of Bisq reads the settings of a running Tor from external_tor.config in the Tor directory
-ExecStartPre=/bin/bash -c "if [ $BISQ_EXTERNAL_TOR_PORT != -1 ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/tor && (echo UseExternalTor 1; echo CookieAuthentication 1; echo CookieAuthFile $BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE; echo ControlPort 127.0.0.1:$BISQ_EXTERNAL_TOR_PORT) > $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/tor/external_tor.config;else rm -f $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/tor/external_tor.config;fi"
-ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
-ExecStopPost=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+# Every local user can read the command line of a process, so the node gets the RPC password and the private key of
+# the BM oracle through bisq.properties in its data directory, which it reads as its config file. The command replaces
+# their lines there, keeps the other lines, and leaves the file readable by the user bisq only: mktemp creates it with
+# mode 600. The single quotes let bash quote the values; the values stay in the environment and never become arguments
+# of a program.
+ExecStartPre=/bin/bash -c 'dir=$BISQ_HOME/$BISQ_APP_NAME; mkdir -p $dir && touch $dir/bisq.properties && tmp=$(mktemp $dir/bisq.properties.XXXXXX) && { grep -v -e "^[[:space:]]*rpcPassword=" -e "^[[:space:]]*bmOracleNodePrivKey=" $dir/bisq.properties; echo "rpcPassword=$BITCOIN_RPC_PASS"; echo "bmOracleNodePrivKey=$BISQ_BM_ORACLE_NODE_PRIVKEY"; } > $tmp && mv $tmp $dir/bisq.properties'
+
+# The Tor library of Bisq reads the settings of a running Tor from external_tor.config in the Tor directory. With
+# BISQ_EXTERNAL_TOR_PORT=-1, the default, the node starts its own Tor. README.md describes the drop-in which starts the
+# node after a running Tor of the system.
+# The node lower-cases the network for the name of its directory, whatever case --baseCurrencyNetwork has, so these
+# commands lower-case BISQ_BASE_CURRENCY with tr in the C locale, as the node does in every locale. They use no ${...}:
+# systemd replaces that itself, and would turn ${BISQ_BASE_CURRENCY,,} into an empty string.
+ExecStartPre=/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_EXTERNAL_TOR_PORT != -1 ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/tor && (echo UseExternalTor 1; echo CookieAuthentication 1; echo CookieAuthFile $BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE; echo ControlPort 127.0.0.1:$BISQ_EXTERNAL_TOR_PORT) > $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;else rm -f $BISQ_HOME/$BISQ_APP_NAME/$network/tor/external_tor.config;fi"
+ExecStartPre=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$network/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
+ExecStopPost=+/bin/bash -c "network=$(echo $BISQ_BASE_CURRENCY | LC_ALL=C tr A-Z a-z); if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$network/db/json;else true;fi"
 
 User=bisq
 Group=bisq

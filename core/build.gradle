@@ -38,6 +38,8 @@ dependencies {
     implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
     implementation 'tor:jsocks'
+    // TorSandboxNotice reads the TorSandboxStatus of the Tor library
+    implementation 'tor:tor'
     implementation(libs.bitcoinj) {
         exclude(module: 'bcprov-jdk15on')
         exclude(module: 'guava')

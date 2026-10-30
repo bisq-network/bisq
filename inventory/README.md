@@ -27,11 +27,15 @@ And then run:
 
 To configure it with custom parameters append optional program arguments in the following order:
 
-Arguments: `port cleanupTorFiles intervalSec shutdownIntervalDays useLocalhostForP2P network`
+Arguments: `port cleanupTorFiles intervalSec shutdownIntervalDays useLocalhostForP2P network useTorSandbox`
 If `shutdownIntervalDays` is 0 the app will not be shut down. Otherwise, it's the number of days for shutting down (run
 script need to ensure the node gets started again).
 
-Values: `Integer 0|1 Integer Integer 0|1 BTC_MAINNET|BTC_TESTNET|BTC_REGTEST`
+The inventory monitor runs its Tor in the sandbox, as every Bisq application does. Only `0` as `useTorSandbox` turns
+the sandbox off. If Tor or its onion service cannot start, the inventory monitor exits with status 1, so that the run
+script can start it again.
+
+Values: `Integer 0|1 Integer Integer 0|1 BTC_MAINNET|BTC_TESTNET|BTC_REGTEST 0|1`
 
 Example for localhost, regtest on port 8080: `8080 0 10 5 1 BTC_REGTEST`
 

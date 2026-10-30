@@ -52,6 +52,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.utils.Utils;
 
@@ -169,6 +170,9 @@ public class BisqSetup {
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
+    @Setter
+    @Nullable
+    private Consumer<TorSandboxNotice> displayTorSandboxNoticeHandler;
     @Setter
     @Nullable
     private Runnable showFirstPopupIfResyncSPVRequestedHandler;
@@ -422,7 +426,7 @@ public class BisqSetup {
 
         log.info("Init P2P network");
         bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
-        p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
+        p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, this::maybeShowTorSandboxNotice);
 
         // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
@@ -792,6 +796,12 @@ public class BisqSetup {
         return false;
     }
 
+    private void maybeShowTorSandboxNotice(TorSandboxNotice notice) {
+        if (displayTorSandboxNoticeHandler != null && preferences.showAgain(notice.getDontShowAgainKey())) {
+            displayTorSandboxNoticeHandler.accept(notice);
+        }
+    }
+
     private void maybeTriggerDisplayHandler(String key, Consumer<String> displayHandler, boolean signingStateFound) {
         if (signingStateFound && preferences.showAgain(key) &&
                 displayHandler != null) {
@@ -861,6 +871,11 @@ public class BisqSetup {
 
     public StringProperty getP2pNetworkWarnMsg() {
         return p2PNetworkSetup.getP2pNetworkWarnMsg();
+    }
+
+    @Nullable
+    public BridgesCanHelpException getBridgesCanHelpFailure() {
+        return p2PNetworkSetup.getBridgesCanHelpFailure();
     }
 
     public StringProperty getP2PNetworkIconId() {

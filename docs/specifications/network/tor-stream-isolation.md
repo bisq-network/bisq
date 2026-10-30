@@ -37,11 +37,19 @@ In both cases the node sends the target as a domain name, so that Tor resolves i
 of the target. A proxy which the user sets with `--socks5ProxyHttpAddress` or `--socks5ProxyBtcAddress` is always used
 with the SOCKS client of the Java runtime, as without the option.
 
+### SOCKS port
+
+The isolation needs `IsolateSOCKSAuth` on the SOCKS port which the node uses. The node's own Tor gets its SOCKS port
+from the node, and a torrc entry of the user cannot change it ([`tor-startup.md`](tor-startup.md)). The node refuses a
+running Tor if an entry of its `SocksPort` configuration which may have opened the port that the node would use turns
+`IsolateSOCKSAuth` off: the start fails with an error which names the entry and says to remove `NoIsolateSOCKSAuth`.
+
 ## Known gaps
 
 - The Bitcoin connections through Tor use the SOCKS client of the Java runtime and drop the credentials of
   `--torStreamIsolation`, so they share the credentials of the HTTP requests without the option.
-- An external Tor, or a torrc entry of the user, can turn off `IsolateSOCKSAuth`.
+- The node checks the configuration which a running Tor reports on its control port. On Whonix, onion-grater does not
+  let the query through, so the node logs that it could not check the SOCKS port of the Whonix-Gateway and uses it.
 
 ## Rationale
 

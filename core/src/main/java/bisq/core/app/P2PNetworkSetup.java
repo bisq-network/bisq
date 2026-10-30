@@ -25,9 +25,12 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
+import bisq.network.p2p.network.ExplainedStartFailureException;
+import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
 import javax.inject.Inject;
@@ -75,6 +78,10 @@ public class P2PNetworkSetup {
     final BooleanProperty dataReceived = new SimpleBooleanProperty();
     @Getter
     final BooleanProperty p2pNetworkFailed = new SimpleBooleanProperty();
+    // A failed start which other bridges can fix, for the popup which leads to the fix
+    @Getter
+    @Nullable
+    private BridgesCanHelpException bridgesCanHelpFailure;
     final FilterPolicyService filterPolicyService;
 
     @Inject
@@ -92,7 +99,7 @@ public class P2PNetworkSetup {
     }
 
     BooleanProperty init(Runnable initWalletServiceHandler,
-                         @Nullable Consumer<Boolean> displayTorNetworkSettingsHandler) {
+                         Consumer<TorSandboxNotice> torSandboxNoticeHandler) {
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
@@ -150,6 +157,9 @@ public class P2PNetworkSetup {
                 log.debug("onTorNodeReady");
                 bootstrapState.set(Res.get("mainView.bootstrapState.torNodeCreated"));
                 p2PNetworkIconId.set("image-connection-tor");
+                if (p2PService.getNetworkNode() instanceof TorNetworkNode torNetworkNode) {
+                    TorSandboxNotice.from(torNetworkNode.getTorSandboxStatus()).ifPresent(torSandboxNoticeHandler);
+                }
 
                 if (preferences.getUseTorForBitcoinJ())
                     initWalletServiceHandler.run();
@@ -211,17 +221,24 @@ public class P2PNetworkSetup {
             @Override
             public void onSetupFailed(Throwable throwable) {
                 log.error("onSetupFailed");
-                p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailed", throwable.getMessage()));
+                // Set before the warning: the desktop application chooses its popup with it
+                bridgesCanHelpFailure = throwable instanceof BridgesCanHelpException bridgesCanHelp ?
+                        bridgesCanHelp :
+                        null;
+                // A failure which says what helps gets no advice to check the internet connection or to restart
+                String warnMsgKey;
+                if (bridgesCanHelpFailure != null) {
+                    warnMsgKey = "mainView.p2pNetworkWarnMsg.connectionToP2PFailedBridgesCanHelp";
+                } else if (throwable instanceof ExplainedStartFailureException) {
+                    warnMsgKey = "mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice";
+                } else {
+                    warnMsgKey = "mainView.p2pNetworkWarnMsg.connectionToP2PFailed";
+                }
+                p2pNetworkWarnMsg.set(Res.get(warnMsgKey, throwable.getMessage()));
                 splashP2PNetworkAnimationVisible.set(false);
                 bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));
                 p2pNetworkLabelId.set("splash-error-state-msg");
                 p2pNetworkFailed.set(true);
-            }
-
-            @Override
-            public void onRequestCustomBridges() {
-                if (displayTorNetworkSettingsHandler != null)
-                    displayTorNetworkSettingsHandler.accept(true);
             }
         });
 

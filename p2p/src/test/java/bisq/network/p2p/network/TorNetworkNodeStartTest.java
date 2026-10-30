@@ -23,11 +23,15 @@ import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorStartupFailedException;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 
 import bisq.common.FrameRateTimer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.SingleThreadExecutorUtils;
+import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -35,6 +39,9 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 
+import java.io.IOException;
+
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
@@ -121,11 +128,77 @@ class TorNetworkNodeStartTest {
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals(message, listener.failure.get().getMessage());
             // Bridges of the Tor network settings do not help a running Tor, which uses its own.
+            assertFalse(listener.failure.get() instanceof BridgesCanHelpException);
+            // The message says what to change, so the desktop application leaves out its generic advice
+            assertTrue(listener.failure.get() instanceof ExplainedStartFailureException);
             waitForTheUserThread();
             assertEquals(1, listener.bridgesRequested.getCount());
         } finally {
             shutDownExecutors(networkNode);
         }
+    }
+
+    @Test
+    void reportsWhyTorCannotRunInTheSandbox() throws Exception {
+        var sandboxUnavailable = new SandboxUnavailableException("This build of Bisq contains no sandy binary.",
+                NewTor.SANDBOX_OPT_OUT_HINT, new IOException("Missing resource"));
+        TorMode torMode = mock(TorMode.class);
+        when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
+        when(torMode.getTor()).thenThrow(new CompletionException(sandboxUnavailable));
+        var networkNode = new TorNetworkNode(8080, mock(NetworkProtoResolver.class), false, torMode, null, 2);
+        var listener = new RecordingSetupListener();
+
+        try {
+            networkNode.start(listener);
+
+            assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
+            assertEquals(sandboxUnavailable.getMessage(), listener.failure.get().getMessage());
+            assertTrue(listener.failure.get().getMessage().contains("--useTorSandbox=false"));
+            assertTrue(listener.failure.get() instanceof ExplainedStartFailureException);
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void namesTheTransportsWhichTheSandboxRefusedForTheBridges() throws Exception {
+        TorMode torMode = mock(TorMode.class);
+        when(torMode.getOnionServiceKey()).thenReturn(ONION_SERVICE_KEY);
+        when(torMode.getTor()).thenThrow(new CompletionException(new PluggableTransportsNotAllowedException(
+                "The bridges use the pluggable transports obfs4. ... allowPluggableTransports of the sandbox " +
+                        "configuration is true.", NewTor.SANDBOX_OPT_OUT_HINT, List.of("obfs4"))));
+        var networkNode = new TorNetworkNode(8080, mock(NetworkProtoResolver.class), false, torMode, null, 2);
+        var listener = new RecordingSetupListener();
+
+        try {
+            networkNode.start(listener);
+
+            assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
+            assertEquals(TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"),
+                    Utilities.isWindows()), listener.failure.get().getMessage());
+            // The desktop application offers to allow these transports or to use no bridges
+            assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
+            assertEquals(List.of("obfs4"),
+                    ((BridgesCanHelpException) listener.failure.get()).getNotAllowedTransportNames());
+            assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
+        } finally {
+            shutDownExecutors(networkNode);
+        }
+    }
+
+    @Test
+    void theRefusalOfTheTransportsNamesWhatTheUserOfBisq1CanDo() {
+        String message = TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4", "snowflake"), false);
+        assertTrue(message.contains("obfs4, snowflake"));
+        assertTrue(message.contains("Allow pluggable transports in the Tor sandbox"));
+        assertTrue(message.contains("Don't use bridges"));
+        assertFalse(message.contains("sandbox configuration"));
+
+        String windowsMessage = TorNetworkNode.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), true);
+        // The switch is disabled on Windows
+        assertFalse(windowsMessage.contains("Allow pluggable transports in the Tor sandbox"));
+        assertTrue(windowsMessage.contains("Don't use bridges"));
+        assertTrue(windowsMessage.contains("--useTorSandbox=false"));
     }
 
     @Test
@@ -142,10 +215,29 @@ class TorNetworkNodeStartTest {
 
             assertTrue(listener.failed.await(5, TimeUnit.SECONDS));
             assertEquals("Could not bootstrap Tor in 240 seconds", listener.failure.get().getMessage());
+            assertTrue(listener.failure.get() instanceof BridgesCanHelpException);
+            assertEquals(List.of(),
+                    ((BridgesCanHelpException) listener.failure.get()).getNotAllowedTransportNames());
             assertTrue(listener.bridgesRequested.await(5, TimeUnit.SECONDS));
         } finally {
             shutDownExecutors(networkNode);
         }
+    }
+
+    @Test
+    void theFailuresWhichTheTorLibraryExplainsAreTheRefusalsOfTheSandboxTheRunningTorAndTheWhonixGateway() {
+        assertTrue(TorNetworkNode.isExplained(new CompletionException(new SandboxUnavailableException(
+                "sandy cannot tell now whether this system enforces the sandbox of Tor.",
+                NewTor.SANDBOX_OPT_OUT_HINT)), false));
+        assertTrue(TorNetworkNode.isExplained(new ExternalTorUnavailableException("Bisq is configured to use a Tor " +
+                "which runs outside Bisq, but it cannot use the Tor at 127.0.0.1:9051: ..."), false));
+        // The Tor library refuses every start on a Whonix-Gateway before anything else
+        var gatewayRefusal = new TorStartupFailedException("Bisq does not run on a Whonix-Gateway, ...");
+        assertTrue(TorNetworkNode.isExplained(gatewayRefusal, true));
+        assertFalse(TorNetworkNode.isExplained(gatewayRefusal, false));
+        assertFalse(TorNetworkNode.isExplained(new IOException("Could not read the key"), true));
+        assertFalse(TorNetworkNode.isExplained(new CompletionException(
+                new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")), false));
     }
 
     @Test
