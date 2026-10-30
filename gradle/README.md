@@ -285,7 +285,20 @@ To verify the current metadata without rewriting it:
 
 To refresh dependency verification metadata, turn the key servers on for the refresh: in
 `verification-metadata.xml`, change `<key-servers enabled="false"/>` to
-`<key-servers enabled="true"/>`. Then run:
+`<key-servers enabled="true"/>`.
+
+If Gradle fails during configuration because an artifact has no entry in
+`verification-metadata.xml`, bootstrap the missing metadata before refreshing:
+
+```bash
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
+```
+
+Then restart this refresh sequence, enabling key servers again if metadata writing removed
+that setting. This bootstrap applies only to missing entries that prevent configuration;
+for existing entries, refresh the keyring first as described below.
+
+Run:
 
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
