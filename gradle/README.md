@@ -17,6 +17,9 @@ The Java update, runtime build, vendor, and Zulu distribution build are pinned i
 (`releaseBuild.javaVersion`, `releaseBuild.javaRuntimeVersion`, `releaseBuild.javaVendor`,
 `releaseBuild.javaVendorVersion`). GitHub Actions requests the same build. A Java update version alone can select
 different Zulu builds, so update the workflow pin and these properties together. The release checklist repeats them.
+The installers bundle a runtime made from the JDK of the build, so `verifyReleaseEnvironment` requires the exact runtime
+and Zulu build. It compares the Java update by its version numbers: `21.0.13.0.3+1` is a build of `21.0.13`, so a move
+to a later Zulu build of the same update needs no change of `releaseBuild.javaVersion`.
 
 ## How to upgrade the Gradle version
 
