@@ -22,7 +22,6 @@ import bisq.proto.grpc.GetTradesRequest;
 
 import joptsimple.OptionSpec;
 
-import java.util.Locale;
 import java.util.function.Predicate;
 
 import static bisq.cli.opts.OptLabel.OPT_CATEGORY;
@@ -79,7 +78,11 @@ public class GetTradesOptionParser extends AbstractMethodOptionParser implements
     }
 
     public GetTradesRequest.Category getCategory() {
-        String categoryOpt = options.valueOf(this.categoryOpt).toLowerCase(Locale.ROOT);
-        return CATEGORY.valueOf(categoryOpt).grpcRequestCategory;
+        String categoryOpt = options.valueOf(this.categoryOpt);
+        return stream(CATEGORY.values())
+                .filter(category -> category.name().equalsIgnoreCase(categoryOpt))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("category must be open|closed|failed"))
+                .grpcRequestCategory;
     }
 }

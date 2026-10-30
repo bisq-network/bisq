@@ -1,46 +1,46 @@
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+// The root build audits this included build through its aggregate task. Resolve each project's configurations
+// in that project's task, then merge only the inventories here, without resolving across project locks.
+def projectDependencyAudits = allprojects.collect { owningProject ->
+    owningProject.apply from: rootProject.file('../gradle/resolve-project-dependencies.gradle')
+    owningProject.tasks.named('resolveProjectDependencies')
+}
+def projectDependencyInventories = allprojects.collect { owningProject ->
+    owningProject.layout.projectDirectory.file('.gradle/dependency-verification/project-inventory.tsv')
+}
 
-// The dependency audit of the Bisq build cannot reach the projects of an included build, so this task resolves the
-// configurations of build-logic for it (resolveAndVerifyDependencies in ../build.gradle). Gradle verifies their
-// artifacts with the verification metadata of the Bisq build. The task writes the resolved modules to an inventory in
-// the format of the inventories of Bisq 2, from which dependencySignatureReport of the Bisq build lists them.
 tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
     description = 'Resolves every resolvable configuration of build-logic for dependency verification.'
-
-    // Resolving every configuration of every project needs the project model while the task runs.
-    // The configuration cache does not allow that, so it is turned off for this task.
-    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+    dependsOn projectDependencyAudits
+    notCompatibleWithConfigurationCache('Writes the aggregate dependency inventory at execution time')
 
     doLast {
-        def configurations = allprojects.collectMany { project ->
-            (project.configurations + project.buildscript.configurations).findAll { it.canBeResolved }
-        }
+        def configurationCount = 0
         def resolvedComponents = new TreeSet<String>()
         def directComponents = new TreeSet<String>()
-        configurations.each { configuration ->
-            def result = configuration.incoming.resolutionResult
-            result.root.dependencies.each { dependency ->
-                def selected = dependency.hasProperty('selected') ? dependency.selected?.id : null
-                if (selected instanceof ModuleComponentIdentifier) {
-                    directComponents.add("${selected.group}:${selected.module}:${selected.version}".toString())
+        projectDependencyInventories.each { inventory ->
+            inventory.asFile.eachLine('UTF-8') { line ->
+                def columns = line.split('\t')
+                switch (columns[0]) {
+                    case 'configurations':
+                        configurationCount += columns[1] as int
+                        break
+                    case 'direct':
+                        resolvedComponents.add(columns[1])
+                        directComponents.add(columns[1])
+                        break
+                    case 'transitive':
+                        resolvedComponents.add(columns[1])
+                        break
                 }
             }
-            result.allComponents.each { component ->
-                def id = component.id
-                if (id instanceof ModuleComponentIdentifier) {
-                    resolvedComponents.add("${id.group}:${id.module}:${id.version}".toString())
-                }
-            }
-            configuration.resolve()
         }
-
         def inventoryFile = file('.gradle/dependency-verification/inventory.tsv')
         inventoryFile.parentFile.mkdirs()
-        def lines = ["configurations\t${configurations.size()}".toString()] + resolvedComponents.collect { id ->
+        def lines = ["configurations\t${configurationCount}".toString()] + resolvedComponents.collect { id ->
             "${directComponents.contains(id) ? 'direct' : 'transitive'}\t${id}".toString()
         }
         inventoryFile.setText(lines.join('\n') + '\n', 'UTF-8')
-        logger.lifecycle("Resolved and verified ${configurations.size()} configurations in build-logic.")
+        logger.lifecycle("Resolved and verified ${configurationCount} configurations in build-logic.")
     }
 }

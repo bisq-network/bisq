@@ -87,7 +87,7 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
             getShutDownFuture().join();
         } catch (Throwable t) {
             // The service shutdown completes with an error in normal situations, for instance if the Tor
-            // shutdown runs into its 2 second timeout. We must not let that skip the completion handler,
+            // shutdown runs into its 8 second timeout. We must not let that skip the completion handler,
             // otherwise the JVM shutdown hook waits for its full timeout of 2 minutes.
             log.error("Shutdown of services failed. We continue with the exit.", t);
         }

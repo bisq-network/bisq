@@ -28,6 +28,10 @@ services:
             - -bind=0.0.0.0:8332
             - -rpcbind=0.0.0.0:8332
 
+    # The node starts its own Tor in this container: Tor reaches the onion service of the node only on the loopback of
+    # the node, and the services of a Swarm stack cannot share a network namespace. The node runs Tor in its sandbox; if
+    # the container cannot enforce the sandbox, the start fails, and useTorSandbox=false in seednode_config runs Tor
+    # without it.
     bisq-seednode:
         image: bisq/seednode:latest
         environment:
@@ -45,27 +49,9 @@ services:
         command:
             - --configFile=/bisq_seednode_config
 
-    bisq-tor:
-        image: bisq/tor:latest
-        deploy:
-            replicas: 1
-            restart_policy:
-                condition: any
-        volumes:
-            - tor_data:/root/.tor
-        command: [ "--allow-missing-torrc",
-                   "--SOCKSPort", "0.0.0.0:9050",
-                   "--ControlPort", "0.0.0.0:9051",
-                   "--HashedControlPassword", "16:ED08CEBE4E91EA126089506E2880119E20A39054754D3916EAFF774046", # password: bisq
-                   "--Log", "notice",
-                   "--SafeSocks", "0",
-                   "--HiddenServiceStatistics", "0",
-                   "--AvoidDiskWrites", "1" ]
-
 configs:
     bisq_seednode_config:
         file: ./seednode_config
 
 volumes:
     bisq_seednode_data:
-    tor_data:

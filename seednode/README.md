@@ -138,6 +138,7 @@ sudo -u bisq -s
 cd bisq
 git fetch origin
 git checkout v1.2.5 # new tag
+git submodule update --init --recursive
 ./gradlew clean build -x test
 exit
 sudo service bisq restart

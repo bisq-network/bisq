@@ -6,11 +6,20 @@ Signer metadata is loaded from `gradle/verification-keyring.keys`; names and ema
 
 Checksum fallback review rationales are loaded from `gradle/dependency-checksum-fallback-allowlist.tsv`.
 
-Refresh the metadata before regenerating this report:
+Refresh the metadata before regenerating this report, following [gradle/README.md](../gradle/README.md#verifying-and-refreshing-build-dependencies), including its bootstrap step if configuration fails for missing metadata.
+
+In `gradle/verification-metadata.xml`, change `<key-servers enabled="false"/>` to `<key-servers enabled="true"/>` before refreshing:
 
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
+```
+
+Restore `<key-servers enabled="false"/>` after `<keyring-format>` (metadata writing removes the setting), and review changes to `gradle/verification-metadata.xml` and `gradle/verification-keyring.keys`. Then verify and regenerate the report:
+
+```bash
+./gradlew resolveAndVerifyDependencies
+./gradlew verifyDependencySignaturePolicy
 ./gradlew dependencySignatureReport
 ```
 

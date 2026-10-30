@@ -129,9 +129,22 @@ with jpackage while removing nondeterministic RPM header and payload metadata.
 
 Refresh dependency verification metadata separately from ordinary code changes:
 
+In `gradle/verification-metadata.xml`, change `<key-servers enabled="false"/>` to
+`<key-servers enabled="true"/>` before refreshing. If configuration fails for a missing
+metadata entry, follow the bootstrap procedure in
+[gradle/README.md](../../gradle/README.md#verifying-and-refreshing-build-dependencies).
+
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
+```
+
+Restore `<key-servers enabled="false"/>` after `<keyring-format>` (metadata writing
+removes the setting). Review the metadata and `gradle/verification-keyring.keys` changes,
+then verify with key servers disabled and regenerate the report:
+
+```bash
+./gradlew resolveAndVerifyDependencies
 ./gradlew verifyDependencySignaturePolicy
 ./gradlew dependencySignatureReport
 ```
