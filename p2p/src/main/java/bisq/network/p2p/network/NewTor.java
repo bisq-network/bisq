@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -61,9 +63,6 @@ public class NewTor extends TorMode {
     // netlayer started Tor up to 5 times, because Tor sometimes does not bootstrap with the files of an earlier run,
     // and deleted these files before each new attempt.
     private static final int START_ATTEMPTS = 5;
-    static final String BRIDGES_NOT_SUPPORTED = "Bisq cannot use the configured Tor bridges yet and does not " +
-            "connect without them, because your network could then see that you use Tor, and Tor may be blocked. " +
-            "To connect without bridges, remove them in the Tor network settings.";
 
     private final File torrcFile;
     private final String torrcOptions;
@@ -80,19 +79,14 @@ public class NewTor extends TorMode {
     public TorService getTor() {
         long ts1 = new Date().getTime();
 
-        if (!getBridgeLines(bridgeAddressProvider.getBridgeAddresses()).isEmpty()) {
-            // TODO Use the bridges once the Tor library supports bridges and pluggable transports. Until then Tor
-            //  must not start: the user relies on the bridges to get around a block or to hide the use of Tor.
-            throw new IllegalStateException(BRIDGES_NOT_SUPPORTED);
-        }
-
         TorTransportConfig transportConfig = new TorTransportConfig(torDir.toPath(),
                 BOOTSTRAP_TIMEOUT,
                 HS_UPLOAD_TIMEOUT,
                 false,
                 Set.of(),
                 getTorrcOverrides(torrcFile, torrcOptions),
-                false);
+                false,
+                getBridgeConfig(bridgeAddressProvider));
         for (int attempt = 1; ; attempt++) {
             TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
             log.info("Starting tor");
@@ -106,8 +100,7 @@ public class NewTor extends TorMode {
                 return torService;
             } catch (RuntimeException e) {
                 // TorService stops the Tor process it started when a later step of the start fails.
-                if (attempt == START_ATTEMPTS ||
-                        !(Throwables.getRootCause(e) instanceof TorBootstrapFailedException)) {
+                if (attempt == START_ATTEMPTS || !canStartAgain(e)) {
                     throw e;
                 }
                 log.warn("Tor did not bootstrap at attempt {} of {}. We delete the Tor files and start Tor again.",
@@ -118,6 +111,33 @@ public class NewTor extends TorMode {
                     throw new UncheckedIOException(ioException);
                 }
             }
+        }
+    }
+
+    // Only the Tor which the node starts can be started again with fresh files. A running Tor which did not bootstrap
+    // in time fails with ExternalTorUnavailableException, and waiting for it four more times and deleting the files of
+    // the node's own Tor in between cannot help; the start fails at once, as specified.
+    static boolean canStartAgain(RuntimeException e) {
+        return Throwables.getCausalChain(e).stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
+                Throwables.getRootCause(e) instanceof TorBootstrapFailedException;
+    }
+
+    // The library uses the bridges only for the Tor which it starts. A running Tor uses its own bridges.
+    static BridgeConfig getBridgeConfig(BridgeAddressProvider bridgeAddressProvider) {
+        switch (bridgeAddressProvider.getBridgeOption()) {
+            case PROVIDED:
+                return BridgeConfig.builtIn(bridgeAddressProvider.getBridgeTransport().getBuiltInBridgesName());
+            case CUSTOM:
+                List<String> bridgeLines = getBridgeLines(bridgeAddressProvider.getCustomBridgeLines());
+                if (bridgeLines.isEmpty()) {
+                    log.warn("Custom bridges are selected in the Tor network settings, but no bridge is entered. " +
+                            "Tor connects without bridges, as with earlier versions.");
+                    return BridgeConfig.NONE;
+                }
+                return BridgeConfig.custom(bridgeLines);
+            case NONE:
+            default:
+                return BridgeConfig.NONE;
         }
     }
 

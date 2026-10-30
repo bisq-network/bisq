@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -43,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,15 +54,36 @@ import static org.mockito.Mockito.when;
 class NewTorTest {
 
     @Test
-    void doesNotStartTorWhenBridgesAreConfigured(@TempDir File torDir) {
-        try (var construction = mockConstruction(TorService.class)) {
-            var newTor = new NewTor(torDir, null, "", () -> List.of("obfs4 192.0.2.1:443 cert=x iat-mode=0"));
+    void startsTorWithTheBridgesOfTheTorNetworkSettings(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            var bridges = new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.SNOWFLAKE, null);
 
-            var exception = assertThrows(IllegalStateException.class, newTor::getTor);
+            new NewTor(torDir, null, "", bridges).getTor();
 
-            assertEquals(NewTor.BRIDGES_NOT_SUPPORTED, exception.getMessage());
-            assertEquals(0, construction.constructed().size());
+            assertEquals(BridgeConfig.builtIn("snowflake"), config.get().getBridgeConfig());
         }
+    }
+
+    @Test
+    void mapsTheTorNetworkSettingsToTheBridgesOfTheTorLibrary() {
+        String bridge = "obfs4 192.0.2.1:443 cert=x iat-mode=0";
+
+        assertEquals(BridgeConfig.NONE, NewTor.getBridgeConfig(BridgeAddressProvider.NONE));
+        assertEquals(BridgeConfig.builtIn("obfs4"), NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.OBFS_4, List.of(bridge))));
+        assertEquals(BridgeConfig.builtIn("meek"), NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.MEEK, null)));
+        assertEquals(BridgeConfig.custom(List.of(bridge)), NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.CUSTOM, BridgeTransport.OBFS_4, List.of("", bridge))));
+        // An empty custom bridge field has no bridge, as with netlayer.
+        assertEquals(BridgeConfig.NONE, NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.CUSTOM, BridgeTransport.OBFS_4, List.of(""))));
+        assertEquals(BridgeConfig.NONE, NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.NONE, BridgeTransport.OBFS_4, List.of(bridge))));
     }
 
     @Test
@@ -69,7 +93,7 @@ class NewTorTest {
             config.set((TorTransportConfig) context.arguments().get(0));
             when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
         })) {
-            var newTor = new NewTor(torDir, null, "SocksPort 9150", List::of);
+            var newTor = new NewTor(torDir, null, "SocksPort 9150", BridgeAddressProvider.NONE);
 
             var torService = newTor.getTor();
 
@@ -84,7 +108,7 @@ class NewTorTest {
     void doesNotStartTorAgainAfterAnotherFailure(@TempDir File torDir) {
         try (var construction = mockConstruction(TorService.class,
                 (mock, context) -> when(mock.initialize()).thenThrow(new IllegalStateException("bootstrap failed")))) {
-            var newTor = new NewTor(torDir, null, "", List::of);
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
 
             assertThrows(IllegalStateException.class, newTor::getTor);
 
@@ -107,7 +131,7 @@ class NewTorTest {
                 when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
             }
         })) {
-            var newTor = new NewTor(torDir, null, "", List::of);
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
 
             var torService = newTor.getTor();
 
@@ -125,11 +149,51 @@ class NewTorTest {
         try (var construction = mockConstruction(TorService.class,
                 (mock, context) -> when(mock.initialize()).thenThrow(new CompletionException(
                         new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds"))))) {
-            var newTor = new NewTor(torDir, null, "", List::of);
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
 
             assertThrows(CompletionException.class, newTor::getTor);
 
             assertEquals(5, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void doesNotStartTorAgainWhenTheShutdownInterruptsTheStart(@TempDir File torDir) {
+        // At the shutdown, TorNetworkNode interrupts the thread which runs getTor. The library then fails the start,
+        // here the second one after a start which did not bootstrap, with the InterruptedException as the cause.
+        var startAttempts = new AtomicInteger();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            if (startAttempts.incrementAndGet() == 1) {
+                when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")));
+            } else {
+                when(mock.initialize()).thenThrow(new TorBootstrapFailedException(new InterruptedException()));
+            }
+        })) {
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+
+            assertThrows(TorBootstrapFailedException.class, newTor::getTor);
+
+            assertEquals(2, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void doesNotStartTorAgainWhenTheRunningTorDoesNotBootstrap(@TempDir File torDir) throws IOException {
+        // The library reports a running Tor which did not bootstrap in time with ExternalTorUnavailableException,
+        // whose message names the timeout. Fresh files and four more waits of 4 minutes cannot help a running Tor.
+        Files.writeString(torDir.toPath().resolve("external_tor.config"), "UseExternalTor 1");
+        Files.writeString(torDir.toPath().resolve("tor-stdout.log"), "");
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new ExternalTorUnavailableException(
+                        "Bisq is configured to use a Tor which runs outside Bisq, but it cannot use the Tor at " +
+                                "127.0.0.1:9051: The external Tor did not bootstrap within 240 seconds.")))) {
+            var newTor = new NewTor(torDir, null, "", BridgeAddressProvider.NONE);
+
+            assertThrows(ExternalTorUnavailableException.class, newTor::getTor);
+
+            assertEquals(1, construction.constructed().size());
+            assertTrue(Files.exists(torDir.toPath().resolve("tor-stdout.log")));
         }
     }
 

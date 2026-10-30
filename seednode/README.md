@@ -97,7 +97,15 @@ sudo systemctl daemon-reload
 ```
 Adapt the paths if your installation differs, and apply the changes which `install_seednode_debian.sh` makes for the
 `bitcoin.service` dependency again. `BISQ_EXTERNAL_TOR_CONTROL_USE_COOKIE` in `/etc/default/bisq.env` is no longer used:
-the Tor library authenticates with the plain cookie method.
+the Tor library always authenticates with the SAFECOOKIE method, in which tor proves that it knows the cookie before
+the seed node sends anything. If the seed node cannot use the system tor, it stops instead of starting its own Tor, and
+systemd restarts it. A seed node which used `--torControlPassword` sets `ControlPassword` in `external_tor.config`
+instead.
+
+The Docker deployment in `deployment_v2/docker` is not supported with the Tor library. It configures its Tor container
+with `--torControlHost` and `--torControlPassword`, which stop the seed node at the start, and that Tor runs in another
+container, which cannot reach the onion service of the seed node: Tor connects to the target of `ADD_ONION` at
+`127.0.0.1` of its own container.
 
 ### Uninstall
 

@@ -30,6 +30,7 @@ import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.NetworkNodeProvider;
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.SetupListener;
 
@@ -264,7 +265,7 @@ public class InventoryMonitor implements SetupListener {
     private NetworkNode getNetworkNode(File torDir) {
         CoreNetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
         return new NetworkNodeProvider(networkProtoResolver,
-                () -> null,
+                BridgeAddressProvider.NONE,
                 null,
                 12,
                 useLocalhostForP2P,

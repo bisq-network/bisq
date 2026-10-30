@@ -18,8 +18,10 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.tor.TorNotInstalledException;
+import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
+import bisq.network.tor.bridges.BridgesUnavailableException;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.onionservice.OnionServiceKey;
 
 import bisq.common.Timer;
@@ -41,6 +43,8 @@ import java.net.Socket;
 import java.io.IOException;
 
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -289,10 +293,15 @@ public class TorNetworkNode extends NetworkNode {
                     torService = null;
                     startedTorService.shutdown();
                 }
-                // TODO Request custom bridges with SetupListener::onRequestCustomBridges again if Tor cannot
-                //  connect, once the Tor library supports bridges and pluggable transports.
                 String errorMessage = getErrorMessage(throwable);
-                UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(errorMessage))));
+                boolean canBridgesHelp = canBridgesHelp(throwable);
+                UserThread.execute(() -> {
+                    setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(errorMessage)));
+                    if (canBridgesHelp) {
+                        // As with netlayer: the network may block Tor, so the user can choose bridges.
+                        setupListeners.forEach(SetupListener::onRequestCustomBridges);
+                    }
+                });
             }
             return null;
         });
@@ -306,10 +315,25 @@ public class TorNetworkNode extends NetworkNode {
         }
     }
 
+    // Tor could not connect, or the chosen bridges cannot be used. Other bridges can help, but not with a running Tor,
+    // which uses the bridges of its own configuration.
+    static boolean canBridgesHelp(Throwable throwable) {
+        List<Throwable> causalChain = Throwables.getCausalChain(throwable);
+        return causalChain.stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
+                causalChain.stream().anyMatch(cause -> cause instanceof TorBootstrapFailedException ||
+                        cause instanceof BridgesUnavailableException);
+    }
+
     private static String getErrorMessage(Throwable throwable) {
         Throwable rootCause = Throwables.getRootCause(throwable);
-        if (rootCause instanceof TorNotInstalledException) {
-            return "Tor is not installed. Please install the tor package of your Linux distribution.";
+        // Its message names the running Tor, the cause and what the user can do. The root cause alone, for example
+        // "Connection refused", does not say that Bisq was configured to use a running Tor.
+        Optional<ExternalTorUnavailableException> externalTorUnavailable = Throwables.getCausalChain(throwable).stream()
+                .filter(ExternalTorUnavailableException.class::isInstance)
+                .map(ExternalTorUnavailableException.class::cast)
+                .findFirst();
+        if (externalTorUnavailable.isPresent()) {
+            return externalTorUnavailable.get().getMessage();
         }
         return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
     }

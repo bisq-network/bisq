@@ -19,12 +19,16 @@ package bisq.core.app;
 
 import bisq.common.app.AppModule;
 
+import java.nio.file.Path;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BisqExecutableTest {
@@ -74,9 +78,32 @@ class BisqExecutableTest {
         assertEquals(1, completionCount.get());
     }
 
+    @Test
+    void anOptionWhichIsNotSupportedAnymoreReachesTheConfigErrorHandler(@TempDir Path appDataDir) {
+        // The desktop application overrides the handler to show the reason in a dialog
+        var executable = new TestBisqExecutable();
+
+        assertThrows(ConfigErrorHandled.class, () -> executable.execute(new String[]{
+                "--appDataDir=" + appDataDir, "--torControlPort=9051"}));
+
+        assertTrue(executable.configErrorMessage.contains("option 'torControlPort' is not supported anymore"));
+    }
+
+    private static final class ConfigErrorHandled extends RuntimeException {
+    }
+
     private static final class TestBisqExecutable extends BisqExecutable {
+        private String configErrorMessage;
+
         private TestBisqExecutable() {
             super("test", "test", "test", "test");
+        }
+
+        // The real handler exits, so the start must not go on here either
+        @Override
+        protected void handleConfigError(String message) {
+            configErrorMessage = message;
+            throw new ConfigErrorHandled();
         }
 
         @Override

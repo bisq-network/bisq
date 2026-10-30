@@ -10,10 +10,13 @@ the start fails. The key of the onion service is covered by
 
 ### Tor of the node
 
-On macOS and Windows, the node runs the Tor of the Tor expert bundle which the Bisq build downloaded and whose PGP
-signature it verified. On Linux, the node runs the `tor` executable of the system, found on the `PATH`; the Linux
-packages of Bisq depend on the `tor` package. If no `tor` executable is found, the start fails with an error which says
-that Tor is not installed.
+On every operating system, the node runs the Tor of the Tor expert bundle which the Bisq build downloaded and verified:
+its PGP signature, the SHA-256 hash which the build pins for the platform, and the version of its tor. The node installs
+the bundle into the Tor directory and never runs a `tor` of the system; the Linux packages of Bisq do not
+depend on the `tor` package. Linux x86_64, macOS and Windows x86_64 get the bundle of a stable Tor Browser release.
+Linux ARM64 gets the bundle of an alpha release with the same tor version, because no stable release has a bundle for
+Linux ARM64. On Linux, the bundled Tor needs glibc 2.17 or newer (2.27 on ARM64) and the zlib library of the system
+(`libz.so.1`).
 
 The node owns the Tor it starts. Tor gets the process ID of the node as its owning controller and stops when the node
 stops. If the start fails after Tor was launched, including the publication of the onion service, the node stops that
@@ -39,25 +42,59 @@ The node waits for the upload of its onion service descriptor without a time lim
 keeps trying to upload it.
 
 Tor must not read a configuration file outside the Tor directory of the node. The node therefore also passes the torrc
-which it generates as the defaults torrc, instead of the built-in default location. The bundled Tor of macOS and
-Windows has the paths of its build below `/var/tmp/dist` compiled in, which other local users can create. The node
-therefore sets the GeoIP files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in the Tor
-directory, because OpenSSL would otherwise read its configuration there and could load modules from it.
+which it generates as the defaults torrc, instead of the built-in default location. The bundled Tor has the paths of
+its build below `/var/tmp/dist` compiled in, which other local users can create. The node therefore sets the GeoIP
+files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in the Tor directory, because OpenSSL would
+otherwise read its configuration there and could load modules from it.
 
-The commands, replies and events of the control connection are logged at debug level only, because they contain onion
-addresses.
+The node logs the version which the running Tor reports. The commands, replies and events of the control connection
+are logged at debug level only, because they contain onion addresses.
 
 ### Running Tor
 
 The node uses a running Tor instead of its own if `external_tor.config` in its Tor directory sets `UseExternalTor 1`,
-if the environment variable `TOR_SKIP_LAUNCH` is `1`, `true` or `yes`, or if it runs on Whonix. `external_tor.config`
-sets the control port and whether a cookie authenticates the controller. If the node cannot connect to the running
-Tor, it starts its own Tor, except on Whonix, where the start fails.
+if the environment variable `TOR_SKIP_LAUNCH` is `1`, `true` or `yes`, or if it runs on a Whonix-Workstation.
+`external_tor.config` sets the host and port of the control port and whether a cookie authenticates the controller.
+The node uses the SOCKS port which the running Tor reports, on the host of the control port.
+
+With a cookie, the node authenticates with the SAFECOOKIE method: Tor first proves that it knows the cookie, and the
+node never sends the cookie. A process which listens on the control port instead of Tor gets neither the cookie nor the
+key of the onion service, and the start fails. A cookie file which does not hold the 32 bytes of a Tor cookie fails the
+start. `ControlPassword` in `external_tor.config` sets the password of a running Tor which uses `HashedControlPassword`
+instead of a cookie; setting it together with `CookieAuthentication 1` fails the start. With a password, the process on
+the control port cannot prove that it is Tor, so the cookie is the better choice on the same system. Without a cookie
+and a password, the node sends an empty authentication, which only fits a control port that other processes cannot
+reach, such as the filtered control port of Whonix.
+
+On a Whonix-Workstation, the node always uses the Tor of the Whonix-Gateway. onion-grater filters the control port of
+the Gateway and needs the profile of Bisq there (`sudo onion-grater-add 40_bisq`). onion-grater accepts only the empty
+authentication, so the node uses it there also with `CookieAuthentication 1`; the cookie of a Whonix-Workstation is a
+dummy. The node listens on all addresses, because the Tor of the Gateway connects to the address of the Workstation.
+The publication of the onion service completes at the start or at the end of the upload of its descriptor, because
+older profiles of onion-grater deliver only the end in a form which the node accepts.
+
+On a Whonix-Gateway, whose Tor serves the Workstations behind it, the node does not run: the start of Tor fails before
+anything else with an error which says to run Bisq on a Whonix-Workstation. Both systems have the markers of Whonix,
+`/usr/share/whonix/marker` and `/usr/share/anon-dist/marker`; a Gateway also has
+`/usr/share/anon-gw-base-files/gateway`. The node and the Tor library decide with one rule, the one of the library.
+
+Before it uses the running Tor, the node waits until that Tor has bootstrapped, at most 4 minutes, as netlayer did. It
+does not change the configuration of the running Tor. The restarts with fresh files, which the node does for its own
+Tor, do not apply to a running Tor: if it does not bootstrap in time, the start fails at once.
+
+If the node cannot use the running Tor, the start fails with an error which names the host and port and the cause. The
+node never starts its own Tor instead. The user may rely on the running Tor, for example for its bridges, and the own
+Tor would connect directly to the Tor network.
 
 The options `--torControlHost`, `--torControlPort`, `--torControlPassword`, `--torControlCookieFile` and
 `--torControlUseSafeCookieAuth`, which configured a running Tor before, stop the start with an explanation which
-names `external_tor.config`. This applies on the command line and in a config file. The options must not be ignored,
-because the node would then start its own Tor instead of the one the operator configured.
+names `external_tor.config` and the config file. This applies on the command line and in a config file. The desktop
+application shows the explanation in a dialog, because it is usually started without a terminal. The options must not be ignored,
+because the node would then start its own Tor instead of the one the operator configured. On a Whonix-Workstation, the
+node ignores them with a warning, because there it always uses the Tor of the Whonix-Gateway and never starts its own
+Tor. The Whonix guide for Bisq passes `--torControlPort=9051 --torControlPassword=notrequired`. On a Whonix-Gateway the
+node ignores them too, so that the start reaches the refusal which names the Workstation instead of an error which
+points to `external_tor.config`.
 
 Deleting the outdated Tor files keeps `external_tor.config`, because it is a setting of the user.
 
@@ -72,10 +109,27 @@ for another key which the node sets, such as `Log`, replaces the value of the no
 
 ### Bridges
 
-As long as the node cannot use bridges and pluggable transports, it must not start Tor if the user configured
-bridges. The start fails with an error which explains the risk of connecting without bridges and tells the user to
-remove them in the Tor network settings to do so. Bridge lines of 10 characters or fewer, for example the empty line
-of an empty custom bridge field, are no bridges, as in netlayer.
+The user chooses in the Tor network settings: no bridges, the provided bridges of a type (obfs4, snowflake or meek), or
+custom bridge lines. The provided bridges are the built-in bridges of the Tor Browser version of the bundled Tor, so
+they change with the Tor version. The node reads the choice at every start. It does not use the bridge lines which an
+earlier version stored for the provided bridges, because they become outdated. The settings store the type as a number.
+Earlier versions stored obfs4, obfs3, meek-amazon or meek-azure. obfs3 is read as snowflake and both meek types as
+meek, because obfs3 has no bridges anymore and the old meek fronts stopped working. The settings still store the bridge
+lines of the choice, because versions before the Tor library read only these lines.
+
+With bridges, the Tor of the node connects only through them. The programs of the pluggable transports come with the
+Tor bundle, which the node installs on every operating system; programs on the `PATH` are not used. If the node cannot
+use the chosen bridges, for example because a transport has no program, the start fails. The node never connects
+without the chosen bridges. Custom bridge lines of 10 characters or fewer, for example the empty line of an empty
+custom bridge field, are no bridges, as in netlayer. If no line remains, the node connects without bridges.
+
+A running Tor uses the bridges of its own configuration. The node then ignores the bridges of its settings and logs a
+warning.
+
+If Tor cannot connect, or the chosen bridges cannot be used, the start fails, and the desktop application opens the
+Tor network settings so that the user can choose bridges, as with netlayer.
+
+The node does not log bridge lines, because a bridge which a user got privately is blocked once it is known.
 
 ## Rationale
 
@@ -85,11 +139,12 @@ decision to the user.
 
 A running Tor is configured in the same file as in Bisq 2, because both use the same Tor library.
 
+The node runs the Tor of the bundle on Linux as well, so that every platform runs the tor version and the pluggable
+transports which the build verified, independent of the version and the patch level which a distribution packages.
+
 ## Known gaps
 
-- Bridges and pluggable transports are not supported.
-- A running Tor must be reachable on the local host and must accept a cookie or no authentication. A password, the
-  SAFECOOKIE method and a remote host are not supported. With the plain cookie method, a process which holds the
-  control port while the running Tor does not receives the cookie and the key of the onion service.
-- If the running Tor cannot be reached or authentication fails, the Tor library starts its own Tor instead, with only a
-  log entry.
+- On Linux ARM64 the node runs the Tor of an alpha release of Tor Browser, because no stable release has a Tor expert
+  bundle for Linux ARM64. The build pins that bundle by its hash and requires the tor version of the stable bundle.
+- A running Tor on another host reaches the onion service of the node only at `127.0.0.1` of its own host, for example
+  in a shared network namespace or on Whonix, where onion-grater rewrites the target.

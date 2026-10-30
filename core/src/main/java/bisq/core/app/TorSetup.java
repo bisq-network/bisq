@@ -29,6 +29,7 @@ import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -38,6 +39,7 @@ import static bisq.common.util.Preconditions.checkDir;
 @Slf4j
 @Singleton
 public class TorSetup {
+    @Getter
     private final File torDir;
 
     @Inject

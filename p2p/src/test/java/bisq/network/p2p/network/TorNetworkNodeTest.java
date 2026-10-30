@@ -28,8 +28,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
@@ -56,7 +54,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", this::getBridgeAddresses), null, 12);
+                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -83,7 +81,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(1);
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", this::getBridgeAddresses), null, 12);
+                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -141,7 +139,7 @@ public class TorNetworkNodeTest {
         latch = new CountDownLatch(2);
         int port = 9001;
         TorNetworkNode node1 = new TorNetworkNode(port, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", this::getBridgeAddresses), null, 12);
+                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -167,7 +165,7 @@ public class TorNetworkNodeTest {
 
         int port2 = 9002;
         TorNetworkNode node2 = new TorNetworkNode(port2, TestUtils.getNetworkProtoResolver(), false,
-                new NewTor(new File("torNode_" + port), null, "", this::getBridgeAddresses), null, 12);
+                new NewTor(new File("torNode_" + port), null, "", BridgeAddressProvider.NONE), null, 12);
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -217,9 +215,5 @@ public class TorNetworkNodeTest {
         node1.shutDown(latch::countDown);
         node2.shutDown(latch::countDown);
         latch.await();
-    }
-
-    public List<String> getBridgeAddresses() {
-        return new ArrayList<>();
     }
 }

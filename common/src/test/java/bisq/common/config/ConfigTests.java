@@ -128,6 +128,28 @@ public class ConfigTests {
     }
 
     @Test
+    public void onWhonixTheTorControlOptionsOfTheWhonixGuideAreIgnored() {
+        // On a Whonix-Workstation the Tor library uses the Tor of the Whonix-Gateway and never starts its own Tor.
+        File configFile = new File("bisq.properties");
+        File torDir = new File("tor");
+        Config.checkUnsupportedTorControlOptions(List.of(TOR_CONTROL_PORT, TOR_CONTROL_PASSWORD), configFile, torDir,
+                true, false);
+
+        Exception exception = assertThrows(ConfigException.class, () ->
+                Config.checkUnsupportedTorControlOptions(List.of(TOR_CONTROL_PORT, TOR_CONTROL_PASSWORD), configFile,
+                        torDir, false, false));
+        assertTrue(exception.getMessage().contains("option 'torControlPort' is not supported anymore"));
+    }
+
+    // On a Whonix-Gateway the Tor library refuses to start and names the Workstation. An error about
+    // external_tor.config would come first and send the user the wrong way.
+    @Test
+    public void onAWhonixGatewayTheTorControlOptionsOfTheWhonixGuideAreIgnoredToo() {
+        Config.checkUnsupportedTorControlOptions(List.of(TOR_CONTROL_PORT, TOR_CONTROL_PASSWORD),
+                new File("bisq.properties"), new File("tor"), true, true);
+    }
+
+    @Test
     public void whenTorControlUseSafeCookieAuthFlagIsSet_thenConfigExceptionIsThrown() {
         Exception exception = assertThrows(ConfigException.class,
                 () -> configWithOpts(opt(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)));
@@ -145,6 +167,8 @@ public class ConfigTests {
                 () -> configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath())));
 
         assertTrue(exception.getMessage().contains("option 'torControlHost' is not supported anymore"));
+        // The users of the desktop application set it in the config file and have to find it there
+        assertTrue(exception.getMessage().contains(configFile.getAbsolutePath()));
     }
 
     @Test
