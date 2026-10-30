@@ -90,6 +90,6 @@ public class ProxySetup {
                         log.info("Tor shutdown completed");
                     }
                 })
-                .orTimeout(2, TimeUnit.SECONDS);
+                .orTimeout(8, TimeUnit.SECONDS);
     }
 }
