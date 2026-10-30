@@ -1891,8 +1891,17 @@ tasks.register('verifyGithubActionsSecurity') {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
         def expectedJavaBuildVersion = expectedJavaRuntimeVersion.replaceFirst(/-LTS$/, '')
-        if (!expectedJavaBuildVersion.startsWith("${expectedJavaVersion}+")) {
-            violations << 'releaseBuild.javaRuntimeVersion does not match releaseBuild.javaVersion'
+        // Compared by version numbers: 21.0.13+9-LTS and 21.0.13.0.3+1-LTS are both builds of the update 21.0.13
+        def isBuildOf = { String runtimeVersion, String javaVersion ->
+            try {
+                def updateNumbers = Runtime.Version.parse(javaVersion).version()
+                return Runtime.Version.parse(runtimeVersion).version().take(updateNumbers.size()) == updateNumbers
+            } catch (IllegalArgumentException ignored) {
+                return false
+            }
+        }
+        if (!isBuildOf(expectedJavaRuntimeVersion, expectedJavaVersion)) {
+            violations << "releaseBuild.javaRuntimeVersion ${expectedJavaRuntimeVersion} is no build of releaseBuild.javaVersion ${expectedJavaVersion}"
         }
         workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
             def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
