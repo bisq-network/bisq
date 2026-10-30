@@ -34,6 +34,8 @@ services:
             - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
         configs:
             - bisq_seednode_config
+            - source: bisq_external_tor_config
+              target: /bisq/bisq-seednode/btc_mainnet/tor/external_tor.config
         deploy:
             replicas: 1
             restart_policy:
@@ -65,6 +67,8 @@ services:
 configs:
     bisq_seednode_config:
         file: ./seednode_config
+    bisq_external_tor_config:
+        file: ./external_tor.config
 
 volumes:
     bisq_seednode_data:

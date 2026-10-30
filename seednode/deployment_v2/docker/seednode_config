@@ -15,6 +15,3 @@ rpcUser=bisq
 rpcPassword=bisq
 dumpBlockchainData=false
 dumpStatistics=false
-torControlHost=bisq-tor
-torControlPort=9051
-torControlPassword=bisq
