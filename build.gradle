@@ -1637,14 +1637,27 @@ tasks.register('verifyReleaseEnvironment') {
         def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
         def expectedJavaVendorVersion = expectedReleaseJavaVendorVersion.get()
         def expectedGradleVersion = expectedReleaseGradleVersion.get()
-        def actualJavaVersion = System.getProperty('java.version')
+        def actualJavaVersion = Runtime.version()
         def actualJavaVendor = System.getProperty('java.vendor')
         def actualJavaRuntimeVersion = System.getProperty('java.runtime.version')
         def actualJavaVendorVersion = System.getProperty('java.vendor.version')
         def violations = []
 
-        if (actualJavaVersion != expectedJavaVersion) {
-            violations << "Java version expected ${expectedJavaVersion} but was ${actualJavaVersion}"
+        // A build suffix such as +9 would not be compared, so the pin may only hold the numbers of the update.
+        def pinnedJavaVersion = null
+        try {
+            pinnedJavaVersion = Runtime.Version.parse(expectedJavaVersion)
+        } catch (IllegalArgumentException ignored) {
+        }
+        if (pinnedJavaVersion == null || pinnedJavaVersion.pre().isPresent() || pinnedJavaVersion.build().isPresent() ||
+                pinnedJavaVersion.optional().isPresent()) {
+            throw new GradleException("releaseBuild.javaVersion must be a Java update such as 21.0.13, but is ${expectedJavaVersion}")
+        }
+        // The update is compared by its version numbers and the build exactly below, so a later Zulu build of the
+        // update, such as 21.0.13.0.3+1 of 21.0.13, needs no change of releaseBuild.javaVersion.
+        def pinnedJavaVersionNumbers = pinnedJavaVersion.version()
+        if (actualJavaVersion.version().take(pinnedJavaVersionNumbers.size()) != pinnedJavaVersionNumbers) {
+            violations << "Java version expected a build of ${expectedJavaVersion} but was ${actualJavaVersion}"
         }
         if (actualJavaVendor != expectedJavaVendorValue) {
             violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
@@ -1663,7 +1676,7 @@ tasks.register('verifyReleaseEnvironment') {
             throw new GradleException("Release build environment verification failed:\n" + violations.collect { "  - ${it}" }.join('\n'))
         }
 
-        logger.lifecycle("Verified release build environment: Gradle ${actualGradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}).")
+        logger.lifecycle("Verified release build environment: Gradle ${actualGradleVersion}, Java ${actualJavaVersion} (${actualJavaVendor}, ${actualJavaVendorVersion}).")
     }
 }
 
@@ -1891,8 +1904,17 @@ tasks.register('verifyGithubActionsSecurity') {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
         def expectedJavaBuildVersion = expectedJavaRuntimeVersion.replaceFirst(/-LTS$/, '')
-        if (!expectedJavaBuildVersion.startsWith("${expectedJavaVersion}+")) {
-            violations << 'releaseBuild.javaRuntimeVersion does not match releaseBuild.javaVersion'
+        // Compared by version numbers: 21.0.13+9-LTS and 21.0.13.0.3+1-LTS are both builds of the update 21.0.13
+        def isBuildOf = { String runtimeVersion, String javaVersion ->
+            try {
+                def updateNumbers = Runtime.Version.parse(javaVersion).version()
+                return Runtime.Version.parse(runtimeVersion).version().take(updateNumbers.size()) == updateNumbers
+            } catch (IllegalArgumentException ignored) {
+                return false
+            }
+        }
+        if (!isBuildOf(expectedJavaRuntimeVersion, expectedJavaVersion)) {
+            violations << "releaseBuild.javaRuntimeVersion ${expectedJavaRuntimeVersion} is no build of releaseBuild.javaVersion ${expectedJavaVersion}"
         }
         workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
             def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
