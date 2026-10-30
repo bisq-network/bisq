@@ -17,17 +17,19 @@
 
 package bisq.network.p2p.network;
 
-import bisq.common.file.FileUtil;
+import bisq.network.tor.TorService;
+import bisq.network.tor.onionservice.OnionServiceKey;
 
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
+import bisq.common.file.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Set;
+
 /**
  * Holds information on how tor should be created and delivers a respective
- * {@link Tor} object when asked.
+ * {@link TorService} object when asked.
  *
  * @author Florian Reimair
  *
@@ -35,10 +37,13 @@ import java.io.IOException;
 public abstract class TorMode {
 
     /**
-     * The sub-directory where the <code>private_key</code> file sits in. Kept
-     * private, because it only concerns implementations of {@link TorMode}.
+     * The sub-directory where the <code>private_key</code> file sits in. netlayer
+     * kept the key of the onion service there, so we use it as well.
      */
-    protected static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
+    private static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
+    // The key of the onion service and the user's settings of a running Tor, which the Tor library reads from the Tor
+    // directory
+    private static final Set<String> KEPT_FILE_NAMES = Set.of(HIDDEN_SERVICE_DIRECTORY, "external_tor.config");
 
     protected final File torDir;
 
@@ -51,34 +56,48 @@ public abstract class TorMode {
     }
 
     /**
-     * Returns a fresh {@link Tor} object.
+     * Starts Tor and returns the {@link TorService} which controls it. Blocks until
+     * Tor has bootstrapped.
      *
-     * @return a fresh instance of {@link Tor}
-     * @throws IOException
-     * @throws TorCtlException
+     * @return a started {@link TorService}
      */
-    public abstract Tor getTor() throws IOException, TorCtlException;
+    public abstract TorService getTor();
 
     /**
-     * {@link NativeTor}'s inner workings prepend its Tor installation path and some
-     * other stuff to the hiddenServiceDir, thus, selecting nothing (i.e.
-     * <code>""</code>) as a hidden service directory is fine. {@link ExternalTor},
-     * however, does not have a Tor installation path and thus, takes the hidden
-     * service path literally. Hence, we set <code>"torDir/hiddenservice"</code> as
-     * the hidden service directory. By doing so, we use the same
-     * <code>private_key</code> file as in {@link NewTor} mode.
+     * Returns the key of the onion service from the hidden service directory, and
+     * creates it at the first start.
      *
-     * @return <code>""</code> in {@link NewTor} Mode,
-     *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
-     *         mode
+     * @return the key of the onion service
+     * @throws IOException if the key files cannot be read or written
      */
-    public abstract String getHiddenServiceDirectory();
+    public OnionServiceKey getOnionServiceKey() throws IOException {
+        return OnionServiceKeyStorage.loadOrCreate(new File(torDir, HIDDEN_SERVICE_DIRECTORY).toPath());
+    }
 
     /**
      * Do a rolling backup of the "private_key" file.
      */
     protected void doRollingBackup() {
         FileUtil.rollingBackup(new File(torDir, HIDDEN_SERVICE_DIRECTORY), "private_key", 20);
+    }
+
+    /**
+     * Deletes the files of Tor in the Tor directory, except the key of the onion
+     * service and <code>external_tor.config</code>. Tor creates them again at the
+     * next start.
+     *
+     * @param torDir the Tor directory
+     * @throws IOException if a file cannot be deleted
+     */
+    public static void deleteTorFiles(File torDir) throws IOException {
+        File[] files = torDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!KEPT_FILE_NAMES.contains(file.getName())) {
+                    FileUtil.deleteDirectory(file, null, true);
+                }
+            }
+        }
     }
 
 }

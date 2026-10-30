@@ -272,11 +272,6 @@ public class InventoryMonitor implements SetupListener {
                 torDir,
                 null,
                 "",
-                "",
-                -1,
-                "",
-                null,
-                false,
                 false)
                 .get();
     }

@@ -316,11 +316,15 @@ The build environment is pinned in `gradle.properties`:
 ```
 releaseBuild.javaVersion=21.0.13
 releaseBuild.javaVendor=Azul Systems, Inc.
+releaseBuild.javaRuntimeVersion=21.0.13+9-LTS
+releaseBuild.javaVendorVersion=Zulu21.54+107-CA
 releaseBuild.gradleVersion=9.0.0
 ```
 
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
-with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.13.
+with the Java toolchain. Run Gradle itself with Azul Zulu `21.0.13+9`. GitHub Actions pins the
+same build because a request for `21.0.13` can resolve a newer Zulu build whose `java.version`
+is `21.0.13.0.3`.
 
 1. Verify the build and produce the evidence files:
 

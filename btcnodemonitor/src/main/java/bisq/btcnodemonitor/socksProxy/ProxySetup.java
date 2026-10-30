@@ -19,19 +19,16 @@ package bisq.btcnodemonitor.socksProxy;
 
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.network.NewTor;
+import bisq.network.tor.TorService;
 
 import bisq.common.config.Config;
 import bisq.common.util.SingleThreadExecutorUtils;
-
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.nio.file.Paths;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -50,11 +47,11 @@ public class ProxySetup {
     private final SocksProxyFactory socksProxyFactory;
     private final Config config;
     private NewTor torMode;
-    private Tor tor;
+    private TorService torService;
 
     public ProxySetup(Config config) {
         this.config = config;
-        socksProxyFactory = new SocksProxyFactory("127.0.0.1");
+        socksProxyFactory = new SocksProxyFactory();
         Socks5ProxyProvider socks5ProxyProvider = new Socks5ProxyProvider("", "");
         socks5ProxyProvider.setSocks5ProxyInternal(socksProxyFactory);
         String networkDirName = config.getBaseCurrencyNetwork().name().toLowerCase();
@@ -66,25 +63,21 @@ public class ProxySetup {
         if (!config.useTorForBtcMonitor) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
-        checkArgument(tor == null);
+        checkArgument(torService == null);
         return CompletableFuture.supplyAsync(() -> {
             torMode = new NewTor(torDir, null, "", ArrayList::new);
-            try {
-                // blocking
-                tor = torMode.getTor();
-                socksProxyFactory.setTor(tor);
-                return Optional.of(socksProxyFactory.getSocksProxy());
-            } catch (IOException | TorCtlException e) {
-                throw new RuntimeException(e);
-            }
+            // blocking
+            torService = torMode.getTor();
+            socksProxyFactory.setTorService(torService);
+            return Optional.of(socksProxyFactory.getSocksProxy());
         }, SingleThreadExecutorUtils.getSingleThreadExecutor("ProxySetup.start"));
     }
 
     public CompletableFuture<Void> shutdown() {
         log.info("Shutdown tor");
         return CompletableFuture.runAsync(() -> {
-                    if (tor != null) {
-                        tor.shutdown();
+                    if (torService != null) {
+                        torService.shutdown().join();
                         log.info("Tor shutdown completed");
                     }
                 })

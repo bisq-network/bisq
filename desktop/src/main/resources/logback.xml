@@ -11,5 +11,4 @@
     </root>
 
     <!-- <logger name="org.bitcoinj" level="WARN"/>-->
-    <logger name="org.berndpruenster.netlayer.tor.Tor" level="WARN"/>
 </configuration>

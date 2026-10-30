@@ -15,13 +15,11 @@ dependencies {
     compileOnly libs.lombok
     implementation libs.google.guava
     implementation libs.fxmisc.easybind
+    implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
-    implementation(libs.netlayer.tor.external) {
-        exclude(module: 'slf4j-api')
-    }
-    implementation(libs.netlayer.tor.native) {
-        exclude(module: 'slf4j-api')
-    }
+    implementation 'tor:tor'
+    // The constructor of TorTransportConfig takes DirectoryAuthority of tor-common, which tor does not export.
+    implementation 'tor:tor-common'
     implementation(libs.bitcoinj) {
         exclude(module: 'bcprov-jdk15on')
         exclude(module: 'guava')

@@ -25,6 +25,7 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import ch.qos.logback.classic.Level;
 
@@ -234,11 +235,6 @@ public class Config {
     public final String socks5ProxyHttpAddress;
     public final File torrcFile;
     public final String torrcOptions;
-    public final String torControlHost;
-    public final int torControlPort;
-    public final String torControlPassword;
-    public final File torControlCookieFile;
-    public final boolean useTorControlSafeCookieAuth;
     public final boolean torStreamIsolation;
     public final int msgThrottlePerSec;
     public final int msgThrottlePer10Sec;
@@ -619,39 +615,18 @@ public class Config {
                         .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))
                         .defaultsTo("");
 
-        ArgumentAcceptingOptionSpec<String> torControlHostOpt =
-                parser.accepts(TOR_CONTROL_HOST, "The control hostname of an already running Tor service to be used by Bisq.")
-                        .withRequiredArg()
-                        .defaultsTo("127.0.0.1");
-
-        ArgumentAcceptingOptionSpec<Integer> torControlPortOpt =
-                parser.accepts(TOR_CONTROL_PORT,
-                                "The control port of an already running Tor service to be used by Bisq.")
-                        .availableUnless(TORRC_FILE, TORRC_OPTIONS)
-                        .withRequiredArg()
-                        .ofType(int.class)
-                        .describedAs("port")
-                        .defaultsTo(UNSPECIFIED_PORT);
-
-        ArgumentAcceptingOptionSpec<String> torControlPasswordOpt =
-                parser.accepts(TOR_CONTROL_PASSWORD, "The password for controlling the already running Tor service.")
-                        .availableIf(TOR_CONTROL_PORT)
-                        .withRequiredArg()
-                        .defaultsTo("");
-
-        ArgumentAcceptingOptionSpec<Path> torControlCookieFileOpt =
-                parser.accepts(TOR_CONTROL_COOKIE_FILE, "The cookie file for authenticating against the already " +
-                                "running Tor service. Use in conjunction with --" + TOR_CONTROL_USE_SAFE_COOKIE_AUTH)
-                        .availableIf(TOR_CONTROL_PORT)
-                        .availableUnless(TOR_CONTROL_PASSWORD)
-                        .withRequiredArg()
-                        .describedAs("File")
-                        .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
-
-        OptionSpecBuilder torControlUseSafeCookieAuthOpt =
-                parser.accepts(TOR_CONTROL_USE_SAFE_COOKIE_AUTH,
-                                "Use the SafeCookie method when authenticating to the already running Tor service.")
-                        .availableIf(TOR_CONTROL_COOKIE_FILE);
+        // Bisq connected to a running Tor with these options. The Tor library reads the settings of a running Tor
+        // from external_tor.config in the Tor directory instead. The options are still accepted, so that a config
+        // file which sets one fails with an explanation instead of silently starting another Tor.
+        List<OptionSpec<String>> unsupportedTorControlOpts = Stream.of(TOR_CONTROL_HOST,
+                        TOR_CONTROL_PORT,
+                        TOR_CONTROL_PASSWORD,
+                        TOR_CONTROL_COOKIE_FILE,
+                        TOR_CONTROL_USE_SAFE_COOKIE_AUTH)
+                .map(option -> parser.accepts(option, "Not supported anymore. Configure a running Tor in " +
+                                "external_tor.config in the Tor directory instead.")
+                        .withOptionalArg())
+                .collect(toList());
 
         OptionSpecBuilder torStreamIsolationOpt =
                 parser.accepts(TOR_STREAM_ISOLATION, "Use stream isolation for Tor [experimental!].");
@@ -947,6 +922,7 @@ public class Config {
                         .ofType(Boolean.class)
                         .defaultsTo(false);
 
+        List<String> givenUnsupportedTorControlOptions;
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -1017,12 +993,10 @@ public class Config {
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
-            this.torControlHost = options.valueOf(torControlHostOpt);
-            this.torControlPort = options.valueOf(torControlPortOpt);
-            this.torControlPassword = options.valueOf(torControlPasswordOpt);
-            this.torControlCookieFile = options.has(torControlCookieFileOpt) ?
-                    options.valueOf(torControlCookieFileOpt).toFile() : null;
-            this.useTorControlSafeCookieAuth = options.has(torControlUseSafeCookieAuthOpt);
+            givenUnsupportedTorControlOptions = unsupportedTorControlOpts.stream()
+                    .filter(options::has)
+                    .map(optionSpec -> optionSpec.options().get(0))
+                    .collect(toList());
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
             this.referralId = options.valueOf(referralIdOpt);
             this.useDevMode = options.valueOf(useDevModeOpt);
@@ -1116,6 +1090,11 @@ public class Config {
         this.storageDir = mkdir(btcNetworkDir, "db");
         this.torDir = mkdir(btcNetworkDir, "tor");
         this.walletDir = mkdir(btcNetworkDir, "wallet");
+
+        if (!givenUnsupportedTorControlOptions.isEmpty()) {
+            throw new ConfigException("option '%s' is not supported anymore. To use a running Tor, configure it in %s",
+                    givenUnsupportedTorControlOptions.get(0), new File(torDir, "external_tor.config"));
+        }
 
         // Assign values to special-case static fields
         APP_DATA_DIR_VALUE = appDataDir;

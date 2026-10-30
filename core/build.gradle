@@ -37,12 +37,7 @@ dependencies {
     implementation libs.fxmisc.easybind
     implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
-    implementation(libs.netlayer.tor.external) {
-        exclude(module: 'slf4j-api')
-    }
-    implementation(libs.netlayer.tor.native) {
-        exclude(module: 'slf4j-api')
-    }
+    implementation 'tor:jsocks'
     implementation(libs.bitcoinj) {
         exclude(module: 'bcprov-jdk15on')
         exclude(module: 'guava')

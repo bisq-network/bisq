@@ -12,10 +12,11 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Java **21.0.13** from **Azul Systems, Inc.**
-The Gradle and Java values are also pinned in `gradle.properties`
-(`releaseBuild.gradleVersion`, `releaseBuild.javaVersion`, `releaseBuild.javaVendor`)
-and repeated in `docs/release-checklist.md`.
+Currently pinned: **Gradle 9.0.0**, Azul Zulu Java **21.0.13+9**.
+The Java update, runtime build, vendor, and Zulu distribution build are pinned in `gradle.properties`
+(`releaseBuild.javaVersion`, `releaseBuild.javaRuntimeVersion`, `releaseBuild.javaVendor`,
+`releaseBuild.javaVendorVersion`). GitHub Actions requests the same build. A Java update version alone can select
+different Zulu builds, so update the workflow pin and these properties together. The release checklist repeats them.
 
 ## How to upgrade the Gradle version
 
@@ -262,11 +263,16 @@ needs. Only a refresh of the keyring turns the key servers on, see below.
 `resolveAndVerifyDependencies` resolves every resolvable configuration, including the
 buildscript configurations, of every project in the root build. Gradle gives the root build
 no access to the projects of an included build, so the task first runs the task of the same
-name of the included build `build-logic`, which resolves the configurations of its projects;
-`verifyDependencySignaturePolicy` runs it as well. Gradle verifies the artifacts of an included
-build with the metadata of the root build. The included build `bitcoind` is not
-part of the audit: it has no such task. `dependencySignatureReport` lists the modules of
-the root build only.
+name of the included builds `build-logic` and `tor`, which resolve the configurations of
+their projects; the task of `tor` also resolves the `build-logic` of `tor`.
+`verifyDependencySignaturePolicy` and `dependencySignatureReport` run them as well. Gradle
+verifies the artifacts of an included build with the metadata of the root build. The tasks
+write the modules which they resolved to `.gradle/dependency-verification/inventory.tsv` of
+`build-logic`, `tor` and `tor/build-logic`, in the format of the inventories of Bisq 2, and
+`dependencySignatureReport` lists them next to the modules of the root build. The tasks of
+the included builds are marked as incompatible with the configuration cache, as the task of
+the root build is, so Gradle runs them but stores no configuration cache entry. The included
+build `bitcoind` is not part of the audit or the report yet: it has no such task.
 
 ### Verifying and refreshing build dependencies
 
@@ -376,9 +382,8 @@ stale, or when an entry has no rationale.
 An allowlist entry names an exact version and an exact artifact file name. Changing the
 version of a checksum-only dependency therefore makes the old entries stale and the new
 artifacts unapproved. This is the normal case for the Bisq-maintained JitPack dependencies
-(`netlayer`, `tor-binary`, `bitcoinj`, `jsocks` and others), because they are pinned to a Git
-commit and every update changes the commit. A `netlayer` update usually changes the
-`tor-binary` commit as well.
+(`bitcoinj` and `jsonrpc4j`), because they are pinned to a Git commit or a Bisq release
+version and every update changes it.
 **Updating `verification-metadata.xml` without updating the allowlist turns `verifyReleaseBuild`
 red, including every open pull request.** The failure looks like this:
 
@@ -387,10 +392,10 @@ Execution failed for task ':verifyDependencySignaturePolicy'.
 > Dependency signature policy failed.
 
   Unapproved checksum-only dependency artifacts:
-   - com.github.bisq-network.netlayer:tor:<new-commit>	tor-<new-commit>.jar
+   - com.github.bisq-network:bitcoinj:<new-commit>	bitcoinj-<new-commit>.jar
    ...
   Allowlist entries that are no longer checksum-only artifacts:
-   - com.github.bisq-network.netlayer:tor:<old-commit>	tor-<old-commit>.jar
+   - com.github.bisq-network:bitcoinj:<old-commit>	bitcoinj-<old-commit>.jar
    ...
 ```
 

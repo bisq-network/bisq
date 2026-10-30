@@ -40,7 +40,6 @@ logback = { strictly = '1.5.32' }
 lombok = { strictly = '1.18.46' }
 mockito = { strictly = '5.23.0' }
 natpryce-make-it-easy = { strictly = '4.0.1' }
-netlayer = { strictly = '74230355ff2aa65596fff0f25138045e36b6014e' }
 javafx = { strictly = '21.0.13' }
 openjfx-javafx-plugin = { strictly = '0.1.0' }
 protobuf = { strictly = '3.25.8' }
@@ -108,9 +107,6 @@ lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 natpryce-make-it-easy = { module = "com.natpryce:make-it-easy", version.ref = "natpryce-make-it-easy" }
-
-netlayer-tor-external = { module = "com.github.bisq-network.netlayer:tor.external", version.ref = "netlayer" }
-netlayer-tor-native = { module = "com.github.bisq-network.netlayer:tor.native", version.ref = "netlayer" }
 
 openjfx-javafx-plugin = { module = "org.openjfx:javafx-plugin", version.ref = "openjfx-javafx-plugin" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }

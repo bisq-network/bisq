@@ -258,9 +258,15 @@ def loadSignerMetadata = { File keyringFile ->
 
 // Gradle gives this build no access to the projects of its included builds, so each of them resolves its own
 // configurations in its task resolveAndVerifyDependencies, and Gradle verifies their artifacts with the metadata of
-// this build. The submodule bitcoind is left out: it has no such task.
-def includedBuildDependencyAudits = ['build-logic'].collect { name ->
+// this build. Each writes the modules which it resolved to an inventory, from which dependencySignatureReport lists
+// them; the task of tor also resolves the build-logic of tor and writes its inventory. The submodule bitcoind is left
+// out: it has no such task.
+def includedBuildDependencyAudits = ['build-logic', 'tor'].collect { name ->
     gradle.includedBuild(name).task(':resolveAndVerifyDependencies')
+}
+def includedBuildsWithDependencyInventory = ['build-logic', 'tor', 'tor/build-logic']
+def includedBuildDependencyInventories = includedBuildsWithDependencyInventory.collect { name ->
+    layout.projectDirectory.file("${name}/.gradle/dependency-verification/inventory.tsv")
 }
 
 def resolvableConfigurations = {
@@ -360,7 +366,7 @@ def readChecksumFallbackAllowlist = { File allowlistFile ->
 
 tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
-    description = 'Resolves every resolvable configuration, also of the included build build-logic, for dependency verification.'
+    description = 'Resolves every resolvable configuration, also of the included builds build-logic and tor, for dependency verification.'
     dependsOn includedBuildDependencyAudits
 
     // Resolving every configuration of every project needs the project model while the task runs.
@@ -489,6 +495,7 @@ tasks.register('refreshDependencyVerificationKeyring') {
 tasks.register('dependencySignatureReport') {
     group = 'verification'
     description = 'Writes a report of signed and checksum-only dependencies from Gradle verification metadata.'
+    dependsOn includedBuildDependencyAudits
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyVerificationKeyring).optional()
@@ -502,6 +509,29 @@ tasks.register('dependencySignatureReport') {
 
     doLast {
         def resolved = resolveConfigurations(true)
+        def configurationCount = resolvableConfigurations().size()
+        includedBuildDependencyInventories.each { inventory ->
+            def inventoryFile = inventory.asFile
+            if (!inventoryFile.isFile()) {
+                throw new GradleException("Missing dependency inventory ${inventoryFile}.")
+            }
+            // The format of the inventories of Bisq 2 and the Tor build; their artifact lines are not needed here
+            inventoryFile.eachLine(StandardCharsets.UTF_8.name()) { line ->
+                def columns = line.split('\t')
+                switch (columns[0]) {
+                    case 'configurations':
+                        configurationCount += columns[1] as int
+                        break
+                    case 'direct':
+                        resolved.resolvedComponents.add(columns[1])
+                        resolved.directComponents.add(columns[1])
+                        break
+                    case 'transitive':
+                        resolved.resolvedComponents.add(columns[1])
+                        break
+                }
+            }
+        }
         def metadataFile = dependencyVerificationMetadata.asFile
         def keyringFile = dependencyVerificationKeyring.asFile
         if (!metadataFile.exists()) {
@@ -658,7 +688,7 @@ tasks.register('dependencySignatureReport') {
 
         def markdown = new StringBuilder()
         markdown << '# Dependency Signature Report\n\n'
-        markdown << "Generated from `gradle/verification-metadata.xml` after resolving ${resolvableConfigurations().size()} configurations.\n\n"
+        markdown << "Generated from `gradle/verification-metadata.xml` after resolving ${configurationCount} configurations of this build and of the included builds ${includedBuildsWithDependencyInventory.join(', ')}.\n\n"
         if (keyringFile.exists()) {
             markdown << 'Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.\n\n'
         } else {
@@ -1212,6 +1242,8 @@ def installerEvidenceRequiredEntries = [
 ]
 def expectedReleaseJavaVersion = providers.gradleProperty('releaseBuild.javaVersion')
 def expectedReleaseJavaVendor = providers.gradleProperty('releaseBuild.javaVendor')
+def expectedReleaseJavaRuntimeVersion = providers.gradleProperty('releaseBuild.javaRuntimeVersion')
+def expectedReleaseJavaVendorVersion = providers.gradleProperty('releaseBuild.javaVendorVersion')
 def expectedReleaseGradleVersion = providers.gradleProperty('releaseBuild.gradleVersion')
 
 def validateReleaseEvidenceBundle = { File bundle ->
@@ -1607,6 +1639,8 @@ tasks.register('verifyReleaseEnvironment') {
 
     inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
     inputs.property('expectedReleaseJavaVendor', expectedReleaseJavaVendor)
+    inputs.property('expectedReleaseJavaRuntimeVersion', expectedReleaseJavaRuntimeVersion)
+    inputs.property('expectedReleaseJavaVendorVersion', expectedReleaseJavaVendorVersion)
     inputs.property('expectedReleaseGradleVersion', expectedReleaseGradleVersion)
     outputs.upToDateWhen { false }
 
@@ -1617,9 +1651,13 @@ tasks.register('verifyReleaseEnvironment') {
     doLast {
         def expectedJavaVersion = expectedReleaseJavaVersion.get()
         def expectedJavaVendorValue = expectedReleaseJavaVendor.get()
+        def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
+        def expectedJavaVendorVersion = expectedReleaseJavaVendorVersion.get()
         def expectedGradleVersion = expectedReleaseGradleVersion.get()
         def actualJavaVersion = System.getProperty('java.version')
         def actualJavaVendor = System.getProperty('java.vendor')
+        def actualJavaRuntimeVersion = System.getProperty('java.runtime.version')
+        def actualJavaVendorVersion = System.getProperty('java.vendor.version')
         def violations = []
 
         if (actualJavaVersion != expectedJavaVersion) {
@@ -1627,6 +1665,12 @@ tasks.register('verifyReleaseEnvironment') {
         }
         if (actualJavaVendor != expectedJavaVendorValue) {
             violations << "Java vendor expected ${expectedJavaVendorValue} but was ${actualJavaVendor}"
+        }
+        if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
+            violations << "Java runtime version expected ${expectedJavaRuntimeVersion} but was ${actualJavaRuntimeVersion}"
+        }
+        if (actualJavaVendorVersion != expectedJavaVendorVersion) {
+            violations << "Java vendor version expected ${expectedJavaVendorVersion} but was ${actualJavaVendorVersion}"
         }
         if (actualGradleVersion != expectedGradleVersion) {
             violations << "Gradle version expected ${expectedGradleVersion} but was ${actualGradleVersion}"
@@ -1855,10 +1899,18 @@ tasks.register('verifyGithubActionsSecurity') {
     }
 
     inputs.files(workflowFiles)
+    inputs.property('expectedReleaseJavaVersion', expectedReleaseJavaVersion)
+    inputs.property('expectedReleaseJavaRuntimeVersion', expectedReleaseJavaRuntimeVersion)
     outputs.upToDateWhen { false }
 
     doLast {
         def violations = []
+        def expectedJavaVersion = expectedReleaseJavaVersion.get()
+        def expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.get()
+        def expectedJavaBuildVersion = expectedJavaRuntimeVersion.replaceFirst(/-LTS$/, '')
+        if (!expectedJavaBuildVersion.startsWith("${expectedJavaVersion}+")) {
+            violations << 'releaseBuild.javaRuntimeVersion does not match releaseBuild.javaVersion'
+        }
         workflowFiles.files.sort { left, right -> left.path <=> right.path }.each { workflowFile ->
             def lines = workflowFile.readLines(StandardCharsets.UTF_8.name())
             lines.eachWithIndex { line, index ->
@@ -1894,12 +1946,28 @@ tasks.register('verifyGithubActionsSecurity') {
                     violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating GitHub runner label: ${line.trim()}"
                 }
 
-                if (line ==~ /^\s*java-version:\s*['"]?\d+['"]?\s*$/) {
-                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version: ${line.trim()}"
+                def javaVersionMatcher = line =~ /^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$/
+                if (javaVersionMatcher.matches()) {
+                    def javaVersion = javaVersionMatcher.group(1).trim().replaceAll(/^['"]|['"]$/, '')
+                    if (!javaVersion.startsWith('${{')) {
+                        if (!(javaVersion ==~ /\d+(?:\.\d+){2,}\+\d+/)) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java version: ${line.trim()}"
+                        } else if (javaVersion != expectedJavaBuildVersion) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java version ${javaVersion} but releaseBuild.javaRuntimeVersion is ${expectedJavaRuntimeVersion}"
+                        }
+                    }
                 }
 
-                if (line ==~ /^\s*java:\s*\[\s*['"]?\d+['"]?\s*\]\s*$/) {
-                    violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java major version in a matrix: ${line.trim()}"
+                def javaMatrixMatcher = line =~ /^\s*java:\s*\[([^]]+)]\s*(?:#.*)?$/
+                if (javaMatrixMatcher.matches()) {
+                    javaMatrixMatcher.group(1).split(',').each { value ->
+                        def javaVersion = value.trim().replaceAll(/^['"]|['"]$/, '')
+                        if (!(javaVersion ==~ /\d+(?:\.\d+){2,}\+\d+/)) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses a floating Java matrix version: ${javaVersion}"
+                        } else if (javaVersion != expectedJavaBuildVersion) {
+                            violations << "${relativeToProjectDirectory(workflowFile)}:${lineNumber} uses Java matrix version ${javaVersion} but releaseBuild.javaRuntimeVersion is ${expectedJavaRuntimeVersion}"
+                        }
+                    }
                 }
 
                 if (line ==~ /^\s*check-latest:\s*true\s*$/) {
