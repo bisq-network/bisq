@@ -88,7 +88,7 @@ sudo journalctl --unit bisq --follow
 
 If you need to start over, you can run the uninstall script in this repo
 ```bash
-sudo ./delete_seednode_debian.sh
+sudo ./uninstall_seednode_debian.sh
 ```
 WARNING: this script will delete all data!
 

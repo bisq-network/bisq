@@ -1,0 +1,19 @@
+// The dependency audit of the Bisq build cannot reach the projects of an included build, so this task resolves the
+// configurations of build-logic for it (resolveAndVerifyDependencies in ../build.gradle). Gradle verifies their
+// artifacts with the verification metadata of the Bisq build.
+tasks.register('resolveAndVerifyDependencies') {
+    group = 'verification'
+    description = 'Resolves every resolvable configuration of build-logic for dependency verification.'
+
+    // Resolving every configuration of every project needs the project model while the task runs.
+    // The configuration cache does not allow that, so it is turned off for this task.
+    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+
+    doLast {
+        def configurations = allprojects.collectMany { project ->
+            (project.configurations + project.buildscript.configurations).findAll { it.canBeResolved }
+        }
+        configurations.each { it.resolve() }
+        logger.lifecycle("Resolved and verified ${configurations.size()} configurations in build-logic.")
+    }
+}
