@@ -269,53 +269,36 @@ def includedBuildDependencyInventories = includedBuildsWithDependencyInventory.c
     layout.projectDirectory.file("${name}/.gradle/dependency-verification/inventory.tsv")
 }
 
-def resolvableConfigurations = {
-    allprojects.collectMany { project ->
-        (project.configurations + project.buildscript.configurations).findAll { it.canBeResolved }.collect { configuration ->
-            [project: project, configuration: configuration]
-        }
-    }.sort { left, right ->
-        def leftPath = "${left.project.path}:${left.configuration.name}"
-        def rightPath = "${right.project.path}:${right.configuration.name}"
-        leftPath <=> rightPath
-    }
+def projectDependencyAudits = allprojects.collect { owningProject ->
+    owningProject.apply from: rootProject.file('gradle/resolve-project-dependencies.gradle')
+    owningProject.tasks.named('resolveProjectDependencies')
+}
+def projectDependencyInventories = allprojects.collect { owningProject ->
+    owningProject.layout.projectDirectory.file('.gradle/dependency-verification/project-inventory.tsv')
 }
 
-def resolveConfigurations = { boolean collectComponents ->
+def resolveConfigurations = {
     def resolvedComponents = new TreeSet<String>()
     def directComponents = new TreeSet<String>()
-    def failures = []
-
-    resolvableConfigurations().each { entry ->
-        def configuration = entry.configuration
-        try {
-            if (collectComponents) {
-                def result = configuration.incoming.resolutionResult
-                result.root.dependencies.each { dependency ->
-                    def selected = dependency.hasProperty('selected') ? dependency.selected?.id : null
-                    if (selected instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier) {
-                        directComponents.add("${selected.group}:${selected.module}:${selected.version}".toString())
-                    }
-                }
-                result.allComponents.each { component ->
-                    def id = component.id
-                    if (id instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier) {
-                        resolvedComponents.add("${id.group}:${id.module}:${id.version}".toString())
-                    }
-                }
+    def configurationCount = 0
+    projectDependencyInventories.each { inventory ->
+        inventory.asFile.eachLine(StandardCharsets.UTF_8.name()) { line ->
+            def columns = line.split('\t')
+            switch (columns[0]) {
+                case 'configurations':
+                    configurationCount += columns[1] as int
+                    break
+                case 'direct':
+                    resolvedComponents.add(columns[1])
+                    directComponents.add(columns[1])
+                    break
+                case 'transitive':
+                    resolvedComponents.add(columns[1])
+                    break
             }
-
-            configuration.resolve()
-        } catch (Exception exception) {
-            failures << "${entry.project.path}:${configuration.name} - ${exception.message}"
         }
     }
-
-    if (!failures.empty) {
-        throw new GradleException("Failed to resolve ${failures.size()} configuration(s):\n - ${failures.join('\n - ')}")
-    }
-
-    [resolvedComponents: resolvedComponents, directComponents: directComponents]
+    [resolvedComponents: resolvedComponents, directComponents: directComponents, configurationCount: configurationCount]
 }
 
 def readChecksumFallbackAllowlist = { File allowlistFile ->
@@ -367,15 +350,13 @@ def readChecksumFallbackAllowlist = { File allowlistFile ->
 tasks.register('resolveAndVerifyDependencies') {
     group = 'verification'
     description = 'Resolves every resolvable configuration, also of the included builds build-logic and tor, for dependency verification.'
-    dependsOn includedBuildDependencyAudits
+    dependsOn includedBuildDependencyAudits, projectDependencyAudits
 
-    // Resolving every configuration of every project needs the project model while the task runs.
-    // The configuration cache does not allow that, so it is turned off for this task.
-    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+    notCompatibleWithConfigurationCache('Reads dependency inventories and project files at execution time')
 
     doLast {
-        resolveConfigurations(false)
-        logger.lifecycle("Resolved and verified ${resolvableConfigurations().size()} configurations.")
+        def resolved = resolveConfigurations()
+        logger.lifecycle("Resolved and verified ${resolved.configurationCount} configurations.")
     }
 }
 
@@ -383,17 +364,15 @@ tasks.register('verifyDependencySignaturePolicy') {
     group = 'verification'
     description = 'Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed ' +
             'or if the metadata does not turn the key servers off.'
-    dependsOn includedBuildDependencyAudits
+    dependsOn includedBuildDependencyAudits, projectDependencyAudits
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyChecksumFallbackAllowlist)
 
-    // Resolving every configuration of every project needs the project model while the task runs.
-    // The configuration cache does not allow that, so it is turned off for this task.
-    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+    notCompatibleWithConfigurationCache('Reads dependency inventories and project files at execution time')
 
     doLast {
-        resolveConfigurations(false)
+        resolveConfigurations()
 
         def metadataFile = dependencyVerificationMetadata.asFile
         def allowlistFile = dependencyChecksumFallbackAllowlist.asFile
@@ -495,7 +474,7 @@ tasks.register('refreshDependencyVerificationKeyring') {
 tasks.register('dependencySignatureReport') {
     group = 'verification'
     description = 'Writes a report of signed and checksum-only dependencies from Gradle verification metadata.'
-    dependsOn includedBuildDependencyAudits
+    dependsOn includedBuildDependencyAudits, projectDependencyAudits
 
     inputs.file(dependencyVerificationMetadata)
     inputs.file(dependencyVerificationKeyring).optional()
@@ -503,13 +482,11 @@ tasks.register('dependencySignatureReport') {
     outputs.file(dependencySignatureReport)
     outputs.upToDateWhen { false }
 
-    // Resolving every configuration of every project needs the project model while the task runs.
-    // The configuration cache does not allow that, so it is turned off for this task.
-    notCompatibleWithConfigurationCache('Resolves all project configurations at execution time')
+    notCompatibleWithConfigurationCache('Reads dependency inventories and project files at execution time')
 
     doLast {
-        def resolved = resolveConfigurations(true)
-        def configurationCount = resolvableConfigurations().size()
+        def resolved = resolveConfigurations()
+        def configurationCount = resolved.configurationCount
         includedBuildDependencyInventories.each { inventory ->
             def inventoryFile = inventory.asFile
             if (!inventoryFile.isFile()) {
