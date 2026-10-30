@@ -4,13 +4,6 @@ plugins {
 
 javafx {
     version = libs.versions.javafx.get()
-
-    // JavaFX does not publish linux-aarch64 artifacts; use the plain linux classifier on Linux ARM
-    def osName = System.getProperty('os.name').toLowerCase()
-    def osArch = System.getProperty('os.arch')
-    if (osName.contains('linux') && (osArch == 'aarch64' || osArch == 'arm64')) {
-        platform = 'linux'
-    }
 }
 
 plugins.withId('java') {

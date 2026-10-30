@@ -184,7 +184,7 @@ Example:
     "environment": {
       "os": "macOS 15",
       "architecture": "x86_64",
-      "javaVersion": "21.0.6",
+      "javaVersion": "21.0.13",
       "gradleVersion": "..."
     },
     "commands": [

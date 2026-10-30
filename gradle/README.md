@@ -12,7 +12,7 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Java **21.0.6** from **Azul Systems, Inc.**
+Currently pinned: **Gradle 9.0.0**, Java **21.0.13** from **Azul Systems, Inc.**
 The Gradle and Java values are also pinned in `gradle.properties`
 (`releaseBuild.gradleVersion`, `releaseBuild.javaVersion`, `releaseBuild.javaVendor`)
 and repeated in `docs/release-checklist.md`.
@@ -337,7 +337,26 @@ contain one, and the task warns if one appears.
 IDE import can resolve `-sources.jar` and `-javadoc.jar` artifacts that normal builds and
 `resolveAndVerifyDependencies` do not request. `verification-metadata.xml` trusts both
 kinds by file name in `<trusted-artifacts>`, so Gradle does not verify them and they need no
-metadata entries. They are not on any build classpath.
+metadata entries.
+
+### Updating JavaFX
+
+The JavaFX version is `javafx` in `libs.versions.toml`. The `org.openjfx` group is trusted by
+the key `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1` at group level, so
+`--write-verification-metadata` writes only the checksum of the `javafx` parent POM and no
+entries for `javafx-base`, `javafx-controls`, `javafx-fxml` and `javafx-graphics`. The build
+still verifies them by signature, but `dependencySignatureReport` lists them as missing
+metadata. A build also resolves only the classifier of its own platform.
+
+Add the entries by hand: for each of the four modules, the plain jar, the POM and the
+`linux`, `linux-aarch64`, `mac`, `mac-aarch64` and `win` jars. JavaFX publishes
+`linux-aarch64` from 21.0.11 on. Download them with their `.asc` files from
+`https://repo1.maven.org/maven2/org/openjfx/`, check that each `VALIDSIG` line ends with the
+key above, and record the SHA-256 values. The keyring copy of that key has no user ID, which
+gpg rejects on import; take the key from a key server and compare the fingerprint. Then
+remove the entries of the old version, run `resolveAndVerifyDependencies
+--write-verification-metadata pgp,sha256`, which keeps the added entries, and regenerate the
+report.
 
 ### Checksum-only artifacts
 
