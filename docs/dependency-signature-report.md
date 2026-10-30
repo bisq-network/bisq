@@ -10,7 +10,7 @@ Refresh the metadata before regenerating this report:
 
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
 ./gradlew dependencySignatureReport
 ```
 

@@ -373,7 +373,7 @@ dependency verification data. The commands are documented in
 
 ```
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
 ./gradlew dependencySignatureReport
 ```
 

@@ -398,7 +398,7 @@ tasks.register('verifyDependencySignaturePolicy') {
         def metadataFile = dependencyVerificationMetadata.asFile
         def allowlistFile = dependencyChecksumFallbackAllowlist.asFile
         if (!metadataFile.exists()) {
-            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
+            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys' first.")
         }
         def allowlist = readChecksumFallbackAllowlist(allowlistFile)
         def allowedEntries = allowlist.entries
@@ -535,7 +535,7 @@ tasks.register('dependencySignatureReport') {
         def metadataFile = dependencyVerificationMetadata.asFile
         def keyringFile = dependencyVerificationKeyring.asFile
         if (!metadataFile.exists()) {
-            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256' first.")
+            throw new GradleException("Missing ${metadataFile}. Run './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys' first.")
         }
         def allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist.asFile)
         def signerMetadata = loadSignerMetadata(keyringFile)
@@ -698,7 +698,7 @@ tasks.register('dependencySignatureReport') {
         markdown << 'Refresh the metadata before regenerating this report:\n\n'
         markdown << '```bash\n'
         markdown << './gradlew refreshDependencyVerificationKeyring\n'
-        markdown << './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256\n'
+        markdown << './gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys\n'
         markdown << './gradlew dependencySignatureReport\n'
         markdown << '```\n\n'
         markdown << '## Summary\n\n'

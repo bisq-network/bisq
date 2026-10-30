@@ -289,7 +289,7 @@ To refresh dependency verification metadata, turn the key servers on for the ref
 
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
 ```
 
 Writing the metadata with the key servers on removes the `<key-servers>` line. Add
@@ -320,7 +320,7 @@ format, records trusted PGP keys for signed artifacts and keeps SHA-256 checksum
 `reason="Artifact is not signed"` for artifacts whose publishers do not provide detached
 signatures. Gradle writes a reason once and keeps it when it regenerates the metadata. After
 `refreshDependencyVerificationKeyring` adds a key for such an artifact, delete its component
-entry and run `resolveAndVerifyDependencies --write-verification-metadata pgp,sha256` again
+entry and run `resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys` again
 so Gradle writes it with the current result. Do not remove reasons by hand:
 `verifyDependencySignaturePolicy` relies on them to find checksum-only artifacts.
 
@@ -361,7 +361,7 @@ Add the entries by hand: for each of the four modules, the plain jar, the POM an
 key above, and record the SHA-256 values. The keyring copy of that key has no user ID, which
 gpg rejects on import; take the key from a key server and compare the fingerprint. Then
 remove the entries of the old version, run `resolveAndVerifyDependencies
---write-verification-metadata pgp,sha256`, which keeps the added entries, and regenerate the
+--write-verification-metadata pgp,sha256 --export-keys`, which keeps the added entries, and regenerate the
 report.
 
 ### Checksum-only artifacts

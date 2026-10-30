@@ -131,7 +131,7 @@ Refresh dependency verification metadata separately from ordinary code changes:
 
 ```bash
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
 ./gradlew verifyDependencySignaturePolicy
 ./gradlew dependencySignatureReport
 ```
