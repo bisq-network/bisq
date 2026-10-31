@@ -187,8 +187,9 @@ public class PrivateNotificationManager implements MessageListener {
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(privateNotificationMessageAsHex, privateNotification.getSignatureAsBase64());
             return true;
-        } catch (SignatureException e) {
-            log.warn("verifySignature failed");
+        } catch (SignatureException | RuntimeException e) {
+            // Anyone can send the message, and a malformed signature makes bitcoinj throw a RuntimeException
+            log.warn("verifySignature failed. {}", e.toString());
             return false;
         }
     }
