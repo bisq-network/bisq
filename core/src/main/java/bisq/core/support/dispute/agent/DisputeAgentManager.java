@@ -188,7 +188,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
 
     public void updateMap() {
         Map<NodeAddress, T> map = disputeAgentService.getDisputeAgents();
-        observableMap.clear();
+        // The registry is replaced only after every agent was checked
         Map<NodeAddress, T> filtered = map.values().stream()
                 .filter(e -> {
                     String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
@@ -202,6 +202,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                             log.warn("We got an disputeAgent which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());
+                        // Anyone can publish an unlisted agent, so its signature is not checked at all
+                        return false;
                     }
                     final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
                             e.getRegistrationPubKey(),
@@ -209,10 +211,11 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                     if (!isSigValid)
                         log.warn("Sig check for disputeAgent failed. DisputeAgent={}", e.toString());
 
-                    return isInPublicKeyInList && isSigValid;
+                    return isSigValid;
                 })
                 .collect(Collectors.toMap(DisputeAgent::getNodeAddress, Function.identity()));
 
+        observableMap.clear();
         clearAcceptedDisputeAgentsAtUser();
         observableMap.putAll(filtered);
         observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
@@ -320,7 +323,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
             ECKey key = ECKey.fromPublicOnly(registrationPubKey);
             key.verifyMessage(keyToSignAsHex, signature);
             return true;
-        } catch (SignatureException e) {
+        } catch (SignatureException | RuntimeException e) {
+            // A malformed key or signature makes bitcoinj throw a RuntimeException
             log.warn("verifySignature failed");
             return false;
         }
