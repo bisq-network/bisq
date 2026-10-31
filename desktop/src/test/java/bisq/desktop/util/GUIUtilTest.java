@@ -28,14 +28,20 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
 
 import javafx.util.StringConverter;
 
+import java.net.URI;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import org.mockito.MockedStatic;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +54,10 @@ import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 
@@ -202,5 +211,29 @@ public class GUIUtilTest {
 
         assertEquals(" (0.01% of trade amount)",
                 GUIUtil.getPercentageOfTradeAmount(fee, oneBitcoin, Coin.ZERO));
+    }
+
+    // A link can come from a popup text or from DAO data that anyone can publish
+    @Test
+    public void onlyAWebPageIsOpened() throws Exception {
+        assertTrue(GUIUtil.isWebPage(new URI("https://bisq.network")));
+        assertTrue(GUIUtil.isWebPage(new URI("http://example.onion/page")));
+        assertTrue(GUIUtil.isWebPage(new URI("HTTPS://bisq.network")));
+        assertFalse(GUIUtil.isWebPage(new URI("file:///etc/passwd")));
+        assertFalse(GUIUtil.isWebPage(new URI("smb://host/share")));
+        assertFalse(GUIUtil.isWebPage(new URI("javascript:alert(1)")));
+        assertFalse(GUIUtil.isWebPage(new URI("bisq.network")));
+    }
+
+    // Utilities is mocked, so nothing is opened
+    @Test
+    public void aLinkThatIsNotAWebPageIsNotPassedOn() throws Exception {
+        try (MockedStatic<Utilities> utilities = mockStatic(Utilities.class)) {
+            GUIUtil.openWebPageNoPopup("file:///etc/passwd");
+            GUIUtil.openWebPageNoPopup("https://example.invalid");
+
+            utilities.verify(() -> Utilities.openURI(new URI("https://example.invalid")));
+            utilities.verifyNoMoreInteractions();
+        }
     }
 }
