@@ -116,13 +116,16 @@ public class PrivateNotificationManager implements MessageListener {
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
         if (networkEnvelope instanceof PrivateNotificationMessage) {
-            privateNotificationMessage = (PrivateNotificationMessage) networkEnvelope;
+            PrivateNotificationMessage message = (PrivateNotificationMessage) networkEnvelope;
             log.info("Received PrivateNotificationMessage from {} with uid={}",
-                    senderNodeAddress, privateNotificationMessage.getUid());
-            if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
-                final PrivateNotificationPayload privateNotification = privateNotificationMessage.getPrivateNotificationPayload();
-                if (verifySignature(privateNotification))
+                    senderNodeAddress, message.getUid());
+            if (message.getSenderNodeAddress().equals(senderNodeAddress)) {
+                final PrivateNotificationPayload privateNotification = message.getPrivateNotificationPayload();
+                if (verifySignature(privateNotification)) {
+                    // Anyone can send the message, so only the shown one is removed when the user closes it
+                    privateNotificationMessage = message;
                     privateNotificationMessageProperty.set(privateNotification);
+                }
             } else {
                 log.warn("Peer address not matching for privateNotificationMessage");
             }

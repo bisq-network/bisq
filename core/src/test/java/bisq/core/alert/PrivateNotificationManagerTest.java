@@ -46,12 +46,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
- * Anyone can send a private notification. Only one signed with the notification key is shown, and a malformed
- * signature does not make the handling of the message throw.
+ * Anyone can send a private notification. Only one signed with the notification key is shown and removed when the
+ * user closes it, and a malformed signature does not make the handling of the message throw.
  */
 class PrivateNotificationManagerTest {
     private static final NodeAddress SENDER = new NodeAddress("sender.onion", 9999);
@@ -87,6 +88,17 @@ class PrivateNotificationManagerTest {
         receiveFromMailbox(message(notification(malformedSignature()), "uid"));
 
         assertNull(manager.privateNotificationProperty().get());
+    }
+
+    @Test
+    void closingTheShownNotificationRemovesItAndNotALaterUnverifiedOne() {
+        PrivateNotificationMessage shown = message(notification(signedWith(notificationKey())), "shown");
+        receiveFromMailbox(shown);
+        receive(message(notification(signedWith(new ECKey())), "unverified"));
+
+        manager.removePrivateNotification();
+
+        verify(mailboxMessageService).removeMailboxMsg(same(shown));
     }
 
     private static ECKey notificationKey() {
