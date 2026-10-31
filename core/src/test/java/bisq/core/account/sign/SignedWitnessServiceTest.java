@@ -60,6 +60,8 @@ import static org.mockito.Mockito.*;
 
 public class SignedWitnessServiceTest {
     private static final long NOW = Instant.parse("2026-08-14T12:00:00Z").toEpochMilli();
+    // A prefix that is not a valid EC point encoding
+    private static final byte[] MALFORMED_EC_KEY = new byte[]{5, 1};
 
     private final Clock clock = Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC);
     private SignedWitnessService signedWitnessService;
@@ -149,6 +151,66 @@ public class SignedWitnessServiceTest {
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
         assertTrue(signedWitnessService.isSignedByArbitrator(aew1));
+    }
+
+    // Anyone can publish a witness for an account hash, which offers show. Its signer key is not checked when the
+    // witness is stored.
+    @Test
+    public void anArbitratorWitnessWithAMalformedSignerKeyIsInvalid() {
+        SignedWitness malformed = new SignedWitness(ARBITRATOR, account1DataHash, signature1, MALFORMED_EC_KEY,
+                witnessOwner1PubKey, date1, tradeAmount1);
+        signedWitnessService.addToMap(malformed);
+
+        assertFalse(signedWitnessService.verifySignature(malformed));
+        assertFalse(signedWitnessService.isSignedByArbitrator(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.getVerifiedWitnessDateList(aew1).isEmpty());
+    }
+
+    // The signature of an arbitrator in its canonical encoding, with r = 0, from which bitcoinj cannot recover a key
+    @Test
+    public void anArbitratorWitnessWithAnUnrecoverableSignatureIsInvalid() {
+        byte[] signature = new byte[65];
+        signature[0] = 31;
+        signature[64] = 1;
+        SignedWitness witness = new SignedWitness(ARBITRATOR, account1DataHash,
+                java.util.Base64.getEncoder().encode(signature), signer1PubKey, witnessOwner1PubKey, date1,
+                tradeAmount1);
+        signedWitnessService.addToMap(witness);
+
+        assertFalse(signedWitnessService.verifySignature(witness));
+        assertFalse(signedWitnessService.isSignedByArbitrator(aew1));
+    }
+
+    @Test
+    public void aTradeWitnessWithAMalformedSignerKeyIsInvalid() {
+        SignedWitness malformed = new SignedWitness(TRADE, account2DataHash, signature2, new byte[]{1, 2, 3},
+                witnessOwner2PubKey, date2, tradeAmount2);
+        signedWitnessService.addToMap(malformed);
+
+        assertFalse(signedWitnessService.verifySignature(malformed));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.getVerifiedWitnessDateList(aew2).isEmpty());
+    }
+
+    @Test
+    public void aMalformedWitnessNextToTheValidOnesOfAnAccountChangesNothing() {
+        SignedWitness sw1 = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey,
+                witnessOwner2PubKey, date2, tradeAmount2);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(new SignedWitness(ARBITRATOR, account1DataHash, signature1, MALFORMED_EC_KEY,
+                witnessOwner1PubKey, date1, tradeAmount1));
+        signedWitnessService.addToMap(new SignedWitness(TRADE, account2DataHash, signature2, new byte[]{1, 2, 3},
+                witnessOwner2PubKey, date2, tradeAmount2));
+
+        assertTrue(signedWitnessService.isSignedByArbitrator(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertEquals(List.of(date1), signedWitnessService.getVerifiedWitnessDateList(aew1));
+        assertEquals(List.of(date2), signedWitnessService.getVerifiedWitnessDateList(aew2));
     }
 
     @Test

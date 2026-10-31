@@ -442,7 +442,8 @@ public class SignedWitnessService {
                 verifySignatureWithECKeyResultCache.put(hash, false);
                 return false;
             }
-        } catch (SignatureException e) {
+        } catch (SignatureException | RuntimeException e) {
+            // A malformed key or signature makes bitcoinj throw a RuntimeException
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
             verifySignatureWithECKeyResultCache.put(hash, false);
@@ -463,7 +464,8 @@ public class SignedWitnessService {
             }
             verifySignatureWithDSAKeyResultCache.put(hash, isValid);
             return isValid;
-        } catch (CryptoException e) {
+        } catch (CryptoException | RuntimeException e) {
+            // A malformed key is reported as a KeyConversionException, which is a RuntimeException
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
             verifySignatureWithDSAKeyResultCache.put(hash, false);
