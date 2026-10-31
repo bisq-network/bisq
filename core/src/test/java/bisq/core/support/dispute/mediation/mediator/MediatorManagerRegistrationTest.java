@@ -41,9 +41,12 @@ import java.math.BigInteger;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.LongFunction;
 
 import org.junit.jupiter.api.Test;
 
@@ -135,6 +138,44 @@ class MediatorManagerRegistrationTest {
         assertRegistered(registered);
     }
 
+    // Anyone can publish a mediator with the address of a registered one. The attacker chooses free fields, such as the
+    // registration date, until its mediator comes first in the set of published ones.
+    @Test
+    void anUnregisteredMediatorWithTheAddressOfARegisteredOneDoesNotHideIt() {
+        Mediator registered = registeredMediator(MEDIATOR_ADDRESS);
+        Mediator shadow = comingFirstBefore(registered,
+                date -> mediator(MEDIATOR_ADDRESS, pubKeyRing(), new byte[]{2, 1}, "signature", date));
+        givenMediators(shadow, registered);
+
+        manager.updateMap();
+
+        assertRegistered(registered);
+    }
+
+    // The registration signature covers the storage key of the mediator, so a copy with another storage key is invalid
+    @Test
+    void aCopiedRegistrationWithTheAddressOfARegisteredMediatorDoesNotHideIt() {
+        Mediator registered = registeredMediator(MEDIATOR_ADDRESS);
+        Mediator copy = comingFirstBefore(registered, date -> mediator(MEDIATOR_ADDRESS, pubKeyRing(),
+                registered.getRegistrationPubKey(), registered.getRegistrationSignature(), date));
+        givenMediators(copy, registered);
+
+        manager.updateMap();
+
+        assertRegistered(registered);
+    }
+
+    @Test
+    void ofTwoRegistrationsOfAnAddressTheLaterOneCounts() {
+        Mediator later = registeredMediator(MEDIATOR_ADDRESS, 2);
+        Mediator earlier = comingFirstBefore(later, date -> registeredMediator(MEDIATOR_ADDRESS, 1));
+        givenMediators(earlier, later);
+
+        manager.updateMap();
+
+        assertRegistered(later);
+    }
+
     // An update that fails leaves the registry as it was. A mock stands in for a mediator whose check throws.
     @Test
     void theRegistryIsReplacedOnlyAfterAllMediatorsWereChecked() {
@@ -175,6 +216,21 @@ class MediatorManagerRegistrationTest {
         PubKeyRing pubKeyRing = pubKeyRing();
         return mediator(nodeAddress, pubKeyRing, REGISTRATION_KEY.getPubKey(), signatureFor(pubKeyRing),
                 registrationDate);
+    }
+
+    // MediatorService collects the published mediators into a HashSet in the order of the data map, and the order of
+    // the set follows their hash. givenMediators puts the returned mediator first.
+    private static Mediator comingFirstBefore(Mediator other, LongFunction<Mediator> mediatorWithDate) {
+        for (long date = 1; date < 1000; date++) {
+            Mediator mediator = mediatorWithDate.apply(date);
+            Set<Mediator> published = new HashSet<>();
+            published.add(mediator);
+            published.add(other);
+            if (published.iterator().next() == mediator) {
+                return mediator;
+            }
+        }
+        throw new IllegalStateException("No mediator found that comes first");
     }
 
     private static Mediator mediator(NodeAddress nodeAddress, byte[] registrationPubKey, String signature) {

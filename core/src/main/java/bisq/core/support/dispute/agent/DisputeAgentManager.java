@@ -187,9 +187,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     }
 
     public void updateMap() {
-        Map<NodeAddress, T> map = disputeAgentService.getDisputeAgents();
         // The registry is replaced only after every agent was checked
-        Map<NodeAddress, T> filtered = map.values().stream()
+        Map<NodeAddress, T> filtered = disputeAgentService.getUnbannedDisputeAgents().stream()
                 .filter(e -> {
                     String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
                     boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
@@ -213,7 +212,10 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
 
                     return isSigValid;
                 })
-                .collect(Collectors.toMap(DisputeAgent::getNodeAddress, Function.identity()));
+                // Only registered agents claim an address here. If several do, the latest registration counts.
+                .collect(Collectors.toMap(DisputeAgent::getNodeAddress,
+                        Function.identity(),
+                        this::getLaterRegistration));
 
         observableMap.clear();
         clearAcceptedDisputeAgentsAtUser();
@@ -221,6 +223,13 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
         observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
     }
 
+
+    private T getLaterRegistration(T disputeAgent, T otherDisputeAgent) {
+        log.warn("Two registered disputeAgents claim the address {}", disputeAgent.getNodeAddress().getFullAddress());
+        return otherDisputeAgent.getRegistrationDate() > disputeAgent.getRegistrationDate() ?
+                otherDisputeAgent :
+                disputeAgent;
+    }
 
     public void addDisputeAgent(T disputeAgent,
                                 ResultHandler resultHandler,
