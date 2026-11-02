@@ -72,6 +72,33 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
         return payload instanceof SignedWitness;
     }
 
+    // A witness which the store refuses now, with an empty field or an unknown method, could be stored before. It would
+    // stay in the store and go to peers in the initial data, which nodes without that check store and fail on, so it
+    // is removed when the store is read.
+    @Override
+    protected void readFromResources(String postFix, Runnable completeHandler) {
+        super.readFromResources(postFix, () -> {
+            removeMalformedWitnesses();
+            completeHandler.run();
+        });
+    }
+
+    @Override
+    protected void readFromResourcesSync(String postFix) {
+        super.readFromResourcesSync(postFix);
+        removeMalformedWitnesses();
+    }
+
+    private void removeMalformedWitnesses() {
+        int sizeBefore = getMap().size();
+        getMap().values().removeIf(payload -> !payload.verifyHashSize());
+        int removed = sizeBefore - getMap().size();
+        if (removed > 0) {
+            log.warn("We removed {} malformed signed witnesses from the store", removed);
+            requestPersistence();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected

@@ -623,6 +623,10 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public void addToMap(SignedWitness signedWitness) {
+        if (!hasLookupKeys(signedWitness)) {
+            log.warn("We ignore a signed witness with an empty account hash or key. signedWitness={}", signedWitness);
+            return;
+        }
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
 
         P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
@@ -632,6 +636,14 @@ public class SignedWitnessService {
         P2PDataStorage.ByteArray ownerPubKey = new P2PDataStorage.ByteArray(signedWitness.getWitnessOwnerPubKey());
         signedWitnessSetByOwnerPubKey.putIfAbsent(ownerPubKey, new HashSet<>());
         signedWitnessSetByOwnerPubKey.get(ownerPubKey).add(signedWitness);
+    }
+
+    // Anyone can publish a witness, and nothing checks its fields before it is stored. The lookup maps key witnesses by
+    // the account hash and the keys, which must not be empty. Such a witness could not be valid anyway.
+    private static boolean hasLookupKeys(SignedWitness signedWitness) {
+        return signedWitness.getAccountAgeWitnessHash().length > 0 &&
+                signedWitness.getSignerPubKey().length > 0 &&
+                signedWitness.getWitnessOwnerPubKey().length > 0;
     }
 
     private void publishSignedWitness(SignedWitness signedWitness) {
@@ -645,6 +657,9 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public void removeSignedWitness(SignedWitness signedWitness) {
+        if (!hasLookupKeys(signedWitness)) {
+            return;
+        }
         signedWitnessMap.remove(signedWitness.getHashAsByteArray());
 
         P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());

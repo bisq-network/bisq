@@ -24,6 +24,7 @@ import bisq.core.filter.FilterPolicyService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
@@ -45,7 +46,10 @@ import java.time.temporal.ChronoUnit;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -211,6 +215,36 @@ public class SignedWitnessServiceTest {
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertEquals(List.of(date1), signedWitnessService.getVerifiedWitnessDateList(aew1));
         assertEquals(List.of(date2), signedWitnessService.getVerifiedWitnessDateList(aew2));
+    }
+
+    // A stored witness is indexed again at every start, also one with an empty owner key or account hash
+    @Test
+    public void aStoredWitnessWithEmptyFieldsDoesNotStopTheStart() {
+        SignedWitness valid = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness emptyOwner = new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey,
+                new byte[0], date2, tradeAmount2);
+        SignedWitness emptyAccount = new SignedWitness(TRADE, new byte[0], signature3, signer3PubKey,
+                witnessOwner3PubKey, date3, tradeAmount3);
+        SignedWitness emptySigner = new SignedWitness(TRADE, account3DataHash, signature3, new byte[0],
+                witnessOwner3PubKey, date3, tradeAmount3);
+        SignedWitnessStorageService storageService = mock(SignedWitnessStorageService.class);
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> stored = new HashMap<>();
+        for (SignedWitness witness : List.of(valid, emptyOwner, emptyAccount, emptySigner)) {
+            stored.put(witness.getHashAsByteArray(), witness);
+        }
+        when(storageService.getMap()).thenReturn(stored);
+        when(p2pService.getP2PDataStorage()).thenReturn(mock(P2PDataStorage.class));
+        @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
+        when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
+        SignedWitnessService service = new SignedWitnessService(keyRing, p2pService, arbitratorManager,
+                storageService, mock(AppendOnlyDataStoreService.class), filterPolicyService, false, clock);
+
+        service.onAllServicesInitialized();
+
+        assertEquals(List.of(valid), List.copyOf(service.getSignedWitnessMapValues()));
+        assertTrue(service.isSignedByArbitrator(aew1));
+        assertEquals(Set.of(valid), service.getRootSignedWitnessSet(true));
     }
 
     @Test

@@ -154,9 +154,16 @@ public class SignedWitness implements ProcessOncePersistableNetworkPayload, Pers
         return DateUtil.isWithinTolerance(date, clock.millis(), TOLERANCE);
     }
 
+    // The store checks every received witness with this method, as do the connection and the initial data. A witness
+    // with an empty account hash or key cannot be valid, and SignedWitnessService cannot index it. An unknown
+    // verification method is read as null, and such a witness could not be serialized again.
     @Override
     public boolean verifyHashSize() {
-        return hash.length == 20;
+        return hash.length == 20 &&
+                verificationMethod != null &&
+                accountAgeWitnessHash.length > 0 &&
+                signerPubKey.length > 0 &&
+                witnessOwnerPubKey.length > 0;
     }
 
     // Pre 1.0.1 version don't know the new message type and throw an error which leads to disconnecting the peer.
