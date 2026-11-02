@@ -45,6 +45,9 @@ import java.time.temporal.ChronoUnit;
 
 import java.nio.charset.StandardCharsets;
 
+import java.math.BigInteger;
+
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -54,9 +57,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR;
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -215,6 +221,236 @@ public class SignedWitnessServiceTest {
         assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
         assertEquals(List.of(date1), signedWitnessService.getVerifiedWitnessDateList(aew1));
         assertEquals(List.of(date2), signedWitnessService.getVerifiedWitnessDateList(aew2));
+    }
+
+    // Ways to encode the compact signature of a message that bitcoinj also verifies
+    private enum ReEncoding {
+        FLIPPED_COMPRESSION_FLAG,
+        HIGH_S,
+        BASE64_WITH_NEWLINE,
+        BASE64_WITH_UNUSED_BITS_SET;
+
+        private byte[] apply(byte[] signatureBase64) {
+            byte[] signature = java.util.Base64.getDecoder().decode(signatureBase64);
+            switch (this) {
+                case FLIPPED_COMPRESSION_FLAG:
+                    signature[0] = (byte) ((signature[0] & 0xFF) >= 31 ? signature[0] - 4 : signature[0] + 4);
+                    break;
+                case HIGH_S:
+                    int base = (signature[0] & 0xFF) >= 31 ? 31 : 27;
+                    signature[0] = (byte) (base + (((signature[0] & 0xFF) - base) ^ 1));
+                    BigInteger s = new BigInteger(1, Arrays.copyOfRange(signature, 33, 65));
+                    byte[] highS = ECKey.CURVE.getN().subtract(s).toByteArray();
+                    Arrays.fill(signature, 33, 65, (byte) 0);
+                    int length = Math.min(highS.length, 32);
+                    System.arraycopy(highS, highS.length - length, signature, 65 - length, length);
+                    break;
+                case BASE64_WITH_NEWLINE:
+                    return (java.util.Base64.getEncoder().encodeToString(signature) + "\n")
+                            .getBytes(StandardCharsets.UTF_8);
+                case BASE64_WITH_UNUSED_BITS_SET:
+                    // 65 bytes leave two unused bits in the last character before the padding
+                    byte[] encoded = java.util.Base64.getEncoder().encode(signature);
+                    String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+                    int last = alphabet.indexOf(encoded[encoded.length - 2]);
+                    encoded[encoded.length - 2] = (byte) alphabet.charAt(last | 1);
+                    return encoded;
+            }
+            return java.util.Base64.getEncoder().encode(signature);
+        }
+    }
+
+    // A copy of an arbitrator's witness, re-encoded and with the attacker's key as owner, would make that key a signer
+    // root, and an account it signs would count as signed at once
+    @ParameterizedTest
+    @EnumSource(ReEncoding.class)
+    public void aReEncodedCopyOfAnArbitratorWitnessDoesNotMakeItsNewOwnerASigner(ReEncoding reEncoding)
+            throws Exception {
+        KeyPair attacker = Sig.generateKeyPair();
+        byte[] attackerKey = Sig.getPublicKeyBytes(attacker.getPublic());
+        byte[] reEncoded = reEncoding.apply(signature1);
+        // The re-encoded signature verifies, so only its encoding tells it apart
+        arbitrator1Key.verifyMessage(Utilities.encodeToHex(account1DataHash), new String(reEncoded, StandardCharsets.UTF_8));
+        SignedWitness copy = new SignedWitness(ARBITRATOR, account1DataHash, reEncoded, signer1PubKey, attackerKey,
+                NOW, tradeAmount1);
+        SignedWitness signedByTheAttacker = new SignedWitness(TRADE, account3DataHash,
+                Sig.sign(attacker.getPrivate(), account3DataHash), attackerKey, witnessOwner3PubKey, NOW, tradeAmount3);
+        signedWitnessService.addToMap(copy);
+        signedWitnessService.addToMap(signedByTheAttacker);
+
+        assertFalse(signedWitnessService.verifySignature(copy));
+        assertFalse(signedWitnessService.isSignedAccountAgeWitness(aew3));
+    }
+
+    // In the encoding that bitcoinj creates, a copy with another owner has the hash of the original, so the store
+    // ignores it when it has the original
+    @Test
+    public void aCopyOfAnArbitratorWitnessInItsCanonicalEncodingHasTheHashOfTheOriginal() {
+        SignedWitness original = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness copy = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner2PubKey, NOW, tradeAmount1);
+
+        assertTrue(signedWitnessService.verifySignature(original));
+        assertArrayEquals(original.getHash(), copy.getHash());
+    }
+
+    // The result of the check is cached by the hash of the witness, which does not cover the date, so one service
+    // checks both witnesses in both orders
+    @Test
+    public void aWitnessOfAMainnetArbitratorCountsOnlyIfDatedBeforeArbitrationEnded() {
+        long limit = SignedWitnessService.MAINNET_ARBITRATOR_WITNESS_DATE_LIMIT;
+        SignedWitness before = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, limit - 1, tradeAmount1);
+        SignedWitness after = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, limit, tradeAmount1);
+        assertArrayEquals(before.getHash(), after.getHash());
+
+        SignedWitnessService service = serviceWithMainnetArbitratorKeys();
+        assertTrue(service.verifySignature(before));
+        assertFalse(service.verifySignature(after));
+        SignedWitnessService otherService = serviceWithMainnetArbitratorKeys();
+        assertFalse(otherService.verifySignature(after));
+        assertTrue(otherService.verifySignature(before));
+    }
+
+    // The network relays a witness only if it is dated within a day of now, so a copy of a mainnet arbitrator's
+    // witness, even in its canonical encoding, cannot make its new owner a signer
+    @Test
+    public void aRelayedCopyOfAMainnetArbitratorWitnessDoesNotMakeItsNewOwnerASigner() throws Exception {
+        SignedWitnessService service = serviceWithMainnetArbitratorKeys();
+        KeyPair attacker = Sig.generateKeyPair();
+        byte[] attackerKey = Sig.getPublicKeyBytes(attacker.getPublic());
+        SignedWitness copy = new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey, attackerKey,
+                NOW, tradeAmount1);
+        SignedWitness signedByTheAttacker = new SignedWitness(TRADE, account3DataHash,
+                Sig.sign(attacker.getPrivate(), account3DataHash), attackerKey, witnessOwner3PubKey, NOW, tradeAmount3);
+        assertTrue(copy.isDateInTolerance(clock));
+        service.addToMap(copy);
+        service.addToMap(signedByTheAttacker);
+
+        assertFalse(service.verifySignature(copy));
+        assertFalse(service.isSignedAccountAgeWitness(aew3));
+    }
+
+    // The JDK verifies a trade signature also with an INTEGER without its leading zero, which gives the witness
+    // another hash. A copy in that encoding with the attacker's key as owner would be stored next to the original,
+    // and the attacker's key would sign as if the signer had signed it.
+    @Test
+    public void aReEncodedCopyOfATradeWitnessDoesNotMakeItsNewOwnerASigner() throws Exception {
+        byte[] signature = signatureWithALeadingZero(peer1KeyPair, account2DataHash);
+        byte[] reEncoded = withoutTheFirstLeadingZero(signature);
+        // The re-encoded signature verifies, so only its encoding tells it apart
+        assertTrue(Sig.verify(peer1KeyPair.getPublic(), account2DataHash, reEncoded));
+        KeyPair attacker = Sig.generateKeyPair();
+        byte[] attackerKey = Sig.getPublicKeyBytes(attacker.getPublic());
+        SignedWitness original = new SignedWitness(TRADE, account2DataHash, signature, signer2PubKey,
+                witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness copy = new SignedWitness(TRADE, account2DataHash, reEncoded, signer2PubKey, attackerKey, date2,
+                tradeAmount2);
+        assertFalse(Arrays.equals(original.getHash(), copy.getHash()));
+        assertTrue(copy.verifyHashSize());
+        SignedWitness signedByTheAttacker = new SignedWitness(TRADE, account3DataHash,
+                Sig.sign(attacker.getPrivate(), account3DataHash), attackerKey, witnessOwner3PubKey, date3,
+                tradeAmount3);
+        signedWitnessService.addToMap(new SignedWitness(ARBITRATOR, account1DataHash, signature1, signer1PubKey,
+                witnessOwner1PubKey, date1, tradeAmount1));
+        signedWitnessService.addToMap(copy);
+        signedWitnessService.addToMap(signedByTheAttacker);
+
+        assertTrue(signedWitnessService.verifySignature(original));
+        assertFalse(signedWitnessService.verifySignature(copy));
+        assertFalse(signedWitnessService.isSignedAccountAgeWitness(aew3));
+    }
+
+    // The hash of the witness also covers the signer key, which the JDK also reads in an encoding with a longer
+    // length field
+    @Test
+    public void aCopyOfATradeWitnessWithAReEncodedSignerKeyIsNotValid() throws Exception {
+        byte[] reEncodedKey = withALongerLengthField(signer2PubKey);
+        // The JDK reads the re-encoded key, and the signature verifies with it
+        assertTrue(Sig.verify(Sig.getPublicKeyFromBytes(reEncodedKey), account2DataHash, signature2));
+        SignedWitness original = new SignedWitness(TRADE, account2DataHash, signature2, signer2PubKey,
+                witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness copy = new SignedWitness(TRADE, account2DataHash, signature2, reEncodedKey,
+                witnessOwner3PubKey, date2, tradeAmount2);
+        assertFalse(Arrays.equals(original.getHash(), copy.getHash()));
+
+        assertTrue(signedWitnessService.verifySignature(original));
+        assertFalse(signedWitnessService.verifySignature(copy));
+    }
+
+    // The X.509 encoding of a DSA key with the length of its outer SEQUENCE in three bytes instead of two
+    private static byte[] withALongerLengthField(byte[] key) {
+        assertEquals(0x30, key[0] & 0xFF);
+        assertEquals(0x82, key[1] & 0xFF);
+        byte[] reEncoded = new byte[key.length + 1];
+        reEncoded[0] = 0x30;
+        reEncoded[1] = (byte) 0x83;
+        reEncoded[2] = 0;
+        System.arraycopy(key, 2, reEncoded, 3, key.length - 2);
+        return reEncoded;
+    }
+
+    @Test
+    public void onlyTheDerEncodingWhichTheJdkCreatesIsCanonical() throws Exception {
+        byte[] signature = signatureWithALeadingZero(peer1KeyPair, account2DataHash);
+        assertTrue(SignedWitnessService.isCanonicalDerSignature(signature));
+        assertTrue(SignedWitnessService.isCanonicalDerSignature(signature2));
+
+        assertFalse(SignedWitnessService.isCanonicalDerSignature(withoutTheFirstLeadingZero(signature)));
+        byte[] withNeedlessZero = new byte[signature2.length + 1];
+        withNeedlessZero[0] = 0x30;
+        withNeedlessZero[1] = (byte) (signature2[1] + 1);
+        withNeedlessZero[2] = 0x02;
+        withNeedlessZero[3] = (byte) (signature2[3] + 1);
+        System.arraycopy(signature2, 4, withNeedlessZero, 5, signature2.length - 4);
+        assertFalse(SignedWitnessService.isCanonicalDerSignature(withNeedlessZero));
+        byte[] withTrailingByte = Arrays.copyOf(signature2, signature2.length + 1);
+        assertFalse(SignedWitnessService.isCanonicalDerSignature(withTrailingByte));
+        byte[] withLongFormLength = new byte[signature2.length + 1];
+        withLongFormLength[0] = 0x30;
+        withLongFormLength[1] = (byte) 0x81;
+        System.arraycopy(signature2, 1, withLongFormLength, 2, signature2.length - 1);
+        assertFalse(SignedWitnessService.isCanonicalDerSignature(withLongFormLength));
+        assertFalse(SignedWitnessService.isCanonicalDerSignature(new byte[0]));
+    }
+
+    // About half of the signatures have an INTEGER with a leading zero, because its first byte would be negative
+    private static byte[] signatureWithALeadingZero(KeyPair keyPair, byte[] data) throws Exception {
+        for (int i = 0; i < 200; i++) {
+            byte[] signature = Sig.sign(keyPair.getPrivate(), data);
+            if (withoutTheFirstLeadingZero(signature) != null) {
+                return signature;
+            }
+        }
+        throw new IllegalStateException("No signature with a leading zero");
+    }
+
+    // The DER SEQUENCE of r and s with the leading zero of the first INTEGER which has one removed, or null
+    private static byte[] withoutTheFirstLeadingZero(byte[] signature) {
+        int offset = 2;
+        for (int integer = 0; integer < 2; integer++) {
+            int length = signature[offset + 1];
+            if (length > 1 && signature[offset + 2] == 0 && (signature[offset + 3] & 0x80) != 0) {
+                byte[] reEncoded = new byte[signature.length - 1];
+                System.arraycopy(signature, 0, reEncoded, 0, offset + 2);
+                System.arraycopy(signature, offset + 3, reEncoded, offset + 2, signature.length - offset - 3);
+                reEncoded[1] = (byte) (signature[1] - 1);
+                reEncoded[offset + 1] = (byte) (length - 1);
+                return reEncoded;
+            }
+            offset += 2 + length;
+        }
+        return null;
+    }
+
+    private SignedWitnessService serviceWithMainnetArbitratorKeys() {
+        @SuppressWarnings("deprecation") ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
+        when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
+        when(arbitratorManager.isLegacyArbitratorPublicKey(any())).thenReturn(true);
+        return new SignedWitnessService(keyRing, p2pService, arbitratorManager, null,
+                mock(AppendOnlyDataStoreService.class), filterPolicyService, false, clock);
     }
 
     // A stored witness is indexed again at every start, also one with an empty owner key or account hash
@@ -397,12 +633,13 @@ public class SignedWitnessServiceTest {
         SignedWitnessService mainnetDataService = new SignedWitnessService(keyRing, p2pService,
                 devArbitratorManager, null, appendOnlyDataStoreService, filterPolicyService, true, clock);
 
+        // Mainnet arbitrators signed before arbitration ended
         SignedWitness signedWitness = new SignedWitness(ARBITRATOR,
                 account1DataHash,
                 signature1,
                 signer1PubKey,
                 witnessOwner1PubKey,
-                date1,
+                SignedWitnessService.MAINNET_ARBITRATOR_WITNESS_DATE_LIMIT - 1,
                 tradeAmount1);
         defaultService.addToMap(signedWitness);
         mainnetDataService.addToMap(signedWitness);
