@@ -92,7 +92,9 @@ and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bun
 - Monitored seed nodes set `seedNodeReportingServerUrl=http://localhost:13003` in `bisq.properties` of the data
   directory. The monitoring script of bisq-monitor adds the option to `bisq.service` with a patch which does not apply
   to the new unit, so without this line the node sends no reports.
-- The Docker deployment of the seed node in `seednode/deployment_v2/docker` is not supported with the Tor library.
+- The Docker deployment of the seed node in `seednode/deployment_v2/docker` runs Tor in the container of the seed
+  node instead of the service `bisq-tor`. Operators remove the stack and deploy it again, as the README of the seed
+  node describes.
 - Release builds use Azul Zulu 21.0.13 and JavaFX 21.0.13.
 
 ## Notable Changes

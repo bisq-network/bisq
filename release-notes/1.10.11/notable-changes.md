@@ -172,9 +172,11 @@ Related commits: `c5d5ce01dd`, `4fd3b7b2e1`, `2ceeb89841`, `1445620f06`, `a7d7a9
 - Monitored seed nodes set `seedNodeReportingServerUrl=http://localhost:13003` in `bisq.properties` of the data
   directory: the patch of bisq-monitor's install script, which added the option to the old unit, does not apply to
   the new one.
-- The Docker deployment in `seednode/deployment_v2/docker` is not supported with the Tor library.
+- The Docker deployment in `seednode/deployment_v2/docker` runs Tor in the container of the seed node instead of the
+  service `bisq-tor`, which could not reach the onion service of the node. Operators remove the stack and deploy it
+  again, as the README of the seed node describes.
 
-Related commits: `a41734fe77`, `bd644fbf2b`, `5ddf0996e1`, `d0d99260d0`, `456d1fb0ef`, `545a3aeac6`.
+Related commits: `a41734fe77`, `bd644fbf2b`, `5ddf0996e1`, `d0d99260d0`, `456d1fb0ef`, `545a3aeac6`, `0bb1e71510`.
 
 ## Build Tooling
 
