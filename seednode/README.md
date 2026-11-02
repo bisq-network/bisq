@@ -193,10 +193,22 @@ because the new unit no longer starts after the tor service.
 authenticates with the SAFECOOKIE method, in which tor proves that it knows the cookie before the seed node sends
 anything. A seed node which used `--torControlPassword` sets `ControlPassword` in `external_tor.config` instead.
 
-The Docker deployment in `deployment_v2/docker` is not supported with the Tor library. It configures its Tor container
-with `--torControlHost` and `--torControlPassword`, which stop the seed node at the start, and that Tor runs in another
-container, which cannot reach the onion service of the seed node: Tor connects to the target of `ADD_ONION` at
-`127.0.0.1` of its own container.
+In the Docker deployment in `deployment_v2/docker`, the seed node starts its own Tor in the `bisq-seednode` container,
+as under "Tor" above. Tor connects to the onion service of the seed node at `127.0.0.1`, so it must run in the
+container of the seed node: the services of a Swarm stack cannot share a network namespace. The key of the onion
+service stays in `tor/hiddenservice` of the data volume, so the onion address does not change. If the container cannot
+enforce the sandbox, the seed node stops with an error which names the reason; only then add the line
+`useTorSandbox=false` to `seednode_config`. Earlier versions of the deployment ran Tor in the service `bisq-tor`.
+`docker stack deploy` keeps services which the compose file no longer names, and Swarm cannot change a config which
+the stack uses, so remove the stack before you deploy it again after this upgrade or after a change of
+`seednode_config`. The volume of the seed node stays:
+```bash
+sudo docker stack rm bisq-seednode
+# Wait until `sudo docker service ls` lists no service of the stack.
+sudo docker stack deploy --compose-file docker-compose.yml bisq-seednode
+```
+After this upgrade, `sudo docker volume rm bisq-seednode_tor_data` removes the volume of the old Tor service, which
+holds no key of the seed node.
 
 ### Uninstall
 
