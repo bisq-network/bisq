@@ -87,7 +87,9 @@ class TorLogRedactionTest {
                         "(status code 403, \"Forbidden\"). Closing.",
                 "Oct 31 09:07:38.000 [warn] Problem bootstrapping. Stuck at 5% (conn): Connecting to a relay. " +
                         "(No route to host; NOROUTE; count 2; recommendation warn; host " + BRIDGE_FINGERPRINT +
-                        " at ::ffff:192.0.2.79:443)");
+                        " at ::ffff:192.0.2.79:443)",
+                "Oct 31 09:07:39.000 [warn] The https proxy refused to allow connection to 2600:: " +
+                        "(status code 403, \"Forbidden\"). Closing.");
 
         String redacted = TorLogRedaction.withoutRelayIdentities(log);
 
@@ -97,7 +99,10 @@ class TorLogRedactionTest {
         assertTrue(redacted.contains("recommendation warn; host [relay] at [address])"), redacted);
         assertTrue(redacted.contains("Oct 31 09:07:37.000 [warn] The https proxy refused to allow connection to " +
                 "[address] (status code 403"), redacted);
-        assertTrue(redacted.endsWith("host [relay] at [address])"), redacted);
+        assertTrue(redacted.contains("host [relay] at [address])\n"), redacted);
+        assertFalse(redacted.contains("2600"), redacted);
+        assertTrue(redacted.endsWith("Oct 31 09:07:39.000 [warn] The https proxy refused to allow connection to " +
+                "[address] (status code 403, \"Forbidden\"). Closing."), redacted);
     }
 
     // Tor logs a LOG line of a pluggable transport as 'Managed proxy "%s": %s'. The messages are those of lyrebird:
@@ -111,6 +116,7 @@ class TorLogRedactionTest {
                         "front cdn.example.com: dial tcp: lookup cdn.example.com: no such host",
                 "Oct 31 09:08:12.000 [err] Managed proxy \"C:\\Program Files\\Bisq\\tor\\lyrebird.exe\": " +
                         "Error dialing: dial tcp: lookup Bridge-1.Example.ORG: no such host",
+                "Oct 31 09:08:12.500 [notice] " + proxy + "Using TLS SNI: bridge.xn--p1ai",
                 "Oct 31 09:08:13.000 [notice] Tor can't help you if you use it wrong! Learn how to be safe at " +
                         "https://support.torproject.org/faq/staying-anonymous/");
 
@@ -122,6 +128,8 @@ class TorLogRedactionTest {
                 "lookup [host]: no such host"), redacted);
         assertTrue(redacted.contains("Managed proxy \"C:\\Program Files\\Bisq\\tor\\lyrebird.exe\": Error dialing: " +
                 "dial tcp: lookup [host]: no such host"), redacted);
+        assertTrue(redacted.contains("09:08:12.500 [notice] " + proxy + "Using TLS SNI: [host]"), redacted);
+        assertFalse(redacted.contains("p1ai"), redacted);
         // Lines of Tor itself keep their host names
         assertTrue(redacted.endsWith("https://support.torproject.org/faq/staying-anonymous/"), redacted);
     }

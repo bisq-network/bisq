@@ -41,20 +41,22 @@ public final class TorLogRedaction {
     // A loopback address stays, so that support sees the ports of the listeners. It names no relay or bridge.
     private static final Pattern IPV6_ADDRESS =
             Pattern.compile("\\[(?!::1])[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*](?::\\d{1,5})?");
-    // An IPv6 address without brackets, as in "host <id> at 2001:db8::77:443" of a bootstrap warning. It has "::" or at
-    // least three colons, unlike a time such as 09:07:36.000.
+    // An IPv6 address without brackets, as in "host <id> at 2001:db8::77:443" of a bootstrap warning, also one which
+    // ends with "::". It has "::" or at least three colons, unlike a time such as 09:07:36.000.
     private static final Pattern UNDECORATED_IPV6_ADDRESS = Pattern.compile("(?<![0-9A-Za-z:.])" +
             "(?!::1(?![0-9A-Za-z:]))" +
-            "(?=[0-9A-Fa-f.]*:[0-9A-Fa-f.]*:[0-9A-Fa-f.]*:|[0-9A-Fa-f:.]*::)[0-9A-Fa-f:.]*[0-9A-Fa-f](?![0-9A-Za-z:])");
+            "(?=[0-9A-Fa-f.]*:[0-9A-Fa-f.]*:[0-9A-Fa-f.]*:|[0-9A-Fa-f:.]*::)" +
+            "[0-9A-Fa-f:.]*[0-9A-Fa-f](?:::)?(?![0-9A-Za-z:])");
     // Tor logs the messages of a pluggable transport in lines which name the managed proxy. lyrebird writes the host
     // of a webtunnel bridge there ("Using TLS SNI: <host>"), the URL and front of a meek bridge, and errors with host
     // names.
     private static final Pattern MANAGED_PROXY_LINE = Pattern.compile("(?m)^.*\\b[Mm]anaged proxy\\b.*$");
     private static final Pattern URL = Pattern.compile("\\b[A-Za-z][A-Za-z0-9+.-]*://[^\\s\"'<>]+");
-    // A host name ends with a top level domain of letters. A file name such as lyrebird.exe in the path of the proxy
-    // follows a separator, and stays.
+    // A host name ends with a top level domain of letters, or of Punycode such as xn--p1ai. A file name such as
+    // lyrebird.exe in the path of the proxy follows a separator, and stays.
     private static final Pattern HOST_NAME = Pattern.compile("(?<![A-Za-z0-9_./\\\\-])" +
-            "(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+[A-Za-z]{2,63}(?![A-Za-z0-9_-])");
+            "(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)+" +
+            "(?:[A-Za-z]{2,63}|[Xx][Nn]--[A-Za-z0-9-]{0,58}[A-Za-z0-9])(?![A-Za-z0-9_-])");
     // A version of Tor, such as 0.4.9.15, also has four numbers with dots, and starts with 0. Loopback addresses stay.
     private static final Pattern IPV4_ADDRESS =
             Pattern.compile("\\b(?!0\\.|127\\.)(?:\\d{1,3}\\.){3}\\d{1,3}\\b(?::\\d{1,5})?");
