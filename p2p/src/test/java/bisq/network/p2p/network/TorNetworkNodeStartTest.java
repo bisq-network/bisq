@@ -19,6 +19,7 @@ package bisq.network.p2p.network;
 
 import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
+import bisq.network.tor.TorrcOverrideNotAllowedException;
 import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
@@ -231,6 +232,10 @@ class TorNetworkNodeStartTest {
                 NewTor.SANDBOX_OPT_OUT_HINT)), false));
         assertTrue(TorNetworkNode.isExplained(new ExternalTorUnavailableException("Bisq is configured to use a Tor " +
                 "which runs outside Bisq, but it cannot use the Tor at 127.0.0.1:9051: ..."), false));
+        // A config file brings a torrc entry which makes Tor load a library
+        assertTrue(TorNetworkNode.isExplained(new TorrcOverrideNotAllowedException("These torrc overrides of a " +
+                "configuration file make Tor start a program or load a library: AccelName. " +
+                NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT), false));
         // The Tor library refuses every start on a Whonix-Gateway before anything else
         var gatewayRefusal = new TorStartupFailedException("Bisq does not run on a Whonix-Gateway, ...");
         assertTrue(TorNetworkNode.isExplained(gatewayRefusal, true));

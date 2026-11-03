@@ -21,6 +21,7 @@ import bisq.network.tor.BridgeConfig;
 import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.TorrcOverrideNotAllowedException;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -179,6 +181,40 @@ class NewTorTest {
             assertEquals(Map.of("SocksPort", "9150"), config.get().getTorrcOverrides());
             assertFalse(config.get().isUseExternalTor());
         }
+    }
+
+    // The Tor library refuses the entries of a config file which make Tor start a program or load a library
+    @Test
+    void passesTheEntriesOfAConfigFileToTheTorLibrary(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, new TorrcSettings(null, false, "AccelName engine, Log notice stdout", false),
+                    BridgeAddressProvider.NONE, false, false).getTor();
+
+            assertEquals(Set.of("AccelName", "Log"), config.get().getConfigFileTorrcOverrides().getKeys());
+            assertEquals(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT, config.get().getConfigFileTorrcOverrides().getHint());
+
+            createNewTor(torDir, "AccelName engine", BridgeAddressProvider.NONE).getTor();
+
+            assertEquals(Set.of(), config.get().getConfigFileTorrcOverrides().getKeys());
+        }
+    }
+
+    // TorService of the Tor library refuses the entry before it installs or starts Tor
+    @Test
+    void anEntryOfAConfigFileWhichLoadsALibraryStopsTheStart(@TempDir File torDir) {
+        assumeTrue(System.getenv("TOR_SKIP_LAUNCH") == null, "TOR_SKIP_LAUNCH would choose a running Tor");
+        var newTor = new NewTor(torDir, new TorrcSettings(null, false, "AccelName engine", false),
+                BridgeAddressProvider.NONE, false, false);
+
+        var refusal = assertThrows(TorrcOverrideNotAllowedException.class, newTor::getTor);
+
+        assertTrue(refusal.getMessage().contains("load a library: AccelName."), refusal.getMessage());
+        assertTrue(refusal.getMessage().endsWith(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT), refusal.getMessage());
+        assertTrue(refusal.getMessage().contains("--torrcOptions"), refusal.getMessage());
     }
 
     @Test

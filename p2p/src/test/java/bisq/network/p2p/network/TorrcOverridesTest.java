@@ -26,12 +26,12 @@ import java.io.IOException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -89,46 +89,42 @@ class TorrcOverridesTest {
         assertTrue(parseFromCommandLine(null, "").isEmpty());
     }
 
+    // The Tor library refuses the entries of a config file which make Tor start a program or load a library. Only the
+    // config file is the source of such an entry, not the command line.
     @Test
-    void acceptsEntriesWhichStartAProgramOnlyFromTheCommandLine(@TempDir Path tempDir) throws IOException {
-        String torrcOptions = "ClientTransportPlugin obfs4 exec /usr/bin/lyrebird";
-        File torrcFile = writeTorrcFile(tempDir, "ServerTransportPlugin obfs4 exec /usr/bin/lyrebird");
+    void namesTheKeysOfTheEntriesWhichAConfigFileBrings(@TempDir Path tempDir) throws IOException {
+        String torrcOptions = "AccelName engine, clienttransportplug obfs4 exec /usr/bin/lyrebird";
+        File torrcFile = writeTorrcFile(tempDir, "ServerTransportPlugin obfs4 exec /usr/bin/lyrebird", "UseBridges 1");
 
-        assertEquals("obfs4 exec /usr/bin/lyrebird", parseFromCommandLine(null, torrcOptions)
-                .get("ClientTransportPlugin"));
-        assertEquals("obfs4 exec /usr/bin/lyrebird", parseFromCommandLine(torrcFile, "")
-                .get("ServerTransportPlugin"));
-
-        var fromConfigFileOptions = assertThrows(IllegalArgumentException.class,
-                () -> TorrcOverrides.parse(new TorrcSettings(null, false, torrcOptions, false)));
-        assertTrue(fromConfigFileOptions.getMessage().contains("ClientTransportPlugin"));
-        assertTrue(fromConfigFileOptions.getMessage().contains("only on the command line"));
-        // The command line names a torrc file, but the options come from a config file
-        assertThrows(IllegalArgumentException.class,
-                () -> TorrcOverrides.parse(new TorrcSettings(torrcFile, true, torrcOptions, false)));
+        // The command line sets both options
+        TorrcOverrides fromCommandLine = TorrcOverrides.parse(TorrcSettings.fromCommandLine(torrcFile, torrcOptions));
+        assertEquals(Set.of(), fromCommandLine.keysFromConfigFile());
+        assertEquals("engine", fromCommandLine.entries().get("AccelName"));
+        // A config file sets the options
+        assertEquals(Set.of("AccelName", "clienttransportplug"),
+                TorrcOverrides.parse(new TorrcSettings(null, false, torrcOptions, false)).keysFromConfigFile());
+        // The command line names the torrc file, but the options come from a config file
+        assertEquals(Set.of("AccelName", "clienttransportplug"),
+                TorrcOverrides.parse(new TorrcSettings(torrcFile, true, torrcOptions, false)).keysFromConfigFile());
         // A config file names the torrc file
-        assertThrows(IllegalArgumentException.class,
-                () -> TorrcOverrides.parse(new TorrcSettings(torrcFile, false, "", true)));
-        // Other entries of a config file are accepted
-        assertEquals(Map.of("AvoidDiskWrites", "1"),
-                TorrcOverrides.parse(new TorrcSettings(null, false, "AvoidDiskWrites 1", false)));
+        assertEquals(Set.of("ServerTransportPlugin", "UseBridges"),
+                TorrcOverrides.parse(new TorrcSettings(torrcFile, false, "", true)).keysFromConfigFile());
     }
 
+    // Tor gets the value of the command line, so the entry of the config file does not reach Tor.
     @Test
-    void entriesWhichStartAProgramAreFoundInAnyCaseAndAsAbbreviation() {
-        // Tor ignores the case of option names and accepts the start of a name
-        assertTrue(TorrcOverrides.startsAProgram("ClientTransportPlugin"));
-        assertTrue(TorrcOverrides.startsAProgram("clienttransportplugin"));
-        assertTrue(TorrcOverrides.startsAProgram("ClientTransportPlug"));
-        assertTrue(TorrcOverrides.startsAProgram("SERVERTRANSPORT"));
-        assertFalse(TorrcOverrides.startsAProgram("ClientOnly"));
-        assertFalse(TorrcOverrides.startsAProgram("ClientTransportPluginX"));
-        assertFalse(TorrcOverrides.startsAProgram("UseBridges"));
-        assertFalse(TorrcOverrides.startsAProgram(""));
+    void anEntryOfTheCommandLineReplacesTheEntryOfAConfigFileWithTheSameKey(@TempDir Path tempDir) throws IOException {
+        File torrcFile = writeTorrcFile(tempDir, "AccelName engine", "UseBridges 1");
+
+        TorrcOverrides torrcOverrides = TorrcOverrides.parse(new TorrcSettings(torrcFile, false, "AccelName other",
+                true));
+
+        assertEquals("other", torrcOverrides.entries().get("AccelName"));
+        assertEquals(Set.of("UseBridges"), torrcOverrides.keysFromConfigFile());
     }
 
     private static Map<String, String> parseFromCommandLine(File torrcFile, String torrcOptions) {
-        return TorrcOverrides.parse(TorrcSettings.fromCommandLine(torrcFile, torrcOptions));
+        return TorrcOverrides.parse(TorrcSettings.fromCommandLine(torrcFile, torrcOptions)).entries();
     }
 
     private static File writeTorrcFile(Path dir, String... lines) throws IOException {
