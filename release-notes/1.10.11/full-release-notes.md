@@ -22,8 +22,7 @@
 >   issue.
 > - Open decisions which change what these notes say: `tor-dir-netlayer-leftovers-kept`,
 >   `http-isolation-default-policy`, `backup-link-handling`, `torrc-file-inline-comment-refused`,
->   `tor-log-leaks-private-bridges-in-support-zip`, `tails-support-unassessed` and
->   `seednode-docker-config-rejected-options`.
+>   `tails-support-unassessed` and `seednode-docker-config-rejected-options`.
 
 These release notes cover the changes after `v1.10.10` (`fb552d3dc6`) through `8072e5ef3c` of `master_henrik_private`,
 and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bundled-tor-sandbox-defaults` which follow
@@ -228,6 +227,13 @@ Tor writes its log to `tor/tor-stdout.log`, which moves to `tor-stdout.log.1` ab
 `tor/tor-stderr.log`, where sandy also says why it did not start Tor. netlayer wrote Tor's output to the Bisq log.
 "Zip Log files" adds these files, the earlier log `tor-stdout.log.1` included. The control traffic of Tor is logged at
 debug level only, because it contains onion addresses.
+
+The zip leaves out the relays and bridges which the logs name, because a privately obtained bridge is blocked once it
+is known and users share the zip. From the logs of Tor it removes fingerprints, nicknames, ed25519 identities, IPv4
+addresses and IPv6 addresses with or without brackets, the arguments of bridge lines such as `cert` and `url`, and the
+URLs and host names in the messages of the pluggable transports, where lyrebird names the host of a webtunnel bridge.
+The versions of Tor and loopback addresses stay. From the Bisq log it removes `HOSTID` and `HOSTADDR` of the bootstrap
+events which the Tor library logs. The files on disk are unchanged.
 
 "Backup now" does not copy the data directory of Tor, which a sandboxed Tor may write, nor `tor/data-mode`, the record
 whether a sandboxed Tor wrote it, which would be wrong next to another data directory. It copies only regular files and

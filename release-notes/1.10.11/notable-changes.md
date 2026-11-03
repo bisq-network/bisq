@@ -133,6 +133,10 @@ Related commit: `14e25d7bb7`.
 - Tor writes its log to `tor/tor-stdout.log` and `tor/tor-stderr.log` instead of the Bisq log. "Zip Log files" adds
   both files and the earlier log `tor/tor-stdout.log.1`. The control traffic of Tor is logged at debug level only,
   because it contains onion addresses.
+- The zip leaves out the relays and bridges which the logs name: in the logs of Tor their fingerprints, nicknames,
+  identities and addresses, and the URLs and host names in the messages of the pluggable transports; in the Bisq log
+  the relay or bridge of a bootstrap warning. A privately obtained bridge is blocked once it is known. The files on
+  disk keep everything, so share the zip, not the files.
 - "Backup now" skips the data directory of Tor and its record `tor/data-mode`, does not follow symbolic links or
   junctions, and names the entries which it did not copy. On file systems with POSIX permissions, only the owner can
   read the backup.

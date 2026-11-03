@@ -31,7 +31,7 @@
 - A running Tor whose SOCKS port does not isolate streams by their SOCKS credentials is refused.
 - When the Tor sandbox is turned off, Bisq clears the data of Tor which a sandboxed Tor wrote. Only a refusal of sandy,
   which Tor cannot fake, makes Bisq advise to turn the sandbox off.
-- "Zip Log files" adds the logs of Tor.
+- "Zip Log files" adds the logs of Tor, without the relays and bridges which they name.
 
 ## Operators
 
