@@ -98,6 +98,32 @@ public class SignedWitnessTest {
         assertFalse(signedWitnessWithDate(now + Long.MIN_VALUE).isDateInTolerance(clock));
     }
 
+    // The store, the connection and the initial data check this before a witness is stored or relayed
+    @Test
+    public void aWitnessWithAnEmptyAccountHashOrKeyFailsTheStoreCheck() {
+        byte[] signerPubKey = arbitrator1Key.getPubKey();
+
+        assertTrue(signedWitness(witnessHash, signerPubKey, witnessOwner1PubKey).verifyHashSize());
+        assertFalse(signedWitness(new byte[0], signerPubKey, witnessOwner1PubKey).verifyHashSize());
+        assertFalse(signedWitness(witnessHash, new byte[0], witnessOwner1PubKey).verifyHashSize());
+        assertFalse(signedWitness(witnessHash, signerPubKey, new byte[0]).verifyHashSize());
+    }
+
+    @Test
+    public void aWitnessWithAnUnknownVerificationMethodFailsTheStoreCheck() {
+        protobuf.SignedWitness proto = signedWitness(witnessHash, arbitrator1Key.getPubKey(), witnessOwner1PubKey)
+                .toProtoMessage().getSignedWitness();
+
+        assertFalse(SignedWitness.fromProto(proto.toBuilder()
+                .setVerificationMethod(protobuf.SignedWitness.VerificationMethod.PB_ERROR).build()).verifyHashSize());
+        assertFalse(SignedWitness.fromProto(proto.toBuilder().setVerificationMethodValue(99).build()).verifyHashSize());
+    }
+
+    private SignedWitness signedWitness(byte[] accountAgeWitnessHash, byte[] signerPubKey, byte[] witnessOwnerPubKey) {
+        return new SignedWitness(TRADE, accountAgeWitnessHash, witnessHashSignature, signerPubKey, witnessOwnerPubKey,
+                Instant.now().toEpochMilli(), 100);
+    }
+
     private SignedWitness signedWitnessWithDate(long date) {
         return new SignedWitness(TRADE, witnessHash, witnessHashSignature, arbitrator1Key.getPubKey(),
                 witnessOwner1PubKey, date, 100);

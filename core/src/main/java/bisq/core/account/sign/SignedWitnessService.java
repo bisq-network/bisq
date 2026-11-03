@@ -53,7 +53,10 @@ import java.time.temporal.ChronoUnit;
 
 import java.nio.charset.StandardCharsets;
 
+import java.math.BigInteger;
+
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -70,6 +73,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
+    // The last witness of a mainnet arbitrator is from 2021-01-25, and no code creates one anymore. A witness that the
+    // network relays is dated within a day of its receipt, so a copy of an arbitrator's witness that someone relays
+    // now cannot be dated earlier. Only seed nodes serve older witnesses, in the initial data.
+    @VisibleForTesting
+    static final long MAINNET_ARBITRATOR_WITNESS_DATE_LIMIT = Instant.parse("2021-02-01T00:00:00Z").toEpochMilli();
     private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
     public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.divide(4);
     // Tolerance for clock differences between the peers when we check the date of a SignedWitness we received
@@ -421,6 +429,14 @@ public class SignedWitnessService {
     }
 
     private boolean verifySignatureWithECKey(SignedWitness signedWitness) {
+        // The lists of arbitrators hold the compressed keys, so a key in another encoding is in none of them
+        String pubKeyAsHex = Utilities.encodeToHex(signedWitness.getSignerPubKey());
+        // Before the cached result, which is keyed by the hash of the witness, and the hash does not cover the date
+        if (signedWitness.getDate() >= MAINNET_ARBITRATOR_WITNESS_DATE_LIMIT &&
+                arbitratorManager.isLegacyArbitratorPublicKey(pubKeyAsHex)) {
+            log.warn("Witness of a mainnet arbitrator dated after arbitration ended. signedWitness={}", signedWitness);
+            return false;
+        }
         P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(signedWitness.getHash());
         if (verifySignatureWithECKeyResultCache.containsKey(hash)) {
             return verifySignatureWithECKeyResultCache.get(hash);
@@ -429,11 +445,19 @@ public class SignedWitnessService {
             String message = Utilities.encodeToHex(signedWitness.getAccountAgeWitnessHash());
             String signatureBase64 = new String(signedWitness.getSignature(), StandardCharsets.UTF_8);
             ECKey key = ECKey.fromPublicOnly(signedWitness.getSignerPubKey());
-            String pubKeyAsHex = Utilities.encodeToHex(key.getPubKey());
             boolean isAcceptedArbitrator = arbitratorManager.isPublicKeyInList(pubKeyAsHex) ||
                     (allowMainnetSignedWitnessesWithDevPrivilegeKeys &&
                             arbitratorManager.isLegacyArbitratorPublicKey(pubKeyAsHex));
             if (isAcceptedArbitrator) {
+                // A message signature verifies in several encodings, and each gives the witness another hash. With
+                // only the encoding that bitcoinj creates, a copy of an arbitrator's witness with another owner has
+                // the hash of the original, so a node that has the original does not store the copy.
+                if (!isCanonicalMessageSignature(signedWitness.getSignature(), key)) {
+                    log.warn("Signature of the arbitrator is not in its canonical encoding. signedWitness={}",
+                            signedWitness);
+                    verifySignatureWithECKeyResultCache.put(hash, false);
+                    return false;
+                }
                 key.verifyMessage(message, signatureBase64);
                 verifySignatureWithECKeyResultCache.put(hash, true);
                 return true;
@@ -442,12 +466,63 @@ public class SignedWitnessService {
                 verifySignatureWithECKeyResultCache.put(hash, false);
                 return false;
             }
-        } catch (SignatureException e) {
+        } catch (SignatureException | RuntimeException e) {
+            // A malformed key or signature makes bitcoinj throw a RuntimeException
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
             verifySignatureWithECKeyResultCache.put(hash, false);
             return false;
         }
+    }
+
+    // bitcoinj signs a message as 65 bytes in padded Base64: a header with the recovery id and the compressed flag of
+    // the key, then r and a low s
+    @VisibleForTesting
+    static boolean isCanonicalMessageSignature(byte[] signatureBase64, ECKey key) {
+        byte[] signature;
+        try {
+            signature = Base64.getDecoder().decode(signatureBase64);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        if (signature.length != 65 || !Arrays.equals(Base64.getEncoder().encode(signature), signatureBase64)) {
+            return false;
+        }
+        int header = signature[0] & 0xFF;
+        boolean isCompressed = header >= 31;
+        if (header < 27 || header > 34 || isCompressed != key.isCompressed()) {
+            return false;
+        }
+        BigInteger s = new BigInteger(1, Arrays.copyOfRange(signature, 33, 65));
+        return s.compareTo(ECKey.HALF_CURVE_ORDER) <= 0;
+    }
+
+    // The JDK signs with DSA as a DER SEQUENCE of two INTEGERs r and s, each positive and in its shortest form, and
+    // with lengths of one byte
+    @VisibleForTesting
+    static boolean isCanonicalDerSignature(byte[] signature) {
+        if (signature.length < 8 || signature[0] != 0x30 || (signature[1] & 0x80) != 0 ||
+                signature[1] != signature.length - 2) {
+            return false;
+        }
+        int offset = 2;
+        for (int integer = 0; integer < 2; integer++) {
+            if (offset + 2 > signature.length || signature[offset] != 0x02) {
+                return false;
+            }
+            int length = signature[offset + 1] & 0xFF;
+            int start = offset + 2;
+            if (length == 0 || length > 0x7F || start + length > signature.length) {
+                return false;
+            }
+            boolean isNegative = (signature[start] & 0x80) != 0;
+            boolean hasNeedlessZero = signature[start] == 0 && (length == 1 || (signature[start + 1] & 0x80) == 0);
+            if (isNegative || hasNeedlessZero) {
+                return false;
+            }
+            offset = start + length;
+        }
+        return offset == signature.length;
     }
 
     private boolean verifySignatureWithDSAKey(SignedWitness signedWitness) {
@@ -456,14 +531,29 @@ public class SignedWitnessService {
             return verifySignatureWithDSAKeyResultCache.get(hash);
         }
         try {
+            // The hash of the witness covers the signature and the signer key, and the JDK verifies a signature and
+            // reads a key in more than one encoding, for example a DER INTEGER without its leading zero. With only
+            // the encodings that the JDK creates, a copy of a witness with another owner has the hash of the
+            // original, so a node that has the original does not store the copy.
+            if (!isCanonicalDerSignature(signedWitness.getSignature())) {
+                log.warn("Signature of the trade is not in its canonical encoding. signedWitness={}", signedWitness);
+                verifySignatureWithDSAKeyResultCache.put(hash, false);
+                return false;
+            }
             PublicKey signaturePubKey = Sig.getPublicKeyFromBytes(signedWitness.getSignerPubKey());
+            if (!Arrays.equals(signaturePubKey.getEncoded(), signedWitness.getSignerPubKey())) {
+                log.warn("Signer key of the trade is not in its canonical encoding. signedWitness={}", signedWitness);
+                verifySignatureWithDSAKeyResultCache.put(hash, false);
+                return false;
+            }
             boolean isValid = Sig.verify(signaturePubKey, signedWitness.getAccountAgeWitnessHash(), signedWitness.getSignature());
             if (!isValid) {
                 log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             }
             verifySignatureWithDSAKeyResultCache.put(hash, isValid);
             return isValid;
-        } catch (CryptoException e) {
+        } catch (CryptoException | RuntimeException e) {
+            // A malformed key is reported as a KeyConversionException, which is a RuntimeException
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
             log.warn("Caused by ", e);
             verifySignatureWithDSAKeyResultCache.put(hash, false);
@@ -621,6 +711,10 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public void addToMap(SignedWitness signedWitness) {
+        if (!hasLookupKeys(signedWitness)) {
+            log.warn("We ignore a signed witness with an empty account hash or key. signedWitness={}", signedWitness);
+            return;
+        }
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
 
         P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());
@@ -630,6 +724,14 @@ public class SignedWitnessService {
         P2PDataStorage.ByteArray ownerPubKey = new P2PDataStorage.ByteArray(signedWitness.getWitnessOwnerPubKey());
         signedWitnessSetByOwnerPubKey.putIfAbsent(ownerPubKey, new HashSet<>());
         signedWitnessSetByOwnerPubKey.get(ownerPubKey).add(signedWitness);
+    }
+
+    // Anyone can publish a witness, and nothing checks its fields before it is stored. The lookup maps key witnesses by
+    // the account hash and the keys, which must not be empty. Such a witness could not be valid anyway.
+    private static boolean hasLookupKeys(SignedWitness signedWitness) {
+        return signedWitness.getAccountAgeWitnessHash().length > 0 &&
+                signedWitness.getSignerPubKey().length > 0 &&
+                signedWitness.getWitnessOwnerPubKey().length > 0;
     }
 
     private void publishSignedWitness(SignedWitness signedWitness) {
@@ -643,6 +745,9 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     public void removeSignedWitness(SignedWitness signedWitness) {
+        if (!hasLookupKeys(signedWitness)) {
+            return;
+        }
         signedWitnessMap.remove(signedWitness.getHashAsByteArray());
 
         P2PDataStorage.ByteArray accountAgeWitnessHash = new P2PDataStorage.ByteArray(signedWitness.getAccountAgeWitnessHash());

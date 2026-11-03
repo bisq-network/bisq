@@ -33,7 +33,8 @@ The bridge must resolve the recomputed hash to a stored Bisq 1 account-age witne
 The bridge returns a sign date only when at least one `SignedWitness` leaf for that account-age
 witness satisfies every existing Bisq 1 trust-chain rule. In particular:
 
-- the leaf signature must be valid;
+- the leaf signature must be valid and in the encoding which its signer creates (see
+  [signed-witness-admission.md](signed-witness-admission.md));
 - a trade-signed leaf's `witnessOwnerPubKey` must equal the public key from the ownership proof;
 - a directly arbitrator-signed leaf may carry a different historical owner key, because versions
   before commit `09141eba92` accidentally exchanged the buyer and seller owner keys when producing
@@ -53,7 +54,8 @@ witness hash and the ownership proof independently binds the requester key to th
 historically incorrect auxiliary owner field is therefore not used for that compatibility case. The
 proven owner key must still pass the deny-list policy.
 
-Arbitrator roots must have a valid signature and a key accepted by the active environment. Developers
+Arbitrator roots must have a valid signature and a key accepted by the active environment. A root of one
+of the legacy mainnet arbitrator keys counts only if it is dated before 2021-02-01. Developers
 who run with `useDevPrivilegeKeys=true` may explicitly enable `allowMainnetSignedWitnessesWithDevPrivilegeKeys` to add the
 immutable legacy mainnet arbitrator keys to the signed-witness trust roots. The option is disabled by
 default and affects only signed-witness validation; it must not authorize those legacy keys for live

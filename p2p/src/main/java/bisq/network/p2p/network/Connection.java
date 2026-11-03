@@ -795,7 +795,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage &&
                             !((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().verifyHashSize()) {
-                        log.warn("PersistableNetworkPayload.verifyHashSize failed. hashSize={}; object={}",
+                        log.warn("PersistableNetworkPayload.verifyHashSize failed: wrong hash size or malformed " +
+                                "payload. hashSize={}; object={}",
                                 ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().getHash().length,
                                 Utilities.toTruncatedString(proto));
                         if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
