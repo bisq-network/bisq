@@ -28,7 +28,7 @@ import java.security.PublicKey;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,17 +45,15 @@ class DisputeAgentManagerTest {
     void updateMapClearsAcceptedAgentsBeforeAddingFilteredAgents() {
         DisputeAgent firstAgent = mockDisputeAgent("agent-one:1");
         DisputeAgent secondAgent = mockDisputeAgent("agent-two:1");
-        NodeAddress firstAgentAddress = firstAgent.getNodeAddress();
-        NodeAddress secondAgentAddress = secondAgent.getNodeAddress();
         DisputeAgentService<DisputeAgent> disputeAgentService = mockDisputeAgentService();
         TestDisputeAgentManager manager = new TestDisputeAgentManager(disputeAgentService);
 
-        when(disputeAgentService.getDisputeAgents()).thenReturn(Map.of(firstAgentAddress, firstAgent));
+        when(disputeAgentService.getUnbannedDisputeAgents()).thenReturn(Set.of(firstAgent));
         manager.updateMap();
 
         assertThat(manager.getAcceptedDisputeAgents(), contains(firstAgent));
 
-        when(disputeAgentService.getDisputeAgents()).thenReturn(Map.of(secondAgentAddress, secondAgent));
+        when(disputeAgentService.getUnbannedDisputeAgents()).thenReturn(Set.of(secondAgent));
         manager.updateMap();
 
         assertThat(manager.getAcceptedDisputeAgents(), contains(secondAgent));

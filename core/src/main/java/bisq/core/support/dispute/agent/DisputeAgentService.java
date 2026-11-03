@@ -109,6 +109,16 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
         return map;
     }
 
+    // Every agent that is not banned. Anyone can publish an agent with any address, so several can claim the same
+    // one: the caller reduces them by address only after it verified them.
+    public Set<T> getUnbannedDisputeAgents() {
+        List<String> bannedDisputeAgents = getDisputeAgentsFromFilter();
+        if (bannedDisputeAgents != null && !bannedDisputeAgents.isEmpty()) {
+            log.warn("bannedDisputeAgents=" + bannedDisputeAgents);
+        }
+        return getDisputeAgentSet(bannedDisputeAgents);
+    }
+
     protected abstract Set<T> getDisputeAgentSet(List<String> bannedDisputeAgents);
 
     protected abstract List<String> getDisputeAgentsFromFilter();
