@@ -67,7 +67,7 @@ and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bun
   seventh argument instead.
 - `ClientTransportPlugin`, `ServerTransportPlugin`, `AccelName` and `AccelDir` entries of `--torrcOptions` or
   `--torrcFile` in `bisq.properties` stop the start of the Tor which Bisq starts; they are accepted on the command line
-  only.
+  only. With bridges, Bisq ignores `ClientTransportPlugin` entries, so they do not stop the start.
 - Seed node operators must install the new `seednode/bisq.service` before they restart the upgraded node. The unit of
   earlier versions passes `--torControlPort`, `--torControlUseSafeCookieAuth` and `--torControlCookieFile`, also with
   `BISQ_EXTERNAL_TOR_PORT=-1`, so the upgraded node exits at once at every start, and systemd keeps restarting it or
@@ -212,7 +212,8 @@ the start, so an inline comment after a value in the file of `--torrcFile`, whic
 start. `ClientTransportPlugin` and `ServerTransportPlugin` entries make Tor start a program, and `AccelName` and
 `AccelDir` entries make it load a library; they are accepted only if the command line sets the option which brings
 them, because whoever can change `bisq.properties` could otherwise run code at the next start. The Tor library refuses
-them, and a running Tor, which gets no torrc entries from Bisq, is not affected.
+them, and a running Tor, which gets no torrc entries from Bisq, is not affected. With bridges, Bisq sets the transports
+of the bridges itself and ignores `ClientTransportPlugin` entries with a warning, so they do not stop the start.
 
 ### Stream Isolation of HTTP Requests
 

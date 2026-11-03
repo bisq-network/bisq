@@ -157,10 +157,12 @@ library which `AccelName` and `AccelDir` name as its OpenSSL engine; `AccelName`
 comes from `--torrcOptions` in a config file, or from a torrc file which a config file names, the start of the Tor
 which the node starts fails with an explanation which names the entry and the options of the command line. An entry
 of `--torrcOptions` on the command line replaces the entry of such a file with the same key, and then it comes from the
-command line. The node writes `bisq.properties` itself, and whoever can change a config file in the data directory
-could otherwise run code with the rights of the user at the next start of Tor, also with the sandbox off. The node
-names the entries which come from a config file, and the Tor library applies the rule. A running Tor gets no torrc
-entries from the node, so such an entry does not stop its use.
+command line. With bridges, the node sets the transports of the bridges itself and ignores entries of `UseBridges`,
+`Bridge` and `ClientTransportPlugin`, also as an abbreviation, with a warning; a `ClientTransportPlugin` entry of a
+config file then does not stop the start, because Tor never gets it. The node writes `bisq.properties` itself, and
+whoever can change a config file in the data directory could otherwise run code with the rights of the user at the next
+start of Tor, also with the sandbox off. The node names the entries which come from a config file, and the Tor library
+applies the rule. A running Tor gets no torrc entries from the node, so such an entry does not stop its use.
 
 ### Bridges
 
