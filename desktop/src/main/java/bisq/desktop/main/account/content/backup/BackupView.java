@@ -27,6 +27,7 @@ import bisq.core.support.dispute.mediation.logs.LogFilesFinder;
 import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.network.TorLogRedaction;
 import bisq.network.p2p.network.TorMode;
 
 import bisq.common.UserThread;
@@ -38,6 +39,8 @@ import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import javafx.stage.DirectoryChooser;
 
@@ -57,9 +60,12 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -242,23 +248,32 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
             File appDataDir = Config.appDataDir();
             LogFilesFinder logFilesFinder = new LogFilesFinder(appDataDir);
-            List<File> logFiles = new ArrayList<>(logFilesFinder.find());
-            // Warnings of Tor, for example about the clock or the bridges, are only in its own log. A running Tor
-            // writes no log there.
-            torLogFiles.stream().filter(File::isFile).forEach(logFiles::add);
 
             Date now = new Date();
             String currentTimeAndDate = new SimpleDateFormat("yyyyMMdd_HHmmss").format(now);
             String zipFileName = "BisqLogsArchive_" + currentTimeAndDate + ".zip";
 
             Path destinationPath = Path.of(Utilities.getSystemHomeDirectory(), zipFileName);
-            LogFilesZipper logFilesZipper = new LogFilesZipper(destinationPath);
-            logFilesZipper.zip(logFiles);
+            zipLogFiles(logFilesFinder.find(), torLogFiles, destinationPath);
 
         } catch (IOException e) {
             log.error("Couldn't compress log files to zip file.", e);
             throw new RuntimeException(e);
         }
+    }
+
+    // Warnings of Tor, for example about the clock or the bridges, are only in its own log. A running Tor writes no log
+    // there. Tor names the bridges in it, and the log of the node names the bridge of a bootstrap warning, so the zip
+    // gets both without them.
+    @VisibleForTesting
+    static void zipLogFiles(List<File> nodeLogFiles, List<File> torLogFiles, Path destinationPath) throws IOException {
+        List<File> existingTorLogFiles = torLogFiles.stream().filter(File::isFile).collect(Collectors.toList());
+        List<File> logFiles = new ArrayList<>(nodeLogFiles);
+        logFiles.addAll(existingTorLogFiles);
+        Map<File, UnaryOperator<String>> redactions = new HashMap<>();
+        nodeLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutBootstrapEventHosts));
+        existingTorLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutRelayIdentities));
+        new LogFilesZipper(destinationPath).zip(logFiles, redactions);
     }
 
     private void openFileDialogInHomeDirectory() {

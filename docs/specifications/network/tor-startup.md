@@ -59,7 +59,16 @@ are logged at debug level only, because they contain onion addresses. Tor writes
 which the node writes to `tor-stdout.log` in the Tor directory; above 10 MiB it moves the log to `tor-stdout.log.1`
 before the next start. The standard error of Tor, where sandy also reports why it did not start Tor, goes to
 `tor-stderr.log`. "Zip log files" of the desktop application adds these three files, if they exist, to the logs of
-the node, because warnings of Tor, for example about the clock or the bridges, are only there.
+the node, because warnings of Tor, for example about the clock or the bridges, are only there. Tor names relays and
+bridges in its log by fingerprint, nickname, ed25519 identity and address, also at its notice level, for example a
+bridge which it cannot reach, so the zip gets these three files without them, and without the arguments of a bridge
+line which name the bridge, such as `cert` and `url`, which Tor does not log today. An IPv6 address is removed with
+or without brackets; Tor writes the host of a bootstrap warning without them. Tor also logs the messages of a
+pluggable transport (`Managed proxy "...": ...`), where lyrebird names the host of a webtunnel bridge, the URL and
+front of a meek bridge, and hosts in errors, so these lines lose their URLs and host names. The versions of Tor and
+loopback addresses, which name no relay or bridge, stay. The logs of the node in the zip lose the relay or bridge of a
+bootstrap warning (`HOSTID`, `HOSTADDR`), which the Tor library logs with the event. The files on disk keep
+everything; only the zip is redacted.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
 sandbox program and its status record, see "Sandbox"). The torrc, the logs, `external_tor.config`, the record
