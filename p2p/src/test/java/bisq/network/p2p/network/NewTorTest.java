@@ -22,6 +22,7 @@ import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.TorrcOverrideNotAllowedException;
+import bisq.network.tor.common.platform.LinuxDistribution;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 
@@ -42,12 +43,15 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
@@ -206,15 +210,34 @@ class NewTorTest {
     // TorService of the Tor library refuses the entry before it installs or starts Tor
     @Test
     void anEntryOfAConfigFileWhichLoadsALibraryStopsTheStart(@TempDir File torDir) {
-        assumeTrue(System.getenv("TOR_SKIP_LAUNCH") == null, "TOR_SKIP_LAUNCH would choose a running Tor");
-        var newTor = new NewTor(torDir, new TorrcSettings(null, false, "AccelName engine", false),
-                BridgeAddressProvider.NONE, false, false);
-
-        var refusal = assertThrows(TorrcOverrideNotAllowedException.class, newTor::getTor);
+        var refusal = startWithAnEntryOfAConfigFile(torDir, "AccelName engine");
 
         assertTrue(refusal.getMessage().contains("load a library: AccelName."), refusal.getMessage());
         assertTrue(refusal.getMessage().endsWith(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT), refusal.getMessage());
         assertTrue(refusal.getMessage().contains("--torrcOptions"), refusal.getMessage());
+    }
+
+    // The Tor library finds the entries which start a program in any case of the name and as an abbreviation, which
+    // Tor accepts
+    @ParameterizedTest
+    @ValueSource(strings = {"ClientTransportPlugin", "clienttransportplugin", "ClientTransportPlug"})
+    void anEntryOfAConfigFileWhichStartsAProgramStopsTheStart(String key, @TempDir File torDir) {
+        var refusal = startWithAnEntryOfAConfigFile(torDir, key + " obfs4 exec /bin/true");
+
+        assertTrue(refusal.getMessage().contains("start a program or load a library: " + key + "."),
+                refusal.getMessage());
+        assertTrue(refusal.getMessage().endsWith(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT), refusal.getMessage());
+    }
+
+    // Only the embedded Tor gets torrc entries. TOR_SKIP_LAUNCH chooses a running Tor, and on Whonix the Tor library
+    // uses the Tor of the Whonix-Gateway, or refuses to run on the Gateway itself.
+    private static TorrcOverrideNotAllowedException startWithAnEntryOfAConfigFile(File torDir, String torrcOptions) {
+        assumeTrue(System.getenv("TOR_SKIP_LAUNCH") == null, "TOR_SKIP_LAUNCH would choose a running Tor");
+        assumeFalse(LinuxDistribution.isWhonix(), "On Whonix the Tor library starts no Tor of its own");
+        var newTor = new NewTor(torDir, new TorrcSettings(null, false, torrcOptions, false),
+                BridgeAddressProvider.NONE, false, false);
+
+        return assertThrows(TorrcOverrideNotAllowedException.class, newTor::getTor);
     }
 
     @Test
