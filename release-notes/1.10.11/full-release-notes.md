@@ -65,8 +65,9 @@ and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bun
 - Every Bisq application runs the Tor which it starts in the sandbox by default, also the seed node, the BTC node
   monitor and the inventory monitor. `--useTorSandbox=false` turns it off; the inventory monitor takes `0` as its
   seventh argument instead.
-- `ClientTransportPlugin` and `ServerTransportPlugin` entries of `--torrcOptions` or `--torrcFile` in
-  `bisq.properties` stop the start; they are accepted on the command line only.
+- `ClientTransportPlugin`, `ServerTransportPlugin`, `AccelName` and `AccelDir` entries of `--torrcOptions` or
+  `--torrcFile` in `bisq.properties` stop the start of the Tor which Bisq starts; they are accepted on the command line
+  only.
 - Seed node operators must install the new `seednode/bisq.service` before they restart the upgraded node. The unit of
   earlier versions passes `--torControlPort`, `--torControlUseSafeCookieAuth` and `--torControlCookieFile`, also with
   `BISQ_EXTERNAL_TOR_PORT=-1`, so the upgraded node exits at once at every start, and systemd keeps restarting it or
@@ -208,9 +209,10 @@ case and as abbreviations, and so are entries which would give another program c
 `ControlSocketsGroupWritable`, `CookieAuthentication`, `CookieAuthFile`, `CookieAuthFileGroupReadable`,
 `__HashedControlSessionPassword` and `__OwningControllerFD`. An entry with a line break, or a value with `#`, stops
 the start, so an inline comment after a value in the file of `--torrcFile`, which netlayer accepted, now stops the
-start. `ClientTransportPlugin` and `ServerTransportPlugin` entries make Tor start a program; they are accepted only if
-the command line sets the option which brings them, because whoever can change `bisq.properties` could otherwise run a
-program at the next start.
+start. `ClientTransportPlugin` and `ServerTransportPlugin` entries make Tor start a program, and `AccelName` and
+`AccelDir` entries make it load a library; they are accepted only if the command line sets the option which brings
+them, because whoever can change `bisq.properties` could otherwise run code at the next start. The Tor library refuses
+them, and a running Tor, which gets no torrc entries from Bisq, is not affected.
 
 ### Stream Isolation of HTTP Requests
 

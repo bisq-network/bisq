@@ -26,8 +26,8 @@
 
 - "Backup now" creates owner-only files and does not follow links.
 - The private keys of the node and their backups are owner-only on Linux and macOS.
-- Torrc entries which make Tor start a program are accepted only from the command line, and entries which would give
-  another program control over Tor are ignored.
+- Torrc entries which make Tor start a program or load a library are accepted only from the command line, and entries
+  which would give another program control over Tor are ignored.
 - A running Tor whose SOCKS port does not isolate streams by their SOCKS credentials is refused.
 - When the Tor sandbox is turned off, Bisq clears the data of Tor which a sandboxed Tor wrote. Only a refusal of sandy,
   which Tor cannot fake, makes Bisq advise to turn the sandbox off.

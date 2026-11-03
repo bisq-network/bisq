@@ -113,8 +113,9 @@ Related commits: `86250b94e1`, `88c3ad4890`, `7ecc5c959a`, `01a0d05444`, `968bfb
 - Entries which would give another program control over Tor are ignored with a warning as well: `ControlSocket`,
   `ControlSocketsGroupWritable`, `CookieAuthentication`, `CookieAuthFile`, `CookieAuthFileGroupReadable`,
   `__HashedControlSessionPassword` and `__OwningControllerFD`.
-- `ClientTransportPlugin` and `ServerTransportPlugin` entries are accepted only if the command line sets the option
-  which brings them. From `bisq.properties`, or from a torrc file which it names, they stop the start.
+- `ClientTransportPlugin`, `ServerTransportPlugin`, `AccelName` and `AccelDir` entries are accepted only if the command
+  line sets the option which brings them. From `bisq.properties`, or from a torrc file which it names, they stop the
+  start of the Tor which Bisq starts.
 - An inline `# comment` after a value in the file of `--torrcFile` now stops the start; netlayer accepted it.
 
 Related commits: `efe7e9057b`, `4fd3b7b2e1`, `8fc928c0cf`, `2833ceb168`.
