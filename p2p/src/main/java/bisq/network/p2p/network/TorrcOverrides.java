@@ -24,9 +24,10 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,59 +37,42 @@ import static com.google.common.base.Preconditions.checkArgument;
  * The torrc entries which the user adds with --torrcFile and --torrcOptions. An entry of --torrcOptions overrides an
  * entry of the file with the same key. Parses like netlayer's Torrc did.
  * <p>
- * An entry which makes Tor start a program is accepted only if the command line sets the option which brings it. The
- * node writes bisq.properties itself, and whoever can change a config file in the data directory could otherwise run
- * a program with the rights of the user at the next start of Tor, also with the sandbox off.
+ * The node writes bisq.properties itself, and whoever can change a config file in the data directory could otherwise
+ * make the next start of Tor run code with the rights of the user, also with the sandbox off. So the Tor library gets
+ * the keys of the entries which a config file brings, and it refuses those which make Tor start a program or load a
+ * library.
+ *
+ * @param entries            the entries in the order of the file and then of the options
+ * @param keysFromConfigFile the keys of the entries which come from the option torrcOptions of a config file, or from a
+ *                           torrc file which a config file names. An entry of the options of the command line replaces
+ *                           the entry of such a file with the same key, and so it comes from the command line.
  */
 @Slf4j
-final class TorrcOverrides {
-    // Tor starts the program of such an entry. Tor ignores the case of option names and accepts the start of a name.
-    private static final List<String> KEYS_STARTING_PROGRAMS = List.of("clienttransportplugin", "servertransportplugin");
-
-    private TorrcOverrides() {
-    }
-
-    /**
-     * @throws IllegalArgumentException if a config file brings an entry which makes Tor start a program
-     */
-    static LinkedHashMap<String, String> parse(TorrcSettings torrcSettings) {
-        LinkedHashMap<String, String> torrcOverrides = new LinkedHashMap<>();
+record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFromConfigFile) {
+    static TorrcOverrides parse(TorrcSettings torrcSettings) {
+        LinkedHashMap<String, String> entries = new LinkedHashMap<>();
+        Set<String> keysFromConfigFile = new HashSet<>();
         File torrcFile = torrcSettings.torrcFile();
         if (torrcFile != null) {
             try {
                 LinkedHashMap<String, String> fileEntries =
                         parseTorrcFile(Files.readAllLines(torrcFile.toPath(), StandardCharsets.UTF_8));
+                entries.putAll(fileEntries);
                 if (!torrcSettings.torrcFileSetOnCommandLine()) {
-                    rejectProgramStarts(fileEntries, "the torrc file " + torrcFile + ", which a config file names");
+                    keysFromConfigFile.addAll(fileEntries.keySet());
                 }
-                torrcOverrides.putAll(fileEntries);
             } catch (IOException e) {
                 log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
             }
         }
         LinkedHashMap<String, String> optionEntries = parseTorrcOptions(torrcSettings.torrcOptions());
-        if (!torrcSettings.torrcOptionsSetOnCommandLine()) {
-            rejectProgramStarts(optionEntries, "the option torrcOptions of a config file");
+        entries.putAll(optionEntries);
+        if (torrcSettings.torrcOptionsSetOnCommandLine()) {
+            keysFromConfigFile.removeAll(optionEntries.keySet());
+        } else {
+            keysFromConfigFile.addAll(optionEntries.keySet());
         }
-        torrcOverrides.putAll(optionEntries);
-        return torrcOverrides;
-    }
-
-    static boolean startsAProgram(String key) {
-        String lowerCaseKey = key.toLowerCase(Locale.ROOT);
-        return !lowerCaseKey.isEmpty() &&
-                KEYS_STARTING_PROGRAMS.stream().anyMatch(name -> name.startsWith(lowerCaseKey));
-    }
-
-    private static void rejectProgramStarts(LinkedHashMap<String, String> entries, String source) {
-        entries.keySet().stream()
-                .filter(TorrcOverrides::startsAProgram)
-                .findFirst()
-                .ifPresent(key -> {
-                    throw new IllegalArgumentException("The torrc entry " + key + " of " + source + " makes Tor " +
-                            "start a program. Bisq accepts such entries only on the command line: pass --torrcOptions " +
-                            "or --torrcFile there, and remove the option from the config file.");
-                });
+        return new TorrcOverrides(entries, Set.copyOf(keysFromConfigFile));
     }
 
     private static LinkedHashMap<String, String> parseTorrcFile(List<String> lines) {

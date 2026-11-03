@@ -18,6 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ConfigFileTorrcOverrides;
 import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorSandboxConfig;
 import bisq.network.tor.TorService;
@@ -36,7 +37,6 @@ import java.io.UncheckedIOException;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +74,10 @@ public class NewTor extends TorMode {
     // How the user turns the sandbox off in the applications which read the options of Config
     static final String SANDBOX_OPT_OUT_HINT = "Start Bisq with the option --" + Config.USE_TOR_SANDBOX +
             "=false to run Tor without the sandbox.";
+    // How the user gives the torrc entries which the Tor library refuses from a config file. Only the applications
+    // which read the options of Config have such entries.
+    static final String CONFIG_FILE_TORRC_ENTRIES_HINT = "Bisq accepts such entries only on the command line: pass --" +
+            Config.TORRC_OPTIONS + " or --" + Config.TORRC_FILE + " there, and remove the option from the config file.";
 
     private final TorrcSettings torrcSettings;
     private final BridgeAddressProvider bridgeAddressProvider;
@@ -140,15 +144,17 @@ public class NewTor extends TorMode {
     public TorService getTor() {
         long ts1 = new Date().getTime();
 
+        TorrcOverrides torrcOverrides = TorrcOverrides.parse(torrcSettings);
         TorTransportConfig transportConfig = new TorTransportConfig(torDir.toPath(),
                 BOOTSTRAP_TIMEOUT,
                 HS_UPLOAD_TIMEOUT,
                 !testNetworkDirectoryAuthorities.isEmpty(),
                 testNetworkDirectoryAuthorities,
-                getTorrcOverrides(torrcSettings),
+                torrcOverrides.entries(),
                 false,
                 getBridgeConfig(bridgeAddressProvider),
-                getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox, sandboxOptOutHint));
+                getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox, sandboxOptOutHint),
+                new ConfigFileTorrcOverrides(torrcOverrides.keysFromConfigFile(), CONFIG_FILE_TORRC_ENTRIES_HINT));
         for (int attempt = 1; ; attempt++) {
             TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
             log.info("Starting tor");
@@ -227,11 +233,5 @@ public class NewTor extends TorMode {
         return bridgeAddresses.stream()
                 .filter(line -> line != null && line.trim().length() > 10)
                 .collect(Collectors.toList());
-    }
-
-    // The Tor library ignores the entries which it needs for its control connection, the Tor data and the stream
-    // isolation, in any case and as the abbreviations which Tor accepts.
-    static LinkedHashMap<String, String> getTorrcOverrides(TorrcSettings torrcSettings) {
-        return TorrcOverrides.parse(torrcSettings);
     }
 }

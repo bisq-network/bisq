@@ -244,7 +244,7 @@ public class Config {
     public final String socks5ProxyHttpAddress;
     public final File torrcFile;
     public final String torrcOptions;
-    // Torrc entries which make Tor start a program are accepted only from the command line
+    // Torrc entries which make Tor start a program or load a library are accepted only from the command line
     public final boolean torrcFileSetOnCommandLine;
     public final boolean torrcOptionsSetOnCommandLine;
     public final boolean torStreamIsolation;
@@ -619,7 +619,8 @@ public class Config {
         ArgumentAcceptingOptionSpec<Path> torrcFileOpt =
                 parser.accepts(TORRC_FILE, "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
                                 "which are critical to Bisq's correct operation, cannot be overwritten. Entries which " +
-                                "make Tor start a program are accepted only if this option is given on the command line.")
+                                "make Tor start a program or load a library are accepted only if this option is " +
+                                "given on the command line.")
                         .withRequiredArg()
                         .describedAs("File")
                         .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
@@ -627,7 +628,8 @@ public class Config {
         ArgumentAcceptingOptionSpec<String> torrcOptionsOpt =
                 parser.accepts(TORRC_OPTIONS, "A list of torrc-entries to amend to Bisq's torrc. Note that " +
                                 "torrc-entries, which are critical to Bisq's flawless operation, cannot be overwritten. " +
-                                "Entries which make Tor start a program are accepted only on the command line. " +
+                                "Entries which make Tor start a program or load a library are accepted only on the " +
+                                "command line. " +
                                 "[torrc options line, torrc option, ...]")
                         .withRequiredArg()
                         .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))

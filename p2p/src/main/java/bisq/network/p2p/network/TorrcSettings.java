@@ -23,7 +23,8 @@ import javax.annotation.Nullable;
 
 /**
  * The options --torrcFile and --torrcOptions, and whether the command line or a config file sets them. Torrc entries
- * which make Tor start a program are accepted only from the command line (see {@link TorrcOverrides}).
+ * which make Tor start a program or load a library are accepted only from the command line (see
+ * {@link TorrcOverrides}).
  */
 public record TorrcSettings(@Nullable File torrcFile,
                             boolean torrcFileSetOnCommandLine,

@@ -150,12 +150,19 @@ this rule. An entry for another key which the node sets, such as `Log`, replaces
 the name and as an abbreviation which Tor accepts, for example `AvoidDiskWrite` for `AvoidDiskWrites`. An entry for a
 longer option which only starts like such a key, such as `LogTimeGranularity`, replaces nothing.
 
-An entry which makes Tor start a program, `ClientTransportPlugin` or `ServerTransportPlugin` in any case of the name
-and as an abbreviation which Tor accepts, is accepted only if the command line sets the option which brings it. If
-such an entry comes from `--torrcOptions` in a config file, or from a torrc file which a config file names, the start
-fails with an explanation which names the entry. The node writes `bisq.properties` itself, and whoever can change a
-config file in the data directory could otherwise run a program with the rights of the user at the next start of
-Tor, also with the sandbox off.
+An entry which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
+`AccelName` or `AccelDir` in any case of the name and as an abbreviation which Tor accepts, is accepted only if the
+command line sets the option which brings it. Tor starts the program of a transport plugin entry, and it loads the
+library which `AccelName` and `AccelDir` name as its OpenSSL engine; `AccelName` alone is enough. If such an entry
+comes from `--torrcOptions` in a config file, or from a torrc file which a config file names, the start of the Tor
+which the node starts fails with an explanation which names the entry and the options of the command line. An entry
+of `--torrcOptions` on the command line replaces the entry of such a file with the same key, and then it comes from the
+command line. With bridges, the node sets the transports of the bridges itself and ignores entries of `UseBridges`,
+`Bridge` and `ClientTransportPlugin`, also as an abbreviation, with a warning; a `ClientTransportPlugin` entry of a
+config file then does not stop the start, because Tor never gets it. The node writes `bisq.properties` itself, and
+whoever can change a config file in the data directory could otherwise run code with the rights of the user at the next
+start of Tor, also with the sandbox off. The node names the entries which come from a config file, and the Tor library
+applies the rule. A running Tor gets no torrc entries from the node, so such an entry does not stop its use.
 
 ### Bridges
 
@@ -181,8 +188,9 @@ error in a popup which says that other bridges can help, with a button which ope
 settings do not open by themselves, as they did with netlayer, because they covered the popup with the error.
 
 The desktop application shows every other failed start in a popup. When the error says itself what the user can do,
-as the refusals of the sandbox, of a running Tor which the node cannot use and of a Whonix-Gateway do, the popup leaves
-out the generic advice to check the internet connection or to restart the application, which does not help with them.
+as the refusals of the sandbox, of a running Tor which the node cannot use, of a torrc entry of a config file which
+makes Tor run code and of a Whonix-Gateway do, the popup leaves out the generic advice to check the internet
+connection or to restart the application, which does not help with them.
 
 The node does not log bridge lines, because a bridge which a user got privately is blocked once it is known.
 

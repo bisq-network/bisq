@@ -142,7 +142,7 @@ public class ConfigTests {
 
     @Test
     public void recordsWhetherTheCommandLineSetsTheTorrcOptions() throws IOException {
-        // Torrc entries which make Tor start a program are accepted only from the command line
+        // Torrc entries which make Tor start a program or load a library are accepted only from the command line
         File configFile = File.createTempFile("bisq", "properties");
         try (PrintWriter writer = new PrintWriter(configFile)) {
             writer.println(new ConfigFileOption(TORRC_OPTIONS, "AvoidDiskWrites 1"));

@@ -21,6 +21,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.tor.ExternalTorUnavailableException;
 import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
+import bisq.network.tor.TorrcOverrideNotAllowedException;
 import bisq.network.tor.bridges.BridgesUnavailableException;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 import bisq.network.tor.common.platform.LinuxDistribution;
@@ -338,13 +339,14 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     // The Tor library explains these failures and says what the user can do: the sandbox or the running Tor cannot be
-    // used, or Bisq runs on a Whonix-Gateway, where the library fails every start before anything else with a
-    // TorStartupFailedException without cause.
+    // used, a config file brings a torrc entry which makes Tor run code, or Bisq runs on a Whonix-Gateway, where the
+    // library fails every start before anything else with a TorStartupFailedException without cause.
     static boolean isExplained(Throwable throwable, boolean isWhonixGateway) {
-        boolean isSandboxOrRunningTorUnavailable = Throwables.getCausalChain(throwable).stream()
+        boolean isExplainedByTheTorLibrary = Throwables.getCausalChain(throwable).stream()
                 .anyMatch(cause -> cause instanceof ExternalTorUnavailableException ||
-                        cause instanceof SandboxUnavailableException);
-        return isSandboxOrRunningTorUnavailable ||
+                        cause instanceof SandboxUnavailableException ||
+                        cause instanceof TorrcOverrideNotAllowedException);
+        return isExplainedByTheTorLibrary ||
                 isWhonixGateway && Throwables.getRootCause(throwable) instanceof TorStartupFailedException;
     }
 

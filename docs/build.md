@@ -54,6 +54,10 @@ This command does not take new commits of the tor repository. It checks out the 
    git -C tor fetch origin
    git -C tor checkout <commit>
    ```
+To use the main branch:
+   ```bash
+   git -C tor checkout origin/main
+   ```
 
 2. Review the changes which the update brings:
 
