@@ -93,6 +93,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -807,11 +808,23 @@ public class GUIUtil {
 
     private static void doOpenWebPage(String target) {
         try {
-            Utilities.openURI(new URI(target));
+            URI uri = new URI(target);
+            // Links come from popup texts and from DAO data that anyone can publish, so only a web page is opened
+            if (!isWebPage(uri)) {
+                log.warn("We do not open a link that is not a web page. link={}", target);
+                return;
+            }
+            Utilities.openURI(uri);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
         }
+    }
+
+    @VisibleForTesting
+    static boolean isWebPage(URI uri) {
+        String scheme = uri.getScheme();
+        return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
     }
 
     public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, Coin minFee) {
