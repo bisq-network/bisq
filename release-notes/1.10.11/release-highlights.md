@@ -1,17 +1,16 @@
 # Bisq 1.10.11 Highlights
 
 > **Draft. The maintainer completes it before the release** (see the list at the top of `full-release-notes.md`):
-> it covers only the switch from netlayer to the Tor library and the changes that came with it. Add the other
-> changes of the release, confirm the version number and set the dates.
+> it covers `release-candidate-v1.10.11` through `e6925cd038`. Add the changes of other branches if the release takes
+> them, confirm the version number and set the dates.
 
 ## Tor
 
 - Bisq uses the Tor library, which Bisq 2 also uses, instead of netlayer. Nodes keep their onion address.
-- Bisq brings its own Tor on every operating system: tor 0.4.9.14 of Tor Browser 15.0.25, as 1.10.10 did on Linux
-  x86_64, macOS and Windows. Linux ARM64 gets the same tor, with its pluggable transports, from the alpha release
-  16.0a14, because no stable release has a Linux ARM64 bundle yet. Bisq does not use the `tor` package of the
-  distribution.
-- Every Bisq application runs the Tor which it starts in a sandbox (sandy 2.4.1) by default, also the seed node, the BTC
+- Bisq brings its own Tor on every operating system, as 1.10.10 did on Linux x86_64, macOS and Windows: tor 0.4.9.15
+  of Tor Browser 16.0, with its pluggable transports, now also on Linux ARM64. Bisq does not use the `tor` package of
+  the distribution.
+- Every Bisq application runs the Tor which it starts in a sandbox (sandy 1.0.0) by default, also the seed node, the BTC
   node monitor and the inventory monitor. `--useTorSandbox=false` turns it off; the inventory monitor takes `0` as its
   seventh argument.
 - Bridges with pluggable transports need the new switch "Allow pluggable transports in the Tor sandbox" of the Tor
@@ -32,9 +31,13 @@
 - When the Tor sandbox is turned off, Bisq clears the data of Tor which a sandboxed Tor wrote. Only a refusal of sandy,
   which Tor cannot fake, makes Bisq advise to turn the sandbox off.
 - "Zip Log files" adds the logs of Tor, without the relays and bridges which they name.
+- Malformed signed witnesses, dispute agent registrations and private notifications, which anyone can publish, no
+  longer stop the start of a node. Copies of a signed witness with another owner are rejected.
+- Bisq opens only `http` and `https` links.
 
 ## Operators
 
+- The Docker seed node runs Tor in its own container; operators remove the stack and deploy it again.
 - Seed node operators install the new `bisq.service` before they restart the upgraded node; the old unit makes it
   exit at every start.
 - Seed nodes run the Tor of the Bisq build in the sandbox instead of the tor service of the system. Operators switch
