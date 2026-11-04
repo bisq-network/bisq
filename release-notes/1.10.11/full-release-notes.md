@@ -2,37 +2,36 @@
 
 > **Draft. The maintainer completes these points before the release and then removes this block:**
 >
-> - Add the other changes of the release. These notes cover only the switch from netlayer to the Tor library and the
->   changes that came with it. The local ref `upstream/master` (`18a1bdb973` of 2026-10-22) has 170 commits which are
->   not in the range below. Update the range, the counts and the commit summary to the commits of the release.
-> - Confirm the version number `1.10.11` (set by `2303377050`), and set the release date and the "Generated on" date.
-> - Link the commits to `https://github.com/bisq-network/bisq/commit/<hash>` once they are there. Their hashes change
->   if the branches are rebased.
-> - Check that the `tor` gitlink names a commit of the library `main` which contains the library changes that these
->   notes describe. The branch `WT-fix-open-items-after-bundled-tor` moved it to a library branch of the same name
->   before that branch was merged.
-> - Development builds from `223559db3e` up to the branch `linux-bundled-tor-sandbox-defaults` depended on the `tor`
->   package. Tell their testers that the package stays installed and that its `tor@default` service keeps running on
->   Debian and Ubuntu until they remove the package (`docs/known-issues-with-installation.md`). No release depended on
->   it.
+> - Decide whether the release contains more than `release-candidate-v1.10.11`. These notes cover that branch, which
+>   holds `v1.10.10` and the pull requests #8168 to #8189. The local ref `upstream/master` (`18a1bdb973` of
+>   2026-10-22) has 170 commits which are not on the branch. If the release takes some of them, add them to the range,
+>   the counts and the commit summary.
+> - Confirm the version number `1.10.11` (set by `546c81b1e6`), and set the release date and the "Generated on" date.
+> - Link the commits to `https://github.com/bisq-network/bisq/commit/<hash>`. The hashes are those of
+>   `release-candidate-v1.10.11`; they change if the branch is rebased.
+> - The `tor` gitlink names `6edc00e7`, a commit of the library `main`.
+> - Development builds with `2dd4d2ff87` but without `493f2e50c9` depended on the `tor` package (on
+>   `master_henrik_private` from `223559db3e` up to the branch `linux-bundled-tor-sandbox-defaults`). Tell their
+>   testers that the package stays installed and that its `tor@default` service keeps running on Debian and Ubuntu
+>   until they remove the package (`docs/known-issues-with-installation.md`). No release depended on it.
 > - Runtime checks which no note records yet: a sandboxed start of Bisq 1 (`sandbox-bisq1-start-unverified`), the
 >   upgrade of a real netlayer data directory of v1.10.x and of one that started on v1.9.x
 >   (`migration-netlayer-dir-upgrade-unverified`), and runs on macOS and Windows. On macOS, check whether webtunnel
 >   bootstraps in the sandbox, which now lets it reach the certificate verifier of the system, and update the known
 >   issue.
 > - Open decisions which change what these notes say: `tor-dir-netlayer-leftovers-kept`,
->   `http-isolation-default-policy`, `backup-link-handling`, `torrc-file-inline-comment-refused`,
->   `tails-support-unassessed` and `seednode-docker-config-rejected-options`.
+>   `http-isolation-default-policy`, `backup-link-handling`, `torrc-file-inline-comment-refused` and
+>   `tails-support-unassessed`. `seednode-docker-config-rejected-options` is resolved: `df4cd7481b` and `0bb1e71510`
+>   update the Docker deployment.
 
-These release notes cover the changes after `v1.10.10` (`fb552d3dc6`) through `8072e5ef3c` of `master_henrik_private`,
-and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bundled-tor-sandbox-defaults` which follow
-`8072e5ef3c`.
+These release notes cover the changes after `v1.10.10` (`fb552d3dc6`) through `e6925cd038` of
+`release-candidate-v1.10.11`. The `tor` submodule is pinned at `6edc00e7` of the Tor library.
 
-- Total commits: 71 through `8072e5ef3c`, and 4 commits of `fix-open-items-after-crosscheck` before these notes
-- Non-merge commits: 55 through `8072e5ef3c`, and 4
-- Merge commits: 16
-- Files changed: 126 through `8072e5ef3c`
-- Generated on: TODO (draft of 2026-10-27)
+- Total commits: 116
+- Non-merge commits: 96
+- Merge commits: 20
+- Files changed: 205
+- Generated on: TODO (draft of 2026-10-27, updated on 2026-11-04)
 
 ## Compatibility and Operator Notes
 
@@ -43,9 +42,9 @@ and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bun
 - The first start moves the state of Tor into `tor/data/`. `tor/hiddenservice/` and `tor/external_tor.config` stay
   where they are.
 - Bisq brings its own Tor on every operating system, as 1.10.10 did on Linux x86_64, macOS and Windows, and does not
-  use the `tor` package of the distribution; the deb and rpm packages do not depend on it. Linux ARM64 gets the Tor of
-  the alpha release 16.0a14 of Tor Browser, with the same tor 0.4.9.14. On Linux, Tor needs glibc 2.17 (2.27 on ARM64)
-  and `libz.so.1` of the system.
+  use the `tor` package of the distribution; the deb and rpm packages do not depend on it. Every platform, Linux ARM64
+  included, gets tor 0.4.9.15 of Tor Browser 16.0. On Linux, Tor needs glibc 2.17 (2.27 on ARM64) and `libz.so.1` of
+  the system.
 - The programs of the pluggable transports come with the Tor bundle on every operating system, also on Linux ARM64.
 - Versions before the Tor library read only the bridge lines which the Tor network settings store. For provided
   bridges, the settings store the built-in lines of the Tor bundle which the node installed in its Tor directory, when
@@ -95,7 +94,12 @@ and the commits of the branches `fix-open-items-after-crosscheck` and `linux-bun
 - The Docker deployment of the seed node in `seednode/deployment_v2/docker` runs Tor in the container of the seed
   node instead of the service `bisq-tor`. Operators remove the stack and deploy it again, as the README of the seed
   node describes.
-- Release builds use Azul Zulu 21.0.13 and JavaFX 21.0.13.
+- Release builds use Azul Zulu 21.0.13 and JavaFX 21.0.13. The release build check compares the Java update by its
+  version numbers, so another Azul build of 21.0.13 can become the release build by changing only the pinned runtime
+  build.
+- Malformed signed witnesses, dispute agent registrations and private notifications no longer stop the start of a
+  node or the handling of other data. A signed witness which was stored before the new checks is removed when the
+  store is read.
 
 ## Notable Changes
 
@@ -109,23 +113,26 @@ The key of the onion service stays in `tor/hiddenservice/private_key` in the for
 the onion address from the key, as Tor does, and rewrites a missing or wrong `hostname`. A generated key is written in
 netlayer's format, so that an earlier version can read it.
 
-On every operating system, Bisq runs the Tor of the Tor expert bundle of Tor Browser 15.0.25 (tor 0.4.9.14), whose
-PGP signature, SHA-256 hash and tor version the build verifies, the same Tor version as netlayer brought in 1.10.10.
-Linux ARM64, for which netlayer had no Tor, gets the bundle of the alpha release 16.0a14 with the same tor, because no
-stable release has a bundle for Linux ARM64. The bundles bring the pluggable transports `lyrebird` and
-`conjure-client`. Bisq uses neither a `tor` nor transports on the `PATH`, and the Linux packages do not depend on the
-`tor` package. On Linux, Tor needs glibc 2.17 (2.27 on ARM64) and `libz.so.1` of the system. The bundled Tor gets its
-GeoIP files and an empty OpenSSL configuration in the Tor directory instead of the paths below `/var/tmp/dist` which
-its binary has compiled in.
+On every operating system, Bisq runs the Tor of the Tor expert bundle of Tor Browser 16.0 (tor 0.4.9.15), whose PGP
+signature, SHA-256 hash and tor version the build verifies. netlayer brought tor 0.4.9.14 in 1.10.10. Linux ARM64, for
+which netlayer had no Tor, gets the bundle of the same stable release. The bundles bring the pluggable transports
+`lyrebird` and `conjure-client`. Bisq uses neither a `tor` nor transports on the `PATH`, and the Linux packages do not
+depend on the `tor` package. On Linux, Tor needs glibc 2.17 (2.27 on ARM64) and `libz.so.1` of the system. The bundled
+Tor gets its GeoIP files and an empty OpenSSL configuration in the Tor directory instead of the paths below
+`/var/tmp/dist` which its binary has compiled in.
 
 The Tor directory gets the parts `bin/` (the bundle), `data/` (the data directory of Tor) and `sandy/` (the sandbox
 program). If Tor does not bootstrap within 4 minutes, Bisq deletes the Tor files except `hiddenservice/` and
 `external_tor.config` and starts Tor again, up to 5 starts, as netlayer did. This deletion, and "Delete outdated Tor
 files and shut down" in the Tor network settings, no longer follow symbolic links or junctions.
 
-At the shutdown, the node waits up to 8 seconds for the close of its connections and the stop of its Tor. On Linux, Tor
-runs in a session of its own, so a Ctrl+C in the terminal of the node reaches only the node, whose shutdown still uses
-Tor and stops it at its end.
+At the shutdown, the node waits up to 8 seconds for the close of its connections and the stop of its Tor. The Tor
+library also stops and waits for the processes below Tor, such as the programs of pluggable transports. Processes
+which it could not stop stay tracked: the next start stops them first, and a later shutdown reports them. If the
+cleanup after a failed start fails as well, the error still names the cause of the failed start. The BTC node monitor
+also waits up to 8 seconds for the stop of its Tor; before, it waited 2 seconds and could exit while Tor still ran.
+On Linux, Tor runs in a session of its own, so a Ctrl+C in the terminal of the node reaches only the node, whose
+shutdown still uses Tor and stops it at its end.
 
 ### Running Tor
 
@@ -166,8 +173,8 @@ because a bridge which a user got privately is blocked once it is known.
 
 ### Tor Sandbox
 
-Every Bisq application runs the Tor which it starts in the sandbox of sandy 2.4.1, which every build contains with its
-pinned hash, also the seed node, the BTC node monitor and the inventory monitor. Tor may read its torrc and the bundle
+Every Bisq application runs the Tor which it starts in the sandbox of sandy 1.0.0, the first public release of sandy,
+also the seed node, the BTC node monitor and the inventory monitor. Tor may read its torrc and the bundle
 and write only its data directory, has a network of its own, and cannot start other processes or signal processes
 outside the sandbox. Where the system cannot enforce this, sandy uses a weaker level, which the log names with a
 warning; the desktop application also shows a notice for a level with the network of the computer or without isolated
@@ -175,7 +182,9 @@ signals, which says what the level gives up and when Tor gets the stronger prote
 show again" for that combination of weaknesses. If no level can be enforced, the start fails with an error which
 names the reason and `--useTorSandbox=false`; Bisq never starts Tor without the sandbox instead. The inventory monitor,
 which takes positional arguments, turns the sandbox off with `0` as its seventh argument, and its error names that
-argument. A running Tor runs without the sandbox of the node.
+argument. A running Tor runs without the sandbox of the node. The build takes the sandy archive of each platform from
+the GitHub release of sandy. It checks the archive against its pinned SHA-256 hash and against the `SHA256SUMS` file of
+the release, which must carry a signature by the pinned sandy release key.
 
 Bridges with pluggable transports need `--allowPluggableTransportsInTorSandbox=true`. The switch "Allow pluggable
 transports in the Tor sandbox" of the Tor network settings asks for a confirmation, writes the option into
@@ -230,8 +239,9 @@ debug level only, because it contains onion addresses.
 
 The zip leaves out the relays and bridges which the logs name, because a privately obtained bridge is blocked once it
 is known and users share the zip. From the logs of Tor it removes fingerprints, nicknames, ed25519 identities, IPv4
-addresses and IPv6 addresses with or without brackets, the arguments of bridge lines such as `cert` and `url`, and the
-URLs and host names in the messages of the pluggable transports, where lyrebird names the host of a webtunnel bridge.
+addresses and IPv6 addresses with or without brackets, also those which end with `::`, the arguments of bridge lines
+such as `cert` and `url`, and the URLs and host names in the messages of the pluggable transports, where lyrebird names
+the host of a webtunnel bridge, also host names under a Punycode top level domain.
 The versions of Tor and loopback addresses stay. From the Bisq log it removes `HOSTID` and `HOSTADDR` of the bootstrap
 events which the Tor library logs. The files on disk are unchanged.
 
@@ -311,8 +321,48 @@ the unit keeps, for example
 `echo "seedNodeReportingServerUrl=http://localhost:13003" | sudo -u bisq tee -a /bisq/bisq-seednode/bisq.properties`,
 and restart the node. `seednode/README.md` describes it under "Monitoring".
 
-The Docker deployment in `seednode/deployment_v2/docker` is not supported: it passes `--torControlHost` and
-`--torControlPassword`, and its Tor runs in another container, which cannot reach the onion service of the node.
+The Docker deployment in `seednode/deployment_v2/docker` no longer has the service `bisq-tor` and no longer passes
+`--torControlHost` and `--torControlPassword`. The seed node starts the bundled Tor in its own container, in the
+sandbox by default. Tor in another container could not reach the onion service of the node, because Tor forwards the
+connections of the onion service to its own loopback address; only outbound connections worked. The onion key stays
+in the data volume of the node, so the onion address does not change. If the container cannot enforce the sandbox,
+`useTorSandbox=false` in `seednode_config` turns it off. Operators remove the stack and deploy it again, because
+`docker stack deploy` without `--prune` keeps the old `bisq-tor` service. The upgrade instructions of the seed node
+also initialize the `tor` submodule.
+
+On a Turkish default locale, enum options such as `--baseCurrencyNetwork=btc_mainnet` of the shipped
+`seednode/bisq.env`, values of the daemon API and the CLI, and the network files of the inventory monitor and the BTC
+node monitor were not found, because their case was converted with the default locale. Bisq now converts the case of
+these identifiers with `Locale.ROOT`. `bisq.service` derives the name of the network directory as the node does, so
+a `BISQ_BASE_CURRENCY` in upper case no longer puts `external_tor.config` and the DAO JSON files into the wrong
+directory.
+
+### Validation of Network Data
+
+Several types of network data which anyone can publish made a signature check throw an exception instead of failing.
+
+- Signed witnesses: a malformed signer key or signature now gives an invalid signature. Before, the exception broke
+  the sign state and the trade limit checks of the account. A signed witness with an empty account hash or key, or
+  with an unknown verification method, is no longer stored. Before, indexing it stopped the start of every node which
+  received it, also of seed nodes, which served it to every new node. Such a witness which was stored earlier is
+  removed when the store is read.
+- Copies of a signed witness with another owner: the signature and the signer key verify in several encodings, and
+  each encoding gave the witness another hash, so a copy was stored next to the original. A copy of an arbitrator's
+  witness made its key a signer at once. Only the encodings which bitcoinj creates for an arbitrator's witness and the
+  JDK creates for a trade witness count now. The mainnet arbitrator keys signed their last witness in January 2021,
+  so a witness of one of these keys dated 2021-02-01 or later is invalid. A test checks that every witness of the
+  bundled mainnet store still passes the rules.
+- Dispute agents: a malformed registration key or signature of a mediator or refund agent stopped the start of the
+  node and emptied the registry of a running node. It is now rejected, and the registry is replaced only after all
+  agents were checked. An agent which anyone published with the address of a registered agent could remove that agent
+  from the registry; all agents are now checked first, and of several registered agents with the same address the
+  latest registration counts.
+- Private notifications: a malformed signature skipped the rest of the mailbox messages at every start until the
+  notification expired. It now counts as invalid. Only a verified notification is kept, so an invalid notification no
+  longer makes the shown one return at the next start.
+
+Bisq opens only `http` and `https` links. Before, a link of a popup text or of DAO data, which anyone can publish, was
+passed to the opener of the system also as a `file:` or `smb:` link.
 
 ### Build Tooling
 
@@ -320,10 +370,18 @@ Release builds use Azul Zulu 21.0.13, and JavaFX is updated to 21.0.13. Linux AR
 artifacts, which JavaFX publishes since 21.0.11. The dependency verification instructions follow those of Bisq 2, and
 the Tor upgrade instructions describe the upgrade through the `tor` submodule.
 
+`verifyReleaseEnvironment` compares the Java update by its version numbers: the numbers of the running JDK must start
+with those of `releaseBuild.javaVersion`. Azul builds one update more than once, and a second build of 21.0.13 reports
+`21.0.13.0.3`. The runtime build, the Zulu build, the vendor and the Gradle version are still compared exactly,
+because the installers bundle a runtime made from the JDK of the build. Bisq 1 has no build environment check in
+`check`, so development builds are unchanged.
+
+The dependency audit and `dependencySignatureReport` cover the included `tor` build and its build-logic. The audit
+resolves the configurations of each project in that project, as Gradle requires. The sandy 1.0.0 archives are
+reviewed checksum-only entries of the verification metadata, because they have no detached signature.
+
 ## Known Issues
 
-- On Linux ARM64, Bisq runs the Tor of the alpha release 16.0a14 of Tor Browser, because no stable release has a Tor
-  expert bundle for Linux ARM64. It contains the same tor 0.4.9.14 as the stable bundle of the other platforms.
 - On Windows, bridges with pluggable transports need the sandbox off. On macOS, webtunnel fails in the sandbox.
 - At a sandbox level with the network of the system, and with pluggable transports other than obfs4 on Linux, the
   sandbox does not keep Tor from connecting to local services, such as a local Bitcoin node or the API of the daemon.
@@ -337,7 +395,8 @@ the Tor upgrade instructions describe the upgrade through the `tor` submodule.
 
 New specifications describe the Tor startup and configuration (`docs/specifications/network/tor-startup.md`), the
 identity of the onion service (`onion-service-identity.md`), the stream isolation (`tor-stream-isolation.md`) and the
-backup of the data directory (`docs/specifications/application/data-directory-backup.md`). `docs/tor-upgrade.md`
+backup of the data directory (`docs/specifications/application/data-directory-backup.md`). The specifications of the
+signed witness describe the new rules for malformed and copied witnesses. `docs/tor-upgrade.md`
 describes the upgrade of Tor through the `tor` submodule and the pins of the bundles, `docs/build.md` and the known
 installation issues say that Bisq brings its own Tor on Linux and what it needs from the system, and
 `seednode/README.md` describes the seed node with its own Tor in the sandbox and with a running Tor. Unit tests cover
@@ -347,67 +406,104 @@ this note.
 
 ## Commit Summary
 
-| Commit | Summary |
-| --- | --- |
-| `d548269649` | Refactoring: Remove the unused Tor download build plugins |
-| `efe7e9057b` | Parse the torrc options in Bisq instead of netlayer |
-| `e4b126bb21` | Keep external_tor.config when the Tor files get deleted |
-| `323d2f7eb5` | Add the Tor library as the Git submodule tor |
-| `a41734fe77` | Use the Tor library instead of netlayer |
-| `c908dcb5ee` | Stop Tor and close the server socket without the Tor worker |
-| `223559db3e` | Depend on the tor package on Linux |
-| `a9c16c4698` | Remove netlayer |
-| `e9fda976fc` | Specify the onion service identity and the Tor startup |
-| `3da5557d97` | Use relative URLs for the local tor repository |
-| `8247b7d550` | Read the onion service key in the format which netlayer wrote |
-| `46d1993aaa` | Update the Tor library to its bug fixes |
-| `058f92dbad` | Leave the stop of a failed Tor start to the Tor library |
-| `08ee1b174c` | Let a second shutdown of the Tor node join the running shutdown |
-| `4fd3b7b2e1` | Update the Tor library to its hardening |
-| `8fc928c0cf` | Leave the protected torrc keys to the Tor library |
-| `691ed26938` | Delete the Tor files without following symbolic links |
-| `bd644fbf2b` | Use SAFECOOKIE and fail closed with a running Tor |
-| `3d4446ae72` | Show why a running Tor cannot be used when the start fails |
-| `5ddf0996e1` | Let a running Tor be used with a password through external_tor.config |
-| `a08d10ca12` | Update the Tor library to its bridges, Whonix and Android fixes |
-| `42592f6d8a` | Use the bridges of the Tor network settings with the Tor library |
-| `eedd43ad32` | Open the Tor network settings again when Tor cannot connect |
-| `4847ea314c` | Ignore the Tor options of the Whonix guide on Whonix |
-| `c5d5ce01dd` | Update the Tor library to its sandbox integration |
-| `7f96575583` | Delete the Tor files without entering junctions |
-| `1445620f06` | Skip the Tor data directory in the backup |
-| `86250b94e1` | Let Bisq 1 run its Tor in the sandbox with --useTorSandbox |
-| `0d019a8878` | fix(p2p): fail at once when a running Tor does not bootstrap in time |
-| `6149c463db` | docs(p2p): move the javadoc of deleteTorFiles to the method |
-| `a5510fdbb5` | Document local Tor submodule configuration |
-| `24ee4bc12e` | Use relative path for tor submodule for dev purpose |
-| `88c3ad4890` | Set default value for USE_TOR_SANDBOX to true |
-| `7ecc5c959a` | Apply temp fix for latest tor/sandy version |
-| `01a0d05444` | build(tor): move the tor submodule to the packaged sandy 2.2.1 |
-| `968bfbc804` | feat(tor): add an option and a switch for pluggable transports in the sandbox |
-| `86485284ca` | docs(gradle): adopt the Bisq 2 dependency verification instructions |
-| `a6b23b2877` | build: update the pinned Java version to Azul Zulu 21.0.13 |
-| `a4560e0634` | build(deps): update JavaFX to 21.0.13 |
-| `2f115af01f` | docs(gradle): describe the JavaFX verification metadata update |
-| `9579d16b61` | fix(build): use the linux-aarch64 JavaFX classifier on Linux ARM |
-| `2303377050` | Set version 1.10.11 |
-| `b7da02fcec` | docs(tor): raise the version of the tor artifacts in a Tor upgrade |
-| `f745748eea` | fix(i18n): give the changed bridge line prompt a new key |
-| `2ceeb89841` | fix(desktop): add the Tor log to the zip of the log files |
-| `a976de46c6` | fix(p2p): wait for the bounded stop of Tor at the shutdown |
-| `94d8a5d0dd` | fix(desktop): disable the pluggable transports switch for a command line option |
-| `8d78168dc8` | fix(desktop): show an invalid option at the start in a dialog |
-| `a7d7a99070` | fix(common): do not follow links in the backup of the data directory |
-| `2037610166` | fix(common): make the backup of the data directory owner-only |
-| `2833ceb168` | fix(p2p): accept torrc entries which start a program only from the command line |
-| `14e25d7bb7` | fix(p2p): send the stream isolation credentials with HTTP requests |
-| `5a96d265d7` | fix(tor): explain a refusal of the transports of the bridges in Bisq 1 terms |
-| `42f55991bb` | fix(tor): keep a Ctrl+C in the terminal of the node away from its Tor |
-| `f71b6d131b` | fix(p2p): send the stream isolation credentials with HTTP requests |
-| `d0d99260d0` | fix(seednode): let only the node stop its own Tor at a systemd stop |
-| `456d1fb0ef` | fix(core): exit with the failure status when a headless node cannot start Tor |
-| `c38b3cb982` | docs(tor): name external_tor.config as a file to keep in the Tor directory |
-| `c9d0acddfe` | docs(tor): say that the tor package starts the Tor service of the system |
+The commits of `release-candidate-v1.10.11` after `v1.10.10`, without merge commits, in the order of their pull
+requests.
 
-TODO (maintainer): add the later commits of `fix-open-items-after-crosscheck` and `linux-bundled-tor-sandbox-defaults`
-and the other commits of the release.
+| Pull request | Commit | Summary |
+| --- | --- | --- |
+| #8168 | `07af1b95e0` | build: remove the unused Tor download plugins of build-logic |
+| #8168 | `a4c13d84d3` | doc: adopt the dependency verification instructions of Bisq 2 |
+| #8168 | `546c81b1e6` | build: set version 1.10.11 |
+| #8168 | `ace34126c9` | build: audit build-logic and turn the verification key servers off |
+| #8168 | `2e6f4e01bd` | doc: name the seed node uninstall script as it is called |
+| #8169 | `15224159c5` | build: update the pinned Java version to Azul Zulu 21.0.13 |
+| #8169 | `043aa0164f` | build: update JavaFX to 21.0.13 and use its linux-aarch64 jars |
+| #8170 | `25075eeea2` | refactor: parse the torrc options in Bisq instead of netlayer |
+| #8170 | `44d141b7f8` | refactor: keep external_tor.config when the Tor files get deleted |
+| #8170 | `6d09422416` | build: add the Tor library as the Git submodule tor |
+| #8170 | `ecb30afaef` | refactor: use the Tor library instead of netlayer |
+| #8170 | `1b73ac43f1` | refactor: stop Tor and close the server socket without the Tor worker |
+| #8170 | `2dd4d2ff87` | build: depend on the tor package on Linux |
+| #8170 | `cb7457788a` | build: remove netlayer |
+| #8170 | `d08e48470f` | doc: specify the onion service identity and the Tor startup |
+| #8170 | `99aa8c448a` | build: audit and report the dependencies of the included builds |
+| #8170 | `8b852db86f` | fix: pin exact Zulu build in CI |
+| #8170 | `b373b1e3d5` | fix: verify exact Zulu runtime build |
+| #8171 | `bea4f7fee8` | fix: update the Tor library to its bug fixes and adapt to them |
+| #8171 | `eb3ab4b48c` | fix: join a second shutdown of the Tor node and wait for its Tor |
+| #8171 | `5a8cc18ae3` | test: reset the UserThread statics of the Tor node tests in one place |
+| #8171 | `74e439ccb2` | fix: exit with the failure status when a headless node cannot start Tor |
+| #8171 | `35e470260b` | fix: take the exit status 143 of a stopped seed node as success |
+| #8171 | `463fd31b77` | fix: convert the case of options, API and CLI values with Locale.ROOT |
+| #8172 | `6d6b90fe0d` | hardening: update the Tor library to its hardening |
+| #8172 | `ded4678005` | hardening: delete the Tor files without following links or junctions |
+| #8172 | `2de5f5d393` | hardening: back up the data directory owner-only and without links |
+| #8172 | `cbbfffa320` | fix: let only the seed node stop its own Tor at a systemd stop |
+| #8172 | `3a21bec4ee` | hardening: send the stream isolation credentials with HTTP requests |
+| #8172 | `94fb6c7ec8` | hardening: keep the private keys of the key ring owner-only |
+| #8173 | `493f2e50c9` | feature: update the Tor library, use SAFECOOKIE and bundle Tor on Linux |
+| #8173 | `01bac25c96` | feature: always report why a running Tor cannot be used |
+| #8173 | `dfbcc99cfb` | feature: use bridges again and ask for them when Tor cannot connect |
+| #8173 | `6409e87026` | fix: fail at once when a running Tor does not bootstrap in time |
+| #8173 | `2723964e89` | doc: say that Bisq brings its own Tor on Linux too |
+| #8173 | `ea1bdabf23` | feature: ignore Tor options on Whonix and show invalid ones in a dialog |
+| #8173 | `0a9ec64721` | test: cover an interrupted Tor start and the seed node unit |
+| #8174 | `b786a8c197` | sandy: update the Tor library to its sandbox integration |
+| #8174 | `f3cf0f2977` | sandy: run the Tor of the node in the sandbox by default |
+| #8174 | `0685dfd0ea` | sandy: let the user allow pluggable transports in the Tor sandbox |
+| #8174 | `6e39623c57` | hardening: refuse torrc entries which start programs from config files |
+| #8174 | `74c3de393b` | sandy: explain the refusal of bridge transports in Bisq 1 terms |
+| #8174 | `cf0706ea7e` | sandy: show why Tor failed in the Tor network settings |
+| #8174 | `6cedf0b411` | sandy: run the Tor of every application in the sandbox by default |
+| #8174 | `ed37679193` | sandy: show a notice when Tor runs in a weak level of its sandbox |
+| #8174 | `d07e7da848` | hardening: skip the Tor data directory in the backup |
+| #8174 | `153eb61a36` | fix: add the logs of Tor to the zip of the log files |
+| #8174 | `8b694e5e59` | fix: leave the data mode record of Tor out of the backup |
+| #8174 | `1004f24788` | doc: state the rules of the Tor library in the Tor specifications |
+| #8174 | `250efb31b0` | fix: show a start failure which says what helps without generic advice |
+| #8174 | `2517a40332` | fix: offer the fixes when the Tor sandbox refuses the bridges |
+| #8174 | `39c94e0e67` | fix: derive the network directory in bisq.service as the node does |
+| #8174 | `21dfda8edd` | hardening: keep seed node secrets and data away from other local users |
+| #8174 | `8498d3bb35` | doc: tell monitored nodes to set the reporting URL in bisq.properties |
+| #8174 | `125a6746c7` | fix: shut the monitors down with the failure status if Tor cannot start |
+| #8174 | `bb230593b4` | fix: find the files of the network in both monitors in every locale |
+| #8174 | `7d291aabc8` | test: run the Tor network node test on a private Tor network |
+| #8174 | `438961afc7` | doc: add the draft release notes of 1.10.11 |
+| #8174 | `15d11f86b5` | build: pin the published Tor main commit |
+| #8175 | `692f5f6980` | Update tor library |
+| #8176 | `893ae54274` | Initialize submodules when upgrading seed nodes |
+| #8176 | `28790c0e68` | Export keys when writing verification metadata |
+| #8176 | `a3891a3448` | Document configuration-time metadata bootstrap |
+| #8176 | `865017dac3` | Enable key servers in refresh instructions |
+| #8176 | `e089c49b36` | Allow Tor shutdown to finish in the node monitor |
+| #8176 | `697240b24a` | Match trade categories consistently after parsing |
+| #8176 | `df4cd7481b` | Migrate Docker seed-node external Tor settings |
+| #8176 | `f3874247d4` | Resolve audit dependencies in owning projects |
+| #8176 | `0bb1e71510` | fix: run the Tor of the Docker seed node in its own container |
+| #8177 | `144622ace3` | build: compare the CI Java build with the pinned update by version numbers |
+| #8177 | `376ed4a0ff` | build: compare the release JDK with the pinned Java update by version numbers |
+| #8178 | `01092d0731` | Update tor lib 8234d49c |
+| #8181 | `f54a511c2e` | test(p2p): run disconnect network test on its own timer |
+| #8180 | `65fb5a794b` | docs: describe the Tor of the Docker seed node in its own container |
+| #8182 | `c10b178876` | Update the tor library to 8234d49 |
+| #8183 | `7ebf727ff8` | Update to tor lib ff6cb9a0f45ed3d23ef74f005586b139a458fa7a |
+| #8183 | `dff18fbe2f` | hardening: let the Tor library refuse code-running torrc entries of config files |
+| #8183 | `5bdcc40906` | docs(release): name AccelName and AccelDir among the refused torrc entries |
+| #8183 | `2f6380449f` | test(p2p): cover transport plugin refusals through the Tor library |
+| #8183 | `a31479db1d` | docs: name the bridge exception of the refused transport plugin entries |
+| #8186 | `cce4f07996` | Reject malformed dispute agent registrations |
+| #8186 | `b245ddbb70` | Verify dispute agents before reducing by address |
+| #8188 | `690559297d` | Ignore a malformed private notification signature |
+| #8188 | `d0fb0ce052` | Remove only the shown private notification |
+| #8188 | `5f2c7a38f4` | Open only http and https links |
+| #8187 | `44526cc255` | fix(core): treat a malformed signed witness key as invalid |
+| #8187 | `ce1707da39` | fix(core): keep malformed signed witnesses out of the store |
+| #8187 | `b58c82efcb` | fix(core): reject copies of a signed witness with another owner |
+| #8187 | `0380d51d2c` | test(core): check the bundled witnesses against the rules |
+| #8187 | `43c21132a4` | docs: update the signed witness specifications |
+| #8185 | `9163bf852e` | feat(core): let the log zipper redact the text of a file |
+| #8185 | `8b8aaa5f38` | fix: zip the logs without the relays and bridges |
+| #8185 | `0368f3672a` | docs: describe what the log zip leaves out |
+| #8185 | `4334c3eea9` | fix(p2p): redact IPv6 addresses ending in :: and Punycode host names |
+| #8189 | `b6095e7b53` | Update to tor lib 6edc00e7413a1a95767586abc4899a8f0202ac85 |
+| #8189 | `fd7df3cd3c` | build: allow the checksum-only sandy 1.0.0 release archives |
