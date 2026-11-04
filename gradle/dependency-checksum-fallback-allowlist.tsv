@@ -3,6 +3,11 @@
 # Keep this artifact-level list exact. A new unsigned artifact should be reviewed before it is added here.
 aopalliance:aopalliance:1.0	aopalliance-1.0.jar	Legacy Maven Central artifact without published detached signatures.
 aopalliance:aopalliance:1.0	aopalliance-1.0.pom	Legacy Maven Central artifact without published detached signatures.
+bisq-network:sandy:1.0.0	sandy-1.0.0-aarch64-apple-darwin.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-aarch64-unknown-linux-musl.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-x86_64-apple-darwin.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-x86_64-pc-windows-msvc.zip	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-x86_64-unknown-linux-musl.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
 com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a	bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.jar	Bisq-maintained JitPack fork pinned to an immutable commit.
 com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a	bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.module	Bisq-maintained JitPack fork pinned to an immutable commit.
 com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1	jsonrpc4j-1.6.0.bisq.1.jar	Bisq-maintained JitPack fork pinned to a reviewed Bisq release version.

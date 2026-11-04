@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 457 configurations of this build and of the included builds build-logic, tor, tor/build-logic.
+Generated from `gradle/verification-metadata.xml` after resolving 462 configurations of this build and of the included builds build-logic, tor, tor/build-logic.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
@@ -27,14 +27,14 @@ Restore `<key-servers enabled="false"/>` after `<keyring-format>` (metadata writ
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 210 |
+| Resolved external modules | 211 |
 | Modules with PGP-signed artifacts only | 202 |
-| Modules using checksum fallback only | 8 |
+| Modules using checksum fallback only | 9 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 443 |
+| Verified artifacts | 448 |
 | PGP-signed artifacts | 429 |
-| Checksum-fallback artifacts | 14 |
+| Checksum-fallback artifacts | 19 |
 | Signer keys found in exported keyring | 69 / 69 |
 | Signer keys with name or email | 49 / 69 |
 | Signer keys with creation date | 69 / 69 |
@@ -48,6 +48,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum-only artifacts and review rationale |
 | --- | --- | --- |
 | `aopalliance:aopalliance:1.0` | transitive | `aopalliance-1.0.jar`<br>Legacy Maven Central artifact without published detached signatures.<br><br>`aopalliance-1.0.pom`<br>Legacy Maven Central artifact without published detached signatures. |
+| `bisq-network:sandy:1.0.0` | direct | `sandy-1.0.0-aarch64-apple-darwin.tar.gz`<br>sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.<br><br>`sandy-1.0.0-aarch64-unknown-linux-musl.tar.gz`<br>sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.<br><br>`sandy-1.0.0-x86_64-apple-darwin.tar.gz`<br>sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.<br><br>`sandy-1.0.0-x86_64-pc-windows-msvc.zip`<br>sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.<br><br>`sandy-1.0.0-x86_64-unknown-linux-musl.tar.gz`<br>sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key. |
 | `com.github.bisq-network:bitcoinj:6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a` | direct | `bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.jar`<br>Bisq-maintained JitPack fork pinned to an immutable commit.<br><br>`bitcoinj-6c32c0629d4ac7ecc95889eb1a46fa0d77a4e15a.module`<br>Bisq-maintained JitPack fork pinned to an immutable commit. |
 | `com.github.bisq-network:jsonrpc4j:1.6.0.bisq.1` | direct | `jsonrpc4j-1.6.0.bisq.1.jar`<br>Bisq-maintained JitPack fork pinned to a reviewed Bisq release version.<br><br>`jsonrpc4j-1.6.0.bisq.1.module`<br>Bisq-maintained JitPack fork pinned to a reviewed Bisq release version. |
 | `com.google.protobuf:com.google.protobuf.gradle.plugin:0.9.5` | direct | `com.google.protobuf.gradle.plugin-0.9.5.pom`<br>Gradle plugin marker POM without a published detached signature; implementation module is PGP signed. |
@@ -61,6 +62,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Status | Artifacts | Signer key and metadata |
 | --- | --- | --- | ---: | --- |
 | `aopalliance:aopalliance:1.0` | transitive | checksum fallback | 0 signed / 2 checksum | - |
+| `bisq-network:sandy:1.0.0` | direct | checksum fallback | 0 signed / 5 checksum | - |
 | `ch.qos.logback:logback-classic:1.5.32` | direct | PGP signed | 2 signed / 0 checksum | `60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
 | `ch.qos.logback:logback-core:1.5.32` | direct | PGP signed | 2 signed / 0 checksum | `60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
 | `com.fasterxml.jackson.core:jackson-annotations:2.21` | direct | PGP signed | 2 signed / 0 checksum | `28118C070CB22A0175A2E8D43D12CA2AC19F3181`<br>Tatu Saloranta (cowtowncoder)<br>`tatu.saloranta@iki.fi`<br>created 2022-08-13<br><br>`6214760097DC5CFAD0175AC2C9FBAA83A8753994`<br>created 2016-07-26 |
