@@ -3,7 +3,8 @@
 ## Scope
 
 This specification defines when an account shows as banned: in the badge of the peer of an offer
-or a trade, in the warning when an offer is taken, and in the views of the own payment accounts.
+or a trade, in the details of a trade and its contract, in the warning when an offer is taken, and
+in the views of the own payment accounts.
 Accounts of payment methods without chargeback risk show no signing state, so they show no ban
 either. The deny list of the release and the filter ban signature keys with
 `bannedAccountWitnessSignerPubKeys`.
@@ -32,6 +33,11 @@ witness names another trader.
 The ban does not depend on the witnesses. A banned owner shows as banned also if no signed witness
 exists for the account and if the node does not know the account age witness. A trade shows as
 unsigned as long as the key of the peer is not known.
+
+A banned account is never shown as signed, also if a witness of its account counts. The list of
+offers shows it as not signed. The badge of the peer and the view of an own account show the ban
+without a time since signing, and the details of a trade and its contract show the ban instead of
+it.
 
 ## What the ban does not change
 

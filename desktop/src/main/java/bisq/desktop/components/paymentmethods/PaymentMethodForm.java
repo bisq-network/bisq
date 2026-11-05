@@ -235,7 +235,8 @@ public abstract class PaymentMethodForm {
                         Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                 daysSinceSigning));
 
-                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED) &&
+                        !signState.equals(AccountAgeWitnessService.SignState.BANNED)) {
                     accountSigningStateText += " / " + timeSinceSigning;
                 }
 
