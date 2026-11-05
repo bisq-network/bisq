@@ -975,24 +975,37 @@ public class AccountAgeWitnessService {
     }
 
     public SignState getSignState(Offer offer) {
-        return findWitness(offer)
-                .map(this::getSignState)
-                .orElse(SignState.UNSIGNED);
+        return getSignState(offer.getPubKeyRing(), findWitness(offer));
     }
 
     public SignState getSignState(Trade trade) {
-        return findTradePeerWitness(trade)
-                .map(this::getSignState)
-                .orElse(SignState.UNSIGNED);
+        TradingPeer tradingPeer = trade.getProcessModel().getTradePeer();
+        if (tradingPeer == null || tradingPeer.getPubKeyRing() == null) {
+            return SignState.UNSIGNED;
+        }
+        return getSignState(tradingPeer.getPubKeyRing(), findTradePeerWitness(trade));
     }
 
-    public SignState getSignState(AccountAgeWitness accountAgeWitness) {
+    public SignState getMySignState(PaymentAccountPayload paymentAccountPayload) {
+        return getSignState(keyRing.getPubKeyRing(), Optional.of(getMyWitness(paymentAccountPayload)));
+    }
+
+    // The ban is decided by the key which the caller knows to be the owner's: the key which signed the offer, the key
+    // of the trade peer or our own key. No signature covers the owner key of a signed witness, so it must not decide.
+    // See docs/specifications/account/banned-accounts.md.
+    SignState getSignState(PubKeyRing ownerPubKeyRing, Optional<AccountAgeWitness> optionalWitness) {
         // Add hash to sign state info when running in debug mode
-        String hash = log.isDebugEnabled() ? Utilities.bytesAsHexString(accountAgeWitness.getHash()) + "\n" +
-                signedWitnessService.ownerPubKeyAsString(accountAgeWitness) : "";
-        if (signedWitnessService.isFilteredWitness(accountAgeWitness)) {
+        String hash = log.isDebugEnabled() ? optionalWitness
+                .map(witness -> Utilities.bytesAsHexString(witness.getHash()) + "\n" +
+                        signedWitnessService.ownerPubKeyAsString(witness))
+                .orElse("") : "";
+        if (isWitnessOwnerPubKeyBanned(ownerPubKeyRing.getSignaturePubKeyBytes())) {
             return SignState.BANNED.addHash(hash);
         }
+        if (optionalWitness.isEmpty()) {
+            return SignState.UNSIGNED.addHash(hash);
+        }
+        AccountAgeWitness accountAgeWitness = optionalWitness.get();
         if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
             return SignState.ARBITRATOR.addHash(hash);
         } else {
@@ -1087,9 +1100,5 @@ public class AccountAgeWitnessService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
-        return signedWitnessService.isFilteredWitness(accountAgeWitness);
     }
 }

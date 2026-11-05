@@ -147,8 +147,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
 
                             if (needsSigning) {
                                 AccountAgeWitnessService.SignState signState =
-                                        accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
-                                                item.paymentAccountPayload));
+                                        accountAgeWitnessService.getMySignState(item.paymentAccountPayload);
 
                                 String info = StringUtils.capitalize(signState.getDisplayString());
                                 label.setIcon(GUIUtil.getIconForSignState(signState), info);

@@ -225,7 +225,7 @@ public abstract class PaymentMethodForm {
                 AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
                         paymentAccount.paymentAccountPayload);
                 AccountAgeWitnessService.SignState signState =
-                        accountAgeWitnessService.getSignState(myWitness);
+                        accountAgeWitnessService.getMySignState(paymentAccount.paymentAccountPayload);
 
                 accountSigningStateText = StringUtils.capitalize(signState.getDisplayString());
 

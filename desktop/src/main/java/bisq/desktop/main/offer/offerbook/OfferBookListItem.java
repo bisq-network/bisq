@@ -77,9 +77,7 @@ public class OfferBookListItem {
             } else if (PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
                 // Fiat and signed witness required
                 Optional<AccountAgeWitness> optionalWitness = accountAgeWitnessService.findWitness(offer);
-                AccountAgeWitnessService.SignState signState = optionalWitness
-                        .map(accountAgeWitnessService::getSignState)
-                        .orElse(AccountAgeWitnessService.SignState.UNSIGNED);
+                AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(offer);
 
                 boolean isSignedAccountAgeWitness = optionalWitness
                         .map(signedWitnessService::isSignedAccountAgeWitness)
