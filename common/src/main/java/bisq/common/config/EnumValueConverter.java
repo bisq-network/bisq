@@ -23,6 +23,7 @@ import com.google.common.base.Enums;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -42,14 +43,16 @@ class EnumValueConverter implements ValueConverter<Enum> {
 
     /**
      * Attempt to resolve an enum of the specified type by looking for a label with the
-     * given value, trying all case variations in the process.
+     * given value, trying all case variations in the process. The case conversion does not
+     * depend on the default locale: in a Turkish locale, toUpperCase() turns the i of
+     * btc_mainnet into a dotted capital I, which no label has.
      *
      * @return the matching enum label (if any)
      * @throws ConfigException if no such label matching the given value is found.
      */
     @Override
     public Enum convert(String value) {
-        Set<String> candidates = Sets.newHashSet(value, value.toUpperCase(), value.toLowerCase());
+        Set<String> candidates = Sets.newHashSet(value, value.toUpperCase(Locale.ROOT), value.toLowerCase(Locale.ROOT));
         for (String candidate : candidates) {
             @SuppressWarnings("unchecked")
             Optional<? extends Enum> result = Enums.getIfPresent(enumType, candidate);

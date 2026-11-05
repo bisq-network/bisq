@@ -17,6 +17,35 @@ bridge export) work with the stored date and never check it again against the wa
 Consequently, every path that inserts a witness into the local store must validate the date at the
 point of entry. A path that skips this validation reopens date forgery for the whole system.
 
+## A well-formed witness
+
+On every path a `SignedWitness` enters the store only with a non-empty account age witness hash,
+signer key and owner key and with a known verification method (`verifyHashSize`, which the
+connection, the P2P store and the initial data check). The lookup maps of the witnesses are keyed by
+these fields, and a witness with an unknown method cannot be serialized again. A stored witness which
+fails this check, because it was stored before the check, is removed when the store is read, so that
+the node does not serve it to peers in the initial data.
+
+## Signature encoding
+
+The storage identity of a `SignedWitness` covers the account age witness hash, the signature bytes
+and the signer key, not the owner key or the date. Both verifiers accept a signature, and the JDK
+also a signer key, in more than one encoding, and each encoding gives the witness another identity,
+so a copy with another owner would be stored next to the original. A signature therefore counts only
+in the encoding which its signer creates, and a trade signer key only in the X.509 encoding which the
+JDK creates:
+
+- an arbitrator signature is the compact message signature of 65 bytes in padded Base64 which encodes
+  back to the same bytes, with the compression flag of the key and a low `s`;
+- a trade signature is the DER `SEQUENCE` of two positive `INTEGER`s `r` and `s` in their shortest
+  form, with lengths of one byte. The JDK verifier also accepts an `INTEGER` without its leading zero
+  or with sign bytes of `0xFF`.
+
+A witness of one of the legacy mainnet arbitrator keys counts only if it is dated before
+2021-02-01. The last of these witnesses in the bundled store is dated 2021-01-25, and the network
+relays a witness only if it is dated within a day of its receipt, so a copy relayed today cannot use
+such a key as a signer root.
+
 ## Admission paths and their rules
 
 ### Remotely received P2P payloads
@@ -81,10 +110,13 @@ carry the local current time and need no additional admission check.
 
 ## Known limitations
 
-- The date remains outside the deployed `SignedWitness` signature. Anyone can copy an existing
-  record and change only its date. Such a copy cannot displace the stored original, because the
-  storage identity excludes the date and the first write wins, but the date is not authenticated by
-  cryptography. Covering the date by the signature would require a protocol change.
+- The date and the owner key remain outside the deployed `SignedWitness` signature. Anyone can copy
+  an existing record and change its date or owner key. Such a copy cannot displace the stored
+  original on a node which has it, because the storage identity excludes both and the first write
+  wins. A node which does not have the original yet stores the copy instead and then ignores the
+  original, so a copy of a fresh trade witness which reaches some nodes first makes its owner key
+  the owner there. Covering the date and the owner key by the signature would require a protocol
+  change.
 - The date accepted at the trade ingress is the date the peer chose inside the duration of the
   trade, not the date the peer actually signed. A peer can therefore move the date to the start of
   the trade. The gain is bounded by the duration of that single trade.

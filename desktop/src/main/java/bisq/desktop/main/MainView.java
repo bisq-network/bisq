@@ -49,6 +49,8 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 
+import bisq.network.p2p.network.BridgesCanHelpException;
+
 import bisq.common.BisqException;
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -103,6 +105,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import lombok.Setter;
@@ -776,7 +779,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
         model.getP2pNetworkWarnMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
+                p2PNetworkWarnMsgPopup = createP2PNetworkWarnMsgPopup(newValue);
                 p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();
@@ -837,6 +840,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             setMinHeight(30);
             setMaxHeight(30);
         }};
+    }
+
+    // A failure which other bridges can fix leads to the Tor network settings, or for the pluggable transports which
+    // the sandbox refused, to the choices which fix it
+    private Popup createP2PNetworkWarnMsgPopup(String warnMsg) {
+        BridgesCanHelpException bridgesCanHelpFailure = model.getBridgesCanHelpFailure();
+        if (bridgesCanHelpFailure == null) {
+            return new Popup().warning(warnMsg);
+        }
+        List<String> notAllowedTransportNames = bridgesCanHelpFailure.getNotAllowedTransportNames();
+        if (!notAllowedTransportNames.isEmpty()) {
+            return torNetworkSettingsWindow.createPluggableTransportsNotAllowedPopup(notAllowedTransportNames);
+        }
+        return new Popup().warning(warnMsg)
+                .actionButtonText(Res.get("settings.net.openTorSettingsButton"))
+                .onAction(torNetworkSettingsWindow::show);
     }
 
     private void setupBadge(BisqJfxBadge buttonWithBadge, StringProperty badgeNumber, BooleanProperty badgeEnabled) {

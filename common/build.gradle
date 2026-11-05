@@ -10,6 +10,8 @@ javafx {
 dependencies {
     implementation enforcedPlatform(project(':platform'))
     implementation project(':proto')
+    // Config tells Whonix and the Whonix-Gateway apart with the rule of the Tor library
+    implementation 'tor:tor-common'
     annotationProcessor libs.lombok
     compileOnly libs.javax.annotation
     compileOnly libs.lombok

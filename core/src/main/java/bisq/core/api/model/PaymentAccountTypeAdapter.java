@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -352,9 +353,9 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     private final Predicate<String> isCommaDelimitedCurrencyList = (s) -> s != null && s.contains(",");
     private final Function<String, List<String>> commaDelimitedCodesToList = (s) -> {
         if (isCommaDelimitedCurrencyList.test(s))
-            return stream(s.split(",")).map(a -> a.trim().toUpperCase()).collect(toList());
+            return stream(s.split(",")).map(a -> a.trim().toUpperCase(Locale.ROOT)).collect(toList());
         else if (s != null && !s.isEmpty())
-            return singletonList(s.trim().toUpperCase());
+            return singletonList(s.trim().toUpperCase(Locale.ROOT));
         else
             return new ArrayList<>();
     };
@@ -400,7 +401,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
 
         String fieldValue = nextStringOrNull(in);
         if (fieldValue != null && !fieldValue.isEmpty()) {
-            Optional<TradeCurrency> tradeCurrency = getTradeCurrency(fieldValue.toUpperCase());
+            Optional<TradeCurrency> tradeCurrency = getTradeCurrency(fieldValue.toUpperCase(Locale.ROOT));
             if (tradeCurrency.isPresent()) {
                 account.setSelectedTradeCurrency(tradeCurrency.get());
             } else {

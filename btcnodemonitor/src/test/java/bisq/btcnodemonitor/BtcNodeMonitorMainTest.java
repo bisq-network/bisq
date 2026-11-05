@@ -17,11 +17,15 @@
 
 package bisq.btcnodemonitor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
+import static bisq.core.app.BisqExecutable.EXIT_FAILURE;
+import static bisq.core.app.BisqExecutable.EXIT_SUCCESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -42,7 +46,7 @@ class BtcNodeMonitorMainTest {
         verify(btcNodeMonitor, times(1)).shutdown();
         assertEquals(2, completionCount.get());
         // The repeated exit request is dropped by the guard in CommonSetup.exitAfter, which the test replaces.
-        assertEquals(2, main.exitCalls);
+        assertEquals(List.of(EXIT_SUCCESS, EXIT_SUCCESS), main.exitStatuses);
     }
 
     @Test
@@ -55,7 +59,7 @@ class BtcNodeMonitorMainTest {
         main.gracefulShutDown(completionCount::incrementAndGet);
 
         assertEquals(1, completionCount.get());
-        assertEquals(1, main.exitCalls);
+        assertEquals(List.of(EXIT_SUCCESS), main.exitStatuses);
     }
 
     @Test
@@ -66,19 +70,31 @@ class BtcNodeMonitorMainTest {
         main.gracefulShutDown(completionCount::incrementAndGet);
 
         assertEquals(1, completionCount.get());
-        assertEquals(1, main.exitCalls);
+        assertEquals(List.of(EXIT_SUCCESS), main.exitStatuses);
+    }
+
+    @Test
+    void aFailedStartShutsTheServicesDownAndExitsWithTheFailureStatus() {
+        BtcNodeMonitor btcNodeMonitor = mock(BtcNodeMonitor.class);
+        when(btcNodeMonitor.shutdown()).thenReturn(CompletableFuture.completedFuture(null));
+        TestBtcNodeMonitorMain main = new TestBtcNodeMonitorMain(btcNodeMonitor);
+
+        main.onStartFailed(new RuntimeException("Bisq did not start Tor"));
+
+        verify(btcNodeMonitor, times(1)).shutdown();
+        assertEquals(List.of(EXIT_FAILURE), main.exitStatuses);
     }
 
     private static final class TestBtcNodeMonitorMain extends BtcNodeMonitorMain {
-        private int exitCalls;
+        private final List<Integer> exitStatuses = new ArrayList<>();
 
         private TestBtcNodeMonitorMain(BtcNodeMonitor btcNodeMonitor) {
             super(btcNodeMonitor);
         }
 
         @Override
-        void exitAfterShutDown() {
-            exitCalls++;
+        void exitAfterShutDown(int exitStatus) {
+            exitStatuses.add(exitStatus);
         }
     }
 }

@@ -52,6 +52,8 @@ import bisq.common.util.SingleThreadExecutorUtils;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -152,6 +154,11 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
             public void onHiddenServicePublished() {
                 ExecutableForAppWithP2p.this.onHiddenServicePublished();
             }
+
+            @Override
+            public void onSetupFailed(Throwable throwable) {
+                ExecutableForAppWithP2p.this.onP2PSetupFailed();
+            }
         });
 
         appSetupWithP2PAndDAO.start();
@@ -162,6 +169,14 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
             startShutDownInterval();
         }
         UserThread.runAfter(this::setupConnectionLossCheck, 60);
+    }
+
+    // Nothing retries a failed start of Tor or of the onion service, and the connection loss check needs connections,
+    // so the node would stay unreachable until its periodic restart.
+    @VisibleForTesting
+    void onP2PSetupFailed() {
+        log.error("The start of the P2P network failed. We shut down, so that the node gets restarted.");
+        shutDown();
     }
 
     @Override

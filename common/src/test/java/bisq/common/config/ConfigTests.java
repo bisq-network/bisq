@@ -11,6 +11,7 @@ import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -116,6 +117,108 @@ public class ConfigTests {
         String actualMessage = exception.getMessage();
 
         assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @Test
+    public void whenTorControlPortOptionIsSet_thenConfigExceptionIsThrown() {
+        Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt(TOR_CONTROL_PORT, 9051)));
+
+        assertTrue(exception.getMessage().contains("option 'torControlPort' is not supported anymore"));
+        assertTrue(exception.getMessage().contains("external_tor.config"));
+    }
+
+    @Test
+    public void theTorSandboxIsOnUnlessTheOptionTurnsItOff() {
+        assertTrue(new Config().useTorSandbox);
+        assertFalse(configWithOpts(opt(USE_TOR_SANDBOX, "false")).useTorSandbox);
+    }
+
+    @Test
+    public void theTorSandboxAllowsNoPluggableTransportsUnlessTheOptionAllowsThem() {
+        assertFalse(new Config().allowPluggableTransportsInTorSandbox);
+        assertTrue(configWithOpts(opt(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "true"))
+                .allowPluggableTransportsInTorSandbox);
+    }
+
+    @Test
+    public void recordsWhetherTheCommandLineSetsTheTorrcOptions() throws IOException {
+        // Torrc entries which make Tor start a program or load a library are accepted only from the command line
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(TORRC_OPTIONS, "AvoidDiskWrites 1"));
+        }
+        Config fromConfigFile = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertThat(fromConfigFile.torrcOptions, equalTo("AvoidDiskWrites 1"));
+        assertFalse(fromConfigFile.torrcOptionsSetOnCommandLine);
+        assertFalse(fromConfigFile.torrcFileSetOnCommandLine);
+
+        Config fromCommandLine = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()),
+                opt(TORRC_OPTIONS, "AvoidDiskWrites 0"));
+        assertThat(fromCommandLine.torrcOptions, equalTo("AvoidDiskWrites 0"));
+        assertTrue(fromCommandLine.torrcOptionsSetOnCommandLine);
+    }
+
+    @Test
+    public void onlyTheCommandLineOptionOfPluggableTransportsOverridesTheSwitch() throws IOException {
+        // The switch of the Tor network settings writes the option into the config file
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "true"));
+        }
+        Config fromConfigFile = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertTrue(fromConfigFile.allowPluggableTransportsInTorSandbox);
+        assertFalse(fromConfigFile.allowPluggableTransportsInTorSandboxSetOnCommandLine);
+
+        Config fromCommandLine = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()),
+                opt(ALLOW_PLUGGABLE_TRANSPORTS_IN_TOR_SANDBOX, "false"));
+        assertFalse(fromCommandLine.allowPluggableTransportsInTorSandbox);
+        assertTrue(fromCommandLine.allowPluggableTransportsInTorSandboxSetOnCommandLine);
+
+        assertFalse(new Config().allowPluggableTransportsInTorSandboxSetOnCommandLine);
+    }
+
+    @Test
+    public void onWhonixTheTorControlOptionsOfTheWhonixGuideAreIgnored() {
+        // On a Whonix-Workstation the Tor library uses the Tor of the Whonix-Gateway and never starts its own Tor.
+        File configFile = new File("bisq.properties");
+        File torDir = new File("tor");
+        Config.checkUnsupportedTorControlOptions(List.of(TOR_CONTROL_PORT, TOR_CONTROL_PASSWORD), configFile, torDir,
+                true, false);
+
+        Exception exception = assertThrows(ConfigException.class, () ->
+                Config.checkUnsupportedTorControlOptions(List.of(TOR_CONTROL_PORT, TOR_CONTROL_PASSWORD), configFile,
+                        torDir, false, false));
+        assertTrue(exception.getMessage().contains("option 'torControlPort' is not supported anymore"));
+    }
+
+    // On a Whonix-Gateway the Tor library refuses to start and names the Workstation. An error about
+    // external_tor.config would come first and send the user the wrong way.
+    @Test
+    public void onAWhonixGatewayTheTorControlOptionsOfTheWhonixGuideAreIgnoredToo() {
+        Config.checkUnsupportedTorControlOptions(List.of(TOR_CONTROL_PORT, TOR_CONTROL_PASSWORD),
+                new File("bisq.properties"), new File("tor"), true, true);
+    }
+
+    @Test
+    public void whenTorControlUseSafeCookieAuthFlagIsSet_thenConfigExceptionIsThrown() {
+        Exception exception = assertThrows(ConfigException.class,
+                () -> configWithOpts(opt(TOR_CONTROL_USE_SAFE_COOKIE_AUTH)));
+
+        assertTrue(exception.getMessage().contains("option 'torControlUseSafeCookieAuth' is not supported anymore"));
+    }
+
+    @Test
+    public void whenTorControlOptionIsSetInConfigFile_thenConfigExceptionIsThrown() throws IOException {
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(TOR_CONTROL_HOST, "bisq-tor"));
+        }
+        Exception exception = assertThrows(ConfigException.class,
+                () -> configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath())));
+
+        assertTrue(exception.getMessage().contains("option 'torControlHost' is not supported anymore"));
+        // The users of the desktop application set it in the config file and have to find it there
+        assertTrue(exception.getMessage().contains(configFile.getAbsolutePath()));
     }
 
     @Test
@@ -372,6 +475,23 @@ public class ConfigTests {
             return;
         }
         configWithOpts(opt(APP_DATA_DIR, symlink));
+    }
+
+
+    // seednode/bisq.env gives the network in lower case
+    @Test
+    public void whenBaseCurrencyNetworkIsNotInUpperCase_thenItIsParsedAlsoInATurkishDefaultLocale() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+
+            assertThat(configWithOpts(opt(BASE_CURRENCY_NETWORK, "btc_mainnet")).getBaseCurrencyNetwork(),
+                    is(BaseCurrencyNetwork.BTC_MAINNET));
+            assertThat(configWithOpts(opt(BASE_CURRENCY_NETWORK, "Btc_Mainnet")).getBaseCurrencyNetwork(),
+                    is(BaseCurrencyNetwork.BTC_MAINNET));
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
 

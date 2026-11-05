@@ -314,13 +314,19 @@ Document: [reproducible-builds/](reproducible-builds/) and
 The build environment is pinned in `gradle.properties`:
 
 ```
-releaseBuild.javaVersion=21.0.6
+releaseBuild.javaVersion=21.0.13
 releaseBuild.javaVendor=Azul Systems, Inc.
+releaseBuild.javaRuntimeVersion=21.0.13+9-LTS
+releaseBuild.javaVendorVersion=Zulu21.54+107-CA
 releaseBuild.gradleVersion=9.0.0
 ```
 
 `verifyReleaseEnvironment` compares these values with the Java virtual machine that runs Gradle, not
-with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.6.
+with the Java toolchain. The runtime build, the Zulu build, the vendor and the Gradle version must
+match exactly. The Java update matches when the version numbers of the JVM start with those of
+`releaseBuild.javaVersion`, so `21.0.13.0.3` is a build of `21.0.13`. Run Gradle itself with Azul
+Zulu `21.0.13+9`. GitHub Actions pins the same build because a request for `21.0.13` can resolve a
+newer Zulu build whose `java.version` is `21.0.13.0.3`.
 
 1. Verify the build and produce the evidence files:
 
@@ -345,10 +351,10 @@ with the Java toolchain. Run Gradle itself with Azul Zulu 21.0.6.
 3. Optional, for a second independent build in a container:
 
    ```
-   docker build --pull=false -t bisq-release-builder-linux:java-21.0.6 docker/release-builder/linux
+   docker build --pull=false -t bisq-release-builder-linux:java-21.0.13 docker/release-builder/linux
    docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" \
      -v "$PWD:/workspace" -w /workspace \
-     bisq-release-builder-linux:java-21.0.6 \
+     bisq-release-builder-linux:java-21.0.13 \
      ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
    ```
 
@@ -367,9 +373,23 @@ If dependencies were added, changed or removed, or if the Gradle version changed
 dependency verification data. The commands are documented in
 [../gradle/README.md](../gradle/README.md):
 
+In `gradle/verification-metadata.xml`, change `<key-servers enabled="false"/>` to
+`<key-servers enabled="true"/>` before refreshing. If configuration fails for a missing
+metadata entry, follow the bootstrap procedure in
+[gradle/README.md](../gradle/README.md#verifying-and-refreshing-build-dependencies).
+
 ```
 ./gradlew refreshDependencyVerificationKeyring
-./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
+```
+
+Restore `<key-servers enabled="false"/>` after `<keyring-format>` (metadata writing
+removes the setting). Review the metadata and `gradle/verification-keyring.keys` changes,
+then verify with key servers disabled and regenerate the report:
+
+```bash
+./gradlew resolveAndVerifyDependencies
+./gradlew verifyDependencySignaturePolicy
 ./gradlew dependencySignatureReport
 ```
 

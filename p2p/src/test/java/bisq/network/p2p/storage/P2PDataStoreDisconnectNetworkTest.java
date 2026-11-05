@@ -32,6 +32,8 @@ import bisq.network.p2p.storage.mocks.ExpirableProtectedStoragePayloadStub;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import java.net.ServerSocket;
@@ -41,13 +43,19 @@ import java.security.KeyPair;
 
 import java.io.IOException;
 
+import java.time.Duration;
+
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static bisq.network.p2p.storage.TestState.getTestNodeAddress;
@@ -68,10 +76,17 @@ public class P2PDataStoreDisconnectNetworkTest {
     private final CountDownLatch disconnectLatch = new CountDownLatch(1);
     private LocalhostNetworkNode networkNode;
 
+    @BeforeEach
+    public void setUp() {
+        UserThread.resetForTests();
+        UserThread.setTimerClass(ScheduledTimer.class);
+    }
+
     @AfterEach
     public void tearDown() {
         if (networkNode != null)
             networkNode.shutDown(null);
+        UserThread.resetForTests();
     }
 
     // TESTCASE: A peer that claims the owner's address on an inbound connection and then drops it doesn't reduce TTL
@@ -174,6 +189,39 @@ public class P2PDataStoreDisconnectNetworkTest {
     private static int getFreePort() throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(0)) {
             return serverSocket.getLocalPort();
+        }
+    }
+
+    /**
+     * The default FrameRateTimer runs on the JVM-wide MasterTimer thread, which other test classes can stall or kill,
+     * and which follows the wall clock. The simulated Tor startup of LocalhostNetworkNode depends on it.
+     */
+    public static class ScheduledTimer implements Timer {
+        private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread thread = new Thread(runnable, "P2PDataStoreDisconnectNetworkTest-Timer");
+            thread.setDaemon(true);
+            return thread;
+        });
+        private volatile ScheduledFuture<?> future;
+
+        @Override
+        public Timer runLater(Duration delay, Runnable runnable) {
+            future = SCHEDULER.schedule(() -> UserThread.execute(runnable), delay.toMillis(), TimeUnit.MILLISECONDS);
+            return this;
+        }
+
+        @Override
+        public Timer runPeriodically(Duration interval, Runnable runnable) {
+            future = SCHEDULER.scheduleAtFixedRate(() -> UserThread.execute(runnable),
+                    interval.toMillis(), interval.toMillis(), TimeUnit.MILLISECONDS);
+            return this;
+        }
+
+        @Override
+        public void stop() {
+            ScheduledFuture<?> scheduled = future;
+            if (scheduled != null)
+                scheduled.cancel(false);
         }
     }
 

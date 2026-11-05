@@ -33,6 +33,8 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
+import bisq.network.p2p.network.BridgeOption;
+import bisq.network.p2p.network.BridgeTransport;
 
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
@@ -989,10 +991,27 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.isPayFeeInBtc();
     }
 
-    @Override
+    // Only an older version reads the stored bridge lines, see TorNetworkSettingsWindow.
     @Nullable
     public List<String> getBridgeAddresses() {
         return prefPayload.getBridgeAddresses();
+    }
+
+    @Override
+    public BridgeOption getBridgeOption() {
+        return BridgeOption.fromPreferences(prefPayload.getBridgeOptionOrdinal());
+    }
+
+    @Override
+    public BridgeTransport getBridgeTransport() {
+        return BridgeTransport.fromPreferences(prefPayload.getTorTransportOrdinal());
+    }
+
+    @Override
+    @Nullable
+    public List<String> getCustomBridgeLines() {
+        String customBridges = prefPayload.getCustomBridges();
+        return customBridges != null ? Arrays.asList(customBridges.split("\\R")) : null;
     }
 
     public long getWithdrawalTxFeeInVbytes() {

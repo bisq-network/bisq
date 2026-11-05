@@ -1,5 +1,5 @@
-# linux/amd64 manifest for docker.io/azul/zulu-openjdk:21.0.6.
-FROM --platform=linux/amd64 azul/zulu-openjdk:21.0.6@sha256:00a833d7f08952a436332df8c2ccced19e62e88cf49791dad23653443ab23833
+# linux/amd64 manifest for docker.io/azul/zulu-openjdk:21.0.13.
+FROM --platform=linux/amd64 azul/zulu-openjdk:21.0.13@sha256:0b489efcb2e9f014b88ddabf3caad826880f76ec7eb6a1c92892cce3c0226ec5
 
 ARG UBUNTU_APT_SNAPSHOT=20260501T000000Z
 

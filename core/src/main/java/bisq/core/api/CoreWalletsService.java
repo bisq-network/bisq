@@ -73,6 +73,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -185,7 +186,7 @@ class CoreWalletsService {
         if (balances.getAvailableBalance().get() == null)
             throw new NotAvailableException("balance is not yet available");
 
-        switch (currencyCode.trim().toUpperCase()) {
+        switch (currencyCode.trim().toUpperCase(Locale.ROOT)) {
             case "BSQ":
                 return new BalancesInfo(getBsqBalances(), BtcBalanceInfo.EMPTY);
             case "BTC":

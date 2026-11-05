@@ -1,0 +1,46 @@
+// The root build audits this included build through its aggregate task. Resolve each project's configurations
+// in that project's task, then merge only the inventories here, without resolving across project locks.
+def projectDependencyAudits = allprojects.collect { owningProject ->
+    owningProject.apply from: rootProject.file('../gradle/resolve-project-dependencies.gradle')
+    owningProject.tasks.named('resolveProjectDependencies')
+}
+def projectDependencyInventories = allprojects.collect { owningProject ->
+    owningProject.layout.projectDirectory.file('.gradle/dependency-verification/project-inventory.tsv')
+}
+
+tasks.register('resolveAndVerifyDependencies') {
+    group = 'verification'
+    description = 'Resolves every resolvable configuration of build-logic for dependency verification.'
+    dependsOn projectDependencyAudits
+    notCompatibleWithConfigurationCache('Writes the aggregate dependency inventory at execution time')
+
+    doLast {
+        def configurationCount = 0
+        def resolvedComponents = new TreeSet<String>()
+        def directComponents = new TreeSet<String>()
+        projectDependencyInventories.each { inventory ->
+            inventory.asFile.eachLine('UTF-8') { line ->
+                def columns = line.split('\t')
+                switch (columns[0]) {
+                    case 'configurations':
+                        configurationCount += columns[1] as int
+                        break
+                    case 'direct':
+                        resolvedComponents.add(columns[1])
+                        directComponents.add(columns[1])
+                        break
+                    case 'transitive':
+                        resolvedComponents.add(columns[1])
+                        break
+                }
+            }
+        }
+        def inventoryFile = file('.gradle/dependency-verification/inventory.tsv')
+        inventoryFile.parentFile.mkdirs()
+        def lines = ["configurations\t${configurationCount}".toString()] + resolvedComponents.collect { id ->
+            "${directComponents.contains(id) ? 'direct' : 'transitive'}\t${id}".toString()
+        }
+        inventoryFile.setText(lines.join('\n') + '\n', 'UTF-8')
+        logger.lifecycle("Resolved and verified ${configurationCount} configurations in build-logic.")
+    }
+}

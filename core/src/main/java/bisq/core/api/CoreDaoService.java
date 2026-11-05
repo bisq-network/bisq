@@ -57,6 +57,7 @@ import bisq.common.handlers.ErrorMessageHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -380,7 +381,7 @@ public class CoreDaoService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "no ballot in current cycle for proposal tx id: " + proposalTxId));
         Vote vote;
-        switch (voteOpt.toLowerCase()) {
+        switch (voteOpt.toLowerCase(Locale.ROOT)) {
             case "accept":
                 vote = new Vote(true);
                 break;

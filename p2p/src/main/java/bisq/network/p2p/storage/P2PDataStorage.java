@@ -798,9 +798,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                  boolean checkDate) {
         log.debug("addPersistableNetworkPayload payload={}", payload);
 
-        // Payload hash size does not match expectation for that type of message.
+        // Payload hash size does not match expectation for that type of message, or the payload is malformed.
         if (!payload.verifyHashSize()) {
-            log.warn("addPersistableNetworkPayload failed due to unexpected hash size");
+            log.warn("addPersistableNetworkPayload failed due to an unexpected hash size or a malformed payload");
             return false;
         }
 
@@ -848,7 +848,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             ByteArray hashAsByteArray = new ByteArray(hash);
             appendOnlyDataStoreService.put(hashAsByteArray, payload);
         } else {
-            log.warn("We got a hash exceeding our permitted size");
+            log.warn("We got a payload with an unexpected hash size or malformed fields");
         }
     }
 

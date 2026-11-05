@@ -13,5 +13,4 @@
     <logger name="org.bitcoinj" level="INFO"/>
     <logger name="spark.embeddedserver" level="WARN"/>
     <logger name="org.eclipse.jetty.server" level="WARN"/>
-    <logger name="org.berndpruenster.netlayer.tor.Tor" level="WARN"/>
 </configuration>

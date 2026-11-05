@@ -27,6 +27,9 @@ import bisq.core.support.dispute.mediation.logs.LogFilesFinder;
 import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.network.TorLogRedaction;
+import bisq.network.p2p.network.TorMode;
+
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
@@ -36,6 +39,8 @@ import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import javafx.stage.DirectoryChooser;
 
@@ -53,9 +58,15 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -64,6 +75,8 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
     private final File dataDir, logFile;
+    private final Set<File> torEntriesLeftOutOfBackup;
+    private final List<File> torLogFiles;
     private int gridRow = 0;
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
@@ -81,6 +94,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         super();
         this.preferences = preferences;
         dataDir = new File(config.appDataDir.getPath());
+        torEntriesLeftOutOfBackup = TorMode.getTorEntriesLeftOutOfBackup(config.torDir);
+        torLogFiles = TorMode.getTorLogFiles(config.torDir);
         logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 
@@ -149,8 +164,19 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     try {
                         String dateString = new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date());
                         String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
-                        FileUtil.copyDirectory(dataDir, new File(destination));
-                        new Popup().feedback(Res.get("account.backup.success", destination)).show();
+                        // A sandboxed Tor may write its data directory, and a backup does not need it.
+                        List<File> notCopied = FileUtil.copyDirectory(dataDir, new File(destination),
+                                torEntriesLeftOutOfBackup);
+                        if (notCopied.isEmpty()) {
+                            new Popup().feedback(Res.get("account.backup.success", destination)).show();
+                        } else {
+                            // For example a link to a wallet directory on another drive: the user has to copy it
+                            String entries = notCopied.stream()
+                                    .map(File::getAbsolutePath)
+                                    .collect(Collectors.joining("\n"));
+                            new Popup().warning(Res.get("account.backup.success.entriesNotCopied", destination,
+                                    entries)).show();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         log.error(e.getMessage());
@@ -222,20 +248,32 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
             File appDataDir = Config.appDataDir();
             LogFilesFinder logFilesFinder = new LogFilesFinder(appDataDir);
-            List<File> logFiles = logFilesFinder.find();
 
             Date now = new Date();
             String currentTimeAndDate = new SimpleDateFormat("yyyyMMdd_HHmmss").format(now);
             String zipFileName = "BisqLogsArchive_" + currentTimeAndDate + ".zip";
 
             Path destinationPath = Path.of(Utilities.getSystemHomeDirectory(), zipFileName);
-            LogFilesZipper logFilesZipper = new LogFilesZipper(destinationPath);
-            logFilesZipper.zip(logFiles);
+            zipLogFiles(logFilesFinder.find(), torLogFiles, destinationPath);
 
         } catch (IOException e) {
             log.error("Couldn't compress log files to zip file.", e);
             throw new RuntimeException(e);
         }
+    }
+
+    // Warnings of Tor, for example about the clock or the bridges, are only in its own log. A running Tor writes no log
+    // there. Tor names the bridges in it, and the log of the node names the bridge of a bootstrap warning, so the zip
+    // gets both without them.
+    @VisibleForTesting
+    static void zipLogFiles(List<File> nodeLogFiles, List<File> torLogFiles, Path destinationPath) throws IOException {
+        List<File> existingTorLogFiles = torLogFiles.stream().filter(File::isFile).collect(Collectors.toList());
+        List<File> logFiles = new ArrayList<>(nodeLogFiles);
+        logFiles.addAll(existingTorLogFiles);
+        Map<File, UnaryOperator<String>> redactions = new HashMap<>();
+        nodeLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutBootstrapEventHosts));
+        existingTorLogFiles.forEach(file -> redactions.put(file, TorLogRedaction::withoutRelayIdentities));
+        new LogFilesZipper(destinationPath).zip(logFiles, redactions);
     }
 
     private void openFileDialogInHomeDirectory() {

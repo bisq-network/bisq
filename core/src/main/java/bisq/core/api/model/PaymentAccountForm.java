@@ -41,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
+import java.util.Locale;
 import java.util.Map;
 
 import java.lang.reflect.Type;
@@ -226,7 +227,7 @@ public class PaymentAccountForm {
             // Creates a tmp file that includes a random number string between the
             // prefix and suffix, i.e., sepa_form_13243546575879.json, so there is
             // little chance this will fail because the tmp file already exists.
-            file = File.createTempFile(paymentMethodId.toLowerCase() + "_form_",
+            file = File.createTempFile(paymentMethodId.toLowerCase(Locale.ROOT) + "_form_",
                     ".json",
                     Paths.get(getProperty("java.io.tmpdir")).toFile());
         } catch (IOException ex) {

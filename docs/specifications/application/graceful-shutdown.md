@@ -75,6 +75,12 @@ not independently tear down the same resource from a concurrent JVM hook when do
 the application shutdown order. Abrupt process termination may still rely on operating-system or
 protocol ownership semantics as a final backstop.
 
+A termination by a signal ends with the exit status which the JVM sets for that signal, 143 for
+SIGTERM, also when the graceful shutdown in the hook completed: the exit which that shutdown
+requests waits for the running JVM shutdown and does not replace its status. Service managers must
+therefore treat 143 as a clean stop; the systemd unit of the seed node declares it with
+`SuccessExitStatus=143`. A node which wants to be restarted exits with the failure status instead.
+
 Once a controlled graceful shutdown has completed, its own subsequent `System.exit` must unregister
 the common hook before initiating JVM shutdown. Re-entering the already completed graceful shutdown
 from that hook provides no additional persistence guarantee and can deadlock the process. Other JVM

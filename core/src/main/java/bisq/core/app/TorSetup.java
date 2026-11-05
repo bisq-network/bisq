@@ -17,19 +17,19 @@
 
 package bisq.core.app;
 
+import bisq.network.p2p.network.TorMode;
+
 import bisq.common.config.Config;
-import bisq.common.file.FileUtil;
 import bisq.common.handlers.ErrorMessageHandler;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import java.nio.file.Paths;
-
 import java.io.File;
 import java.io.IOException;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -39,6 +39,7 @@ import static bisq.common.util.Preconditions.checkDir;
 @Slf4j
 @Singleton
 public class TorSetup {
+    @Getter
     private final File torDir;
 
     @Inject
@@ -48,10 +49,9 @@ public class TorSetup {
 
     // Should only be called if needed. Slows down Tor startup from about 5 sec. to 30 sec. if it gets deleted.
     public void cleanupTorFiles(@Nullable Runnable resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
         try {
-            FileUtil.deleteDirectory(torDir, hiddenservice, true);
-            log.info("All Tor files except hiddenservice directory got deleted");
+            TorMode.deleteTorFiles(torDir);
+            log.info("All Tor files except the hiddenservice directory and external_tor.config got deleted");
             if (resultHandler != null)
                 resultHandler.run();
         } catch (IOException e) {

@@ -116,13 +116,16 @@ public class PrivateNotificationManager implements MessageListener {
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
         if (networkEnvelope instanceof PrivateNotificationMessage) {
-            privateNotificationMessage = (PrivateNotificationMessage) networkEnvelope;
+            PrivateNotificationMessage message = (PrivateNotificationMessage) networkEnvelope;
             log.info("Received PrivateNotificationMessage from {} with uid={}",
-                    senderNodeAddress, privateNotificationMessage.getUid());
-            if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
-                final PrivateNotificationPayload privateNotification = privateNotificationMessage.getPrivateNotificationPayload();
-                if (verifySignature(privateNotification))
+                    senderNodeAddress, message.getUid());
+            if (message.getSenderNodeAddress().equals(senderNodeAddress)) {
+                final PrivateNotificationPayload privateNotification = message.getPrivateNotificationPayload();
+                if (verifySignature(privateNotification)) {
+                    // Anyone can send the message, so only the shown one is removed when the user closes it
+                    privateNotificationMessage = message;
                     privateNotificationMessageProperty.set(privateNotification);
+                }
             } else {
                 log.warn("Peer address not matching for privateNotificationMessage");
             }
@@ -187,8 +190,9 @@ public class PrivateNotificationManager implements MessageListener {
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(privateNotificationMessageAsHex, privateNotification.getSignatureAsBase64());
             return true;
-        } catch (SignatureException e) {
-            log.warn("verifySignature failed");
+        } catch (SignatureException | RuntimeException e) {
+            // Anyone can send the message, and a malformed signature makes bitcoinj throw a RuntimeException
+            log.warn("verifySignature failed. {}", e.toString());
             return false;
         }
     }

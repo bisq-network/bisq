@@ -26,5 +26,10 @@ include 'platform'
 include 'updater'
 
 includeBuild 'bitcoind'
+// tor/ is the Git submodule tor. A clone without its submodules has an empty tor/.
+if (!file('tor/settings.gradle.kts').isFile()) {
+    throw new GradleException('The Git submodule tor/ is missing. Run: git submodule update --init')
+}
+includeBuild 'tor'
 
 rootProject.name = 'bisq'
