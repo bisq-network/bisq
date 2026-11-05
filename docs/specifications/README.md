@@ -17,6 +17,8 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, controlled process exit, and the JVM shutdown-hook backstop. |
+| [`application/data-directory-backup.md`](application/data-directory-backup.md) | What "Backup now" copies from the data directory, how it treats links and special files, and who can read the backup. |
+| [`application/key-ring-storage.md`](application/key-ring-storage.md) | Who can read the private keys of the key ring and their rolling backups. |
 
 ### `api/`
 
@@ -62,8 +64,11 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`network/bisq2-bridge-block-continuity.md`](network/bisq2-bridge-block-continuity.md) | Snapshot and live-stream continuity for DAO block data exported to Bisq 2 oracle nodes. |
 | [`network/local-bitcoin-node.md`](network/local-bitcoin-node.md) | When a Bitcoin node on localhost is used as the only peer of the wallet, and why a pruned node or one without bloom filters is not. |
+| [`network/onion-service-identity.md`](network/onion-service-identity.md) | Where the key of the node's onion service is kept, when a key may be generated, and how it is protected, so that the onion address does not change. |
 | [`network/owner-disconnect-backdating.md`](network/owner-disconnect-backdating.md) | Backdating of offers when the connection to their owner is lost, allowed only for outbound connections. |
 | [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
+| [`network/tor-startup.md`](network/tor-startup.md) | Starting Tor or connecting to a running Tor, the torrc entries of the user, and the bridges and pluggable transports. |
+| [`network/tor-stream-isolation.md`](network/tor-stream-isolation.md) | Which connections may share a Tor circuit, and what `--torStreamIsolation` changes for the HTTP requests. |
 
 ### `offer/`
 

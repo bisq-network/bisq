@@ -17,109 +17,221 @@
 
 package bisq.network.p2p.network;
 
-import org.berndpruenster.netlayer.tor.NativeTor;
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-import org.berndpruenster.netlayer.tor.Torrc;
+import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ConfigFileTorrcOverrides;
+import bisq.network.tor.ExternalTorUnavailableException;
+import bisq.network.tor.TorSandboxConfig;
+import bisq.network.tor.TorService;
+import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.common.torrc.DirectoryAuthority;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+
+import bisq.common.config.Config;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
- * This class creates a brand new instance of the Tor onion router.
+ * This class starts Tor with the Tor library.
  *
  * When asked, the class checks, whether command line parameters such as
  * --torrcFile and --torrcOptions are set and if so, takes these settings into
- * account. Then, a fresh set of Tor binaries is installed and Tor is launched.
- * Finally, a {@link Tor} instance is returned for further use.
+ * account. Then the Tor library starts Tor, or connects to a running Tor if
+ * external_tor.config in the Tor directory or the environment variable
+ * TOR_SKIP_LAUNCH says so, or on Whonix. Finally, the {@link TorService} is
+ * returned for further use.
  *
  * @author Florian Reimair
  *
  */
 @Slf4j
 public class NewTor extends TorMode {
+    private static final int BOOTSTRAP_TIMEOUT = (int) TimeUnit.MINUTES.toMillis(4);
+    // netlayer waited for the upload of the onion service descriptor without a time limit. Tor keeps trying to upload
+    // it, so giving up early would leave a node which cannot be reached.
+    private static final int HS_UPLOAD_TIMEOUT = Integer.MAX_VALUE;
+    // netlayer started Tor up to 5 times, because Tor sometimes does not bootstrap with the files of an earlier run,
+    // and deleted these files before each new attempt.
+    private static final int START_ATTEMPTS = 5;
 
-    private final File torrcFile;
-    private final String torrcOptions;
+    // How the user turns the sandbox off in the applications which read the options of Config
+    static final String SANDBOX_OPT_OUT_HINT = "Start Bisq with the option --" + Config.USE_TOR_SANDBOX +
+            "=false to run Tor without the sandbox.";
+    // How the user gives the torrc entries which the Tor library refuses from a config file. Only the applications
+    // which read the options of Config have such entries.
+    static final String CONFIG_FILE_TORRC_ENTRIES_HINT = "Bisq accepts such entries only on the command line: pass --" +
+            Config.TORRC_OPTIONS + " or --" + Config.TORRC_FILE + " there, and remove the option from the config file.";
+
+    private final TorrcSettings torrcSettings;
     private final BridgeAddressProvider bridgeAddressProvider;
+    private final boolean useTorSandbox;
+    private final boolean allowPluggableTransportsInTorSandbox;
+    private final String sandboxOptOutHint;
+    // Empty for the Tor network
+    private final Set<DirectoryAuthority> testNetworkDirectoryAuthorities;
 
-    public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
+    public NewTor(File torWorkingDirectory,
+                  TorrcSettings torrcSettings,
+                  BridgeAddressProvider bridgeAddressProvider,
+                  boolean useTorSandbox,
+                  boolean allowPluggableTransportsInTorSandbox) {
+        this(torWorkingDirectory, torrcSettings, bridgeAddressProvider, useTorSandbox,
+                allowPluggableTransportsInTorSandbox, SANDBOX_OPT_OUT_HINT);
+    }
+
+    /**
+     * For an application which does not read the options of Config.
+     *
+     * @param sandboxOptOutHint how the user of the application turns the sandbox off; the error of an unusable sandbox
+     *                          names it
+     */
+    public NewTor(File torWorkingDirectory,
+                  TorrcSettings torrcSettings,
+                  BridgeAddressProvider bridgeAddressProvider,
+                  boolean useTorSandbox,
+                  boolean allowPluggableTransportsInTorSandbox,
+                  String sandboxOptOutHint) {
+        this(torWorkingDirectory, torrcSettings, bridgeAddressProvider, useTorSandbox,
+                allowPluggableTransportsInTorSandbox, sandboxOptOutHint, Set.of());
+    }
+
+    private NewTor(File torWorkingDirectory,
+                   TorrcSettings torrcSettings,
+                   BridgeAddressProvider bridgeAddressProvider,
+                   boolean useTorSandbox,
+                   boolean allowPluggableTransportsInTorSandbox,
+                   String sandboxOptOutHint,
+                   Set<DirectoryAuthority> testNetworkDirectoryAuthorities) {
         super(torWorkingDirectory);
-        this.torrcFile = torrcFile;
-        this.torrcOptions = torrcOptions;
+        this.torrcSettings = torrcSettings;
         this.bridgeAddressProvider = bridgeAddressProvider;
+        this.useTorSandbox = useTorSandbox;
+        this.allowPluggableTransportsInTorSandbox = allowPluggableTransportsInTorSandbox;
+        this.sandboxOptOutHint = sandboxOptOutHint;
+        this.testNetworkDirectoryAuthorities = testNetworkDirectoryAuthorities;
+    }
+
+    /**
+     * A Tor which joins the private Tor network of the given directory authorities instead of the Tor network, for
+     * example a network of tor-local-network on this host. The library refuses such a network in the sandbox levels
+     * whose egress broker reaches public addresses only, so this Tor runs without the sandbox.
+     */
+    @VisibleForTesting
+    static NewTor forTestNetwork(File torWorkingDirectory, Set<DirectoryAuthority> directoryAuthorities) {
+        checkArgument(!directoryAuthorities.isEmpty(), "A test network needs its directory authorities");
+        return new NewTor(torWorkingDirectory, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE,
+                false, false, SANDBOX_OPT_OUT_HINT, directoryAuthorities);
     }
 
     @Override
-    public Tor getTor() throws IOException, TorCtlException {
+    public TorService getTor() {
         long ts1 = new Date().getTime();
 
-        Collection<String> bridgeEntries = bridgeAddressProvider.getBridgeAddresses();
-        if (bridgeEntries != null && !bridgeEntries.isEmpty())
-            log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
-
-        Torrc override = null;
-
-        // check if the user wants to provide his own torrc file
-        if (torrcFile != null) {
+        TorrcOverrides torrcOverrides = TorrcOverrides.parse(torrcSettings);
+        TorTransportConfig transportConfig = new TorTransportConfig(torDir.toPath(),
+                BOOTSTRAP_TIMEOUT,
+                HS_UPLOAD_TIMEOUT,
+                !testNetworkDirectoryAuthorities.isEmpty(),
+                testNetworkDirectoryAuthorities,
+                torrcOverrides.entries(),
+                false,
+                getBridgeConfig(bridgeAddressProvider),
+                getSandboxConfig(useTorSandbox, allowPluggableTransportsInTorSandbox, sandboxOptOutHint),
+                new ConfigFileTorrcOverrides(torrcOverrides.keysFromConfigFile(), CONFIG_FILE_TORRC_ENTRIES_HINT));
+        for (int attempt = 1; ; attempt++) {
+            TorService torService = new TorService(transportConfig, new BisqTorPlatformServices());
+            log.info("Starting tor");
             try {
-                override = new Torrc(new FileInputStream(torrcFile));
-            } catch (IOException e) {
-                log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
+                torService.initialize().join();
+                log.info(
+                        "\n################################################################\n"
+                                + "Tor started after {} ms. Start publishing hidden service.\n"
+                                + "################################################################",
+                        (new Date().getTime() - ts1)); // takes usually a few seconds
+                return torService;
+            } catch (RuntimeException e) {
+                // TorService stops the Tor process it started when a later step of the start fails.
+                if (attempt == START_ATTEMPTS || !canStartAgain(e)) {
+                    throw e;
+                }
+                log.warn("Tor did not bootstrap at attempt {} of {}. We delete the Tor files and start Tor again.",
+                        attempt, START_ATTEMPTS, e);
+                try {
+                    deleteTorFiles(torDir);
+                } catch (IOException ioException) {
+                    throw new UncheckedIOException(ioException);
+                }
             }
         }
+    }
 
-        // check if the user wants to temporarily add to the default torrc file
-        LinkedHashMap<String, String> torrcOptionsMap = new LinkedHashMap<>();
-        if (!"".equals(torrcOptions)) {
-            Arrays.asList(torrcOptions.split(",")).forEach(line -> {
-                line = line.trim();
-                if (line.matches("^[^\\s]+\\s.+")) {
-                    String[] tmp = line.split("\\s", 2);
-                    torrcOptionsMap.put(tmp[0].trim(), tmp[1].trim());
-                } else {
-                    log.error("custom torrc override parse error ('{}'). Proceeding without custom overrides.", line);
-                    torrcOptionsMap.clear();
+    // Only the Tor which the node starts can be started again with fresh files. A running Tor which did not bootstrap
+    // in time fails with ExternalTorUnavailableException, and waiting for it four more times and deleting the files of
+    // the node's own Tor in between cannot help; the start fails at once, as specified.
+    static boolean canStartAgain(RuntimeException e) {
+        return Throwables.getCausalChain(e).stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
+                Throwables.getRootCause(e) instanceof TorBootstrapFailedException;
+    }
+
+    // In its sandbox Tor has a network of its own on every platform, so it reaches the onion service of the node only
+    // through a port which sandy forwards; the library refuses a sandboxed start without them. A Bisq 1 node publishes
+    // one onion service. Unless the option allows them, the sandbox lets Tor start no pluggable transports, so bridges
+    // which need them fail the sandboxed start. A running Tor runs without the sandbox.
+    static TorSandboxConfig getSandboxConfig(boolean useTorSandbox,
+                                             boolean allowPluggableTransports,
+                                             String optOutHint) {
+        return new TorSandboxConfig(useTorSandbox,
+                true,
+                allowPluggableTransports,
+                1,
+                "bisq1",
+                optOutHint);
+    }
+
+    // The library uses the bridges only for the Tor which it starts. A running Tor uses its own bridges.
+    static BridgeConfig getBridgeConfig(BridgeAddressProvider bridgeAddressProvider) {
+        switch (bridgeAddressProvider.getBridgeOption()) {
+            case PROVIDED:
+                return BridgeConfig.builtIn(bridgeAddressProvider.getBridgeTransport().getBuiltInBridgesName());
+            case CUSTOM:
+                List<String> bridgeLines = getBridgeLines(bridgeAddressProvider.getCustomBridgeLines());
+                if (bridgeLines.isEmpty()) {
+                    log.warn("Custom bridges are selected in the Tor network settings, but no bridge is entered. " +
+                            "Tor connects without bridges, as with earlier versions.");
+                    return BridgeConfig.NONE;
                 }
-            });
+                return BridgeConfig.custom(bridgeLines);
+            case NONE:
+            default:
+                return BridgeConfig.NONE;
         }
-
-        // assemble final override options
-        if (!torrcOptionsMap.isEmpty())
-            // check for custom torrcFile
-            if (override != null)
-                // and merge the contents
-                override = new Torrc(override.getInputStream$tor_native(), torrcOptionsMap);
-            else
-                override = new Torrc(torrcOptionsMap);
-
-        log.info("Starting tor");
-        // Bisq owns Tor teardown through its graceful-shutdown flow. Letting netlayer register an
-        // additional JVM shutdown hook would race that flow for the same control connection.
-        NativeTor result = new NativeTor(torDir, bridgeEntries, override, false);
-        log.info(
-                "\n################################################################\n"
-                        + "Tor started after {} ms. Start publishing hidden service.\n"
-                        + "################################################################",
-                (new Date().getTime() - ts1)); // takes usually a few seconds
-
-        return result;
     }
 
-    @Override
-    public String getHiddenServiceDirectory() {
-        return "";
+    // netlayer used only bridge lines with more than 10 characters, so an empty line of the custom bridges is no
+    // bridge.
+    static List<String> getBridgeLines(@Nullable Collection<String> bridgeAddresses) {
+        if (bridgeAddresses == null) {
+            return List.of();
+        }
+        return bridgeAddresses.stream()
+                .filter(line -> line != null && line.trim().length() > 10)
+                .collect(Collectors.toList());
     }
-
 }

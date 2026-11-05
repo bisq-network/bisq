@@ -18,22 +18,20 @@
 package bisq.btcnodemonitor.socksProxy;
 
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.NewTor;
+import bisq.network.p2p.network.TorrcSettings;
+import bisq.network.tor.TorService;
 
 import bisq.common.config.Config;
 import bisq.common.util.SingleThreadExecutorUtils;
 
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
-import java.nio.file.Paths;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.io.File;
-import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -50,15 +48,16 @@ public class ProxySetup {
     private final SocksProxyFactory socksProxyFactory;
     private final Config config;
     private NewTor torMode;
-    private Tor tor;
+    private TorService torService;
 
     public ProxySetup(Config config) {
         this.config = config;
-        socksProxyFactory = new SocksProxyFactory("127.0.0.1");
+        socksProxyFactory = new SocksProxyFactory();
         Socks5ProxyProvider socks5ProxyProvider = new Socks5ProxyProvider("", "");
         socks5ProxyProvider.setSocks5ProxyInternal(socksProxyFactory);
-        String networkDirName = config.getBaseCurrencyNetwork().name().toLowerCase();
-        torDir = Paths.get(config.appDataDir.getPath(), networkDirName, "tor").toFile();
+        // The Tor directory of the network, as in every Bisq application. A name lower-cased here in the default locale
+        // would differ from it in a Turkish locale, in which the I of BTC_MAINNET becomes a dotless i.
+        torDir = config.torDir;
     }
 
     public CompletableFuture<Optional<Socks5Proxy>> createSocksProxy() {
@@ -66,28 +65,31 @@ public class ProxySetup {
         if (!config.useTorForBtcMonitor) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
-        checkArgument(tor == null);
+        checkArgument(torService == null);
         return CompletableFuture.supplyAsync(() -> {
-            torMode = new NewTor(torDir, null, "", ArrayList::new);
-            try {
-                // blocking
-                tor = torMode.getTor();
-                socksProxyFactory.setTor(tor);
-                return Optional.of(socksProxyFactory.getSocksProxy());
-            } catch (IOException | TorCtlException e) {
-                throw new RuntimeException(e);
-            }
+            torMode = createTorMode();
+            // blocking
+            torService = torMode.getTor();
+            socksProxyFactory.setTorService(torService);
+            return Optional.of(socksProxyFactory.getSocksProxy());
         }, SingleThreadExecutorUtils.getSingleThreadExecutor("ProxySetup.start"));
+    }
+
+    // As every Bisq application, the monitor runs its Tor in the sandbox unless --useTorSandbox=false turns it off.
+    @VisibleForTesting
+    NewTor createTorMode() {
+        return new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE,
+                config.useTorSandbox, config.allowPluggableTransportsInTorSandbox);
     }
 
     public CompletableFuture<Void> shutdown() {
         log.info("Shutdown tor");
         return CompletableFuture.runAsync(() -> {
-                    if (tor != null) {
-                        tor.shutdown();
+                    if (torService != null) {
+                        torService.shutdown().join();
                         log.info("Tor shutdown completed");
                     }
                 })
-                .orTimeout(2, TimeUnit.SECONDS);
+                .orTimeout(8, TimeUnit.SECONDS);
     }
 }

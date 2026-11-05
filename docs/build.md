@@ -28,6 +28,97 @@
 
    If you prefer to skip tests to speed up the building process, just append _-x test_ to the previous commands.
 
+### Tor submodule
+
+The directory `tor/` is the Git submodule [tor](https://github.com/bisq-network/tor), the Tor library which Bisq
+shares with Bisq 2. Bisq records one commit of it, and `tor/` must contain this commit. The build stops with a message
+if `tor/` is empty.
+
+**Check out the recorded commit.** A clone without `--recurse-submodules`, a `git pull` without it, and a branch switch
+leave `tor/` empty or at another commit. Then run:
+
+```sh
+git submodule update --init
+```
+
+This command does not take new commits of the tor repository. It checks out the commit which Bisq records, also when
+`tor/` has a newer commit checked out. To let `git pull` and `git switch` update `tor/` automatically, run once:
+`git config submodule.recurse true`.
+
+**Update Bisq to a newer commit of the tor repository:**
+
+1. Fetch the new commits into `tor/` and check out the new commit there, for example `origin/main` for the newest
+   commit of the `main` branch:
+
+   ```sh
+   git -C tor fetch origin
+   git -C tor checkout <commit>
+   ```
+To use the main branch:
+   ```bash
+   git -C tor checkout origin/main
+   ```
+
+2. Review the changes which the update brings:
+
+   ```sh
+   git diff --submodule=log tor
+   ```
+
+3. Build and test, then commit the new commit of `tor/` in Bisq:
+
+   ```sh
+   git add tor
+   git commit
+   ```
+
+**Change the Tor code.** `tor/` is a repository of its own. Commit the change in `tor/` on a branch and push it to the
+tor repository. Then commit the new commit of `tor/` in Bisq as in step 3. Push the tor commit first, otherwise other
+clones of Bisq cannot check it out.
+
+**Use a local Tor repository.** To fetch committed changes from a local repository `tor` next to the Bisq checkout,
+run the following commands from the Bisq checkout's root directory. Keep the published URL in `.gitmodules`; these
+overrides apply only to your local checkout.
+
+Set the local repository path:
+
+```sh
+git config --local submodule.tor.url ../tor
+```
+
+If `tor/` is empty, initialize it from the local repository first:
+
+```sh
+git -c protocol.file.allow=always submodule update --init tor
+```
+
+Once initialization has succeeded, configure the submodule's remote and select the local repository's `main` branch:
+
+```sh
+git -C tor remote set-url origin ../../tor
+git config --local submodule.tor.branch main
+```
+
+Run `remote set-url` only after `tor/` is initialized: in an empty `tor/`, `git -C tor` changes the remote of the Bisq
+checkout. The two relative paths above resolve from the Bisq checkout and its nested `tor/` checkout, respectively.
+Relative URLs in `.gitmodules` resolve against Bisq's default remote repository, so they do not refer to the adjacent
+local repository when Bisq's remote is on GitHub.
+
+Fetch and check out the latest committed changes from the local repository's `main` branch:
+
+```sh
+git -c protocol.file.allow=always submodule update --remote tor
+git diff --submodule=log tor
+```
+
+Git restricts local file transport for submodules by default; `-c protocol.file.allow=always` allows it for that
+command. Without `--remote`, `submodule update` checks out the commit recorded by Bisq. Uncommitted changes in the
+local repository are not included. Build and test, then record the new Tor commit in Bisq with `git add tor` and
+`git commit`, as described above. Other developers need access to that Tor commit before they can use the update.
+
+Do not run `git submodule sync` for Tor after configuring these overrides, including the recursive command in step 1
+above: it overwrites both local URLs with the URL from `.gitmodules`.
+
 ### Important notes
 
 1. You do _not_ need to install Gradle to build Bisq. The `gradlew` shell script will install it for you, if necessary.
@@ -52,6 +143,15 @@
 
 If you do not have JDK 21 installed, check out scripts in the [scripts](../scripts) directory or download it manually
 from https://jdk.java.net/archive/.
+
+3. Bisq brings its own Tor on every operating system. The build downloads the Tor expert bundle from
+   archive.torproject.org and verifies it; Bisq does not use the tor package of your Linux distribution. On Linux, this
+   Tor needs glibc 2.17 or newer (2.27 on ARM64) and the zlib library of the system (`libz.so.1`, the package `zlib1g`
+   on Debian and Ubuntu).
+   Development versions of these instructions asked Linux users to install the tor package. If you installed it, it
+   stays installed, and on Debian and Ubuntu its Tor service keeps running at every boot, also when Bisq does not run.
+   Bisq uses that service only if `external_tor.config` tells it to. Otherwise you can turn it off with
+   `sudo systemctl disable --now tor`, or remove the package with `sudo apt remove tor` if nothing else uses it.
 
 ## Running Bisq
 

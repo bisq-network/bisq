@@ -15,6 +15,10 @@ Being a base language English is managed directly in the project.
 Edit `core/src/main/resources/i18n/displayStrings.properties` to add or modify English texts.
 Mind the chapters. Fit your entry properly.
 
+If a change makes the existing translations of a text wrong, for example because the text now shows another input
+format, give the text a new key. The translations of the old key are then no longer shown, and the text appears in
+English until it is translated. Transifex can keep the translations of a key whose English text changed.
+
 Once your changes get merged the Transifex will sync itself with GitHub.
 
 However, **do not** edit files for other languages. They are synced from Transifex.

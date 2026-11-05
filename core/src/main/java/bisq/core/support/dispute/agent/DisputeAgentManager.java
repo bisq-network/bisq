@@ -187,9 +187,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     }
 
     public void updateMap() {
-        Map<NodeAddress, T> map = disputeAgentService.getDisputeAgents();
-        observableMap.clear();
-        Map<NodeAddress, T> filtered = map.values().stream()
+        // The registry is replaced only after every agent was checked
+        Map<NodeAddress, T> filtered = disputeAgentService.getUnbannedDisputeAgents().stream()
                 .filter(e -> {
                     String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
                     boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
@@ -202,6 +201,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                             log.warn("We got an disputeAgent which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());
+                        // Anyone can publish an unlisted agent, so its signature is not checked at all
+                        return false;
                     }
                     final boolean isSigValid = verifySignature(e.getPubKeyRing().getSignaturePubKey(),
                             e.getRegistrationPubKey(),
@@ -209,15 +210,26 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                     if (!isSigValid)
                         log.warn("Sig check for disputeAgent failed. DisputeAgent={}", e.toString());
 
-                    return isInPublicKeyInList && isSigValid;
+                    return isSigValid;
                 })
-                .collect(Collectors.toMap(DisputeAgent::getNodeAddress, Function.identity()));
+                // Only registered agents claim an address here. If several do, the latest registration counts.
+                .collect(Collectors.toMap(DisputeAgent::getNodeAddress,
+                        Function.identity(),
+                        this::getLaterRegistration));
 
+        observableMap.clear();
         clearAcceptedDisputeAgentsAtUser();
         observableMap.putAll(filtered);
         observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
     }
 
+
+    private T getLaterRegistration(T disputeAgent, T otherDisputeAgent) {
+        log.warn("Two registered disputeAgents claim the address {}", disputeAgent.getNodeAddress().getFullAddress());
+        return otherDisputeAgent.getRegistrationDate() > disputeAgent.getRegistrationDate() ?
+                otherDisputeAgent :
+                disputeAgent;
+    }
 
     public void addDisputeAgent(T disputeAgent,
                                 ResultHandler resultHandler,
@@ -320,7 +332,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
             ECKey key = ECKey.fromPublicOnly(registrationPubKey);
             key.verifyMessage(keyToSignAsHex, signature);
             return true;
-        } catch (SignatureException e) {
+        } catch (SignatureException | RuntimeException e) {
+            // A malformed key or signature makes bitcoinj throw a RuntimeException
             log.warn("verifySignature failed");
             return false;
         }

@@ -25,6 +25,11 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
+
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -89,6 +94,13 @@ public class KeyStorage {
         }
     }
 
+    // On a file system with POSIX permissions only the owner may read the private keys, as for the key of the onion
+    // service. The directory is owner-only too: it also holds the rolling backups of the keys, which
+    // FileUtil.rollingBackup copies with the default mode. A key ring of an earlier version gets the modes when it is
+    // loaded. Windows keeps its access control lists.
+    private static final boolean SUPPORTS_POSIX_PERMISSIONS =
+            FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+
     private final File storageDir;
 
     @Inject
@@ -101,10 +113,12 @@ public class KeyStorage {
     }
 
     private boolean fileExists(KeyEntry keyEntry) {
-        return new File(storageDir + "/" + keyEntry.getFileName() + ".key").exists();
+        return getKeyFile(keyEntry.getFileName()).exists();
     }
 
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
+        restrictToOwner(storageDir.toPath(), "rwx------");
+        restrictToOwner(getKeyFile(keyEntry.getFileName()).toPath(), "rw-------");
         FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key", 20);
         // long now = System.currentTimeMillis();
         try {
@@ -112,7 +126,7 @@ public class KeyStorage {
             PublicKey publicKey;
             PrivateKey privateKey;
 
-            File filePrivateKey = new File(storageDir + "/" + keyEntry.getFileName() + ".key");
+            File filePrivateKey = getKeyFile(keyEntry.getFileName());
             try (FileInputStream fis = new FileInputStream(filePrivateKey.getPath())) {
                 byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
                 //noinspection ResultOfMethodCallIgnored
@@ -159,13 +173,33 @@ public class KeyStorage {
         if (!storageDir.exists())
             //noinspection ResultOfMethodCallIgnored
             storageDir.mkdir();
+        // Before the key is written, so that no other user can open the new file before it is owner-only
+        restrictToOwner(storageDir.toPath(), "rwx------");
 
+        File keyFile = getKeyFile(name);
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + ".key")) {
+        try (FileOutputStream fos = new FileOutputStream(keyFile)) {
             fos.write(pkcs8EncodedKeySpec.getEncoded());
         } catch (IOException e) {
             log.error("Could not save key " + name, e);
             throw new RuntimeException("Could not save key " + name, e);
+        }
+        restrictToOwner(keyFile.toPath(), "rw-------");
+    }
+
+    private File getKeyFile(String name) {
+        return new File(storageDir, name + ".key");
+    }
+
+    // The keys work without it, as before, for example in a data directory which another user owns
+    private static void restrictToOwner(Path path, String permissions) {
+        if (!SUPPORTS_POSIX_PERMISSIONS) {
+            return;
+        }
+        try {
+            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString(permissions));
+        } catch (IOException | UnsupportedOperationException e) {
+            log.warn("Could not make {} accessible to its owner only: {}", path, e.toString());
         }
     }
 }

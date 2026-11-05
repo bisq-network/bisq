@@ -12,10 +12,14 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Java **21.0.6** from **Azul Systems, Inc.**
-The Gradle and Java values are also pinned in `gradle.properties`
-(`releaseBuild.gradleVersion`, `releaseBuild.javaVersion`, `releaseBuild.javaVendor`)
-and repeated in `docs/release-checklist.md`.
+Currently pinned: **Gradle 9.0.0**, Azul Zulu Java **21.0.13+9**.
+The Java update, runtime build, vendor, and Zulu distribution build are pinned in `gradle.properties`
+(`releaseBuild.javaVersion`, `releaseBuild.javaRuntimeVersion`, `releaseBuild.javaVendor`,
+`releaseBuild.javaVendorVersion`). GitHub Actions requests the same build. A Java update version alone can select
+different Zulu builds, so update the workflow pin and these properties together. The release checklist repeats them.
+The installers bundle a runtime made from the JDK of the build, so `verifyReleaseEnvironment` requires the exact runtime
+and Zulu build. It compares the Java update by its version numbers: `21.0.13.0.3+1` is a build of `21.0.13`, so a move
+to a later Zulu build of the same update needs no change of `releaseBuild.javaVersion`.
 
 ## How to upgrade the Gradle version
 
@@ -196,6 +200,9 @@ shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
 
 All four files must be reported as `OK`.
 
+A checksum mismatch means the working copy differs from the approved bytes. Review the
+difference; do not update the checksum file to match an unreviewed file.
+
 `.gitattributes` contains `*.bat text eol=crlf`, so `gradlew.bat` is stored with single line
 feeds in Git and written with carriage return and line feed into the working directory. Take
 its checksum from the checked out file, not from `git show`.
@@ -239,48 +246,141 @@ Add the new version to `verification-metadata.xml`: a `<trusting>` line for that
 
 ## Dependency verification
 
-To update the verification metadata without PGP signature metadata run:
+Bisq 1 uses Gradle dependency verification with:
 
-- `./gradlew resolveAndVerifyDependencies --write-verification-metadata sha256`
+- `verify-metadata`
+- `verify-signatures`
+- armored keyring format
+- key servers off (`<key-servers enabled="false"/>`)
 
-To refresh dependency PGP signature verification metadata run:
+The committed verification files are `verification-metadata.xml`,
+`verification-keyring.keys` and `dependency-checksum-fallback-allowlist.tsv`.
 
-- `./gradlew refreshDependencyVerificationKeyring`
-- `./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256`
+With the key servers off, Gradle takes every PGP key from `verification-keyring.keys` and
+never asks a key server. A build does not wait for a slow key server and cannot use a key
+which was not committed. A missing key fails the build with "Key servers are disabled, this
+can indicate that you need to update the local keyring with the missing key", so
+`resolveAndVerifyDependencies` also proves that the keyring holds every key which the build
+needs. Only a refresh of the keyring turns the key servers on, see below.
+
+`resolveAndVerifyDependencies` resolves every resolvable configuration, including the
+buildscript configurations, of every project in the root build. Gradle gives the root build
+no access to the projects of an included build, so the task first runs the task of the same
+name of the included builds `build-logic` and `tor`, which resolve the configurations of
+their projects; the task of `tor` also resolves the `build-logic` of `tor`.
+`verifyDependencySignaturePolicy` and `dependencySignatureReport` run them as well. Gradle
+verifies the artifacts of an included build with the metadata of the root build. The tasks
+write the modules which they resolved to `.gradle/dependency-verification/inventory.tsv` of
+`build-logic`, `tor` and `tor/build-logic`, in the format of the inventories of Bisq 2, and
+`dependencySignatureReport` lists them next to the modules of the root build. The tasks of
+the included builds are marked as incompatible with the configuration cache, as the task of
+the root build is, so Gradle runs them but stores no configuration cache entry. The included
+build `bitcoind` is not part of the audit or the report yet: it has no such task.
+
+### Verifying and refreshing build dependencies
+
+To verify the current metadata without rewriting it:
+
+```bash
+./gradlew resolveAndVerifyDependencies
+./gradlew verifyDependencySignaturePolicy
+```
+
+To refresh dependency verification metadata, turn the key servers on for the refresh: in
+`verification-metadata.xml`, change `<key-servers enabled="false"/>` to
+`<key-servers enabled="true"/>`.
+
+If Gradle fails during configuration because an artifact has no entry in
+`verification-metadata.xml`, bootstrap the missing metadata before refreshing:
+
+```bash
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
+```
+
+Then restart this refresh sequence, enabling key servers again if metadata writing removed
+that setting. This bootstrap applies only to missing entries that prevent configuration;
+for existing entries, refresh the keyring first as described below.
+
+Run:
+
+```bash
+./gradlew refreshDependencyVerificationKeyring
+./gradlew resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys
+```
+
+Writing the metadata with the key servers on removes the `<key-servers>` line. Add
+`<key-servers enabled="false"/>` after `<keyring-format>` again, review the keys which the
+refresh added to `verification-keyring.keys`, and run:
+
+```bash
+./gradlew resolveAndVerifyDependencies
+./gradlew verifyDependencySignaturePolicy
+./gradlew dependencySignatureReport
+```
+
+With the key servers off again, `resolveAndVerifyDependencies` fails if the keyring lacks a
+key, and `verifyDependencySignaturePolicy` fails if the `<key-servers enabled="false"/>` line
+is missing. `refreshDependencyVerificationKeyring` refuses to run while the key servers are
+off, because Gradle would then export the keyring unchanged.
+
+`dependencySignatureReport` writes `docs/dependency-signature-report.md`. To update only the
+checksums, without PGP signature metadata, use `--write-verification-metadata sha256`
+instead.
 
 Refresh the keyring first so newly available signing keys are present before Gradle rewrites
-verification metadata. This avoids recording checksum-only fallbacks for artifacts whose
-signatures can now be verified.
+`verification-metadata.xml`. This avoids recording checksum-only fallbacks for artifacts
+whose signatures can now be verified.
 
-This refreshes Gradle's dependency verification keys from the configured key servers, exports
-the armored keyring, resolves every resolvable Gradle configuration, enables
-`verify-signatures` in `verification-metadata.xml`, configures the armored keyring format,
-records trusted PGP keys for signed artifacts, and keeps SHA-256 checksums with
+When writing metadata, Gradle enables `verify-signatures`, configures the armored keyring
+format, records trusted PGP keys for signed artifacts and keeps SHA-256 checksums with
 `reason="Artifact is not signed"` for artifacts whose publishers do not provide detached
-signatures. The exported armored keyring (`verification-keyring.keys`) provides the public
-keys Gradle uses for signature verification and the signer identity data used by the report.
+signatures. Gradle writes a reason once and keeps it when it regenerates the metadata. After
+`refreshDependencyVerificationKeyring` adds a key for such an artifact, delete its component
+entry and run `resolveAndVerifyDependencies --write-verification-metadata pgp,sha256 --export-keys` again
+so Gradle writes it with the current result. Do not remove reasons by hand:
+`verifyDependencySignaturePolicy` relies on them to find checksum-only artifacts.
 
-The `refreshDependencyVerificationKeyring` task wraps
-`./gradlew help --refresh-keys --export-keys`, so it refreshes Gradle's dependency
-verification keys from the configured key servers and exports the armored keyring. Some
-Gradle and Bouncy Castle combinations may write the keyring file and then fail while
-finishing key export; the task accepts that case only when the armored keyring was updated.
-The report task only needs `verification-keyring.keys` for signer names, emails and key
-creation dates.
+`refreshDependencyVerificationKeyring` wraps:
 
-Dependency verification is configured for the armored keyring, so a binary keyring
-(`verification-keyring.gpg`) is not used. The project does not contain one, and
-`refreshDependencyVerificationKeyring` warns if one appears.
+```bash
+./gradlew help --refresh-keys --export-keys
+```
 
-To verify the current metadata without rewriting it run:
+With the key servers turned on, it refreshes the keys from Gradle's key servers and exports
+the armored keyring to `verification-keyring.keys`, which provides the public keys for
+signature verification and the signer names, emails and key creation dates used by the
+report. Some Gradle and Bouncy Castle combinations may write the keyring and then fail while
+finishing key export; the task accepts that case only if `verification-keyring.keys` was
+updated. A binary keyring (`verification-keyring.gpg`) is not used. The project does not
+contain one, and the task warns if one appears.
 
-- `./gradlew resolveAndVerifyDependencies`
+### Sources and Javadoc requested by the IDE
 
-To regenerate the dependency signature report run:
+IDE import can resolve `-sources.jar` and `-javadoc.jar` artifacts that normal builds and
+`resolveAndVerifyDependencies` do not request. `verification-metadata.xml` trusts both
+kinds by file name in `<trusted-artifacts>`, so Gradle does not verify them and they need no
+metadata entries.
 
-- `./gradlew dependencySignatureReport`
+### Updating JavaFX
 
-It writes `docs/dependency-signature-report.md`.
+The JavaFX version is `javafx` in `libs.versions.toml`. The `org.openjfx` group is trusted by
+the key `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1` at group level, so
+`--write-verification-metadata` writes only the checksum of the `javafx` parent POM and no
+entries for `javafx-base`, `javafx-controls`, `javafx-fxml` and `javafx-graphics`. The build
+still verifies them by signature, but `dependencySignatureReport` lists them as missing
+metadata. A build also resolves only the classifier of its own platform.
+
+Add the entries by hand: for each of the four modules, the plain jar, the POM and the
+`linux`, `linux-aarch64`, `mac`, `mac-aarch64` and `win` jars. JavaFX publishes
+`linux-aarch64` from 21.0.11 on. Download them with their `.asc` files from
+`https://repo1.maven.org/maven2/org/openjfx/`, check that each `VALIDSIG` line ends with the
+key above, and record the SHA-256 values. The keyring copy of that key has no user ID, which
+gpg rejects on import; take the key from a key server and compare the fingerprint. Then
+remove the entries of the old version, run `resolveAndVerifyDependencies
+--write-verification-metadata pgp,sha256 --export-keys`, which keeps the added entries, and regenerate the
+report.
+
+### Checksum-only artifacts
 
 Checksum-only artifacts must be listed in `dependency-checksum-fallback-allowlist.tsv` with
 an artifact-level review rationale:
@@ -293,14 +393,13 @@ Keep the list exact and sorted by module and artifact. `verifyDependencySignatur
 fails when a checksum-only artifact is missing from the allowlist, when an allowlist entry is
 stale, or when an entry has no rationale.
 
-### Updating the allowlist after a dependency change
+#### Updating the allowlist after a dependency change
 
 An allowlist entry names an exact version and an exact artifact file name. Changing the
 version of a checksum-only dependency therefore makes the old entries stale and the new
 artifacts unapproved. This is the normal case for the Bisq-maintained JitPack dependencies
-(`netlayer`, `tor-binary`, `bitcoinj`, `jsocks` and others), because they are pinned to a Git
-commit and every update changes the commit. A `netlayer` update usually changes the
-`tor-binary` commit as well.
+(`bitcoinj` and `jsonrpc4j`), because they are pinned to a Git commit or a Bisq release
+version and every update changes it.
 **Updating `verification-metadata.xml` without updating the allowlist turns `verifyReleaseBuild`
 red, including every open pull request.** The failure looks like this:
 
@@ -309,10 +408,10 @@ Execution failed for task ':verifyDependencySignaturePolicy'.
 > Dependency signature policy failed.
 
   Unapproved checksum-only dependency artifacts:
-   - com.github.bisq-network.netlayer:tor:<new-commit>	tor-<new-commit>.jar
+   - com.github.bisq-network:bitcoinj:<new-commit>	bitcoinj-<new-commit>.jar
    ...
   Allowlist entries that are no longer checksum-only artifacts:
-   - com.github.bisq-network.netlayer:tor:<old-commit>	tor-<old-commit>.jar
+   - com.github.bisq-network:bitcoinj:<old-commit>	bitcoinj-<old-commit>.jar
    ...
 ```
 

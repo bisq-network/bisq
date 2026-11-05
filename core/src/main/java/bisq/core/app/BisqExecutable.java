@@ -100,8 +100,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 System.exit(EXIT_SUCCESS);
             }
         } catch (ConfigException ex) {
-            System.err.println("error: " + ex.getMessage());
-            System.exit(EXIT_FAILURE);
+            handleConfigError(ex.getMessage());
         } catch (Throwable ex) {
             System.err.println("fault: An unexpected error occurred. " +
                     "Please file a report at https://bisq.network/issues");
@@ -167,6 +166,16 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         log.error("Another instance of {} is already running{} using data directory {}",
                 appName, pidInfo, config.appDataDir);
         System.err.println("error: " + Res.get("popup.alreadyRunning.msg", appName, config.appDataDir));
+        System.exit(EXIT_FAILURE);
+    }
+
+    /**
+     * Called when an option of the command line or of the config file is invalid or not supported anymore. Runs
+     * before the log is set up. Default implementation prints the reason and exits. Desktop overrides this to
+     * additionally show a dialog, because it is usually started without a terminal.
+     */
+    protected void handleConfigError(String message) {
+        System.err.println("error: " + message);
         System.exit(EXIT_FAILURE);
     }
 

@@ -1,5 +1,9 @@
 package bisq.cli.opts;
 
+import bisq.proto.grpc.GetTradesRequest;
+
+import java.util.Locale;
+
 import org.junit.jupiter.api.Test;
 
 import static bisq.cli.Method.*;
@@ -492,5 +496,38 @@ public class OptionParsersTest {
         var parser = new TakeBsqSwapOfferOptionParser(args).parse();
         assertEquals(offerId, parser.getOfferId());
         assertEquals(amount, parser.getAmount());
+    }
+
+    // gettrades opt parser tests
+
+    @Test
+    public void testGetTradesCategoryWithUnicodeCaseVariants() {
+        for (String category : new String[]{"failed", "FAILED", "FaIlEd", "FA\u0130LED", "FA\u0131LED"}) {
+            String[] args = new String[]{
+                    PASSWORD_OPT,
+                    gettrades.name(),
+                    "--" + OPT_CATEGORY + "=" + category
+            };
+            var parser = new GetTradesOptionParser(args).parse();
+            assertEquals(GetTradesRequest.Category.FAILED, parser.getCategory(), category);
+        }
+    }
+
+    @Test
+    public void testGetTradesCategoryInUpperCaseInATurkishDefaultLocale() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // In Turkish, the I of FAILED becomes a dotless i when it is lower-cased
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            String[] args = new String[]{
+                    PASSWORD_OPT,
+                    gettrades.name(),
+                    "--" + OPT_CATEGORY + "=" + "FAILED"
+            };
+            var parser = new GetTradesOptionParser(args).parse();
+            assertEquals(GetTradesRequest.Category.FAILED, parser.getCategory());
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 }

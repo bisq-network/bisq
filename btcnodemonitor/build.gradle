@@ -24,9 +24,7 @@ dependencies {
     implementation libs.apache.commons.lang3
     implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
-    implementation(libs.netlayer.tor.external) {
-        exclude(module: 'slf4j-api')
-    }
+    implementation 'tor:tor'
     implementation(libs.bitcoinj) {
         exclude(module: 'bcprov-jdk15on')
         exclude(module: 'guava')

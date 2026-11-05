@@ -17,28 +17,44 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.tor.TorService;
+import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorDirectories;
+
 import bisq.common.file.FileUtil;
 
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.util.List;
+import java.util.Set;
+
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Holds information on how tor should be created and delivers a respective
- * {@link Tor} object when asked.
+ * {@link TorService} object when asked.
  *
  * @author Florian Reimair
  *
  */
+@Slf4j
 public abstract class TorMode {
 
     /**
-     * The sub-directory where the <code>private_key</code> file sits in. Kept
-     * private, because it only concerns implementations of {@link TorMode}.
+     * The sub-directory where the <code>private_key</code> file sits in. netlayer
+     * kept the key of the onion service there, so we use it as well.
      */
-    protected static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
+    private static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
+    // The key of the onion service and the user's settings of a running Tor, which the Tor library reads from the Tor
+    // directory
+    private static final Set<String> KEPT_FILE_NAMES = Set.of(HIDDEN_SERVICE_DIRECTORY, "external_tor.config");
 
     protected final File torDir;
 
@@ -51,34 +67,117 @@ public abstract class TorMode {
     }
 
     /**
-     * Returns a fresh {@link Tor} object.
+     * Starts Tor and returns the {@link TorService} which controls it. Blocks until
+     * Tor has bootstrapped.
      *
-     * @return a fresh instance of {@link Tor}
-     * @throws IOException
-     * @throws TorCtlException
+     * @return a started {@link TorService}
      */
-    public abstract Tor getTor() throws IOException, TorCtlException;
+    public abstract TorService getTor();
 
     /**
-     * {@link NativeTor}'s inner workings prepend its Tor installation path and some
-     * other stuff to the hiddenServiceDir, thus, selecting nothing (i.e.
-     * <code>""</code>) as a hidden service directory is fine. {@link ExternalTor},
-     * however, does not have a Tor installation path and thus, takes the hidden
-     * service path literally. Hence, we set <code>"torDir/hiddenservice"</code> as
-     * the hidden service directory. By doing so, we use the same
-     * <code>private_key</code> file as in {@link NewTor} mode.
+     * Returns the key of the onion service from the hidden service directory, and
+     * creates it at the first start.
      *
-     * @return <code>""</code> in {@link NewTor} Mode,
-     *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
-     *         mode
+     * @return the key of the onion service
+     * @throws IOException if the key files cannot be read or written
      */
-    public abstract String getHiddenServiceDirectory();
+    public OnionServiceKey getOnionServiceKey() throws IOException {
+        return OnionServiceKeyStorage.loadOrCreate(new File(torDir, HIDDEN_SERVICE_DIRECTORY).toPath());
+    }
 
     /**
      * Do a rolling backup of the "private_key" file.
      */
     protected void doRollingBackup() {
         FileUtil.rollingBackup(new File(torDir, HIDDEN_SERVICE_DIRECTORY), "private_key", 20);
+    }
+
+    // The data directory of the Tor which the node starts, which a sandboxed Tor may write
+    public static File getTorDataDir(File torDir) {
+        return new TorDirectories(torDir.toPath()).getDataDirPath().toFile();
+    }
+
+    /**
+     * The entries of the Tor directory which a backup leaves out: the data directory of Tor, which a sandboxed Tor may
+     * write, and the record of the Tor library whether a sandboxed Tor wrote it. Copied back next to another data
+     * directory, the record would describe that one, and a Tor without the sandbox could then read what a sandboxed
+     * Tor wrote there instead of starting on a cleared data directory.
+     */
+    public static Set<File> getTorEntriesLeftOutOfBackup(File torDir) {
+        TorDirectories torDirectories = new TorDirectories(torDir.toPath());
+        return Set.of(torDirectories.getDataDirPath().toFile(), torDirectories.getDataModePath().toFile());
+    }
+
+    // Tor logs to its standard output. The Tor library writes it and the standard error of Tor, where sandy reports
+    // why it refuses to start Tor, to these files outside the data directory of Tor. It moves a large log aside to
+    // the earlier log at the next start.
+    public static List<File> getTorLogFiles(File torDir) {
+        TorDirectories torDirectories = new TorDirectories(torDir.toPath());
+        return List.of(torDirectories.getStdoutLogPath().toFile(),
+                torDirectories.getRotatedStdoutLogPath().toFile(),
+                torDirectories.getStderrLogPath().toFile());
+    }
+
+    /**
+     * Deletes the files of Tor in the Tor directory, except the key of the onion
+     * service and <code>external_tor.config</code>. Tor creates them again at the
+     * next start. An entry which cannot be deleted is skipped and logged.
+     *
+     * @param torDir the Tor directory
+     * @throws IOException if the Tor directory cannot be walked
+     */
+    public static void deleteTorFiles(File torDir) throws IOException {
+        File[] files = torDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!KEPT_FILE_NAMES.contains(file.getName())) {
+                    deleteWithoutFollowingLinks(file.toPath());
+                }
+            }
+        }
+    }
+
+    // A symbolic link is deleted itself, so that no file outside the Tor directory is deleted. As before, a file which
+    // cannot be deleted, for example one which a running Tor keeps open on Windows, is skipped.
+    private static void deleteWithoutFollowingLinks(Path path) throws IOException {
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
+                if (attributes.isOther()) {
+                    // A junction of Windows, which Files.walkFileTree reports as a directory and would enter. Tor
+                    // may write its data directory, so it could point a junction there to another directory.
+                    deleteOrLog(directory);
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                deleteOrLog(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                log.info("Could not read {}: {}", file, e.toString());
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path directory, IOException e) {
+                deleteOrLog(directory);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private static void deleteOrLog(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            log.info("Could not delete {}: {}", path, e.toString());
+        }
     }
 
 }

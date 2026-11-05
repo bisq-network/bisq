@@ -17,24 +17,7 @@
 
 package bisq.network.utils;
 
-import java.net.ServerSocket;
-
-import java.io.IOException;
-
-import java.util.Random;
-
 public class Utils {
-    public static int findFreeSystemPort() {
-        try {
-            ServerSocket server = new ServerSocket(0);
-            int port = server.getLocalPort();
-            server.close();
-            return port;
-        } catch (IOException ignored) {
-            return new Random().nextInt(10000) + 50000;
-        }
-    }
-
     public static boolean isV3Address(String address) {
         return address.matches("[a-z2-7]{56}.onion");
     }

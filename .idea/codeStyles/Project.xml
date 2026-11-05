@@ -59,8 +59,6 @@
           <emptyLine />
           <package name="javax.servlet" withSubpackages="true" static="false" />
           <emptyLine />
-          <package name="org.berndpruenster.netlayer" withSubpackages="true" static="false" />
-          <emptyLine />
           <package name="com.runjva" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="com.googlecode.jcsv" withSubpackages="true" static="false" />

@@ -78,6 +78,7 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.BridgesCanHelpException;
 
 import bisq.common.ClockWatcher;
 import bisq.common.Timer;
@@ -125,6 +126,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
@@ -480,6 +483,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show());
+        bisqSetup.setDisplayTorSandboxNoticeHandler(notice -> popupQueue.add(new Popup()
+                .headLine(Res.get("popup.torSandbox.weakLevel.headline"))
+                .warning(notice.getMessage())
+                .dontShowAgainId(notice.getDontShowAgainKey())));
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isIgnorePopupsInDevMode()) {
                 Popup popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
@@ -890,6 +897,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     StringProperty getP2pNetworkWarnMsg() {
         return bisqSetup.getP2pNetworkWarnMsg();
+    }
+
+    @Nullable
+    BridgesCanHelpException getBridgesCanHelpFailure() {
+        return bisqSetup.getBridgesCanHelpFailure();
     }
 
     StringProperty getP2PNetworkIconId() {

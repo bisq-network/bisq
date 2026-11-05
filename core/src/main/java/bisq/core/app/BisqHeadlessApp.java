@@ -83,6 +83,8 @@ public class BisqHeadlessApp implements HeadlessApp {
             });
         });
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> log.info("onDisplayTorNetworkSettingsHandler: show={}", show));
+        // TorService logged what the level gives up with a warning already
+        bisqSetup.setDisplayTorSandboxNoticeHandler(notice -> log.info("onDisplayTorSandboxNoticeHandler: key={}", notice.getDontShowAgainKey()));
         bisqSetup.setSpvFileCorruptedHandler(msg -> log.error("onSpvFileCorruptedHandler: msg={}", msg));
         bisqSetup.setChainFileLockedExceptionHandler(msg -> log.error("onChainFileLockedExceptionHandler: msg={}", msg));
         bisqSetup.setDiskSpaceWarningHandler(msg -> log.error("onDiskSpaceWarningHandler: msg={}", msg));

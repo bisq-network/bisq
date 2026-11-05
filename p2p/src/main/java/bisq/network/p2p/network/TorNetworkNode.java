@@ -18,29 +18,45 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.utils.Utils;
+import bisq.network.tor.ExternalTorUnavailableException;
+import bisq.network.tor.TorSandboxStatus;
+import bisq.network.tor.TorService;
+import bisq.network.tor.TorrcOverrideNotAllowedException;
+import bisq.network.tor.bridges.BridgesUnavailableException;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+import bisq.network.tor.common.platform.LinuxDistribution;
+import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorStartupFailedException;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.SingleThreadExecutorUtils;
-
-import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-import org.berndpruenster.netlayer.tor.TorSocket;
+import bisq.common.util.Utilities;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import com.runjva.sourceforge.jsocks.protocol.UserPasswordAuthentication;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 
 import java.security.SecureRandom;
 
+import java.net.ServerSocket;
 import java.net.Socket;
 
 import java.io.IOException;
 
-import java.util.Base64;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -51,20 +67,28 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TorNetworkNode extends NetworkNode {
-    private static final long SHUT_DOWN_TIMEOUT = 2;
+    // The connections close within 1.5 s (NetworkNode.shutDown). The Tor library then stops Tor within about 6 s: it
+    // waits 3 s for Tor to exit after SIGTERM, and 3 s after SIGKILL. A shorter wait lets the application exit while
+    // the library still stops Tor.
+    private static final long SHUT_DOWN_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(8);
+    // Tor puts streams with different SOCKS credentials on different circuits. All peer connections use the same
+    // credentials, as they all used netlayer's unauthenticated SOCKS connection before.
+    private static final String PEER_CONNECTION_STREAM_ID = "bisq-p2p";
 
-    private final String torControlHost;
-
-    private HiddenServiceSocket hiddenServiceSocket;
     private Timer shutDownTimeoutTimer;
-    private Tor tor;
+    @Nullable
+    private volatile TorService torService;
     private TorMode torMode;
     private boolean streamIsolation;
     private Socks5Proxy socksProxy;
-    private boolean shutDownInProgress;
+    // Read by the start of Tor on the executor
+    private volatile boolean shutDownInProgress;
     private final AtomicBoolean torShutDownStarted = new AtomicBoolean();
     private final AtomicBoolean shutDownCompleted = new AtomicBoolean();
+    // The handlers of all shutDown calls. A call during the shutdown joins it (graceful-shutdown.md).
+    private final Queue<Runnable> shutDownCompleteHandlers = new ConcurrentLinkedQueue<>();
     private final ExecutorService executor;
+    private final long shutDownTimeoutMillis;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,11 +100,23 @@ public class TorNetworkNode extends NetworkNode {
                           boolean useStreamIsolation,
                           TorMode torMode,
                           @Nullable BanFilter banFilter,
-                          int maxConnections, String torControlHost) {
+                          int maxConnections) {
+        this(servicePort, networkProtoResolver, useStreamIsolation, torMode, banFilter, maxConnections,
+                SHUT_DOWN_TIMEOUT_MILLIS);
+    }
+
+    @VisibleForTesting
+    TorNetworkNode(int servicePort,
+                   NetworkProtoResolver networkProtoResolver,
+                   boolean useStreamIsolation,
+                   TorMode torMode,
+                   @Nullable BanFilter banFilter,
+                   int maxConnections,
+                   long shutDownTimeoutMillis) {
         super(servicePort, networkProtoResolver, banFilter, maxConnections);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
-        this.torControlHost = torControlHost;
+        this.shutDownTimeoutMillis = shutDownTimeoutMillis;
 
         executor = SingleThreadExecutorUtils.getSingleThreadExecutor("StartTor");
     }
@@ -97,30 +133,49 @@ public class TorNetworkNode extends NetworkNode {
         if (setupListener != null)
             addSetupListener(setupListener);
 
-        createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort);
+        createTorAndHiddenService(servicePort);
     }
 
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
-        // If streamId is null stream isolation gets deactivated.
-        // Hidden services use stream isolation by default, so we pass null.
-        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), torControlHost, null);
+        TorService currentTorService = torService;
+        if (currentTorService == null) {
+            throw new IOException("Tor is not running");
+        }
+        return currentTorService.getSocket(peerNodeAddress.getHostName(),
+                peerNodeAddress.getPort(),
+                PEER_CONNECTION_STREAM_ID,
+                CREATE_SOCKET_TIMEOUT);
+    }
+
+    // Whether the Tor of this node runs in its sandbox and in which level, for the user. Final for a start once the
+    // setup listeners got onTorNodeReady.
+    public TorSandboxStatus getTorSandboxStatus() {
+        TorService currentTorService = torService;
+        return currentTorService != null ? currentTorService.getSandboxStatus() : TorSandboxStatus.NOT_STARTED;
     }
 
     @Override
     public Socks5Proxy getSocksProxy() {
         try {
-            String stream = null;
-            if (streamIsolation) {
-                byte[] bytes = new byte[512]; // tor.getProxy creates a Sha256 hash
-                new SecureRandom().nextBytes(bytes);
-                stream = Base64.getEncoder().encodeToString(bytes);
+            TorService currentTorService = torService;
+            if (currentTorService == null) {
+                return null;
             }
 
-            if (socksProxy == null || streamIsolation) {
-                tor = Tor.getDefault();
-                socksProxy = tor != null ? tor.getProxy(torControlHost, stream) : null;
+            if (streamIsolation) {
+                Socks5Proxy isolatedSocksProxy = currentTorService.getSocks5Proxy();
+                // Tor isolates streams with different SOCKS credentials. A SOCKS username has at most 255 bytes.
+                byte[] bytes = new byte[32];
+                new SecureRandom().nextBytes(bytes);
+                isolatedSocksProxy.setAuthenticationMethod(UserPasswordAuthentication.METHOD_ID,
+                        new UserPasswordAuthentication(HexFormat.of().formatHex(bytes), ""));
+                return isolatedSocksProxy;
+            }
+
+            if (socksProxy == null) {
+                socksProxy = currentTorService.getSocks5Proxy();
             }
             return socksProxy;
         } catch (Throwable t) {
@@ -131,59 +186,52 @@ public class TorNetworkNode extends NetworkNode {
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
         log.info("TorNetworkNode shutdown started");
+        if (shutDownCompleteHandler != null) {
+            shutDownCompleteHandlers.add(shutDownCompleteHandler);
+        }
         if (shutDownInProgress) {
-            log.warn("We got shutDown already called");
+            log.info("The shutdown is already in progress. The handler runs when it completes.");
+            if (shutDownCompleted.get()) {
+                runShutDownCompleteHandlers();
+            }
             return;
         }
         shutDownInProgress = true;
 
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
-            completeShutDown(shutDownCompleteHandler);
-        }, SHUT_DOWN_TIMEOUT);
+            completeShutDown();
+        }, shutDownTimeoutMillis, TimeUnit.MILLISECONDS);
 
-        super.shutDown(() -> shutDownTor(shutDownCompleteHandler));
+        super.shutDown(this::shutDownTor);
     }
 
-    @Override
-    void shutDownServer(Server server) {
-        // Serialize HiddenServiceSocket.close(), which sends DEL_ONION, with the subsequent Tor
-        // shutdown commands while keeping both operations off the UserThread.
-        server.shutDown(executor);
-    }
-
-    private void shutDownTor(@Nullable Runnable shutDownCompleteHandler) {
+    private void shutDownTor() {
         if (shutDownCompleted.get() || !torShutDownStarted.compareAndSet(false, true)) {
             return;
         }
 
-        try {
-            // Tor shutdown uses synchronous control-port commands and can wait indefinitely if
-            // the controller stops responding. Keep the UserThread available for the bounded
-            // shutdown timeout and the persistence flush which follows it.
-            executor.execute(() -> {
-                try {
-                    Tor currentTor = Tor.getDefault();
-                    if (currentTor != null) {
-                        currentTor.shutdown();
-                        tor = null;
-                        log.info("Tor shutdown completed");
-                    }
-                } catch (Throwable e) {
-                    log.error("Shutdown torNetworkNode failed with exception", e);
-                } finally {
-                    UserThread.execute(() -> completeShutDown(shutDownCompleteHandler));
-                }
-            });
-        } catch (RejectedExecutionException e) {
-            if (!shutDownCompleted.get()) {
-                log.error("Could not schedule Tor shutdown", e);
-            }
-            completeShutDown(shutDownCompleteHandler);
+        TorService currentTorService = torService;
+        torService = null;
+        if (currentTorService == null) {
+            // A Tor which is still starting is stopped by the start, which checks shutDownInProgress.
+            completeShutDown();
+            return;
         }
+
+        // TorService stops Tor on another thread and waits for the Tor process to exit. The UserThread stays
+        // available for the bounded shutdown timeout and the persistence flush which follows it.
+        currentTorService.shutdown().whenComplete((result, throwable) -> {
+            if (throwable != null) {
+                log.error("Shutdown torNetworkNode failed with exception", throwable);
+            } else {
+                log.info("Tor shutdown completed");
+            }
+            UserThread.execute(this::completeShutDown);
+        });
     }
 
-    private void completeShutDown(@Nullable Runnable shutDownCompleteHandler) {
+    private void completeShutDown() {
         if (!shutDownCompleted.compareAndSet(false, true)) {
             return;
         }
@@ -194,9 +242,15 @@ public class TorNetworkNode extends NetworkNode {
             }
             executor.shutdownNow();
         } finally {
-            if (shutDownCompleteHandler != null) {
-                shutDownCompleteHandler.run();
-            }
+            runShutDownCompleteHandlers();
+        }
+    }
+
+    // Runs each handler once, also the handler of a shutDown call which joins after the completion.
+    private void runShutDownCompleteHandlers() {
+        Runnable handler;
+        while ((handler = shutDownCompleteHandlers.poll()) != null) {
+            handler.run();
         }
     }
 
@@ -205,41 +259,148 @@ public class TorNetworkNode extends NetworkNode {
     // Create tor and hidden service
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorAndHiddenService(int localPort, int servicePort) {
+    private void createTorAndHiddenService(int servicePort) {
         executor.submit(() -> {
+            TorService startedTorService = null;
             try {
-                Tor.setDefault(torMode.getTor());
-                long ts = System.currentTimeMillis();
-                hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
-                nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
-                UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
-                hiddenServiceSocket.addReadyListener(socket -> {
-                    log.info("\n################################################################\n" +
-                                    "Tor hidden service published after {} ms. Socket={}\n" +
-                                    "################################################################",
-                            System.currentTimeMillis() - ts, socket);
-                    UserThread.execute(() -> {
-                        nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
-                        startServer(socket);
-                        setupListeners.forEach(SetupListener::onHiddenServicePublished);
-                    });
+                OnionServiceKey onionServiceKey = torMode.getOnionServiceKey();
+                startedTorService = torMode.getTor();
+                torService = startedTorService;
+                // The shutdown stops the Tor it finds in torService. A shutdown which started before that has to be
+                // checked here.
+                if (shutDownInProgress) {
+                    startedTorService.shutdown();
                     return null;
-                });
-            } catch (TorCtlException e) {
-                log.error("Starting tor node failed", e);
-                if (e.getCause() instanceof IOException) {
-                    UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
-                } else {
-                    UserThread.execute(() -> setupListeners.forEach(SetupListener::onRequestCustomBridges));
-                    log.warn("We shutdown as starting tor with the default bridges failed. We request user to add custom bridges.");
-                    shutDown(null);
                 }
-            } catch (IOException e) {
-                log.error("Could not connect to running Tor", e);
-                UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
-            } catch (Throwable ignore) {
+                long ts = System.currentTimeMillis();
+                NodeAddress nodeAddress = new NodeAddress(onionServiceKey.getOnionAddress() + ":" + servicePort);
+                nodeAddressProperty.set(nodeAddress);
+                UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
+                ServerSocket serverSocket = startedTorService
+                        .publishOnionServiceAndCreateServerSocket(servicePort, onionServiceKey)
+                        .join();
+                if (shutDownInProgress) {
+                    closeQuietly(serverSocket);
+                    startedTorService.shutdown();
+                    return null;
+                }
+                log.info("\n################################################################\n" +
+                                "Tor hidden service published after {} ms. Socket={}\n" +
+                                "################################################################",
+                        System.currentTimeMillis() - ts, serverSocket);
+                UserThread.execute(() -> {
+                    if (shutDownInProgress) {
+                        closeQuietly(serverSocket);
+                        return;
+                    }
+                    nodeAddressProperty.set(nodeAddress);
+                    startServer(serverSocket);
+                    setupListeners.forEach(SetupListener::onHiddenServicePublished);
+                });
+            } catch (Throwable throwable) {
+                if (shutDownInProgress) {
+                    log.info("Starting tor node stopped by the shutdown: {}", throwable.toString());
+                    return null;
+                }
+                log.error("Starting tor node failed", throwable);
+                // A node with Tor but without onion service could connect to peers but not be reached.
+                if (startedTorService != null) {
+                    torService = null;
+                    startedTorService.shutdown();
+                }
+                String errorMessage = getErrorMessage(throwable);
+                boolean canBridgesHelp = canBridgesHelp(throwable);
+                RuntimeException failure;
+                if (canBridgesHelp) {
+                    failure = new BridgesCanHelpException(errorMessage, throwable);
+                } else if (isExplained(throwable, LinuxDistribution.isWhonixGateway())) {
+                    failure = new ExplainedStartFailureException(errorMessage);
+                } else {
+                    failure = new RuntimeException(errorMessage);
+                }
+                UserThread.execute(() -> {
+                    setupListeners.forEach(s -> s.onSetupFailed(failure));
+                    if (canBridgesHelp) {
+                        // As with netlayer: the network may block Tor, so the user can choose bridges.
+                        setupListeners.forEach(SetupListener::onRequestCustomBridges);
+                    }
+                });
             }
             return null;
         });
+    }
+
+    private static void closeQuietly(ServerSocket serverSocket) {
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            log.debug("Could not close the server socket", e);
+        }
+    }
+
+    // The Tor library explains these failures and says what the user can do: the sandbox or the running Tor cannot be
+    // used, a config file brings a torrc entry which makes Tor run code, or Bisq runs on a Whonix-Gateway, where the
+    // library fails every start before anything else with a TorStartupFailedException without cause.
+    static boolean isExplained(Throwable throwable, boolean isWhonixGateway) {
+        boolean isExplainedByTheTorLibrary = Throwables.getCausalChain(throwable).stream()
+                .anyMatch(cause -> cause instanceof ExternalTorUnavailableException ||
+                        cause instanceof SandboxUnavailableException ||
+                        cause instanceof TorrcOverrideNotAllowedException);
+        return isExplainedByTheTorLibrary ||
+                isWhonixGateway && Throwables.getRootCause(throwable) instanceof TorStartupFailedException;
+    }
+
+    // Tor could not connect, or the chosen bridges cannot be used. Other bridges can help, but not with a running Tor,
+    // which uses the bridges of its own configuration. The Tor network settings also have the switch which allows
+    // the pluggable transports of the bridges in the sandbox.
+    static boolean canBridgesHelp(Throwable throwable) {
+        List<Throwable> causalChain = Throwables.getCausalChain(throwable);
+        return causalChain.stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
+                causalChain.stream().anyMatch(cause -> cause instanceof TorBootstrapFailedException ||
+                        cause instanceof BridgesUnavailableException ||
+                        cause instanceof PluggableTransportsNotAllowedException);
+    }
+
+    private static String getErrorMessage(Throwable throwable) {
+        Throwable rootCause = Throwables.getRootCause(throwable);
+        // The message of the Tor library names the configuration of Bisq 2
+        Optional<PluggableTransportsNotAllowedException> transportsNotAllowed = Throwables.getCausalChain(throwable)
+                .stream()
+                .filter(PluggableTransportsNotAllowedException.class::isInstance)
+                .map(PluggableTransportsNotAllowedException.class::cast)
+                .findFirst();
+        if (transportsNotAllowed.isPresent()) {
+            return getPluggableTransportsNotAllowedMessage(transportsNotAllowed.get().getTransportNames(),
+                    Utilities.isWindows());
+        }
+        // Their messages name the running Tor or the sandbox, the cause and what the user can do. The root cause
+        // alone, for example "Connection refused", does not say that.
+        Optional<RuntimeException> explainedFailure = Throwables.getCausalChain(throwable).stream()
+                .filter(cause -> cause instanceof ExternalTorUnavailableException ||
+                        cause instanceof SandboxUnavailableException)
+                .map(RuntimeException.class::cast)
+                .findFirst();
+        if (explainedFailure.isPresent()) {
+            return explainedFailure.get().getMessage();
+        }
+        return rootCause.getMessage() != null ? rootCause.getMessage() : rootCause.getClass().getSimpleName();
+    }
+
+    // The Tor network settings have the switch for the transports. On Windows the sandbox cannot run them, so the
+    // switch is disabled there. The desktop application shows a popup of its own for this failure, which offers the
+    // fixes.
+    @VisibleForTesting
+    static String getPluggableTransportsNotAllowedMessage(List<String> transportNames, boolean isWindows) {
+        String bridges = "Tor did not start, because the bridges of the Tor network settings use the pluggable " +
+                "transports " + String.join(", ", transportNames) + ", which are programs that Tor starts. ";
+        if (isWindows) {
+            return bridges + "On Windows, Tor cannot start them in its sandbox. Choose \"Don't use bridges\" or " +
+                    "bridges without pluggable transports, or start Bisq with the option --" + Config.USE_TOR_SANDBOX +
+                    "=false to run Tor without the sandbox. Without the sandbox, a security bug in Tor gives an " +
+                    "attacker access to all your files, including your Bisq keys.";
+        }
+        return bridges + "Tor may start them in its sandbox only if you allow it: turn on \"Allow pluggable " +
+                "transports in the Tor sandbox\" in the Tor network settings, or choose \"Don't use bridges\" or " +
+                "bridges without pluggable transports there, and restart Bisq.";
     }
 }

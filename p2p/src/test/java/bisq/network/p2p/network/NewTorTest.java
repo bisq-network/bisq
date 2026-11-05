@@ -17,39 +17,334 @@
 
 package bisq.network.p2p.network;
 
-import org.berndpruenster.netlayer.tor.NativeTor;
+import bisq.network.tor.BridgeConfig;
+import bisq.network.tor.ExternalTorUnavailableException;
+import bisq.network.tor.TorService;
+import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.TorrcOverrideNotAllowedException;
+import bisq.network.tor.common.platform.LinuxDistribution;
+import bisq.network.tor.common.torrc.DirectoryAuthority;
+import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
+
+import java.nio.file.Files;
 
 import java.io.File;
+import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.mockito.MockedConstruction;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class NewTorTest {
 
     @Test
-    void leavesNativeTorShutdownToBisq(@TempDir File torDir) {
-        var context = new AtomicReference<MockedConstruction.Context>();
-        try (var construction = mockConstruction(NativeTor.class,
-                (mock, constructionContext) -> context.set(constructionContext))) {
-            var newTor = new NewTor(torDir, null, "", List::of);
+    void startsTorWithTheBridgesOfTheTorNetworkSettings(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            var bridges = new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.SNOWFLAKE, null);
 
-            var tor = assertDoesNotThrow(newTor::getTor);
+            createNewTor(torDir, "", bridges).getTor();
+
+            assertEquals(BridgeConfig.builtIn("snowflake"), config.get().getBridgeConfig());
+        }
+    }
+
+    @Test
+    void passesTheSandboxOptionToTheTorLibrary(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE, true, false).getTor();
+
+            assertTrue(config.get().getSandboxConfig().isEnabled());
+            // The library refuses a sandboxed start without forwarded onion service ports.
+            assertTrue(config.get().getSandboxConfig().isForwardOnionServicePorts());
+            assertFalse(config.get().getSandboxConfig().isAllowPluggableTransports());
+            assertEquals("bisq1", config.get().getSandboxConfig().getApplicationId());
+            assertTrue(config.get().getSandboxConfig().getOptOutHint().contains("--useTorSandbox=false"));
+        }
+        // --useTorSandbox=false turns the sandbox off.
+        assertFalse(NewTor.getSandboxConfig(false, false, NewTor.SANDBOX_OPT_OUT_HINT).isEnabled());
+        assertTrue(NewTor.getSandboxConfig(true, true, NewTor.SANDBOX_OPT_OUT_HINT).isAllowPluggableTransports());
+    }
+
+    @Test
+    void joinsTheTorNetworkUnlessATestNetworkIsGiven(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE, true, false).getTor();
+
+            assertFalse(config.get().isTestNetwork());
+            assertEquals(Set.of(), config.get().getDirectoryAuthorities());
+        }
+    }
+
+    // The Tor network node test runs its nodes on a private Tor network on this host, which the egress broker of the
+    // sandbox cannot reach
+    @Test
+    void joinsATestNetworkThroughItsDirectoryAuthoritiesWithoutTheSandbox(@TempDir File torDir) {
+        DirectoryAuthority directoryAuthority = DirectoryAuthority.builder()
+                .nickname("da0")
+                .orPort(5000)
+                .v3Ident("0123456789ABCDEF0123456789ABCDEF01234567")
+                .dirPort(7000)
+                .relayFingerprint("89ABCDEF0123456789ABCDEF0123456789ABCDEF")
+                .build();
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            NewTor.forTestNetwork(torDir, Set.of(directoryAuthority)).getTor();
+
+            assertTrue(config.get().isTestNetwork());
+            assertEquals(Set.of(directoryAuthority), config.get().getDirectoryAuthorities());
+            assertFalse(config.get().getSandboxConfig().isEnabled());
+        }
+        assertThrows(IllegalArgumentException.class, () -> NewTor.forTestNetwork(torDir, Set.of()));
+    }
+
+    @Test
+    void passesTheSandboxOptOutOfAnApplicationWithoutConfig(@TempDir File torDir) {
+        String optOutHint = "Start the application with 0 as its last argument to run Tor without the sandbox.";
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE, true, false,
+                    optOutHint).getTor();
+
+            assertTrue(config.get().getSandboxConfig().isEnabled());
+            assertEquals(optOutHint, config.get().getSandboxConfig().getOptOutHint());
+        }
+    }
+
+    @Test
+    void mapsTheTorNetworkSettingsToTheBridgesOfTheTorLibrary() {
+        String bridge = "obfs4 192.0.2.1:443 cert=x iat-mode=0";
+
+        assertEquals(BridgeConfig.NONE, NewTor.getBridgeConfig(BridgeAddressProvider.NONE));
+        assertEquals(BridgeConfig.builtIn("obfs4"), NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.OBFS_4, List.of(bridge))));
+        assertEquals(BridgeConfig.builtIn("meek"), NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.PROVIDED, BridgeTransport.MEEK, null)));
+        assertEquals(BridgeConfig.custom(List.of(bridge)), NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.CUSTOM, BridgeTransport.OBFS_4, List.of("", bridge))));
+        // An empty custom bridge field has no bridge, as with netlayer.
+        assertEquals(BridgeConfig.NONE, NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.CUSTOM, BridgeTransport.OBFS_4, List.of(""))));
+        assertEquals(BridgeConfig.NONE, NewTor.getBridgeConfig(
+                new FixedBridgeAddressProvider(BridgeOption.NONE, BridgeTransport.OBFS_4, List.of(bridge))));
+    }
+
+    @Test
+    void startsTorWithTheTorDirAndTheTorrcOverrides(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            var newTor = createNewTor(torDir, "SocksPort 9150", BridgeAddressProvider.NONE);
+
+            var torService = newTor.getTor();
+
+            assertSame(construction.constructed().get(0), torService);
+            assertEquals(torDir.toPath(), config.get().getDataDirPath());
+            assertEquals(Map.of("SocksPort", "9150"), config.get().getTorrcOverrides());
+            assertFalse(config.get().isUseExternalTor());
+        }
+    }
+
+    // The Tor library refuses the entries of a config file which make Tor start a program or load a library
+    @Test
+    void passesTheEntriesOfAConfigFileToTheTorLibrary(@TempDir File torDir) {
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, new TorrcSettings(null, false, "AccelName engine, Log notice stdout", false),
+                    BridgeAddressProvider.NONE, false, false).getTor();
+
+            assertEquals(Set.of("AccelName", "Log"), config.get().getConfigFileTorrcOverrides().getKeys());
+            assertEquals(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT, config.get().getConfigFileTorrcOverrides().getHint());
+
+            createNewTor(torDir, "AccelName engine", BridgeAddressProvider.NONE).getTor();
+
+            assertEquals(Set.of(), config.get().getConfigFileTorrcOverrides().getKeys());
+        }
+    }
+
+    // TorService of the Tor library refuses the entry before it installs or starts Tor
+    @Test
+    void anEntryOfAConfigFileWhichLoadsALibraryStopsTheStart(@TempDir File torDir) {
+        var refusal = startWithAnEntryOfAConfigFile(torDir, "AccelName engine");
+
+        assertTrue(refusal.getMessage().contains("load a library: AccelName."), refusal.getMessage());
+        assertTrue(refusal.getMessage().endsWith(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT), refusal.getMessage());
+        assertTrue(refusal.getMessage().contains("--torrcOptions"), refusal.getMessage());
+    }
+
+    // The Tor library finds the entries which start a program in any case of the name and as an abbreviation, which
+    // Tor accepts
+    @ParameterizedTest
+    @ValueSource(strings = {"ClientTransportPlugin", "clienttransportplugin", "ClientTransportPlug"})
+    void anEntryOfAConfigFileWhichStartsAProgramStopsTheStart(String key, @TempDir File torDir) {
+        var refusal = startWithAnEntryOfAConfigFile(torDir, key + " obfs4 exec /bin/true");
+
+        assertTrue(refusal.getMessage().contains("start a program or load a library: " + key + "."),
+                refusal.getMessage());
+        assertTrue(refusal.getMessage().endsWith(NewTor.CONFIG_FILE_TORRC_ENTRIES_HINT), refusal.getMessage());
+    }
+
+    // Only the embedded Tor gets torrc entries. TOR_SKIP_LAUNCH chooses a running Tor, and on Whonix the Tor library
+    // uses the Tor of the Whonix-Gateway, or refuses to run on the Gateway itself.
+    private static TorrcOverrideNotAllowedException startWithAnEntryOfAConfigFile(File torDir, String torrcOptions) {
+        assumeTrue(System.getenv("TOR_SKIP_LAUNCH") == null, "TOR_SKIP_LAUNCH would choose a running Tor");
+        assumeFalse(LinuxDistribution.isWhonix(), "On Whonix the Tor library starts no Tor of its own");
+        var newTor = new NewTor(torDir, new TorrcSettings(null, false, torrcOptions, false),
+                BridgeAddressProvider.NONE, false, false);
+
+        return assertThrows(TorrcOverrideNotAllowedException.class, newTor::getTor);
+    }
+
+    @Test
+    void doesNotStartTorAgainAfterAnotherFailure(@TempDir File torDir) {
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new IllegalStateException("bootstrap failed")))) {
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
+
+            assertThrows(IllegalStateException.class, newTor::getTor);
 
             assertEquals(1, construction.constructed().size());
-            assertSame(construction.constructed().get(0), tor);
-            assertEquals(4, context.get().arguments().size());
-            assertFalse((Boolean) context.get().arguments().get(3));
         }
+    }
+
+    @Test
+    void startsTorAgainWithoutItsFilesWhenItDoesNotBootstrap(@TempDir File torDir) throws IOException {
+        Files.createDirectories(torDir.toPath().resolve("hiddenservice"));
+        Files.writeString(torDir.toPath().resolve("external_tor.config"), "");
+        var startAttempts = new AtomicInteger();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            int attempt = startAttempts.incrementAndGet();
+            Files.writeString(torDir.toPath().resolve("cached-microdescs" + attempt), "");
+            if (attempt < 3) {
+                when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")));
+            } else {
+                when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+            }
+        })) {
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
+
+            var torService = newTor.getTor();
+
+            assertEquals(3, construction.constructed().size());
+            assertSame(construction.constructed().get(2), torService);
+            // TorService stops the Tor of a failed start itself.
+            construction.constructed().forEach(mock -> verify(mock, never()).shutdown());
+            Set<String> fileNames = Arrays.stream(torDir.list()).collect(Collectors.toSet());
+            assertEquals(Set.of("hiddenservice", "external_tor.config", "cached-microdescs3"), fileNames);
+        }
+    }
+
+    @Test
+    void givesUpAfterFiveStartsWithoutBootstrap(@TempDir File torDir) {
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds"))))) {
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
+
+            assertThrows(CompletionException.class, newTor::getTor);
+
+            assertEquals(5, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void doesNotStartTorAgainWhenTheShutdownInterruptsTheStart(@TempDir File torDir) {
+        // At the shutdown, TorNetworkNode interrupts the thread which runs getTor. The library then fails the start,
+        // here the second one after a start which did not bootstrap, with the InterruptedException as the cause.
+        var startAttempts = new AtomicInteger();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            if (startAttempts.incrementAndGet() == 1) {
+                when(mock.initialize()).thenThrow(new CompletionException(
+                        new TorBootstrapFailedException("Could not bootstrap Tor in 240 seconds")));
+            } else {
+                when(mock.initialize()).thenThrow(new TorBootstrapFailedException(new InterruptedException()));
+            }
+        })) {
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
+
+            assertThrows(TorBootstrapFailedException.class, newTor::getTor);
+
+            assertEquals(2, construction.constructed().size());
+        }
+    }
+
+    @Test
+    void doesNotStartTorAgainWhenTheRunningTorDoesNotBootstrap(@TempDir File torDir) throws IOException {
+        // The library reports a running Tor which did not bootstrap in time with ExternalTorUnavailableException,
+        // whose message names the timeout. Fresh files and four more waits of 4 minutes cannot help a running Tor.
+        Files.writeString(torDir.toPath().resolve("external_tor.config"), "UseExternalTor 1");
+        Files.writeString(torDir.toPath().resolve("tor-stdout.log"), "");
+        try (var construction = mockConstruction(TorService.class,
+                (mock, context) -> when(mock.initialize()).thenThrow(new ExternalTorUnavailableException(
+                        "Bisq is configured to use a Tor which runs outside Bisq, but it cannot use the Tor at " +
+                                "127.0.0.1:9051: The external Tor did not bootstrap within 240 seconds.")))) {
+            var newTor = createNewTor(torDir, "", BridgeAddressProvider.NONE);
+
+            assertThrows(ExternalTorUnavailableException.class, newTor::getTor);
+
+            assertEquals(1, construction.constructed().size());
+            assertTrue(Files.exists(torDir.toPath().resolve("tor-stdout.log")));
+        }
+    }
+
+    @Test
+    void ignoresBridgeLinesOfTenCharactersOrLess() {
+        String bridge = "obfs4 192.0.2.1:443 cert=x iat-mode=0";
+
+        assertEquals(List.of(), NewTor.getBridgeLines(null));
+        assertEquals(List.of(), NewTor.getBridgeLines(List.of("", "  ", "1.2.3.4:1")));
+        assertEquals(List.of(bridge), NewTor.getBridgeLines(Arrays.asList("", bridge, null)));
+    }
+
+    // The tests mock TorService, so the sandbox setting does not matter for them.
+    private static NewTor createNewTor(File torDir, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
+        return new NewTor(torDir, TorrcSettings.fromCommandLine(null, torrcOptions), bridgeAddressProvider, false,
+                false);
     }
 }

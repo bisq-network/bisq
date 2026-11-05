@@ -49,6 +49,7 @@ import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -232,7 +233,7 @@ class CoreOffersService {
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
-        var upperCaseCurrencyCode = currencyCode.toUpperCase();
+        var upperCaseCurrencyCode = currencyCode.toUpperCase(Locale.ROOT);
         var isFiat = isFiatCurrency(upperCaseCurrencyCode);
         if (isFiat) {
             return offerBookService.getOffers().stream()
@@ -257,7 +258,7 @@ class CoreOffersService {
     }
 
     List<OpenOffer> getMyOffers(String direction, String currencyCode) {
-        var upperCaseCurrencyCode = currencyCode.toUpperCase();
+        var upperCaseCurrencyCode = currencyCode.toUpperCase(Locale.ROOT);
         var isFiat = isFiatCurrency(upperCaseCurrencyCode);
         if (isFiat) {
             return openOfferManager.getObservableList().stream()
@@ -322,7 +323,7 @@ class CoreOffersService {
 
         String currencyCode = "BSQ";
         String offerId = getRandomOfferId();
-        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase(Locale.ROOT));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = minAmountAsLong == 0 ? amount : Coin.valueOf(minAmountAsLong);
         Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
@@ -358,9 +359,9 @@ class CoreOffersService {
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id %s not found", paymentAccountId));
 
-        String upperCaseCurrencyCode = currencyCode.toUpperCase();
+        String upperCaseCurrencyCode = currencyCode.toUpperCase(Locale.ROOT);
         String offerId = getRandomOfferId();
-        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase(Locale.ROOT));
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = minAmountAsLong == 0 ? amount : Coin.valueOf(minAmountAsLong);

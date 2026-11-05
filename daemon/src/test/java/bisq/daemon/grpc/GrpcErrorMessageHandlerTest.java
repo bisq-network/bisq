@@ -19,18 +19,28 @@ package bisq.daemon.grpc;
 
 import bisq.core.locale.Res;
 
+import bisq.proto.grpc.TakeOfferReply;
+
+import protobuf.AvailabilityResult;
+
 import io.grpc.stub.StreamObserver;
 
 import org.slf4j.Logger;
 
+import java.util.Locale;
+
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 import static bisq.proto.grpc.TradesGrpc.getTakeOfferMethod;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class GrpcErrorMessageHandlerTest {
     // The handler reads an AvailabilityResult from any enum name in the text of a take offer error. The refusal of
@@ -50,5 +60,32 @@ class GrpcErrorMessageHandlerTest {
 
         verify(responseObserver, never()).onNext(any());
         verify(exceptionHandler).handleErrorMessage(log, errorMessage, responseObserver);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void theAvailabilityResultOfATakeOfferErrorIsFoundAlsoInATurkishDefaultLocale() {
+        Locale defaultLocale = Locale.getDefault();
+        try {
+            // In Turkish, the i of price becomes a dotted capital I when it is upper-cased
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            StreamObserver<TakeOfferReply> responseObserver = mock(StreamObserver.class);
+            GrpcExceptionHandler exceptionHandler = mock(GrpcExceptionHandler.class);
+            GrpcErrorMessageHandler errorMessageHandler = new GrpcErrorMessageHandler(
+                    getTakeOfferMethod().getFullMethodName(),
+                    responseObserver,
+                    exceptionHandler,
+                    mock(Logger.class));
+
+            errorMessageHandler.handleErrorMessage("offer availability check failed: price_out_of_tolerance");
+
+            ArgumentCaptor<TakeOfferReply> reply = ArgumentCaptor.forClass(TakeOfferReply.class);
+            verify(responseObserver).onNext(reply.capture());
+            assertEquals(AvailabilityResult.PRICE_OUT_OF_TOLERANCE,
+                    reply.getValue().getFailureReason().getAvailabilityResult());
+            verifyNoInteractions(exceptionHandler);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 }

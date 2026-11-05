@@ -39,6 +39,10 @@ class SocksConnectionSocketFactory extends PlainConnectionSocketFactory {
     @Override
     public Socket createSocket(final HttpContext context) throws IOException {
         InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
+        String streamId = (String) context.getAttribute(IsolatingSocksSocket.STREAM_ID_ATTRIBUTE);
+        if (streamId != null) {
+            return new IsolatingSocksSocket(socksaddr, streamId);
+        }
         Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
         return new Socket(proxy);
     }

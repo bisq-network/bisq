@@ -41,5 +41,6 @@ public interface PersistableNetworkPayload extends NetworkPayload, PersistablePa
     // Hash which will be used as key in the in-memory hashMap
     byte[] getHash();
 
+    // Whether the hash has the size of the type. A payload can also check its fields here, as SignedWitness does.
     boolean verifyHashSize();
 }

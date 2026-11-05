@@ -41,6 +41,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import com.runjva.sourceforge.jsocks.protocol.UserPasswordAuthentication;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,6 +59,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -88,6 +90,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *     is refused at request time.
  *   - Conservative timeouts (80 s connect / 60 s read) and a 512 KiB response
  *     body cap bound the damage of a malicious or misbehaving server.
+ *   - With --torStreamIsolation, each request through Bisq's Tor sends the new
+ *     SOCKS credentials of its proxy, so that Tor puts it on a circuit of its
+ *     own, and fails if the proxy does not accept them (IsolatingSocksSocket).
  *   - Bodies are decoded as UTF-8; size accounting is byte-exact.
  */
 @Slf4j
@@ -398,6 +403,10 @@ public class HttpClientImpl implements HttpClient {
 
             HttpClientContext context = HttpClientContext.create();
             context.setAttribute("socks.address", socksAddress);
+            // With --torStreamIsolation, the proxy of Bisq's Tor has new SOCKS credentials for each request, so that Tor
+            // puts each request on a circuit of its own. The SOCKS client of the Java runtime would drop them.
+            getIsolationStreamId(socks5Proxy)
+                    .ifPresent(streamId -> context.setAttribute(IsolatingSocksSocket.STREAM_ID_ATTRIBUTE, streamId));
 
             HttpUriRequest request = getHttpUriRequest(httpMethod, baseUrl, param);
             if (headerKey != null && headerValue != null) {
@@ -474,6 +483,14 @@ public class HttpClientImpl implements HttpClient {
         // If not set we request socks5ProxyProvider.getSocks5Proxy()
         // which delivers the btc proxy if set, otherwise the internal proxy.
         return socks5ProxyProvider.getSocks5Proxy();
+    }
+
+    // Tor only compares the credentials, so their username serves as the stream ID
+    private static Optional<String> getIsolationStreamId(Socks5Proxy socks5Proxy) {
+        return socks5Proxy.getAuthenticationMethod(UserPasswordAuthentication.METHOD_ID)
+                instanceof UserPasswordAuthentication userPasswordAuthentication ?
+                Optional.of(userPasswordAuthentication.getUser()) :
+                Optional.empty();
     }
 
     static boolean isSuccess(int statusCode) {

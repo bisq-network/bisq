@@ -94,6 +94,22 @@ public class BisqAppMain extends BisqExecutable {
         System.exit(BisqExecutable.EXIT_FAILURE);
     }
 
+    @Override
+    protected void handleConfigError(String message) {
+        // Runs before JavaFX is launched and before the log is set up. Users who start Bisq from its launcher do not
+        // see the standard error, so they would see Bisq not start without a reason.
+        if (!GraphicsEnvironment.isHeadless()) {
+            try {
+                Res.setup();
+                JOptionPane.showMessageDialog(null, message, Res.get("popup.headline.error"),
+                        JOptionPane.ERROR_MESSAGE);
+            } catch (Throwable t) {
+                log.warn("Could not show the dialog for the invalid option", t);
+            }
+        }
+        super.handleConfigError(message);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // First synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
