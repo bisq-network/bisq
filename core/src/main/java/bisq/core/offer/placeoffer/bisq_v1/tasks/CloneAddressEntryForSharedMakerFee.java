@@ -30,8 +30,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
-import java.util.List;
-import java.util.Optional;
+import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.DEAD;
 
 //
 public class CloneAddressEntryForSharedMakerFee extends Task<PlaceOfferModel> {
@@ -45,37 +44,26 @@ public class CloneAddressEntryForSharedMakerFee extends Task<PlaceOfferModel> {
         runInterceptHook();
 
         Offer offer = model.getOffer();
-        String makerFeeTxId = offer.getOfferFeePaymentTxId();
         BtcWalletService walletService = model.getWalletService();
-        for (AddressEntry reservedForTradeEntry : walletService.getAddressEntries(AddressEntry.Context.RESERVED_FOR_TRADE)) {
-            if (findTxId(reservedForTradeEntry.getAddress())
-                    .map(txId -> txId.equals(makerFeeTxId))
-                    .orElse(false)) {
-                walletService.getOrCloneAddressEntryWithOfferId(reservedForTradeEntry, offer.getId());
-                complete();
-                return;
+        Transaction makerFeeTx = walletService.getTransaction(offer.getOfferFeePaymentTxId());
+        if (makerFeeTx != null && makerFeeTx.getConfidence().getConfidenceType() != DEAD) {
+            for (AddressEntry reservedForTradeEntry : walletService.getAddressEntries(AddressEntry.Context.RESERVED_FOR_TRADE)) {
+                if (hasUnspentOutputTo(makerFeeTx, reservedForTradeEntry.getAddress())) {
+                    walletService.getOrCloneAddressEntryWithOfferId(reservedForTradeEntry, offer.getId());
+                    complete();
+                    return;
+                }
             }
         }
 
         failed();
     }
 
-    // We look up the most recent transaction with unspent outputs associated with the given address and return
-    // the txId if found.
-    private Optional<String> findTxId(Address address) {
-        BtcWalletService walletService = model.getWalletService();
-        List<Transaction> transactions = walletService.getAllRecentTransactions(false);
-        for (Transaction transaction : transactions) {
-            for (TransactionOutput output : transaction.getOutputs()) {
-                if (walletService.isTransactionOutputMine(output) && WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    String addressString = WalletService.getAddressStringFromOutput(output);
-                    // make sure the output is still unspent
-                    if (addressString != null && addressString.equals(address.toString()) && output.getSpentBy() == null) {
-                        return Optional.of(transaction.getTxId().toString());
-                    }
-                }
-            }
-        }
-        return Optional.empty();
+    // Other coins sent to the reserved address must not hide the reserved output, so we look only at the outputs of
+    // the maker fee tx.
+    private static boolean hasUnspentOutputTo(Transaction makerFeeTx, Address address) {
+        return makerFeeTx.getOutputs().stream()
+                .filter(TransactionOutput::isAvailableForSpending)
+                .anyMatch(output -> address.equals(WalletService.getAddressFromOutput(output)));
     }
 }

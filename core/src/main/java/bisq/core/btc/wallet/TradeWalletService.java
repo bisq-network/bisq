@@ -68,6 +68,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -378,7 +379,8 @@ public class TradeWalletService {
                 .collect(Collectors.toList());
     }
 
-    public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Coin makerInputAmount,
+    public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(Transaction makerFeeTx,
+                                                                         Coin makerInputAmount,
                                                                          Coin msOutputAmount,
                                                                          List<RawTransactionInput> takerRawTransactionInputs,
                                                                          Address makerAddress,
@@ -387,6 +389,7 @@ public class TradeWalletService {
                                                                          byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         return makerCreatesDepositTx(false,
+                makerFeeTx,
                 makerInputAmount,
                 msOutputAmount,
                 takerRawTransactionInputs,
@@ -396,7 +399,8 @@ public class TradeWalletService {
                 sellerPubKey);
     }
 
-    public PreparedDepositTxAndMakerInputs buyerAsMakerCreatesAndSignsDepositTx(Coin makerInputAmount,
+    public PreparedDepositTxAndMakerInputs buyerAsMakerCreatesAndSignsDepositTx(Transaction makerFeeTx,
+                                                                                Coin makerInputAmount,
                                                                                 Coin msOutputAmount,
                                                                                 List<RawTransactionInput> takerRawTransactionInputs,
                                                                                 Address makerAddress,
@@ -405,6 +409,7 @@ public class TradeWalletService {
                                                                                 byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         return makerCreatesDepositTx(true,
+                makerFeeTx,
                 makerInputAmount,
                 msOutputAmount,
                 takerRawTransactionInputs,
@@ -418,6 +423,7 @@ public class TradeWalletService {
      * The maker creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
      * @param makerIsBuyer              the flag indicating if we are in the maker as buyer role or the opposite
+     * @param makerFeeTx                the maker fee tx, its output to the maker's address is the only maker input
      * @param makerInputAmount          the input amount of the maker
      * @param msOutputAmount            the output amount to our MS output
      * @param takerRawTransactionInputs raw data for the connected outputs for all inputs of the taker (normally 1 input)
@@ -432,6 +438,7 @@ public class TradeWalletService {
      * @throws WalletException if the maker's wallet is null or there was an error choosing deposit tx input(s) from it
      */
     private PreparedDepositTxAndMakerInputs makerCreatesDepositTx(boolean makerIsBuyer,
+                                                                  Transaction makerFeeTx,
                                                                   Coin makerInputAmount,
                                                                   Coin msOutputAmount,
                                                                   List<RawTransactionInput> takerRawTransactionInputs,
@@ -447,9 +454,17 @@ public class TradeWalletService {
         Transaction dummyTx = new Transaction(params);
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, SegwitAddress.fromKey(params, new ECKey()));
         dummyTx.addOutput(dummyOutput);
-        addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress);
+        // The taker accepts only the reserved funds as our inputs. Other coins sent to the maker's address must not be
+        // used, so we spend only the reserved output of the maker fee tx.
+        Set<TransactionOutput> reservedOutputs = makerFeeTx.getOutputs().stream()
+                .filter(TransactionOutput::isAvailableForSpending)
+                .filter(output -> makerAddress.equals(WalletService.getAddressFromOutput(output)))
+                .collect(Collectors.toSet());
+        checkArgument(reservedOutputs.size() == 1,
+                "The maker fee tx %s must have exactly 1 unspent output to the maker's address %s",
+                makerFeeTx.getTxId(), makerAddress);
+        addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress, reservedOutputs);
         WalletService.assertAllInputsSpendP2WPKH(dummyTx);
-        // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
         List<TransactionInput> makerInputs = dummyTx.getInputs();
         TransactionOutput makerOutput = null;
 
@@ -1351,7 +1366,8 @@ public class TradeWalletService {
 
     private void addAvailableInputsAndChangeOutputs(Transaction transaction,
                                                     Address address,
-                                                    Address changeAddress) throws WalletException {
+                                                    Address changeAddress,
+                                                    Set<TransactionOutput> utxoCandidates) throws WalletException {
         SendRequest sendRequest = null;
         try {
             // Let the framework do the work to find the right inputs
@@ -1363,7 +1379,9 @@ public class TradeWalletService {
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-            sendRequest.coinSelector = new BtcCoinSelector(address, preferences.getIgnoreDustThreshold());
+            BtcCoinSelector coinSelector = new BtcCoinSelector(address, preferences.getIgnoreDustThreshold());
+            coinSelector.setUtxoCandidates(utxoCandidates);
+            sendRequest.coinSelector = coinSelector;
             // We use always the same address in a trade for all transactions
             sendRequest.changeAddress = changeAddress;
             // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.
