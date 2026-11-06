@@ -16,6 +16,9 @@ peer's MediatedPayoutTxPublishedMessage also after that and during a refund requ
   or by the publication without a click, reuses the stored signature if it is valid for the payout of
   the stored mediation amounts, and fails without signing otherwise. A second signature for another
   payout would let the peer choose between two payouts.
+- Before publishing, the node checks both signatures against the payout transaction. If one of them
+  is for another payout, the publication fails before the trade stores the payout: the network would
+  drop the transaction, and the trade would be closed with a payout that never confirms.
 - A node that has signed the mediated payout and has the peer's signature publishes it, whichever
   of the two came last. The accept button publishes it when the peer's signature is already there,
   and the processing of the peer's signature publishes it when the trader has already accepted,
