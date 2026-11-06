@@ -265,42 +265,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 peersDisputeOptional.get().getDisputeState() == Dispute.State.CLOSED);
         if (applyPeersDisputeResult) {
             // If the other peers dispute has been closed we apply the result to ourselves
-            DisputeResult peersDisputeResult = peersDisputeOptional.get().getDisputeResultProperty().get();
-            disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
-            disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
-            disputeResult.setPayoutAdjustmentPercent(peersDisputeResult.getPayoutAdjustmentPercent());
-            disputeResult.setPayoutSuggestion(peersDisputeResult.getPayoutSuggestion());
-            disputeResult.setWinner(peersDisputeResult.getWinner());
-            disputeResult.setReason(peersDisputeResult.getReason());
-            disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
-
-            buyerGetsTradeAmountRadioButton.setDisable(true);
-            buyerGetsCompensationRadioButton.setDisable(true);
-            buyerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
-            sellerGetsTradeAmountRadioButton.setDisable(true);
-            sellerGetsCompensationRadioButton.setDisable(true);
-            sellerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
-            customRadioButton.setDisable(true);
-
-            buyerPayoutAmountInputTextField.setDisable(true);
-            sellerPayoutAmountInputTextField.setDisable(true);
-            compensationOrPenaltyInputTextField.setDisable(true);
-            buyerPayoutAmountInputTextField.setEditable(false);
-            sellerPayoutAmountInputTextField.setEditable(false);
-            compensationOrPenaltyInputTextField.setEditable(false);
-
-            reasonWasBugRadioButton.setDisable(true);
-            reasonWasUsabilityIssueRadioButton.setDisable(true);
-            reasonProtocolViolationRadioButton.setDisable(true);
-            reasonNoReplyRadioButton.setDisable(true);
-            reasonWasScamRadioButton.setDisable(true);
-            reasonWasOtherRadioButton.setDisable(true);
-            reasonWasBankRadioButton.setDisable(true);
-            reasonWasOptionTradeRadioButton.setDisable(true);
-            reasonWasSellerNotRespondingRadioButton.setDisable(true);
-            reasonWasWrongSenderAccountRadioButton.setDisable(true);
-            reasonWasPeerWasLateRadioButton.setDisable(true);
-            reasonWasTradeAlreadySettledRadioButton.setDisable(true);
+            applyResultOfOtherTicket(peersDisputeOptional.get().getDisputeResultProperty().get());
+            disableResultControls();
             applyDisputeResultToUiControls();
         }
 
@@ -308,6 +274,46 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         addSummaryNotes();
         addButtons();
+    }
+
+    private void applyResultOfOtherTicket(DisputeResult otherDisputeResult) {
+        disputeResult.setBuyerPayoutAmount(otherDisputeResult.getBuyerPayoutAmount());
+        disputeResult.setSellerPayoutAmount(otherDisputeResult.getSellerPayoutAmount());
+        disputeResult.setPayoutAdjustmentPercent(otherDisputeResult.getPayoutAdjustmentPercent());
+        disputeResult.setPayoutSuggestion(otherDisputeResult.getPayoutSuggestion());
+        disputeResult.setWinner(otherDisputeResult.getWinner());
+        disputeResult.setReason(otherDisputeResult.getReason());
+        disputeResult.setSummaryNotes(otherDisputeResult.summaryNotesProperty().get());
+    }
+
+    private void disableResultControls() {
+        buyerGetsTradeAmountRadioButton.setDisable(true);
+        buyerGetsCompensationRadioButton.setDisable(true);
+        buyerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
+        sellerGetsTradeAmountRadioButton.setDisable(true);
+        sellerGetsCompensationRadioButton.setDisable(true);
+        sellerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
+        customRadioButton.setDisable(true);
+
+        buyerPayoutAmountInputTextField.setDisable(true);
+        sellerPayoutAmountInputTextField.setDisable(true);
+        compensationOrPenaltyInputTextField.setDisable(true);
+        buyerPayoutAmountInputTextField.setEditable(false);
+        sellerPayoutAmountInputTextField.setEditable(false);
+        compensationOrPenaltyInputTextField.setEditable(false);
+
+        reasonWasBugRadioButton.setDisable(true);
+        reasonWasUsabilityIssueRadioButton.setDisable(true);
+        reasonProtocolViolationRadioButton.setDisable(true);
+        reasonNoReplyRadioButton.setDisable(true);
+        reasonWasScamRadioButton.setDisable(true);
+        reasonWasOtherRadioButton.setDisable(true);
+        reasonWasBankRadioButton.setDisable(true);
+        reasonWasOptionTradeRadioButton.setDisable(true);
+        reasonWasSellerNotRespondingRadioButton.setDisable(true);
+        reasonWasWrongSenderAccountRadioButton.setDisable(true);
+        reasonWasPeerWasLateRadioButton.setDisable(true);
+        reasonWasTradeAlreadySettledRadioButton.setDisable(true);
     }
 
     private void addInfoPane() {
