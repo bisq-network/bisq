@@ -79,7 +79,10 @@ public abstract class TradeTask extends Task<TradeModel> {
     }
 
     private void setTradeErrorMessage() {
-        if (tradeErrorOnFailure) {
+        if (isCanceled()) {
+            log.info("{} failed after it was canceled. tradeId={}, errorMessage={}",
+                    getClass().getSimpleName(), trade.getId(), errorMessage);
+        } else if (tradeErrorOnFailure) {
             trade.setErrorMessage(errorMessage);
         } else {
             log.warn("{} failed in an attempt that the trader did not start. tradeId={}, errorMessage={}",

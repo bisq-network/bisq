@@ -20,7 +20,9 @@ package bisq.common.taskrunner;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,6 +39,8 @@ public class TaskRunner<T extends Model> {
     private boolean isCanceled;
 
     private Class<? extends Task<T>> currentTask;
+    // The tasks run so far, so that a cancel also reaches a task that completed but keeps a timer or a listener
+    private final List<Task<T>> startedTasks = new ArrayList<>();
 
 
     @SuppressWarnings("unchecked")
@@ -66,7 +70,10 @@ public class TaskRunner<T extends Model> {
                 try {
                     currentTask = tasks.poll();
                     log.info("Run task: " + currentTask.getSimpleName());
-                    currentTask.getDeclaredConstructor(TaskRunner.class, sharedModelClass).newInstance(this, sharedModel).run();
+                    Task<T> task = currentTask.getDeclaredConstructor(TaskRunner.class, sharedModelClass)
+                            .newInstance(this, sharedModel);
+                    startedTasks.add(task);
+                    task.run();
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
                     handleErrorMessage("Error at taskRunner: " + throwable.getMessage());
@@ -77,8 +84,10 @@ public class TaskRunner<T extends Model> {
         }
     }
 
+    // No further task runs and neither the result nor an error is reported. Each task that has run is canceled.
     public void cancel() {
         isCanceled = true;
+        startedTasks.forEach(Task::cancel);
     }
 
     void handleComplete() {
@@ -86,6 +95,10 @@ public class TaskRunner<T extends Model> {
     }
 
     void handleErrorMessage(String errorMessage) {
+        if (isCanceled) {
+            log.info("A task failed after the task runner was canceled: {}", errorMessage);
+            return;
+        }
         log.error("Task failed: " + currentTask.getSimpleName() + " / errorMessage: " + errorMessage);
         failed = true;
         errorMessageHandler.handleErrorMessage(errorMessage);
