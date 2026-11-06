@@ -14,7 +14,8 @@ to the seller. The payout addresses come from the contract and do not depend on 
   tickets were closed and reopened.
 - A result counts as sent once the mediator's node has created the chat message of its
   DisputeResultMessage. A result that the mediator only prepared, for example in a window that the
-  mediator closed with Cancel, is not sent.
+  mediator closed with Cancel, is not sent. The node stores a prepared result without a chat
+  message, so the result is still not sent after a restart.
 - The mediator's node refuses to send a result whose payout differs from a result that was sent for
   the trade. Sending the same payout again stays possible, for example when the first message could
   not be delivered.
@@ -26,6 +27,9 @@ to the seller. The payout addresses come from the contract and do not depend on 
 
 ## Rules for the trader
 
+- A result message must contain the chat message of the result, which the agent's node creates
+  before it sends the result. The node drops a result message without it when it reads the message.
+  This also applies to the result messages of the refund agent.
 - The first mediation result that a trader's node receives for a trade fixes the payout of the trade
   for this node.
 - A later result with the same payout is a copy. The node handles it as before: it adds the
@@ -56,6 +60,13 @@ treated like a result sent with this version. A trader's node of an earlier vers
 result with another payout; a mediator with this version does not send one. A result that replaced
 another one before the trader's node had this version stays the stored result, and the node compares
 later results with it.
+
+Earlier versions read a stored result without a chat message back with an empty chat message, which
+has no ID, and stored the empty chat message with the result again. The node reads a chat message
+without an ID as absent, so a result that the mediator prepared with an earlier version is not sent.
+A chat message that a node creates always has an ID. Earlier versions also applied a result message
+without a chat message, with an empty chat message. Nodes of all versions send the result with its
+chat message.
 
 ## Not covered
 

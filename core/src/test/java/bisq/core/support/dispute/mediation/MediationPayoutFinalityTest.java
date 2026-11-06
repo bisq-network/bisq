@@ -44,6 +44,8 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.persistence.PersistenceManager;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.bitcoinj.core.Coin;
 
 import java.io.File;
@@ -122,6 +124,31 @@ class MediationPayoutFinalityTest {
 
         assertTrue(manager.findSentResult(buyersTicket).isEmpty());
         assertTrue(manager.hasPayoutOfSentResults(buyersTicket, preparedResult(buyersTicket, 1_000, 109_000)));
+    }
+
+    @Test
+    void savedPreparedResultsDoNotFixThePayoutAfterARestart() throws InvalidProtocolBufferException {
+        // The buyer's ticket was saved with this version, the seller's ticket with an earlier version
+        buyersTicket.setDisputeResult(reload(preparedResult(buyersTicket, 70_000, 40_000).toProtoMessage()));
+        sellersTicket.setDisputeResult(reload(preparedResult(sellersTicket, 80_000, 30_000).toProtoMessage()
+                .toBuilder()
+                .setChatMessage(emptyChatMessageOfEarlierVersions())
+                .build()));
+        DisputeResult buyersResult = buyersTicket.getDisputeResultProperty().get();
+
+        assertTrue(manager.findSentResult(buyersTicket).isEmpty());
+        assertTrue(manager.findSentResult(sellersTicket).isEmpty());
+        manager.sendDisputeResultMessage(buyersResult, buyersTicket, "summary");
+
+        verify(mailboxMessageService).sendEncryptedMailboxMessage(any(), any(), any(), any());
+    }
+
+    @Test
+    void sentResultFixesThePayoutAfterARestart() throws InvalidProtocolBufferException {
+        sellersTicket.setDisputeResult(reload(sentResult(sellersTicket, 80_000, 30_000, 1).toProtoMessage()));
+
+        assertSame(sellersTicket.getDisputeResultProperty().get(), manager.findSentResult(buyersTicket).orElseThrow());
+        assertFalse(manager.hasPayoutOfSentResults(buyersTicket, preparedResult(buyersTicket, 70_000, 40_000)));
     }
 
     @Test
@@ -226,6 +253,17 @@ class MediationPayoutFinalityTest {
                 "result",
                 MEDIATOR_NODE_ADDRESS));
         return result;
+    }
+
+    private static DisputeResult reload(protobuf.DisputeResult storedResult) throws InvalidProtocolBufferException {
+        return DisputeResult.fromProto(protobuf.DisputeResult.parseFrom(storedResult.toByteArray()));
+    }
+
+    // Earlier versions read an absent chat message as the default instance and stored it with the result again
+    private static protobuf.ChatMessage emptyChatMessageOfEarlierVersions() {
+        return ChatMessage.fromPayloadProto(protobuf.ChatMessage.getDefaultInstance())
+                .toProtoNetworkEnvelope()
+                .getChatMessage();
     }
 
     private static PubKeyRing pubKeyRing() {

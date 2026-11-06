@@ -181,7 +181,7 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getIdVerification(),
                 proto.getScreenCast(),
                 proto.getSummaryNotes(),
-                proto.getChatMessage() == null ? null : ChatMessage.fromPayloadProto(proto.getChatMessage()),
+                chatMessageFromProto(proto),
                 proto.getArbitratorSignature().toByteArray(),
                 proto.getBuyerPayoutAmount(),
                 proto.getSellerPayoutAmount(),
@@ -190,6 +190,16 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getIsLoserPublisher(),
                 proto.getPayoutAdjustmentPercent(),
                 ProtoUtil.enumFromProto(DisputeResult.PayoutSuggestion.class, proto.getPayoutSuggestion().name()));
+    }
+
+    // The chat message is absent until the agent sends the result. Earlier versions read an absent chat message as
+    // an empty one without uid and persisted it, so such a chat message is absent as well.
+    @Nullable
+    private static ChatMessage chatMessageFromProto(protobuf.DisputeResult proto) {
+        if (!proto.hasChatMessage() || proto.getChatMessage().getUid().isEmpty()) {
+            return null;
+        }
+        return ChatMessage.fromPayloadProto(proto.getChatMessage());
     }
 
     @Override
