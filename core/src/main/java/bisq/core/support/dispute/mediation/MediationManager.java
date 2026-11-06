@@ -318,14 +318,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                 .filter(other -> other.getTradeId().equals(dispute.getTradeId()))
                 .map(MediationManager::getSentResult)
                 .flatMap(Optional::stream)
-                .filter(sentResult -> sentResult != disputeResult)
                 .allMatch(sentResult -> sentResult.hasSamePayout(disputeResult));
     }
 
-    // A result gets its chat message when the DisputeResultMessage is sent, a prepared result has none
     private static Optional<DisputeResult> getSentResult(Dispute dispute) {
         return Optional.ofNullable(dispute.getDisputeResultProperty().get())
-                .filter(result -> result.getChatMessage() != null);
+                .filter(DisputeResult::isSent);
     }
 
     @Nullable

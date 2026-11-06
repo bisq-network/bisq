@@ -285,6 +285,11 @@ public final class DisputeResult implements NetworkPayload {
         return buyerPayoutAmount == other.buyerPayoutAmount && sellerPayoutAmount == other.sellerPayoutAmount;
     }
 
+    // The agent's node creates the chat message when it sends the result, a prepared result has none
+    public boolean isSent() {
+        return chatMessage != null;
+    }
+
     public void setCloseDate(Date closeDate) {
         this.closeDate = closeDate.getTime();
     }
