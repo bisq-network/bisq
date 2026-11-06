@@ -36,6 +36,7 @@ import bisq.core.trade.model.Tradable;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.network.p2p.AckMessage;
@@ -67,7 +68,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,6 +93,7 @@ class MediationTraderPayoutFinalityTest {
     private final Trade trade = mock(Trade.class);
     private final TradeManager tradeManager = mock(TradeManager.class);
     private final ClosedTradableManager closedTradableManager = mock(ClosedTradableManager.class);
+    private final DisputeProtocol disputeProtocol = mock(DisputeProtocol.class);
     private KeyRing keyRing;
     private MediationDisputeListService disputeListService;
     private MediationManager manager;
@@ -108,6 +112,7 @@ class MediationTraderPayoutFinalityTest {
         when(trade.getProcessModel()).thenReturn(processModel);
         when(trade.getDisputeState()).thenReturn(Trade.DisputeState.MEDIATION_CLOSED);
         when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(trade));
+        when(tradeManager.getTradeProtocol(trade)).thenReturn(disputeProtocol);
         ownDispute = dispute(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing());
         disputeListService.getDisputeList().add(ownDispute);
     }
@@ -225,6 +230,71 @@ class MediationTraderPayoutFinalityTest {
         assertEquals(List.of(copy), disputeListService.getDisputeList().getList());
         verify(trade).setDisputeState(Trade.DisputeState.MEDIATION_STARTED_BY_PEER);
         assertTrue(sentAckMessage().isSuccess());
+    }
+
+    @Test
+    void repeatedAcceptanceKeepsTheAmountsOfOwnSignature() {
+        // A result that replaced the accepted one before this version
+        ownDispute.setDisputeResult(result(ownDispute, 70_000, 40_000));
+        processModel.setBuyerPayoutAmountFromMediation(80_000);
+        processModel.setSellerPayoutAmountFromMediation(30_000);
+        processModel.setMediatedPayoutTxSignature(new byte[]{1, 2, 3});
+
+        manager.onAcceptMediationResult(trade, () -> {
+        }, errorMessage -> {
+        });
+
+        assertEquals(80_000, processModel.getBuyerPayoutAmountFromMediation());
+        assertEquals(30_000, processModel.getSellerPayoutAmountFromMediation());
+        verify(disputeProtocol).onAcceptMediationResult(any(), any());
+    }
+
+    @Test
+    void firstAcceptanceTakesTheAmountsOfTheResult() {
+        ownDispute.setDisputeResult(result(ownDispute, 80_000, 30_000));
+
+        manager.onAcceptMediationResult(trade, () -> {
+        }, errorMessage -> {
+        });
+
+        assertEquals(80_000, processModel.getBuyerPayoutAmountFromMediation());
+        assertEquals(30_000, processModel.getSellerPayoutAmountFromMediation());
+        verify(disputeProtocol).onAcceptMediationResult(any(), any());
+    }
+
+    @Test
+    void firstAcceptanceOfOtherAmountsDropsThePeersSignature() {
+        // A result that replaced the first one before this version, after the peer's signature was stored
+        ownDispute.setDisputeResult(result(ownDispute, 70_000, 40_000));
+        processModel.setBuyerPayoutAmountFromMediation(80_000);
+        processModel.setSellerPayoutAmountFromMediation(30_000);
+        processModel.getTradePeer().setMediatedPayoutTxSignature(new byte[]{4, 5, 6});
+
+        manager.onAcceptMediationResult(trade, () -> {
+        }, errorMessage -> {
+        });
+
+        assertEquals(70_000, processModel.getBuyerPayoutAmountFromMediation());
+        assertEquals(40_000, processModel.getSellerPayoutAmountFromMediation());
+        assertNull(processModel.getTradePeer().getMediatedPayoutTxSignature());
+        verify(disputeProtocol).onAcceptMediationResult(any(), any());
+        verify(disputeProtocol, never()).onFinalizeMediationResultPayout(any(), any());
+    }
+
+    @Test
+    void firstAcceptanceOfTheSameAmountsKeepsThePeersSignature() {
+        ownDispute.setDisputeResult(result(ownDispute, 80_000, 30_000));
+        processModel.setBuyerPayoutAmountFromMediation(80_000);
+        processModel.setSellerPayoutAmountFromMediation(30_000);
+        byte[] peersSignature = {4, 5, 6};
+        processModel.getTradePeer().setMediatedPayoutTxSignature(peersSignature);
+
+        manager.onAcceptMediationResult(trade, () -> {
+        }, errorMessage -> {
+        });
+
+        assertArrayEquals(peersSignature, processModel.getTradePeer().getMediatedPayoutTxSignature());
+        verify(disputeProtocol).onFinalizeMediationResultPayout(any(), any());
     }
 
     private static PeerOpenedDisputeMessage peerOpenedDisputeMessage(Dispute dispute) {

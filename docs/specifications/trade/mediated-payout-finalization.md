@@ -16,6 +16,12 @@ peer's MediatedPayoutTxPublishedMessage also after that and during a refund requ
   or by the publication without a click, reuses the stored signature if it is valid for the payout of
   the stored mediation amounts, and fails without signing otherwise. A second signature for another
   payout would let the peer choose between two payouts.
+- Only the first acceptance takes the amounts of the displayed result for the trade. A repeated
+  acceptance keeps the amounts that the own signature covers, so that a refused repetition does not
+  leave the trade with amounts that no signature covers. If the first acceptance takes other amounts
+  than the trade had, which only happens for a result that replaced another one before the rules of
+  [`../dispute/mediation-payout-finality.md`](../dispute/mediation-payout-finality.md), the node
+  drops a stored signature of the peer, as it covers the earlier amounts.
 - Before publishing, the node checks both signatures against the payout transaction. If one of them
   is for another payout, the publication fails before the trade stores the payout: the network would
   drop the transaction, and the trade would be closed with a payout that never confirms.

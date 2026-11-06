@@ -41,6 +41,7 @@ import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -54,8 +55,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-
-import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -342,11 +341,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");
         DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
-        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
-        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         ProcessModel processModel = trade.getProcessModel();
-        processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
-        processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
+        // Our signature is the acceptance, and we sign only once (SignMediatedPayoutTx). The amounts that it covers
+        // must not change afterwards, so only the first acceptance takes the amounts of the result.
+        if (processModel.getMediatedPayoutTxSignature() == null) {
+            applyAmountsOfAcceptedResult(tradeId, processModel, disputeResult);
+        }
         DisputeProtocol tradeProtocol = (DisputeProtocol) tradeManager.getTradeProtocol(trade);
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
@@ -369,6 +369,25 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                 resultHandler.handleResult();
             }, errorMessageHandler);
         }
+    }
+
+    // The peer's stored signature was checked against the amounts that the trade had then. A result that replaced
+    // another one before this version can have other amounts, which the peer's signature does not cover.
+    private static void applyAmountsOfAcceptedResult(String tradeId,
+                                                     ProcessModel processModel,
+                                                     DisputeResult disputeResult) {
+        long buyerPayoutAmount = disputeResult.getBuyerPayoutAmount().value;
+        long sellerPayoutAmount = disputeResult.getSellerPayoutAmount().value;
+        TradingPeer tradingPeer = processModel.getTradePeer();
+        if (tradingPeer.getMediatedPayoutTxSignature() != null &&
+                (buyerPayoutAmount != processModel.getBuyerPayoutAmountFromMediation() ||
+                        sellerPayoutAmount != processModel.getSellerPayoutAmountFromMediation())) {
+            log.warn("We drop the peer's signature of the mediated payout, as it covers other amounts than the " +
+                    "result we accept. tradeId={}", tradeId);
+            tradingPeer.setMediatedPayoutTxSignature(null);
+        }
+        processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount);
+        processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount);
     }
 
     public void rejectMediationResult(Trade trade) {
