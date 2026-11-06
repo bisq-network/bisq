@@ -127,6 +127,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private Optional<Dispute> peersDisputeOptional;
     private String role;
     private Label delayedPayoutTxStatus;
+    private Label payoutLabel;
     private TextArea summaryNotesTextArea;
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener, buyerGetsTradeAmountSelectedListener, sellerGetsTradeAmountSelectedListener;
@@ -260,20 +261,33 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addPayoutAmountTextFields();
         addReasonControls();
         applyDisputeResultToUiControls();
-        boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && (
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.RESULT_PROPOSED ||
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.CLOSED);
-        if (applyPeersDisputeResult) {
-            // If the other peers dispute has been closed we apply the result to ourselves
-            applyResultOfOtherTicket(peersDisputeOptional.get().getDisputeResultProperty().get());
+        // In mediation the payout is final once a result was sent for the trade, also after closing and reopening
+        // the tickets. The refund agent's window applies the result of the other ticket once it is closed.
+        Optional<DisputeResult> lockedResult = isMediationDispute() ?
+                mediationManager.findSentResult(dispute) :
+                findResultOfClosedPeersDispute();
+        if (lockedResult.isPresent()) {
+            if (lockedResult.get() != disputeResult) {
+                applyResultOfOtherTicket(lockedResult.get());
+            }
             disableResultControls();
             applyDisputeResultToUiControls();
+            if (isMediationDispute()) {
+                payoutLabel.setText(Res.get("disputeSummaryWindow.payout.sent"));
+            }
         }
 
         setReasonRadioButtonState();
 
         addSummaryNotes();
         addButtons();
+    }
+
+    private Optional<DisputeResult> findResultOfClosedPeersDispute() {
+        return peersDisputeOptional
+                .filter(peersDispute -> peersDispute.getDisputeState() == Dispute.State.RESULT_PROPOSED ||
+                        peersDispute.getDisputeState() == Dispute.State.CLOSED)
+                .map(peersDispute -> peersDispute.getDisputeResultProperty().get());
     }
 
     private void applyResultOfOtherTicket(DisputeResult otherDisputeResult) {
@@ -386,7 +400,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
                     customRadioButton);
         }
-        addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0);
+        payoutLabel = addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0).first;
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
@@ -1250,6 +1264,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
         boolean isRefundAgent = disputeManager instanceof RefundManager;
         if (isRefundAgent && !isRefundValidationCurrent()) {
+            return;
+        }
+        // Only possible with results that earlier versions sent with different payouts
+        if (isMediationDispute() && !mediationManager.hasPayoutOfSentResults(dispute, disputeResult)) {
+            new Popup().warning(Res.get("disputeSummaryWindow.close.payoutChanged")).show();
             return;
         }
         disputeResult.setLoserPublisher(false); // field no longer used per pazza / leo816
