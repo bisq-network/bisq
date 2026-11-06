@@ -134,6 +134,15 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         return Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
     }
 
+    // A new mediation would take a trade whose mediation has a result back to MEDIATION_STARTED_BY_PEER, where the
+    // result is neither accepted nor published, and a trade in arbitration back to mediation
+    @Override
+    protected boolean isDisputeStartedByPeerAllowed(Trade.DisputeState disputeState) {
+        return disputeState == Trade.DisputeState.NO_DISPUTE ||
+                disputeState == Trade.DisputeState.MEDIATION_REQUESTED ||
+                disputeState == Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+    }
+
     @Override
     protected AckMessageSourceType getAckMessageSourceType() {
         return AckMessageSourceType.MEDIATION_MESSAGE;

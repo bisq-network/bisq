@@ -35,6 +35,9 @@ to the seller. The payout addresses come from the contract and do not depend on 
   a system message to the mediation chat that tells the trader that the result was refused and that
   the first result stays valid, and it acknowledges the message to the mediator with an error. This
   applies to every mediation dispute that the node has for the trade.
+- After the first result, a trader's node accepts no new mediation dispute for the trade
+  ([`peer-opened-dispute.md`](peer-opened-dispute.md)), so a new mediation cannot reopen the
+  mediation either.
 
 ## Rationale
 

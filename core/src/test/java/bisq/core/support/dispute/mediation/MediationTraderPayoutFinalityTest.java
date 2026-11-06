@@ -28,10 +28,13 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
+import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
@@ -86,6 +89,8 @@ class MediationTraderPayoutFinalityTest {
     private final MailboxMessageService mailboxMessageService = mock(MailboxMessageService.class);
     private final Trade trade = mock(Trade.class);
     private final TradeManager tradeManager = mock(TradeManager.class);
+    private final ClosedTradableManager closedTradableManager = mock(ClosedTradableManager.class);
+    private KeyRing keyRing;
     private MediationDisputeListService disputeListService;
     private MediationManager manager;
     private ProcessModel processModel;
@@ -94,9 +99,9 @@ class MediationTraderPayoutFinalityTest {
     @BeforeEach
     void setUp() {
         Res.setup();
-        KeyRing keyRing = new KeyRing(new KeyStorage(keyStorageDir));
+        keyRing = new KeyRing(new KeyStorage(keyStorageDir));
         disputeListService = new MediationDisputeListService(persistenceManager());
-        manager = mediationManager(keyRing);
+        manager = mediationManager();
         processModel = new ProcessModel(TRADE_ID, "account-id", keyRing.getPubKeyRing());
         when(trade.getId()).thenReturn(TRADE_ID);
         when(trade.getMediatorPubKeyRing()).thenReturn(agentPubKeyRing);
@@ -156,6 +161,79 @@ class MediationTraderPayoutFinalityTest {
         assertTrue(sentAckMessage().isSuccess());
     }
 
+    @Test
+    void refusesDisputeOpenedByPeerForAnotherTrader() {
+        PubKeyRing otherPubKeyRing = pubKeyRing();
+        Dispute copy = dispute(otherPubKeyRing.hashCode(), otherPubKeyRing);
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertEquals(List.of(ownDispute), disputeListService.getDisputeList().getList());
+        verify(trade, never()).setDisputeState(any());
+        assertFalse(sentAckMessage().isSuccess());
+    }
+
+    @Test
+    void refusesDisputeOpenedByPeerWithAnotherTraderId() {
+        Dispute copy = dispute(keyRing.getPubKeyRing().hashCode() + 1, keyRing.getPubKeyRing());
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertEquals(List.of(ownDispute), disputeListService.getDisputeList().getList());
+        verify(trade, never()).setDisputeState(any());
+        assertFalse(sentAckMessage().isSuccess());
+    }
+
+    @Test
+    void refusesNewMediationOpenedByPeerAfterTheResult() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        Dispute copy = dispute(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing());
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeListService.getDisputeList().getList().isEmpty());
+        verify(trade, never()).setDisputeState(any());
+        assertFalse(sentAckMessage().isSuccess());
+    }
+
+    @Test
+    void doesNotMoveClosedTradeBackForNewMediationAfterTheResult() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.empty());
+        when(closedTradableManager.getTradableById(TRADE_ID)).thenReturn(Optional.<Tradable>of(trade));
+        Dispute copy = dispute(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing());
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        verify(closedTradableManager, never()).remove(any());
+        verify(tradeManager, never()).addTradeToPendingTrades(any());
+        verify(trade, never()).setDisputeState(any());
+        assertTrue(disputeListService.getDisputeList().getList().isEmpty());
+    }
+
+    @Test
+    void storesMediationOpenedByPeerBeforeAnyDispute() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        when(trade.getDisputeState()).thenReturn(Trade.DisputeState.NO_DISPUTE);
+        Contract contract = mock(Contract.class);
+        when(contract.getBuyerNodeAddress()).thenReturn(TRADER_NODE_ADDRESS);
+        when(contract.getSellerNodeAddress()).thenReturn(MEDIATOR_NODE_ADDRESS);
+        Dispute copy = dispute(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(), contract);
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertEquals(List.of(copy), disputeListService.getDisputeList().getList());
+        verify(trade).setDisputeState(Trade.DisputeState.MEDIATION_STARTED_BY_PEER);
+        assertTrue(sentAckMessage().isSuccess());
+    }
+
+    private static PeerOpenedDisputeMessage peerOpenedDisputeMessage(Dispute dispute) {
+        return new PeerOpenedDisputeMessage(dispute,
+                MEDIATOR_NODE_ADDRESS,
+                "peer-opened-dispute-uid",
+                SupportType.MEDIATION);
+    }
+
     // ChatMessage.equals needs the P2P message version, which only the application sets
     private static boolean hasChatMessage(Dispute dispute, DisputeResult result) {
         String uid = result.getChatMessage().getUid();
@@ -169,14 +247,13 @@ class MediationTraderPayoutFinalityTest {
         return (AckMessage) messages.get(messages.size() - 1);
     }
 
-    private MediationManager mediationManager(KeyRing keyRing) {
+    private MediationManager mediationManager() {
         NetworkNode networkNode = mock(NetworkNode.class);
         when(networkNode.getNodeAddress()).thenReturn(TRADER_NODE_ADDRESS);
         P2PService p2PService = mock(P2PService.class);
         when(p2PService.getMailboxMessageService()).thenReturn(mailboxMessageService);
         when(p2PService.getNetworkNode()).thenReturn(networkNode);
         when(p2PService.getAddress()).thenReturn(TRADER_NODE_ADDRESS);
-        ClosedTradableManager closedTradableManager = mock(ClosedTradableManager.class);
         when(closedTradableManager.getClosedTrades()).thenReturn(List.of());
         FailedTradesManager failedTradesManager = mock(FailedTradesManager.class);
         return new MediationManager(p2PService,
@@ -195,6 +272,10 @@ class MediationTraderPayoutFinalityTest {
     }
 
     private Dispute dispute(int traderId, PubKeyRing traderPubKeyRing) {
+        return dispute(traderId, traderPubKeyRing, null);
+    }
+
+    private Dispute dispute(int traderId, PubKeyRing traderPubKeyRing, Contract contract) {
         return new Dispute(0,
                 TRADE_ID,
                 traderId,
@@ -203,7 +284,7 @@ class MediationTraderPayoutFinalityTest {
                 traderPubKeyRing,
                 0,
                 0,
-                null,
+                contract,
                 null,
                 null,
                 null,

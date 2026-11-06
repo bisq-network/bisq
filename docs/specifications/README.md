@@ -55,6 +55,7 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`dispute/mediation-payout-finality.md`](dispute/mediation-payout-finality.md) | When the payout of a mediation can no longer change, and what the nodes of the mediator and of the traders do with a result that would change it. |
+| [`dispute/peer-opened-dispute.md`](dispute/peer-opened-dispute.md) | Which disputes that the agent opens for the other trader a trader's node accepts, and when a new mediation is refused. |
 | [`dispute/mediation-result-confirmation.md`](dispute/mediation-result-confirmation.md) | Rejecting stale Accept/Reject actions and requiring fresh review of a replacement mediation result with the same payout. |
 | [`dispute/refund-claimant-authentication.md`](dispute/refund-claimant-authentication.md) | Escrow-key proof that a refund claimant participated in the trade, including normal and exceptional payout authorization. |
 | [`dispute/refund-direct-payout.md`](dispute/refund-direct-payout.md) | One-time refund receipt consumption, durable payout reservation, amount limits, and inbound refund state. |
