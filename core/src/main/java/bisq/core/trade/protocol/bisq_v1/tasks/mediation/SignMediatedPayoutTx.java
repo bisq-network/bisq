@@ -33,12 +33,15 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.Arrays;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
 import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTxSignature;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class SignMediatedPayoutTx extends TradeTask {
 
     public SignMediatedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
@@ -90,19 +93,27 @@ public class SignMediatedPayoutTx extends TradeTask {
 
             byte[] existingSignature = processModel.getMediatedPayoutTxSignature();
             if (existingSignature != null) {
-                // A prior acceptance may only complete the payout it actually signed. In particular, automatic
-                // finalization must not replace that signature after the mediation amounts have changed.
-                checkPayoutTxSignature(existingSignature,
-                        walletService,
-                        depositTx,
-                        buyerPayoutAmount,
-                        sellerPayoutAmount,
-                        buyerPayoutAddressString,
-                        sellerPayoutAddressString,
-                        myMultiSigPubKey,
-                        buyerMultiSigPubKey,
-                        sellerMultiSigPubKey,
-                        "mediatedPayoutTxSignature");
+                // A trader signs the mediated payout only once. The peer may hold that signature, and a second one
+                // would let the peer choose the payout. A repeated acceptance, by click or by the automatic
+                // publication, reuses the signature only for the same payout.
+                try {
+                    checkPayoutTxSignature(existingSignature,
+                            walletService,
+                            depositTx,
+                            buyerPayoutAmount,
+                            sellerPayoutAmount,
+                            buyerPayoutAddressString,
+                            sellerPayoutAddressString,
+                            myMultiSigPubKey,
+                            buyerMultiSigPubKey,
+                            sellerMultiSigPubKey,
+                            "own mediatedPayoutTxSignature");
+                } catch (IllegalArgumentException e) {
+                    log.warn("Our signature of the mediated payout does not cover the payout of the stored " +
+                            "mediation amounts. We do not sign again. tradeId={}", tradeId);
+                    throw e;
+                }
+                log.info("We reuse our signature of the mediated payout. tradeId={}", tradeId);
                 complete();
                 return;
             }

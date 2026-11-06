@@ -51,9 +51,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -74,7 +78,14 @@ class SignMediatedPayoutTxTest {
     private final Trade trade = mock(Trade.class);
     private final ProcessModel processModel = mock(ProcessModel.class);
     private final TradeWalletService tradeWalletService = mock(TradeWalletService.class);
+    private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
+    private final TradeManager tradeManager = mock(TradeManager.class);
+    private final Contract contract = mock(Contract.class);
+    private final TradingPeer tradingPeer = new TradingPeer();
+    private final AddressEntry payoutEntry = mock(AddressEntry.class);
+    private final AddressEntry multisigEntry = mock(AddressEntry.class);
     private Transaction depositTx;
+    private Sha256Hash acceptedSignatureHash;
     private byte[] acceptedSignature;
 
     @BeforeEach
@@ -91,21 +102,16 @@ class SignMediatedPayoutTxTest {
         acceptedPayout.addInput(depositTx.getOutput(0));
         acceptedPayout.addOutput(Coin.valueOf(80_000), Address.fromString(PARAMS, BUYER_ADDRESS));
         acceptedPayout.addOutput(Coin.valueOf(30_000), Address.fromString(PARAMS, SELLER_ADDRESS));
-        Sha256Hash signatureHash = acceptedPayout.hashForWitnessSignature(0,
+        acceptedSignatureHash = acceptedPayout.hashForWitnessSignature(0,
                 REDEEM_SCRIPT,
                 depositTx.getOutput(0).getValue(),
                 Transaction.SigHash.ALL,
                 false);
-        acceptedSignature = BUYER_KEY.sign(signatureHash).encodeToDER();
+        acceptedSignature = BUYER_KEY.sign(acceptedSignatureHash).encodeToDER();
 
-        BtcWalletService btcWalletService = mock(BtcWalletService.class);
         Offer offer = mock(Offer.class);
-        Contract contract = mock(Contract.class);
-        TradingPeer tradingPeer = new TradingPeer();
         tradingPeer.setPayoutAddressString(SELLER_ADDRESS);
         tradingPeer.setMultiSigPubKey(SELLER_KEY.getPubKey());
-        AddressEntry payoutEntry = mock(AddressEntry.class);
-        AddressEntry multisigEntry = mock(AddressEntry.class);
 
         when(trade.getProcessModel()).thenReturn(processModel);
         when(trade.getId()).thenReturn(TRADE_ID);
@@ -120,7 +126,7 @@ class SignMediatedPayoutTxTest {
         when(processModel.getTradePeer()).thenReturn(tradingPeer);
         when(processModel.getBtcWalletService()).thenReturn(btcWalletService);
         when(processModel.getTradeWalletService()).thenReturn(tradeWalletService);
-        when(processModel.getTradeManager()).thenReturn(mock(TradeManager.class));
+        when(processModel.getTradeManager()).thenReturn(tradeManager);
         when(processModel.getMyMultiSigPubKey()).thenReturn(BUYER_KEY.getPubKey());
         when(processModel.getMediatedPayoutTxSignature()).thenReturn(acceptedSignature);
         when(btcWalletService.getParams()).thenReturn(PARAMS);
@@ -130,6 +136,16 @@ class SignMediatedPayoutTxTest {
                 .thenReturn(multisigEntry);
         when(payoutEntry.getAddressString()).thenReturn(BUYER_ADDRESS);
         when(multisigEntry.getPubKey()).thenReturn(BUYER_KEY.getPubKey());
+    }
+
+    // The seller signs with the seller key and is paid to the payout address of its own wallet
+    private void useSellerRole() {
+        when(contract.isMyRoleBuyer(any(PubKeyRing.class))).thenReturn(false);
+        when(processModel.getMyMultiSigPubKey()).thenReturn(SELLER_KEY.getPubKey());
+        when(multisigEntry.getPubKey()).thenReturn(SELLER_KEY.getPubKey());
+        when(payoutEntry.getAddressString()).thenReturn(SELLER_ADDRESS);
+        tradingPeer.setPayoutAddressString(BUYER_ADDRESS);
+        tradingPeer.setMultiSigPubKey(BUYER_KEY.getPubKey());
     }
 
     @SuppressWarnings("unchecked")
@@ -163,8 +179,51 @@ class SignMediatedPayoutTxTest {
         runTask();
 
         assertFalse(completed.get());
-        assertTrue(errorMessage.get().contains("mediatedPayoutTxSignature is not valid for the expected payout tx"));
+        assertNotNull(errorMessage.get());
+        assertTrue(errorMessage.get().contains("own mediatedPayoutTxSignature is not valid for the expected payout tx"));
         verify(processModel, never()).setMediatedPayoutTxSignature(any());
         verify(tradeWalletService, never()).signMediatedPayoutTx(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void reusesSignatureForTheAcceptedPayoutAsSeller() throws Exception {
+        useSellerRole();
+        byte[] sellerSignature = SELLER_KEY.sign(acceptedSignatureHash).encodeToDER();
+        when(processModel.getMediatedPayoutTxSignature()).thenReturn(sellerSignature);
+        when(processModel.getBuyerPayoutAmountFromMediation()).thenReturn(80_000L);
+        when(processModel.getSellerPayoutAmountFromMediation()).thenReturn(30_000L);
+
+        runTask();
+
+        assertTrue(completed.get());
+        assertNull(errorMessage.get());
+        verify(processModel, never()).setMediatedPayoutTxSignature(any());
+        verify(tradeWalletService, never()).signMediatedPayoutTx(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void signsAndStoresSignatureAtFirstAcceptance() throws Exception {
+        byte[] newSignature = {1, 2, 3};
+        when(processModel.getMediatedPayoutTxSignature()).thenReturn(null);
+        when(processModel.getBuyerPayoutAmountFromMediation()).thenReturn(70_000L);
+        when(processModel.getSellerPayoutAmountFromMediation()).thenReturn(40_000L);
+        when(tradeWalletService.signMediatedPayoutTx(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(newSignature);
+
+        runTask();
+
+        assertTrue(completed.get());
+        assertNull(errorMessage.get());
+        verify(btcWalletService).getMultiSigKeyPair(eq(TRADE_ID), aryEq(BUYER_KEY.getPubKey()));
+        verify(tradeWalletService).signMediatedPayoutTx(eq(depositTx),
+                eq(Coin.valueOf(70_000)),
+                eq(Coin.valueOf(40_000)),
+                eq(BUYER_ADDRESS),
+                eq(SELLER_ADDRESS),
+                any(),
+                aryEq(BUYER_KEY.getPubKey()),
+                aryEq(SELLER_KEY.getPubKey()));
+        verify(processModel).setMediatedPayoutTxSignature(newSignature);
+        verify(tradeManager, atLeastOnce()).requestPersistence();
     }
 }

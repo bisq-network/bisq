@@ -12,6 +12,10 @@ peer's MediatedPayoutTxPublishedMessage also after that and during a refund requ
 - Accepting the mediation result signs the mediated payout and sends the signature to the peer.
   The signature is the acceptance: the peer can publish the payout with it, so it cannot be
   withdrawn. The desktop therefore disables rejecting the result once the trader has signed.
+- A node signs the mediated payout of a trade only once. A repeated acceptance, by the accept button
+  or by the publication without a click, reuses the stored signature if it is valid for the payout of
+  the stored mediation amounts, and fails without signing otherwise. A second signature for another
+  payout would let the peer choose between two payouts.
 - A node that has signed the mediated payout and has the peer's signature publishes it, whichever
   of the two came last. The accept button publishes it when the peer's signature is already there,
   and the processing of the peer's signature publishes it when the trader has already accepted,
