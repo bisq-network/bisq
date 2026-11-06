@@ -48,6 +48,7 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundClaimSignature;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundValidationResult;
+import bisq.core.support.messages.ChatMessageOrder;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -1274,9 +1275,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 disputeResult.summaryNotesProperty().get()
         );
 
+        // The mediator's price info, or the mediator's summary at the refund agent, which the agent's node added
         if (reason == DisputeResult.Reason.OPTION_TRADE &&
                 dispute.getChatMessages().size() > 1 &&
-                dispute.getChatMessages().get(1).isSystemMessage()) {
+                ChatMessageOrder.isLocalSystemMessage(dispute.getChatMessages().get(1))) {
             textToSign += "\n" + dispute.getChatMessages().get(1).getMessage() + "\n";
         }
 

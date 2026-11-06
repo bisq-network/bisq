@@ -487,6 +487,7 @@ message ChatMessage {
     string ack_error = 14;
     SupportType type = 15;
     bool was_displayed = 16;
+    int64 received_date = 17;
 }
 
 message DisputeResultMessage {

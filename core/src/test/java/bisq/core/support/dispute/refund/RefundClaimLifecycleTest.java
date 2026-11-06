@@ -31,6 +31,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.messages.ChatMessageOrder;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
@@ -164,6 +165,22 @@ class RefundClaimLifecycleTest {
             assertEquals(List.of(signed), disputes.getDisputeList().getList());
             assertDoesNotThrow(() -> manager.verifyRefundClaimForPayout(signed, Coin.valueOf(1_000), Coin.ZERO));
         }
+    }
+
+    // The opener's request carries the summary of the mediator, which the refund agent shows as a system message of
+    // its own, after the opener's message
+    @Test
+    void theRefundAgentAddsTheMediatorsSummaryAsASystemMessage() throws Exception {
+        Dispute dispute = data.signed(true, OPENING_DATE);
+        openingChat(dispute, RefundClaimTestData.BUYER_ADDRESS);
+        dispute.setMediatorsDisputeResult("summary of the mediator");
+
+        receive(dispute);
+
+        assertEquals(List.of(dispute), disputes.getDisputeList().getList());
+        ChatMessage summary = dispute.getChatMessages().get(1);
+        assertTrue(ChatMessageOrder.isLocalSystemMessage(summary));
+        assertTrue(summary.getMessage().contains("summary of the mediator"));
     }
 
     @ParameterizedTest
