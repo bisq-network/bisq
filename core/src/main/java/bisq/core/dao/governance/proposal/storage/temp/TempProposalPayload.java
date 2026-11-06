@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.crypto.Sig;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.CollectionUtils;
@@ -128,7 +129,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
                                     TreeMapIterator.naturalOrder()));
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

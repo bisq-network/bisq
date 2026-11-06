@@ -20,6 +20,7 @@ package bisq.core.dao.burningman.accounting.blockchain;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Hex;
 
@@ -117,7 +118,7 @@ public final class AccountingBlock implements NetworkPayload, Canonical {
                     .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

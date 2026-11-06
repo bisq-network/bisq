@@ -22,11 +22,12 @@ import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.common.encoding.canonical.CanonicalEncoder;
-import bisq.common.encoding.canonical.CanonicalSchema;
-import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.util.CollectionUtils;
 
 import org.bitcoinj.core.Coin;
@@ -131,7 +132,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                     .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

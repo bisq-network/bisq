@@ -25,6 +25,7 @@ import bisq.common.app.Version;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
 import bisq.common.proto.network.NetworkPayload;
 
 import com.google.common.collect.ImmutableList;
@@ -145,7 +146,7 @@ public final class RawTx extends BaseTx implements NetworkPayload, Canonical {
             .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 

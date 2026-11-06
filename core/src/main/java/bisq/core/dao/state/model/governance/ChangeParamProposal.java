@@ -21,11 +21,12 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.common.encoding.canonical.CanonicalEncoder;
-import bisq.common.encoding.canonical.CanonicalSchema;
-import bisq.common.encoding.canonical.TreeMapIterator;
 
 import bisq.common.app.Version;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingContext;
+import bisq.common.encoding.canonical.TreeMapIterator;
 import bisq.common.util.CollectionUtils;
 
 import java.util.Date;
@@ -127,7 +128,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                     .build();
 
     @Override
-    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder) {
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingContext encodingContext) {
         return canonicalEncoder.encode(this, SCHEMA);
     }
 
