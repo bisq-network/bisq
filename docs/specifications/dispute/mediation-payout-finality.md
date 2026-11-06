@@ -23,7 +23,8 @@ to the seller. The payout addresses come from the contract and do not depend on 
   does not let the mediator change them: the result sent for the ticket itself, or else the first
   result sent for the other ticket of the trade. The summary notes stay editable. If results with
   different payouts were sent for the trade by an earlier version, the window refuses to send
-  another result.
+  another result. The window locks the payout and the reason when the mediator sends the result,
+  so they stay locked if sending fails and the window stays open.
 
 ## Rules for the trader
 

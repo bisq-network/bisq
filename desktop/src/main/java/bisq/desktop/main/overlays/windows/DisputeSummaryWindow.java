@@ -1313,6 +1313,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             summaryText += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
         }
 
+        // The payout is final once the result is sent. We lock it before sending, so that a window which stays open
+        // after a failed send cannot change it.
+        if (isMediationDispute()) {
+            disableResultControls();
+            payoutLabel.setText(Res.get("disputeSummaryWindow.payout.sent"));
+        }
         disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
         peersDisputeOptional.ifPresent(peersDispute -> {
