@@ -270,6 +270,11 @@ public final class DisputeResult implements NetworkPayload {
         return Coin.valueOf(sellerPayoutAmount);
     }
 
+    // The payout is what the payout transaction pays to the buyer and to the seller
+    public boolean hasSamePayout(DisputeResult other) {
+        return buyerPayoutAmount == other.buyerPayoutAmount && sellerPayoutAmount == other.sellerPayoutAmount;
+    }
+
     public void setCloseDate(Date closeDate) {
         this.closeDate = closeDate.getTime();
     }

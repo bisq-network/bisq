@@ -62,6 +62,7 @@ import com.google.inject.Singleton;
 
 import java.security.PublicKey;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -245,6 +246,44 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getMediatorNodeAddress();
+    }
+
+    // The payout of a trade is final once the mediator has sent a result for the trade to one trader. The traders
+    // sign the payout of the result they received, so a changed payout could only be a second, conflicting result.
+    @Override
+    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String summaryText) {
+        checkArgument(hasPayoutOfSentResults(dispute, disputeResult),
+                "The payout differs from a mediation result that was sent for trade %s", dispute.getTradeId());
+        super.sendDisputeResultMessage(disputeResult, dispute, summaryText);
+    }
+
+    /**
+     * Returns the result that fixes the payout of a mediator's ticket: the result sent for this ticket, or else the
+     * first result sent for the other ticket of the trade. Empty while no result was sent for the trade.
+     */
+    public Optional<DisputeResult> findSentResult(Dispute dispute) {
+        return getSentResult(dispute).or(() -> getDisputeList().stream()
+                .filter(other -> other.getTradeId().equals(dispute.getTradeId()) &&
+                        other.getTraderId() != dispute.getTraderId())
+                .map(MediationManager::getSentResult)
+                .flatMap(Optional::stream)
+                .min(Comparator.comparing(DisputeResult::getCloseDate)));
+    }
+
+    // Whether the payout of the result is the payout of every result that was sent for the trade of the dispute
+    public boolean hasPayoutOfSentResults(Dispute dispute, DisputeResult disputeResult) {
+        return getDisputeList().stream()
+                .filter(other -> other.getTradeId().equals(dispute.getTradeId()))
+                .map(MediationManager::getSentResult)
+                .flatMap(Optional::stream)
+                .filter(sentResult -> sentResult != disputeResult)
+                .allMatch(sentResult -> sentResult.hasSamePayout(disputeResult));
+    }
+
+    // A result gets its chat message when the DisputeResultMessage is sent, a prepared result has none
+    private static Optional<DisputeResult> getSentResult(Dispute dispute) {
+        return Optional.ofNullable(dispute.getDisputeResultProperty().get())
+                .filter(result -> result.getChatMessage() != null);
     }
 
     @Nullable

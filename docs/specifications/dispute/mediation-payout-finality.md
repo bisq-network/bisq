@@ -1,0 +1,41 @@
+# Mediation payout finality
+
+## Scope
+
+This specification defines when the payout of a BISQ 1 mediation can no longer change. The payout of
+a mediation result is the pair of amounts that the mediated payout transaction pays to the buyer and
+to the seller. The payout addresses come from the contract and do not depend on the result.
+
+## Rules for the mediator
+
+- The payout of a trade is final once the mediator has sent a result for the trade to one trader.
+  Every later result for the trade has the same payout: the result for the other trader, a result
+  that the mediator sends to the same trader again, and a result that the mediator sends after the
+  tickets were closed and reopened.
+- A result counts as sent once the mediator's node has created the chat message of its
+  DisputeResultMessage. A result that the mediator only prepared, for example in a window that the
+  mediator closed with Cancel, is not sent.
+- The mediator's node refuses to send a result whose payout differs from a result that was sent for
+  the trade. Sending the same payout again stays possible, for example when the first message could
+  not be delivered.
+
+## Rationale
+
+Each trader signs the mediated payout of the result that it received, and a trader's node signs it
+only once ([`../trade/mediated-payout-finalization.md`](../trade/mediated-payout-finalization.md)).
+Two different payouts for one trade cannot both complete: the two signatures do not combine to a
+valid transaction, and a trader who has accepted cannot accept a changed result. A changed payout
+after a result was sent therefore leaves the trade stuck, or lets a trader be asked to sign a payout
+that differs from the one the other trader accepted. A fixed payout also lets the traders treat a
+result with another payout as a failure instead of as a correction.
+
+## Compatibility
+
+No message and no persisted data change. A result that a mediator sent with another version is
+treated like a result sent with this version.
+
+## Not covered
+
+The payout of the first result: the mediator decides it. The results of the refund agent. A stored
+result whose payout a mediator changed after sending it, which earlier versions of the mediator's
+window allowed: the node takes the stored result as the sent one.
