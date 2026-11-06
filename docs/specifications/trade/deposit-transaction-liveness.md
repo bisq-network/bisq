@@ -26,9 +26,10 @@ measures the take-offer time, not the transaction's publication.
 A unanimous not-found answer only means the transaction is dead if the transaction was actually
 broadcast. The seller publishes the deposit transaction himself, so reaching the
 deposit-confirmation step implies a broadcast on his side. The buyer receives the transaction in a
-message which the seller sends before publishing; for fiat trades publication additionally waits
-for that message's delivery (one of the two publication prerequisites in
-[`fiat-buyer-payment-account-validation.md`](fiat-buyer-payment-account-validation.md)). The buyer
+message which the seller sends before publishing; publication waits for the buyer's acknowledgement
+of that message ([`deposit-message-delivery.md`](deposit-message-delivery.md)), and for fiat trades
+also for the validated buyer account
+([`fiat-buyer-payment-account-validation.md`](fiat-buyer-payment-account-validation.md)). The buyer
 therefore needs positive broadcast evidence: either his wallet saw the network relay the
 transaction before the message arrived, or broadcast peers were observed on the committed
 transaction afterwards. Without such evidence no verdict may be derived, however the explorers

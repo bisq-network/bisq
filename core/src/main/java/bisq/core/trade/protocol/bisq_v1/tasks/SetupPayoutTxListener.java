@@ -137,6 +137,11 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));
     }
 
+    @Override
+    protected void onCanceled() {
+        unSubscribe();
+    }
+
     private void unSubscribe() {
         if (tradeStateSubscription != null)
             tradeStateSubscription.unsubscribe();
