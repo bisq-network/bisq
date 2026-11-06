@@ -19,6 +19,9 @@ to the seller. The payout addresses come from the contract and do not depend on 
 - The mediator's node refuses to send a result whose payout differs from a result that was sent for
   the trade. Sending the same payout again stays possible, for example when the first message could
   not be delivered.
+- The node refuses to change the payout of a sent result. The sent result is the node's record of
+  the payout that it sent, and the node compares later results with this record. If the record could
+  change, the node could not detect a result with another payout.
 - The mediator's window fills the payout and the reason from the result that fixes the payout, and
   does not let the mediator change them: the result sent for the ticket itself, or else the first
   result sent for the other ticket of the trade. The summary notes stay editable. If results with

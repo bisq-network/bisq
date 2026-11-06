@@ -26,6 +26,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
@@ -34,6 +35,7 @@ import bisq.core.trade.model.bisq_v1.Contract;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.MailboxMessage;
 import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.config.Config;
@@ -56,7 +58,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -174,6 +178,23 @@ class MediationPayoutFinalityTest {
                 () -> manager.sendDisputeResultMessage(changedResult, buyersTicket, "summary"));
 
         verify(mailboxMessageService, never()).sendEncryptedMailboxMessage(any(), any(), any(), any());
+    }
+
+    // The sent result is the only record of the sent payout, so a change in place could not be detected when sending
+    @Test
+    void sentResultKeepsItsPayoutWhenSentAgain() {
+        DisputeResult sentResult = sentResult(buyersTicket, 80_000, 30_000, 1);
+        buyersTicket.setDisputeResult(sentResult);
+
+        assertThrows(IllegalStateException.class, () -> sentResult.setBuyerPayoutAmount(Coin.valueOf(70_000)));
+        assertThrows(IllegalStateException.class, () -> sentResult.setSellerPayoutAmount(Coin.valueOf(40_000)));
+        manager.sendDisputeResultMessage(sentResult, buyersTicket, "summary");
+
+        ArgumentCaptor<MailboxMessage> message = ArgumentCaptor.forClass(MailboxMessage.class);
+        verify(mailboxMessageService).sendEncryptedMailboxMessage(any(), any(), message.capture(), any());
+        DisputeResult resultInMessage = ((DisputeResultMessage) message.getValue()).getDisputeResult();
+        assertEquals(80_000, resultInMessage.getBuyerPayoutAmount().value);
+        assertEquals(30_000, resultInMessage.getSellerPayoutAmount().value);
     }
 
     @Test

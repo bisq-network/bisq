@@ -18,6 +18,7 @@
 package bisq.core.support.dispute;
 
 import bisq.core.locale.Res;
+import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.common.proto.ProtoUtil;
@@ -42,6 +43,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkState;
 
 @EqualsAndHashCode
 @Getter
@@ -265,6 +268,7 @@ public final class DisputeResult implements NetworkPayload {
     }
 
     public void setBuyerPayoutAmount(Coin buyerPayoutAmount) {
+        checkPayoutCanChange(buyerPayoutAmount.value, this.buyerPayoutAmount);
         this.buyerPayoutAmount = buyerPayoutAmount.value;
     }
 
@@ -273,6 +277,7 @@ public final class DisputeResult implements NetworkPayload {
     }
 
     public void setSellerPayoutAmount(Coin sellerPayoutAmount) {
+        checkPayoutCanChange(sellerPayoutAmount.value, this.sellerPayoutAmount);
         this.sellerPayoutAmount = sellerPayoutAmount.value;
     }
 
@@ -288,6 +293,13 @@ public final class DisputeResult implements NetworkPayload {
     // The agent's node creates the chat message when it sends the result, a prepared result has none
     public boolean isSent() {
         return chatMessage != null;
+    }
+
+    // The payout of a mediation result is final once the result is sent. The nodes compare later results with the sent
+    // result, so its payout must not change. Results of the refund agent are not covered.
+    private void checkPayoutCanChange(long amount, long currentAmount) {
+        checkState(amount == currentAmount || !isSent() || chatMessage.getSupportType() != SupportType.MEDIATION,
+                "The payout of a sent mediation result must not change. tradeId=%s", tradeId);
     }
 
     public void setCloseDate(Date closeDate) {
