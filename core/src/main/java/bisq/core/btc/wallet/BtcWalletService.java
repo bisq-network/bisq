@@ -19,11 +19,13 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.exceptions.InsufficientFundsException;
+import bisq.core.btc.exceptions.ReceiverAmountBelowDustException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.model.WithdrawalEstimate;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -954,7 +956,7 @@ public class BtcWalletService extends WalletService {
                             printTx("FeeEstimationTransaction", tx);
                             sendRequest.tx.getOutputs().forEach(o -> log.debug("Output value " + o.getValue().toFriendlyString()));
                         }
-                        while (feeEstimationNotSatisfied(counter, tx));
+                        while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
 
                         if (counter == 10)
                             log.error("Could not calculate the fee. Tx=" + tx);
@@ -1065,7 +1067,7 @@ public class BtcWalletService extends WalletService {
                 txVsize = tx.getVsize();
                 printTx("FeeEstimationTransaction", tx);
             }
-            while (feeEstimationNotSatisfied(counter, tx));
+            while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
@@ -1077,10 +1079,12 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       String toAddress,
-                                                                       Coin amount,
-                                                                       Coin txFeeForWithdrawalPerVbyte)
+    // If feeExcluded is set, the receiver gets the amount and the fee is added to it
+    public WithdrawalEstimate getWithdrawalEstimate(Set<String> fromAddresses,
+                                                    String toAddress,
+                                                    Coin amount,
+                                                    boolean feeExcluded,
+                                                    Coin txFeeForWithdrawalPerVbyte)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
         Set<AddressEntry> addressEntries = fromAddresses.stream()
                 .map(address -> {
@@ -1099,24 +1103,43 @@ public class BtcWalletService extends WalletService {
             throw new AddressEntryException("No Addresses for withdraw  found in our wallet");
 
         try {
-            Coin fee;
+            Coin feeForSize;
             int counter = 0;
             int txVsize = 0;
+            // With the fee included, a change output below our dust limit that bitcoinj keeps is paid to the fee
+            Coin changeBelowDust = Coin.ZERO;
             Transaction tx;
             do {
                 counter++;
-                fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
-                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
+                feeForSize = txFeeForWithdrawalPerVbyte.multiply(txVsize);
+                Coin fee = feeForSize.add(changeBelowDust);
+                Coin sendersAmount = feeExcluded ? amount.add(fee) : amount.add(changeBelowDust);
+                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses,
+                        toAddress,
+                        sendersAmount,
+                        fee,
+                        null,
+                        aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txVsize = tx.getVsize();
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
+                // The remainder does not depend on the fee here, so the first round shows it. The estimation starts
+                // again for the transaction without the change output, which the send creates. The first round asks
+                // for no fee, so it never ends the estimation.
+                if (!feeExcluded && changeBelowDust.isZero()) {
+                    Coin dust = getDust(tx);
+                    if (dust.isPositive()) {
+                        changeBelowDust = dust;
+                        txVsize = 0;
+                    }
+                }
             }
-            while (feeEstimationNotSatisfied(counter, tx));
+            while (feeEstimationNotSatisfied(counter, tx, txFeeForWithdrawalPerVbyte));
             if (counter == 10)
                 log.error("Could not calculate the fee. Tx=" + tx);
 
-            return tx;
+            return new WithdrawalEstimate(tx, feeForSize, getDust(tx));
         } catch (InsufficientMoneyException e) {
             throw new InsufficientFundsException("The fees for that transaction exceed the available funds " +
                     "or the resulting output value is below the min. dust value:\n" +
@@ -1124,15 +1147,27 @@ public class BtcWalletService extends WalletService {
         }
     }
 
-    private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
-        return feeEstimationNotSatisfied(counter, tx.getFee().value, tx.getVsize(), getTxFeeForWithdrawalPerVbyte());
+    private boolean feeEstimationNotSatisfied(int counter, Transaction tx, Coin txFeeForWithdrawalPerVbyte) {
+        // The transactions of the estimations have one output to the receiver and maybe a change output
+        boolean hasChangeOutput = tx.getOutputs().size() > 1;
+        return feeEstimationNotSatisfied(counter,
+                tx.getFee().value,
+                tx.getVsize(),
+                hasChangeOutput,
+                txFeeForWithdrawalPerVbyte);
     }
 
-    private boolean feeEstimationNotSatisfied(int counter, long txFee, long txVsize, Coin txFeeForWithdrawalPerVbyte) {
+    private boolean feeEstimationNotSatisfied(int counter,
+                                              long txFee,
+                                              long txVsize,
+                                              boolean hasChangeOutput,
+                                              Coin txFeeForWithdrawalPerVbyte) {
         long targetFee = txFeeForWithdrawalPerVbyte.multiply(txVsize).value;
         long higherThanTargetFee = txFee - targetFee;
+        // Without a change output, a fee above the target is a remainder of the inputs that cannot be returned. With
+        // a lower fee the remainder would become a change output that the lower fee does not pay for.
         return counter < 10 &&
-                (txFee < targetFee || higherThanTargetFee > 1000);
+                (txFee < targetFee || (hasChangeOutput && higherThanTargetFee > 1000));
     }
 
     public int getEstimatedFeeTxVsize(List<Coin> outputValues, Coin txFee)
@@ -1161,16 +1196,17 @@ public class BtcWalletService extends WalletService {
     // Withdrawal Send
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // The receiver gets sendersAmount minus the fee
     public String sendFunds(String fromAddress,
                             String toAddress,
-                            Coin receiverAmount,
+                            Coin sendersAmount,
                             Coin fee,
                             @Nullable KeyParameter aesKey,
                             @SuppressWarnings("SameParameterValue") AddressEntry.Context context,
                             @Nullable String memo,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
-        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
+        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, sendersAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
         // The callback is attached before the memo is set: an already completed broadcast
@@ -1188,9 +1224,10 @@ public class BtcWalletService extends WalletService {
         return sendResult.tx.getTxId().toString();
     }
 
+    // The receiver gets sendersAmount minus the fee
     public Transaction sendFundsForMultipleAddresses(Set<String> fromAddresses,
                                                      String toAddress,
-                                                     Coin receiverAmount,
+                                                     Coin sendersAmount,
                                                      Coin fee,
                                                      @Nullable String changeAddress,
                                                      @Nullable KeyParameter aesKey,
@@ -1198,7 +1235,7 @@ public class BtcWalletService extends WalletService {
                                                      FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
-        SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
+        SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, sendersAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         // The wallet has committed the tx at this point; the remaining steps are best-effort.
         // The callback is attached before the memo is set: an already completed broadcast
@@ -1239,8 +1276,9 @@ public class BtcWalletService extends WalletService {
             AddressEntryException {
         Transaction tx = new Transaction(params);
         final Coin receiverAmount = amount.subtract(fee);
-        Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
-                "The amount is too low (dust limit).");
+        if (!Restrictions.isAboveDust(receiverAmount)) {
+            throw new ReceiverAmountBelowDustException();
+        }
         tx.addOutput(receiverAmount, Address.fromString(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
@@ -1269,8 +1307,9 @@ public class BtcWalletService extends WalletService {
             AddressFormatException, AddressEntryException {
         Transaction tx = new Transaction(params);
         final Coin netValue = amount.subtract(fee);
-        checkArgument(Restrictions.isAboveDust(netValue),
-                "The amount is too low (dust limit).");
+        if (!Restrictions.isAboveDust(netValue)) {
+            throw new ReceiverAmountBelowDustException();
+        }
 
         tx.addOutput(netValue, Address.fromString(params, toAddress));
 
