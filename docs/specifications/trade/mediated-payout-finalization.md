@@ -74,9 +74,9 @@ with its accept button at the same moment, it rejects our message, which only lo
 A delayed payout tx that the peer publishes at the same time, or whose
 PeerPublishedDelayedPayoutTxMessage has not arrived, as that tx pays nothing to the wallet and the
 wallet does not watch the deposit output. A refund request that reaches the node only after the
-check, for example in a later mailbox message. A mediation result that is replaced after both
-traders signed: the node publishes the payout that both signatures cover. The mediator's desktop
-fills the second ticket of a trade with the result of the first one and does not let it be changed.
+check, for example in a later mailbox message. A mediation result with another payout than the
+result that the node has: the node refuses it, so it cannot replace the result that the signatures
+cover ([`../dispute/mediation-payout-finality.md`](../dispute/mediation-payout-finality.md)).
 A MediatedPayoutTxPublishedMessage that the node received directly and rejected during a refund
 request because the payout was not confirmed yet: it is not handled again, but the wallet completes
 the trade if the payout confirms while the refund request is open. A mediated payout that pays

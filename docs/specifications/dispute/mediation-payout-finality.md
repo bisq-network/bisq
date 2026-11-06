@@ -24,6 +24,18 @@ to the seller. The payout addresses come from the contract and do not depend on 
   different payouts were sent for the trade by an earlier version, the window refuses to send
   another result.
 
+## Rules for the trader
+
+- The first mediation result that a trader's node receives for a trade fixes the payout of the trade
+  for this node.
+- A later result with the same payout is a copy. The node handles it as before: it adds the
+  mediator's message to the chat and replaces the stored result.
+- A later result with another payout is a failure, not a correction, because the mediator cannot
+  change the payout. The node does not change the dispute, the trade or the stored amounts. It adds
+  a system message to the mediation chat that tells the trader that the result was refused and that
+  the first result stays valid, and it acknowledges the message to the mediator with an error. This
+  applies to every mediation dispute that the node has for the trade.
+
 ## Rationale
 
 Each trader signs the mediated payout of the result that it received, and a trader's node signs it
@@ -37,7 +49,10 @@ result with another payout as a failure instead of as a correction.
 ## Compatibility
 
 No message and no persisted data change. A result that a mediator sent with another version is
-treated like a result sent with this version.
+treated like a result sent with this version. A trader's node of an earlier version still accepts a
+result with another payout; a mediator with this version does not send one. A result that replaced
+another one before the trader's node had this version stays the stored result, and the node compares
+later results with it.
 
 ## Not covered
 

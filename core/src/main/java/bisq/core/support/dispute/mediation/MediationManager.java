@@ -63,6 +63,7 @@ import com.google.inject.Singleton;
 import java.security.PublicKey;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -205,6 +206,18 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
 
         cleanupRetryMap(uid);
+        // The mediator cannot change the payout once a result was sent, so a result with another payout is no
+        // correction. We keep the result we have, and the mediator gets the refusal in the ACK.
+        if (hasResultWithOtherPayout(tradeId, disputeResult)) {
+            log.warn("We refuse a mediation result whose payout differs from the result we have for the trade. " +
+                    "tradeId={}, uid={}", tradeId, uid);
+            addOtherPayoutRefusedMessage(dispute);
+            sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), false,
+                    "The payout differs from the mediation result that the trader has for this trade");
+            requestPersistence();
+            return;
+        }
+
         if (!dispute.getChatMessages().contains(chatMessage)) {
             dispute.addAndPersistChatMessage(chatMessage);
         } else {
@@ -235,6 +248,27 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
         maybeClearSensitiveData();
         requestPersistence();
+    }
+
+
+    // A trader's node keeps the payout of the first mediation result that it received for a trade
+    private boolean hasResultWithOtherPayout(String tradeId, DisputeResult disputeResult) {
+        return getDisputeList().stream()
+                .filter(dispute -> dispute.getTradeId().equals(tradeId))
+                .map(dispute -> dispute.getDisputeResultProperty().get())
+                .filter(Objects::nonNull)
+                .anyMatch(result -> !result.hasSamePayout(disputeResult));
+    }
+
+    private void addOtherPayoutRefusedMessage(Dispute dispute) {
+        ChatMessage chatMessage = new ChatMessage(getSupportType(),
+                dispute.getTradeId(),
+                pubKeyRing.hashCode(),
+                false,
+                Res.get("support.systemMsg", Res.get("support.mediationResult.otherPayoutRefused")),
+                p2PService.getAddress());
+        chatMessage.setSystemMessage(true);
+        dispute.addAndPersistChatMessage(chatMessage);
     }
 
 
