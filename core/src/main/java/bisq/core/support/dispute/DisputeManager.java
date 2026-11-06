@@ -413,6 +413,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             log.warn("Ignoring {} because dispute is null", openNewDisputeMessage.getClass().getSimpleName());
             return;
         }
+        setReceivedDate(dispute);
 
         boolean senderValidated = false;
         try {
@@ -539,6 +540,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
                                               PublicKey senderSignaturePubKey) {
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
+        setReceivedDate(dispute);
         tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
                 trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey, false),
                 () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
@@ -547,6 +549,12 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                                 trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade, senderSignaturePubKey),
                                 () -> log.warn("Dropping {} for trade {}: no local trade, closed tradable, or failed trade found.",
                                         peerOpenedDisputeMessage.getClass().getSimpleName(), dispute.getTradeId()))));
+    }
+
+    // All chat messages of a dispute from the peer are received now, before we add our own
+    private static void setReceivedDate(Dispute dispute) {
+        long now = System.currentTimeMillis();
+        dispute.getChatMessages().forEach(chatMessage -> chatMessage.setReceivedDate(now));
     }
 
     private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
