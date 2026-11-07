@@ -48,9 +48,9 @@ public class FeeService {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Miner fees are between 1-600 sat/vbyte. We try to stay on the safe side. BTC_DEFAULT_TX_FEE is only used if our
-    // fee service would not deliver data.
-    private static final long BTC_DEFAULT_TX_FEE = 50;
+    // Miner fees are between 1-600 sat/vbyte. BTC_DEFAULT_TX_FEE is only used until our fee service delivers data,
+    // and must not be below the default min fee rate of BaseCurrencyNetwork.
+    private static final long BTC_DEFAULT_TX_FEE = 5;
     static final long BTC_MAX_TX_FEE = 600;
     private static DaoStateService daoStateService;
     private static PeriodService periodService;

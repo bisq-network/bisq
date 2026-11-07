@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -48,6 +50,15 @@ class FeeServiceTest {
 
         assertEquals(2, feeService.getTxFeePerVbyte().getValue());
         assertEquals(1, feeService.getMinFeePerVByte());
+    }
+
+    // Until the fee service delivers data, the default rates must keep txFeePerVbyte >= minFeePerVByte.
+    @Test
+    void defaultRatesKeepTxFeeAtLeastMinFee() {
+        FeeService feeService = newFeeService();
+
+        assertFalse(feeService.isFeeAvailable());
+        assertTrue(feeService.getTxFeePerVbyte().getValue() >= feeService.getMinFeePerVByte());
     }
 
     @Test
