@@ -143,6 +143,30 @@ class PeerDateTest {
         }
     }
 
+    // A peer which is reported again keeps its entry and date, so repeated reports do not delay its removal
+    @Test
+    void peerReportedAgainKeepsItsDate() throws IOException {
+        MockNode node = new MockNode(2);
+        try {
+            PeerManager peerManager = node.getPeerManager();
+            Peer knownPeer = Peer.fromProto(peerProto("recent.onion", FIVE_DAYS_AGO));
+            peerManager.addToReportedPeers(Set.of(knownPeer), mock(Connection.class), new Capabilities());
+            GetPeersRequest request = GetPeersRequest.fromProto(protobuf.GetPeersRequest.newBuilder()
+                            .setSenderNodeAddress(new NodeAddress("sender.onion", 9999).toProtoMessage())
+                            .setNonce(1)
+                            .addReportedPeers(peerProto("recent.onion", IN_TEN_YEARS))
+                            .build(),
+                    Version.getP2PMessageVersion());
+
+            peerManager.addToReportedPeers(request.getReportedPeers(), mock(Connection.class), new Capabilities());
+
+            assertEquals(Map.of("recent.onion", FIVE_DAYS_AGO), datesByHostName(peerManager.getReportedPeers()));
+            assertEquals(Map.of("recent.onion", FIVE_DAYS_AGO), datesByHostName(peerManager.getPersistedPeers()));
+        } finally {
+            node.getPersistenceManager().shutdown();
+        }
+    }
+
     private static Set<protobuf.Peer> peerProtos() {
         return Set.of(peerProto("future.onion", IN_TEN_YEARS),
                 peerProto("extreme.onion", Long.MIN_VALUE),
