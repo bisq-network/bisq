@@ -65,6 +65,12 @@ result with another payout; a mediator with this version does not send one. A re
 another one before the trader's node had this version stays the stored result, and the node compares
 later results with it.
 
+The rule protects a trade only when its mediator runs this version. A mediator of an earlier version
+can still send a second result with another payout. A trader's node of this version refuses it, and a
+trader's node of an earlier version applies it, so the two traders sign different payouts and only
+arbitration can settle the trade. The mediators therefore need this version before the rule can be
+relied on.
+
 Earlier versions read a stored result without a chat message back with an empty chat message, which
 has no ID, and stored the empty chat message with the result again. The node reads a chat message
 without an ID as absent, so a result that the mediator prepared with an earlier version is not sent.

@@ -75,6 +75,12 @@ acceptance. If our node has the older peer's signature, our node publishes, and 
 completes the trade with our MediatedPayoutTxPublishedMessage as before. If the older peer publishes
 with its accept button at the same moment, it rejects our message, which only logs an error there.
 
+Earlier versions took the amounts of a later mediation result when the mediation had been opened
+again, also after the trader had signed the payout of the first result. If the trader did not accept
+again before updating, the stored amounts are not covered by the trader's signature. Accepting then
+fails, because the node neither takes the amounts again nor signs a second time, and only
+arbitration can settle the trade.
+
 ## Not covered
 
 A delayed payout tx that the peer publishes at the same time, or whose
