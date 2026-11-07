@@ -21,10 +21,11 @@ or after a rule violation by the peer.
 A lost connection may shorten the TTL of an entry only if the node knows that the peer of that
 connection is the owner of the entry.
 
-The node itself is never an owner that went offline. It dials its own address only in the self-ping
-test, which checks whether the node is reachable, so the loss of that connection is not evidence
-about any owner. A backdated own offer would expire before its next refresh: the refresh interval
-of 6 minutes is longer than the 4.5 minutes that remain after backdating.
+The node itself is never an owner that went offline. It dials its own address in the self-ping test,
+which checks whether the node is reachable, and it can do so on other paths, for example when the user
+takes an offer that states the node's address as owner address. The loss of such a connection is not
+evidence about any owner. A backdated own offer would expire before its next refresh: the refresh
+interval of 6 minutes is longer than the at most 4.5 minutes that remain after backdating.
 
 The node knows the address of a peer only on an outbound connection: it is the address that the node
 dialed, and a sender address that the peer claims must not replace it. On mainnet the node connects
