@@ -64,3 +64,10 @@ witness as banned until they are updated.
   data and the key of the peer.
 - A witness with a banned owner key stays in the append-only store. It no longer changes the
   banned state.
+- The limits still follow the owner key of each signed witness, not the key of the owner. A
+  witness which an arbitrator signed before commit `09141eba92` carries the key of the counterparty.
+  If that counterparty is banned, the limits of the honest account stay low, while the list of
+  offers shows it as signed by an arbitrator with lifted limits. The witness of the banned trader
+  carries the key of the honest counterparty, so the banned trader keeps lifted limits and is only
+  shown as banned. A signer who puts another key into the owner key of a new witness has the same
+  effect.
