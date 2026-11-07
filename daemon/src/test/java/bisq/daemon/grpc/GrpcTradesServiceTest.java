@@ -47,7 +47,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class GrpcTradesServiceTest {
-    // At a fee rate of 1 sat/vbyte the trade tx fee of an API taker is below 250 sat, and the core api refuses it
+    // At a fee rate of 1 sat/vbyte the trade tx fee of an API taker is below 424 sat, and the core api refuses it
     // before it returns. The call gets one answer, with the reason, and the service does not throw.
     @Test
     void refusalBeforeTheCoreApiReturnsAnswersTheCallOnce() {
