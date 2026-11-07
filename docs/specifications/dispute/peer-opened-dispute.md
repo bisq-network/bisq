@@ -18,6 +18,9 @@ accepts.
 - The node checks both rules before it moves a closed or failed trade back to the open trades.
 - A refused dispute is not stored and does not change the trade. The node acknowledges the message
   and its first chat message with an error.
+- If the node refuses a dispute of an open trade because it is not addressed to this trader, and the
+  node has no dispute of this type for the trade, the node tells the trader that it refused a case
+  that the peer opened, so that the trader can open one.
 
 ## Rationale
 
@@ -29,6 +32,14 @@ take the trade out of MEDIATION_CLOSED, where the trader accepts the result and 
 the payout, and a second result could follow
 ([`mediation-payout-finality.md`](mediation-payout-finality.md)).
 
+The opener can make the agent create the peer's dispute with a key ring that the opener chose (see
+Not covered). The peer's node refuses such a dispute, so the peer has no case for the trade. If that
+key ring has another signature key, the agent's node ignores the peer's error, because it checks the
+acknowledgement against that key ring. Only the peer's node knows about the refusal, so it tells the
+trader. If the trader then opens a dispute, the agent's node has a third dispute for the trade,
+refuses it as a replay and warns the agent, so the agent learns about the dispute that the opener
+created.
+
 ## Compatibility
 
 No message and no persisted data change. Agents of earlier versions create the dispute for the
@@ -39,3 +50,9 @@ other trader from the same key ring, so their disputes pass the first rule.
 Other content checks of the dispute, for example a contract that differs from the contract of the
 trade: the node logs them and stores the dispute, so that a validation problem does not block the
 dispute. A refund request that the peer opens after a mediation result is allowed.
+
+The key rings of the traders are not part of the contract data that the traders sign, so the agent
+cannot check the key ring that the opener sends for the peer. With a key ring whose signature key the
+opener holds, the opener can also write to the agent as the peer. Binding the key rings to the signed
+contract data would remove this, but it changes the trade protocol and needs a decision of the
+maintainers.

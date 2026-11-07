@@ -107,6 +107,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     @Getter
     protected final ObservableList<DisputeValidation.ValidationException> validationExceptions =
             FXCollections.observableArrayList();
+    // Open trades without a dispute of this type for which we refused a dispute that the peer opened, because it was
+    // not addressed to us. The UI tells the trader.
+    @Getter
+    private final ObservableList<String> tradeIdsOfRefusedPeerDisputes = FXCollections.observableArrayList();
     @Getter
     private final KeyPair signatureKeyPair;
 
@@ -687,6 +691,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         String errorMessage = null;
         if (!isTrader(dispute) || dispute.getTraderId() != pubKeyRing.hashCode()) {
             errorMessage = "The dispute is not for this trader";
+            onPeerDisputeNotForThisTrader(dispute.getTradeId());
         } else if (findDispute(dispute).isEmpty() && !isDisputeStartedByPeerAllowed(trade.getDisputeState())) {
             errorMessage = "A new dispute is not allowed in dispute state " + trade.getDisputeState();
         }
@@ -702,6 +707,18 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
         sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), false, errorMessage);
         return true;
+    }
+
+    // The opener chooses the key rings in the contract that the agent copies. With a key ring that is not ours, we have
+    // no case for the trade, and the agent's node ignores our error if that key ring has another signature key. So only
+    // the trader can act, by opening a dispute.
+    private void onPeerDisputeNotForThisTrader(String tradeId) {
+        boolean isOpenTrade = tradeManager.getTradeById(tradeId).isPresent();
+        if (isOpenTrade &&
+                findDispute(tradeId, pubKeyRing.hashCode()).isEmpty() &&
+                !tradeIdsOfRefusedPeerDisputes.contains(tradeId)) {
+            tradeIdsOfRefusedPeerDisputes.add(tradeId);
+        }
     }
 
 

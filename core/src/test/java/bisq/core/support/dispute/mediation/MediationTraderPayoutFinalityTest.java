@@ -176,6 +176,38 @@ class MediationTraderPayoutFinalityTest {
         assertEquals(List.of(ownDispute), disputeListService.getDisputeList().getList());
         verify(trade, never()).setDisputeState(any());
         assertFalse(sentAckMessage().isSuccess());
+        // The trader has a case of its own, so there is nothing to tell
+        assertTrue(manager.getTradeIdsOfRefusedPeerDisputes().isEmpty());
+    }
+
+    // The opener chose the key ring of the peer's dispute, so the trader has no case and only the trader can act
+    @Test
+    void reportsRefusedDisputeOpenedByPeerForAnotherTraderWithoutOwnCase() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        PubKeyRing otherPubKeyRing = pubKeyRing();
+        Dispute copy = dispute(otherPubKeyRing.hashCode(), otherPubKeyRing);
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeListService.getDisputeList().getList().isEmpty());
+        verify(trade, never()).setDisputeState(any());
+        assertEquals(List.of(TRADE_ID), manager.getTradeIdsOfRefusedPeerDisputes());
+    }
+
+    @Test
+    void doesNotReportRefusedDisputeOpenedByPeerForAnotherTraderOfClosedTrade() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.empty());
+        when(closedTradableManager.getTradableById(TRADE_ID)).thenReturn(Optional.<Tradable>of(trade));
+        PubKeyRing otherPubKeyRing = pubKeyRing();
+        Dispute copy = dispute(otherPubKeyRing.hashCode(), otherPubKeyRing);
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        verify(closedTradableManager, never()).remove(any());
+        assertTrue(disputeListService.getDisputeList().getList().isEmpty());
+        assertTrue(manager.getTradeIdsOfRefusedPeerDisputes().isEmpty());
     }
 
     @Test
@@ -199,6 +231,8 @@ class MediationTraderPayoutFinalityTest {
         assertTrue(disputeListService.getDisputeList().getList().isEmpty());
         verify(trade, never()).setDisputeState(any());
         assertFalse(sentAckMessage().isSuccess());
+        // The dispute was addressed to the trader, who has the mediation result
+        assertTrue(manager.getTradeIdsOfRefusedPeerDisputes().isEmpty());
     }
 
     @Test
