@@ -135,7 +135,7 @@ import javax.annotation.Nullable;
 
 import static bisq.core.trade.validation.InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest;
 import static bisq.core.trade.validation.MinerFeeValidation.MIN_TRADE_TX_FEE_SAT;
-import static bisq.core.trade.validation.MinerFeeValidation.checkTradeTxFeeIsInTolerance;
+import static bisq.core.trade.validation.MinerFeeValidation.checkOwnTradeTxFeeIsInTolerance;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -593,9 +593,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
-        // The maker drops a request with a trade tx fee outside this tolerance without a reply.
+        // Makers up to v1.10.11 drop a request with a trade tx fee outside this tolerance without a reply.
         try {
-            checkTradeTxFeeIsInTolerance(txFee, provider.getFeeService());
+            checkOwnTradeTxFeeIsInTolerance(txFee, provider.getFeeService());
         } catch (IllegalArgumentException e) {
             log.warn("Trade tx fee {} would not be accepted by the maker. {}", txFee.value, e.getMessage());
             errorMessageHandler.handleErrorMessage(Res.get(isAboveTradeTxFeeRange(txFee) ?

@@ -51,6 +51,29 @@ class MinerFeeValidationTest {
         assertSame(txFee, MinerFeeValidation.checkTradeTxFeeIsInTolerance(txFee, Coin.valueOf(300)));
         assertEquals(1_500, MinerFeeValidation.checkFeeIsInTolerance(1_500, 1_000));
         assertEquals(500, MinerFeeValidation.checkFeeIsInTolerance(500, 1_000));
+        assertEquals(4_000, MinerFeeValidation.checkFeeIsInTolerance(4_000, 1_000));
+        assertEquals(250, MinerFeeValidation.checkFeeIsInTolerance(250, 1_000));
+    }
+
+    // The trade tx fee of a peer may differ by a factor of 4 from the expected fee, as fee providers differ.
+    // The taker checks its own fee with the factor of 2 that makers up to v1.10.11 apply.
+    @Test
+    void ownTradeTxFeeUsesTheFactorOfEarlierMakers() {
+        FeeService feeService = mock(FeeService.class);
+        when(feeService.getTxFeePerVbyte()).thenReturn(Coin.valueOf(10));
+        Coin twiceExpected = Coin.valueOf(4_240);
+        Coin aboveTwiceExpected = Coin.valueOf(4_241);
+
+        assertSame(twiceExpected, MinerFeeValidation.checkOwnTradeTxFeeIsInTolerance(twiceExpected, feeService));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkOwnTradeTxFeeIsInTolerance(aboveTwiceExpected, feeService));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkOwnTradeTxFeeIsInTolerance(Coin.valueOf(1_059), feeService));
+        assertSame(aboveTwiceExpected, MinerFeeValidation.checkTradeTxFeeIsInTolerance(aboveTwiceExpected, feeService));
+        assertEquals(8_480, MinerFeeValidation.checkTradeTxFeeIsInTolerance(8_480, feeService));
+        assertEquals(530, MinerFeeValidation.checkTradeTxFeeIsInTolerance(530, feeService));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(8_481, feeService));
     }
 
     @Test
@@ -62,8 +85,8 @@ class MinerFeeValidationTest {
 
     @Test
     void checkTradeTxFeeRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkFeeIsInTolerance(2_001, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkFeeIsInTolerance(499, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkFeeIsInTolerance(4_001, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkFeeIsInTolerance(249, 1_000));
     }
 
     @Test
@@ -124,12 +147,14 @@ class MinerFeeValidationTest {
     void checkMinerFeeRateAcceptsFeesWithinAllowedTolerance() {
         assertEquals(1_500, MinerFeeValidation.checkMinerFeeRateIsInTolerance(1_500, 1_000));
         assertEquals(500, MinerFeeValidation.checkMinerFeeRateIsInTolerance(500, 1_000));
+        assertEquals(4_000, MinerFeeValidation.checkMinerFeeRateIsInTolerance(4_000, 1_000));
+        assertEquals(250, MinerFeeValidation.checkMinerFeeRateIsInTolerance(250, 1_000));
     }
 
     @Test
     void checkMinerFeeRateRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(2_001, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(499, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(4_001, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(249, 1_000));
     }
 
     @Test

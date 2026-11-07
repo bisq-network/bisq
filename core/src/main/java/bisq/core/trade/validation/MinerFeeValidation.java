@@ -29,7 +29,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class MinerFeeValidation {
-    public static final double MAX_FEE_DEVIATION_FACTOR = 2; // Max change by factor 2 (expected / 2 or expected * 2)
+    // Max change by factor 4 (expected / 4 or expected * 4). Peers get their fee rates from different pricenodes,
+    // which average different mempool instances at different times. Versions up to v1.10.11 allow a factor of 2.
+    public static final double MAX_FEE_DEVIATION_FACTOR = 4;
+    // The taker checks its own trade tx fee against its own fee rate before it sends a take offer request. Makers up
+    // to v1.10.11 drop a request outside a factor of 2 without a reply, so the taker keeps their factor.
+    public static final double MAX_OWN_FEE_DEVIATION_FACTOR = 2;
 
     // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
     // unconfirmable (locking maker funds); a huge value can drain miner fees from the maker.
@@ -71,11 +76,20 @@ public final class MinerFeeValidation {
     }
 
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
+        return checkTradeTxFeeIsInTolerance(tradeTxFee, feeService, MAX_FEE_DEVIATION_FACTOR);
+    }
+
+    public static Coin checkOwnTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
+        return checkTradeTxFeeIsInTolerance(tradeTxFee, feeService, MAX_OWN_FEE_DEVIATION_FACTOR);
+    }
+
+    private static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService, double factor) {
         checkTradeTxFee(tradeTxFee);
         checkNotNull(feeService, "feeService must not be null");
         Coin txFeePerVbyte = checkIsPositive(feeService.getTxFeePerVbyte(), "txFeePerVbyte");
         Coin expectedTradeTxFee = TradeFeeFactory.getTradeTxFee(txFeePerVbyte);
-        return checkTradeTxFeeIsInTolerance(tradeTxFee, expectedTradeTxFee);
+        TradeValidation.checkValueInTolerance(tradeTxFee.getValue(), expectedTradeTxFee.getValue(), factor);
+        return tradeTxFee;
     }
 
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, Coin expectedTradeTxFee) {

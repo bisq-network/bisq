@@ -20,7 +20,6 @@ package bisq.core.trade.validation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.validation.ValidationTestUtils.InputsForDepositTxRequestValidationFixture;
 
-import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 
 import org.bitcoinj.core.Coin;
@@ -65,16 +64,28 @@ class InputsForDepositTxRequestValidationTest {
                 fixture.feeService));
     }
 
+    // The fixture's request states the trade tx fee at 2 sat/vbyte. A maker whose fee rate is
+    // MAX_FEE_DEVIATION_FACTOR times higher still accepts it, as fee providers can differ that much.
+    @Test
+    void checkInputsForDepositTxRequestAcceptsTxFeeAtTheDeviationFactor() throws CryptoException {
+        InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
+        long makersFeeRate = (long) (2 * MinerFeeValidation.MAX_FEE_DEVIATION_FACTOR);
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), makersFeeRate);
+
+        assertSame(fixture.request, InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
+                fixture.offer,
+                fixture.user,
+                fixture.btcWalletService,
+                fixture.priceFeedService,
+                fixture.delayedPayoutTxReceiverService,
+                feeService));
+    }
+
     @Test
     void checkInputsForDepositTxRequestRejectsTxFeeOutsideAllowedTolerance() throws CryptoException {
-        // Fixture builds the request at a low txFeePerVbyte which FeeService.updateFeeInfo
-        // clamps up to the network minimum. To stay outside the 2x deviation tolerance we
-        // override the validator's FeeService above 2 * networkMin, derived from Config so
-        // the test does not silently lose its assertion if the network minimum changes.
         InputsForDepositTxRequestValidationFixture fixture = inputsForDepositTxRequestValidationFixture(null);
-        long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
-        long txFeeOutsideTolerance = 2 * networkMin + 1;
-        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), txFeeOutsideTolerance);
+        long makersFeeRate = (long) (2 * MinerFeeValidation.MAX_FEE_DEVIATION_FACTOR) + 1;
+        FeeService feeService = configureTradeFeeService(Coin.valueOf(77), Coin.valueOf(100), makersFeeRate);
 
         assertThrows(IllegalArgumentException.class, () -> InputsForDepositTxRequestValidation.checkInputsForDepositTxRequest(fixture.request,
                 fixture.offer,
