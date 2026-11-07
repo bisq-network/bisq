@@ -171,6 +171,30 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                 .onAction(this::useNoBridgesAndShutDown);
     }
 
+    // For a start which failed because Tor cannot run in the sandbox on this system. The failure already says what
+    // Tor without the sandbox risks, so the button needs no confirmation of its own.
+    public Popup createTorSandboxUnavailablePopup(String warnMsg) {
+        Popup popup = new Popup()
+                .headLine(Res.get("popup.torSandbox.unavailable.headline"))
+                .width(WIDTH);
+        // An option on the command line overrides what the button writes into the config file
+        if (config.useTorSandboxSetOnCommandLine) {
+            return popup.warning(warnMsg)
+                    .actionButtonText(Res.get("shared.shutDown"))
+                    .onAction(this::shutDown);
+        }
+        String message = warnMsg + "\n\n" + Res.get("popup.torSandbox.unavailable.turnOff.info",
+                Config.USE_TOR_SANDBOX, config.getConfigFile().getAbsolutePath());
+        return popup.warning(message)
+                .actionButtonText(Res.get("popup.torSandbox.unavailable.turnOff"))
+                .onAction(() -> {
+                    configFileEditor.setOption(Config.USE_TOR_SANDBOX, "false");
+                    shutDown();
+                })
+                .secondaryActionButtonText(Res.get("shared.shutDown"))
+                .onSecondaryAction(this::shutDown);
+    }
+
     protected void addButtons() {
         closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
         closeButton.setOnAction(event -> doClose());

@@ -291,6 +291,12 @@ node has nothing else to do without Tor. Its text replaces the confirmation of t
 on Windows and while the option is given on the command line, the popup has no button which allows them and names the
 option instead.
 
+When the start fails because Tor cannot run in the sandbox on this system, which the node knows only from its own checks
+and the refusals of sandy, never from an exit of a sandboxed Tor, the desktop application shows the failure in a popup
+which offers to turn the sandbox off and shut down, which writes `useTorSandbox=false` into the config file, or to shut
+down. The failure already says what Tor without the sandbox risks, so the button asks for no confirmation. While
+`--useTorSandbox` is given on the command line, which overrides the config file, the popup offers only to shut down.
+
 A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
 `hiddenservice`: the node sends the key of the onion service to Tor over the control connection.
 

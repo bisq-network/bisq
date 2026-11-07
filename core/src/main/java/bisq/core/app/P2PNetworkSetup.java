@@ -30,6 +30,7 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.ExplainedStartFailureException;
+import bisq.network.p2p.network.TorSandboxUnavailableException;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.payload.ProofOfWorkPayload;
 
@@ -82,6 +83,9 @@ public class P2PNetworkSetup {
     @Getter
     @Nullable
     private BridgesCanHelpException bridgesCanHelpFailure;
+    // A failed start which turning the sandbox off fixes, for the popup which offers that
+    @Getter
+    private boolean torSandboxUnavailable;
     final FilterPolicyService filterPolicyService;
 
     @Inject
@@ -225,6 +229,7 @@ public class P2PNetworkSetup {
                 bridgesCanHelpFailure = throwable instanceof BridgesCanHelpException bridgesCanHelp ?
                         bridgesCanHelp :
                         null;
+                torSandboxUnavailable = throwable instanceof TorSandboxUnavailableException;
                 // A failure which says what helps gets no advice to check the internet connection or to restart
                 String warnMsgKey;
                 if (bridgesCanHelpFailure != null) {

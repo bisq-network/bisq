@@ -313,6 +313,8 @@ public class TorNetworkNode extends NetworkNode {
                 RuntimeException failure;
                 if (canBridgesHelp) {
                     failure = new BridgesCanHelpException(errorMessage, throwable);
+                } else if (isSandboxUnavailable(throwable)) {
+                    failure = new TorSandboxUnavailableException(errorMessage);
                 } else if (isExplained(throwable, LinuxDistribution.isWhonixGateway())) {
                     failure = new ExplainedStartFailureException(errorMessage);
                 } else {
@@ -348,6 +350,12 @@ public class TorNetworkNode extends NetworkNode {
                         cause instanceof TorrcOverrideNotAllowedException);
         return isExplainedByTheTorLibrary ||
                 isWhonixGateway && Throwables.getRootCause(throwable) instanceof TorStartupFailedException;
+    }
+
+    // The Tor library throws it only for what the node checks before Tor runs and for refusals of sandy, never for an
+    // exit of Tor in its sandbox
+    static boolean isSandboxUnavailable(Throwable throwable) {
+        return Throwables.getCausalChain(throwable).stream().anyMatch(SandboxUnavailableException.class::isInstance);
     }
 
     // Tor could not connect, or the chosen bridges cannot be used. Other bridges can help, but not with a running Tor,

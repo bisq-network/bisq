@@ -27,6 +27,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.network.BridgesCanHelpException;
 import bisq.network.p2p.network.ExplainedStartFailureException;
+import bisq.network.p2p.network.TorSandboxUnavailableException;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.tor.TorSandboxStatus;
@@ -44,9 +45,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -122,6 +125,22 @@ class P2PNetworkSetupTest {
 
         listener.onSetupFailed(new ExplainedStartFailureException(message));
 
+        assertEquals(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice", message),
+                p2PNetworkSetup.getP2pNetworkWarnMsg().get());
+        assertNull(p2PNetworkSetup.getBridgesCanHelpFailure());
+        assertFalse(p2PNetworkSetup.isTorSandboxUnavailable());
+    }
+
+    @Test
+    void keepsAFailureWhichTurningTheSandboxOffFixesBeforeTheWarning() {
+        String message = "Bisq did not start Tor, because it cannot run Tor in its sandbox on this system.";
+        var sandboxUnavailableAtTheWarning = new AtomicReference<Boolean>();
+        p2PNetworkSetup.getP2pNetworkWarnMsg().addListener((observable, oldValue, newValue) ->
+                sandboxUnavailableAtTheWarning.set(p2PNetworkSetup.isTorSandboxUnavailable()));
+
+        listener.onSetupFailed(new TorSandboxUnavailableException(message));
+
+        assertTrue(sandboxUnavailableAtTheWarning.get());
         assertEquals(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailedWithAdvice", message),
                 p2PNetworkSetup.getP2pNetworkWarnMsg().get());
         assertNull(p2PNetworkSetup.getBridgesCanHelpFailure());

@@ -178,6 +178,26 @@ public class ConfigTests {
     }
 
     @Test
+    public void onlyTheCommandLineOptionOfTheTorSandboxOverridesTheConfigFile() throws IOException {
+        // The popup of an unusable sandbox writes the option into the config file
+        File configFile = File.createTempFile("bisq", "properties");
+        try (PrintWriter writer = new PrintWriter(configFile)) {
+            writer.println(new ConfigFileOption(USE_TOR_SANDBOX, "false"));
+        }
+        Config fromConfigFile = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        assertFalse(fromConfigFile.useTorSandbox);
+        assertFalse(fromConfigFile.useTorSandboxSetOnCommandLine);
+
+        Config fromCommandLine = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()),
+                opt(USE_TOR_SANDBOX, "true"));
+        assertTrue(fromCommandLine.useTorSandbox);
+        assertTrue(fromCommandLine.useTorSandboxSetOnCommandLine);
+
+        assertTrue(new Config().useTorSandbox);
+        assertFalse(new Config().useTorSandboxSetOnCommandLine);
+    }
+
+    @Test
     public void onWhonixTheTorControlOptionsOfTheWhonixGuideAreIgnored() {
         // On a Whonix-Workstation the Tor library uses the Tor of the Whonix-Gateway and never starts its own Tor.
         File configFile = new File("bisq.properties");
