@@ -268,7 +268,6 @@ public class BsqSwapCalculation {
             log.warn("We got a bsqTradeFee of 0. We ignore that and use the default value of 3 sat (0.03 BSQ)");
             bsqTradeFee = FeeService.getMinMakerFee(false).value;
         }
-        // txFeePerVbyte is currently min. 10
         Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
 
         checkArgument(vBytes >= MIN_SELLERS_TX_SIZE,
