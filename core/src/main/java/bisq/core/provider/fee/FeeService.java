@@ -174,13 +174,20 @@ public class FeeService {
         // txFeePerVbyte >= minFeePerVByte to guarantee total tx fee meets relay minimum
         // when one side's BSQ trade fee exceeds its miner-portion (see BsqSwapCalculation),
         // and avoids multiply overflow in fee estimators if a bad feed returns absurd values.
+        // txFeePerVbyte is also kept at least MIN_TRADE_TX_FEE_RATE, so we never state or expect a trade tx
+        // fee that makers refuse, whatever the provider delivers. The pricenodes raise their estimate to the
+        // same rate for versions up to v1.10.11, which use the delivered rate as it is and accept the taker's
+        // trade tx fee only within a factor of 2 of their own. A higher bound here, such as the network
+        // default min fee rate, would break trades with them whenever the pricenode delivers less.
         long clampedMinFee = Math.min(minFeePerVByte, BTC_MAX_TX_FEE);
-        long clampedTxFee = Math.min(Math.max(txFeePerVbyte, clampedMinFee), BTC_MAX_TX_FEE);
+        long lowestTxFee = Math.max(clampedMinFee, MIN_TRADE_TX_FEE_RATE);
+        long clampedTxFee = Math.min(Math.max(txFeePerVbyte, lowestTxFee), BTC_MAX_TX_FEE);
         if (clampedTxFee != txFeePerVbyte || clampedMinFee != minFeePerVByte) {
             log.warn("Fee provider returned txFeePerVbyte={}, minFeePerVbyte={}, maxFeePerVbyte={}; " +
                             "clamped to txFeePerVbyte={}, minFeePerVbyte={} to enforce " +
-                            "maxFeePerVbyte>=txFeePerVbyte>=minFeePerVbyte",
-                    txFeePerVbyte, minFeePerVByte, BTC_MAX_TX_FEE, clampedTxFee, clampedMinFee);
+                            "maxFeePerVbyte>=txFeePerVbyte>=max(minFeePerVbyte, minTradeTxFeeRate={})",
+                    txFeePerVbyte, minFeePerVByte, BTC_MAX_TX_FEE, clampedTxFee, clampedMinFee,
+                    MIN_TRADE_TX_FEE_RATE);
         }
         this.txFeePerVbyte = clampedTxFee;
         this.minFeePerVByte = clampedMinFee;

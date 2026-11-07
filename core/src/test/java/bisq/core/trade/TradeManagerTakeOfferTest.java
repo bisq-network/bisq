@@ -174,11 +174,12 @@ class TradeManagerTakeOfferTest {
         assertRefusal(refusalKey);
     }
 
-    // The API states the fee that the maker expects, which is in the range unless it is below the
-    // absolute minimum of 424 sat, at a fee rate of 1 sat/vbyte. At 2 sat/vbyte it is that minimum.
+    // The API states the fee that the maker expects, which is in the range. At 2 sat/vbyte it is the
+    // absolute minimum of 424 sat. A provider rate of 1 sat/vbyte is raised to 2, as a fee of 212 sat
+    // would be below that minimum.
     @ParameterizedTest
     @CsvSource({
-            "1, takeOffer.failed.tradeTxFeeTooLow",
+            "1, ",
             "2, ",
             "10, ",
             "100, ",
@@ -195,8 +196,10 @@ class TradeManagerTakeOfferTest {
         assertRefusal(refusalKey);
     }
 
-    // At 1 sat/vbyte the desktop states at least 233 sat, below the absolute minimum of 424 sat. That is
-    // a problem of the fee rate, not of the wallet. At 2 sat/vbyte 423 sat is in the range but below it.
+    // A fee below the absolute minimum of 424 sat is too low even when it is in the range of the own fee
+    // rate, as 423 sat at 2 sat/vbyte. A provider rate of 1 sat/vbyte is raised to 2, so the 233 sat that
+    // the desktop would state at 1 sat/vbyte are too low as well. That is a problem of the fee rate, not
+    // of the wallet.
     @ParameterizedTest
     @CsvSource({"1, 233", "1, 249", "2, 423"})
     void tradeTxFeeBelowTheAbsoluteMinimumIsTooLow(long feeRate, long tradeTxFee) {
