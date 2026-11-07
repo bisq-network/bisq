@@ -127,6 +127,29 @@ public class DelayedPayoutTxReceiverServiceTest {
                 .first);
     }
 
+    // A trade at 2 sat/vbyte has a trade tx fee of 2 * 212 = 424 sat, from which the delayed payout tx would get
+    // 424 / 278 = 2 sat/vbyte, below its minimum of 10 sat/vbyte. Seller, buyer and refund agent of any version
+    // derive the receivers on their own, so the trade must get the same receivers as a trade at 10 sat/vbyte. With
+    // two Burning Man candidates the delayed payout tx pays 10 * (51 + 2 * 32) = 1150 sat, and 5% of the remaining
+    // 998_850 sat rounds to 49_943 sat.
+    @Test
+    public void getReceiversKeepsTheMinimumFeeRateForALowerTradeTxFee() {
+        DelayedPayoutTxReceiverService service = newService(
+                addressList(List.of(entry(ALLOWED_ADDRESS_1, 0.05),
+                        entry(ALLOWED_ADDRESS_2, 0.05))),
+                List.of(candidate(ALLOWED_ADDRESS_1, 0.05),
+                        candidate(ALLOWED_ADDRESS_2, 0.05)));
+
+        List<Tuple2<Long, String>> receivers = service.getReceivers(SELECTION_HEIGHT, INPUT_AMOUNT, 424, 1);
+
+        assertEquals(service.getReceivers(SELECTION_HEIGHT, INPUT_AMOUNT, TRADE_TX_FEE, 1), receivers);
+        assertEquals(49_943L, receivers.stream()
+                .filter(receiver -> ALLOWED_ADDRESS_1.equals(receiver.second))
+                .findFirst()
+                .orElseThrow()
+                .first);
+    }
+
     @Test
     public void validateDelayedPayoutTxReceiversRejectsReceiverOutsideSelectedAddressList() {
         DelayedPayoutTxReceiverService service = newService(

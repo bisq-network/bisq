@@ -52,6 +52,9 @@ public class FeeService {
     // and must not be below the default min fee rate of BaseCurrencyNetwork.
     private static final long BTC_DEFAULT_TX_FEE = 5;
     static final long BTC_MAX_TX_FEE = 600;
+    // The lowest fee rate for trading. Makers refuse a trade tx fee below the trade tx fee at this rate,
+    // MinerFeeValidation.MIN_TRADE_TX_FEE_SAT.
+    public static final long MIN_TRADE_TX_FEE_RATE = 2;
     private static DaoStateService daoStateService;
     private static PeriodService periodService;
     private static FilterPolicyService filterPolicyService = null;

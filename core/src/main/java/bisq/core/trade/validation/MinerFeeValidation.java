@@ -38,11 +38,17 @@ public final class MinerFeeValidation {
 
     // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
     // unconfirmable (locking maker funds); a huge value can drain miner fees from the maker.
-    // Envelope derived from realistic miner-fee range 1..600 sat/vB over up to ~600 vB
-    // (headroom above the stored average of taker-fee-tx ~192 vB and deposit-tx ~233 vB).
+    // The minimum is the trade tx fee at FeeService.MIN_TRADE_TX_FEE_RATE (2 sat/vB for 212 vB, 424 sat),
+    // so the trade txs pay at least that rate. The maximum is 600 sat/vB over up to ~600 vB (headroom above
+    // the stored average of taker-fee-tx ~192 vB and deposit-tx ~233 vB).
     // The tighter check is checkTradeTxFeeIsInTolerance; these are absolute sanity bounds.
-    public static final long MIN_TRADE_TX_FEE_SAT = 250L;
+    public static final long MIN_TRADE_TX_FEE_SAT =
+            FeeService.MIN_TRADE_TX_FEE_RATE * TradeFeeFactory.AVERAGE_TRADE_TX_VSIZE;
     public static final long MAX_TRADE_TX_FEE_SAT = 360_000L;
+    // Makers up to v1.10.11 accepted down to 250 sat. A trade object is also created when the trade is loaded
+    // from disk, and one trade that fails its check makes the whole trade file unreadable. So a trade object
+    // is only checked against this bound; a new take offer request is checked against MIN_TRADE_TX_FEE_SAT.
+    public static final long MIN_STORED_TRADE_TX_FEE_SAT = 250L;
 
     private MinerFeeValidation() {
     }
@@ -54,19 +60,25 @@ public final class MinerFeeValidation {
 
     public static Coin checkTradeTxFee(Coin tradeTxFee) {
         checkIsPositive(tradeTxFee, "tradeTxFee");
-        checkTradeTxFeeBounds(tradeTxFee.getValue());
+        checkTradeTxFeeBounds(tradeTxFee.getValue(), MIN_TRADE_TX_FEE_SAT);
         return tradeTxFee;
     }
 
     public static long checkTradeTxFee(long tradeTxFee) {
         checkIsPositive(tradeTxFee, "tradeTxFee");
-        checkTradeTxFeeBounds(tradeTxFee);
+        checkTradeTxFeeBounds(tradeTxFee, MIN_TRADE_TX_FEE_SAT);
         return tradeTxFee;
     }
 
-    private static void checkTradeTxFeeBounds(long tradeTxFee) {
-        checkArgument(tradeTxFee >= MIN_TRADE_TX_FEE_SAT,
-                "tradeTxFee too low (must be >= %s sat). Got: %s", MIN_TRADE_TX_FEE_SAT, tradeTxFee);
+    public static Coin checkStoredTradeTxFee(Coin tradeTxFee) {
+        checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkTradeTxFeeBounds(tradeTxFee.getValue(), MIN_STORED_TRADE_TX_FEE_SAT);
+        return tradeTxFee;
+    }
+
+    private static void checkTradeTxFeeBounds(long tradeTxFee, long minTradeTxFee) {
+        checkArgument(tradeTxFee >= minTradeTxFee,
+                "tradeTxFee too low (must be >= %s sat). Got: %s", minTradeTxFee, tradeTxFee);
         checkArgument(tradeTxFee <= MAX_TRADE_TX_FEE_SAT,
                 "tradeTxFee too high (must be <= %s sat). Got: %s", MAX_TRADE_TX_FEE_SAT, tradeTxFee);
     }

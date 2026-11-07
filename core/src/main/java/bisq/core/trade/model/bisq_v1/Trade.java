@@ -77,7 +77,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.trade.validation.MinerFeeValidation.checkTradeTxFee;
+import static bisq.core.trade.validation.MinerFeeValidation.checkStoredTradeTxFee;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -467,7 +467,8 @@ public abstract class Trade extends TradeModel {
                     ProcessModel processModel,
                     String uid) {
         super(uid, offer);
-        this.tradeTxFee = checkTradeTxFee(tradeTxFee);
+        // Also used when the trade is loaded from disk, see MIN_STORED_TRADE_TX_FEE_SAT.
+        this.tradeTxFee = checkStoredTradeTxFee(tradeTxFee);
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.arbitratorNodeAddress = arbitratorNodeAddress;

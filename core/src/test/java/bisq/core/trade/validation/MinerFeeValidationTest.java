@@ -38,17 +38,17 @@ class MinerFeeValidationTest {
 
     @Test
     void checkTradeTxFeeAcceptsPositiveFees() {
-        Coin txFee = Coin.valueOf(300);
+        Coin txFee = Coin.valueOf(500);
 
         assertSame(txFee, MinerFeeValidation.checkTradeTxFee(txFee));
-        assertEquals(300, MinerFeeValidation.checkTradeTxFee(300));
+        assertEquals(500, MinerFeeValidation.checkTradeTxFee(500));
     }
 
     @Test
     void checkTradeTxFeeAcceptsFeesWithinAllowedTolerance() {
-        Coin txFee = Coin.valueOf(300);
+        Coin txFee = Coin.valueOf(500);
 
-        assertSame(txFee, MinerFeeValidation.checkTradeTxFeeIsInTolerance(txFee, Coin.valueOf(300)));
+        assertSame(txFee, MinerFeeValidation.checkTradeTxFeeIsInTolerance(txFee, Coin.valueOf(500)));
         assertEquals(1_500, MinerFeeValidation.checkFeeIsInTolerance(1_500, 1_000));
         assertEquals(500, MinerFeeValidation.checkFeeIsInTolerance(500, 1_000));
         assertEquals(4_000, MinerFeeValidation.checkFeeIsInTolerance(4_000, 1_000));
@@ -92,15 +92,39 @@ class MinerFeeValidationTest {
     @Test
     void checkTradeTxFeeRejectsNullFees() {
         assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFee(null));
-        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(null, Coin.valueOf(300)));
-        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), (Coin) null));
-        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), (FeeService) null));
+        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(null, Coin.valueOf(500)));
+        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(500), (Coin) null));
+        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(500), (FeeService) null));
     }
 
     @Test
     void checkTradeTxFeeRejectsFeesBelowMinBound() {
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkTradeTxFee(Coin.valueOf(249)));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkTradeTxFee(249L));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkTradeTxFee(Coin.valueOf(423)));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkTradeTxFee(423L));
+    }
+
+    // 2 sat/vbyte for the 212 vbytes that the maker expects. Changing either value changes which take
+    // offer requests makers of different versions accept.
+    @Test
+    void minTradeTxFeeIsTheTradeTxFeeAtTheMinTradeTxFeeRate() {
+        assertEquals(2, FeeService.MIN_TRADE_TX_FEE_RATE);
+        assertEquals(424, MinerFeeValidation.MIN_TRADE_TX_FEE_SAT);
+        assertEquals(TradeFeeFactory.getTradeTxFee(Coin.valueOf(FeeService.MIN_TRADE_TX_FEE_RATE)).value,
+                MinerFeeValidation.MIN_TRADE_TX_FEE_SAT);
+    }
+
+    // A trade object is also created when the trade is loaded from disk, so it accepts the fees down to
+    // 250 sat that makers up to v1.10.11 accepted, while a new take offer request needs 424 sat.
+    @Test
+    void checkStoredTradeTxFeeAcceptsTheMinimumOfEarlierVersions() {
+        Coin minOfEarlierVersions = Coin.valueOf(250);
+
+        assertSame(minOfEarlierVersions, MinerFeeValidation.checkStoredTradeTxFee(minOfEarlierVersions));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkTradeTxFee(minOfEarlierVersions));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkStoredTradeTxFee(Coin.valueOf(249)));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkStoredTradeTxFee(Coin.valueOf(360_001)));
+        assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkStoredTradeTxFee(null));
     }
 
     @Test
@@ -132,11 +156,11 @@ class MinerFeeValidationTest {
         when(feeService.getTxFeePerVbyte()).thenReturn(null);
 
         assertThrows(NullPointerException.class,
-                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), feeService));
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(500), feeService));
 
         when(feeService.getTxFeePerVbyte()).thenReturn(Coin.ZERO);
         assertThrows(IllegalArgumentException.class,
-                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(300), feeService));
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(500), feeService));
     }
 
     /* --------------------------------------------------------------------- */
