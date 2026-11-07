@@ -37,16 +37,17 @@ import static org.mockito.Mockito.when;
 
 class FeeServiceTest {
 
-    // For now, we do not clamp to networkMin because of backward compatibility issues
-    // @Test
-    void updateFeeInfoClampsRatesToNetworkMin() {
+    // Makers up to v1.10.11 accept the taker's trade tx fee only within a factor of 2 of their own, and all
+    // released versions use the provider's rates as they are. A lower bound such as the network default min fee
+    // rate would break trades between versions whenever the pricenode delivers less, as at 2 sat/vbyte.
+    @Test
+    void updateFeeInfoKeepsRatesBelowTheNetworkDefaultMin() {
         FeeService feeService = newFeeService();
-        long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
-        feeService.updateFeeInfo(1, 1);
+        feeService.updateFeeInfo(2, 1);
 
-        assertEquals(networkMin, feeService.getTxFeePerVbyte().getValue());
-        assertEquals(networkMin, feeService.getMinFeePerVByte());
+        assertEquals(2, feeService.getTxFeePerVbyte().getValue());
+        assertEquals(1, feeService.getMinFeePerVByte());
     }
 
     @Test

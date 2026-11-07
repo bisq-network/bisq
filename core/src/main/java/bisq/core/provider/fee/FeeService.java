@@ -164,26 +164,20 @@ public class FeeService {
         Validator.checkIsPositive(txFeePerVbyte, "txFeePerVbyte");
         Validator.checkIsPositive(minFeePerVByte, "minFeePerVByte");
         // Defense-in-depth: a misbehaving or malicious fee provider could push values outside
-        // the realistic range downstream code assumes. Clamp both fields to the network
-        // default min and cap them at the documented high-water mark so the invariant
-        // BTC_MAX_TX_FEE >= txFeePerVbyte >= minFeePerVByte >= networkMin holds for every
+        // the realistic range downstream code assumes. Cap both fields at the documented high-water
+        // mark and keep txFeePerVbyte at least minFeePerVByte, so the invariant
+        // BTC_MAX_TX_FEE >= txFeePerVbyte >= minFeePerVByte holds for every
         // consumer. This matters for BSQ-swap arithmetic where getAdjustedTxFee relies on
         // txFeePerVbyte >= minFeePerVByte to guarantee total tx fee meets relay minimum
         // when one side's BSQ trade fee exceeds its miner-portion (see BsqSwapCalculation),
         // and avoids multiply overflow in fee estimators if a bad feed returns absurd values.
-        long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
-
-        // v1.10.0 does not clamp to networkMin, thus we can receive lower values (usually 10).
-        // To not break backward compatibility, we only clamp to BTC_MAX_TX_FEE.
-        // Once trade version has enforces > v1.10.0 we can use the networkMin as lower bound as well.
-        // long clampedMinFee = Math.min(Math.max(minFeePerVByte, networkMin), BTC_MAX_TX_FEE);
         long clampedMinFee = Math.min(minFeePerVByte, BTC_MAX_TX_FEE);
         long clampedTxFee = Math.min(Math.max(txFeePerVbyte, clampedMinFee), BTC_MAX_TX_FEE);
         if (clampedTxFee != txFeePerVbyte || clampedMinFee != minFeePerVByte) {
-            log.warn("Fee provider returned txFeePerVbyte={}, minFeePerVbyte={}, networkMin={}, maxFeePerVbyte={}; " +
+            log.warn("Fee provider returned txFeePerVbyte={}, minFeePerVbyte={}, maxFeePerVbyte={}; " +
                             "clamped to txFeePerVbyte={}, minFeePerVbyte={} to enforce " +
-                            "maxFeePerVbyte>=txFeePerVbyte>=minFeePerVbyte>=networkMin",
-                    txFeePerVbyte, minFeePerVByte, networkMin, BTC_MAX_TX_FEE, clampedTxFee, clampedMinFee);
+                            "maxFeePerVbyte>=txFeePerVbyte>=minFeePerVbyte",
+                    txFeePerVbyte, minFeePerVByte, BTC_MAX_TX_FEE, clampedTxFee, clampedMinFee);
         }
         this.txFeePerVbyte = clampedTxFee;
         this.minFeePerVByte = clampedMinFee;
