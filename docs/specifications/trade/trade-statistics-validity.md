@@ -57,6 +57,12 @@ While a node holds no price from the price feed for a currency, the price alert 
 of the mobile notifications compare against the newest price from trade statistics, which any peer
 can publish. A price alert which fires is removed.
 
+The trade volume of an altcoin in trade statistics over its look-back period decides whether the
+node shows the altcoin as actively traded or as delisted (DAO parameter `ASSET_MIN_VOLUME`). Only
+altcoins which are not delisted can be chosen for a new payment account and in the preferences.
+Valid but invented statistics can therefore keep a delisted altcoin listed on every node which
+receives them. They cannot delist an altcoin, because statistics are never removed.
+
 ## Not covered
 
 Rules for storing and relaying trade statistics.
