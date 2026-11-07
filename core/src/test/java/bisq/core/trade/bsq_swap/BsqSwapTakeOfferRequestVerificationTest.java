@@ -27,6 +27,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
+import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -55,8 +56,9 @@ class BsqSwapTakeOfferRequestVerificationTest {
     // Derived from the network default so the assertions remain meaningful if the network
     // minimum is retuned.
     private static final long NETWORK_MIN = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
-    // Strictly above 2 * NETWORK_MIN so the tolerance check rejects it.
-    private static final long OUTSIDE_TOLERANCE = 2 * NETWORK_MIN + 1;
+    // The highest rate the tolerance check accepts, and one above it.
+    private static final long AT_TOLERANCE = (long) (MinerFeeValidation.MAX_FEE_DEVIATION_FACTOR * NETWORK_MIN);
+    private static final long OUTSIDE_TOLERANCE = AT_TOLERANCE + 1;
 
     @Test
     void acceptsRequestAtStoredMinimumFeeRate() {
@@ -72,7 +74,7 @@ class BsqSwapTakeOfferRequestVerificationTest {
     @Test
     void acceptsRequestBelowStoredMinimumFeeRateWhenToleranceAllowsIt() {
         // Force storedMin >= 2 so belowMin = storedMin - 1 is both strictly below the
-        // stored minimum and still within the 2x tolerance window. This documents the
+        // stored minimum and still within the tolerance window. This documents the
         // backward-compatible behavior for peers running versions before strict min-rate
         // enforcement.
         long storedMin = Math.max(2L, NETWORK_MIN);
@@ -95,6 +97,17 @@ class BsqSwapTakeOfferRequestVerificationTest {
                 fixture.keyRing,
                 PEER,
                 newRequest(NETWORK_MIN, MAKER_FEE - 1, TAKER_FEE)));
+    }
+
+    @Test
+    void acceptsRequestAtFeeRateTolerance() {
+        Fixture fixture = new Fixture(NETWORK_MIN);
+
+        assertTrue(BsqSwapTakeOfferRequestVerification.isValid(fixture.openOfferManager,
+                fixture.feeService,
+                fixture.keyRing,
+                PEER,
+                newRequest(AT_TOLERANCE)));
     }
 
     @Test

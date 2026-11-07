@@ -115,8 +115,9 @@ class TradeManagerTakeOfferTest {
         errorMessageHandler = mock(ErrorMessageHandler.class);
     }
 
-    // The maker accepts up to 2 * 212 vbytes * fee rate. The taker averages its fee tx vsize
-    // with the 233 vbytes deposit tx, so a fee tx from 617 vbytes on exceeds that.
+    // The taker contacts the maker only up to 2 * 212 vbytes * fee rate, the most that makers up to
+    // v1.10.11 accept. The taker averages its fee tx vsize with the 233 vbytes deposit tx, so a fee tx
+    // from 617 vbytes on exceeds that.
     // The preference for the taker fee in BSQ adds 70 vbytes to the estimate; the check itself
     // does not depend on the fee currency.
     @ParameterizedTest
