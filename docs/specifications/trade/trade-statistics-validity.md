@@ -20,8 +20,16 @@ deactivate an open offer through its trigger price.
 3. A node checks the validity against its clock when it receives a statistic. Stored statistics are
    checked again at every startup.
 4. The trigger price of an open offer deactivates the offer only with a recent price from the price
-   feed (`MarketPrice.isRecentExternalPriceAvailable`). A price which a node derives from trade
-   statistics never deactivates an offer.
+   feed, which is at most 30 minutes old (`MarketPrice.isRecentExternalPriceAvailable`). A price
+   which a node derives from trade statistics never deactivates an offer.
+
+## Trust model
+
+A trade statistic is an unauthenticated claim: no signature binds it to a trade or to a trader, and
+any peer can publish one. Validity (rule 2) removes only values which no trade can have. A valid
+statistic can still state a price, an amount or a date which no trade had. Values which a node
+derives from trade statistics, such as the newest price of a currency, average prices and volumes,
+are therefore informational. They must not change an offer, a trade, a fee or the DAO state.
 
 ## Reasons
 
@@ -42,6 +50,12 @@ before. All statistics in the bundled stores pass the date and volume checks. A 
 more than one day behind does not use new statistics until its clock is corrected and it is
 restarted. While no recent price from the price feed is available, for example right after startup
 or during an outage of the price feed, no offer is deactivated by its trigger price.
+
+## Known gaps
+
+While a node holds no price from the price feed for a currency, the price alert and the market alert
+of the mobile notifications compare against the newest price from trade statistics, which any peer
+can publish. A price alert which fires is removed.
 
 ## Not covered
 
