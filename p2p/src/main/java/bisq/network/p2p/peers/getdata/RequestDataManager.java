@@ -116,6 +116,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private boolean dataUpdateRequested;
     private boolean allDataReceived;
     private boolean stopped;
+    private boolean isSeedNode;
     private int numRepeatedRequests = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +145,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.networkNode.nodeAddressProperty().addListener((observable, oldValue, myAddress) -> {
             if (myAddress != null) {
                 seedNodeAddresses.remove(myAddress);
-                if (seedNodeRepository.isSeedNode(myAddress)) {
+                isSeedNode = seedNodeRepository.isSeedNode(myAddress);
+                if (isSeedNode) {
                     NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
                     NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
                     MAX_REPEATED_REQUESTS = 100;
@@ -315,7 +317,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     }
                                 }
                             },
-                            getDataRequestHandlerMaxEntries);
+                            getDataRequestHandlerMaxEntries,
+                            isSeedNode);
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
                     getDataRequestHandler.handle(getDataRequest, connection);
                 } else {
