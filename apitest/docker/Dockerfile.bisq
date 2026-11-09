@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1.6
+# syntax=docker/dockerfile:1.6@sha256:ac85f380a63b13dfcefa89046420e1781752bab202122f8f50032edf31be0021
 #
 # Single image used for all four Bisq roles (seednode, arb, alice, bob).
 # Bakes in Alice and Bob's pre-synced app data dirs from dao-setup.zip; entrypoint
 # seeds the per-role appDataDir from /opt/dao-setup on first boot.
 
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-jammy@sha256:1eac8b8fee11ca7d6725a48bc5d41992ed1561504ebae25490d2d062847e8269
 
 # Cheap+stable layer: apt deps.
 RUN apt-get update \
