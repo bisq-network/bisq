@@ -53,10 +53,14 @@ jobs:
         distribution: 'zulu'
         check-latest: false
 
-    - name: Build Linux installer evidence
-      uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
-        arguments: verifyInstallerEvidenceBundle --scan
+        cache-provider: basic
+
+    - name: Build Linux installer evidence
+      shell: bash
+      run: ./gradlew verifyInstallerEvidenceBundle --scan
 
     - name: Upload Linux installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -97,10 +101,14 @@ jobs:
         distribution: 'zulu'
         check-latest: false
 
-    - name: Build macOS installer evidence
-      uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
-        arguments: verifyInstallerEvidenceBundle --scan
+        cache-provider: basic
+
+    - name: Build macOS installer evidence
+      shell: bash
+      run: ./gradlew verifyInstallerEvidenceBundle --scan
 
     - name: Upload macOS installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -153,10 +161,14 @@ jobs:
         distribution: 'zulu'
         check-latest: false
 
-    - name: Build Windows installer evidence
-      uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
       with:
-        arguments: verifyInstallerEvidenceBundle --scan
+        cache-provider: basic
+
+    - name: Build Windows installer evidence
+      shell: bash
+      run: ./gradlew verifyInstallerEvidenceBundle --scan
 
     - name: Upload Windows installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
