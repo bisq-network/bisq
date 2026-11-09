@@ -48,11 +48,10 @@ public final class MinerFeeValidation {
     public static final long MIN_TRADE_TX_FEE_SAT =
             FeeService.MIN_TRADE_TX_FEE_RATE * TradeFeeFactory.AVERAGE_TRADE_TX_VSIZE;
     public static final long MAX_TRADE_TX_FEE_SAT = 360_000L;
-    // Makers up to v1.10.11 accepted down to 250 sat. A trade object is also created when the trade is loaded
-    // from disk, and one trade that fails its check makes the whole trade file unreadable. So a trade object
-    // is only checked against this bound. The take offer request and the buyer's check of the delayed payout tx
-    // use MIN_TRADE_TX_FEE_SAT, so a trade that a maker up to v1.10.11 accepted below it fails that check if the
-    // buyer updates during the take, before the deposit tx is published.
+    // Makers up to v1.10.11 accepted down to 250 sat, and such a trade can continue after an update. So the checks of
+    // an existing trade use this bound: the trade object, also when the trade is loaded from disk, where one trade
+    // that fails its check makes the whole trade file unreadable, and the buyer's check of the delayed payout tx. A
+    // new take offer request is checked against MIN_TRADE_TX_FEE_SAT.
     public static final long MIN_STORED_TRADE_TX_FEE_SAT = 250L;
 
     private MinerFeeValidation() {
@@ -88,20 +87,25 @@ public final class MinerFeeValidation {
                 "tradeTxFee too high (must be <= %s sat). Got: %s", MAX_TRADE_TX_FEE_SAT, tradeTxFee);
     }
 
-    public static long checkTradeTxFeeIsInTolerance(long tradeTxFee, FeeService feeService) {
-        return checkTradeTxFeeIsInTolerance(Coin.valueOf(tradeTxFee), feeService).getValue();
+    public static long checkStoredTradeTxFeeIsInTolerance(long tradeTxFee, FeeService feeService) {
+        return checkTradeTxFeeIsInTolerance(Coin.valueOf(tradeTxFee), MIN_STORED_TRADE_TX_FEE_SAT, feeService,
+                MAX_FEE_DEVIATION_FACTOR).getValue();
     }
 
     public static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
-        return checkTradeTxFeeIsInTolerance(tradeTxFee, feeService, MAX_FEE_DEVIATION_FACTOR);
+        return checkTradeTxFeeIsInTolerance(tradeTxFee, MIN_TRADE_TX_FEE_SAT, feeService, MAX_FEE_DEVIATION_FACTOR);
     }
 
     public static Coin checkOwnTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService) {
-        return checkTradeTxFeeIsInTolerance(tradeTxFee, feeService, MAX_OWN_FEE_DEVIATION_FACTOR);
+        return checkTradeTxFeeIsInTolerance(tradeTxFee, MIN_TRADE_TX_FEE_SAT, feeService, MAX_OWN_FEE_DEVIATION_FACTOR);
     }
 
-    private static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee, FeeService feeService, double factor) {
-        checkTradeTxFee(tradeTxFee);
+    private static Coin checkTradeTxFeeIsInTolerance(Coin tradeTxFee,
+                                                     long minTradeTxFee,
+                                                     FeeService feeService,
+                                                     double factor) {
+        checkIsPositive(tradeTxFee, "tradeTxFee");
+        checkTradeTxFeeBounds(tradeTxFee.getValue(), minTradeTxFee);
         checkNotNull(feeService, "feeService must not be null");
         Coin txFeePerVbyte = checkIsPositive(feeService.getTxFeePerVbyte(), "txFeePerVbyte");
         Coin expectedTradeTxFee = TradeFeeFactory.getTradeTxFee(txFeePerVbyte);

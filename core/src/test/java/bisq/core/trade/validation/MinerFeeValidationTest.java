@@ -70,10 +70,10 @@ class MinerFeeValidationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> MinerFeeValidation.checkOwnTradeTxFeeIsInTolerance(Coin.valueOf(1_059), feeService));
         assertSame(aboveTwiceExpected, MinerFeeValidation.checkTradeTxFeeIsInTolerance(aboveTwiceExpected, feeService));
-        assertEquals(8_480, MinerFeeValidation.checkTradeTxFeeIsInTolerance(8_480, feeService));
-        assertEquals(530, MinerFeeValidation.checkTradeTxFeeIsInTolerance(530, feeService));
+        assertEquals(8_480, MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(8_480), feeService).value);
+        assertEquals(530, MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(530), feeService).value);
         assertThrows(IllegalArgumentException.class,
-                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(8_481, feeService));
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(8_481), feeService));
     }
 
     @Test
@@ -125,6 +125,24 @@ class MinerFeeValidationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> MinerFeeValidation.checkStoredTradeTxFee(Coin.valueOf(360_001)));
         assertThrows(NullPointerException.class, () -> MinerFeeValidation.checkStoredTradeTxFee(null));
+    }
+
+    // The buyer's check of the delayed payout tx is a check of an existing trade, so it also accepts the fees down to
+    // 250 sat, with the factor of 4 against the own fee rate.
+    @Test
+    void checkStoredTradeTxFeeIsInToleranceAcceptsTheMinimumOfEarlierVersions() {
+        FeeService feeService = mock(FeeService.class);
+        // The expected fee is 424 sat, and the factor of 4 accepts 106 to 1696 sat
+        when(feeService.getTxFeePerVbyte()).thenReturn(Coin.valueOf(2));
+
+        assertEquals(250, MinerFeeValidation.checkStoredTradeTxFeeIsInTolerance(250, feeService));
+        assertEquals(1_696, MinerFeeValidation.checkStoredTradeTxFeeIsInTolerance(1_696, feeService));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkStoredTradeTxFeeIsInTolerance(249, feeService));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkStoredTradeTxFeeIsInTolerance(1_697, feeService));
+        assertThrows(IllegalArgumentException.class,
+                () -> MinerFeeValidation.checkTradeTxFeeIsInTolerance(Coin.valueOf(250), feeService));
     }
 
     @Test
