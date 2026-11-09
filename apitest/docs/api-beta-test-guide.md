@@ -31,7 +31,7 @@ Clone the Bisq master branch into a project folder of your choice. In this docum
 called `api-beta-test`.
 
 ```
-$ git clone https://github.com/bisq-network/bisq.git api-beta-test
+$ git clone --recurse-submodules https://github.com/bisq-network/bisq.git api-beta-test
 ```
 
 Change your current working directory to `api-beta-test`, build the source, and download / install Bisq’s

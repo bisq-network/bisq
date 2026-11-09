@@ -188,7 +188,7 @@ sudo sed -i -e "s!__BISQ_BM_ORACLE_NODE_PUBKEY__!${BISQ_BM_ORACLE_NODE_PUBKEY}!"
 sudo sed -i -e "s!__BISQ_BM_ORACLE_NODE_PRIVKEY__!${BISQ_BM_ORACLE_NODE_PRIVKEY}!" "${SYSTEMD_ENV_HOME}/bisq.env"
 
 echo "[*] Checking out Bisq ${BISQ_LATEST_RELEASE}"
-sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_LATEST_RELEASE}"
+sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_LATEST_RELEASE} && git submodule update --init --recursive"
 
 echo "[*] Building Bisq from source"
 sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && ./gradlew build -x test < /dev/null" # redirect from /dev/null is necessary to workaround gradlew non-interactive shell hanging issue
