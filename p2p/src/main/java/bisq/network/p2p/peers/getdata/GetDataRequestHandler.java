@@ -65,6 +65,7 @@ public class GetDataRequestHandler {
     private final P2PDataStorage dataStorage;
     private final Listener listener;
     private final int maxEntries;
+    private final boolean isSeedNode;
     private Timer timeoutTimer;
     private boolean stopped;
 
@@ -74,17 +75,24 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public GetDataRequestHandler(NetworkNode networkNode, P2PDataStorage dataStorage, Listener listener) {
-        this(networkNode, dataStorage, listener, MAX_ENTRIES);
+        this(networkNode, dataStorage, listener, MAX_ENTRIES, false);
     }
 
+    /**
+     * @param isSeedNode whether we are a seed node. Only the response of a seed node contains the
+     *                   {@link bisq.network.p2p.storage.payload.SeedNodeOnlyInitialDataResponsePayload} items, as
+     *                   the requester drops them from the response of any other node.
+     */
     public GetDataRequestHandler(NetworkNode networkNode,
                                  P2PDataStorage dataStorage,
                                  Listener listener,
-                                 int maxEntries) {
+                                 int maxEntries,
+                                 boolean isSeedNode) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.listener = listener;
         this.maxEntries = maxEntries;
+        this.isSeedNode = isSeedNode;
     }
 
 
@@ -105,7 +113,8 @@ public class GetDataRequestHandler {
                 maxEntries,
                 wasPersistableNetworkPayloadsTruncated,
                 wasProtectedStorageEntriesTruncated,
-                connection.getCapabilities());
+                connection.getCapabilities(),
+                isSeedNode);
 
         if (wasPersistableNetworkPayloadsTruncated.get()) {
             log.info("The getDataResponse for peer {} got truncated.", connectionInfo);
