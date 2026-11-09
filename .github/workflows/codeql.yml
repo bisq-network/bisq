@@ -1,6 +1,6 @@
 name: CodeQL
 
-# Replaces the CodeQL default setup, which cannot check out the submodules or select the JDK of the release pin. Its Java
+# Replaces the CodeQL default setup, which cannot check out the submodules or select the Azul JDK of the release. Its Java
 # analysis failed on the first run and was dropped. Turn the default setup off when this workflow is merged, because both
 # cannot upload results for the same language.
 on:
