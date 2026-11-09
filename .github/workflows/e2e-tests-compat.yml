@@ -38,8 +38,8 @@ jobs:
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: zulu
-          java-version: '21.0.13+9'
-          check-latest: false
+          java-version: '21'
+          check-latest: true
 
       - name: Gradle cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

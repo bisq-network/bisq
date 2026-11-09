@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   linux-installer-evidence:
-    name: Linux installer evidence, Java 21.0.13
+    name: Linux installer evidence, Java 21
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,9 +49,9 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.13+9'
+        java-version: '21'
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
@@ -65,7 +65,7 @@ jobs:
     - name: Upload Linux installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: installer-evidence-ubuntu-24.04-java-21.0.13
+        name: installer-evidence-ubuntu-24.04-java-21
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
@@ -77,7 +77,7 @@ jobs:
         if-no-files-found: error
 
   macos-installer-evidence:
-    name: macOS installer evidence, Java 21.0.13
+    name: macOS installer evidence, Java 21
     runs-on: macos-15
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -97,9 +97,9 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.13+9'
+        java-version: '21'
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
@@ -113,7 +113,7 @@ jobs:
     - name: Upload macOS installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: installer-evidence-macos-15-java-21.0.13
+        name: installer-evidence-macos-15-java-21
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
@@ -125,7 +125,7 @@ jobs:
         if-no-files-found: error
 
   windows-installer-evidence:
-    name: Windows installer evidence, Java 21.0.13
+    name: Windows installer evidence, Java 21
     runs-on: windows-2025
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -157,9 +157,9 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.13+9'
+        java-version: '21'
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
@@ -173,7 +173,7 @@ jobs:
     - name: Upload Windows installer evidence
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
-        name: installer-evidence-windows-2025-java-21.0.13
+        name: installer-evidence-windows-2025-java-21
         path: |
           build/reports/release/INSTALLER-SHA256SUMS
           build/reports/release/installer-manifest.tsv
