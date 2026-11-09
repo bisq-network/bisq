@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1.6
+# syntax=docker/dockerfile:1.6@sha256:ac85f380a63b13dfcefa89046420e1781752bab202122f8f50032edf31be0021
 #
 # Wraps lnliz/bitcoind:29.3 with the dao-setup regtest chain (genesis tx
 # 30af00...03cf at height 111). lnliz uses /data/.bitcoin as the datadir (matches
 # the user's reference compose: `./data_dirs/bitcoind:/data/.bitcoin:z`).
 
-FROM lnliz/bitcoind:29.3
+FROM lnliz/bitcoind:29.3@sha256:6bf624c9ee64d930a734c6be5c4a134ffab7ed9929366dc93cd88564ba1f93ac
 
 USER root
 RUN if command -v apk >/dev/null 2>&1; then \
