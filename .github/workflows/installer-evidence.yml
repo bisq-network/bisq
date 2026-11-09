@@ -49,9 +49,9 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.13+9'
+        java-version: '21'
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Build Linux installer evidence
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
@@ -93,9 +93,9 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.13+9'
+        java-version: '21'
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Build macOS installer evidence
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
@@ -149,9 +149,9 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
       with:
-        java-version: '21.0.13+9'
+        java-version: '21'
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Build Windows installer evidence
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0

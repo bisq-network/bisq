@@ -13,7 +13,7 @@ jobs:
     strategy:
         matrix:
             os: [ubuntu-24.04, macos-15, windows-2025]
-            java: [ '21.0.13+9' ]
+            java: [ '21' ]
     name: Test Java ${{ matrix.java }}, ${{ matrix.os }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,7 +35,7 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'
-        check-latest: false
+        check-latest: true
 
     - name: Build with Gradle
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
