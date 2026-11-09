@@ -1792,12 +1792,14 @@ tasks.register('verifyReleaseBuilderImage') {
         if (!expectedJavaVersionValue) {
             throw new GradleException('Missing releaseBuild.javaVersion in gradle.properties')
         }
+        // The image tag is the feature version, so it holds the newest Azul build, and the digest pins one build of it
+        def expectedJavaFeatureVersion = Runtime.Version.parse(expectedJavaVersionValue).feature()
 
         def text = dockerfile.getText(StandardCharsets.UTF_8.name())
         def trimmedLines = dockerfile.readLines(StandardCharsets.UTF_8.name()).collect { it.trim() }
         def fromLine = trimmedLines.find { it.startsWith('FROM ') }
         def snapshotLine = trimmedLines.find { it.startsWith('ARG UBUNTU_APT_SNAPSHOT=') }
-        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaVersionValue}"
+        def expectedBaseImage = "azul/zulu-openjdk:${expectedJavaFeatureVersion}"
         def violations = []
 
         if (!(fromLine ==~ /^FROM --platform=linux\/amd64 ${java.util.regex.Pattern.quote(expectedBaseImage)}@sha256:[0-9a-f]{64}$/)) {

@@ -1,5 +1,6 @@
-# linux/amd64 manifest for docker.io/azul/zulu-openjdk:21.0.13.
-FROM --platform=linux/amd64 azul/zulu-openjdk:21.0.13@sha256:0b489efcb2e9f014b88ddabf3caad826880f76ec7eb6a1c92892cce3c0226ec5
+# linux/amd64 manifest for docker.io/azul/zulu-openjdk:21 (Zulu 21.0.13.0.3 on 2026-11-09). The tag holds the newest
+# Azul build of Java 21; the digest pins one build. verifyReleaseBuilderImage requires the tag of the feature version.
+FROM --platform=linux/amd64 azul/zulu-openjdk:21@sha256:77050e6c69f71d227ccdd112a5dc27979294bfff64e9441a46eda9e0cb955d17
 
 ARG UBUNTU_APT_SNAPSHOT=20260501T000000Z
 

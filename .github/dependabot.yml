@@ -4,3 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/docker/release-builder/linux"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    ignore:
+      # The release builder needs Java 21. The tag 21 follows the newest Azul build, Dependabot updates the digest.
+      - dependency-name: "azul/zulu-openjdk"
+        update-types: ["version-update:semver-major"]
