@@ -35,6 +35,9 @@ public final class MinerFeeValidation {
     // The taker checks its own trade tx fee against its own fee rate before it sends a take offer request. Makers up
     // to v1.10.11 drop a request outside a factor of 2 without a reply, so the taker keeps their factor.
     public static final double MAX_OWN_FEE_DEVIATION_FACTOR = 2;
+    // The BSQ swap maker pays its own share of the miner fee at the fee rate of the taker's request. A wider
+    // tolerance would let the taker raise the maker's fee further or delay the confirmation of the swap tx.
+    public static final double MAX_BSQ_SWAP_FEE_RATE_DEVIATION_FACTOR = 2;
 
     // Bound the taker-supplied trade tx fee. A tiny value can leave the deposit tx
     // unconfirmable (locking maker funds); a huge value can drain miner fees from the maker.
@@ -118,10 +121,11 @@ public final class MinerFeeValidation {
     // Miner fee rate
     /* --------------------------------------------------------------------- */
 
-    public static long checkMinerFeeRateIsInTolerance(long minerFeeRate, long expectedMinerFeeRate) {
+    public static long checkBsqSwapMinerFeeRateIsInTolerance(long minerFeeRate, long expectedMinerFeeRate) {
         checkIsPositive(minerFeeRate, "minerFeeRate");
         checkIsPositive(expectedMinerFeeRate, "expectedMinerFeeRate");
-        return checkFeeIsInTolerance(minerFeeRate, expectedMinerFeeRate);
+        return TradeValidation.checkValueInTolerance(minerFeeRate, expectedMinerFeeRate,
+                MAX_BSQ_SWAP_FEE_RATE_DEVIATION_FACTOR);
     }
 
 

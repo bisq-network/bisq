@@ -90,7 +90,7 @@ public class BsqSwapTakeOfferRequestVerification {
                     "Peer miner fee rate is below minimum. peer=%s, min=%s", peersMinerFeeRate, minMinerFeeRate);
             */
 
-            MinerFeeValidation.checkMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
+            MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(peersMinerFeeRate, expectedMinerFeeRate);
 
             checkMakerFee(request.getMakerFee(), false, amountAsCoin);
             checkTakerFee(request.getTakerFee(), false, amountAsCoin);

@@ -4,7 +4,9 @@
 
 This specification covers the trade transaction fee the taker states when taking an offer of the
 Bisq v1 trade protocol, and when the taker must not take an offer because of it. BSQ swaps are out
-of scope.
+of scope. Their maker pays its own share of the miner fee at the taker's fee rate, so the factor of
+4 below does not apply to them; their tolerance is specified in
+[`bsq-swap-seller-inputs.md`](bsq-swap-seller-inputs.md).
 
 ## The trade transaction fee
 

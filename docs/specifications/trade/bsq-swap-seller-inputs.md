@@ -119,7 +119,7 @@ request.
   network rejects can therefore still complete the trade on the buyer side.
 - The fee rate tolerance for the taker is not changed. The taker chooses the fee rate, and the maker
   accepts a rate between half and twice its own estimate
-  (`MinerFeeValidation.checkMinerFeeRateIsInTolerance`). With the invariant above the seller cannot
+  (`MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance`). With the invariant above the seller cannot
   take back any part of the miner fee. A seller who takes the offer of a buyer can still make the
   buyer pay its share of the fee at up to twice the buyer's estimate, and this share grows with the
   size of the buyer's inputs and change output. The extra fee goes to the miners, and the seller
