@@ -56,9 +56,9 @@ jobs:
         if: matrix.build-mode == 'manual'
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          java-version: '21.0.13+9'
+          java-version: '21'
           distribution: 'zulu'
-          check-latest: false
+          check-latest: true
 
       - name: Set up Gradle
         if: matrix.build-mode == 'manual'
