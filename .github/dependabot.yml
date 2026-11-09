@@ -4,10 +4,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "docker"
     directory: "/apitest/docker"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     ignore:
       # The e2e images run the Bisq daemon, which needs Java 21.
       - dependency-name: "eclipse-temurin"
