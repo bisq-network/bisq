@@ -4,7 +4,7 @@
 # 30af00...03cf at height 111). lnliz uses /data/.bitcoin as the datadir (matches
 # the user's reference compose: `./data_dirs/bitcoind:/data/.bitcoin:z`).
 
-FROM lnliz/bitcoind:29.3@sha256:6bf624c9ee64d930a734c6be5c4a134ffab7ed9929366dc93cd88564ba1f93ac
+FROM lnliz/bitcoind:v32.1@sha256:3f8b120f0a6654077cb1fa0268e1cd93b8f7f5cd156799579ce8bd9dd37c0a92
 
 USER root
 RUN if command -v apk >/dev/null 2>&1; then \
