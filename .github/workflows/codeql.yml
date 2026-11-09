@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
+      # The CodeQL action reads the workflow run, which needs this permission in a private repository.
+      actions: read
       contents: read
       security-events: write
     strategy:
