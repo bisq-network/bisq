@@ -72,7 +72,9 @@ public enum BaseCurrencyNetwork {
         return "BTC_REGTEST".equals(name());
     }
 
+    // Min fee rate until the fee service delivers data. Increased from 2 to 15 on 2021-02-22 due to mempool
+    // congestion, lowered to 5 on 2026-11-07 along with the trading floor of the pricenode.
     public long getDefaultMinFeePerVbyte() {
-        return 15;  // 2021-02-22 due to mempool congestion, increased from 2
+        return 5;
     }
 }

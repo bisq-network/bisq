@@ -20,33 +20,74 @@ package bisq.core.provider.fee;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
+import bisq.core.trade.TradeFeeFactory;
 import bisq.core.trade.bsq_swap.BsqSwapCalculation;
+import bisq.core.trade.validation.MinerFeeValidation;
 
 import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import org.mockito.MockedStatic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 class FeeServiceTest {
 
-    // For now, we do not clamp to networkMin because of backward compatibility issues
-    // @Test
-    void updateFeeInfoClampsRatesToNetworkMin() {
+    // Makers up to v1.10.11 accept the taker's trade tx fee only within a factor of 2 of their own, and all
+    // released versions use the provider's rates as they are. A lower bound such as the network default min fee
+    // rate would break trades between versions whenever the pricenode delivers less, as at 2 sat/vbyte.
+    @Test
+    void updateFeeInfoKeepsRatesBelowTheNetworkDefaultMin() {
         FeeService feeService = newFeeService();
-        long networkMin = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
+
+        feeService.updateFeeInfo(2, 1);
+
+        assertEquals(2, feeService.getTxFeePerVbyte().getValue());
+        assertEquals(1, feeService.getMinFeePerVByte());
+    }
+
+    // Below the lowest fee rate for trading, makers would refuse the trade tx fee. The min fee rate for
+    // withdrawals keeps the provider's value.
+    @Test
+    void updateFeeInfoRaisesTxFeeToTheMinTradeTxFeeRate() {
+        FeeService feeService = newFeeService();
 
         feeService.updateFeeInfo(1, 1);
 
-        assertEquals(networkMin, feeService.getTxFeePerVbyte().getValue());
-        assertEquals(networkMin, feeService.getMinFeePerVByte());
+        assertEquals(FeeService.MIN_TRADE_TX_FEE_RATE, feeService.getTxFeePerVbyte().getValue());
+        assertEquals(1, feeService.getMinFeePerVByte());
+    }
+
+    // Whatever the provider delivers, makers accept the trade tx fee at the rate we use.
+    @ParameterizedTest
+    @ValueSource(longs = {1, 2, 3, 599, 600, 601, Long.MAX_VALUE})
+    void tradeTxFeeAtTheUsedRateIsAcceptedByMakers(long providerTxFee) {
+        FeeService feeService = newFeeService();
+
+        feeService.updateFeeInfo(providerTxFee, 1);
+
+        Coin tradeTxFee = TradeFeeFactory.getTradeTxFee(feeService.getTxFeePerVbyte());
+        assertSame(tradeTxFee, MinerFeeValidation.checkTradeTxFee(tradeTxFee));
+    }
+
+    // Until the fee service delivers data, the default rates must keep txFeePerVbyte >= minFeePerVByte.
+    @Test
+    void defaultRatesKeepTxFeeAtLeastMinFee() {
+        FeeService feeService = newFeeService();
+
+        assertFalse(feeService.isFeeAvailable());
+        assertTrue(feeService.getTxFeePerVbyte().getValue() >= feeService.getMinFeePerVByte());
     }
 
     @Test
