@@ -92,7 +92,7 @@ not differ only by ZIP metadata.
 The Linux release-builder image is defined in
 `docker/release-builder/linux/Dockerfile`. It pins:
 
-- `linux/amd64` Azul Zulu OpenJDK 21.0.13 base image by digest
+- `linux/amd64` Azul Zulu OpenJDK base image, tag `21` (the newest Azul build of Java 21), by digest
 - Ubuntu apt snapshot timestamp
 - `SOURCE_DATE_EPOCH=0`
 - `TZ=UTC`
