@@ -351,10 +351,10 @@ newer Zulu build whose `java.version` is `21.0.13.0.3`.
 3. Optional, for a second independent build in a container:
 
    ```
-   docker build --pull=false -t bisq-release-builder-linux:java-21.0.13 docker/release-builder/linux
+   docker build --pull=false -t bisq-release-builder-linux:java-21 docker/release-builder/linux
    docker run --rm --platform linux/amd64 --user "$(id -u):$(id -g)" \
      -v "$PWD:/workspace" -w /workspace \
-     bisq-release-builder-linux:java-21.0.13 \
+     bisq-release-builder-linux:java-21 \
      ./gradlew clean verifyReleaseBuild verifyInstallerEvidenceBundle
    ```
 
