@@ -12,14 +12,19 @@ verification.
 | `verification-keyring.keys` | the public keys used to verify dependency signatures |
 | `dependency-checksum-fallback-allowlist.tsv` | dependency artifacts accepted with a checksum only |
 
-Currently pinned: **Gradle 9.0.0**, Azul Zulu Java **21.0.13+9**.
-The Java update, runtime build, vendor, and Zulu distribution build are pinned in `gradle.properties`
-(`releaseBuild.javaVersion`, `releaseBuild.javaRuntimeVersion`, `releaseBuild.javaVendor`,
-`releaseBuild.javaVendorVersion`). GitHub Actions requests the same build. A Java update version alone can select
-different Zulu builds, so update the workflow pin and these properties together. The release checklist repeats them.
-The installers bundle a runtime made from the JDK of the build, so `verifyReleaseEnvironment` requires the exact runtime
-and Zulu build. It compares the Java update by its version numbers: `21.0.13.0.3+1` is a build of `21.0.13`, so a move
-to a later Zulu build of the same update needs no change of `releaseBuild.javaVersion`.
+Currently pinned: **Gradle 9.0.0**, Azul Zulu Java **21**, at least **21.0.13.0.3**.
+`gradle.properties` pins the vendor (`releaseBuild.javaVendor`) and the minimum Java version
+(`releaseBuild.javaVersion`). `verifyReleaseEnvironment` accepts every Azul build of the same feature version at or
+above the minimum. It compares the version numbers only, so `21.0.13.0.3+1` and `21.0.14+7` pass for `21.0.13.0.3`,
+and `21.0.13+9` and `25.0.1` fail. Azul builds an update several times and not on every platform at once, so no exact
+build is pinned. The build info of a release records the exact runtime and Zulu build.
+
+GitHub Actions requests Java `21` with `check-latest: true`, so each runner gets the newest Azul build for its platform.
+`verifyGithubActionsSecurity` requires this for every `actions/setup-java` step. The release-builder image uses the tag
+`azul/zulu-openjdk:21` by digest, and Dependabot updates the digest.
+
+Raise `releaseBuild.javaVersion` when a release must not ship without a fix of a newer Java build, for example a
+security fix. The installers bundle a runtime made from the JDK of the build.
 
 ## How to upgrade the Gradle version
 
