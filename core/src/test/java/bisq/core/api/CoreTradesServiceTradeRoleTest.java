@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -105,6 +106,12 @@ class CoreTradesServiceTradeRoleTest {
 
         assertEquals("Not Available", coreTradesService.getTradeRole(trade));
         assertEquals(List.of(), errors());
+        List<ILoggingEvent> infos = appender.list.stream()
+                .filter(event -> event.getLevel() == Level.INFO)
+                .filter(event -> event.getFormattedMessage().contains(TRADE_ID))
+                .toList();
+        assertEquals(1, infos.size());
+        assertNull(infos.get(0).getThrowableProxy());
     }
 
     @Test
