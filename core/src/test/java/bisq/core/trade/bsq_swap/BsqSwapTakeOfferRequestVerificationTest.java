@@ -57,7 +57,8 @@ class BsqSwapTakeOfferRequestVerificationTest {
     // minimum is retuned.
     private static final long NETWORK_MIN = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
     // The highest rate the tolerance check accepts, and one above it.
-    private static final long AT_TOLERANCE = (long) (MinerFeeValidation.MAX_FEE_DEVIATION_FACTOR * NETWORK_MIN);
+    private static final long AT_TOLERANCE =
+            (long) (MinerFeeValidation.MAX_BSQ_SWAP_FEE_RATE_DEVIATION_FACTOR * NETWORK_MIN);
     private static final long OUTSIDE_TOLERANCE = AT_TOLERANCE + 1;
 
     @Test

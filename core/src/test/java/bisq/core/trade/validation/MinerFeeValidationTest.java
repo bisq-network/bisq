@@ -169,24 +169,25 @@ class MinerFeeValidationTest {
 
     @Test
     void checkMinerFeeRateAcceptsFeesWithinAllowedTolerance() {
-        assertEquals(1_500, MinerFeeValidation.checkMinerFeeRateIsInTolerance(1_500, 1_000));
-        assertEquals(500, MinerFeeValidation.checkMinerFeeRateIsInTolerance(500, 1_000));
-        assertEquals(4_000, MinerFeeValidation.checkMinerFeeRateIsInTolerance(4_000, 1_000));
-        assertEquals(250, MinerFeeValidation.checkMinerFeeRateIsInTolerance(250, 1_000));
+        assertEquals(1_500, MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(1_500, 1_000));
+        assertEquals(500, MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(500, 1_000));
+        assertEquals(2_000, MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(2_000, 1_000));
     }
 
+    // The BSQ swap maker pays its own share of the miner fee at the rate of the taker's request, so it keeps the
+    // factor of 2, while a peer's trade tx fee may differ by a factor of 4.
     @Test
     void checkMinerFeeRateRejectsFeesOutsideAllowedTolerance() {
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(4_001, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(249, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(2_001, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(499, 1_000));
     }
 
     @Test
     void checkMinerFeeRateRejectsZeroAndNegativeFees() {
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(0, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(-1, 1_000));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(1_000, 0));
-        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkMinerFeeRateIsInTolerance(1_000, -1));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(0, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(-1, 1_000));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(1_000, 0));
+        assertThrows(IllegalArgumentException.class, () -> MinerFeeValidation.checkBsqSwapMinerFeeRateIsInTolerance(1_000, -1));
     }
 
 }
