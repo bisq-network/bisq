@@ -47,7 +47,9 @@ public final class MinerFeeValidation {
     public static final long MAX_TRADE_TX_FEE_SAT = 360_000L;
     // Makers up to v1.10.11 accepted down to 250 sat. A trade object is also created when the trade is loaded
     // from disk, and one trade that fails its check makes the whole trade file unreadable. So a trade object
-    // is only checked against this bound; a new take offer request is checked against MIN_TRADE_TX_FEE_SAT.
+    // is only checked against this bound. The take offer request and the buyer's check of the delayed payout tx
+    // use MIN_TRADE_TX_FEE_SAT, so a trade that a maker up to v1.10.11 accepted below it fails that check if the
+    // buyer updates during the take, before the deposit tx is published.
     public static final long MIN_STORED_TRADE_TX_FEE_SAT = 250L;
 
     private MinerFeeValidation() {
