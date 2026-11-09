@@ -31,6 +31,8 @@ import bisq.common.config.Config;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 
+import java.nio.file.Path;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -145,7 +147,7 @@ public class NewTor extends TorMode {
         long ts1 = new Date().getTime();
 
         TorrcOverrides torrcOverrides = TorrcOverrides.parse(torrcSettings);
-        TorTransportConfig transportConfig = new TorTransportConfig(torDir.toPath(),
+        TorTransportConfig transportConfig = new TorTransportConfig(getRealPath(torDir),
                 BOOTSTRAP_TIMEOUT,
                 HS_UPLOAD_TIMEOUT,
                 !testNetworkDirectoryAuthorities.isEmpty(),
@@ -188,6 +190,19 @@ public class NewTor extends TorMode {
     static boolean canStartAgain(RuntimeException e) {
         return Throwables.getCausalChain(e).stream().noneMatch(ExternalTorUnavailableException.class::isInstance) &&
                 Throwables.getRootCause(e) instanceof TorBootstrapFailedException;
+    }
+
+    // sandy grants the sandboxed Tor its files by their real paths. On macOS Tor then cannot reach them through a
+    // symbolic link, so with a data directory behind one Tor could not read its torrc. Tor gets the real path of the
+    // Tor directory, which it reaches without a link.
+    static Path getRealPath(File torDir) {
+        try {
+            return torDir.toPath().toRealPath();
+        } catch (IOException e) {
+            log.warn("Cannot resolve the real path of the Tor directory {}. We start Tor with the path as given.",
+                    torDir, e);
+            return torDir.toPath();
+        }
     }
 
     // In its sandbox Tor has a network of its own on every platform, so it reaches the onion service of the node only

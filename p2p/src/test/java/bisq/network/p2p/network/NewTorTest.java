@@ -27,6 +27,7 @@ import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,7 +171,7 @@ class NewTorTest {
     }
 
     @Test
-    void startsTorWithTheTorDirAndTheTorrcOverrides(@TempDir File torDir) {
+    void startsTorWithTheTorDirAndTheTorrcOverrides(@TempDir File torDir) throws IOException {
         var config = new AtomicReference<TorTransportConfig>();
         try (var construction = mockConstruction(TorService.class, (mock, context) -> {
             config.set((TorTransportConfig) context.arguments().get(0));
@@ -181,10 +182,36 @@ class NewTorTest {
             var torService = newTor.getTor();
 
             assertSame(construction.constructed().get(0), torService);
-            assertEquals(torDir.toPath(), config.get().getDataDirPath());
+            assertEquals(torDir.toPath().toRealPath(), config.get().getDataDirPath());
             assertEquals(Map.of("SocksPort", "9150"), config.get().getTorrcOverrides());
             assertFalse(config.get().isUseExternalTor());
         }
+    }
+
+    // sandy grants the sandboxed Tor its files by their real paths. On macOS Tor then cannot reach them through a
+    // symbolic link, so a data directory behind one made Tor fail to read its torrc.
+    @Test
+    void startsTorWithTheRealPathOfATorDirBehindASymbolicLink(@TempDir File tempDir) throws IOException {
+        Path realTorDir = Files.createDirectories(tempDir.toPath().resolve("Bisq-1.10.11").resolve("tor"));
+        Path link = tempDir.toPath().resolve("Bisq");
+        try {
+            Files.createSymbolicLink(link, realTorDir.getParent());
+        } catch (UnsupportedOperationException | IOException e) {
+            assumeTrue(false, "Cannot create a symbolic link here: " + e);
+        }
+        File torDir = link.resolve("tor").toFile();
+        var config = new AtomicReference<TorTransportConfig>();
+        try (var construction = mockConstruction(TorService.class, (mock, context) -> {
+            config.set((TorTransportConfig) context.arguments().get(0));
+            when(mock.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        })) {
+            new NewTor(torDir, TorrcSettings.fromCommandLine(null, ""), BridgeAddressProvider.NONE, true, false).getTor();
+
+            assertEquals(realTorDir.toRealPath(), config.get().getDataDirPath());
+        }
+        // A Tor directory which does not exist yet keeps its path.
+        File missingTorDir = new File(tempDir, "missing");
+        assertEquals(missingTorDir.toPath(), NewTor.getRealPath(missingTorDir));
     }
 
     // The Tor library refuses the entries of a config file which make Tor start a program or load a library
