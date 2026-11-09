@@ -1,0 +1,84 @@
+name: CodeQL
+
+# Replaces the CodeQL default setup, which cannot check out the submodules or select the JDK of the release pin. Its Java
+# analysis failed on the first run and was dropped. Turn the default setup off when this workflow is merged, because both
+# cannot upload results for the same language.
+on:
+  push:
+    branches: [ master, 'release-candidate-*' ]
+  pull_request:
+    branches: [ master, 'release-candidate-*' ]
+  schedule:
+    - cron: '27 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual
+          - language: actions
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+          - language: python
+            build-mode: none
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Only the Java build needs the submodules. The other languages analyze the files of this repository only.
+          submodules: ${{ matrix.build-mode == 'manual' }}
+          persist-credentials: false
+
+      - name: Verify Gradle wrapper checksums
+        if: matrix.build-mode == 'manual'
+        shell: bash
+        run: sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+
+      - name: Set up JDK
+        if: matrix.build-mode == 'manual'
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version: '21.0.13+9'
+          distribution: 'zulu'
+          check-latest: false
+
+      - name: Set up Gradle
+        if: matrix.build-mode == 'manual'
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-provider: basic
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      # CodeQL sees only the compiler runs of this build. Without the build cache every Java source is compiled.
+      - name: Compile the Java sources
+        if: matrix.build-mode == 'manual'
+        shell: bash
+        run: ./gradlew --no-daemon --no-build-cache classes
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          category: /language:${{ matrix.language }}
