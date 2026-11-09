@@ -1,8 +1,8 @@
 name: CodeQL
 
-# Replaces the CodeQL default setup, which cannot check out the submodules or select the JDK of the release pin. Its Java
-# analysis failed on the first run and was dropped. Turn the default setup off when this workflow is merged, because both
-# cannot upload results for the same language.
+# Replaces the CodeQL default setup, which cannot check out the submodules or select the JDK the build requires.
+# Its Java analysis failed on the first run and was dropped. Turn the default setup off when this workflow is merged,
+# because both cannot upload results for the same language.
 on:
   push:
     branches: [ master, 'release-candidate-*' ]
@@ -56,9 +56,9 @@ jobs:
         if: matrix.build-mode == 'manual'
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          java-version: '21.0.13+9'
+          java-version: '21'
           distribution: 'zulu'
-          check-latest: false
+          check-latest: true
 
       - name: Set up Gradle
         if: matrix.build-mode == 'manual'
