@@ -33,6 +33,9 @@ on:
       - "gradle/libs.versions.toml"
       - ".github/workflows/e2e-tests.yml"
 
+permissions:
+  contents: read
+
 jobs:
   e2e-tests:
     name: Run end-to-end DAO + trade test suite
@@ -60,10 +63,6 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
-      # Pre-pull bitcoind base image in parallel with the gradle build below.
-      - name: Pre-pull bitcoind image
-        run: docker pull lnliz/bitcoind:29.3 &
 
       # Build the gradle install dists and extract dao-setup. We split this out so
       # the subsequent docker build can use buildx cache without rebuilding Bisq.
