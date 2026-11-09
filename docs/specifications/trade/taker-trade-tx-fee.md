@@ -22,9 +22,10 @@ at different times. Makers up to v1.10.11 allow a factor of 2. The maker drops a
 this check without a reply, so the taker would only see the trade protocol timeout.
 
 424 satoshi is 2 sat/vbyte for those 212 vbytes, so the trade transactions pay at least that rate.
-Makers up to v1.10.11 accepted down to 250 satoshi. Loading a trade from disk checks its fee only
-against these 250 satoshi, because one trade that fails a check makes the whole trade file
-unreadable.
+Makers up to v1.10.11 accepted down to 250 satoshi, and such a trade can continue after an update.
+So only a new take offer request must meet 424 satoshi; the checks of an existing trade use these
+250 satoshi. That covers loading a trade from disk, where one trade that fails a check makes the
+whole trade file unreadable, and the buyer's check of the delayed payout transaction below.
 
 ## Fee rate
 
@@ -96,9 +97,9 @@ other checks before the request, for a banned currency, payment method, offer or
 update and an offer that was already used in a trade, end the attempt in the same way.
 
 A buyer checks the fee again, with its fee rate at that time, the maker's factor of 4 and the
-minimum of 424 satoshi, when it verifies the delayed payout transaction, after the taker fee is
-published and before the deposit transaction is published. The check before the request prevents
-most of these late failures, which cost the taker fee.
+minimum of 250 satoshi of an existing trade, when it verifies the delayed payout transaction, after
+the taker fee is published and before the deposit transaction is published. The check before the
+request prevents most of these late failures, which cost the taker fee.
 
 ## Compatibility
 
@@ -128,9 +129,6 @@ pricenodes deliver at least that rate.
   input.
 - The taker stops a request whose fee is between 2 and 4 times its expected fee, although a later
   maker would accept it.
-- A trade below 424 satoshi that a maker up to v1.10.11 accepted fails the buyer's check of the
-  delayed payout transaction if the buyer updates during the take. An honest taker states such a
-  fee only at a fee rate below the pricenode floor.
 - The maker still drops an invalid take offer request without a reply.
 - The taker's fee is not reduced to fit the maker's range. Paying the miner fee of the taker fee
   transaction separately from the stated fee would remove the need to consolidate, but is a
