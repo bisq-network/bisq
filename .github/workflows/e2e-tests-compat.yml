@@ -51,9 +51,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Pre-pull bitcoind image
-        run: docker pull lnliz/bitcoind:29.3 &
-
       # Master (current branch) install dists + dao-setup — the stack harness and
       # the seednode/arb/alice peers all run these.
       - name: Build master install dists + dao-setup

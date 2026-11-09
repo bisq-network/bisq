@@ -64,10 +64,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # Pre-pull bitcoind base image in parallel with the gradle build below.
-      - name: Pre-pull bitcoind image
-        run: docker pull lnliz/bitcoind:29.3 &
-
       # Build the gradle install dists and extract dao-setup. We split this out so
       # the subsequent docker build can use buildx cache without rebuilding Bisq.
       - name: Build install dists + dao-setup
