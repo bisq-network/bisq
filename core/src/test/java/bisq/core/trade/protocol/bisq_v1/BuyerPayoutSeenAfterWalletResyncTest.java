@@ -187,6 +187,31 @@ class BuyerPayoutSeenAfterWalletResyncTest {
         assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
     }
 
+    // A payout whose confidence event came before the deposit tx was in the wallet is checked again when the
+    // deposit tx arrives, not only at the next confidence change of the payout
+    @Test
+    void payoutSeenBeforeTheDepositTxCountsOnceTheDepositTxArrives() {
+        Trade trade = trade();
+        when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(null);
+
+        new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade).onInitialized();
+        AddressConfidenceListener listener = capturedListener();
+        TransactionConfidence payoutConfidence = confidence(TransactionConfidence.ConfidenceType.BUILDING,
+                payoutTx.getTxId());
+        listener.onTransactionConfidenceChanged(payoutConfidence);
+        assertNull(trade.getPayoutTx());
+
+        // The wallet syncs the block with the deposit tx; its confidence event does not touch the payout address
+        when(btcWalletService.getTransaction(depositTx.getTxId().toString())).thenReturn(depositTx);
+        when(btcWalletService.getConfidenceForAddressFromBlockHeight(BUYER_PAYOUT_ADDRESS, 100))
+                .thenReturn(payoutConfidence);
+        listener.onTransactionConfidenceChanged(null);
+
+        assertSame(payoutTx, trade.getPayoutTx());
+        assertEquals(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK, trade.getTradeState());
+        assertNull(trade.getErrorMessage());
+    }
+
     private AddressConfidenceListener capturedListener() {
         ArgumentCaptor<AddressConfidenceListener> captor = ArgumentCaptor.forClass(AddressConfidenceListener.class);
         verify(btcWalletService).addAddressConfidenceListener(captor.capture());
