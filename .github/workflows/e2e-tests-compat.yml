@@ -18,6 +18,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   e2e-tests-compat:
     name: Run e2e suite with one release-version peer
