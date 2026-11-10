@@ -71,7 +71,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     private PublicKey ownerPubKey;
 
     @Nullable
-    private final TreeMap<String, String> extraDataMap;
+    private TreeMap<String, String> extraDataMap;
 
     public Alert(String message,
                  boolean isUpdateInfo,
@@ -232,6 +232,20 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         this.ownerPubKey = ownerPubKey;
 
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
+    }
+
+    void setAlertSignature(String alertSignature) {
+        TreeMap<String, String> newExtraDataMap = extraDataMap == null ?
+                new TreeMap<>() :
+                new TreeMap<>(extraDataMap);
+        newExtraDataMap.put(AlertSignature.EXTRA_DATA_KEY, alertSignature);
+        ExtraDataMapValidator.validate(newExtraDataMap);
+        extraDataMap = newExtraDataMap;
+    }
+
+    @Nullable
+    String getAlertSignature() {
+        return extraDataMap == null ? null : extraDataMap.get(AlertSignature.EXTRA_DATA_KEY);
     }
 
     public boolean isNewVersion(Preferences preferences) {

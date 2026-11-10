@@ -501,7 +501,9 @@ Document: [in-app-update-download.md](in-app-update-download.md)
 2. Send the update message. The application does not poll for a new version. It receives a signed
    alert over the peer-to-peer network. Start the alert sender application (`Cmd + M`), remove the
    old version, select the update option, enter the version number and add the short release notes.
-   Leave the application running for about one minute so that the message spreads well, then make a
+   Send it from the new release: nodes ignore an alert without the alert signature, which earlier
+   versions do not add (see `docs/specifications/application/alert-admission.md`). Leave the
+   application running for about one minute so that the message spreads well, then make a
    backup of its data directory.
 
 3. Sign the source code archive for Arch Linux. GitHub creates the archive, so this is only possible
