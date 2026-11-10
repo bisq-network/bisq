@@ -1002,6 +1002,14 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(ScriptBuilder.createEmpty());
         input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
+        // SegWit validation in Script.correctlySpends does not check the signatures of a P2WSH input. A signature for
+        // another payout would therefore only show when the network drops the tx, so we verify both ourselves.
+        Sha256Hash sigHash = payoutTx.hashForWitnessSignature(0, redeemScript,
+                depositTx.getOutput(0).getValue(), Transaction.SigHash.ALL, false);
+        if (!ECKey.fromPublicOnly(buyerPubKey).verify(sigHash, buyerTxSig) ||
+                !ECKey.fromPublicOnly(sellerPubKey).verify(sigHash, sellerTxSig)) {
+            throw new TransactionVerificationException("A signature is not valid for the mediated payout tx");
+        }
         WalletService.printTx("mediated payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);

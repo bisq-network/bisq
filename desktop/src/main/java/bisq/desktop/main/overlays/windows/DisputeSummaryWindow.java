@@ -127,6 +127,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private Optional<Dispute> peersDisputeOptional;
     private String role;
     private Label delayedPayoutTxStatus;
+    private Label payoutLabel;
     private TextArea summaryNotesTextArea;
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener, buyerGetsTradeAmountSelectedListener, sellerGetsTradeAmountSelectedListener;
@@ -260,54 +261,73 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addPayoutAmountTextFields();
         addReasonControls();
         applyDisputeResultToUiControls();
-        boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && (
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.RESULT_PROPOSED ||
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.CLOSED);
-        if (applyPeersDisputeResult) {
-            // If the other peers dispute has been closed we apply the result to ourselves
-            DisputeResult peersDisputeResult = peersDisputeOptional.get().getDisputeResultProperty().get();
-            disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
-            disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
-            disputeResult.setPayoutAdjustmentPercent(peersDisputeResult.getPayoutAdjustmentPercent());
-            disputeResult.setPayoutSuggestion(peersDisputeResult.getPayoutSuggestion());
-            disputeResult.setWinner(peersDisputeResult.getWinner());
-            disputeResult.setReason(peersDisputeResult.getReason());
-            disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
-
-            buyerGetsTradeAmountRadioButton.setDisable(true);
-            buyerGetsCompensationRadioButton.setDisable(true);
-            buyerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
-            sellerGetsTradeAmountRadioButton.setDisable(true);
-            sellerGetsCompensationRadioButton.setDisable(true);
-            sellerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
-            customRadioButton.setDisable(true);
-
-            buyerPayoutAmountInputTextField.setDisable(true);
-            sellerPayoutAmountInputTextField.setDisable(true);
-            compensationOrPenaltyInputTextField.setDisable(true);
-            buyerPayoutAmountInputTextField.setEditable(false);
-            sellerPayoutAmountInputTextField.setEditable(false);
-            compensationOrPenaltyInputTextField.setEditable(false);
-
-            reasonWasBugRadioButton.setDisable(true);
-            reasonWasUsabilityIssueRadioButton.setDisable(true);
-            reasonProtocolViolationRadioButton.setDisable(true);
-            reasonNoReplyRadioButton.setDisable(true);
-            reasonWasScamRadioButton.setDisable(true);
-            reasonWasOtherRadioButton.setDisable(true);
-            reasonWasBankRadioButton.setDisable(true);
-            reasonWasOptionTradeRadioButton.setDisable(true);
-            reasonWasSellerNotRespondingRadioButton.setDisable(true);
-            reasonWasWrongSenderAccountRadioButton.setDisable(true);
-            reasonWasPeerWasLateRadioButton.setDisable(true);
-            reasonWasTradeAlreadySettledRadioButton.setDisable(true);
+        // In mediation the payout is final once a result was sent for the trade, also after closing and reopening
+        // the tickets. The refund agent's window applies the result of the other ticket once it is closed.
+        Optional<DisputeResult> lockedResult = isMediationDispute() ?
+                mediationManager.findSentResult(dispute) :
+                findResultOfClosedPeersDispute();
+        if (lockedResult.isPresent()) {
+            if (lockedResult.get() != disputeResult) {
+                applyResultOfOtherTicket(lockedResult.get());
+            }
+            disableResultControls();
             applyDisputeResultToUiControls();
+            if (isMediationDispute()) {
+                payoutLabel.setText(Res.get("disputeSummaryWindow.payout.sent"));
+            }
         }
 
         setReasonRadioButtonState();
 
         addSummaryNotes();
         addButtons();
+    }
+
+    private Optional<DisputeResult> findResultOfClosedPeersDispute() {
+        return peersDisputeOptional
+                .filter(peersDispute -> peersDispute.getDisputeState() == Dispute.State.RESULT_PROPOSED ||
+                        peersDispute.getDisputeState() == Dispute.State.CLOSED)
+                .map(peersDispute -> peersDispute.getDisputeResultProperty().get());
+    }
+
+    private void applyResultOfOtherTicket(DisputeResult otherDisputeResult) {
+        disputeResult.setBuyerPayoutAmount(otherDisputeResult.getBuyerPayoutAmount());
+        disputeResult.setSellerPayoutAmount(otherDisputeResult.getSellerPayoutAmount());
+        disputeResult.setPayoutAdjustmentPercent(otherDisputeResult.getPayoutAdjustmentPercent());
+        disputeResult.setPayoutSuggestion(otherDisputeResult.getPayoutSuggestion());
+        disputeResult.setWinner(otherDisputeResult.getWinner());
+        disputeResult.setReason(otherDisputeResult.getReason());
+        disputeResult.setSummaryNotes(otherDisputeResult.summaryNotesProperty().get());
+    }
+
+    private void disableResultControls() {
+        buyerGetsTradeAmountRadioButton.setDisable(true);
+        buyerGetsCompensationRadioButton.setDisable(true);
+        buyerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
+        sellerGetsTradeAmountRadioButton.setDisable(true);
+        sellerGetsCompensationRadioButton.setDisable(true);
+        sellerGetsTradeAmountMinusPenaltyRadioButton.setDisable(true);
+        customRadioButton.setDisable(true);
+
+        buyerPayoutAmountInputTextField.setDisable(true);
+        sellerPayoutAmountInputTextField.setDisable(true);
+        compensationOrPenaltyInputTextField.setDisable(true);
+        buyerPayoutAmountInputTextField.setEditable(false);
+        sellerPayoutAmountInputTextField.setEditable(false);
+        compensationOrPenaltyInputTextField.setEditable(false);
+
+        reasonWasBugRadioButton.setDisable(true);
+        reasonWasUsabilityIssueRadioButton.setDisable(true);
+        reasonProtocolViolationRadioButton.setDisable(true);
+        reasonNoReplyRadioButton.setDisable(true);
+        reasonWasScamRadioButton.setDisable(true);
+        reasonWasOtherRadioButton.setDisable(true);
+        reasonWasBankRadioButton.setDisable(true);
+        reasonWasOptionTradeRadioButton.setDisable(true);
+        reasonWasSellerNotRespondingRadioButton.setDisable(true);
+        reasonWasWrongSenderAccountRadioButton.setDisable(true);
+        reasonWasPeerWasLateRadioButton.setDisable(true);
+        reasonWasTradeAlreadySettledRadioButton.setDisable(true);
     }
 
     private void addInfoPane() {
@@ -380,7 +400,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
                     customRadioButton);
         }
-        addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0);
+        payoutLabel = addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), radioButtonPane, 0).first;
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
@@ -1246,6 +1266,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (isRefundAgent && !isRefundValidationCurrent()) {
             return;
         }
+        // Only possible with results that earlier versions sent with different payouts
+        if (isMediationDispute() && !mediationManager.hasPayoutOfSentResults(dispute, disputeResult)) {
+            new Popup().warning(Res.get("disputeSummaryWindow.close.payoutChanged")).show();
+            return;
+        }
         disputeResult.setLoserPublisher(false); // field no longer used per pazza / leo816
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
@@ -1288,6 +1313,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             summaryText += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
         }
 
+        // The payout is final once the result is sent. We lock it before sending, so that a window which stays open
+        // after a failed send cannot change it.
+        if (isMediationDispute()) {
+            disableResultControls();
+            payoutLabel.setText(Res.get("disputeSummaryWindow.payout.sent"));
+        }
         disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
         peersDisputeOptional.ifPresent(peersDispute -> {

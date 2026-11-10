@@ -89,7 +89,9 @@ public final class DisputeResultMessage extends DisputeMessage implements Sender
 
     public static DisputeResultMessage fromProto(protobuf.DisputeResultMessage proto, int messageVersion) {
         checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
-        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
+        DisputeResult disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
+        checkArgument(disputeResult.getChatMessage() != null, "ChatMessage of DisputeResult must be set");
+        return new DisputeResultMessage(disputeResult,
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion,

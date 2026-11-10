@@ -41,6 +41,7 @@ import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -55,13 +56,13 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
-import org.bitcoinj.core.Coin;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import java.security.PublicKey;
 
+import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -130,6 +131,15 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     @Override
     protected Trade.DisputeState getDisputeStateStartedByPeer() {
         return Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+    }
+
+    // A new mediation would take a trade whose mediation has a result back to MEDIATION_STARTED_BY_PEER, where the
+    // result is neither accepted nor published, and a trade in arbitration back to mediation
+    @Override
+    protected boolean isDisputeStartedByPeerAllowed(Trade.DisputeState disputeState) {
+        return disputeState == Trade.DisputeState.NO_DISPUTE ||
+                disputeState == Trade.DisputeState.MEDIATION_REQUESTED ||
+                disputeState == Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
     }
 
     @Override
@@ -204,6 +214,18 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
 
         cleanupRetryMap(uid);
+        // The mediator cannot change the payout once a result was sent, so a result with another payout is no
+        // correction. We keep the result we have, and the mediator gets the refusal in the ACK.
+        if (hasResultWithOtherPayout(tradeId, disputeResult)) {
+            log.warn("We refuse a mediation result whose payout differs from the result we have for the trade. " +
+                    "tradeId={}, uid={}", tradeId, uid);
+            addOtherPayoutRefusedMessage(dispute);
+            sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), false,
+                    "The payout differs from the mediation result that the trader has for this trade");
+            requestPersistence();
+            return;
+        }
+
         if (!dispute.getChatMessages().contains(chatMessage)) {
             dispute.addAndPersistChatMessage(chatMessage);
         } else {
@@ -237,6 +259,27 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     }
 
 
+    // A trader's node keeps the payout of the first mediation result that it received for a trade
+    private boolean hasResultWithOtherPayout(String tradeId, DisputeResult disputeResult) {
+        return getDisputeList().stream()
+                .filter(dispute -> dispute.getTradeId().equals(tradeId))
+                .map(dispute -> dispute.getDisputeResultProperty().get())
+                .filter(Objects::nonNull)
+                .anyMatch(result -> !result.hasSamePayout(disputeResult));
+    }
+
+    private void addOtherPayoutRefusedMessage(Dispute dispute) {
+        ChatMessage chatMessage = new ChatMessage(getSupportType(),
+                dispute.getTradeId(),
+                pubKeyRing.hashCode(),
+                false,
+                Res.get("support.systemMsg", Res.get("support.mediationResult.otherPayoutRefused")),
+                p2PService.getAddress());
+        chatMessage.setSystemMessage(true);
+        dispute.addAndPersistChatMessage(chatMessage);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +288,42 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getMediatorNodeAddress();
+    }
+
+    // The payout of a trade is final once the mediator has sent a result for the trade to one trader. The traders
+    // sign the payout of the result they received, so a changed payout could only be a second, conflicting result.
+    @Override
+    public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String summaryText) {
+        checkArgument(hasPayoutOfSentResults(dispute, disputeResult),
+                "The payout differs from a mediation result that was sent for trade %s", dispute.getTradeId());
+        super.sendDisputeResultMessage(disputeResult, dispute, summaryText);
+    }
+
+    /**
+     * Returns the result that fixes the payout of a mediator's ticket: the result sent for this ticket, or else the
+     * first result sent for the other ticket of the trade. Empty while no result was sent for the trade.
+     */
+    public Optional<DisputeResult> findSentResult(Dispute dispute) {
+        return getSentResult(dispute).or(() -> getDisputeList().stream()
+                .filter(other -> other.getTradeId().equals(dispute.getTradeId()) &&
+                        other.getTraderId() != dispute.getTraderId())
+                .map(MediationManager::getSentResult)
+                .flatMap(Optional::stream)
+                .min(Comparator.comparing(DisputeResult::getCloseDate)));
+    }
+
+    // Whether the payout of the result is the payout of every result that was sent for the trade of the dispute
+    public boolean hasPayoutOfSentResults(Dispute dispute, DisputeResult disputeResult) {
+        return getDisputeList().stream()
+                .filter(other -> other.getTradeId().equals(dispute.getTradeId()))
+                .map(MediationManager::getSentResult)
+                .flatMap(Optional::stream)
+                .allMatch(sentResult -> sentResult.hasSamePayout(disputeResult));
+    }
+
+    private static Optional<DisputeResult> getSentResult(Dispute dispute) {
+        return Optional.ofNullable(dispute.getDisputeResultProperty().get())
+                .filter(DisputeResult::isSent);
     }
 
     @Nullable
@@ -260,11 +339,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");
         DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
-        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
-        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
         ProcessModel processModel = trade.getProcessModel();
-        processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
-        processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
+        // Our signature is the acceptance, and we sign only once (SignMediatedPayoutTx). The amounts that it covers
+        // must not change afterwards, so only the first acceptance takes the amounts of the result.
+        if (processModel.getMediatedPayoutTxSignature() == null) {
+            applyAmountsOfAcceptedResult(tradeId, processModel, disputeResult);
+        }
         DisputeProtocol tradeProtocol = (DisputeProtocol) tradeManager.getTradeProtocol(trade);
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
@@ -287,6 +367,25 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                 resultHandler.handleResult();
             }, errorMessageHandler);
         }
+    }
+
+    // The peer's stored signature was checked against the amounts that the trade had then. A result that replaced
+    // another one before this version can have other amounts, which the peer's signature does not cover.
+    private static void applyAmountsOfAcceptedResult(String tradeId,
+                                                     ProcessModel processModel,
+                                                     DisputeResult disputeResult) {
+        long buyerPayoutAmount = disputeResult.getBuyerPayoutAmount().value;
+        long sellerPayoutAmount = disputeResult.getSellerPayoutAmount().value;
+        TradingPeer tradingPeer = processModel.getTradePeer();
+        if (tradingPeer.getMediatedPayoutTxSignature() != null &&
+                (buyerPayoutAmount != processModel.getBuyerPayoutAmountFromMediation() ||
+                        sellerPayoutAmount != processModel.getSellerPayoutAmountFromMediation())) {
+            log.warn("We drop the peer's signature of the mediated payout, as it covers other amounts than the " +
+                    "result we accept. tradeId={}", tradeId);
+            tradingPeer.setMediatedPayoutTxSignature(null);
+        }
+        processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount);
+        processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount);
     }
 
     public void rejectMediationResult(Trade trade) {

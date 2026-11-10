@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DisputeResultMessageTest {
     private static final String TRADE_ID = "trade-id";
@@ -70,6 +71,18 @@ public class DisputeResultMessageTest {
         DisputeResultMessage fromProto = DisputeResultMessage.fromProto(proto, 1);
 
         assertNull(fromProto.getSenderSignaturePubKey());
+    }
+
+    @Test
+    public void fromProtoRejectsResultWithoutChatMessage() {
+        protobuf.DisputeResultMessage proto = protobuf.DisputeResultMessage.newBuilder()
+                .setUid("uid")
+                .setDisputeResult(new DisputeResult(TRADE_ID, TRADER_ID).toProtoMessage())
+                .setSenderNodeAddress(SENDER_NODE_ADDRESS.toProtoMessage())
+                .setType(SupportType.toProtoMessage(SupportType.MEDIATION))
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> DisputeResultMessage.fromProto(proto, 1));
     }
 
     @Test

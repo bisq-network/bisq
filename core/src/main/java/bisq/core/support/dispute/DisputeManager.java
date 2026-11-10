@@ -107,6 +107,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     @Getter
     protected final ObservableList<DisputeValidation.ValidationException> validationExceptions =
             FXCollections.observableArrayList();
+    // Open trades without a dispute of this type for which we refused a dispute that the peer opened, because it was
+    // not addressed to us. The UI tells the trader.
+    @Getter
+    private final ObservableList<String> tradeIdsOfRefusedPeerDisputes = FXCollections.observableArrayList();
     @Getter
     private final KeyPair signatureKeyPair;
 
@@ -223,6 +227,13 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected abstract PubKeyRing getExpectedAgentPubKeyRing(Trade trade);
 
     protected abstract Trade.DisputeState getDisputeStateStartedByPeer();
+
+    /**
+     * Whether a dispute that the peer opened may start in a trade with the given dispute state.
+     */
+    protected boolean isDisputeStartedByPeerAllowed(Trade.DisputeState disputeState) {
+        return true;
+    }
 
     public abstract void cleanupDisputes();
 
@@ -559,6 +570,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 peerOpenedDisputeMessage.getClass().getSimpleName())) {
             return;
         }
+        if (isPeerOpenedDisputeRefused(peerOpenedDisputeMessage, dispute, trade)) {
+            return;
+        }
 
         log.info("Peer dispute ticket received, reverting failed trade {} to pending", trade.getShortId());
         failedTradesManager.removeTrade(trade);
@@ -574,6 +588,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 trade,
                 senderSignaturePubKey,
                 peerOpenedDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+        if (isPeerOpenedDisputeRefused(peerOpenedDisputeMessage, dispute, trade)) {
             return;
         }
 
@@ -599,6 +616,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 trade,
                 senderSignaturePubKey,
                 peerOpenedDisputeMessage.getClass().getSimpleName())) {
+            return;
+        }
+        if (isPeerOpenedDisputeRefused(peerOpenedDisputeMessage, dispute, trade)) {
             return;
         }
 
@@ -660,6 +680,45 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), errorMessage == null, errorMessage);
         requestPersistence();
+    }
+
+
+    // The agent creates the dispute for us from the contract that the opener sent. We accept it only if it is ours,
+    // and a new dispute only if the trade's dispute state allows it, before a closed or failed trade is moved back.
+    private boolean isPeerOpenedDisputeRefused(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                               Dispute dispute,
+                                               Trade trade) {
+        String errorMessage = null;
+        if (!isTrader(dispute) || dispute.getTraderId() != pubKeyRing.hashCode()) {
+            errorMessage = "The dispute is not for this trader";
+            onPeerDisputeNotForThisTrader(dispute.getTradeId());
+        } else if (findDispute(dispute).isEmpty() && !isDisputeStartedByPeerAllowed(trade.getDisputeState())) {
+            errorMessage = "A new dispute is not allowed in dispute state " + trade.getDisputeState();
+        }
+        if (errorMessage == null) {
+            return false;
+        }
+
+        log.warn("We refuse the {} for trade {}: {}", peerOpenedDisputeMessage.getClass().getSimpleName(),
+                dispute.getTradeId(), errorMessage);
+        ObservableList<ChatMessage> messages = dispute.getChatMessages();
+        if (!messages.isEmpty()) {
+            sendAckMessage(messages.get(0), dispute.getAgentPubKeyRing(), false, errorMessage);
+        }
+        sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), false, errorMessage);
+        return true;
+    }
+
+    // The opener chooses the key rings in the contract that the agent copies. With a key ring that is not ours, we have
+    // no case for the trade, and the agent's node ignores our error if that key ring has another signature key. So only
+    // the trader can act, by opening a dispute.
+    private void onPeerDisputeNotForThisTrader(String tradeId) {
+        boolean isOpenTrade = tradeManager.getTradeById(tradeId).isPresent();
+        if (isOpenTrade &&
+                findDispute(tradeId, pubKeyRing.hashCode()).isEmpty() &&
+                !tradeIdsOfRefusedPeerDisputes.contains(tradeId)) {
+            tradeIdsOfRefusedPeerDisputes.add(tradeId);
+        }
     }
 
 
