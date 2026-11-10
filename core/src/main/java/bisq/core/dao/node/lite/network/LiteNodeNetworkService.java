@@ -248,6 +248,8 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
             // We relay the message as received, including its unsigned copy of the block. Releases before 1.10.4 use
             // that copy without any check, so we relay only a copy that matches the signed block.
+            // Compatibility with v1.10.11 and earlier: these releases need the copy, and we require it as well. To let
+            // full nodes leave it out later, check it here only if the message carries one.
             String contentHashUnsignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(unSignedRawBlock));
             String blockUid = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(signedRawBlock.getBlock()));
             if (!signedRawBlock.getBlock().getHash().equals(unSignedRawBlock.getHash()) ||

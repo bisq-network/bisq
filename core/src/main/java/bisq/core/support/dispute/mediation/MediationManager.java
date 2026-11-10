@@ -371,6 +371,8 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     // The peer's stored signature was checked against the amounts that the trade had then. A result that replaced
     // another one before this version can have other amounts, which the peer's signature does not cover.
+    // Compatibility with v1.10.11 and earlier: only mediators of these releases replaced a result with another payout.
+    // The check of the amounts can go once no trade with such a result is open anymore.
     private static void applyAmountsOfAcceptedResult(String tradeId,
                                                      ProcessModel processModel,
                                                      DisputeResult disputeResult) {

@@ -991,7 +991,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.isPayFeeInBtc();
     }
 
-    // Only an older version reads the stored bridge lines, see TorNetworkSettingsWindow.
+    // Compatibility with v1.10.11 and earlier: only releases before v1.10.11 read the stored bridge lines, see
+    // TorNetworkSettingsWindow.
     @Nullable
     public List<String> getBridgeAddresses() {
         return prefPayload.getBridgeAddresses();
