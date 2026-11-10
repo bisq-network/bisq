@@ -184,6 +184,45 @@ public class P2PDataStoreDisconnectTest {
         disconnectTwiceAndRemoveExpiredEntries(inboundConnection, false);
     }
 
+    // TESTCASE: With our own address known, losing a connection to another owner still reduces the TTL of its entries
+    @Test
+    public void connectionClosedReduceTTLWithOurAddressKnown() throws NoSuchAlgorithmException, CryptoException {
+        when(this.testState.mockedNetworkNode.getNodeAddress()).thenReturn(new NodeAddress("ourAddress", 9999));
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
+
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.DAYS.toMillis(90));
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
+        this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_TIMEOUT, mockedConnection);
+
+        verifyStateAfterDisconnect(this.testState, beforeState, true);
+    }
+
+    // TESTCASE: Losing a connection we dialed to our own address (the self-ping test) doesn't reduce the TTL of our entries
+    @Test
+    public void connectionClosedToOurOwnAddress() throws NoSuchAlgorithmException, CryptoException {
+        when(this.testState.mockedNetworkNode.getNodeAddress()).thenReturn(getTestNodeAddress());
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
+
+        ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.DAYS.toMillis(90));
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
+        this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_TIMEOUT, mockedConnection);
+
+        verifyStateAfterDisconnect(this.testState, beforeState, false);
+    }
+
+    // TESTCASE: Two lost connections to our own address don't expire our entries
+    @Test
+    public void connectionClosedTwiceToOurOwnAddress() throws NoSuchAlgorithmException, CryptoException {
+        when(this.testState.mockedNetworkNode.getNodeAddress()).thenReturn(getTestNodeAddress());
+        when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
+
+        disconnectTwiceAndRemoveExpiredEntries(this.mockedConnection, false);
+    }
+
     private void disconnectTwiceAndRemoveExpiredEntries(Connection connection,
                                                         boolean expectedRemoved) throws NoSuchAlgorithmException, CryptoException {
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.MINUTES.toMillis(9));

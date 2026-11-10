@@ -146,6 +146,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private boolean initialRequestApplied = false;
     private boolean seedNodeOnlyInitialRequestApplied = false;
 
+    private final NetworkNode networkNode;
     private final Broadcaster broadcaster;
     @VisibleForTesting
     final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -193,6 +194,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           Clock clock,
                           @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge,
                           @Named(Config.P2P_DATA_STORAGE_MAX_SIZE) double maxGetDataResponseSize) {
+        this.networkNode = networkNode;
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
@@ -749,6 +751,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return;
 
         NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
+
+        // A connection to our own address is one we dialed ourselves (the self-ping test does), and
+        // losing it does not show that we went offline. Backdating our own payloads would expire them
+        // before their next refresh, and they would drop out of the network until we republish them.
+        if (peersNodeAddress.equals(networkNode.getNodeAddress()))
+            return;
 
         // Backdate all the eligible payloads based on the node that disconnected
         map.values().stream()
