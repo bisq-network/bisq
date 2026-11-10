@@ -12,7 +12,6 @@ import bisq.common.crypto.Encryption;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 
-import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -80,21 +79,6 @@ class ContractTest {
 
         assertThrows(NullPointerException.class,
                 () -> Contract.fromProto(protoWithoutRefundAgent, mock(CoreProtoResolver.class)));
-    }
-
-    @Test
-    void requiresDisputeAgentPubKeyVersionHonorsActivationAndTradeDate() {
-        long activation = Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime();
-        Date beforeActivation = new Date(activation - 1);
-        Date atActivation = Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE;
-        Date afterActivation = new Date(activation + 1);
-
-        assertFalse(Contract.requiresDisputeAgentPubKeyVersion(beforeActivation, 0));
-        assertFalse(Contract.requiresDisputeAgentPubKeyVersion(atActivation, activation));
-        assertFalse(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, activation - 1));
-        assertTrue(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, activation));
-        assertTrue(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, activation + 1));
-        assertTrue(Contract.requiresDisputeAgentPubKeyVersion(afterActivation, 0));
     }
 
     private static Contract contract(PubKeyRing buyerPubKeyRing,

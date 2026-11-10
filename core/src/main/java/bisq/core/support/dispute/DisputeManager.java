@@ -623,7 +623,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
 
         try {
-            DisputeValidation.validateDisputeData(dispute, btcWalletService, trade);
+            DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateTradeAndDispute(dispute, trade);
             Transaction delayedPayoutTx = null;

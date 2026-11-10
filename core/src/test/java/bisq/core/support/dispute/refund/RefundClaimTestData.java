@@ -83,7 +83,8 @@ final class RefundClaimTestData {
                 "makerPayoutAddress", "takerPayoutAddress",
                 buyerIsMaker ? buyerKey.getPubKey() : sellerKey.getPubKey(),
                 buyerIsMaker ? sellerKey.getPubKey() : buyerKey.getPubKey(),
-                0, AGENT_ADDRESS, null, null, PaymentMethod.SEPA_ID, PaymentMethod.SEPA_ID, 0);
+                0, AGENT_ADDRESS, null, null, PaymentMethod.SEPA_ID, PaymentMethod.SEPA_ID, 0,
+                agent, agent);
         Transaction makerFee = new Transaction(MainNetParams.get());
         makerFee.addOutput(Coin.valueOf(600_000), ScriptBuilder.createP2WPKHOutputScript(buyerKey));
         Transaction takerFee = new Transaction(MainNetParams.get());
