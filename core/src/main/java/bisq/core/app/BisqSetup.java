@@ -901,6 +901,10 @@ public class BisqSetup {
         return p2PNetworkSetup.getBridgesCanHelpFailure();
     }
 
+    public boolean isTorSandboxUnavailable() {
+        return p2PNetworkSetup.isTorSandboxUnavailable();
+    }
+
     public StringProperty getP2PNetworkIconId() {
         return p2PNetworkSetup.getP2PNetworkIconId();
     }

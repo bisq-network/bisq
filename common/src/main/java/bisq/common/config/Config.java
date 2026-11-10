@@ -250,7 +250,8 @@ public class Config {
     public final boolean torStreamIsolation;
     public final boolean useTorSandbox;
     public final boolean allowPluggableTransportsInTorSandbox;
-    // The command line overrides the config file, which the Tor network settings write
+    // The command line overrides the config file, which the Tor network settings and popups write
+    public final boolean useTorSandboxSetOnCommandLine;
     public final boolean allowPluggableTransportsInTorSandboxSetOnCommandLine;
     public final int msgThrottlePerSec;
     public final int msgThrottlePer10Sec;
@@ -1038,6 +1039,7 @@ public class Config {
                     .collect(toList());
             this.torStreamIsolation = options.has(torStreamIsolationOpt);
             this.useTorSandbox = options.valueOf(useTorSandboxOpt);
+            this.useTorSandboxSetOnCommandLine = cliOpts.has(useTorSandboxOpt);
             this.allowPluggableTransportsInTorSandbox = options.valueOf(allowPluggableTransportsInTorSandboxOpt);
             this.allowPluggableTransportsInTorSandboxSetOnCommandLine =
                     cliOpts.has(allowPluggableTransportsInTorSandboxOpt);

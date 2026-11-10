@@ -289,7 +289,18 @@ sandbox, without the details of this section, which may change with the sandbox,
 to use no bridges and shut down, or to open the Tor network settings, which is also what closing it does, because the
 node has nothing else to do without Tor. Its text replaces the confirmation of the switch. Where the switch is disabled,
 on Windows and while the option is given on the command line, the popup has no button which allows them and names the
-option instead.
+option instead. On Windows, where only turning the sandbox off makes these bridges work, the popup offers to turn off
+the sandbox and shut down instead, as the popup of an unusable sandbox below does, unless `--useTorSandbox` is given on
+the command line.
+
+When the start fails because Tor cannot run in the sandbox on this system, which the node knows only from its own checks
+and the refusals of sandy, never from an exit of a sandboxed Tor, the desktop application shows the failure in a popup
+which offers to shut down, to turn the sandbox off and shut down, which writes `useTorSandbox=false` into the config
+file, or to close it. Shutting down is the default, because the failure also covers causes which can pass or which the
+user can fix while keeping the sandbox, for example torrc overrides or a refusal of sandy which a later start may not
+repeat. The failure already says what Tor without the sandbox risks, so the button asks for no confirmation. If the
+config file cannot be written, the popup says so and Bisq does not shut down. While `--useTorSandbox` is given on the
+command line, which overrides the config file, the popup offers only to shut down or to close it.
 
 A running Tor, including the Tor of Whonix, runs without the sandbox of the node. The sandbox never touches
 `hiddenservice`: the node sends the key of the onion service to Tor over the control connection.

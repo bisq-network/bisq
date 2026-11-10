@@ -41,6 +41,8 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -69,6 +71,7 @@ import javafx.util.StringConverter;
 import java.net.URI;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -140,14 +143,14 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
     // A short form of these settings for a start which the sandbox refused for the pluggable transports of the bridges
     public Popup createPluggableTransportsNotAllowedPopup(List<String> transportNames) {
-        String transports = String.join(", ", transportNames);
-        String message;
-        if (Utilities.isWindows()) {
-            message = Res.get("torNetworkSettingWindow.pluggableTransportsNotAllowed.msg.windows", transports);
-        } else if (config.allowPluggableTransportsInTorSandboxSetOnCommandLine) {
-            message = Res.get("torNetworkSettingWindow.pluggableTransportsNotAllowed.msg.commandLine", transports);
-        } else {
-            message = Res.get("torNetworkSettingWindow.pluggableTransportsNotAllowed.msg", transports);
+        boolean isWindows = Utilities.isWindows();
+        boolean offerToTurnOffSandbox = offersToTurnOffSandboxForTransports(isWindows,
+                config.useTorSandboxSetOnCommandLine);
+        String message = Res.get(getPluggableTransportsNotAllowedMessageKey(isWindows,
+                config.useTorSandboxSetOnCommandLine, config.allowPluggableTransportsInTorSandboxSetOnCommandLine),
+                String.join(", ", transportNames));
+        if (offerToTurnOffSandbox) {
+            message += "\n\n" + getTurnOffSandboxInfo();
         }
         // Closing it, also with Escape or Enter, opens these settings: without Tor there is nothing else to do
         Popup popup = new Popup()
@@ -167,8 +170,53 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                     .secondaryActionButtonText(noBridges)
                     .onSecondaryAction(this::useNoBridgesAndShutDown);
         }
-        return popup.actionButtonText(noBridges)
+        popup.actionButtonText(noBridges)
                 .onAction(this::useNoBridgesAndShutDown);
+        // The message says what Tor without the sandbox risks, so the button needs no confirmation of its own
+        if (offerToTurnOffSandbox) {
+            popup.secondaryActionButtonText(Res.get("popup.torSandbox.unavailable.turnOff"))
+                    .onSecondaryAction(this::turnOffSandboxAndShutDown);
+        }
+        return popup;
+    }
+
+    // On Windows only turning the sandbox off makes bridges with pluggable transports work. An option on the command
+    // line overrides what the button writes into the config file.
+    @VisibleForTesting
+    static boolean offersToTurnOffSandboxForTransports(boolean isWindows, boolean useTorSandboxSetOnCommandLine) {
+        return isWindows && !useTorSandboxSetOnCommandLine;
+    }
+
+    @VisibleForTesting
+    static String getPluggableTransportsNotAllowedMessageKey(boolean isWindows,
+                                                             boolean useTorSandboxSetOnCommandLine,
+                                                             boolean allowPluggableTransportsSetOnCommandLine) {
+        String key = "torNetworkSettingWindow.pluggableTransportsNotAllowed.msg";
+        if (isWindows) {
+            return offersToTurnOffSandboxForTransports(true, useTorSandboxSetOnCommandLine) ?
+                    key + ".windows.turnOff" :
+                    key + ".windows";
+        }
+        return allowPluggableTransportsSetOnCommandLine ? key + ".commandLine" : key;
+    }
+
+    // For a start which failed because Tor cannot run in the sandbox. The failure also covers causes which can pass or
+    // which the user can fix while keeping the sandbox, for example torrc overrides or a refusal of sandy which a later
+    // start may not repeat, so shutting down stays the default and turning the sandbox off is the second choice. The
+    // failure says what Tor without the sandbox risks, so that button needs no confirmation of its own.
+    public Popup createTorSandboxUnavailablePopup(String warnMsg) {
+        Popup popup = new Popup()
+                .headLine(Res.get("popup.torSandbox.unavailable.headline"))
+                .actionButtonText(Res.get("shared.shutDown"))
+                .onAction(this::shutDown)
+                .width(WIDTH);
+        // An option on the command line overrides what the button writes into the config file
+        if (config.useTorSandboxSetOnCommandLine) {
+            return popup.warning(warnMsg);
+        }
+        return popup.warning(warnMsg + "\n\n" + getTurnOffSandboxInfo())
+                .secondaryActionButtonText(Res.get("popup.torSandbox.unavailable.turnOff"))
+                .onSecondaryAction(this::turnOffSandboxAndShutDown);
     }
 
     protected void addButtons() {
@@ -466,6 +514,24 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
 
     private void setBridgeAddressesByCustomBridges() {
         preferences.setBridgeAddresses(customBridges != null ? Arrays.asList(customBridges.split("\\n")) : null);
+    }
+
+    private String getTurnOffSandboxInfo() {
+        return Res.get("popup.torSandbox.unavailable.turnOff.info", Config.USE_TOR_SANDBOX,
+                config.getConfigFile().getAbsolutePath());
+    }
+
+    // Without the option in the config file the sandbox stays on, so Bisq only shuts down after writing it
+    private void turnOffSandboxAndShutDown() {
+        try {
+            configFileEditor.setOption(Config.USE_TOR_SANDBOX, "false");
+        } catch (UncheckedIOException e) {
+            log.error("Could not turn off the Tor sandbox in the config file", e);
+            new Popup().warning(Res.get("popup.torSandbox.turnOff.failed",
+                    config.getConfigFile().getAbsolutePath(), e.getMessage())).show();
+            return;
+        }
+        shutDown();
     }
 
     private void useNoBridgesAndShutDown() {

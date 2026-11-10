@@ -843,11 +843,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     }
 
     // A failure which other bridges can fix leads to the Tor network settings, or for the pluggable transports which
-    // the sandbox refused, to the choices which fix it
+    // the sandbox refused, to the choices which fix it. A sandbox which cannot run Tor leads to turning it off.
     private Popup createP2PNetworkWarnMsgPopup(String warnMsg) {
         BridgesCanHelpException bridgesCanHelpFailure = model.getBridgesCanHelpFailure();
         if (bridgesCanHelpFailure == null) {
-            return new Popup().warning(warnMsg);
+            return model.isTorSandboxUnavailable() ?
+                    torNetworkSettingsWindow.createTorSandboxUnavailablePopup(warnMsg) :
+                    new Popup().warning(warnMsg);
         }
         List<String> notAllowedTransportNames = bridgesCanHelpFailure.getNotAllowedTransportNames();
         if (!notAllowedTransportNames.isEmpty()) {

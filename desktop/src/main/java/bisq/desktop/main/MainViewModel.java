@@ -904,6 +904,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return bisqSetup.getBridgesCanHelpFailure();
     }
 
+    boolean isTorSandboxUnavailable() {
+        return bisqSetup.isTorSandboxUnavailable();
+    }
+
     StringProperty getP2PNetworkIconId() {
         return bisqSetup.getP2PNetworkIconId();
     }
