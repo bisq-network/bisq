@@ -69,4 +69,22 @@ public class MathUtilsTest {
         assertFalse(movingAverage.next(values[i++]).isPresent());
         assertEquals(103.666, movingAverage.next(values[i]).get(), 0.001);
     }
+
+    @Test
+    public void roundDoubleToLongOrZeroRoundsLikeRoundDoubleToLong() {
+        assertEquals(MathUtils.roundDoubleToLong(2.5), MathUtils.roundDoubleToLongOrZero(2.5));
+        assertEquals(MathUtils.roundDoubleToLong(-2.5), MathUtils.roundDoubleToLongOrZero(-2.5));
+        assertEquals(Long.MIN_VALUE, MathUtils.roundDoubleToLongOrZero(-0x1p63));
+    }
+
+    @Test
+    public void roundDoubleToLongOrZeroGivesZeroForValuesWithoutALong() {
+        assertThrows(ArithmeticException.class, () -> MathUtils.roundDoubleToLong(0x1p63));
+
+        assertEquals(0, MathUtils.roundDoubleToLongOrZero(0x1p63));
+        assertEquals(0, MathUtils.roundDoubleToLongOrZero(-0x1p64));
+        assertEquals(0, MathUtils.roundDoubleToLongOrZero(Double.NaN));
+        assertEquals(0, MathUtils.roundDoubleToLongOrZero(Double.POSITIVE_INFINITY));
+        assertEquals(0, MathUtils.roundDoubleToLongOrZero(Double.NEGATIVE_INFINITY));
+    }
 }

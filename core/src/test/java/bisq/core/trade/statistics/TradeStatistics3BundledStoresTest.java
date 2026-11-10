@@ -34,12 +34,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The bundled stores hold the statistics of past trades. The checks against a future date and a volume which is not
- * positive must not reject any of them.
+ * The bundled stores hold the statistics of past trades. The checks against a future date, a price above the cap and a
+ * volume which is not positive must not reject any of them.
  */
 class TradeStatistics3BundledStoresTest {
     @Test
-    void bundledStatisticsHaveAPastDateAndAPositiveVolume() throws IOException {
+    void bundledStatisticsHaveAPastDateAPriceBelowTheCapAndAPositiveVolume() throws IOException {
         long now = System.currentTimeMillis();
         int numStatistics = 0;
         List<String> rejected = new ArrayList<>();
@@ -53,7 +53,9 @@ class TradeStatistics3BundledStoresTest {
                     continue;
                 }
                 numStatistics++;
-                if (tradeStatistics.getDateAsLong() > now || !hasPositiveVolume(tradeStatistics)) {
+                if (tradeStatistics.getDateAsLong() > now ||
+                        tradeStatistics.getPrice() > TradeStatistics3.MAX_PRICE ||
+                        !hasPositiveVolume(tradeStatistics)) {
                     rejected.add(version + ": " + tradeStatistics);
                 }
             }

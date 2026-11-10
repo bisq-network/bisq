@@ -476,9 +476,14 @@ public class OfferUtil {
                 if (bsqPrice.isPositive()) {
                     String inputValue = bsqFormatter.formatCoin(makerFee);
                     Volume makerFeeAsVolume = Volume.parse(inputValue, "BSQ");
-                    Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
-                    Volume volumeByAmount = userCurrencyPrice.getVolumeByAmount(requiredBtc);
-                    return Optional.of(volumeByAmount);
+                    try {
+                        Coin requiredBtc = bsqPrice.getAmountByVolume(makerFeeAsVolume);
+                        Volume volumeByAmount = userCurrencyPrice.getVolumeByAmount(requiredBtc);
+                        return Optional.of(volumeByAmount);
+                    } catch (ArithmeticException e) {
+                        // Any peer can publish the trade statistics behind the average BSQ price
+                        return Optional.empty();
+                    }
                 } else {
                     return Optional.empty();
                 }

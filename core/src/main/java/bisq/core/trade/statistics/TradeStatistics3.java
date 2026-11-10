@@ -98,6 +98,11 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     @JsonExclude
     @VisibleForTesting
     static final long FUTURE_DATE_TOLERANCE = TimeUnit.DAYS.toMillis(1);
+    // Far above the price of any trade (the bundled statistics reach 2.5 * 10^13). Prices derived from a statistic,
+    // such as the market price taken from the newest one, stay in the long range when they are converted.
+    @JsonExclude
+    @VisibleForTesting
+    static final long MAX_PRICE = 1_000_000_000_000_000_000L;
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
@@ -476,6 +481,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         return amount > 0 &&
                 validHistoricalTradeAmount &&
                 price > 0 &&
+                price <= MAX_PRICE &&
                 date > 0 &&
                 date <= System.currentTimeMillis() + FUTURE_DATE_TOLERANCE &&
                 paymentMethod != null &&

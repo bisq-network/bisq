@@ -46,6 +46,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.math.LongMath;
+
 import javax.inject.Inject;
 
 import java.util.ArrayList;
@@ -238,16 +241,18 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Get the trade volume from lookupDate until current date
-    private long getTradeVolume(long lookupDate, @Nullable List<TradeAmountDateTuple> tradeAmountDateTupleList) {
+    @VisibleForTesting
+    static long getTradeVolume(long lookupDate, @Nullable List<TradeAmountDateTuple> tradeAmountDateTupleList) {
         if (tradeAmountDateTupleList == null) {
             // Was never traded
             return 0;
         }
 
+        // Saturates instead of wrapping, so that statistics cannot turn a high volume into a low one
         return tradeAmountDateTupleList.stream()
                 .filter(e -> e.getTradeDate() > lookupDate)
-                .mapToLong(TradeAmountDateTuple::getTradeAmount)
-                .sum();
+                .map(TradeAmountDateTuple::getTradeAmount)
+                .reduce(0L, LongMath::saturatedAdd);
     }
 
     private boolean isInTrialPeriod(StatefulAsset statefulAsset) {
@@ -322,7 +327,8 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     }
 
     @Value
-    private static final class TradeAmountDateTuple {
+    @VisibleForTesting
+    static final class TradeAmountDateTuple {
         private final long tradeAmount;
         private final long tradeDate;
 
