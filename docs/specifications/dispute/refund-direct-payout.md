@@ -111,4 +111,4 @@ The persisted dispute payout transaction ID is the compatibility-safe receipt ma
 releases that stored neither this marker nor the wallet receipt memo cannot always be identified automatically.
 Operators must correlate historical payout transactions before paying an old or restored refund ticket whose receipt
 may already have been used. The independently specified claimant proof adds a serialized dispute field and is required
-for new refund authorization after upgrade, subject to its temporary grace period for legacy records.
+for new refund authorization after upgrade.
