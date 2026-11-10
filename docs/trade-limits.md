@@ -42,7 +42,6 @@ If the trader is selling BTC, signing state does not reduce the trade limit.
 | Hard network cap | `0.250 BTC` | `TradeLimits.MAX_TRADE_AMOUNT`; clamps the DAO value and rejects larger trades. |
 | Default local user-defined limit | `0.1 BTC` | Initial `Preferences.INITIAL_TRADE_LIMIT`. |
 | Current small-trade limit | `0.002 BTC` | Limit for unsigned or newly peer-signed chargeback-risk BTC buyers. |
-| Small-trade activation timestamp | `2025-02-17 00:00 UTC` | Before this timestamp the small-trade limit was `0.01 BTC`. |
 | Legacy account exception timestamp | `2019-03-01 00:00 UTC` | Account witnesses at or before this timestamp bypass signing limits. |
 
 Unless the DAO lowers `MAX_TRADE_LIMIT` below `0.250 BTC`, the effective network

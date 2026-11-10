@@ -32,8 +32,6 @@ import java.util.GregorianCalendar;
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 
 public class OfferRestrictions {
-    public static final Date TOLERATED_SMALL_TRADE_AMOUNT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.FEBRUARY, 17);
-
     // The date when traders who have not upgraded to a Tor v3 Node Address cannot take offers and their offers become
     // invisible.
     private static final Date REQUIRE_TOR_NODE_ADDRESS_V3_DATE = Utilities.getUTCDate(2021, GregorianCalendar.AUGUST, 15);
@@ -42,9 +40,7 @@ public class OfferRestrictions {
         return new Date().after(REQUIRE_TOR_NODE_ADDRESS_V3_DATE) && !Config.baseCurrencyNetwork().isRegtest();
     }
 
-    public static Coin TOLERATED_SMALL_TRADE_AMOUNT = new Date().after(TOLERATED_SMALL_TRADE_AMOUNT_CHANGE_ACTIVATION_DATE)
-            ? Coin.parseCoin("0.002")
-            : Coin.parseCoin("0.01");
+    public static final Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.002");
 
     static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
         OfferPayloadExtraDataMap extraDataMap = offer.getOfferPayloadExtraDataMap();
