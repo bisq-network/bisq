@@ -208,6 +208,10 @@ public class AlertManager {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof Alert alert) {
             if (verifySignature(alert)) {
+                if (!alert.hasValidVersion()) {
+                    log.warn("Ignoring a software update alert with an invalid version. alert={}", alert);
+                    return;
+                }
                 long creationTimeStamp = protectedStorageEntry.getCreationTimeStamp();
                 log.info("Alert added: {}, creationTimeStamp={}", alert, creationTimeStamp);
                 Long previousCreationTimeStamp = addedAlerts.get(alert);
