@@ -70,6 +70,12 @@ versions accept alerts published with this version as before. Nodes with this ve
 without an alert signature, including alerts published with earlier versions. Developers therefore
 publish alerts with this version or later, and publish an alert which is still needed again.
 
+The rules apply when a node shows alerts, not when it stores or relays them. Nodes still store and
+relay an alert which fails them, so nodes of earlier versions still receive it. These nodes check
+only the message signature: any peer can still show them the message of a published alert with
+other fields, for example as an update alert, and an update alert with an invalid version still
+fails their startup.
+
 A developer alert persisted by an earlier version carries no alert signature. The alert sender can
 still remove it from the same data directory, because the removal is signed with the publisher's
 key. Removing all alerts reaches only this developer alert and alerts with an alert signature, so
