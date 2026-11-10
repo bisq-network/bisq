@@ -218,7 +218,9 @@ The UI sign-state enum has more labels than the numeric limit schedule needs:
 `UNSIGNED`, `ARBITRATOR`, `PEER_INITIAL`, `PEER_LIMIT_LIFTED`, `PEER_SIGNER`,
 and `BANNED`. The current `getSignState` method returns `PEER_INITIAL` for a
 peer signature younger than 30 days and `PEER_SIGNER` after 30 days. `BANNED` is
-a filter/display state, not a separate numeric branch in `getTradeLimit`.
+a filter/display state, not a separate numeric branch in `getTradeLimit`. It is
+decided by the key of the owner, see
+[`specifications/account/banned-accounts.md`](specifications/account/banned-accounts.md).
 
 ## Offer Creation
 

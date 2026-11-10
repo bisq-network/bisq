@@ -191,11 +191,14 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
         if (signState != null && hasChargebackRisk(tradeModel, offer)) {
             String signAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
             String accountSigningState = StringUtils.capitalize(signState.getDisplayString());
-            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+            // A banned account is shown as not signed, also in the color of the ring
+            boolean isBanned = signState.equals(AccountAgeWitnessService.SignState.BANNED);
+            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED) || isBanned) {
                 signAgeInfo = null;
             }
 
-            return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), signAgeInfo, accountSigningState);
+            return new Tuple5<>(accountAge, isBanned ? -1L : signAge, Res.get("peerInfo.age.noRisk"), signAgeInfo,
+                    accountSigningState);
         }
         return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), null, null);
     }

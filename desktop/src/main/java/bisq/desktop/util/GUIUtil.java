@@ -31,7 +31,6 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.presentation.DaoPresentation;
 
-import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqSetup;
 import bisq.core.btc.setup.WalletsSetup;
@@ -1126,10 +1125,8 @@ public class GUIUtil {
                             ContentDisplay.RIGHT);
 
                     if (needsSigning) {
-                        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
-                                item.paymentAccountPayload);
                         AccountAgeWitnessService.SignState signState =
-                                accountAgeWitnessService.getSignState(myWitness);
+                                accountAgeWitnessService.getMySignState(item.paymentAccountPayload);
                         String info = StringUtils.capitalize(signState.getDisplayString());
 
                         MaterialDesignIcon icon = getIconForSignState(signState);

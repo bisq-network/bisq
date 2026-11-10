@@ -225,7 +225,7 @@ public abstract class PaymentMethodForm {
                 AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
                         paymentAccount.paymentAccountPayload);
                 AccountAgeWitnessService.SignState signState =
-                        accountAgeWitnessService.getSignState(myWitness);
+                        accountAgeWitnessService.getMySignState(paymentAccount.paymentAccountPayload);
 
                 accountSigningStateText = StringUtils.capitalize(signState.getDisplayString());
 
@@ -235,7 +235,8 @@ public abstract class PaymentMethodForm {
                         Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                 daysSinceSigning));
 
-                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED) &&
+                        !signState.equals(AccountAgeWitnessService.SignState.BANNED)) {
                     accountSigningStateText += " / " + timeSinceSigning;
                 }
 

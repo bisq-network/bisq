@@ -813,8 +813,7 @@ public class BisqSetup {
                     .filter(a -> PaymentMethod.hasChargebackRisk(a.getPaymentMethod(), a.getTradeCurrencies()))
                     .filter(a -> Arrays.equals(((SignedWitness) payload).getAccountAgeWitnessHash(),
                             accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload()).getHash()))
-                    .anyMatch(a -> accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
-                            a.getPaymentAccountPayload())).equals(state));
+                    .anyMatch(a -> accountAgeWitnessService.getMySignState(a.getPaymentAccountPayload()).equals(state));
         }
         return false;
     }
