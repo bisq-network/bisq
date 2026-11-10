@@ -115,22 +115,32 @@ class TradeManagerTakeOfferTest {
         errorMessageHandler = mock(ErrorMessageHandler.class);
     }
 
-    // The maker accepts up to 2 * 212 vbytes * fee rate. The taker averages its fee tx vsize
-    // with the 233 vbytes deposit tx, so a fee tx from 617 vbytes on exceeds that.
+    // The taker contacts the maker only up to 2 * 212 vbytes * fee rate, the most that makers up to
+    // v1.10.11 accept. The taker averages its fee tx vsize with the 233 vbytes deposit tx, so a fee tx
+    // from 617 vbytes on exceeds that.
     // The preference for the taker fee in BSQ adds 70 vbytes to the estimate; the check itself
-    // does not depend on the fee currency.
+    // does not depend on the fee currency. Both ends of the range scale with the fee rate, and at
+    // 2 sat/vbyte the smallest fee, 2 * 233 = 466 sat, is still above the absolute minimum of 424 sat.
     @ParameterizedTest
     @CsvSource({
-            "175, true, true",
-            "616, true, true",
-            "617, true, false",
-            "546, false, true",
-            "547, false, false",
-            "1400, true, false"
+            "10, 175, true, true",
+            "10, 616, true, true",
+            "10, 617, true, false",
+            "10, 546, false, true",
+            "10, 547, false, false",
+            "10, 1400, true, false",
+            "2, 175, true, true",
+            "2, 616, true, true",
+            "2, 617, true, false",
+            "2, 546, false, true",
+            "2, 547, false, false",
+            "2, 1400, true, false"
     })
-    void takeOfferOnlyContactsMakerWithAcceptedTradeTxFee(int feeTxVsize,
+    void takeOfferOnlyContactsMakerWithAcceptedTradeTxFee(long feeRate,
+                                                          int feeTxVsize,
                                                           boolean payFeeInBtc,
                                                           boolean acceptedByMaker) throws Exception {
+        feeService.updateFeeInfo(feeRate, 1);
         when(btcWalletService.getEstimatedFeeTxVsize(any(), any())).thenReturn(feeTxVsize);
         when(preferences.isPayFeeInBtc()).thenReturn(payFeeInBtc);
         Coin tradeTxFee = txFeeEstimationService.getEstimatedFeeAndTxVsizeForTaker(Coin.valueOf(1_000_000),
@@ -164,11 +174,12 @@ class TradeManagerTakeOfferTest {
         assertRefusal(refusalKey);
     }
 
-    // The API states the fee that the maker expects, which is in the range unless it is below the
-    // absolute minimum of 250 sat, at a fee rate of 1 sat/vbyte.
+    // The API states the fee that the maker expects, which is in the range. At 2 sat/vbyte it is the
+    // absolute minimum of 424 sat. A provider rate of 1 sat/vbyte is raised to 2, as a fee of 212 sat
+    // would be below that minimum.
     @ParameterizedTest
     @CsvSource({
-            "1, takeOffer.failed.tradeTxFeeTooLow",
+            "1, ",
             "2, ",
             "10, ",
             "100, ",
@@ -185,12 +196,14 @@ class TradeManagerTakeOfferTest {
         assertRefusal(refusalKey);
     }
 
-    // At 1 sat/vbyte the desktop states at least 233 sat, below the absolute minimum of 250 sat. That is
-    // a problem of the fee rate, not of the wallet.
+    // A fee below the absolute minimum of 424 sat is too low even when it is in the range of the own fee
+    // rate, as 423 sat at 2 sat/vbyte. A provider rate of 1 sat/vbyte is raised to 2, so the 233 sat that
+    // the desktop would state at 1 sat/vbyte are too low as well. That is a problem of the fee rate, not
+    // of the wallet.
     @ParameterizedTest
-    @CsvSource({"233", "249"})
-    void tradeTxFeeBelowTheAbsoluteMinimumIsTooLow(long tradeTxFee) {
-        feeService.updateFeeInfo(1, 1);
+    @CsvSource({"1, 233", "1, 249", "2, 423"})
+    void tradeTxFeeBelowTheAbsoluteMinimumIsTooLow(long feeRate, long tradeTxFee) {
+        feeService.updateFeeInfo(feeRate, 1);
 
         takeOffer(Coin.valueOf(tradeTxFee));
 

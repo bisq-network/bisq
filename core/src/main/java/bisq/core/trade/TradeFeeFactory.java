@@ -32,15 +32,15 @@ public class TradeFeeFactory {
     // outputs), since they directly affect getTradeTxFee() and downstream tolerance checks.
     public static final int TAKER_FEE_TX_VSIZE = 192;
     public static final int DEPOSIT_TX_VSIZE = 233;
+    // We use the sum of the size of the trade fee and the deposit tx to get an average.
+    // Miners will take the trade fee tx if the total fee of both dependent txs are good enough.
+    public static final int AVERAGE_TRADE_TX_VSIZE = (TAKER_FEE_TX_VSIZE + DEPOSIT_TX_VSIZE) / 2;
 
     public static final int MIN_TRADE_FEE = 5000;
 
     // Taker pays miner fee for deposit transaction and payout transaction
     public static Coin getTradeTxFee(Coin txFeePerVbyte) {
-        // We use the sum of the size of the trade fee and the deposit tx to get an average.
-        // Miners will take the trade fee tx if the total fee of both dependent txs are good enough.
-        int averageSize = (TAKER_FEE_TX_VSIZE + DEPOSIT_TX_VSIZE) / 2;
-        return getMinerFeeByVsize(txFeePerVbyte, averageSize);
+        return getMinerFeeByVsize(txFeePerVbyte, AVERAGE_TRADE_TX_VSIZE);
     }
 
     public static Coin getMinerFeeByVsize(Coin minerFeePerVbyte, int txVsize) {
