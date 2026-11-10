@@ -593,7 +593,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));
 
-        // Makers up to v1.10.11 drop a request with a trade tx fee outside this tolerance without a reply.
+        // Makers drop a request with a trade tx fee outside their tolerance without a reply.
+        // Compatibility with v1.10.11 and earlier: we use the tolerance of these makers, see
+        // MinerFeeValidation.MAX_OWN_FEE_DEVIATION_FACTOR.
         try {
             checkOwnTradeTxFeeIsInTolerance(txFee, provider.getFeeService());
         } catch (IllegalArgumentException e) {

@@ -680,6 +680,15 @@ the date, and remove the compatibility code once a date has passed.
 
 No rule activates on a calendar date at the moment.
 
+### Compatibility code for older releases
+
+Code that exists only for nodes of older releases is marked with a comment that starts with
+`Compatibility with v<version> and earlier:`, followed by the change that becomes possible. When a
+release is no longer supported, search for its marker, for example
+`grep -rn "Compatibility with v1.10.11 and earlier" --include=*.java .`, and decide for each place
+whether the change can be made. Some changes also wait until no trade or dispute of that release
+is open anymore. `grep -rn "Compatibility with v"` lists all markers.
+
 ### Values in the trade protocol that must stay identical between peers
 
 Do not change these unless the change is planned as a protocol change. Both trade peers calculate the

@@ -32,12 +32,14 @@ to these nodes.
 
 ## Compatibility
 
-Lite nodes use the signed block from release 1.10.4 on. Lite nodes of releases 1.10.10 and 1.10.11
-drop a broadcast message whose unsigned copy is missing or differs from the signed block, so full
-nodes still send the unsigned copy. It can be left out once these releases are no longer supported.
+Lite nodes use the signed block from release 1.10.4 on. Lite nodes of all these releases, including
+1.10.12, drop a broadcast message whose unsigned copy is missing or differs from the signed block, so
+full nodes still send the unsigned copy. To leave it out, lite nodes must first use and relay a
+message without the copy, and the releases that require it must be no longer supported.
 
 Full nodes of releases 1.10.4 to 1.10.11 send signed blocks only to a requester that announces the
-capability `SIGNED_DAO_BLOCK`, so lite nodes still announce it.
+capability `SIGNED_DAO_BLOCK`, so lite nodes still announce it until no full node runs these
+releases.
 
 Releases before 1.10.4 are not supported. Their requests get signed blocks, which they cannot read.
 They still read the unsigned copy of a full node's broadcast message that other nodes relay; that

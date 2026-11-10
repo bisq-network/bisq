@@ -204,6 +204,9 @@ public class AlertManager {
         }
     }
 
+    // The checks apply to showing an alert. Compatibility with v1.10.11 and earlier: an alert that fails them stays in
+    // the P2P store and is relayed, so that nodes of these releases, which check only the message signature, still
+    // receive it. Once these releases are not supported, the P2P store can refuse such an alert.
     private void onAlertAdded(ProtectedStorageEntry protectedStorageEntry) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof Alert alert) {
@@ -263,6 +266,9 @@ public class AlertManager {
     }
 
     private void signAndAddSignatureToAlertMessage(Alert alert) {
+        // Compatibility with v1.10.11 and earlier: these nodes accept an alert by the message signature only. Once they
+        // are not supported, it can be left out, but Alert.fromProto and the canonical encoding of Alert must then
+        // accept an alert without it.
         String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(StandardCharsets.UTF_8));
         String signatureAsBase64 = LowRSigningKey.from(alertSigningKey).signMessage(alertMessageAsHex);
         alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());

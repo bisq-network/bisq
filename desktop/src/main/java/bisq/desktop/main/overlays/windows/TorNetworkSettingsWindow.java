@@ -505,8 +505,9 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
         }
     }
 
-    // The node uses the built-in bridges of the installed Tor bundle and reads only the selected type. An older version
-    // reads only the stored bridge lines, so they are stored for a downgrade.
+    // The node uses the built-in bridges of the installed Tor bundle and reads only the selected type.
+    // Compatibility with v1.10.11 and earlier: releases before v1.10.11 read only the stored bridge lines, so they are
+    // stored for a downgrade. Once these releases are not supported, the lines need not be stored.
     private void setBridgeAddressesByTransport() {
         List<String> builtInBridges = BuiltInBridges.readInstalled(torSetup.getTorDir(), selectedTorTransport);
         preferences.setBridgeAddresses(builtInBridges.isEmpty() ? null : builtInBridges);

@@ -14,11 +14,14 @@ specification defines how a node uses these key rings when a mediation or refund
   of dispute. This applies to the agent that receives a new dispute and to the trader that receives
   the dispute the agent created for them.
 - A contract without these key rings is refused, whatever the trade date.
+- An agent accepts a new dispute only if the key ring of the dispute's agent is its own. A dispute
+  for another agent is refused, also if it matches its contract.
 
 ## Rationale
 
-The agents of a trade are fixed when the trade is made. The check stops an opener from sending the
-dispute of a trade to an agent other than the one the contract names.
+The agents of a trade are fixed when the trade is made. The checks stop an opener from sending the
+dispute of a trade to an agent other than the one the contract names. Each refund agent keeps its own
+record of paid refunds, so a dispute meant for another agent must not enter it.
 
 ## Compatibility
 
@@ -35,4 +38,5 @@ Disputes of legacy arbitration, which the node only displays.
 
 The contract is not committed on chain, and the contract signatures of the peers are optional in a
 dispute. A trader who controls both sides of a trade can therefore write another contract that
-names another agent. Stopping this needs a decision of the maintainers.
+names another agent. With one active refund agent this gains nothing; for several refund agents see
+[`refund-direct-payout.md`](refund-direct-payout.md).

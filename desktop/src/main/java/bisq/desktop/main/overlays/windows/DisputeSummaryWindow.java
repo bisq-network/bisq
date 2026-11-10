@@ -1250,7 +1250,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (isRefundAgent && !isRefundValidationCurrent()) {
             return;
         }
-        // Only possible with results that earlier versions sent with different payouts
+        // Compatibility with v1.10.11 and earlier: only possible with results that mediators of these releases sent
+        // with different payouts. The check can go once no dispute with such results is open anymore.
         if (isMediationDispute() && !mediationManager.hasPayoutOfSentResults(dispute, disputeResult)) {
             new Popup().warning(Res.get("disputeSummaryWindow.close.payoutChanged")).show();
             return;

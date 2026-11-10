@@ -365,6 +365,42 @@ class DisputeManagerAuthTest {
     }
 
     @Test
+    void openNewDisputeAddressedToAnotherAgentDoesNotMutateDisputeList() {
+        TestDisputeList disputeList = new TestDisputeList();
+        DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
+        TestDisputeManager manager = new TestDisputeManager(mockP2PService(),
+                tradeManager,
+                closedTradableManager,
+                failedTradesManager,
+                keyStorageDir,
+                disputeListService,
+                mock(DaoFacade.class),
+                localP2PConfig());
+
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        PubKeyRing sellerPubKeyRing = pubKeyRing();
+        // The dispute and its contract consistently name another agent, but the message reached us.
+        PubKeyRing otherAgentPubKeyRing = pubKeyRing();
+        Dispute dispute = validDispute(TRADE_ID,
+                0,
+                buyerPubKeyRing,
+                otherAgentPubKeyRing,
+                validContract(TRADE_ID, buyerPubKeyRing, sellerPubKeyRing, otherAgentPubKeyRing));
+        dispute.setBurningManSelectionHeight(1);
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                BUYER_NODE_ADDRESS,
+                "open-dispute-uid",
+                SupportType.MEDIATION);
+
+        manager.onOpenNewDispute(message, buyerPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeList.isEmpty());
+        assertEquals(1, manager.getValidationExceptions().size());
+        assertEquals("Dispute is not addressed to this agent", manager.getValidationExceptions().get(0).getMessage());
+        verify(disputeListService, never()).requestPersistence();
+    }
+
+    @Test
     void openNewDisputeWithLegacyDonationAddressFailureDoesNotMutateDisputeList() {
         TestDisputeList disputeList = new TestDisputeList();
         DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
