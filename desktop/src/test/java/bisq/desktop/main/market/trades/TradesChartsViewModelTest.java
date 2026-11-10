@@ -213,22 +213,21 @@ public class TradesChartsViewModelTest {
         assertEquals(date, candleData.date);
     }
 
-    // Before 2021-11-01 there is no amount cap. The amounts of these valid statistics sum up to 2^64, which wraps to 0,
-    // so the fiat average cannot be represented as a long. The candle then has no average instead of failing the chart
-    // of the whole market.
+    // Before 2021-11-01 there is no amount cap. The amounts of these valid statistics sum up to 2^64, which a long sum
+    // wraps to 0. The average still is the price of all three, and the shown amount saturates instead of wrapping.
     @Test
-    public void candleWhoseAmountsSumUpTo2Pow64HasNoAverage() {
+    public void candleWhoseAmountsSumUpTo2Pow64HasTheirAverage() {
         Set<TradeStatistics3> set = Set.copyOf(usdStatisticsWithAmountsSummingUpTo2Pow64());
 
         CandleData candleData = candleData("USD", set);
 
-        assertEquals(0, candleData.average);
+        assertEquals(Price.parse("USD", "1").getValue(), candleData.average);
+        assertEquals(Long.MAX_VALUE, candleData.accumulatedAmount);
     }
 
-    // The volumes of these valid statistics before 2021-11-01 sum up to 2^64 + 1, which wraps to 1, so the inverted
-    // altcoin average cannot be represented as a long
+    // The volumes of these valid statistics before 2021-11-01 sum up to 2^64 + 1, which a long sum wraps to 1
     @Test
-    public void candleWhoseAltcoinVolumesWrapHasNoAverage() {
+    public void candleWhoseAltcoinVolumesSumUpTo2Pow64HasTheirAverage() {
         long date = 1_600_000_000_000L;
         Set<TradeStatistics3> set = Set.of(
                 new TradeStatistics3("XMR", 1, 92_233_720_368L, PaymentMethod.BLOCK_CHAINS_ID, date, null, null,
@@ -241,17 +240,33 @@ public class TradesChartsViewModelTest {
 
         CandleData candleData = candleData("XMR", set);
 
-        assertEquals(0, candleData.average);
+        assertEquals(1, candleData.average);
+        assertEquals(Long.MAX_VALUE, candleData.accumulatedVolume);
     }
 
     @Test
-    public void usdAveragePriceWhoseAmountsSumUpTo2Pow64IsZero() throws Exception {
+    public void usdAveragePriceWhoseAmountsSumUpTo2Pow64IsTheirAverage() throws Exception {
         TreeSet<TradeStatistics3> set = new TreeSet<>(usdStatisticsWithAmountsSummingUpTo2Pow64());
 
         Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePrices =
                 ChartCalculations.getUsdAveragePriceMapsPerTickUnit(set).get();
 
-        assertEquals(List.of(0L), new ArrayList<>(usdAveragePrices.get(TradesChartsViewModel.TickUnit.DAY).values()));
+        assertEquals(List.of(Price.parse("USD", "1").getValue()),
+                new ArrayList<>(usdAveragePrices.get(TradesChartsViewModel.TickUnit.DAY).values()));
+    }
+
+    // The amount times the USD average exceeds the long range. The volume in USD is computed without wrapping.
+    @Test
+    public void volumeInUsdBeyondTheLongProductDoesNotWrap() {
+        long date = 1_600_000_000_000L;
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("EUR", Price.parse("EUR", "1").getValue(),
+                Long.MAX_VALUE, PaymentMethod.SEPA_ID, date, null, null, (TreeMap<String, String>) null);
+        assertTrue(tradeStatistics.isValid());
+
+        CandleData candleData = candleData("EUR", Set.of(tradeStatistics), Price.parse("USD", "50000").getValue());
+
+        // Long.MAX_VALUE satoshi are about 9.2 * 10^10 BTC, at 50000 USD about 4.6 * 10^15 USD
+        assertEquals(4.611686018427385e15, candleData.volumeInUsd, 1e3);
     }
 
     // A USD average of 0 stands for no average, so the volume in USD uses the previous one, as for a missing day
@@ -297,11 +312,16 @@ public class TradesChartsViewModelTest {
     }
 
     private static CandleData candleData(String currencyCode, Set<TradeStatistics3> set) {
+        return candleData(currencyCode, set, 0);
+    }
+
+    private static CandleData candleData(String currencyCode, Set<TradeStatistics3> set, long averageUsdPrice) {
         Date date = set.iterator().next().getDate();
         Date tickStart = ChartCalculations.roundToTick(date, TradesChartsViewModel.TickUnit.DAY);
         List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = List.of(new Pair<>(tickStart, set),
                 new Pair<>(date, Set.of()));
-        return assertDoesNotThrow(() -> ChartCalculations.getCandleData(0, set, 0, TradesChartsViewModel.TickUnit.DAY,
+        return assertDoesNotThrow(() -> ChartCalculations.getCandleData(0, set, averageUsdPrice,
+                TradesChartsViewModel.TickUnit.DAY,
                 currencyCode, itemsPerInterval));
     }
 

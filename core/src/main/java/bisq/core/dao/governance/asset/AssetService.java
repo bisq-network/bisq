@@ -47,6 +47,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.math.LongMath;
 
 import javax.inject.Inject;
 
@@ -247,10 +248,11 @@ public class AssetService implements DaoSetupService, DaoStateListener {
             return 0;
         }
 
+        // Saturates instead of wrapping, so that statistics cannot turn a high volume into a low one
         return tradeAmountDateTupleList.stream()
                 .filter(e -> e.getTradeDate() > lookupDate)
-                .mapToLong(TradeAmountDateTuple::getTradeAmount)
-                .sum();
+                .map(TradeAmountDateTuple::getTradeAmount)
+                .reduce(0L, LongMath::saturatedAdd);
     }
 
     private boolean isInTrialPeriod(StatefulAsset statefulAsset) {

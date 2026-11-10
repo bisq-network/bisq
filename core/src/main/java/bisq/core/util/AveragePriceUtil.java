@@ -100,17 +100,18 @@ public class AveragePriceUtil {
     }
 
     private static long getBTCAverage(List<TradeStatistics3> list) {
-        long accumulatedVolume = 0;
-        long accumulatedAmount = 0;
+        // Floating point sums, so that they cannot wrap
+        double accumulatedVolume = 0;
+        double accumulatedAmount = 0;
 
         for (TradeStatistics3 item : list) {
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue(); // Amount of BTC traded
         }
         long averagePrice;
-        double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
+        double accumulatedAmountScaledUp = MathUtils.scaleUpByPowerOf10(accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
         averagePrice = accumulatedVolume > 0 ?
-                MathUtils.roundDoubleToLongOrZero(accumulatedAmountAsDouble / (double) accumulatedVolume) :
+                MathUtils.roundDoubleToLongOrZero(accumulatedAmountScaledUp / accumulatedVolume) :
                 0;
 
         return averagePrice;

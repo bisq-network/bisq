@@ -2,9 +2,9 @@
 
 ## Scope
 
-This specification defines which trade statistics a BISQ 1 node uses, how average prices computed
-from them handle extreme values, and which market prices can deactivate an open offer through its
-trigger price.
+This specification defines which trade statistics a BISQ 1 node uses, how sums and average prices
+computed from them handle extreme values, and which market prices can deactivate an open offer
+through its trigger price.
 
 ## Rules
 
@@ -30,6 +30,10 @@ trigger price.
    stands for no average, as when there are no trades. A value converted with the average BSQ price,
    such as a trade fee in BSQ shown in the user's currency, is not shown if it cannot be represented
    as a long.
+6. A sum over valid statistics, such as the traded amount or volume of a period, never wraps
+   around. An average is computed from sums as floating point numbers. A total which is
+   shown or compared, such as the volume in the charts or the traded amount of an altcoin, is the
+   largest long if the sum exceeds the long range.
 
 ## Trust model
 
@@ -55,6 +59,12 @@ are therefore informational. They must not change an offer, a trade, a fee or th
   only on the price feed.
 - Rule 5: the validity rules bound single values (rule 2), not every combination of them. A view
   must not fail because of the values of a statistic.
+- Rule 6: statistics dated before 2021-11-01 have no amount cap, and any peer can publish many
+  statistics, so a sum of valid values can exceed the long range. A sum which wraps around gives a
+  negative or wrong total or average. An average of floating point sums stays below about twice the
+  highest price of its statistics (the volume of a statistic is rounded), so with the price limit of
+  rule 2 within the long range. A total which saturates stays at least as large as each of its
+  parts.
 
 ## Compatibility
 
@@ -74,7 +84,8 @@ The trade volume of an altcoin in trade statistics over its look-back period dec
 node shows the altcoin as actively traded or as delisted (DAO parameter `ASSET_MIN_VOLUME`). Only
 altcoins which are not delisted can be chosen for a new payment account and in the preferences.
 Valid but invented statistics can therefore keep a delisted altcoin listed on every node which
-receives them. They cannot delist an altcoin, because statistics are never removed.
+receives them. They cannot delist an altcoin, because statistics are never removed and the traded
+amount never wraps around (rule 6).
 
 ## Not covered
 

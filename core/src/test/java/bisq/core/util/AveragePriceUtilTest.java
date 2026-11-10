@@ -70,10 +70,10 @@ class AveragePriceUtilTest {
         assertEquals(0, averages.first.getValue());
     }
 
-    // Before 2021-11-01 there is no amount cap. The BSQ volumes of these statistics sum up to 2^64 + 1, which wraps to
-    // 1 and makes the BTC average exceed the long range. No current window reaches back that far.
+    // Before 2021-11-01 there is no amount cap. The BSQ volumes of these statistics sum up to 2^64 + 1, which a long
+    // sum wraps to 1. The BTC average still is the price of the statistics. No current window reaches back that far.
     @Test
-    void btcAverageWhichDoesNotFitIntoALongIsZero() {
+    void btcAverageOfVolumesBeyondTheLongRange() {
         long date = 1_600_000_000_000L;
         TradeStatistics3 first = statistics("BSQ", 1, 92_233_720_368L, date);
         TradeStatistics3 second = statistics("BSQ", 1, 92_233_720_368L, date + 1);
@@ -83,7 +83,7 @@ class AveragePriceUtilTest {
         Tuple2<Price, Price> averages = assertDoesNotThrow(() -> AveragePriceUtil.getAveragePriceTuple(preferences(),
                 tradeStatisticsManager(first, second, third), 30, new Date(date + TimeUnit.DAYS.toMillis(1))));
 
-        assertEquals(0, averages.second.getValue());
+        assertEquals(1, averages.second.getValue());
     }
 
     private static Tuple2<Price, Price> averages(TradeStatistics3... tradeStatistics) {
