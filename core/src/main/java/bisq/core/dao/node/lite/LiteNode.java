@@ -354,26 +354,18 @@ public class LiteNode extends BsqNode {
     void processNewBlockBroadcastMessage(NewBlockBroadcastMessage newBlockBroadcastMessage,
                                          @Nullable NodeAddress senderNodeAddress) {
         SignedRawBlock signedRawBlock = newBlockBroadcastMessage.getSignedRawBlock();
-        if (signedRawBlock != null) {
-            if (isSignedRawBlockInvalid(signedRawBlock)) {
-                log.warn("Ignoring NewBlockBroadcastMessage with invalid DAO block signature. senderNodeAddress={}, blockHeight={}, blockHash={}",
-                        senderNodeAddress,
-                        signedRawBlock.getBlock().getHeight(),
-                        signedRawBlock.getBlock().getHash());
-            } else {
-                onNewBlockReceived(signedRawBlock.getBlock());
-            }
-        } else if (daoBlockSignatureVerifier.isSkipSignatureVerification()) {
-            log.warn("isSkipSignatureVerification is set thus we accept unsigned blocks from NewBlockBroadcastMessage. senderNodeAddress={}, blockHeight={}, blockHash={}",
-                    senderNodeAddress,
-                    newBlockBroadcastMessage.getBlock().getHeight(),
-                    newBlockBroadcastMessage.getBlock().getHash());
-            onNewBlockReceived(newBlockBroadcastMessage.getBlock());
-        } else {
+        if (signedRawBlock == null) {
             log.warn("Ignoring unsigned NewBlockBroadcastMessage. senderNodeAddress={}, blockHeight={}, blockHash={}",
                     senderNodeAddress,
                     newBlockBroadcastMessage.getBlock().getHeight(),
                     newBlockBroadcastMessage.getBlock().getHash());
+        } else if (isSignedRawBlockInvalid(signedRawBlock)) {
+            log.warn("Ignoring NewBlockBroadcastMessage with invalid DAO block signature. senderNodeAddress={}, blockHeight={}, blockHash={}",
+                    senderNodeAddress,
+                    signedRawBlock.getBlock().getHeight(),
+                    signedRawBlock.getBlock().getHash());
+        } else {
+            onNewBlockReceived(signedRawBlock.getBlock());
         }
     }
 

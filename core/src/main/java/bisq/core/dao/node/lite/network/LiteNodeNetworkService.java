@@ -239,20 +239,22 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         if (networkEnvelope instanceof NewBlockBroadcastMessage newBlockBroadcastMessage) {
             RawBlock unSignedRawBlock = newBlockBroadcastMessage.getBlock();
             SignedRawBlock signedRawBlock = newBlockBroadcastMessage.getSignedRawBlock();
-            String hashUnsignedBlock = unSignedRawBlock.getHash();
-            String contentHashUnsignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(unSignedRawBlock));
-            String blockUid = "unsigned:" + contentHashUnsignedBlock;
             NodeAddress senderNodeAddress = connection.getPeersNodeAddressOptional().orElse(null);
-            if (signedRawBlock != null) {
-                String contentHashSignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(signedRawBlock.getBlock()));
-                if (!signedRawBlock.getBlock().getHash().equals(hashUnsignedBlock) ||
-                        !contentHashSignedBlock.equals(contentHashUnsignedBlock)) {
-                    log.warn("We received a newBlockBroadcastMessage with a different hashes for the unsigned and the " +
-                            "signed block. We ignore that as invalid. newBlockBroadcastMessage={}", newBlockBroadcastMessage);
-                    return;
-                }
+            if (signedRawBlock == null) {
+                log.warn("We received a NewBlockBroadcastMessage without a signed block. We neither use nor relay it. " +
+                        "senderNodeAddress={}, blockHeight={}", senderNodeAddress, unSignedRawBlock.getHeight());
+                return;
+            }
 
-                blockUid = "signed:" + contentHashSignedBlock;
+            // We relay the message as received, including its unsigned copy of the block. Releases before 1.10.4 use
+            // that copy without any check, so we relay only a copy that matches the signed block.
+            String contentHashUnsignedBlock = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(unSignedRawBlock));
+            String blockUid = Utilities.bytesAsHexString(DaoBlockSignatureHash.getHash(signedRawBlock.getBlock()));
+            if (!signedRawBlock.getBlock().getHash().equals(unSignedRawBlock.getHash()) ||
+                    !blockUid.equals(contentHashUnsignedBlock)) {
+                log.warn("We received a newBlockBroadcastMessage with a different hashes for the unsigned and the " +
+                        "signed block. We ignore that as invalid. newBlockBroadcastMessage={}", newBlockBroadcastMessage);
+                return;
             }
 
             if (receivedBlocks.contains(blockUid)) {
@@ -260,13 +262,11 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                 return;
             }
 
-            if (signedRawBlock != null) {
-                // Skipping signature verification is handled by daoBlockSignatureVerifier.isValid.
-                if (!daoBlockSignatureVerifier.isValid(signedRawBlock)) {
-                    log.warn("We received a newBlockBroadcastMessage with an invalid signature. " +
-                            "newBlockBroadcastMessage={}", newBlockBroadcastMessage);
-                    return;
-                }
+            // Skipping signature verification is handled by daoBlockSignatureVerifier.isValid.
+            if (!daoBlockSignatureVerifier.isValid(signedRawBlock)) {
+                log.warn("We received a newBlockBroadcastMessage with an invalid signature. " +
+                        "newBlockBroadcastMessage={}", newBlockBroadcastMessage);
+                return;
             }
 
             log.info("We received a NewBlockBroadcastMessage from peer {}. blockUid={}", senderNodeAddress, blockUid);

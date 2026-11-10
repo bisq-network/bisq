@@ -47,6 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -118,18 +119,13 @@ public class LiteNodeTest {
     }
 
     @Test
-    void acceptsUnsignedNewBlockBroadcastMessageWhenSkipSignatureVerificationIsEnabled() throws Exception {
+    void ignoresUnsignedNewBlockBroadcastMessageWhenSkipSignatureVerificationIsEnabled() throws Exception {
         RawBlock rawBlock = createRawBlock(100, "block-hash");
         LiteNode liteNode = createLiteNode(true);
-        when(daoStateService.getBlockAtHeight(rawBlock.getHeight())).thenReturn(Optional.empty());
-        when(blockParser.parseBlock(rawBlock)).thenReturn(new Block(rawBlock.getHeight(),
-                rawBlock.getTime(),
-                rawBlock.getHash(),
-                rawBlock.getPreviousBlockHash()));
 
-        liteNode.processNewBlockBroadcastMessage(new NewBlockBroadcastMessage(rawBlock), SENDER_NODE_ADDRESS);
+        liteNode.processNewBlockBroadcastMessage(new NewBlockBroadcastMessage(rawBlock, null), SENDER_NODE_ADDRESS);
 
-        verify(blockParser).parseBlock(rawBlock);
+        verify(blockParser, never()).parseBlock(any());
     }
 
     @Test
@@ -137,14 +133,15 @@ public class LiteNodeTest {
         RawBlock rawBlock = createRawBlock(100, "block-hash");
         LiteNode liteNode = createLiteNode(false);
 
-        liteNode.processNewBlockBroadcastMessage(new NewBlockBroadcastMessage(rawBlock), SENDER_NODE_ADDRESS);
+        liteNode.processNewBlockBroadcastMessage(new NewBlockBroadcastMessage(rawBlock, null), SENDER_NODE_ADDRESS);
 
         verify(blockParser, never()).parseBlock(any());
     }
 
     private LiteNode createLiteNode(boolean skipSignatureVerification) {
         when(daoStateService.getGenesisBlockHeight()).thenReturn(0);
-        when(daoBlockSignatureVerifier.isSkipSignatureVerification()).thenReturn(skipSignatureVerification);
+        // Lenient, as unsigned broadcast messages are ignored without looking at this option.
+        lenient().when(daoBlockSignatureVerifier.isSkipSignatureVerification()).thenReturn(skipSignatureVerification);
         return new LiteNode(blockParser,
                 daoStateService,
                 daoStateSnapshotService,
