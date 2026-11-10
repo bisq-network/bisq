@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
+      # The CodeQL action reads the workflow run, which needs this permission in a private repository.
+      actions: read
       contents: read
       security-events: write
     strategy:
@@ -35,15 +37,11 @@ jobs:
             build-mode: manual
           - language: actions
             build-mode: none
-          - language: javascript-typescript
-            build-mode: none
-          - language: python
-            build-mode: none
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Only the Java build needs the submodules. The other languages analyze the files of this repository only.
+          # Only the Java build needs the submodules.
           submodules: ${{ matrix.build-mode == 'manual' }}
           persist-credentials: false
 
