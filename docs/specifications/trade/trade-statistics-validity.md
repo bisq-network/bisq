@@ -27,7 +27,9 @@ trigger price.
    which a node derives from trade statistics never deactivates an offer.
 5. An average price computed from valid statistics, in the market charts and for the average BSQ
    price, does not fail for any values. An average which cannot be represented as a long is 0, which
-   stands for no average, as when there are no trades.
+   stands for no average, as when there are no trades. A value converted with the average BSQ price,
+   such as a trade fee in BSQ shown in the user's currency, is not shown if it cannot be represented
+   as a long.
 
 ## Trust model
 
