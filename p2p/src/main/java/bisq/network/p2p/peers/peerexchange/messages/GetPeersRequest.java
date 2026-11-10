@@ -97,7 +97,7 @@ public final class GetPeersRequest extends NetworkEnvelope implements PeerExchan
         return new GetPeersRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 new HashSet<>(proto.getReportedPeersList().stream()
-                        .map(Peer::fromProto)
+                        .map(Peer::fromReportedProto)
                         .collect(Collectors.toSet())),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
