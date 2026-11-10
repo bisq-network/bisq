@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.lenient;
@@ -77,15 +78,15 @@ public class LiteNodeTest {
     private ExportJsonFilesService exportJsonFilesService;
 
     @Test
-    void getsSignedBlocksForParsingWhenSkipSignatureVerificationIsEnabled() {
+    void getsSignedBlocksForParsing() {
         RawBlock rawBlock = createRawBlock(100, "block-hash");
         GetBlocksResponse response = GetBlocksResponse.forSignedBlocks(List.of(createSignedRawBlock(rawBlock)), 42);
 
-        assertEquals(List.of(rawBlock), LiteNode.getBlocksForParsing(response, true));
+        assertEquals(List.of(rawBlock), LiteNode.getBlocksForParsing(response));
     }
 
     @Test
-    void prefersUnsignedBlocksForParsingWhenSkipSignatureVerificationIsEnabled() {
+    void usesOnlySignedBlocksForParsing() {
         RawBlock unsignedBlock = createRawBlock(100, "unsigned-block-hash");
         RawBlock signedBlock = createRawBlock(100, "signed-block-hash");
         GetBlocksResponse response = (GetBlocksResponse) GetBlocksResponse.fromProto(protobuf.GetBlocksResponse.newBuilder()
@@ -95,7 +96,24 @@ public class LiteNodeTest {
                         .build(),
                 1);
 
-        assertEquals(List.of(unsignedBlock), LiteNode.getBlocksForParsing(response, true));
+        assertEquals(List.of(signedBlock), LiteNode.getBlocksForParsing(response));
+    }
+
+    @Test
+    void ignoresUnsignedGetBlocksResponseWhenSkipSignatureVerificationIsEnabled() throws Exception {
+        RawBlock rawBlock = createRawBlock(100, "block-hash");
+        LiteNode liteNode = createLiteNode(true);
+        GetBlocksResponse response = (GetBlocksResponse) GetBlocksResponse.fromProto(protobuf.GetBlocksResponse.newBuilder()
+                        .addRawBlocks(rawBlock.toProtoMessage())
+                        .setRequestNonce(42)
+                        .build(),
+                1);
+        AtomicBoolean parsingComplete = new AtomicBoolean();
+
+        liteNode.processGetBlocksResponse(response, SENDER_NODE_ADDRESS, () -> parsingComplete.set(true));
+
+        verify(blockParser, never()).parseBlock(any());
+        assertFalse(parsingComplete.get());
     }
 
     @Test

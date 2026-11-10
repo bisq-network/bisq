@@ -228,12 +228,9 @@ public class LiteNode extends BsqNode {
     void processGetBlocksResponse(GetBlocksResponse getBlocksResponse,
                                   NodeAddress senderNodeAddress,
                                   Runnable onParsingComplete) {
-        boolean skipSignatureVerification = daoBlockSignatureVerifier.isSkipSignatureVerification();
         List<RawBlock> blocks = getBlocksResponse.getBlocks();
         List<SignedRawBlock> signedRawBlocks = getBlocksResponse.getSignedRawBlocks();
-        if (!skipSignatureVerification &&
-                signedRawBlocks.isEmpty() &&
-                !blocks.isEmpty()) {
+        if (signedRawBlocks.isEmpty() && !blocks.isEmpty()) {
             log.warn("Ignoring unsigned GetBlocksResponse from {}. unsignedBlocks={}",
                     senderNodeAddress,
                     blocks.size());
@@ -251,26 +248,17 @@ public class LiteNode extends BsqNode {
             return;
         }
 
-        if (skipSignatureVerification) {
-            log.warn("isSkipSignatureVerification is set thus we accept GetBlocksResponse without enforcing DAO block signatures. " +
-                            "senderNodeAddress={}, unsignedBlocks={}, signedBlocks={}",
+        if (daoBlockSignatureVerifier.isSkipSignatureVerification()) {
+            log.warn("isSkipSignatureVerification is set thus we accept GetBlocksResponse without verifying DAO block signatures. " +
+                            "senderNodeAddress={}, signedBlocks={}",
                     senderNodeAddress,
-                    blocks.size(),
                     signedRawBlocks.size());
-            onRequestedBlocksReceived(getBlocksForParsing(getBlocksResponse, true), onParsingComplete);
-        } else {
-            onRequestedBlocksReceived(getBlocksForParsing(getBlocksResponse, false), onParsingComplete);
         }
+        onRequestedBlocksReceived(getBlocksForParsing(getBlocksResponse), onParsingComplete);
     }
 
     @VisibleForTesting
-    static List<RawBlock> getBlocksForParsing(GetBlocksResponse getBlocksResponse,
-                                              boolean skipSignatureVerification) {
-        List<RawBlock> blocks = getBlocksResponse.getBlocks();
-        if (skipSignatureVerification && !blocks.isEmpty()) {
-            return blocks;
-        }
-
+    static List<RawBlock> getBlocksForParsing(GetBlocksResponse getBlocksResponse) {
         return getBlocksResponse.getSignedRawBlocks().stream()
                 .map(SignedRawBlock::getBlock)
                 .toList();

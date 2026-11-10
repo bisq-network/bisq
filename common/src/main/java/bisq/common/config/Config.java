@@ -559,7 +559,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> skipBsqBlockProvidersSignatureVerificationOpt =
                 parser.accepts(SKIP_BSQ_BLOCK_PROVIDERS_SIGNATURE_VERIFICATION,
-                                "Override the requirement for BSQ block provider signatures. If true, unsigned DAO blocks are accepted; provided signatures are still verified.")
+                                "If true, the signatures of BSQ block providers are not verified. DAO blocks must still be signed.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);

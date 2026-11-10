@@ -16,6 +16,9 @@ defines which of these blocks a lite node uses and relays.
   block. A lite node uses and relays the message only if the signed block is present, its signature
   is valid and the unsigned copy matches it. The node relays the message unchanged.
 - A lite node neither uses nor relays a broadcast message without a signed block.
+- A full node answers each request for blocks with signed blocks only, whatever capabilities the
+  requester announces. A lite node ignores a response that contains unsigned blocks but no signed
+  block.
 - With the option `skipBsqBlockProvidersSignatureVerification`, which is the default on regtest, a
   lite node does not verify the signature. It still requires the signed block.
 
@@ -33,5 +36,9 @@ Lite nodes use the signed block from release 1.10.4 on. Lite nodes of releases 1
 drop a broadcast message whose unsigned copy is missing or differs from the signed block, so full
 nodes still send the unsigned copy. It can be left out once these releases are no longer supported.
 
-Releases before 1.10.4 are not supported. They still read the unsigned copy of a full node's message
-that other nodes relay; that copy matches the signed block.
+Full nodes of releases 1.10.4 to 1.10.11 send signed blocks only to a requester that announces the
+capability `SIGNED_DAO_BLOCK`, so lite nodes still announce it.
+
+Releases before 1.10.4 are not supported. Their requests get signed blocks, which they cannot read.
+They still read the unsigned copy of a full node's broadcast message that other nodes relay; that
+copy matches the signed block.
