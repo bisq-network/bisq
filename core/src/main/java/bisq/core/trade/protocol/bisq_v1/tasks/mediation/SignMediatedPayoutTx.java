@@ -33,14 +33,12 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.Arrays;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAddresses;
 import static bisq.core.trade.validation.MediatedPayoutTxValidation.checkMediatedPayoutAmounts;
+import static bisq.core.trade.validation.PayoutTxValidation.checkPayoutTxSignature;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Slf4j
 public class SignMediatedPayoutTx extends TradeTask {
 
     public SignMediatedPayoutTx(TaskRunner<Trade> taskHandler, Trade trade) {
@@ -51,10 +49,6 @@ public class SignMediatedPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-
-            if (processModel.getMediatedPayoutTxSignature() != null) {
-                log.warn("processModel.getTxSignatureFromMediation is already set");
-            }
 
             TradingPeer tradingPeer = processModel.getTradePeer();
             BtcWalletService walletService = processModel.getBtcWalletService();
@@ -87,8 +81,6 @@ public class SignMediatedPayoutTx extends TradeTask {
             byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
             byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
 
-            DeterministicKey myMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
-
             checkArgument(Arrays.equals(myMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
@@ -96,6 +88,26 @@ public class SignMediatedPayoutTx extends TradeTask {
             processModel.getTradeWalletService().verifyDepositTxMultiSigOutput(
                     depositTx, buyerMultiSigPubKey, sellerMultiSigPubKey);
 
+            byte[] existingSignature = processModel.getMediatedPayoutTxSignature();
+            if (existingSignature != null) {
+                // A prior acceptance may only complete the payout it actually signed. In particular, automatic
+                // finalization must not replace that signature after the mediation amounts have changed.
+                checkPayoutTxSignature(existingSignature,
+                        walletService,
+                        depositTx,
+                        buyerPayoutAmount,
+                        sellerPayoutAmount,
+                        buyerPayoutAddressString,
+                        sellerPayoutAddressString,
+                        myMultiSigPubKey,
+                        buyerMultiSigPubKey,
+                        sellerMultiSigPubKey,
+                        "mediatedPayoutTxSignature");
+                complete();
+                return;
+            }
+
+            DeterministicKey myMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
             byte[] mediatedPayoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
                     depositTx,
                     buyerPayoutAmount,
