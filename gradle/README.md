@@ -454,6 +454,12 @@ That line is expected for these tasks and does not mean the task failed. Look at
 output and at `BUILD SUCCESSFUL` instead. The same applies to `generateJarHashes` and
 `generateReleaseManifest` on the release evidence path.
 
+A discarded entry also hides configuration cache problems of the other tasks in the same
+invocation. Task actions must not use script objects such as `gradle`, `providers`, `fileTree` or
+`exec`; they use values captured at configuration time or injected services. Check a task that is
+meant to be cache compatible by running it alone, for example `./gradlew generateInstallerManifest`.
+A `--dry-run` does not run the task actions and cannot find these problems.
+
 ## Related verification tasks
 
 | Task | Checks |

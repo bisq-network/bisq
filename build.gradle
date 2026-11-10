@@ -9,9 +9,11 @@ buildscript {
 
 import groovy.xml.XmlSlurper
 
+import javax.inject.Inject
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.zip.ZipFile
+import org.gradle.process.ExecOperations
 
 plugins {
     id 'bisq.gradle.regtest_plugin.RegtestPlugin'
@@ -786,9 +788,9 @@ def normalizeReleaseVersion = { String rawReleaseVersion ->
     releaseVersion
 }
 
-def resolveGpgExecutable = {
-    def configuredGpgExecutable = providers.gradleProperty('gpgExecutable').orNull ?:
-            providers.environmentVariable('GPG_EXECUTABLE').orNull
+// The configured value is read by the caller from its own providers. Script objects such as
+// 'providers' must not be used by code that runs during task execution (configuration cache).
+def resolveGpgExecutable = { String configuredGpgExecutable ->
     configuredGpgExecutable ?: [
             '/opt/homebrew/bin/gpg',
             '/usr/local/bin/gpg',
@@ -1398,11 +1400,20 @@ def compactMap = { Map<String, Object> values ->
     }
 }
 
+// The script-level 'exec' method is not available when a task runs from a configuration cache entry.
+// Task actions therefore use this service, which is obtained at configuration time.
+interface InjectedExecOperations {
+    @Inject
+    ExecOperations getExecOperations()
+}
+
+def execOperations = objects.newInstance(InjectedExecOperations).execOperations
+
 def execResult = { List<String> command ->
     def output = new ByteArrayOutputStream()
     def stderrOutput = new ByteArrayOutputStream()
     try {
-        def result = exec {
+        def result = execOperations.exec {
             commandLine command
             standardOutput = output
             errorOutput = stderrOutput
@@ -1521,6 +1532,9 @@ def loadGradleWrapperProperties = {
     wrapperProperties
 }
 
+// Taken at configuration time because the Gradle object must not be read while a task runs.
+def runningGradleVersion = gradle.gradleVersion
+
 def buildInfoForManifest = { Collection entries, File manifest, File checksums ->
     def gitStatus = execText(['git', 'status', '--porcelain'])
     def wrapperProperties = loadGradleWrapperProperties()
@@ -1549,7 +1563,7 @@ def buildInfoForManifest = { Collection entries, File manifest, File checksums -
                     submodules: execText(['git', 'submodule', 'status', '--recursive'])
             ],
             gradle          : [
-                    version                     : gradle.gradleVersion,
+                    version                     : runningGradleVersion,
                     wrapperDistributionUrl      : wrapperProperties.getProperty('distributionUrl'),
                     wrapperDistributionSha256Sum: wrapperProperties.getProperty('distributionSha256Sum'),
                     expectedVersion             : expectedReleaseGradleVersion.get()
@@ -2571,11 +2585,11 @@ tasks.register('generateInstallerEvidenceBundle', Zip) {
     }
     def structureDirectoryFiles = {
         def structureDir = installerStructureReportDir.get().asFile
-        structureDir.directory
-                ? fileTree(structureDir).files
-                .findAll { it.file }
-                .sort { left, right -> left.path <=> right.path }
-                : []
+        def files = []
+        if (structureDir.directory) {
+            structureDir.eachFileRecurse(groovy.io.FileType.FILES) { files << it }
+        }
+        files.sort { left, right -> left.path <=> right.path }
     }
 
     archiveFileName = 'installer-evidence.zip'
@@ -3032,7 +3046,7 @@ tasks.register('signReleaseArtifacts') {
             throw new GradleException("No release artifacts found to sign in ${releaseDir}")
         }
 
-        def gpgExecutable = resolveGpgExecutable()
+        def gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull ?: gpgExecutableEnvironment.orNull)
         def failureDetails = { result ->
             [result.stderr, result.stdout]
                     .findAll { it != null && !it.trim().empty }
@@ -3475,7 +3489,7 @@ tasks.register('verifyGithubReleaseReadiness') {
             def stdout = new ByteArrayOutputStream()
             def stderr = new ByteArrayOutputStream()
             try {
-                def processResult = exec {
+                def processResult = execOperations.exec {
                     commandLine command
                     standardOutput = stdout
                     errorOutput = stderr
@@ -3495,13 +3509,7 @@ tasks.register('verifyGithubReleaseReadiness') {
             }
         }
 
-        def configuredGpgExecutable = gpgExecutableProperty.orNull ?:
-                gpgExecutableEnvironment.orNull
-        def gpgExecutable = configuredGpgExecutable ?: [
-                '/opt/homebrew/bin/gpg',
-                '/usr/local/bin/gpg',
-                '/usr/bin/gpg'
-        ].find { new File(it).canExecute() } ?: 'gpg'
+        def gpgExecutable = resolveGpgExecutable(gpgExecutableProperty.orNull ?: gpgExecutableEnvironment.orNull)
 
         def parseGpgKeyInfo = { String gpgOutput ->
             def lines = gpgOutput.readLines()
