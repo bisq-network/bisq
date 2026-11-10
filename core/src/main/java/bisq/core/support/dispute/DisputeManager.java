@@ -445,6 +445,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateDisputeOpenerIsTrader(dispute, openNewDisputeMessage.getSenderNodeAddress());
             senderValidated = true;
+            // The opener encrypts to the agent of its choice. A dispute for another agent, for example the same
+            // trade filed with a second agent, must not enter our dispute list and receipt checks.
+            checkArgument(isAgent(dispute), "Dispute is not addressed to this agent");
             validateIncomingOpenNewDispute(dispute);
             validateIncomingDisputeReplay(dispute);
 
