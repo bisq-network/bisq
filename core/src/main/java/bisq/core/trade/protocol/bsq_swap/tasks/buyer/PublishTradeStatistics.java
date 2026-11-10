@@ -21,7 +21,6 @@ import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
 import bisq.core.trade.statistics.TradeStatistics3;
 
-import bisq.common.app.Capability;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,24 +37,15 @@ public class PublishTradeStatistics extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            protocolModel.getP2PService().findPeersCapabilities(trade.getTradingPeerNodeAddress())
-                    .filter(capabilities -> capabilities.containsAll(Capability.TRADE_STATISTICS_3))
-                    .ifPresentOrElse(capabilities -> {
-                                TradeStatistics3 tradeStatistics = TradeStatistics3.from(trade);
-                                if (tradeStatistics.isValid()) {
-                                    log.info("Publishing trade statistics");
-                                    protocolModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
-                                } else {
-                                    log.warn("Trade statistics are invalid. We do not publish. {}", tradeStatistics);
-                                }
+            TradeStatistics3 tradeStatistics = TradeStatistics3.from(trade);
+            if (tradeStatistics.isValid()) {
+                log.info("Publishing trade statistics");
+                protocolModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
+            } else {
+                log.warn("Trade statistics are invalid. We do not publish. {}", tradeStatistics);
+            }
 
-                                complete();
-                            },
-                            () -> {
-                                log.info("Our peer does not has updated yet, so they will publish the trade statistics. " +
-                                        "To avoid duplicates we do not publish from our side.");
-                                complete();
-                            });
+            complete();
         } catch (Throwable t) {
             failed(t);
         }
