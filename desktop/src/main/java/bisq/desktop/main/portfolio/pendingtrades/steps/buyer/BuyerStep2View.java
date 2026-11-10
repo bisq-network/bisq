@@ -549,6 +549,11 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onPaymentStarted() {
+        if (trade.hasFailed()) {
+            new Popup().warning(Res.get("portfolio.pending.step2_buyer.tradeHasError", trade.getErrorMessage())).show();
+            return;
+        }
+
         if (!model.dataModel.isBootstrappedOrShowPopup()) {
             return;
         }

@@ -210,6 +210,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade. Was: " + trade.getClass().getSimpleName());
+        // As the API, we refuse it for a trade with an error, for example one whose deposit tx failed validation.
+        if (trade.hasFailed()) {
+            errorMessageHandler.handleErrorMessage("Cannot confirm payment started for a failed trade.");
+            return;
+        }
         ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
