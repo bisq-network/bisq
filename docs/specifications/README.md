@@ -50,6 +50,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/vote-result-validation.md`](dao/vote-result-validation.md) | Validation and fault-isolation rules for untrusted data decrypted during DAO vote-result calculation, and which proposals a result records. |
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
 | [`dao/seed-node-state-hashes.md`](dao/seed-node-state-hashes.md) | Which connections the node trusts as seed nodes when DAO, proposal and blind vote state hashes are exchanged. |
+| [`dao/lite-node-blocks.md`](dao/lite-node-blocks.md) | Which BSQ blocks a lite node uses and relays: signed blocks of trusted block providers only. |
 | [`dao/dao-state-resync-warning.md`](dao/dao-state-resync-warning.md) | The desktop warning when the DAO state needs a resync, how often it is shown, and which user actions do not start until the resync. |
 
 ### `dispute/`
@@ -58,6 +59,8 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`dispute/mediation-payout-finality.md`](dispute/mediation-payout-finality.md) | When the payout of a mediation can no longer change, and what the nodes of the mediator and of the traders do with a result that would change it. |
 | [`dispute/peer-opened-dispute.md`](dispute/peer-opened-dispute.md) | Which disputes that the agent opens for the other trader a trader's node accepts, and when a new mediation is refused. |
+| [`dispute/dispute-message-sender-key.md`](dispute/dispute-message-sender-key.md) | The sender key that dispute messages carry, and why a message without it is dropped. |
+| [`dispute/contract-dispute-agents.md`](dispute/contract-dispute-agents.md) | The mediator and refund agent named in the contract, and why a dispute for another agent or with a contract without them is refused. |
 | [`dispute/mediation-result-confirmation.md`](dispute/mediation-result-confirmation.md) | Rejecting stale Accept/Reject actions and requiring fresh review of a replacement mediation result with the same payout. |
 | [`dispute/refund-claimant-authentication.md`](dispute/refund-claimant-authentication.md) | Escrow-key proof that a refund claimant participated in the trade, including normal and exceptional payout authorization. |
 | [`dispute/refund-direct-payout.md`](dispute/refund-direct-payout.md) | One-time refund receipt consumption, durable payout reservation, amount limits, and inbound refund state. |

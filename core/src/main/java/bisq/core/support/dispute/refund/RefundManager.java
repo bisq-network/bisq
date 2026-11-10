@@ -60,7 +60,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -79,11 +78,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
-import java.time.Instant;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -103,9 +99,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class RefundManager extends DisputeManager<RefundDisputeList> {
-    // TODO Remove the legacy claim grace period in releases after 2026-11-01.
-    private static final Instant LEGACY_REFUND_CLAIM_CUTOFF =
-            Utilities.getUTCDate(2026, GregorianCalendar.NOVEMBER, 1).toInstant();
     private static final int MIN_REFUND_TX_CONFIRMATIONS = 1;
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final MempoolService mempoolService;
@@ -668,25 +661,6 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                 checkedSellerPayoutAmount.value);
     }
 
-    // TODO Remove these legacy eligibility methods in releases after 2026-11-01.
-    public boolean requiresLegacyRefundClaimVerification(Dispute dispute) {
-        return requiresLegacyRefundClaimVerification(dispute, Instant.now());
-    }
-
-    @VisibleForTesting
-    boolean requiresLegacyRefundClaimVerification(Dispute dispute, Instant now) {
-        if (!now.isBefore(LEGACY_REFUND_CLAIM_CUTOFF) ||
-                dispute == null || dispute.getSupportType() != SupportType.REFUND ||
-                dispute.getRefundClaimOpeningDate() != 0 ||
-                (dispute.getRefundClaimSignature() != null && !dispute.getRefundClaimSignature().isEmpty())) {
-            return false;
-        }
-        // New unsigned requests fail admission. Only an existing local row can use the upgrade exception;
-        // an opener-supplied date or a copied row identifier is not evidence of a legacy record.
-        RefundDisputeList stored = getDisputeList();
-        return stored != null && stored.stream().anyMatch(row -> row == dispute);
-    }
-
     /**
      * Re-verifies the escrow-key proof at each authorization boundary. In the usual single-recipient case the
      * recipient must be a proven claimant. A two-recipient payout remains an exceptional, manually checked agent
@@ -702,10 +676,6 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         checkArgument(!checkedBuyerPayoutAmount.isNegative(), "buyerPayoutAmount must not be negative");
         checkArgument(!checkedSellerPayoutAmount.isNegative(), "sellerPayoutAmount must not be negative");
 
-        // TODO Remove in releases after 2026-11-01. The close dialog requires manual verification confirmation.
-        if (requiresLegacyRefundClaimVerification(dispute)) {
-            return;
-        }
         Set<RefundClaimSignature.Claimant> verifiedClaimants = findVerifiedClaimants(dispute);
         checkArgument(!verifiedClaimants.isEmpty(),
                 "Refund authorization requires a valid escrow-key claim signature");

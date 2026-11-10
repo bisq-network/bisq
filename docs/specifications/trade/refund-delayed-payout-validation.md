@@ -189,8 +189,7 @@ validated chain values, trade fee, receiver-selection height, legacy donation ad
 buyer/seller allocation. It also binds the refund claim subject, including the identity and escrow
 keys excluded from legacy contract hashes. The same binding must still match when the payout confirmation is accepted,
 immediately before a refund-wallet payout and immediately before the dispute result is signed.
-The escrow-key claimant proof must be re-verified at those same authorization boundaries, or the
-temporary legacy grace period and manual confirmation must still be valid as specified in
+The escrow-key claimant proof must be re-verified at those same authorization boundaries as specified in
 [`../dispute/refund-claimant-authentication.md`](../dispute/refund-claimant-authentication.md).
 
 Closing the second trader's dispute row must perform the validation again; a peer row's closed flag

@@ -678,13 +678,7 @@ Historical hard fork heights must not be changed. Only check that they are uncha
 Some rules activate on a calendar date instead of a block height. Check that the release ships before
 the date, and remove the compatibility code once a date has passed.
 
-| File | Line | Constant | Date |
-|------|------|----------|------|
-| `core/src/main/java/bisq/core/support/dispute/messages/DisputeMessage.java` | 41 | `SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE` | 2026-09-01 |
-| `core/src/main/java/bisq/core/trade/model/bisq_v1/Contract.java` | 69 | `DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE` | 2026-08-01 |
-
-`core/src/main/java/bisq/core/support/dispute/DisputeValidation.java` carries a `TODO` to remove the
-legacy contract fallback after the dispute agent public key date has passed.
+No rule activates on a calendar date at the moment.
 
 ### Values in the trade protocol that must stay identical between peers
 

@@ -118,6 +118,8 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
         log.info("Publish new block at height={} and block hash={}", block.getHeight(), block.getHash());
         RawBlock rawBlock = RawBlock.fromBlock(block);
         SignedRawBlock signedRawBlock = daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress());
+        // Lite nodes of releases 1.10.10 and 1.10.11 drop the message unless it also carries the unsigned block and
+        // that block matches the signed one. The unsigned block can be left out once these releases are unsupported.
         NewBlockBroadcastMessage newBlockBroadcastMessage = new NewBlockBroadcastMessage(rawBlock, signedRawBlock);
         broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress());
     }

@@ -111,13 +111,6 @@ public final class DisputeResultMessage extends DisputeMessage implements Sender
     }
 
     @Override
-    public boolean isSenderSignaturePubKeyRequired() {
-        // DisputeResultMessage has no reliable trade date before domain handling.
-        // The domain handlers authenticate the sender against the expected dispute agent key.
-        return false;
-    }
-
-    @Override
     public String toString() {
         return "DisputeResultMessage{" +
                 "\n     disputeResult=" + disputeResult +

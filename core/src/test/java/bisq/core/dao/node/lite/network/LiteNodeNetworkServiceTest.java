@@ -169,7 +169,7 @@ public class LiteNodeNetworkServiceTest {
     }
 
     @Test
-    void relaysUnsignedNewBlockBroadcastMessageAndNotifiesListener(
+    void ignoresUnsignedNewBlockBroadcastMessageAndDoesNotRelayIt(
             @Mock NetworkNode networkNode,
             @Mock PeerManager peerManager,
             @Mock Broadcaster broadcaster,
@@ -186,41 +186,14 @@ public class LiteNodeNetworkServiceTest {
         service.addListener(listener);
 
         RawBlock rawBlock = createRawBlock(100, "block-hash");
-        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock);
-
-        service.onMessage(message, connection);
-
-        assertEquals(1, listener.newBlockCount.get());
-        assertEquals(peerAddress, listener.lastSenderNodeAddress.get());
-        assertEquals(message, listener.lastNewBlockMessage.get());
-        verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
-    }
-
-    @Test
-    void deduplicatesRepeatedUnsignedNewBlockBroadcastMessage(
-            @Mock NetworkNode networkNode,
-            @Mock PeerManager peerManager,
-            @Mock Broadcaster broadcaster,
-            @Mock SeedNodeRepository seedNodeRepository,
-            @Mock DaoBlockSignatureVerifier daoBlockSignatureVerifier,
-            @Mock Connection connection) {
-        doReturn(Set.of()).when(seedNodeRepository).getSeedNodeAddresses();
-        NodeAddress peerAddress = new NodeAddress("peer.onion:8000");
-        doReturn(Optional.of(peerAddress)).when(connection).getPeersNodeAddressOptional();
-
-        LiteNodeNetworkService service = new LiteNodeNetworkService(networkNode, peerManager, broadcaster, seedNodeRepository,
-                daoBlockSignatureVerifier);
-        CountingListener listener = new CountingListener();
-        service.addListener(listener);
-
-        RawBlock rawBlock = createRawBlock(100, "block-hash");
-        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock);
+        NewBlockBroadcastMessage message = new NewBlockBroadcastMessage(rawBlock, null);
 
         service.onMessage(message, connection);
         service.onMessage(message, connection);
 
-        assertEquals(1, listener.newBlockCount.get());
-        verify(broadcaster, times(1)).broadcast(eq(message), eq(peerAddress));
+        assertEquals(0, listener.newBlockCount.get());
+        verify(broadcaster, never()).broadcast(any(NewBlockBroadcastMessage.class), any());
+        verify(daoBlockSignatureVerifier, never()).isValid(any());
     }
 
     @Test

@@ -22,6 +22,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersSignaturePubKeyProvidingPayload;
 
 import bisq.common.crypto.Sig;
 
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DisputeResultMessageTest {
     private static final String TRADE_ID = "trade-id";
@@ -86,14 +88,18 @@ public class DisputeResultMessageTest {
     }
 
     @Test
-    public void senderSignaturePubKeyIsAdvisoryForDisputeResultMessage() {
+    public void senderSignaturePubKeyIsRequiredForDisputeResultMessage() {
         DisputeResultMessage message = new DisputeResultMessage(disputeResult(),
                 SENDER_NODE_ADDRESS,
                 "uid",
                 SupportType.MEDIATION,
                 null);
 
-        assertFalse(message.isSenderSignaturePubKeyRequired());
+        assertTrue(message.isSenderSignaturePubKeyRequired());
+        assertFalse(SendersSignaturePubKeyProvidingPayload.isSenderSignaturePubKeyMatching(
+                message.getSenderSignaturePubKey(),
+                Sig.generateKeyPair().getPublic(),
+                message.isSenderSignaturePubKeyRequired()));
     }
 
     private static DisputeResult disputeResult() {

@@ -141,13 +141,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private RefundValidationResult refundValidationResult;
     private RefundClaimApproval refundClaimApproval;
 
-    // TODO Remove the legacyClaim discriminator in releases after 2026-11-01.
-    private record RefundClaimApproval(Dispute dispute, String subjectHash, Coin buyerAmount, Coin sellerAmount,
-                                       boolean legacyClaim) {
-        private static RefundClaimApproval capture(Dispute dispute, Coin buyerAmount, Coin sellerAmount,
-                                                   boolean legacyClaim) {
+    private record RefundClaimApproval(Dispute dispute, String subjectHash, Coin buyerAmount, Coin sellerAmount) {
+        private static RefundClaimApproval capture(Dispute dispute, Coin buyerAmount, Coin sellerAmount) {
             return new RefundClaimApproval(dispute, RefundClaimSignature.getClaimSubjectHash(dispute),
-                    buyerAmount, sellerAmount, legacyClaim);
+                    buyerAmount, sellerAmount);
         }
     }
 
@@ -1010,31 +1007,20 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             try {
                 Coin buyerAmount = disputeResult.getBuyerPayoutAmount();
                 Coin sellerAmount = disputeResult.getSellerPayoutAmount();
-                // TODO Remove the legacy alternative in releases after 2026-11-01.
-                boolean legacyClaim = refundManager.requiresLegacyRefundClaimVerification(dispute);
-                boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim);
+                boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount);
                 // Claim authentication is independent of explorer availability, including on the local test network.
                 refundManager.verifyRefundClaimForPayout(dispute, buyerAmount, sellerAmount);
-                if ((legacyClaim || buyerAmount.isPositive() && sellerAmount.isPositive()) &&
-                        !hasApproval) {
-                    RefundClaimApproval approval = RefundClaimApproval.capture(dispute,
-                            buyerAmount, sellerAmount, legacyClaim);
-                    String warning = legacyClaim ? Res.get("disputeSummaryWindow.legacyRefundClaim.warning") :
-                            Res.get("disputeSummaryWindow.close.txDetails.verifyBothAddresses");
-                    if (buyerAmount.isPositive()) {
-                        warning += "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.buyer",
-                                formatter.formatCoinWithCode(buyerAmount),
-                                dispute.getContract().getBuyerPayoutAddressString());
-                    }
-                    if (sellerAmount.isPositive()) {
-                        warning += "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.seller",
-                                formatter.formatCoinWithCode(sellerAmount),
-                                dispute.getContract().getSellerPayoutAddressString());
-                    }
-                    String confirm = legacyClaim ? Res.get("disputeSummaryWindow.legacyRefundClaim.confirm") :
-                            Res.get("disputeSummaryWindow.close.confirmBothAddresses");
+                if (buyerAmount.isPositive() && sellerAmount.isPositive() && !hasApproval) {
+                    RefundClaimApproval approval = RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount);
+                    String warning = Res.get("disputeSummaryWindow.close.txDetails.verifyBothAddresses") +
+                            "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.buyer",
+                            formatter.formatCoinWithCode(buyerAmount),
+                            dispute.getContract().getBuyerPayoutAddressString()) +
+                            "\n\n" + Res.get("disputeSummaryWindow.close.txDetails.seller",
+                            formatter.formatCoinWithCode(sellerAmount),
+                            dispute.getContract().getSellerPayoutAddressString());
                     new Popup().warning(warning)
-                            .actionButtonText(confirm)
+                            .actionButtonText(Res.get("disputeSummaryWindow.close.confirmBothAddresses"))
                             .onAction(() -> {
                                 refundClaimApproval = approval;
                                 maybeCheckTransactions().whenComplete((result, error) -> {
@@ -1181,23 +1167,21 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         return asyncStatus;
     }
 
-    private boolean hasRefundClaimApproval(Coin buyerAmount, Coin sellerAmount, boolean legacyClaim) {
+    private boolean hasRefundClaimApproval(Coin buyerAmount, Coin sellerAmount) {
         // Clear before comparing so mismatches and malformed subjects cannot revive an old confirmation later.
         RefundClaimApproval previousApproval = refundClaimApproval;
         refundClaimApproval = null;
         // Approval belongs to this exact in-memory row, not a value-equal replacement or restored copy.
         if (previousApproval != null && previousApproval.dispute() == dispute && previousApproval.equals(
-                RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount, legacyClaim))) {
+                RefundClaimApproval.capture(dispute, buyerAmount, sellerAmount))) {
             refundClaimApproval = previousApproval;
         }
         return refundClaimApproval != null;
     }
 
     private void verifyRefundClaimApproval(Coin buyerAmount, Coin sellerAmount) {
-        // TODO Remove the legacy alternative in releases after 2026-11-01.
-        boolean legacyClaim = refundManager.requiresLegacyRefundClaimVerification(dispute);
-        boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount, legacyClaim);
-        if (legacyClaim || buyerAmount.isPositive() && sellerAmount.isPositive()) {
+        boolean hasApproval = hasRefundClaimApproval(buyerAmount, sellerAmount);
+        if (buyerAmount.isPositive() && sellerAmount.isPositive()) {
             checkArgument(hasApproval,
                     "The agent must manually verify this refund claim and its payout addresses");
         }

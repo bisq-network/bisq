@@ -44,7 +44,6 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,35 +65,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DisputeValidation {
     public static void validateDisputeData(Dispute dispute,
                                            BtcWalletService btcWalletService) throws ValidationException {
-        validateDisputeData(dispute, btcWalletService, new Date());
-    }
-
-    public static void validateDisputeData(Dispute dispute,
-                                           BtcWalletService btcWalletService,
-                                           Trade trade) throws ValidationException {
-        validateDisputeData(dispute,
-                btcWalletService,
-                new Date(),
-                checkNotNull(trade).getDate());
-    }
-
-    static void validateDisputeData(Dispute dispute,
-                                    BtcWalletService btcWalletService,
-                                    Date now) throws ValidationException {
-        validateDisputeData(dispute, btcWalletService, now, null);
-    }
-
-    static void validateDisputeData(Dispute dispute,
-                                    BtcWalletService btcWalletService,
-                                    Date now,
-                                    @Nullable Date trustedTradeDate) throws ValidationException {
         try {
             Contract contract = dispute.getContract();
             checkArgument(contract.getOfferPayload().getId().equals(dispute.getTradeId()), "Invalid tradeId");
             checkArgument(dispute.getContractAsJson().equals(JsonUtil.objectToJson(contract)), "Invalid contractAsJson");
             checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
                     "Invalid contractHash");
-            validateContractDisputeAgentPubKeys(dispute, contract, now, trustedTradeDate);
+            validateContractDisputeAgentPubKeys(dispute, contract);
             validateTxIdFormat(dispute.getDepositTxId(), "depositTxId");
             validateTxIdFormat(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId");
 
@@ -156,20 +133,8 @@ public class DisputeValidation {
                 contract.getSellerMultiSigPubKey());
     }
 
-    private static void validateContractDisputeAgentPubKeys(Dispute dispute,
-                                                            Contract contract,
-                                                            Date now,
-                                                            @Nullable Date trustedTradeDate) {
-        if (!contract.hasDisputeAgentPubKeyVersion()) {
-            // The dispute date is sender-supplied and must not be used for this compatibility decision. The dispute
-            // agent has no local trade state, so legacy contracts can only be rejected by a peer with a local trade.
-            if (trustedTradeDate != null && Contract.requiresDisputeAgentPubKeyVersion(now, trustedTradeDate)) {
-                throw new IllegalArgumentException("Contract must include dispute agent pubKeyRings");
-            }
-
-            // TODO Remove this legacy contract fallback after dispute-agent pub key activation.
-            return;
-        }
+    private static void validateContractDisputeAgentPubKeys(Dispute dispute, Contract contract) {
+        checkArgument(contract.hasDisputeAgentPubKeyVersion(), "Contract must include dispute agent pubKeyRings");
 
         PubKeyRing expectedAgentPubKeyRing = getExpectedContractAgentPubKeyRing(dispute, contract);
         if (expectedAgentPubKeyRing == null) {

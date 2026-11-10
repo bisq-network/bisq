@@ -25,7 +25,6 @@ import org.bitcoinj.script.ScriptBuilder;
 
 import java.security.KeyPair;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class DisputeValidationTest {
@@ -45,55 +45,26 @@ class DisputeValidationTest {
     private static final NodeAddress SELLER_NODE_ADDRESS = new NodeAddress("seller.onion", 9999);
     private static final NodeAddress MEDIATOR_NODE_ADDRESS = new NodeAddress("mediator.onion", 9999);
     private static final NodeAddress REFUND_AGENT_NODE_ADDRESS = new NodeAddress("refund.onion", 9999);
-    private static final long PRE_ACTIVATION_TRADE_DATE =
-            Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() - 1;
-    private static final long POST_ACTIVATION_TRADE_DATE =
-            Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() + 1;
-    private static final Date POST_ACTIVATION_NOW =
-            new Date(Contract.DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE.getTime() + 1);
+    private static final long TRADE_DATE = 1_700_000_000_000L;
     private static final ECKey BUYER_MULTISIG_KEY = new ECKey();
     private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
     private static final long TRADE_TX_FEE = 1_000;
     private static final Map<PubKeyRing, KeyPair> SIGNATURE_KEY_PAIRS = new HashMap<>();
 
     @Test
-    void validateDisputeDataDoesNotUseSenderSuppliedTradeDateWithoutLocalTrade() {
-        PubKeyRing buyerPubKeyRing = pubKeyRing();
-        PubKeyRing sellerPubKeyRing = pubKeyRing();
-        PubKeyRing mediatorPubKeyRing = pubKeyRing();
-        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
-        Dispute dispute = dispute(buyerPubKeyRing, mediatorPubKeyRing, contract, SupportType.MEDIATION);
-
-        assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
-    }
-
-    @Test
-    void validateDisputeDataRejectsLegacyContractAfterActivationForPostActivationLocalTrade() {
+    void validateDisputeDataRejectsContractWithoutDisputeAgentPubKeys() {
         PubKeyRing buyerPubKeyRing = pubKeyRing();
         PubKeyRing sellerPubKeyRing = pubKeyRing();
         Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
-        Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION, PRE_ACTIVATION_TRADE_DATE);
+        Dispute mediation = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION);
+        Dispute refund = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.REFUND);
 
-        assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute,
-                        mock(BtcWalletService.class),
-                        POST_ACTIVATION_NOW,
-                        new Date(POST_ACTIVATION_TRADE_DATE)));
-    }
-
-    @Test
-    void validateDisputeDataAcceptsLegacyContractForPreActivationLocalTrade() {
-        PubKeyRing buyerPubKeyRing = pubKeyRing();
-        PubKeyRing sellerPubKeyRing = pubKeyRing();
-        Contract contract = contract(buyerPubKeyRing, sellerPubKeyRing, null, null);
-        Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION, PRE_ACTIVATION_TRADE_DATE);
-
-        assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute,
-                        mock(BtcWalletService.class),
-                        POST_ACTIVATION_NOW,
-                        new Date(PRE_ACTIVATION_TRADE_DATE)));
+        DisputeValidation.ValidationException mediationError = assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(mediation, mock(BtcWalletService.class)));
+        DisputeValidation.ValidationException refundError = assertThrows(DisputeValidation.ValidationException.class,
+                () -> DisputeValidation.validateDisputeData(refund, walletService()));
+        assertTrue(mediationError.getMessage().contains("Contract must include dispute agent pubKeyRings"));
+        assertTrue(refundError.getMessage().contains("Contract must include dispute agent pubKeyRings"));
     }
 
     @Test
@@ -105,7 +76,7 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, mediatorPubKeyRing, contract, SupportType.MEDIATION);
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class)));
     }
 
     @Test
@@ -116,7 +87,7 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.MEDIATION);
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class)));
     }
 
     @Test
@@ -128,7 +99,7 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, refundAgentPubKeyRing, contract, SupportType.REFUND);
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -139,7 +110,7 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.REFUND);
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -152,11 +123,11 @@ class DisputeValidationTest {
                 refundAgentPubKeyRing,
                 contract,
                 SupportType.REFUND,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 false);
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -167,7 +138,7 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, pubKeyRing(), contract, SupportType.ARBITRATION);
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, mock(BtcWalletService.class)));
     }
 
     @Test
@@ -175,7 +146,7 @@ class DisputeValidationTest {
         Dispute dispute = refundDisputeWithDelayedPayoutTxId("cd".repeat(32));
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -183,7 +154,7 @@ class DisputeValidationTest {
         Dispute dispute = refundDisputeWithTxIds("deposit-tx-id", "cd".repeat(32));
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -193,11 +164,11 @@ class DisputeValidationTest {
         Dispute blank = refundDisputeWithDelayedPayoutTxId(" ");
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(upperCase, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(upperCase, walletService()));
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(wrongLength, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(wrongLength, walletService()));
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(blank, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(blank, walletService()));
     }
 
     @Test
@@ -211,13 +182,13 @@ class DisputeValidationTest {
                 mediatorPubKeyRing,
                 contract,
                 SupportType.MEDIATION,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 false,
                 contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
                 contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -232,13 +203,13 @@ class DisputeValidationTest {
                 mediatorPubKeyRing,
                 contract,
                 SupportType.MEDIATION,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 false,
                 contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
                 contractSignature(contract.getMakerPubKeyRing(), contractAsJson));
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -252,7 +223,7 @@ class DisputeValidationTest {
                 refundAgentPubKeyRing,
                 contract,
                 SupportType.REFUND,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 true,
                 contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
                 null);
@@ -260,15 +231,15 @@ class DisputeValidationTest {
                 refundAgentPubKeyRing,
                 contract,
                 SupportType.REFUND,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 true,
                 null,
                 contractSignature(contract.getTakerPubKeyRing(), contractAsJson));
 
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(withoutTakerSignature, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(withoutTakerSignature, walletService()));
         assertDoesNotThrow(
-                () -> DisputeValidation.validateDisputeData(withoutMakerSignature, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(withoutMakerSignature, walletService()));
     }
 
     @Test
@@ -283,13 +254,13 @@ class DisputeValidationTest {
                 refundAgentPubKeyRing,
                 contract,
                 SupportType.REFUND,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 true,
                 contractSignature(contract.getMakerPubKeyRing(), contractAsJson),
                 contractSignature(contract.getMakerPubKeyRing(), contractAsJson));
 
         assertThrows(DisputeValidation.ValidationException.class,
-                () -> DisputeValidation.validateDisputeData(dispute, walletService(), POST_ACTIVATION_NOW));
+                () -> DisputeValidation.validateDisputeData(dispute, walletService()));
     }
 
     @Test
@@ -340,7 +311,7 @@ class DisputeValidationTest {
                 true,
                 true,
                 buyerPubKeyRing,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 0,
                 contract,
                 Hash.getSha256Hash(contractAsJson),
@@ -362,7 +333,7 @@ class DisputeValidationTest {
                                    PubKeyRing agentPubKeyRing,
                                    Contract contract,
                                    SupportType supportType) {
-        return dispute(traderPubKeyRing, agentPubKeyRing, contract, supportType, POST_ACTIVATION_TRADE_DATE);
+        return dispute(traderPubKeyRing, agentPubKeyRing, contract, supportType, TRADE_DATE);
     }
 
     private static Dispute dispute(PubKeyRing traderPubKeyRing,
@@ -442,7 +413,7 @@ class DisputeValidationTest {
                 true,
                 true,
                 buyerPubKeyRing,
-                POST_ACTIVATION_TRADE_DATE,
+                TRADE_DATE,
                 0,
                 contract,
                 Hash.getSha256Hash(contractAsJson),

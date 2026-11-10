@@ -43,10 +43,6 @@ public final class NewBlockBroadcastMessage extends BroadcastMessage /*implement
     @Nullable
     private final SignedRawBlock signedRawBlock;
 
-    public NewBlockBroadcastMessage(RawBlock block) {
-        this(block, null);
-    }
-
     public NewBlockBroadcastMessage(RawBlock block, @Nullable SignedRawBlock signedRawBlock) {
         this(block, signedRawBlock, Version.getP2PMessageVersion());
     }
