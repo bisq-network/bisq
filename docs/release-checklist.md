@@ -680,7 +680,6 @@ the date, and remove the compatibility code once a date has passed.
 
 | File | Line | Constant | Date |
 |------|------|----------|------|
-| `core/src/main/java/bisq/core/support/dispute/messages/DisputeMessage.java` | 41 | `SENDER_SIGNATURE_PUB_KEY_VALIDATION_ACTIVATION_DATE` | 2026-09-01 |
 | `core/src/main/java/bisq/core/trade/model/bisq_v1/Contract.java` | 69 | `DISPUTE_AGENT_PUB_KEYS_ACTIVATION_DATE` | 2026-08-01 |
 
 `core/src/main/java/bisq/core/support/dispute/DisputeValidation.java` carries a `TODO` to remove the
