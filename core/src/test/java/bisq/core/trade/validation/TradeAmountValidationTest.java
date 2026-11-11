@@ -17,6 +17,7 @@
 
 package bisq.core.trade.validation;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Volume;
 import bisq.core.payment.TradeLimits;
@@ -125,6 +126,33 @@ class TradeAmountValidationTest {
                         "tradeAmount=" + tradeAmount.toFriendlyString() +
                         ", offerMaxAmount=" + offerMax.toFriendlyString(),
                 exception.getMessage());
+    }
+
+    @Test
+    void checkTradeAmountRejectsDustRemainderOfOfferAmount() {
+        Coin minNonDustOutput = Restrictions.getMinNonDustOutput();
+        Coin tradeAmountLeavingDust = OFFER_MAX_AMOUNT.subtract(minNonDustOutput).add(Coin.valueOf(1));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeAmount(tradeAmountLeavingDust, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
+
+        assertEquals("Trade amount must not leave a dust amount of the offer. " +
+                        "tradeAmount=" + tradeAmountLeavingDust.toFriendlyString() +
+                        ", offerMaxAmount=" + OFFER_MAX_AMOUNT.toFriendlyString() +
+                        ", minNonDustOutput=" + minNonDustOutput.toFriendlyString(),
+                exception.getMessage());
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountValidation.checkTradeAmount(OFFER_MAX_AMOUNT.subtract(Coin.valueOf(1)),
+                        OFFER_MIN_AMOUNT,
+                        OFFER_MAX_AMOUNT));
+    }
+
+    @Test
+    void checkTradeAmountAcceptsRemainderOfOfferAmountAtDustLimit() {
+        Coin tradeAmount = OFFER_MAX_AMOUNT.subtract(Restrictions.getMinNonDustOutput());
+
+        assertSame(tradeAmount,
+                TradeAmountValidation.checkTradeAmount(tradeAmount, OFFER_MIN_AMOUNT, OFFER_MAX_AMOUNT));
     }
 
     @Test
