@@ -352,11 +352,26 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
-        if (!chatMessages.contains(chatMessage)) {
+        if (!hasChatMessage(chatMessage)) {
             chatMessages.add(chatMessage);
         } else {
             log.error("disputeDirectMessage already exists");
         }
+    }
+
+    // A copy of a message, received again or from the mailbox, is another object with the same uid
+    public boolean hasChatMessage(ChatMessage chatMessage) {
+        return chatMessages.stream().anyMatch(m -> m.getUid().equals(chatMessage.getUid()));
+    }
+
+    // The message of a result stays with the stored result when the cleanup of sensitive data removes it from the
+    // chat. Only for a received result: the agent sets its result before it stores the message of the result.
+    public boolean hasResultMessage(ChatMessage chatMessage) {
+        DisputeResult disputeResult = disputeResultProperty.get();
+        return hasChatMessage(chatMessage) ||
+                (disputeResult != null &&
+                        disputeResult.getChatMessage() != null &&
+                        disputeResult.getChatMessage().getUid().equals(chatMessage.getUid()));
     }
 
     public boolean removeAllChatMessages() {

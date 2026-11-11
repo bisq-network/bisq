@@ -31,6 +31,7 @@ import bisq.core.locale.Res;
 import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.messages.ChatMessageOrder;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -68,13 +69,12 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -113,6 +113,7 @@ public class ChatView extends AnchorPane {
     // Communication stuff, to be renamed to something more generic
     private ChatMessage chatMessage;
     private ObservableList<ChatMessage> chatMessages;
+    private ObservableList<ChatMessage> chatMessagesInDisplayOrder;
     private ListChangeListener<ChatMessage> disputeDirectMessageListListener;
     private Subscription inputTextAreaTextSubscription;
     private ChangeListener<Boolean> storedInMailboxPropertyListener, acknowledgedPropertyListener;
@@ -131,7 +132,11 @@ public class ChatView extends AnchorPane {
     }
 
     public void initialize() {
-        disputeDirectMessageListListener = c -> scrollToBottom();
+        disputeDirectMessageListListener = c -> {
+            optionalSupportSession.ifPresent(supportSession -> chatMessagesInDisplayOrder.setAll(
+                    ChatMessageOrder.inDisplayOrder(chatMessages, supportSession.isClient())));
+            scrollToBottom();
+        };
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
@@ -176,9 +181,9 @@ public class ChatView extends AnchorPane {
         AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
         chatMessages = supportSession.getObservableChatMessageList();
-        SortedList<ChatMessage> sortedList = new SortedList<>(chatMessages);
-        sortedList.setComparator(Comparator.comparingLong(ChatMessage::getDate));
-        messageListView = new ListView<>(sortedList);
+        chatMessagesInDisplayOrder = FXCollections.observableArrayList(
+                ChatMessageOrder.inDisplayOrder(chatMessages, supportSession.isClient()));
+        messageListView = new ListView<>(chatMessagesInDisplayOrder);
         messageListView.setId("message-list-view");
 
         messageListView.setMinHeight(150);
@@ -389,7 +394,8 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
-                            String metaData = DisplayUtils.formatDateTime(new Date(message.getDate()));
+                            String metaData =
+                                    DisplayUtils.formatDateTime(new Date(ChatMessageOrder.getDisplayDate(message)));
                             if (!message.isSystemMessage())
                                 metaData = (isMyMsg ? "Sent " : "Received ") + metaData
                                         + (isMyMsg ? "" : " from " + counterpartyName);
@@ -484,8 +490,8 @@ public class ChatView extends AnchorPane {
     private void copyChatMessagesToClipboard(Button sourceBtn) {
         optionalSupportSession.ifPresent(session -> {
             StringBuilder stringBuilder = new StringBuilder();
-            chatMessages.forEach(i -> {
-                String metaData = DisplayUtils.formatDateTime(new Date(i.getDate()));
+            ChatMessageOrder.inDisplayOrder(chatMessages, session.isClient()).forEach(i -> {
+                String metaData = DisplayUtils.formatDateTime(new Date(ChatMessageOrder.getDisplayDate(i)));
                 metaData = metaData + (i.isSystemMessage() ? " (System message)" :
                         (i.isSenderIsTrader() ? " (from Trader)" : " (from Agent)"));
                 stringBuilder.append(metaData).append("\n").append(i.getMessage()).append("\n\n");

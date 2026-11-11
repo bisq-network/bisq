@@ -161,6 +161,7 @@ public abstract class SupportManager {
             return;
         }
 
+        chatMessage.setReceivedDate(System.currentTimeMillis());
         addAndPersistChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
