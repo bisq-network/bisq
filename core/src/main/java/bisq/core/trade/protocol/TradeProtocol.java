@@ -37,9 +37,12 @@ import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.taskrunner.Task;
+import bisq.common.taskrunner.TaskRunner;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
@@ -54,6 +57,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     protected final ProtocolModel<? extends TradePeer> protocolModel;
     protected final TradeModel tradeModel;
     private Timer timeoutTimer;
+    private final List<TaskRunner<?>> taskRunners = new ArrayList<>();
+    // Set once the trade has left the pending trades. The protocol then handles no message and runs no task.
+    @Getter
+    private boolean isShutDown;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -87,11 +94,18 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         // from the TradeManager, but as we are close to a release I dont want to risk a bigger
         // change and leave that for a later PR
         UserThread.runAfter(() -> {
+            if (isShutDown) {
+                return;
+            }
             mailboxMessageService.addDecryptedMailboxListener(this);
             handleMailboxCollection(mailboxMessageService.getMyDecryptedMailboxMessages());
             // The decryption of the mailbox messages from the P2P data at startup may still be running at this point.
             // Those messages reach our listener once it is done.
-            mailboxMessageService.runOnceStartupMessagesHandled(this::onStartupMailboxMessagesHandled);
+            mailboxMessageService.runOnceStartupMessagesHandled(() -> {
+                if (!isShutDown) {
+                    onStartupMailboxMessagesHandled();
+                }
+            });
         }, 100, TimeUnit.MILLISECONDS);
     }
 
@@ -101,6 +115,21 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     public void onWithdrawCompleted() {
         cleanup();
+    }
+
+    // For a trade that leaves the pending trades. The tasks are canceled, also those that completed but keep a timer
+    // or a listener, and the protocol runs no further task and stops listening for messages.
+    public void shutDown() {
+        isShutDown = true;
+        stopTimeout();
+        taskRunners.forEach(TaskRunner::cancel);
+        taskRunners.clear();
+        protocolModel.getP2PService().removeDecryptedDirectMessageListener(this);
+        protocolModel.getP2PService().getMailboxMessageService().removeDecryptedMailboxListener(this);
+    }
+
+    void addTaskRunner(TaskRunner<?> taskRunner) {
+        taskRunners.add(taskRunner);
     }
 
     // Resets a potentially pending protocol
@@ -121,6 +150,9 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
     @Override
     public void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress peer) {
+        if (isShutDown) {
+            return;
+        }
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
         if (!isMyMessage(networkEnvelope)) {
             return;
@@ -148,6 +180,11 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     private void handleMailboxCollection(Collection<DecryptedMessageWithPubKey> collection) {
+        // A message for a trade that has left the pending trades stays in the mailbox. A new protocol handles it if
+        // the trade returns.
+        if (isShutDown) {
+            return;
+        }
         collection.stream()
                 // Check isMyMessage before isPubKeyValid so we do not validate (and log a
                 // mismatch for) messages addressed to other trades, as onDirectMessage does.
