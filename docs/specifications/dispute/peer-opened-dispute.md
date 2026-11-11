@@ -15,7 +15,10 @@ accepts.
 - The node accepts a new mediation dispute only while the trade has no mediation result and is not
   in arbitration, that is in dispute state NO_DISPUTE, MEDIATION_REQUESTED or
   MEDIATION_STARTED_BY_PEER. A dispute that the node already has is a copy and is handled as before.
-- The node checks both rules before it moves a closed or failed trade back to the open trades.
+- The node accepts the dispute only if it is about the node's trade: its contract equals the contract
+  of the trade, its deposit tx ID and its delayed payout tx ID are those of the trade, and it has the
+  serialized deposit tx. This applies to a copy as well.
+- The node checks these rules before it moves a closed or failed trade back to the open trades.
 - A refused dispute is not stored and does not change the trade. The node acknowledges the message
   and its first chat message with an error.
 - If the node refuses a dispute of an open trade because it is not addressed to this trader, and the
@@ -40,16 +43,23 @@ trader. If the trader then opens a dispute, the agent's node has a third dispute
 refuses it as a replay and warns the agent, so the agent learns about the dispute that the opener
 created.
 
+The traders sign the contract data, but not the key rings and the multisig keys in the contract. So
+the opener can send the agent a contract that differs from the trade in these fields, and the agent
+would decide a case about another contract while the peer's node stores the dispute as its own. The
+node compares the whole contract and the transaction IDs with its trade. The dispute is addressed to
+the trader in this case, so the agent's node gets the error.
+
 ## Compatibility
 
 No message and no persisted data change. Agents of earlier versions create the dispute for the
-other trader from the same key ring, so their disputes pass the first rule.
+other trader from the same key ring and the contract that the opener sent. Both traders hold the
+same contract of a trade, so the dispute of an honest opener passes the rules.
 
 ## Not covered
 
-Other content checks of the dispute, for example a contract that differs from the contract of the
-trade: the node logs them and stores the dispute, so that a validation problem does not block the
-dispute. A refund request that the peer opens after a mediation result is allowed.
+Other content checks of the dispute, for example of the donation address or of the node addresses
+in the contract: the node logs them and stores the dispute, so that a validation problem does not
+block the dispute. A refund request that the peer opens after a mediation result is allowed.
 
 The key rings of the traders are not part of the contract data that the traders sign, so the agent
 cannot check the key ring that the opener sends for the peer. With a key ring whose signature key the

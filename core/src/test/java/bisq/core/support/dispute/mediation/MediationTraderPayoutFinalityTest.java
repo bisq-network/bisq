@@ -55,6 +55,8 @@ import bisq.common.crypto.Sig;
 import bisq.common.persistence.PersistenceManager;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Transaction;
 
 import java.io.File;
 
@@ -84,6 +86,8 @@ class MediationTraderPayoutFinalityTest {
     private static final String TRADE_ID = "trade-id";
     private static final NodeAddress MEDIATOR_NODE_ADDRESS = new NodeAddress("mediator.onion", 9999);
     private static final NodeAddress TRADER_NODE_ADDRESS = new NodeAddress("trader.onion", 9999);
+    private static final String DEPOSIT_TX_ID = "ab".repeat(32);
+    private static final String DELAYED_PAYOUT_TX_ID = "cd".repeat(32);
 
     @TempDir
     private File keyStorageDir;
@@ -254,16 +258,46 @@ class MediationTraderPayoutFinalityTest {
     void storesMediationOpenedByPeerBeforeAnyDispute() {
         disputeListService.getDisputeList().remove(ownDispute);
         when(trade.getDisputeState()).thenReturn(Trade.DisputeState.NO_DISPUTE);
-        Contract contract = mock(Contract.class);
-        when(contract.getBuyerNodeAddress()).thenReturn(TRADER_NODE_ADDRESS);
-        when(contract.getSellerNodeAddress()).thenReturn(MEDIATOR_NODE_ADDRESS);
-        Dispute copy = dispute(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(), contract);
+        Contract contract = contractOfTrade();
+        Dispute copy = disputeOfTrade(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(), contract);
 
         manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
 
         assertEquals(List.of(copy), disputeListService.getDisputeList().getList());
         verify(trade).setDisputeState(Trade.DisputeState.MEDIATION_STARTED_BY_PEER);
         assertTrue(sentAckMessage().isSuccess());
+    }
+
+    // The opener chose another contract, for example with other key rings, which the traders do not sign
+    @Test
+    void refusesDisputeOpenedByPeerWithAnotherContract() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        when(trade.getDisputeState()).thenReturn(Trade.DisputeState.NO_DISPUTE);
+        contractOfTrade();
+        Dispute copy = disputeOfTrade(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(), contract());
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeListService.getDisputeList().getList().isEmpty());
+        verify(trade, never()).setDisputeState(any());
+        assertFalse(sentAckMessage().isSuccess());
+        // The dispute was addressed to the trader, so the agent gets the refusal
+        assertTrue(manager.getTradeIdsOfRefusedPeerDisputes().isEmpty());
+    }
+
+    @Test
+    void refusesDisputeOpenedByPeerWithAnotherDepositTx() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        when(trade.getDisputeState()).thenReturn(Trade.DisputeState.NO_DISPUTE);
+        Contract contract = contractOfTrade();
+        Dispute copy = disputeOfTrade(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(), contract,
+                "ef".repeat(32));
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        assertTrue(disputeListService.getDisputeList().getList().isEmpty());
+        verify(trade, never()).setDisputeState(any());
+        assertFalse(sentAckMessage().isSuccess());
     }
 
     @Test
@@ -377,6 +411,56 @@ class MediationTraderPayoutFinalityTest {
 
     private Dispute dispute(int traderId, PubKeyRing traderPubKeyRing) {
         return dispute(traderId, traderPubKeyRing, null);
+    }
+
+    // The node addresses of the traders are checked for a dispute that the peer opened
+    private static Contract contract() {
+        Contract contract = mock(Contract.class);
+        when(contract.getBuyerNodeAddress()).thenReturn(TRADER_NODE_ADDRESS);
+        when(contract.getSellerNodeAddress()).thenReturn(MEDIATOR_NODE_ADDRESS);
+        return contract;
+    }
+
+    // The trade gets this contract and the deposit and delayed payout txs that disputeOfTrade names
+    private Contract contractOfTrade() {
+        Contract contract = contract();
+        when(trade.getContract()).thenReturn(contract);
+        Transaction depositTx = mock(Transaction.class);
+        when(depositTx.getTxId()).thenReturn(Sha256Hash.wrap(DEPOSIT_TX_ID));
+        when(trade.getDepositTx()).thenReturn(depositTx);
+        Transaction delayedPayoutTx = mock(Transaction.class);
+        when(delayedPayoutTx.getTxId()).thenReturn(Sha256Hash.wrap(DELAYED_PAYOUT_TX_ID));
+        when(trade.getDelayedPayoutTx()).thenReturn(delayedPayoutTx);
+        return contract;
+    }
+
+    private Dispute disputeOfTrade(int traderId, PubKeyRing traderPubKeyRing, Contract contract) {
+        return disputeOfTrade(traderId, traderPubKeyRing, contract, DEPOSIT_TX_ID);
+    }
+
+    private Dispute disputeOfTrade(int traderId, PubKeyRing traderPubKeyRing, Contract contract, String depositTxId) {
+        Dispute dispute = new Dispute(0,
+                TRADE_ID,
+                traderId,
+                true,
+                true,
+                traderPubKeyRing,
+                0,
+                0,
+                contract,
+                null,
+                new byte[]{1},
+                null,
+                depositTxId,
+                null,
+                "",
+                null,
+                null,
+                agentPubKeyRing,
+                false,
+                SupportType.MEDIATION);
+        dispute.setDelayedPayoutTxId(DELAYED_PAYOUT_TX_ID);
+        return dispute;
     }
 
     private Dispute dispute(int traderId, PubKeyRing traderPubKeyRing, Contract contract) {
