@@ -10,6 +10,8 @@ To run daemon.jar on Mainnet:
 
 `$ java -jar daemon.jar --apiPassword=becareful`
 
+The daemon does not start without `--apiPassword`.
+
 If you just want to control your headless daemon within your terminal you have to run the Bisq cli as well.
 Again just download the bisq-cli archive and extract it locally.
 To call getversion from cli.jar
