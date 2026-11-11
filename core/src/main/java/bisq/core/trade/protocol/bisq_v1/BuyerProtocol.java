@@ -158,6 +158,14 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
+                                    // A non-fatal timeout earlier in the protocol sets an error message, which is not
+                                    // cleared and keeps blocking the payment started step (BuyerStep2View, the API).
+                                    // The deposit and delayed payout tx are now processed and verified, so the trade is
+                                    // healthy and a stale error must not stop the buyer from confirming payment started.
+                                    if (trade.hasFailed()) {
+                                        trade.setErrorMessage(null);
+                                        processModel.getTradeManager().requestPersistence();
+                                    }
                                     handleTaskRunnerSuccess(message);
                                 },
                                 errorMessage -> handleTaskRunnerFault(message, errorMessage))))
