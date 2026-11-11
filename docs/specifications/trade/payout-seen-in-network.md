@@ -27,6 +27,17 @@ Core sends the transactions of a filtered block without witness. So a payout tha
 sees in a block has no witness to check, for example when the node was offline while the payout was
 published, or after a resync of the wallet.
 
+- The node watches the payout address also when the deposit transaction is not in its wallet yet,
+  for example at the start of a resync of the wallet, before it has synced the block with the
+  deposit. A transaction to the payout address counts only once the deposit transaction is in the
+  wallet and the transaction passes the rules above. Until then the node keeps watching, and the
+  trade gets no error. When the deposit transaction arrives, the node checks the payout address
+  again, so a payout it saw before the deposit counts without waiting for its next confirmation.
+
+After a resync, the wallet has neither the deposit nor the payout until it has synced their blocks.
+Without the watch, the node set an error on the trade at startup, which stayed on the trade, and
+it completed the trade only after the next restart.
+
 ## Compatibility
 
 No message and no persisted data change.
