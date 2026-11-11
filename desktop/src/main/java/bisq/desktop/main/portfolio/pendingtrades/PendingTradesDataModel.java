@@ -206,8 +206,15 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         doSelectItem(item);
     }
 
-    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onPaymentStarted(Trade expectedTrade, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Trade trade = getTrade();
+        // The confirmation was opened for expectedTrade. The selection can change while it is open, for example when a
+        // peer takes an offer or opens a dispute that reverts a closed trade, so getTrade() may now be another trade.
+        // We must act only on the trade the user confirmed.
+        if (trade != expectedTrade) {
+            errorMessageHandler.handleErrorMessage("The selected trade changed before the confirmation. Please select the trade again.");
+            return;
+        }
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade. Was: " + trade.getClass().getSimpleName());
         // As the API, we refuse it for a trade with an error, for example one whose deposit tx failed validation.
@@ -218,8 +225,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
-    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onFiatPaymentReceived(Trade expectedTrade, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Trade trade = getTrade();
+        // See onPaymentStarted: release the payout only for the trade the user confirmed, not the current selection.
+        if (trade != expectedTrade) {
+            errorMessageHandler.handleErrorMessage("The selected trade changed before the confirmation. Please select the trade again.");
+            return;
+        }
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
         ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
@@ -735,7 +747,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getSellerConfirmedPaymentReceiptDate() > 0 && new Date().after(getDelayedPayoutDate());
     }
 
-    public void setSellerConfirmedPaymentReceiptDate() {
+    public void setSellerConfirmedPaymentReceiptDate(Trade expectedTrade) {
+        // Record the receipt date only for the trade the user confirmed, see onFiatPaymentReceived.
+        if (getTrade() != expectedTrade) {
+            return;
+        }
         if (getSellerConfirmedPaymentReceiptDate() == 0) {
             Objects.requireNonNull(getTrade()).setSellerConfirmedPaymentReceiptDate(new Date().getTime());
             tradeManager.requestPersistence();

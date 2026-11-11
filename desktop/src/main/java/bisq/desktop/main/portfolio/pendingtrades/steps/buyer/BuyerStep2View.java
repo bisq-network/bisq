@@ -689,7 +689,7 @@ public class BuyerStep2View extends TradeStepView {
             model.dataModel.getTradeManager().requestPersistence();
         }
 
-        model.dataModel.onPaymentStarted(() -> {
+        model.dataModel.onPaymentStarted(trade, () -> {
         }, errorMessage -> {
             busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
