@@ -19,20 +19,41 @@ package bisq.common.setup;
 
 import bisq.common.UserThread;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
+
+import java.io.IOException;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CommonSetupTest {
 
     @AfterEach
     void tearDown() {
         UserThread.resetForTests();
+    }
+
+    // A data directory of an earlier version, created with the default umask
+    @Test
+    void appDataDirBecomesOwnerOnly(@TempDir Path tmp) throws IOException {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        Path appDataDir = Files.createDirectories(tmp.resolve("Bisq"));
+        Files.setPosixFilePermissions(appDataDir, PosixFilePermissions.fromString("rwxr-xr-x"));
+
+        CommonSetup.restrictAppDataDirToOwner(appDataDir.toFile());
+
+        assertEquals(PosixFilePermissions.fromString("rwx------"), Files.getPosixFilePermissions(appDataDir));
     }
 
     @Test
