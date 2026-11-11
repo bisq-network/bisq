@@ -159,6 +159,12 @@ this rule. An entry for another key which the node sets, such as `Log`, replaces
 the name and as an abbreviation which Tor accepts, for example `AvoidDiskWrite` for `AvoidDiskWrites`. An entry for a
 longer option which only starts like such a key, such as `LogTimeGranularity`, replaces nothing.
 
+The node starts Tor only with all entries of the user, because an entry such as `ExcludeNodes` restricts the relays
+which Tor uses, and a user who relies on it would not notice that it is missing. `--torrcOptions` is a list of entries
+separated by commas, each a key, whitespace and a value. An empty part, for example after a comma which follows the
+last entry, contains no entry and is skipped. Any other part which is no entry stops the start of Tor. The message
+names the position of the part, not its text, which may contain a password.
+
 An entry which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
 `AccelName` or `AccelDir` in any case of the name and as an abbreviation which Tor accepts, is accepted only if the
 command line sets the option which brings it. Tor starts the program of a transport plugin entry, and it loads the

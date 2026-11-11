@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -87,19 +86,22 @@ record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFro
         return entries;
     }
 
+    // Tor starts only with all entries of the user: an entry such as ExcludeNodes restricts the relays which Tor uses,
+    // and a user who relies on it would not notice that it is missing. The message does not show the part, which may
+    // contain a password.
     private static LinkedHashMap<String, String> parseTorrcOptions(String torrcOptions) {
         LinkedHashMap<String, String> entries = new LinkedHashMap<>();
-        if (!"".equals(torrcOptions)) {
-            Arrays.asList(torrcOptions.split(",")).forEach(line -> {
-                line = line.trim();
-                if (line.matches("^[^\\s]+\\s.+")) {
-                    String[] tmp = line.split("\\s", 2);
-                    putEntry(entries, tmp[0], tmp[1]);
-                } else {
-                    log.error("custom torrc override parse error ('{}'). Proceeding without custom overrides.", line);
-                    entries.clear();
-                }
-            });
+        String[] parts = torrcOptions.split(",");
+        for (int i = 0; i < parts.length; i++) {
+            String line = parts[i].trim();
+            // An empty part, for example after a comma which follows the last entry, contains no entry
+            if (line.isEmpty()) {
+                continue;
+            }
+            String[] keyAndValue = line.split("\\s", 2);
+            checkArgument(keyAndValue.length == 2, "Part %s of --torrcOptions is no torrc entry of a key, whitespace " +
+                    "and a value. Bisq starts Tor only with all entries.", i + 1);
+            putEntry(entries, keyAndValue[0], keyAndValue[1]);
         }
         return entries;
     }

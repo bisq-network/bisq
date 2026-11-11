@@ -30,8 +30,11 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -70,11 +73,24 @@ class TorrcOverridesTest {
         assertEquals(Map.of("SocksPort", "9150"), parseFromCommandLine(missingFile, "SocksPort 9150"));
     }
 
-    @Test
-    void anInvalidOptionDropsTheOptionsBeforeIt() {
-        Map<String, String> torrcOverrides = parseFromCommandLine(null, "SocksPort 9150,invalid,AvoidDiskWrites 1");
+    // Earlier versions dropped the entries before such a part and started Tor without them, for example without the
+    // relays which ExcludeNodes excludes
+    @ParameterizedTest
+    @ValueSource(strings = {"SocksPort 9150,secret,AvoidDiskWrites 1", "ExcludeNodes",
+            "ExcludeNodes {ch}, StrictNodes  "})
+    void aPartWhichIsNoEntryStopsTheStart(String torrcOptions) {
+        var exception = assertThrows(IllegalArgumentException.class, () -> parseFromCommandLine(null, torrcOptions));
 
-        assertEquals(Map.of("AvoidDiskWrites", "1"), torrcOverrides);
+        assertTrue(exception.getMessage().contains("--torrcOptions"));
+        assertFalse(exception.getMessage().contains("secret"));
+    }
+
+    // Config accepts a comma after the last entry, also with spaces after it. With the spaces, earlier versions dropped
+    // all entries.
+    @ParameterizedTest
+    @ValueSource(strings = {"ExcludeNodes {ch},", "ExcludeNodes {ch}, "})
+    void aCommaAfterTheLastEntryKeepsTheEntries(String torrcOptions) {
+        assertEquals(Map.of("ExcludeNodes", "{ch}"), parseFromCommandLine(null, torrcOptions));
     }
 
     @Test
