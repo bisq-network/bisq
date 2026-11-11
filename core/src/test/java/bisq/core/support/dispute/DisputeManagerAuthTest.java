@@ -31,6 +31,7 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
@@ -43,7 +44,10 @@ import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.mailbox.MailboxMessageService;
+import bisq.network.p2p.network.NetworkNode;
 
+import bisq.common.app.Version;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.crypto.Encryption;
 import bisq.common.crypto.Hash;
@@ -75,6 +79,7 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -439,6 +444,121 @@ class DisputeManagerAuthTest {
     }
 
     @Test
+    void openNewDisputeMarksTheMessagesOfTheOpenerAsReceivedAndNotTheOwnOnes() {
+        // Chat messages compare their message version, which the application sets at startup
+        int baseCurrencyNetwork = Version.getBaseCurrencyNetwork();
+        Version.setBaseCryptoNetworkId(BaseCurrencyNetwork.BTC_REGTEST.ordinal());
+        try {
+            TestDisputeList disputeList = new TestDisputeList();
+            DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
+            TestDisputeManager manager = new TestDisputeManager(mockP2PService(),
+                    tradeManager,
+                    closedTradableManager,
+                    failedTradesManager,
+                    keyStorageDir,
+                    disputeListService,
+                    mock(DaoFacade.class),
+                    localP2PConfig());
+
+            PubKeyRing buyerPubKeyRing = pubKeyRing();
+            Dispute dispute = validDispute(TRADE_ID,
+                    0,
+                    buyerPubKeyRing,
+                    manager.getPubKeyRing(),
+                    validContract(TRADE_ID, buyerPubKeyRing, pubKeyRing()));
+            dispute.setBurningManSelectionHeight(1);
+            ChatMessage openersMessage = chatMessageWithReceivedDateFromPeer(SupportType.MEDIATION);
+            dispute.getChatMessages().add(openersMessage);
+            OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                    BUYER_NODE_ADDRESS,
+                    "open-dispute-uid",
+                    SupportType.MEDIATION);
+
+            long before = System.currentTimeMillis();
+            manager.onOpenNewDispute(message, buyerPubKeyRing.getSignaturePubKey());
+
+            assertSame(dispute, disputeList.getList().get(0));
+            assertReceivedSince(before, openersMessage);
+            // The price info that the agent adds after the dispute arrived
+            ChatMessage ownMessage = dispute.getChatMessages().get(dispute.getChatMessages().size() - 1);
+            assertNotSame(openersMessage, ownMessage);
+            assertEquals(0, ownMessage.getReceivedDate());
+        } finally {
+            Version.setBaseCryptoNetworkId(baseCurrencyNetwork);
+        }
+    }
+
+    // Only a refund dispute carries the mediator's summary. The mediator does not turn a text of the opener into a
+    // system message of its own.
+    @Test
+    void theMediatorAddsNoSystemMessageWithTheSummaryOfTheOpener() {
+        TestDisputeList disputeList = new TestDisputeList();
+        TestDisputeManager manager = new TestDisputeManager(mockP2PService(),
+                tradeManager,
+                closedTradableManager,
+                failedTradesManager,
+                keyStorageDir,
+                disputeListService(disputeList),
+                mock(DaoFacade.class),
+                localP2PConfig());
+        PubKeyRing buyerPubKeyRing = pubKeyRing();
+        Dispute dispute = validDispute(TRADE_ID,
+                0,
+                buyerPubKeyRing,
+                manager.getPubKeyRing(),
+                validContract(TRADE_ID, buyerPubKeyRing, pubKeyRing()));
+        dispute.setBurningManSelectionHeight(1);
+        dispute.setMediatorsDisputeResult("text of the opener");
+        OpenNewDisputeMessage message = new OpenNewDisputeMessage(dispute,
+                BUYER_NODE_ADDRESS,
+                "open-dispute-uid",
+                SupportType.MEDIATION);
+
+        manager.onOpenNewDispute(message, buyerPubKeyRing.getSignaturePubKey());
+
+        assertSame(dispute, disputeList.getList().get(0));
+        assertTrue(dispute.getChatMessages().stream().noneMatch(m -> m.getMessage().contains("text of the opener")));
+    }
+
+    @Test
+    void peerOpenedDisputeMarksItsMessagesAsReceivedOnArrival() {
+        P2PService p2PService = mockP2PService();
+        NetworkNode networkNode = mock(NetworkNode.class);
+        when(networkNode.getNodeAddress()).thenReturn(BUYER_NODE_ADDRESS);
+        when(p2PService.getNetworkNode()).thenReturn(networkNode);
+        TestDisputeList disputeList = new TestDisputeList();
+        TestDisputeManager manager = new TestDisputeManager(p2PService,
+                tradeManager,
+                closedTradableManager,
+                failedTradesManager,
+                keyStorageDir,
+                disputeListService(disputeList));
+        PubKeyRing agentPubKeyRing = pubKeyRing();
+        Trade localTrade = trade(TRADE_ID, agentPubKeyRing);
+        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(localTrade));
+        Dispute dispute = dispute(TRADE_ID, agentPubKeyRing);
+        ChatMessage agentsMessage = chatMessageWithReceivedDateFromPeer(SupportType.MEDIATION);
+        // The agent's message in the dispute it sends to the other trader is a system message
+        agentsMessage.setSystemMessage(true);
+        agentsMessage.setWasDisplayed(true);
+        dispute.getChatMessages().add(agentsMessage);
+        PeerOpenedDisputeMessage message = new PeerOpenedDisputeMessage(dispute,
+                PEER_NODE_ADDRESS,
+                "peer-opened-dispute-uid",
+                SupportType.MEDIATION);
+
+        long before = System.currentTimeMillis();
+        manager.onPeerOpenedDispute(message, agentPubKeyRing.getSignaturePubKey());
+
+        // The dispute is stored with the message and its receive time
+        assertEquals(1, disputeList.size());
+        assertTrue(disputeList.getList().get(0).getChatMessages().contains(agentsMessage));
+        assertReceivedSince(before, agentsMessage);
+        assertTrue(agentsMessage.isSystemMessage());
+        assertTrue(agentsMessage.isWasDisplayed());
+    }
+
+    @Test
     void openNewDisputeWithMismatchedSupportTypeDoesNotMutateDisputeList() {
         TestDisputeList disputeList = new TestDisputeList();
         DisputeListService<DisputeList<Dispute>> disputeListService = disputeListService(disputeList);
@@ -565,6 +685,19 @@ class DisputeManagerAuthTest {
 
         assertTrue(disputeList.isEmpty());
         verify(disputeListService, never()).requestPersistence();
+    }
+
+    // A receive time the peer could put into the message, it must not be kept
+    private static ChatMessage chatMessageWithReceivedDateFromPeer(SupportType supportType) {
+        ChatMessage chatMessage = new ChatMessage(supportType, TRADE_ID, 0, true, "message", PEER_NODE_ADDRESS);
+        chatMessage.setReceivedDate(42);
+        return chatMessage;
+    }
+
+    private static void assertReceivedSince(long before, ChatMessage chatMessage) {
+        long receivedDate = chatMessage.getReceivedDate();
+        assertTrue(receivedDate >= before && receivedDate <= System.currentTimeMillis(),
+                "receivedDate=" + receivedDate);
     }
 
     private static Trade trade(String tradeId, PubKeyRing mediatorPubKeyRing) {
@@ -918,8 +1051,17 @@ class DisputeManagerAuthTest {
             return pubKeyRing;
         }
 
+        // A local system message as the mediator's price info, without the price feed
         @Override
         protected void addPriceInfoMessage(Dispute dispute, int counter) {
+            ChatMessage priceInfo = new ChatMessage(getSupportType(),
+                    dispute.getTradeId(),
+                    getPubKeyRing().hashCode(),
+                    false,
+                    "price info",
+                    MEDIATOR_NODE_ADDRESS);
+            priceInfo.setSystemMessage(true);
+            dispute.addAndPersistChatMessage(priceInfo);
         }
 
         @Override
