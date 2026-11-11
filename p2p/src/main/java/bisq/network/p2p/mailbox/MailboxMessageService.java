@@ -545,7 +545,13 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                 .getPrefixedSealedAndSignedMessage();
         SealedAndSigned sealedAndSigned = prefixedSealedAndSignedMessage.getSealedAndSigned();
         String uid = prefixedSealedAndSignedMessage.getUid();
-        if (ignoredMailboxService.isIgnored(uid)) {
+        // We key the ignore list by the hash of the mailbox payload, not by the sender-chosen uid. A peer can publish
+        // a second entry with the uid of our pending entry but with garbage ciphertext; keyed by uid it would fail to
+        // decrypt first and put the uid on the ignore list, so our genuine entry is skipped before we try it. The
+        // payload hash commits to the ciphertext, so such a decoy cannot mark our entry as ignored.
+        String ignoreKey = P2PDataStorage.get32ByteHashAsByteArray(
+                protectedMailboxStorageEntry.getProtectedStoragePayload()).getHex();
+        if (ignoredMailboxService.isIgnored(ignoreKey)) {
             // We had persisted a past failed decryption attempt on that message so we don't try again and return early
             return new MailboxItem(protectedMailboxStorageEntry, null);
         }
@@ -555,13 +561,13 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         } catch (CryptoException ignore) {
             // Expected if message was not intended for us
             // We persist those entries so at the next startup we do not need to try to decrypt it anymore
-            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
+            ignoredMailboxService.ignore(ignoreKey, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (ProtobufferException e) {
             log.warn("Protobuf parsing failed for mailbox entry uid={}. Ignoring entry.", uid, e);
-            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
+            ignoredMailboxService.ignore(ignoreKey, protectedMailboxStorageEntry.getCreationTimeStamp());
         } catch (Exception e) {
             log.error("Unexpected runtime failure decrypting mailbox entry uid={}. Ignoring entry.", uid, e);
-            ignoredMailboxService.ignore(uid, protectedMailboxStorageEntry.getCreationTimeStamp());
+            ignoredMailboxService.ignore(ignoreKey, protectedMailboxStorageEntry.getCreationTimeStamp());
         }
         return new MailboxItem(protectedMailboxStorageEntry, null);
     }
