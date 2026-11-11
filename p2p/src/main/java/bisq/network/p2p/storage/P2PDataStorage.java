@@ -116,6 +116,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -834,7 +835,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (!payloadHashAlreadyInStore) {
             wasAdded = appendOnlyDataStoreService.put(hashAsByteArray, payload);
             if (wasAdded) {
-                appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
+                notifyListeners(appendOnlyDataStoreListeners,
+                        appendOnlyDataStoreListener -> appendOnlyDataStoreListener.onAdded(payload));
             }
         }
 
@@ -936,7 +938,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
-        hashMapChangedListeners.forEach(e -> e.onAdded(Collections.singletonList(protectedStorageEntry)));
+        List<ProtectedStorageEntry> addedEntries = Collections.singletonList(protectedStorageEntry);
+        notifyListeners(hashMapChangedListeners, hashMapChangedListener -> hashMapChangedListener.onAdded(addedEntries));
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
@@ -1191,7 +1194,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         });
 
-        hashMapChangedListeners.forEach(e -> e.onRemoved(removedProtectedStorageEntries));
+        notifyListeners(hashMapChangedListeners,
+                hashMapChangedListener -> hashMapChangedListener.onRemoved(removedProtectedStorageEntries));
+    }
+
+    // A listener that fails must not keep the change from the other listeners, nor stop the change itself, for
+    // example the sequence number, the persistence and the broadcast of an added entry.
+    private static <T> void notifyListeners(Collection<T> listeners, Consumer<T> notification) {
+        listeners.forEach(listener -> {
+            try {
+                notification.accept(listener);
+            } catch (RuntimeException e) {
+                log.error("A listener of the data storage failed to handle a change. listener={}",
+                        listener.getClass().getName(), e);
+            }
+        });
     }
 
     private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
