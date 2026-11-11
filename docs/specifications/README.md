@@ -52,6 +52,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`dao/dao-state-checkpoints.md`](dao/dao-state-checkpoints.md) | Bundled DAO state hashes, verification boundaries, mismatch recovery, and checkpoint generation. |
 | [`dao/seed-node-state-hashes.md`](dao/seed-node-state-hashes.md) | Which connections the node trusts as seed nodes when DAO, proposal and blind vote state hashes are exchanged. |
 | [`dao/lite-node-blocks.md`](dao/lite-node-blocks.md) | Which BSQ blocks a lite node uses and relays: signed blocks of trusted block providers only. |
+| [`dao/bitcoind-script-types.md`](dao/bitcoind-script-types.md) | How a full node maps the script types that Bitcoin Core reports, including types of newer Bitcoin Core versions. |
 | [`dao/dao-state-resync-warning.md`](dao/dao-state-resync-warning.md) | The desktop warning when the DAO state needs a resync, how often it is shown, and which user actions do not start until the resync. |
 
 ### `dispute/`
