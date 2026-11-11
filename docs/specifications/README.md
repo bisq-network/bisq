@@ -26,6 +26,7 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`api/market-price.md`](api/market-price.md) | How the API answers a market price request from the prices the node holds, without waiting for a price provider, and when a price is unavailable. |
+| [`api/daemon-api-access.md`](api/daemon-api-access.md) | Who can reach the gRPC API of the daemon: the required password, the loopback default address, and the known gaps. |
 
 
 ### `account/`

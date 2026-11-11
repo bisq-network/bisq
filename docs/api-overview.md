@@ -10,6 +10,10 @@ To run daemon.jar on Mainnet:
 
 `$ java -jar daemon.jar --apiPassword=becareful`
 
+The daemon does not start without `--apiPassword`. The API listens on `127.0.0.1` only. `--apiHost` sets another
+address, but the API has no TLS, so the password and all calls then cross the network in clear text. To use the API
+from another host, prefer an SSH tunnel to the loopback address.
+
 If you just want to control your headless daemon within your terminal you have to run the Bisq cli as well.
 Again just download the bisq-cli archive and extract it locally.
 To call getversion from cli.jar

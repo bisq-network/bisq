@@ -27,6 +27,7 @@ import io.grpc.StatusRuntimeException;
 
 import javax.inject.Inject;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 import static io.grpc.Metadata.Key;
 import static io.grpc.Status.UNAUTHENTICATED;
@@ -46,6 +47,9 @@ public class PasswordAuthInterceptor implements ServerInterceptor {
 
     @Inject
     public PasswordAuthInterceptor(Config config) {
+        // An empty password would admit every caller that sends an empty header.
+        checkArgument(!config.apiPassword.isBlank(),
+                "The gRPC API requires a non-empty '%s' option", Config.API_PASSWORD);
         this.expectedPasswordValue = config.apiPassword;
     }
 
