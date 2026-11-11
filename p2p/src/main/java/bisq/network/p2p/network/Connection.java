@@ -794,6 +794,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         exceeds = size > PERMITTED_MESSAGE_SIZE;
                     }
 
+                    // The tolerance of a rule violation only decides when we close the connection. We never deliver
+                    // the message which violates the rule.
                     if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage &&
                             !((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload().verifyHashSize()) {
                         log.warn("PersistableNetworkPayload.verifyHashSize failed: wrong hash size or malformed " +
@@ -802,6 +804,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 Utilities.toTruncatedString(proto));
                         if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
+                        continue;
                     }
 
                     if (exceeds) {
@@ -809,6 +812,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                         if (reportInvalidRequest(RuleViolation.MAX_MSG_SIZE_EXCEEDED))
                             return;
+                        continue;
                     }
 
                     if (violatesThrottleLimit() && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
