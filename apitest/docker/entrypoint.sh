@@ -78,6 +78,13 @@ fi
 : "${API_PORT:?API_PORT must be set for daemon role}"
 : "${API_PASSWORD:?API_PASSWORD must be set for daemon role}"
 
+# The tests reach the gRPC API through the published container port, so the daemon must listen on all
+# interfaces instead of the loopback default. The option goes into bisq.properties, not onto the command
+# line: a release peer of the compat run that does not know the option ignores it there, but exits on an
+# unknown command line option.
+CONFIG_FILE="${APP_DATA_DIR}/${APP_NAME}/bisq.properties"
+grep -qs '^apiHost=' "${CONFIG_FILE}" || echo 'apiHost=0.0.0.0' >> "${CONFIG_FILE}"
+
 DAEMON_ARGS=(
   --apiPort="${API_PORT}"
   --apiPassword="${API_PASSWORD}"

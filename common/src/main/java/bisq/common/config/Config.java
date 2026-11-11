@@ -152,6 +152,7 @@ public class Config {
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
     public static final String API_PASSWORD = "apiPassword";
+    public static final String API_HOST = "apiHost";
     public static final String API_PORT = "apiPort";
     public static final String BRIDGE_PORT = "bridgePort";
     public static final String PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE = "preventPeriodicShutdownAtSeedNode";
@@ -286,6 +287,7 @@ public class Config {
     public final boolean dumpDelayedPayoutTxs;
     public final boolean allowFaultyDelayedTxs;
     public final String apiPassword;
+    public final String apiHost;
     public final int apiPort;
     public final int bridgePort;
     public final boolean preventPeriodicShutdownAtSeedNode;
@@ -880,6 +882,12 @@ public class Config {
                         .withRequiredArg()
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<String> apiHostOpt =
+                parser.accepts(API_HOST, "gRPC API bind address. The API has no TLS, " +
+                                "so a non-loopback address exposes the password on the network")
+                        .withRequiredArg()
+                        .defaultsTo("127.0.0.1");
+
         ArgumentAcceptingOptionSpec<Integer> apiPortOpt =
                 parser.accepts(API_PORT, "gRPC API port")
                         .withRequiredArg()
@@ -1107,6 +1115,7 @@ public class Config {
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
+            this.apiHost = options.valueOf(apiHostOpt);
             this.apiPort = options.valueOf(apiPortOpt);
             this.bridgePort = options.valueOf(bridgePortOpt);
             this.preventPeriodicShutdownAtSeedNode = options.valueOf(preventPeriodicShutdownAtSeedNodeOpt);

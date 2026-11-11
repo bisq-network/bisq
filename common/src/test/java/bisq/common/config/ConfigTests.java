@@ -440,6 +440,18 @@ public class ConfigTests {
     }
 
     @Test
+    public void whenApiHostOptionIsUnset_thenApiHostIsTheLoopbackAddress() {
+        Config config = new Config();
+        assertThat(config.apiHost, equalTo("127.0.0.1"));
+    }
+
+    @Test
+    public void whenApiHostOptionIsSet_thenApiHostPropertyReflectsItsValue() {
+        Config config = configWithOpts(opt(API_HOST, "0.0.0.0"));
+        assertThat(config.apiHost, equalTo("0.0.0.0"));
+    }
+
+    @Test
     public void whenConfigIsConstructed_thenNoConsoleOutputSideEffectsShouldOccur() {
         PrintStream outOrig = System.out;
         PrintStream errOrig = System.err;
