@@ -356,6 +356,13 @@ class CoreTradesService {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         var isBsqSwapTrade = tradeModel instanceof BsqSwapTrade;
+        if (!isBsqSwapTrade && ((Trade) tradeModel).getContract() == null) {
+            // A trade has no contract until the trade protocol creates it, and clients
+            // call 'gettrade' right after 'takeoffer'. That is not an error.
+            log.info("Role not available yet for trade with Id {}, its contract is not created yet.",
+                    tradeModel.getId());
+            return "Not Available";
+        }
         try {
             return isBsqSwapTrade
                     ? tradeUtil.getRole((BsqSwapTrade) tradeModel)
