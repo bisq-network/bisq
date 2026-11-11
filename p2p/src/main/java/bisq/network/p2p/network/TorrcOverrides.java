@@ -28,8 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -46,22 +44,16 @@ import static com.google.common.base.Preconditions.checkArgument;
  *                           torrc file which a config file names. An entry of the options of the command line replaces
  *                           the entry of such a file with the same key, and so it comes from the command line.
  */
-@Slf4j
 record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFromConfigFile) {
     static TorrcOverrides parse(TorrcSettings torrcSettings) {
         LinkedHashMap<String, String> entries = new LinkedHashMap<>();
         Set<String> keysFromConfigFile = new HashSet<>();
         File torrcFile = torrcSettings.torrcFile();
         if (torrcFile != null) {
-            try {
-                LinkedHashMap<String, String> fileEntries =
-                        parseTorrcFile(Files.readAllLines(torrcFile.toPath(), StandardCharsets.UTF_8));
-                entries.putAll(fileEntries);
-                if (!torrcSettings.torrcFileSetOnCommandLine()) {
-                    keysFromConfigFile.addAll(fileEntries.keySet());
-                }
-            } catch (IOException e) {
-                log.error("custom torrc file not found ('{}'). Proceeding with defaults.", torrcFile);
+            LinkedHashMap<String, String> fileEntries = parseTorrcFile(readTorrcFile(torrcFile));
+            entries.putAll(fileEntries);
+            if (!torrcSettings.torrcFileSetOnCommandLine()) {
+                keysFromConfigFile.addAll(fileEntries.keySet());
             }
         }
         LinkedHashMap<String, String> optionEntries = parseTorrcOptions(torrcSettings.torrcOptions());
@@ -72,6 +64,18 @@ record TorrcOverrides(LinkedHashMap<String, String> entries, Set<String> keysFro
             keysFromConfigFile.addAll(optionEntries.keySet());
         }
         return new TorrcOverrides(entries, Set.copyOf(keysFromConfigFile));
+    }
+
+    // Config checks that the file can be read when Bisq starts, but the file can change until Tor starts, and a file
+    // which is not UTF-8 text fails only here. The exception has no cause, because the failed start shows the message
+    // of the root cause, which would only say for example "Input length = 1".
+    private static List<String> readTorrcFile(File torrcFile) {
+        try {
+            return Files.readAllLines(torrcFile.toPath(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Bisq cannot read the torrc file " + torrcFile + " as UTF-8 text (" +
+                    e + "). Bisq starts Tor only with all entries of the file.");
+        }
     }
 
     private static LinkedHashMap<String, String> parseTorrcFile(List<String> lines) {

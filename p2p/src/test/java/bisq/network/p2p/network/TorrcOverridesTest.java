@@ -66,11 +66,26 @@ class TorrcOverridesTest {
         assertEquals("1", torrcOverrides.get("AvoidDiskWrites"));
     }
 
+    // Config checks that the file can be read when Bisq starts, but the file can change until Tor starts. Earlier
+    // versions started Tor without the entries of the file.
     @Test
-    void ignoresAMissingTorrcFile(@TempDir Path tempDir) {
+    void aMissingTorrcFileStopsTheStart(@TempDir Path tempDir) {
         File missingFile = tempDir.resolve("missing").toFile();
 
-        assertEquals(Map.of("SocksPort", "9150"), parseFromCommandLine(missingFile, "SocksPort 9150"));
+        var exception = assertThrows(IllegalArgumentException.class,
+                () -> parseFromCommandLine(missingFile, "SocksPort 9150"));
+        assertTrue(exception.getMessage().contains(missingFile.toString()));
+    }
+
+    @Test
+    void aTorrcFileWhichIsNotUtf8TextStopsTheStart(@TempDir Path tempDir) throws IOException {
+        Path latin1File = tempDir.resolve("torrc");
+        Files.write(latin1File, "# Länder\nExcludeNodes {ch}\n".getBytes(StandardCharsets.ISO_8859_1));
+
+        var exception = assertThrows(IllegalArgumentException.class,
+                () -> parseFromCommandLine(latin1File.toFile(), ""));
+        assertTrue(exception.getMessage().contains(latin1File.toString()));
+        assertTrue(exception.getMessage().contains("UTF-8"));
     }
 
     // Earlier versions dropped the entries before such a part and started Tor without them, for example without the

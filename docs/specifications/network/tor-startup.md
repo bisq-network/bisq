@@ -163,7 +163,8 @@ The node starts Tor only with all entries of the user, because an entry such as 
 which Tor uses, and a user who relies on it would not notice that it is missing. `--torrcOptions` is a list of entries
 separated by commas, each a key, whitespace and a value. An empty part, for example after a comma which follows the
 last entry, contains no entry and is skipped. Any other part which is no entry stops the start of Tor. The message
-names the position of the part, not its text, which may contain a password.
+names the position of the part, not its text, which may contain a password. A file of `--torrcFile` which the node
+cannot read as UTF-8 text when it starts Tor stops the start as well.
 
 An entry which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
 `AccelName` or `AccelDir` in any case of the name and as an abbreviation which Tor accepts, is accepted only if the
