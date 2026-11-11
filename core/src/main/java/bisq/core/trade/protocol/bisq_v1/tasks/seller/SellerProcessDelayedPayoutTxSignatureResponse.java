@@ -73,9 +73,8 @@ public class SellerProcessDelayedPayoutTxSignatureResponse extends TradeTask {
                     buyersDepositTxWithWitnesses,
                     buyerRawTransactionInputs,
                     sellerRawTransactionInputs);
-            if (checkNotNull(trade.getOffer()).isFiatOffer()) {
-                processModel.setFinalizedDepositTx(myDepositTx);
-            }
+            // The publication of fiat and crypto deposits waits for the buyer's ACK, so a restart can come before it
+            processModel.setFinalizedDepositTx(myDepositTx);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
