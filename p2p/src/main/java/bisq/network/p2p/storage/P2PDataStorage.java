@@ -318,6 +318,30 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             AtomicBoolean wasPersistableNetworkPayloadsTruncated,
             AtomicBoolean wasProtectedStorageEntriesTruncated,
             Capabilities peerCapabilities) {
+        return buildGetDataResponse(getDataRequest,
+                maxEntriesPerType,
+                wasPersistableNetworkPayloadsTruncated,
+                wasProtectedStorageEntriesTruncated,
+                peerCapabilities,
+                true);
+    }
+
+    /**
+     * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
+     *
+     * @param includeSeedNodeOnlyPayloads false if we are not a seed node. The requester drops the
+     *                                    SeedNodeOnlyInitialDataResponsePayload items of our response then, so we
+     *                                    leave them out. Otherwise, they would take the space of the payloads which
+     *                                    the requester keeps and mark the response as truncated, and the requester
+     *                                    would repeat the request without getting more data.
+     */
+    public GetDataResponse buildGetDataResponse(
+            GetDataRequest getDataRequest,
+            int maxEntriesPerType,
+            AtomicBoolean wasPersistableNetworkPayloadsTruncated,
+            AtomicBoolean wasProtectedStorageEntriesTruncated,
+            Capabilities peerCapabilities,
+            boolean includeSeedNodeOnlyPayloads) {
 
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
                 P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
@@ -327,6 +351,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
         // maps of the remaining appendOnlyDataStoreServices.
         Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
+        if (!includeSeedNodeOnlyPayloads) {
+            mapForDataResponse.values().removeIf(payload -> payload instanceof SeedNodeOnlyInitialDataResponsePayload);
+        }
 
         // Give a bit of tolerance for message overhead
         double maxSize = maxGetDataResponseSize;
