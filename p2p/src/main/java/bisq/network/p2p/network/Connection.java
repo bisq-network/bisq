@@ -208,8 +208,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             if (peersNodeAddress != null)
                 setPeersNodeAddress(peersNodeAddress);
 
-            // We create a thread for handling inputStream data
-            executorService.submit(this);
+            // We create a thread for handling inputStream data. With execute, an error which run passes on reaches
+            // the uncaught exception handler, while submit would keep it in a Future that nobody reads.
+            executorService.execute(this);
 
             if (peersNodeAddress != null && banFilter != null && banFilter.isPeerBanned(peersNodeAddress)) {
                 log.warn("We created an outbound connection with a banned peer");
@@ -867,10 +868,16 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 } catch (ProtobufferException | NoClassDefFoundError | InvalidProtocolBufferException e) {
                     log.error(e.getMessage());
                     reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                } catch (OutOfMemoryError e) {
+                    throw e;
                 } catch (Throwable t) {
                     handleException(t);
                 }
             }
+        } catch (OutOfMemoryError e) {
+            // After an OutOfMemoryError the application might not work as expected, so it is no fault of this
+            // connection. The uncaught exception handler of the application decides, a headless node shuts down.
+            throw e;
         } catch (Throwable t) {
             handleException(t);
         }

@@ -73,6 +73,7 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`network/bisq2-bridge-block-continuity.md`](network/bisq2-bridge-block-continuity.md) | Snapshot and live-stream continuity for DAO block data exported to Bisq 2 oracle nodes. |
+| [`network/connection-out-of-memory.md`](network/connection-out-of-memory.md) | What the input handler of a connection does at an `OutOfMemoryError`: it passes the error on, so that a headless node shuts down. |
 | [`network/inventory-requests.md`](network/inventory-requests.md) | How often a node counts its data for the inventory request of any peer: at most once in 10 seconds. |
 | [`network/local-bitcoin-node.md`](network/local-bitcoin-node.md) | When a Bitcoin node on localhost is used as the only peer of the wallet, and why a pruned node or one without bloom filters is not. |
 | [`network/onion-service-identity.md`](network/onion-service-identity.md) | Where the key of the node's onion service is kept, when a key may be generated, and how it is protected, so that the onion address does not change. |
