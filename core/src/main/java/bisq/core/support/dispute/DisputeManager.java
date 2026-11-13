@@ -628,7 +628,6 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         try {
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
-            DisputeValidation.validateTradeAndDispute(dispute, trade);
             Transaction delayedPayoutTx = null;
             try {
                 delayedPayoutTx = checkDelayedPayoutTx(trade.getDelayedPayoutTx(),
@@ -686,8 +685,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     }
 
 
-    // The agent creates the dispute for us from the contract that the opener sent. We accept it only if it is ours,
-    // and a new dispute only if the trade's dispute state allows it, before a closed or failed trade is moved back.
+    // The agent creates the dispute for us from the contract that the opener sent. We accept it only if it is ours and
+    // about our trade, and a new dispute only if the trade's dispute state allows it, before a closed or failed trade
+    // is moved back.
     private boolean isPeerOpenedDisputeRefused(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
                                                Dispute dispute,
                                                Trade trade) {
@@ -697,6 +697,14 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             onPeerDisputeNotForThisTrader(dispute.getTradeId());
         } else if (findDispute(dispute).isEmpty() && !isDisputeStartedByPeerAllowed(trade.getDisputeState())) {
             errorMessage = "A new dispute is not allowed in dispute state " + trade.getDisputeState();
+        } else {
+            // The opener chose the contract and the transaction IDs. With another contract, for example with key rings
+            // or multisig keys, which the traders do not sign, the agent would decide a case about another trade.
+            try {
+                DisputeValidation.validateTradeAndDispute(dispute, trade);
+            } catch (DisputeValidation.ValidationException e) {
+                errorMessage = "The dispute does not match the trade: " + e.getMessage();
+            }
         }
         if (errorMessage == null) {
             return false;
