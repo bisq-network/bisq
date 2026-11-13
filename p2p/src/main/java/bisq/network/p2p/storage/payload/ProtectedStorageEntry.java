@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.payload;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkPayload;
@@ -31,10 +32,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import org.bouncycastle.util.encoders.Hex;
 
 import java.security.PublicKey;
+
+import java.nio.ByteBuffer;
 
 import java.time.Clock;
 
@@ -48,6 +53,14 @@ import org.jetbrains.annotations.NotNull;
 @EqualsAndHashCode
 @Slf4j
 public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload {
+    // Signatures which failed verification, by a hash of the public key, the signed hash and the signature. Copies of
+    // an entry with another creation date, which the signature does not cover, are rejected without a new
+    // verification. See docs/specifications/network/storage-entry-signatures.md.
+    private static final int MAX_INVALID_SIGNATURES = 10_000;
+    private static final Cache<P2PDataStorage.ByteArray, Boolean> INVALID_SIGNATURES = CacheBuilder.newBuilder()
+            .maximumSize(MAX_INVALID_SIGNATURES)
+            .build();
+
     private final ProtectedStoragePayload protectedStoragePayload;
     private final byte[] ownerPubKeyBytes;
     transient private final PublicKey ownerPubKey;
@@ -214,18 +227,42 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(
                     new P2PDataStorage.DataAndSeqNrPair(this.protectedStoragePayload, this.sequenceNumber));
 
+            // A verification gives the same result for the same public key, signed hash and signature
+            P2PDataStorage.ByteArray verifiedValues = getVerifiedValues(hashOfDataAndSeqNr);
+            if (INVALID_SIGNATURES.getIfPresent(verifiedValues) != null) {
+                log.debug("The signature for {} failed its verification before",
+                        protectedStoragePayload.getClass().getSimpleName());
+                return false;
+            }
+
             boolean result = Sig.verify(this.ownerPubKey, hashOfDataAndSeqNr, this.signature);
 
-            if (!result)
+            if (!result) {
+                INVALID_SIGNATURES.put(verifiedValues, Boolean.TRUE);
                 log.warn("Invalid signature for {}.\nSerialized data as hex={}}",
                         protectedStoragePayload.getClass().getSimpleName(),
                         Hex.toHexString(protectedStoragePayload.toProtoMessage().toByteArray()));
+            }
 
             return result;
         } catch (CryptoException e) {
             log.error("ProtectedStorageEntry::isSignatureValid() exception {}", e.toString());
             return false;
         }
+    }
+
+    // The hash of the public key, the signed hash and the signature that a verification uses. The length of the public
+    // key separates it from the signed hash, which always has 32 bytes, and from the signature.
+    private P2PDataStorage.ByteArray getVerifiedValues(byte[] hashOfDataAndSeqNr) {
+        byte[] publicKey = Sig.getPublicKeyBytes(this.ownerPubKey);
+        byte[] values = ByteBuffer.allocate(Integer.BYTES + publicKey.length + hashOfDataAndSeqNr.length +
+                        this.signature.length)
+                .putInt(publicKey.length)
+                .put(publicKey)
+                .put(hashOfDataAndSeqNr)
+                .put(this.signature)
+                .array();
+        return new P2PDataStorage.ByteArray(Hash.getSha256Hash(values));
     }
 
     /*
