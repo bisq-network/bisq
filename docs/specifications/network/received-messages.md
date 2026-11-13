@@ -77,6 +77,23 @@ bundles messages: it sends the broadcast messages of 2 seconds to a peer in one 
     within 2 seconds. A single message of a message type which the node does not know violates
     `INVALID_DATA_TYPE`, and a single message with a payload or a nested type which the node does
     not know closes the connection (`UNKNOWN_EXCEPTION`).
+- Each element passes the checks of a single message before it is passed to the handlers: the size
+  limit of its type and the hash size of an `AddPersistableNetworkPayloadMessage`
+  (`MAX_MSG_SIZE_EXCEEDED`), and the message version of the network (`WRONG_NETWORK_ID`). An element
+  which is no broadcast message, or which is a bundle itself, violates `INVALID_DATA_TYPE`. An element
+  which violates a rule is not passed to the handlers, and the violation counts as for a single
+  message. If a violation closes the connection, no element of the bundle is passed to the handlers
+  and the connection reads no further message.
+  - The size of an element is the size of the element serialized as the node handles and relays
+    it. Bytes which the parse drops, such as unknown fields, count in the size of the bundle, which
+    the rules above check against the received bytes.
+  - Before, the elements skipped these checks: a bundle of 10 MB could deliver an element of almost
+    10 MB, which the node stored and broadcast, without a rule violation.
+  - A message of another type in a bundle would skip the handling that only a single message gets:
+    a `CloseConnectionMessage` closes the connection, a `SupportedCapabilitiesMessage` sets the
+    capabilities, a sender address binds the connection. Nodes before v1.8.0 also bundled direct
+    messages that they sent within 20 ms; a node of this version does not pass them to the handlers.
+    Like a single message, a `NewBlockBroadcastMessage` above 200 kB is dropped also in a bundle.
 
 ## Limits of the senders
 

@@ -27,6 +27,7 @@ import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
+import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -426,12 +427,23 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
+            // An element which violates a rule is not delivered. If the violation closes the connection, no element
+            // of the bundle is delivered.
+            RuleViolation elementRuleViolation = getRuleViolationOfBundleElement(networkEnvelope);
+            if (elementRuleViolation != null) {
+                if (reportInvalidRequest(elementRuleViolation)) {
+                    return;
+                }
+                continue;
+            }
+
             // If SendersNodeAddressAwareEnvelope we do some verifications and apply if successful, otherwise we return false.
             if (networkEnvelope instanceof SendersNodeAddressAwareEnvelope) {
                 boolean isValid = processSendersNodeAddressAwareEnvelope((SendersNodeAddressAwareEnvelope) networkEnvelope);
                 if (!isValid) {
                     log.warn("Received an invalid {} at processing BundleOfEnvelopes", networkEnvelope.getClass().getSimpleName());
-                    continue;
+                    // The sender is banned, which closed the connection
+                    return;
                 }
             }
 
@@ -455,6 +467,43 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
         envelopesToProcess.forEach(envelope -> UserThread.execute(() ->
                 messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
+    }
+
+    // An element of a bundle passes the checks of a single message. Only broadcast messages are bundled
+    // (Broadcaster). Another message type, or a bundle in the bundle, would skip the handling which only a single
+    // message gets, for example the one of a CloseConnectionMessage or of a sender address.
+    @Nullable
+    private RuleViolation getRuleViolationOfBundleElement(NetworkEnvelope element) {
+        if (!(element instanceof BroadcastMessage) || element instanceof BundleOfEnvelopes) {
+            log.warn("We received a {} in a BundleOfEnvelopes, which may only hold broadcast messages",
+                    element.getClass().getSimpleName());
+            return RuleViolation.INVALID_DATA_TYPE;
+        }
+
+        if (element instanceof AddPersistableNetworkPayloadMessage &&
+                !((AddPersistableNetworkPayloadMessage) element).getPersistableNetworkPayload().verifyHashSize()) {
+            log.warn("PersistableNetworkPayload.verifyHashSize failed for an element of a BundleOfEnvelopes: " +
+                    "wrong hash size or malformed payload");
+            return RuleViolation.MAX_MSG_SIZE_EXCEEDED;
+        }
+
+        // The serialized form of the element as we handle and relay it. Bytes which the parse drops, like unknown
+        // fields, are counted in the size of the bundle.
+        protobuf.NetworkEnvelope proto = element.toProtoNetworkEnvelope();
+        int size = proto.getSerializedSize();
+        if (exceedsPermittedSize(element, size)) {
+            log.warn("An element of a BundleOfEnvelopes is above the size limit of its type. size={}; element={}",
+                    size, element.getClass().getSimpleName());
+            return RuleViolation.MAX_MSG_SIZE_EXCEEDED;
+        }
+
+        if (proto.getMessageVersion() != Version.getP2PMessageVersion()) {
+            log.warn("An element of a BundleOfEnvelopes is of another network. version of element={}, app version={}",
+                    proto.getMessageVersion(), Version.getP2PMessageVersion());
+            return RuleViolation.WRONG_NETWORK_ID;
+        }
+
+        return null;
     }
 
     private static boolean exceedsPermittedSize(NetworkEnvelope networkEnvelope, int size) {
