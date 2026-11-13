@@ -457,6 +457,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
     }
 
+    private static boolean exceedsPermittedSize(NetworkEnvelope networkEnvelope, int size) {
+        return networkEnvelope instanceof ExtendedDataSizePermission ?
+                size > MAX_PERMITTED_MESSAGE_SIZE :
+                size > PERMITTED_MESSAGE_SIZE;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
@@ -819,12 +825,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     statistic.addReceivedMessage(networkEnvelope);
 
                     // First we check the size
-                    boolean exceeds;
-                    if (networkEnvelope instanceof ExtendedDataSizePermission) {
-                        exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
-                    } else {
-                        exceeds = size > PERMITTED_MESSAGE_SIZE;
-                    }
+                    boolean exceeds = exceedsPermittedSize(networkEnvelope, size);
 
                     // The tolerance of a rule violation only decides when we close the connection. We never deliver
                     // the message which violates the rule.
