@@ -37,9 +37,12 @@ import java.io.SequenceInputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -117,6 +120,44 @@ class ConnectionTest {
         verify(messageListener).onMessage(same(smallEnvelope), same(connection));
         // The first oversized message is tolerated, so the connection stayed open for the next one
         assertNull(connection.getRuleViolation());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 2})
+    void checksReceivedSizeDespiteProtobufNormalization(int bytesAboveLimit) throws IOException {
+        protobuf.NetworkEnvelope first = ping(1);
+        protobuf.NetworkEnvelope next = ping(2);
+        NetworkEnvelope firstEnvelope = mock(NetworkEnvelope.class);
+        NetworkEnvelope nextEnvelope = mock(NetworkEnvelope.class);
+        when(networkProtoResolver.fromProto(first)).thenReturn(firstEnvelope);
+        when(networkProtoResolver.fromProto(next)).thenReturn(nextEnvelope);
+
+        // Repeated singular fields count towards the received size, but protobuf keeps only the last value.
+        int receivedSize = Connection.getPermittedMessageSize() + bytesAboveLimit;
+        ByteArrayOutputStream message = new ByteArrayOutputStream();
+        CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(message);
+        for (int size = first.getSerializedSize(); size < receivedSize; size += 2) {
+            codedOutputStream.writeUInt32(1, 0);
+        }
+        codedOutputStream.flush();
+        message.writeBytes(first.toByteArray());
+        assertEquals(receivedSize, message.size());
+        assertEquals(first, protobuf.NetworkEnvelope.parseFrom(message.toByteArray()));
+        assertTrue(first.getSerializedSize() < Connection.getPermittedMessageSize());
+
+        Connection connection = connection(new ByteArrayInputStream(
+                concat(varint(message.size()), message.toByteArray(), delimited(next))));
+
+        verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.NO_PROTO_BUFFER_ENV),
+                same(connection));
+        if (bytesAboveLimit == 0) {
+            verify(messageListener).onMessage(same(firstEnvelope), same(connection));
+        } else {
+            verify(messageListener, never()).onMessage(same(firstEnvelope), any());
+        }
+        verify(messageListener).onMessage(same(nextEnvelope), same(connection));
+        assertNull(connection.getRuleViolation());
+        assertEquals(receivedSize + next.getSerializedSize(), connection.getStatistic().getReceivedBytes());
     }
 
     private Connection connection(InputStream inputStream) throws IOException {

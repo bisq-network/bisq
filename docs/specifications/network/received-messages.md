@@ -33,6 +33,9 @@ large responses keep.
   types with `ExtendedDataSizePermission` (data requests and responses, block and state hash
   responses, bundles of messages), 200 kB for all other types. An `AddPersistableNetworkPayloadMessage`
   whose payload has a hash of the wrong size violates the same rule.
+- The size is the number of received envelope bytes, excluding the length prefix. Duplicate fields
+  and noncanonical encodings count in full, even if protobuf normalizes them to a smaller message.
+  Received-byte statistics use this same size.
 - A message that violates one of these rules is not passed to the handlers. The tolerance of the
   rule only decides when the connection is closed: at the second violation of
   `MAX_MSG_SIZE_EXCEEDED`.

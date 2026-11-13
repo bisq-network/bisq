@@ -795,7 +795,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     NetworkEnvelope networkEnvelope = networkProtoResolver.fromProto(proto);
                     lastReadTimeStamp = now;
                     log.debug("<< Received networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
-                    int size = proto.getSerializedSize();
+                    // Protobuf can discard duplicate fields, so its serialized size can undercount received bytes.
+                    int size = message.length;
 
                     // We want to track the size of each object even if it is invalid data
                     statistic.addReceivedBytes(size);
