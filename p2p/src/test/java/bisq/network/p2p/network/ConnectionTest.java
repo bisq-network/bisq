@@ -17,10 +17,14 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.p2p.peers.keepalive.messages.Ping;
+
 import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
+
+import com.google.protobuf.CodedOutputStream;
 
 import java.net.Socket;
 
@@ -28,11 +32,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -56,6 +62,38 @@ class ConnectionTest {
     @AfterEach
     void tearDown() {
         UserThread.resetForTests();
+    }
+
+    @Test
+    void closesConnectionAtASizeAboveTheMaximumWithoutReadingTheMessage() throws IOException {
+        InputStream inputStream = new SequenceInputStream(
+                new ByteArrayInputStream(varint(Connection.getMaxPermittedMessageSize() + 1)),
+                new FailingInputStream());
+
+        Connection connection = connection(inputStream);
+
+        verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.RULE_VIOLATION),
+                same(connection));
+        assertEquals(RuleViolation.MAX_MSG_SIZE_EXCEEDED, connection.getRuleViolation());
+        verify(messageListener, never()).onMessage(any(), any());
+    }
+
+    @Test
+    void deliversTheNextMessageAfterBytesWhichAreNotAValidEnvelope() throws IOException {
+        Ping ping = new Ping(1, 0);
+        when(networkProtoResolver.fromProto(any(protobuf.NetworkEnvelope.class))).thenReturn(ping);
+        // A field tag of 0 is not valid. Protobuf parses from a stream with a buffer of 4096 bytes, so a parser which
+        // reads from the stream would stop inside this envelope.
+        byte[] invalidEnvelope = new byte[10_000];
+        InputStream inputStream = new ByteArrayInputStream(
+                concat(varint(invalidEnvelope.length), invalidEnvelope, delimited(ping.toProtoNetworkEnvelope())));
+
+        Connection connection = connection(inputStream);
+
+        verify(messageListener, timeout(5_000)).onMessage(same(ping), same(connection));
+        // Closed at the end of the stream, not for the invalid envelope
+        verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.NO_PROTO_BUFFER_ENV),
+                same(connection));
     }
 
     @Test
@@ -100,5 +138,35 @@ class ConnectionTest {
                 .setMessageVersion(Version.getP2PMessageVersion())
                 .setCloseConnectionMessage(protobuf.CloseConnectionMessage.newBuilder().setReason(reason))
                 .build();
+    }
+
+    private static byte[] delimited(protobuf.NetworkEnvelope envelope) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        envelope.writeDelimitedTo(outputStream);
+        return outputStream.toByteArray();
+    }
+
+    private static byte[] varint(long value) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(outputStream);
+        codedOutputStream.writeUInt64NoTag(value);
+        codedOutputStream.flush();
+        return outputStream.toByteArray();
+    }
+
+    private static byte[] concat(byte[]... arrays) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        for (byte[] array : arrays) {
+            outputStream.writeBytes(array);
+        }
+        return outputStream.toByteArray();
+    }
+
+    // Stands for the bytes of an envelope which must not be read
+    private static final class FailingInputStream extends InputStream {
+        @Override
+        public int read() throws IOException {
+            throw new IOException("The envelope must not be read");
+        }
     }
 }

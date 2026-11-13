@@ -203,6 +203,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             // It will not return until that header has been read.
             protoOutputStream = new ProtoOutputStream(socket.getOutputStream(), statistic);
             protoInputStream = socket.getInputStream();
+            networkEnvelopeReader = new NetworkEnvelopeReader(protoInputStream, MAX_PERMITTED_MESSAGE_SIZE);
             // The dialed address is bound before the input handler starts, so that a sender address stated
             // by the peer cannot replace it.
             if (peersNodeAddress != null)
@@ -619,21 +620,24 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             log.warn("We close connection as we received too many corrupt requests. " +
                     "ruleViolations={} " +
                     "connection with address{} and uid {}", ruleViolations, peersNodeAddressProperty, uid);
-            this.ruleViolation = ruleViolation;
-            if (ruleViolation == RuleViolation.PEER_BANNED) {
-                log.debug("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
-                shutDown(CloseConnectionReason.PEER_BANNED);
-            } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
-                log.warn("We close connection due RuleViolation.INVALID_CLASS");
-                shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
-            } else {
-                log.warn("We close connection due RuleViolation.RULE_VIOLATION");
-                shutDown(CloseConnectionReason.RULE_VIOLATION);
-            }
-
+            shutDownOnRuleViolation(ruleViolation);
             return true;
         } else {
             return false;
+        }
+    }
+
+    private void shutDownOnRuleViolation(RuleViolation ruleViolation) {
+        this.ruleViolation = ruleViolation;
+        if (ruleViolation == RuleViolation.PEER_BANNED) {
+            log.debug("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
+            shutDown(CloseConnectionReason.PEER_BANNED);
+        } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
+            log.warn("We close connection due RuleViolation.INVALID_CLASS");
+            shutDown(CloseConnectionReason.INVALID_CLASS_RECEIVED);
+        } else {
+            log.warn("We close connection due RuleViolation.RULE_VIOLATION");
+            shutDown(CloseConnectionReason.RULE_VIOLATION);
         }
     }
 
@@ -705,6 +709,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // (including throttling limits, validity and statistics)
     // and delivers it to the message listener given in the constructor.
     private InputStream protoInputStream;
+    private NetworkEnvelopeReader networkEnvelopeReader;
     private final NetworkProtoResolver networkProtoResolver;
 
     private long lastReadTimeStamp;
@@ -728,7 +733,19 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     }
 
                     // Blocking read from the inputStream
-                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
+                    byte[] message;
+                    try {
+                        message = networkEnvelopeReader.receiveNextMessage();
+                    } catch (InvalidProtocolBufferException e) {
+                        // The length prefix is invalid or above the size limit. We did not read the message, so we
+                        // cannot find the next one in the stream.
+                        log.warn("We close the connection as the length prefix of a received message is invalid. {}. " +
+                                "connection={}", e.getMessage(), this);
+                        ruleViolations.merge(RuleViolation.MAX_MSG_SIZE_EXCEEDED, 1, Integer::sum);
+                        shutDownOnRuleViolation(RuleViolation.MAX_MSG_SIZE_EXCEEDED);
+                        return;
+                    }
+                    protobuf.NetworkEnvelope proto = message != null ? NetworkEnvelopeReader.parse(message) : null;
 
                     long ts = System.currentTimeMillis();
 
