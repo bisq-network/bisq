@@ -694,6 +694,9 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             case IS_NODE_ADDRESS_BANNED:
                 new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
                 break;
+            case HAS_INVALID_SECURITY_DEPOSIT:
+                new Popup().warning(Res.get("offerbook.warning.invalidSecurityDeposit")).show();
+                break;
             case REQUIRE_UPDATE_TO_NEW_VERSION:
                 new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
                 break;

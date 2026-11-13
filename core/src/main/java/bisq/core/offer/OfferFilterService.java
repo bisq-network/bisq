@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterPolicyService;
 import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.payment.PaymentAccount;
@@ -89,6 +90,7 @@ public class OfferFilterService {
         API_DISABLED,
         HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER,
         HAS_NOT_SAME_PROTOCOL_VERSION,
+        HAS_INVALID_SECURITY_DEPOSIT,
         IS_IGNORED,
         IS_IGNORED_BY_MAKER,
         IS_OFFER_BANNED,
@@ -141,6 +143,9 @@ public class OfferFilterService {
         if (isNodeAddressBanned(offer)) {
             return Result.IS_NODE_ADDRESS_BANNED;
         }
+        if (hasInsufficientSecurityDeposit(offer)) {
+            return Result.HAS_INVALID_SECURITY_DEPOSIT;
+        }
         if (requireUpdateToNewVersion()) {
             return Result.REQUIRE_UPDATE_TO_NEW_VERSION;
         }
@@ -157,6 +162,20 @@ public class OfferFilterService {
         }
 
         return Result.VALID;
+    }
+
+    // A maker with a modified client can publish an offer with a dust security deposit, so the taker would lock its
+    // trade amount and deposit against a peer with no stake (a free option for the maker, or the taker's funds locked
+    // until the delayed payout tx time lock). An honest offer bounds both deposits to at least MIN_SECURITY_DEPOSIT
+    // (CreateOfferService.getBoundedBuyerSecurityDeposit), so a value below that floor is not a legitimate offer. BSQ
+    // swap offers have no security deposit. This is the minimum floor only; the percentage-of-amount bound is not
+    // checked here.
+    public boolean hasInsufficientSecurityDeposit(Offer offer) {
+        if (offer.isBsqSwapOffer()) {
+            return false;
+        }
+        return offer.getBuyerSecurityDeposit().isLessThan(Restrictions.getMinBuyerSecurityDepositAsCoin()) ||
+                offer.getSellerSecurityDeposit().isLessThan(Restrictions.getMinSellerSecurityDepositAsCoin());
     }
 
     public boolean isAnyPaymentAccountValidForOffer(Offer offer) {
