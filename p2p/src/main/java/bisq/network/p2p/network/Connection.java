@@ -410,6 +410,18 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     private void onBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes, Connection connection) {
+        // Each element which cannot be parsed violates the rule of a single message which cannot be parsed. If that
+        // closes the connection, no element of the bundle is delivered.
+        int numUnparsableEnvelopes = bundleOfEnvelopes.getNumUnparsableEnvelopes();
+        if (numUnparsableEnvelopes > 0) {
+            log.warn("We received {} elements of a BundleOfEnvelopes which cannot be parsed", numUnparsableEnvelopes);
+            for (int i = 0; i < numUnparsableEnvelopes; i++) {
+                if (reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE)) {
+                    return;
+                }
+            }
+        }
+
         Map<P2PDataStorage.ByteArray, Set<NetworkEnvelope>> itemsByHash = new HashMap<>();
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
@@ -883,6 +895,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         }
 
                         onMessage(networkEnvelope, this);
+                        // A rule violation of an element of a bundle can close the connection. Then we stop reading,
+                        // as after a rule violation of a single message.
+                        if (ruleViolation != null) {
+                            return;
+                        }
                         UserThread.execute(() -> connectionStatistics.addReceivedMsgMetrics(System.currentTimeMillis() - ts, size));
                     }
                 } catch (InvalidClassException e) {

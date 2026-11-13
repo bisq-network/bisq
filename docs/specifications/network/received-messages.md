@@ -41,6 +41,22 @@ large responses keep.
   rule only decides when the connection is closed: at the second violation of
   `MAX_MSG_SIZE_EXCEEDED`.
 
+## Bundles of messages
+
+A `BundleOfEnvelopes` carries several messages, its elements. Since v1.8.0 only `Broadcaster`
+bundles messages: it sends the broadcast messages of 2 seconds to a peer in one bundle.
+
+- An element which cannot be parsed violates `INVALID_DATA_TYPE` and is not passed to the
+  handlers, as a single message which cannot be parsed. The other elements are passed to the
+  handlers, unless a violation closes the connection: then no element of the bundle is passed to
+  the handlers and the connection reads no further message.
+  - Before, such an element was dropped without a trace, so a peer could send any number of
+    elements which the node parses and resolves in vain, without a violation.
+  - A node sends an element of a type which the receiver may not know only to a peer which has the
+    capability of the type, for example for a payload which requires a capability. An element of a
+    new type without such a capability counts as a violation at older nodes, as a single message
+    of that type does.
+
 ## Limits of the senders
 
 A node keeps its responses below the limit of 10 MB:

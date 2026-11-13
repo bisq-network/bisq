@@ -29,7 +29,6 @@ import bisq.common.proto.network.NetworkProtoResolver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -40,13 +39,17 @@ import lombok.Value;
 public final class BundleOfEnvelopes extends BroadcastMessage implements ExtendedDataSizePermission, CapabilityRequiringPayload {
 
     private final List<NetworkEnvelope> envelopes;
+    // The received elements which cannot be parsed. They are not in envelopes, and the connection counts each as a
+    // rule violation. Not part of the message.
+    @EqualsAndHashCode.Exclude
+    private final int numUnparsableEnvelopes;
 
     public BundleOfEnvelopes() {
-        this(new ArrayList<>(), Version.getP2PMessageVersion());
+        this(new ArrayList<>(), 0, Version.getP2PMessageVersion());
     }
 
     public BundleOfEnvelopes(List<NetworkEnvelope> envelopes) {
-        this(envelopes, Version.getP2PMessageVersion());
+        this(envelopes, 0, Version.getP2PMessageVersion());
     }
 
     public void add(NetworkEnvelope networkEnvelope) {
@@ -57,9 +60,10 @@ public final class BundleOfEnvelopes extends BroadcastMessage implements Extende
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private BundleOfEnvelopes(List<NetworkEnvelope> envelopes, int messageVersion) {
+    private BundleOfEnvelopes(List<NetworkEnvelope> envelopes, int numUnparsableEnvelopes, int messageVersion) {
         super(messageVersion);
         this.envelopes = envelopes;
+        this.numUnparsableEnvelopes = numUnparsableEnvelopes;
     }
 
 
@@ -75,19 +79,17 @@ public final class BundleOfEnvelopes extends BroadcastMessage implements Extende
     public static BundleOfEnvelopes fromProto(protobuf.BundleOfEnvelopes proto,
                                               NetworkProtoResolver resolver,
                                               int messageVersion) {
-        List<NetworkEnvelope> envelopes = proto.getEnvelopesList()
-                .stream()
-                .map(envelope -> {
-                    try {
-                        return resolver.fromProto(envelope);
-                    } catch (ProtobufferException e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        List<NetworkEnvelope> envelopes = new ArrayList<>();
+        int numUnparsableEnvelopes = 0;
+        for (protobuf.NetworkEnvelope envelope : proto.getEnvelopesList()) {
+            try {
+                envelopes.add(resolver.fromProto(envelope));
+            } catch (ProtobufferException e) {
+                numUnparsableEnvelopes++;
+            }
+        }
 
-        return new BundleOfEnvelopes(envelopes, messageVersion);
+        return new BundleOfEnvelopes(envelopes, numUnparsableEnvelopes, messageVersion);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
