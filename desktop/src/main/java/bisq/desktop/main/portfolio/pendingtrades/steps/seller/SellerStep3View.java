@@ -489,7 +489,7 @@ public class SellerStep3View extends TradeStepView {
     private void confirmPaymentReceived() {
         log.info("User pressed the [Confirm payment receipt] button for Trade {}", trade.getShortId());
 
-        model.dataModel.setSellerConfirmedPaymentReceiptDate();
+        model.dataModel.setSellerConfirmedPaymentReceiptDate(trade);
         updateConfirmButton();
         if (!model.dataModel.requiresPayoutDelay() || model.dataModel.requiredPayoutDelayHasPassed()) {
             onReleaseBitcoin();
@@ -541,7 +541,7 @@ public class SellerStep3View extends TradeStepView {
             busyAnimation.play();
             statusLabel.setText(Res.get("shared.sendingConfirmation"));
 
-            model.dataModel.onFiatPaymentReceived(ShutdownDelayer::reportPaymentReceivedMessageSent, errorMessage -> {
+            model.dataModel.onFiatPaymentReceived(trade, ShutdownDelayer::reportPaymentReceivedMessageSent, errorMessage -> {
                 ShutdownDelayer.reportPaymentReceivedMessageSent();
                 busyAnimation.stop();
                 new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
