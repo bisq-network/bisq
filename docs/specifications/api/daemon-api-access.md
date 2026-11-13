@@ -12,6 +12,9 @@ the API requires. The desktop application does not start the API.
 - The API accepts a call only if its `password` header equals the API password.
 - The API listens on `127.0.0.1` unless `--apiHost` sets another address. On an address that is not a
   loopback address the daemon logs a warning at startup.
+- A failed `unlockwallet`, with a wrong wallet password, does not change the lock state of the
+  wallet: a locked wallet stays locked, and an unlocked wallet keeps the key and the timeout of its
+  last unlock.
 
 The API can send funds, take offers and set the wallet password, and the wallet is not encrypted by
 default. Without a password, every process that can reach the port could do so. The API has no TLS:
@@ -27,6 +30,7 @@ network.
 
 ## Compatibility
 
-Up to v1.10.11 the daemon started without a password and listened on all interfaces. An operator who
+Up to v1.10.11 the daemon started without a password and listened on all interfaces, and a failed
+`unlockwallet` left the wallet unlocked with the wrong key. An operator who
 started it without a password must now set `--apiPassword`. An operator who calls the API from
 another host must now set `--apiHost` or use a tunnel.

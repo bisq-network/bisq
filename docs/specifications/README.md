@@ -19,6 +19,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`application/alert-admission.md`](application/alert-admission.md) | Which alert messages a node accepts and how they are signed, including the version format of update alerts. |
 | [`application/graceful-shutdown.md`](application/graceful-shutdown.md) | Graceful application shutdown, persistence completion, controlled process exit, and the JVM shutdown-hook backstop. |
 | [`application/data-directory-backup.md`](application/data-directory-backup.md) | What "Backup now" copies from the data directory, how it treats links and special files, and who can read the backup. |
+| [`application/data-directory-access.md`](application/data-directory-access.md) | Who can read the data directory: the owner-only mode that the node sets at every start. |
 | [`application/key-ring-storage.md`](application/key-ring-storage.md) | Who can read the private keys of the key ring and their rolling backups. |
 
 ### `api/`
@@ -72,6 +73,8 @@ specification says so explicitly instead of describing the implementation as if 
 | Specification | Covers |
 |---|---|
 | [`network/bisq2-bridge-block-continuity.md`](network/bisq2-bridge-block-continuity.md) | Snapshot and live-stream continuity for DAO block data exported to Bisq 2 oracle nodes. |
+| [`network/connection-out-of-memory.md`](network/connection-out-of-memory.md) | What the input handler of a connection does at an `OutOfMemoryError`: it passes the error on, so that a headless node shuts down. |
+| [`network/inventory-requests.md`](network/inventory-requests.md) | How often a node counts its data for the inventory request of any peer: at most once in 10 seconds. |
 | [`network/local-bitcoin-node.md`](network/local-bitcoin-node.md) | When a Bitcoin node on localhost is used as the only peer of the wallet, and why a pruned node or one without bloom filters is not. |
 | [`network/onion-service-identity.md`](network/onion-service-identity.md) | Where the key of the node's onion service is kept, when a key may be generated, and how it is protected, so that the onion address does not change. |
 | [`network/owner-disconnect-backdating.md`](network/owner-disconnect-backdating.md) | Backdating of offers when the connection to their owner is lost, allowed only for outbound connections. |
@@ -86,6 +89,7 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`offer/take-offer-refusals.md`](offer/take-offer-refusals.md) | What the taker is told when the maker refuses an availability request, and what the client remembers about the maker afterwards. |
 | [`offer/offer-edit-and-removal.md`](offer/offer-edit-and-removal.md) | The completion contracts of offer edit and removal, and the preconditions they impose on wallet restore, wallet emptying and BSQ swap republishing. |
+| [`offer/offer-book-offer-id.md`](offer/offer-book-offer-id.md) | When an offer replaces a listed offer with the same ID in the offer book: only for the same owner. |
 
 ### `trade/`
 
