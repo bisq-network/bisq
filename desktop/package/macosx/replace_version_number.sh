@@ -6,19 +6,16 @@ oldVersion=1.10.11
 newVersion=1.10.12
 
 find . -type f \( -name "finalize.sh" \
--o -name "create_app.sh" \
--o -name "build.gradle" \
--o -name "release.bat" \
--o -name "package.bat" \
--o -name "release.sh" \
--o -name "package.sh" \
 -o -name "version.txt" \
 \) -exec sed -i s/"$oldVersion-SNAPSHOT"/$newVersion/ {} +
 
 find . -type f \( -name "Info.plist" \
 -o -name "PackagingPlugin.kt" \
--o -name "SeedNodeMain.java" \
 -o -name "Version.java" \
 -o -name "copy_dbs.sh" \
+-o -name "finalize.sh" \
+-o -name "version.txt" \
 \) -exec sed -i s/$oldVersion/$newVersion/ {} +
+
+sed -i -E "s/^version=[0-9]+\.[0-9]+\.[0-9]+$/version=$newVersion/" desktop/package/macosx/insert_snapshot_version.sh
 

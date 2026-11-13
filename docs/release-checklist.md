@@ -572,9 +572,8 @@ rely on a step.
    `desktop-<version>-all-win.jar.SHA-256`, but `finalize.sh` and `createReleaseJarTxt` both need
    them. Create them by hand from the platform jar files.
 
-3. `replace_version_number.sh` also lists file names that no longer exist (`create_app.sh`,
-   `release.sh`, `release.bat`, `package.sh`, `package.bat`). It does not update its own two
-   variables and it does not update `insert_snapshot_version.sh`.
+3. Set `oldVersion` and `newVersion` in `replace_version_number.sh` by hand before running it.
+   The script updates `insert_snapshot_version.sh` as well as the release version files.
 
 4. [verify-download-files.md](verify-download-files.md) names `E222AA02` as the signing key, while
    `desktop/package/signingkey.asc` currently holds `387C8307`.
