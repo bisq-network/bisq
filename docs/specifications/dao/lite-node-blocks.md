@@ -22,6 +22,14 @@ defines which of these blocks a lite node uses and relays.
 - With the option `skipBsqBlockProvidersSignatureVerification`, which is the default on regtest, a
   lite node does not verify the signature. It still requires the signed block.
 
+## Response size
+
+A full node answers a request for blocks with at most 3000 blocks from the requested height on, and
+only with the leading blocks whose serialized sizes add up to at most half of the maximum size of a
+message of 10 MB, but with at least one block. The lite node requests the blocks after the last one
+it received until it reaches the chain tip. A Burning Man accounting node answers a request for
+accounting blocks within the same size limit.
+
 ## Rationale
 
 Any peer can send a broadcast message. The signature binds the block to a trusted full node, so that
@@ -44,3 +52,9 @@ releases.
 Releases before 1.10.4 are not supported. Their requests get signed blocks, which they cannot read.
 They still read the unsigned copy of a full node's broadcast message that other nodes relay; that
 copy matches the signed block.
+
+The largest 3000 BSQ blocks shipped with 1.10.12 have about 8 MB with signatures, so a lite node gets
+them in two responses now. Lite nodes and accounting lite nodes of all releases request the blocks
+after the last one they received, so a response with fewer blocks takes only one more request. A
+node of an earlier version sends all accounting blocks from the requested height on, 17 MB from the
+genesis height.

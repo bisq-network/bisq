@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.full.network;
 
+import bisq.core.dao.node.ResponseSizeLimit;
 import bisq.core.dao.node.full.DaoBlockSigningService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.messages.GetBlocksRequest;
@@ -97,14 +98,16 @@ class GetBlocksRequestHandler {
 
     public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, Connection connection) {
         long ts = System.currentTimeMillis();
-        // We limit number of blocks to 3000 which is about 3 weeks and about 5 MB on data
+        // We limit number of blocks to 3000 which is about 3 weeks, and the size of the response (ResponseSizeLimit)
         List<RawBlock> rawBlocks = daoStateService.getBlocksFromBlockHeightStream(getBlocksRequest.getFromBlockHeight(), 3000)
                 .map(RawBlock::fromBlock)
                 .collect(Collectors.toCollection(LinkedList::new));
         long ts1 = System.currentTimeMillis();
-        List<SignedRawBlock> signedRawBlocks = rawBlocks.stream()
-                .map(rawBlock -> daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress()))
-                .collect(Collectors.toCollection(LinkedList::new));
+        List<SignedRawBlock> signedRawBlocks = ResponseSizeLimit.leadingElementsWithin(rawBlocks.stream()
+                        .map(rawBlock -> daoBlockSigningService.sign(rawBlock, networkNode.getNodeAddress()))
+                        .collect(Collectors.toList()),
+                signedRawBlock -> signedRawBlock.toProtoMessage().getSerializedSize(),
+                ResponseSizeLimit.MAX_BLOCKS_SIZE);
         GetBlocksResponse getBlocksResponse = GetBlocksResponse.forSignedBlocks(signedRawBlocks, getBlocksRequest.getNonce());
         log.info("Signing {} blocks took {} ms", signedRawBlocks.size(), System.currentTimeMillis() - ts1);
 
