@@ -1393,7 +1393,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setSellerPayoutAmount(totalPot.subtract(buyerPayout));
         } else if (selectedTradeAmountToggle == sellerGetsTradeAmountMinusPenaltyRadioButton) {
             disputeResult.setPayoutSuggestion(DisputeResult.PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY);
-            Coin sellerPayout = tradeAmount.add(offer.getBuyerSecurityDeposit()).subtract(penalizedPortionOfTradeAmount);
+            Coin sellerPayout = tradeAmount.add(offer.getSellerSecurityDeposit()).subtract(penalizedPortionOfTradeAmount);
             disputeResult.setSellerPayoutAmount(sellerPayout);
             disputeResult.setBuyerPayoutAmount(totalPot.subtract(sellerPayout));
         } else if (selectedTradeAmountToggle == buyerGetsCompensationRadioButton) {
