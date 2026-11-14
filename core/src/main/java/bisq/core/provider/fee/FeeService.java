@@ -110,7 +110,7 @@ public class FeeService {
     @Getter
     private long lastRequest = 0;
     @Getter
-    private long minFeePerVByte;
+    private long minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,13 +128,8 @@ public class FeeService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized() {
-        minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
-    }
-
     public void onAllServicesInitialized(FilterPolicyService providedFilterPolicyService) {
         filterPolicyService = providedFilterPolicyService;
-        onAllServicesInitialized();
     }
 
     // Test-only: wraps a FilterManager in a FilterPolicyService backed by an empty DenyList so existing
@@ -143,7 +138,6 @@ public class FeeService {
     @VisibleForTesting
     public void onAllServicesInitialized(FilterManager providedFilterManager) {
         filterPolicyService = new FilterPolicyService(DenyList.empty(), providedFilterManager);
-        onAllServicesInitialized();
     }
 
 
