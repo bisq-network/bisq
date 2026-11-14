@@ -109,13 +109,11 @@ public abstract class TorMode {
     }
 
     // Tor logs to its standard output. The Tor library writes it and the standard error of Tor, where sandy reports
-    // why it refuses to start Tor, to these files outside the data directory of Tor. It moves a large log aside to
-    // the earlier log at the next start.
+    // why it refuses to start Tor, in the order in which they were written to one log outside the data directory of
+    // Tor. It moves a large log aside to the earlier log at the next start.
     public static List<File> getTorLogFiles(File torDir) {
         TorDirectories torDirectories = new TorDirectories(torDir.toPath());
-        return List.of(torDirectories.getStdoutLogPath().toFile(),
-                torDirectories.getRotatedStdoutLogPath().toFile(),
-                torDirectories.getStderrLogPath().toFile());
+        return List.of(torDirectories.getLogPath().toFile(), torDirectories.getRotatedLogPath().toFile());
     }
 
     /**

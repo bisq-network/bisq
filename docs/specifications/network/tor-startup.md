@@ -55,13 +55,15 @@ files of the bundle in the torrc, and points `OPENSSL_CONF` to an empty file in 
 otherwise read its configuration there and could load modules from it.
 
 The node logs the version which the running Tor reports. The commands, replies and events of the control connection
-are logged at debug level only, because they contain onion addresses. Tor writes its own log to its standard output,
-which the node writes to `tor-stdout.log` in the Tor directory; above 10 MiB it moves the log to `tor-stdout.log.1`
-before the next start. The standard error of Tor, where sandy also reports why it did not start Tor, goes to
-`tor-stderr.log`. "Zip log files" of the desktop application adds these three files, if they exist, to the logs of
+are logged at debug level only, because they contain onion addresses. Tor writes its own log to its standard output.
+The node writes the standard output and the standard error of Tor, where sandy also reports why it did not start Tor,
+in the order in which they were written to `tor.log` in the Tor directory; above 10 MiB it moves the log to
+`tor.log.1` before the next start. At every start it deletes `tor-stdout.log`, `tor-stdout.log.1` and
+`tor-stderr.log`, which versions up to 1.10.11 wrote. "Zip log files" of the desktop application adds these two files,
+if they exist, to the logs of
 the node, because warnings of Tor, for example about the clock or the bridges, are only there. Tor names relays and
 bridges in its log by fingerprint, nickname, ed25519 identity and address, also at its notice level, for example a
-bridge which it cannot reach, so the zip gets these three files without them, and without the arguments of a bridge
+bridge which it cannot reach, so the zip gets these two files without them, and without the arguments of a bridge
 line which name the bridge, such as `cert` and `url`, which Tor does not log today. An IPv6 address is removed with
 or without brackets; Tor writes the host of a bootstrap warning without them. Tor also logs the messages of a
 pluggable transport (`Managed proxy "...": ...`), where lyrebird names the host of a webtunnel bridge, the URL and
@@ -278,8 +280,10 @@ between, the node starts once more with new ports; a second refusal fails the st
 are not retried.
 
 The error of a failed sandboxed start names first what the node knows itself, the status record, the exit status and
-on Windows the hint about the session, and quotes the standard error of sandy and Tor last, labeled as written by sandy
-and by Tor in its sandbox and not verified by the node, because a sandboxed Tor can write that file.
+on Windows the hint about the session, and quotes last the part of `tor.log` which this start wrote, labeled as
+written by sandy and by Tor in its sandbox and not verified by the node, because a sandboxed Tor can write that file.
+The quote holds the reason which Tor logs to its standard output and the reason which sandy writes to its standard
+error.
 
 The data directory of Tor, `data/`, is the only path which a sandboxed Tor may write. The node records in `data-mode` of
 the Tor directory, outside the paths which Tor may write, whether the Tor of a start ran in the sandbox. Before Tor

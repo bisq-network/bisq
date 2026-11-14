@@ -319,7 +319,7 @@ class NewTorTest {
         // The library reports a running Tor which did not bootstrap in time with ExternalTorUnavailableException,
         // whose message names the timeout. Fresh files and four more waits of 4 minutes cannot help a running Tor.
         Files.writeString(torDir.toPath().resolve("external_tor.config"), "UseExternalTor 1");
-        Files.writeString(torDir.toPath().resolve("tor-stdout.log"), "");
+        Files.writeString(torDir.toPath().resolve("tor.log"), "");
         try (var construction = mockConstruction(TorService.class,
                 (mock, context) -> when(mock.initialize()).thenThrow(new ExternalTorUnavailableException(
                         "Bisq is configured to use a Tor which runs outside Bisq, but it cannot use the Tor at " +
@@ -329,7 +329,7 @@ class NewTorTest {
             assertThrows(ExternalTorUnavailableException.class, newTor::getTor);
 
             assertEquals(1, construction.constructed().size());
-            assertTrue(Files.exists(torDir.toPath().resolve("tor-stdout.log")));
+            assertTrue(Files.exists(torDir.toPath().resolve("tor.log")));
         }
     }
 
