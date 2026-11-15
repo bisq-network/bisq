@@ -97,6 +97,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 
 import javafx.beans.property.BooleanProperty;
@@ -119,6 +120,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -298,6 +300,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         OpenOffer openOffer = openOfferOptional.get();
         if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
             log.info("OpenOffer with offerId {} is not available", tradeId);
+            return;
+        }
+        // The reservation of the offer ends earlier than the handshake of the request which reserved it. The taker of
+        // that request may already have published its taker fee tx. A trade for another request would get the same
+        // trade ID, and the protocol of the first trade would be reset.
+        if (isTakeOfferHandshakePending(tradeId)) {
+            log.warn("We ignore the take offer request for offerId {} as the handshake of an earlier take offer " +
+                    "request for that offer is still pending", tradeId);
             return;
         }
         Offer offer = openOffer.getOffer();
@@ -998,6 +1008,23 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 closedTradableManager.getObservableList().stream());
 
         return combinedStream.anyMatch(t -> t.getOffer().getId().equals(offerId));
+    }
+
+    // We have started a trade for a take offer request of that offer and still wait for the taker's next message,
+    // with which we remove the offer: the trade has no error, and the timeout of the handshake has not passed since
+    // the request. A trade which failed or timed out stays in the list, so a trade for the offer must not block the
+    // offer for longer than that.
+    public boolean isTakeOfferHandshakePending(String offerId) {
+        long timeout = TimeUnit.SECONDS.toMillis(MakerProtocol.TAKE_OFFER_HANDSHAKE_TIMEOUT_SEC);
+        long now = now();
+        return tradableList.stream()
+                .filter(trade -> trade.getId().equals(offerId))
+                .anyMatch(trade -> !trade.hasFailed() && now - trade.getTakeOfferDate() < timeout);
+    }
+
+    @VisibleForTesting
+    protected long now() {
+        return System.currentTimeMillis();
     }
 
     public boolean isBuyer(Offer offer) {
