@@ -49,6 +49,9 @@ import bisq.common.persistence.PersistenceManager;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+
+import org.mockito.ArgumentCaptor;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -199,6 +202,22 @@ class TradeManagerTakeOfferHandshakeTest {
         receiveTakeOfferRequest();
 
         assertRequestIgnored();
+    }
+
+    // The OpenOfferManager answers an availability request for the offer with "offer taken" in that time
+    @SuppressWarnings("unchecked")
+    @Test
+    void openOfferManagerLearnsAboutThePendingHandshake() {
+        ArgumentCaptor<Predicate<String>> takeOfferHandshakePending = ArgumentCaptor.forClass(Predicate.class);
+        verify(openOfferManager).setTakeOfferHandshakePending(takeOfferHandshakePending.capture());
+        addTrade(OFFER_ID, secondsAgo(61), false);
+        addTrade("failedOfferId", secondsAgo(61), true);
+        addTrade("oldOfferId", secondsAgo(121), false);
+
+        assertTrue(takeOfferHandshakePending.getValue().test(OFFER_ID));
+        assertFalse(takeOfferHandshakePending.getValue().test("failedOfferId"));
+        assertFalse(takeOfferHandshakePending.getValue().test("oldOfferId"));
+        assertFalse(takeOfferHandshakePending.getValue().test("unknownOfferId"));
     }
 
     private void receiveTakeOfferRequest() {

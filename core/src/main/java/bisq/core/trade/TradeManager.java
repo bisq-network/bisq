@@ -247,6 +247,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         p2PService.addDecryptedDirectMessageListener(this);
 
         failedTradesManager.setUnFailTradeCallback(this::unFailTrade);
+        openOfferManager.setTakeOfferHandshakePending(this::isTakeOfferHandshakePending);
     }
 
 

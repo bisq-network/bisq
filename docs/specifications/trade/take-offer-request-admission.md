@@ -3,8 +3,8 @@
 ## Scope
 
 This specification covers which take offer requests (`InputsForDepositTxRequest`) the maker of the
-Bisq v1 trade protocol accepts for an offer for which it has already started a trade. BSQ swaps are
-out of scope.
+Bisq v1 trade protocol accepts for an offer for which it has already started a trade, and what the
+maker answers to an availability request for that offer. BSQ swaps are out of scope.
 
 ## The take offer handshake
 
@@ -34,6 +34,11 @@ The handshake of a request is pending while all of the following hold:
 3. A trade whose handshake is not pending does not block the offer: a trade with an error, for
    example after the maker's validation of the request failed, and a trade whose 120 seconds have
    passed, also if it has no error. Another taker can then take the offer.
+4. While the handshake of a request for an offer is pending, the maker answers an availability
+   request for that offer with "offer taken", as it does for a reserved offer. A taker asks for the
+   availability before it sends a take offer request, so it learns at once that it cannot take the
+   offer, and it sends no request that the maker would ignore. What the taker is told is specified in
+   [`../offer/take-offer-refusals.md`](../offer/take-offer-refusals.md).
 
 ## Rationale
 
@@ -59,9 +64,10 @@ handshake.
 
 ## Compatibility
 
-No message and no persisted data change. A taker of any version sees what it sees for every refused
-take offer request. Makers of earlier versions accept a second request once the reservation of 60
-seconds has ended.
+No message and no persisted data change. "Offer taken" is the answer that makers of all versions
+give for a reserved offer, and takers of all versions know it. A taker whose take offer request is
+ignored sees what it sees for every refused take offer request. Makers of earlier versions accept a
+second request once the reservation of 60 seconds has ended.
 
 ## Not covered
 
