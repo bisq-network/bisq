@@ -554,8 +554,8 @@ public class TradeWalletService {
      * @param sellerPubKey              the public key of the seller
      * @throws SigningException if (one of) the taker input(s) was of an unrecognized type for signing
      * @throws TransactionVerificationException if a maker-as-buyer input is not P2WPKH, the maker's MultiSig script,
-     * contract hash or output amount doesn't match the taker's, or there was an unexpected problem with the final
-     * deposit tx or its signatures
+     * contract hash or output amount doesn't match the taker's, the tx built from the raw inputs does not have the
+     * tx ID of the maker's deposit tx, or there was an unexpected problem with the final deposit tx or its signatures
      * @throws WalletException if the taker's wallet is null or structurally inconsistent
      */
 
@@ -636,6 +636,15 @@ public class TradeWalletService {
         // Add all outputs from makersDepositTx to depositTx
         makersDepositTx.getOutputs().forEach(depositTx::addOutput);
         WalletService.printTx("makersDepositTx", makersDepositTx);
+
+        // We sign the maker's deposit tx and no other tx. We built our tx from the raw inputs and took only the
+        // outputs from makersDepositTx. Any other difference, for example the sequence number of an input, gives our
+        // tx another tx ID, and a delayed payout tx which spends makersDepositTx would not spend the tx we sign.
+        if (!depositTx.getTxId().equals(makersDepositTx.getTxId())) {
+            throw new TransactionVerificationException("The deposit tx built from the raw inputs does not have the " +
+                    "tx ID of the maker's deposit tx. depositTxId=" + depositTx.getTxId() +
+                    ", makersDepositTxId=" + makersDepositTx.getTxId());
+        }
 
         // Sign inputs
         int start = takerIsSeller ? buyerInputs.size() : 0;
