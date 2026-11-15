@@ -97,6 +97,8 @@ class MediationTraderPayoutFinalityTest {
     private final Trade trade = mock(Trade.class);
     private final TradeManager tradeManager = mock(TradeManager.class);
     private final ClosedTradableManager closedTradableManager = mock(ClosedTradableManager.class);
+    private final FailedTradesManager failedTradesManager = mock(FailedTradesManager.class);
+    private final BtcWalletService btcWalletService = mock(BtcWalletService.class);
     private final DisputeProtocol disputeProtocol = mock(DisputeProtocol.class);
     private KeyRing keyRing;
     private MediationDisputeListService disputeListService;
@@ -393,10 +395,9 @@ class MediationTraderPayoutFinalityTest {
         when(p2PService.getNetworkNode()).thenReturn(networkNode);
         when(p2PService.getAddress()).thenReturn(TRADER_NODE_ADDRESS);
         when(closedTradableManager.getClosedTrades()).thenReturn(List.of());
-        FailedTradesManager failedTradesManager = mock(FailedTradesManager.class);
         return new MediationManager(p2PService,
                 mock(TradeWalletService.class),
-                mock(BtcWalletService.class),
+                btcWalletService,
                 mock(WalletsSetup.class),
                 tradeManager,
                 closedTradableManager,
