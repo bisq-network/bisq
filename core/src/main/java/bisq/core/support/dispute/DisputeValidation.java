@@ -19,6 +19,7 @@ package bisq.core.support.dispute;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -178,7 +179,7 @@ public class DisputeValidation {
     public static void validateTradeAndDispute(Dispute dispute, Trade trade)
             throws ValidationException {
         try {
-            checkArgument(dispute.getContract().equals(trade.getContract()),
+            checkArgument(contractsMatchForDispute(dispute.getContract(), trade.getContract()),
                     "contract must match contract from trade");
 
             checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
@@ -195,6 +196,33 @@ public class DisputeValidation {
         } catch (Throwable t) {
             throw new ValidationException(dispute, t.getMessage());
         }
+    }
+
+    // The account reveal can reach one trader before the other, and closed trades can have their account data
+    // cleared. Compare the commitments and all other contract fields, and verify any revealed account against its
+    // commitment, instead of requiring both nodes to hold the same optional account data.
+    private static boolean contractsMatchForDispute(Contract incoming, Contract local) {
+        if (incoming.equals(local)) {
+            return true;
+        }
+        protobuf.Contract incomingTradeData = incoming.toProtoMessage().toBuilder()
+                .clearMakerPaymentAccountPayload()
+                .clearTakerPaymentAccountPayload()
+                .build();
+        protobuf.Contract localTradeData = local.toProtoMessage().toBuilder()
+                .clearMakerPaymentAccountPayload()
+                .clearTakerPaymentAccountPayload()
+                .build();
+        return incomingTradeData.equals(localTradeData) &&
+                matchesPaymentAccountCommitment(incoming.getMakerPaymentAccountPayload(),
+                        incoming.getHashOfMakersPaymentAccountPayload()) &&
+                matchesPaymentAccountCommitment(incoming.getTakerPaymentAccountPayload(),
+                        incoming.getHashOfTakersPaymentAccountPayload());
+    }
+
+    private static boolean matchesPaymentAccountCommitment(@Nullable PaymentAccountPayload payload,
+                                                            @Nullable byte[] committedHash) {
+        return payload == null || Arrays.equals(payload.getHashForContract(), committedHash);
     }
 
 

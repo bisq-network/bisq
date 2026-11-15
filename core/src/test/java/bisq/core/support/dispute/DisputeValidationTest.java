@@ -4,9 +4,12 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.utils.DepositTransactionUtils;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.SupportType;
 import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.NodeAddress;
@@ -23,6 +26,8 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.script.ScriptBuilder;
 
+import com.google.protobuf.ByteString;
+
 import java.security.KeyPair;
 
 import java.util.HashMap;
@@ -34,9 +39,13 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DisputeValidationTest {
     private static final String TRADE_ID = "trade-id";
@@ -50,6 +59,67 @@ class DisputeValidationTest {
     private static final ECKey SELLER_MULTISIG_KEY = new ECKey();
     private static final long TRADE_TX_FEE = 1_000;
     private static final Map<PubKeyRing, KeyPair> SIGNATURE_KEY_PAIRS = new HashMap<>();
+
+    @Test
+    void validateTradeAndDisputeAcceptsMatchingContract() {
+        Contract contract = revealedContract();
+
+        assertDoesNotThrow(() -> validateTradeAndDispute(contract, contract));
+    }
+
+    @Test
+    void validateTradeAndDisputeAcceptsAccountRevealStillInTransit() {
+        // The buyer has processed the seller's deposit message and revealed both accounts in its contract. The
+        // seller still waits for ShareBuyerPaymentAccountMessage, so its contract has only the commitments.
+        Contract buyerContract = revealedContract();
+        Contract sellerContract = contractWithoutAccountPayloads(buyerContract);
+        assertNotEquals(buyerContract, sellerContract);
+
+        assertDoesNotThrow(() -> validateTradeAndDispute(buyerContract, sellerContract));
+        assertDoesNotThrow(() -> validateTradeAndDispute(sellerContract, buyerContract));
+        assertNull(sellerContract.getMakerPaymentAccountPayload());
+        assertNotNull(buyerContract.getMakerPaymentAccountPayload());
+    }
+
+    @Test
+    void validateTradeAndDisputeAcceptsLocallyClearedAccountData() {
+        Contract incoming = revealedContract();
+        Contract local = Contract.fromProto(incoming.toProtoMessage(), new CoreProtoResolver());
+        local.maybeClearSensitiveData();
+
+        assertDoesNotThrow(() -> validateTradeAndDispute(incoming, local));
+        assertNull(local.getMakerPaymentAccountPayload());
+        assertNull(local.getTakerPaymentAccountPayload());
+    }
+
+    @Test
+    void validateTradeAndDisputeRejectsChangedKeyDespiteAccountReveal() {
+        Contract incoming = revealedContract();
+        Contract local = Contract.fromProto(contractWithoutAccountPayloads(incoming).toProtoMessage().toBuilder()
+                .setMakerPubKeyRing(pubKeyRing().toProtoMessage())
+                .build(), new CoreProtoResolver());
+
+        assertThrows(DisputeValidation.ValidationException.class, () -> validateTradeAndDispute(incoming, local));
+    }
+
+    @Test
+    void validateTradeAndDisputeRejectsChangedCommitmentDespiteAccountReveal() {
+        Contract incoming = revealedContract();
+        Contract local = Contract.fromProto(contractWithoutAccountPayloads(incoming).toProtoMessage().toBuilder()
+                .setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(new byte[20]))
+                .build(), new CoreProtoResolver());
+
+        assertThrows(DisputeValidation.ValidationException.class, () -> validateTradeAndDispute(incoming, local));
+    }
+
+    @Test
+    void validateTradeAndDisputeRejectsAccountThatDoesNotMatchCommitment() {
+        Contract incoming = revealedContract();
+        Contract local = contractWithoutAccountPayloads(incoming);
+        ((CryptoCurrencyAccountPayload) incoming.getTakerPaymentAccountPayload()).setAddress("another-address");
+
+        assertThrows(DisputeValidation.ValidationException.class, () -> validateTradeAndDispute(incoming, local));
+    }
 
     @Test
     void validateDisputeDataRejectsContractWithoutDisputeAgentPubKeys() {
@@ -439,6 +509,48 @@ class DisputeValidationTest {
         Dispute dispute = dispute(buyerPubKeyRing, refundAgentPubKeyRing, contract, SupportType.REFUND);
         dispute.setDelayedPayoutTxId(delayedPayoutTxId);
         return dispute;
+    }
+
+    private static Contract revealedContract() {
+        CryptoCurrencyAccountPayload makerAccount = new CryptoCurrencyAccountPayload(PaymentMethod.BLOCK_CHAINS_ID,
+                "makerAccountId");
+        makerAccount.setAddress("maker-address");
+        CryptoCurrencyAccountPayload takerAccount = new CryptoCurrencyAccountPayload(PaymentMethod.BLOCK_CHAINS_ID,
+                "takerAccountId");
+        takerAccount.setAddress("taker-address");
+        Contract initial = contract(pubKeyRing(), pubKeyRing(), pubKeyRing(), pubKeyRing());
+        Contract contract = Contract.fromProto(initial.toProtoMessage().toBuilder()
+                .setMakerPaymentMethodId(PaymentMethod.BLOCK_CHAINS_ID)
+                .setTakerPaymentMethodId(PaymentMethod.BLOCK_CHAINS_ID)
+                .setHashOfMakersPaymentAccountPayload(ByteString.copyFrom(makerAccount.getHashForContract()))
+                .setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(takerAccount.getHashForContract()))
+                .build(), new CoreProtoResolver());
+        contract.setPaymentAccountPayloads(takerAccount, makerAccount, contract.getMakerPubKeyRing());
+        return contract;
+    }
+
+    private static Contract contractWithoutAccountPayloads(Contract contract) {
+        return Contract.fromProto(contract.toProtoMessage().toBuilder()
+                .clearMakerPaymentAccountPayload()
+                .clearTakerPaymentAccountPayload()
+                .build(), new CoreProtoResolver());
+    }
+
+    private static void validateTradeAndDispute(Contract incoming, Contract local)
+            throws DisputeValidation.ValidationException {
+        Dispute dispute = mock(Dispute.class);
+        Trade trade = mock(Trade.class);
+        Transaction depositTx = new Transaction(MainNetParams.get());
+        Transaction delayedPayoutTx = new Transaction(MainNetParams.get());
+        when(dispute.getContract()).thenReturn(incoming);
+        when(trade.getContract()).thenReturn(local);
+        when(trade.getDepositTx()).thenReturn(depositTx);
+        when(trade.getDelayedPayoutTx()).thenReturn(delayedPayoutTx);
+        when(dispute.getDepositTxId()).thenReturn(depositTx.getTxId().toString());
+        when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
+        when(dispute.getDepositTxSerialized()).thenReturn(depositTx.bitcoinSerialize());
+
+        DisputeValidation.validateTradeAndDispute(dispute, trade);
     }
 
     private static Contract contract(PubKeyRing buyerPubKeyRing,

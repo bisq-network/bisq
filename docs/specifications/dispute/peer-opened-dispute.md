@@ -15,9 +15,12 @@ accepts.
 - The node accepts a new mediation dispute only while the trade has no mediation result and is not
   in arbitration, that is in dispute state NO_DISPUTE, MEDIATION_REQUESTED or
   MEDIATION_STARTED_BY_PEER. A dispute that the node already has is a copy and is handled as before.
-- The node accepts the dispute only if it is about the node's trade: its contract equals the contract
-  of the trade, its deposit tx ID and its delayed payout tx ID are those of the trade, and it has the
-  serialized deposit tx. This applies to a copy as well.
+- The node accepts the dispute only if it is about the node's trade: its contract matches the
+  contract of the trade except for the optional payment account payloads, its deposit tx ID and its
+  delayed payout tx ID are those of the trade, and it has the serialized deposit tx. Payment account
+  hash commitments, trader and agent keys, and all other contract fields must match. If the account
+  payloads differ, every payload present in the incoming contract must match its committed hash.
+  This applies to a copy as well.
 - The node checks these rules before it moves a closed or failed trade back to the open trades.
 - A refused dispute is not stored and does not change the trade. The node acknowledges the message
   and its first chat message with an error.
@@ -46,14 +49,23 @@ created.
 The traders sign the contract data, but not the key rings and the multisig keys in the contract. So
 the opener can send the agent a contract that differs from the trade in these fields, and the agent
 would decide a case about another contract while the peer's node stores the dispute as its own. The
-node compares the whole contract and the transaction IDs with its trade. The dispute is addressed to
-the trader in this case, so the agent's node gets the error.
+node compares the contract commitments and the transaction IDs with its trade. The dispute is
+addressed to the trader in this case, so the agent's node gets the error.
+
+Payment account payloads are revealed after the contract is agreed. A buyer can already have both
+payloads while the seller still waits for ShareBuyerPaymentAccountMessage, including after a crypto
+deposit has been published. Closed trades can also have their sensitive account data cleared. These
+differences do not identify a different trade and must not prevent mediation. Comparing the hash
+commitments and checking a revealed payload against its hash preserves the account binding without
+requiring both traders to have received or retained the same optional data. Validation does not
+restore cleared data or alter the local trade's contract.
 
 ## Compatibility
 
 No message and no persisted data change. Agents of earlier versions create the dispute for the
 other trader from the same key ring and the contract that the opener sent. Both traders hold the
-same contract of a trade, so the dispute of an honest opener passes the rules.
+same commitments of a trade, even while an account reveal is in transit, so the dispute of an honest
+opener passes the rules.
 
 ## Not covered
 
