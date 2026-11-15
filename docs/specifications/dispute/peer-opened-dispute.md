@@ -21,7 +21,10 @@ accepts.
   hash commitments, trader and agent keys, and all other contract fields must match. If the account
   payloads differ, every payload present in the incoming contract must match its committed hash.
   This applies to a copy as well.
-- The node checks these rules before it moves a closed or failed trade back to the open trades.
+- The node checks these rules before it moves a closed or failed trade back to the open trades. A
+  closed or failed trade loaded at startup is not initialized at that point, so the checks use only
+  the data such a trade has: its contract, its deposit tx from the wallet and its delayed payout tx
+  from the stored bytes.
 - A refused dispute is not stored and does not change the trade. The node acknowledges the message
   and its first chat message with an error.
 - If the node refuses a dispute of an open trade because it is not addressed to this trader, and the

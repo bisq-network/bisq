@@ -540,17 +540,18 @@ class DisputeValidationTest {
             throws DisputeValidation.ValidationException {
         Dispute dispute = mock(Dispute.class);
         Trade trade = mock(Trade.class);
+        BtcWalletService btcWalletService = mock(BtcWalletService.class);
         Transaction depositTx = new Transaction(MainNetParams.get());
         Transaction delayedPayoutTx = new Transaction(MainNetParams.get());
         when(dispute.getContract()).thenReturn(incoming);
         when(trade.getContract()).thenReturn(local);
         when(trade.getDepositTx()).thenReturn(depositTx);
-        when(trade.getDelayedPayoutTx()).thenReturn(delayedPayoutTx);
+        when(trade.getDelayedPayoutTx(btcWalletService)).thenReturn(delayedPayoutTx);
         when(dispute.getDepositTxId()).thenReturn(depositTx.getTxId().toString());
         when(dispute.getDelayedPayoutTxId()).thenReturn(delayedPayoutTx.getTxId().toString());
         when(dispute.getDepositTxSerialized()).thenReturn(depositTx.bitcoinSerialize());
 
-        DisputeValidation.validateTradeAndDispute(dispute, trade);
+        DisputeValidation.validateTradeAndDispute(dispute, trade, btcWalletService);
     }
 
     private static Contract contract(PubKeyRing buyerPubKeyRing,

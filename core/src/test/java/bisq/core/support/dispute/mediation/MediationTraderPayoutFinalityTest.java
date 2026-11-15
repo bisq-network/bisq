@@ -22,6 +22,9 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferMaker;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
@@ -35,6 +38,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
@@ -69,6 +73,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import static com.natpryce.makeiteasy.MakeItEasy.a;
+import static com.natpryce.makeiteasy.MakeItEasy.make;
+import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -302,6 +309,44 @@ class MediationTraderPayoutFinalityTest {
         assertFalse(sentAckMessage().isSuccess());
     }
 
+    // A failed or closed trade that was loaded from disk gets the services of its process model only when it is moved
+    // back to the pending trades. The dispute that the peer opened is checked before that.
+    @Test
+    void movesFailedTradeFromDiskBackForMediationOpenedByPeer() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        Trade tradeFromDisk = tradeFromDisk();
+        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.empty());
+        when(failedTradesManager.getTradeById(TRADE_ID)).thenReturn(Optional.of(tradeFromDisk));
+        Dispute copy = disputeOfTrade(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(),
+                tradeFromDisk.getContract());
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        verify(failedTradesManager).removeTrade(tradeFromDisk);
+        verify(tradeManager).addTradeToPendingTrades(tradeFromDisk);
+        assertEquals(List.of(copy), disputeListService.getDisputeList().getList());
+        assertEquals(Trade.DisputeState.MEDIATION_STARTED_BY_PEER, tradeFromDisk.getDisputeState());
+        assertTrue(sentAckMessage().isSuccess());
+    }
+
+    @Test
+    void movesClosedTradeFromDiskBackForMediationOpenedByPeer() {
+        disputeListService.getDisputeList().remove(ownDispute);
+        Trade tradeFromDisk = tradeFromDisk();
+        when(tradeManager.getTradeById(TRADE_ID)).thenReturn(Optional.empty());
+        when(closedTradableManager.getTradableById(TRADE_ID)).thenReturn(Optional.<Tradable>of(tradeFromDisk));
+        Dispute copy = disputeOfTrade(keyRing.getPubKeyRing().hashCode(), keyRing.getPubKeyRing(),
+                tradeFromDisk.getContract());
+
+        manager.onSupportMessage(peerOpenedDisputeMessage(copy), agentPubKeyRing.getSignaturePubKey());
+
+        verify(closedTradableManager).remove(tradeFromDisk);
+        verify(tradeManager).addTradeToPendingTrades(tradeFromDisk);
+        assertEquals(List.of(copy), disputeListService.getDisputeList().getList());
+        assertEquals(Trade.DisputeState.MEDIATION_STARTED_BY_PEER, tradeFromDisk.getDisputeState());
+        assertTrue(sentAckMessage().isSuccess());
+    }
+
     @Test
     void repeatedAcceptanceKeepsTheAmountsOfOwnSignature() {
         // A result that replaced the accepted one before this version
@@ -432,7 +477,41 @@ class MediationTraderPayoutFinalityTest {
         Transaction delayedPayoutTx = mock(Transaction.class);
         when(delayedPayoutTx.getTxId()).thenReturn(Sha256Hash.wrap(DELAYED_PAYOUT_TX_ID));
         when(trade.getDelayedPayoutTx()).thenReturn(delayedPayoutTx);
+        when(trade.getDelayedPayoutTx(btcWalletService)).thenReturn(delayedPayoutTx);
         return contract;
+    }
+
+    // A real trade as loaded from disk: it has its wallet service, but its process model has no services before the
+    // trade is initialized. It gets the deposit and delayed payout txs that disputeOfTrade names.
+    private Trade tradeFromDisk() {
+        Offer offer = make(a(OfferMaker.Offer,
+                with(OfferMaker.id, TRADE_ID),
+                with(OfferMaker.direction, OfferDirection.SELL)));
+        Trade tradeFromDisk = new SellerAsMakerTrade(offer,
+                Coin.valueOf(1_000) /* txFee */,
+                Coin.valueOf(100) /* takerFee */,
+                true,
+                null /* arbitratorNodeAddress */,
+                MEDIATOR_NODE_ADDRESS,
+                null /* refundAgentNodeAddress */,
+                btcWalletService,
+                new ProcessModel(TRADE_ID, "account-id", keyRing.getPubKeyRing()),
+                "uid");
+        tradeFromDisk.setContract(contract());
+        tradeFromDisk.setMediatorPubKeyRing(agentPubKeyRing);
+        tradeFromDisk.setDisputeState(Trade.DisputeState.NO_DISPUTE);
+
+        Transaction depositTx = mock(Transaction.class);
+        when(depositTx.getTxId()).thenReturn(Sha256Hash.wrap(DEPOSIT_TX_ID));
+        when(btcWalletService.getTransaction(DEPOSIT_TX_ID)).thenReturn(depositTx);
+        tradeFromDisk.setDepositTxId(DEPOSIT_TX_ID);
+
+        byte[] delayedPayoutTxBytes = {2};
+        Transaction delayedPayoutTx = mock(Transaction.class);
+        when(delayedPayoutTx.getTxId()).thenReturn(Sha256Hash.wrap(DELAYED_PAYOUT_TX_ID));
+        when(btcWalletService.getTxFromSerializedTx(delayedPayoutTxBytes)).thenReturn(delayedPayoutTx);
+        tradeFromDisk.setDelayedPayoutTxBytes(delayedPayoutTxBytes);
+        return tradeFromDisk;
     }
 
     private Dispute disputeOfTrade(int traderId, PubKeyRing traderPubKeyRing, Contract contract) {
