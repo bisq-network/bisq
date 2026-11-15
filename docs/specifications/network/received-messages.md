@@ -44,7 +44,9 @@ large responses keep.
 
 A node keeps its responses below the limit of 10 MB:
 
-- A `GetDataResponse` holds data of at most 60% of 10 MB.
+- A `GetDataResponse` holds at most 60% of 10 MB of items with the lowest priority. The items of
+  the other priorities do not count for this limit, see the known gaps in
+  [`get-data-response-size-limit.md`](get-data-response-size-limit.md).
 - A response with DAO, proposal or blind vote state hashes holds at most the 50000 hashes of the
   highest heights, about 1.5 MB ([`dao/seed-node-state-hashes.md`](../dao/seed-node-state-hashes.md)).
 - A response with BSQ blocks or with Burning Man accounting blocks holds only the leading blocks

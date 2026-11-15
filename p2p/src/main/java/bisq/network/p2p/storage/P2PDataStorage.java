@@ -470,6 +470,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         //    reverse order so in case we cut off at next step we cut off oldest items.
         // 4. We truncate list if resultList size > maxEntries
         // 5. Add all payloads with GetDataResponsePriority.HIGH
+        // In 2. and 3. a payload which alone is above the limit is left out and does not count as exceededSizeLimit.
 
 
         // 1. Add all payloads with GetDataResponsePriority.MID
@@ -483,16 +484,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         List<T> lowPrioItems = filteredItems.stream()
                 .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
                 .filter(item -> !(asPayload.apply(item) instanceof DateSortedTruncatablePayload))
-                .filter(item -> {
-                    if (exceededSizeLimit.get()) {
-                        return false;
-                    }
-                    if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
-                        exceededSizeLimit.set(true);
-                        return false;
-                    }
-                    return true;
-                })
+                .filter(item -> fitsIntoSizeLimit(item, asPayload, limit, totalSize, exceededSizeLimit))
                 .collect(Collectors.toList());
         resultItems.addAll(lowPrioItems);
         log.info("Number of items with GetDataResponsePriority.LOW and !DateSortedTruncatablePayload: {}. Exceeded size limit: {}", lowPrioItems.size(), exceededSizeLimit.get());
@@ -504,16 +496,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             List<T> dateSortedItems = filteredItems.stream()
                     .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
                     .filter(item -> asPayload.apply(item) instanceof DateSortedTruncatablePayload)
-                    .filter(item -> {
-                        if (exceededSizeLimit.get()) {
-                            return false;
-                        }
-                        if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
-                            exceededSizeLimit.set(true);
-                            return false;
-                        }
-                        return true;
-                    })
+                    .filter(item -> fitsIntoSizeLimit(item, asPayload, limit, totalSize, exceededSizeLimit))
                     .sorted(Comparator.comparing(item -> ((DateSortedTruncatablePayload) asPayload.apply(item)).getDate()))
                     .collect(Collectors.toList());
             if (!dateSortedItems.isEmpty()) {
@@ -555,6 +538,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("Number of items with GetDataResponsePriority.HIGH: {}", highPrioItems.size());
         log.info("Number of result items we send to requester: {}", resultItems.size());
         return new HashSet<>(resultItems);
+    }
+
+    // The items with GetDataResponsePriority.LOW are added until their total size exceeds the limit
+    private static <T extends NetworkPayload> boolean fitsIntoSizeLimit(T item,
+                                                                        Function<T, ? extends NetworkPayload> asPayload,
+                                                                        long limit,
+                                                                        AtomicLong totalSize,
+                                                                        AtomicBoolean exceededSizeLimit) {
+        if (exceededSizeLimit.get()) {
+            return false;
+        }
+        int size = item.toProtoMessage().getSerializedSize();
+        if (size > limit) {
+            // An item above the limit fits into no response. If it counted for the limit, the items after it would
+            // be left out of this response and of every repeated one, as the requester never learns its hash. It
+            // does not mark the response as truncated either, as a repeated request could not deliver it.
+            log.warn("We leave a {} of {} bytes out of the GetDataResponse as it is above the size limit of {} bytes",
+                    asPayload.apply(item).getClass().getSimpleName(), size, limit);
+            return false;
+        }
+        if (totalSize.addAndGet(size) > limit) {
+            exceededSizeLimit.set(true);
+            return false;
+        }
+        return true;
     }
 
     public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
