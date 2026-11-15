@@ -3,6 +3,7 @@ package bisq.packager.rpm;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class RpmPackager implements Packager {
             var requiredDirNames = List.of("BUILD", "RPMS", SOURCES_DIR_NAME, SPECS_DIR_NAME, "SRPMS");
             for (String directoryName : requiredDirNames) {
                 Path path = workingDirectory.resolve(directoryName);
-                Files.createDirectory(path);
+                Files.createDirectories(path);
             }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to create working directory subfolders.", e);
@@ -56,7 +57,7 @@ public class RpmPackager implements Packager {
         try {
             Path targetPath = workingDirectory.resolve(SOURCES_DIR_NAME)
                     .resolve("desktop.tar");
-            Files.copy(tarballPath, targetPath);
+            Files.copy(tarballPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to copy tarball file.", e);
         }
