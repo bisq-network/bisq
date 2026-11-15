@@ -483,16 +483,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         List<T> lowPrioItems = filteredItems.stream()
                 .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
                 .filter(item -> !(asPayload.apply(item) instanceof DateSortedTruncatablePayload))
-                .filter(item -> {
-                    if (exceededSizeLimit.get()) {
-                        return false;
-                    }
-                    if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
-                        exceededSizeLimit.set(true);
-                        return false;
-                    }
-                    return true;
-                })
+                .filter(item -> fitsIntoSizeLimit(item, limit, totalSize, exceededSizeLimit))
                 .collect(Collectors.toList());
         resultItems.addAll(lowPrioItems);
         log.info("Number of items with GetDataResponsePriority.LOW and !DateSortedTruncatablePayload: {}. Exceeded size limit: {}", lowPrioItems.size(), exceededSizeLimit.get());
@@ -504,16 +495,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             List<T> dateSortedItems = filteredItems.stream()
                     .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
                     .filter(item -> asPayload.apply(item) instanceof DateSortedTruncatablePayload)
-                    .filter(item -> {
-                        if (exceededSizeLimit.get()) {
-                            return false;
-                        }
-                        if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
-                            exceededSizeLimit.set(true);
-                            return false;
-                        }
-                        return true;
-                    })
+                    .filter(item -> fitsIntoSizeLimit(item, limit, totalSize, exceededSizeLimit))
                     .sorted(Comparator.comparing(item -> ((DateSortedTruncatablePayload) asPayload.apply(item)).getDate()))
                     .collect(Collectors.toList());
             if (!dateSortedItems.isEmpty()) {
@@ -555,6 +537,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("Number of items with GetDataResponsePriority.HIGH: {}", highPrioItems.size());
         log.info("Number of result items we send to requester: {}", resultItems.size());
         return new HashSet<>(resultItems);
+    }
+
+    // The items with GetDataResponsePriority.LOW are added until their total size exceeds the limit
+    private static boolean fitsIntoSizeLimit(NetworkPayload item,
+                                             long limit,
+                                             AtomicLong totalSize,
+                                             AtomicBoolean exceededSizeLimit) {
+        if (exceededSizeLimit.get()) {
+            return false;
+        }
+        if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
+            exceededSizeLimit.set(true);
+            return false;
+        }
+        return true;
     }
 
     public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
