@@ -35,7 +35,63 @@ import ch.qos.logback.core.util.FileSize;
 public class Log {
     public static final String JAVA_FX_THREAD_NAME = "JavaFX Application Thread";
     private static Logger logbackLogger;
+    private static final ThreadLocal<Boolean> SENSITIVE_HTTP = new ThreadLocal<>();
+    private static final TurboFilter APACHE_HTTP_FILTER = new TurboFilter() {
+        @Override
+        public FilterReply decide(Marker marker, Logger logger, Level level, String format,
+                                  Object[] params, Throwable t) {
+            return suppressHttpLog(logger.getName()) ? FilterReply.DENY : FilterReply.NEUTRAL;
+        }
+    };
     public static final Level DEFAULT_LOG_LEVEL = Level.INFO;
+
+    public interface HttpLoggingScope extends AutoCloseable {
+        @Override
+        void close();
+    }
+
+    public static synchronized HttpLoggingScope suppressHttpClientLogging() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        if (!context.getTurboFilterList().contains(APACHE_HTTP_FILTER)) {
+            APACHE_HTTP_FILTER.start();
+            context.getTurboFilterList().add(0, APACHE_HTTP_FILTER);
+        }
+        java.util.logging.LogManager manager = java.util.logging.LogManager.getLogManager();
+        var names = manager.getLoggerNames();
+        while (names.hasMoreElements()) {
+            String name = names.nextElement();
+            java.util.logging.Logger logger = manager.getLogger(name);
+            if (logger == null || (!name.isEmpty() && !isApacheHttpLogger(name)))
+                continue;
+            for (java.util.logging.Handler handler : logger.getHandlers()) {
+                if (!(handler.getFilter() instanceof HttpLoggingFilter))
+                    handler.setFilter(new HttpLoggingFilter(handler.getFilter()));
+            }
+        }
+        Boolean previous = SENSITIVE_HTTP.get();
+        SENSITIVE_HTTP.set(true);
+        return () -> {
+            if (previous == null)
+                SENSITIVE_HTTP.remove();
+            else
+                SENSITIVE_HTTP.set(previous);
+        };
+    }
+
+    private static boolean isApacheHttpLogger(String name) {
+        return name != null && (name.equals("org.apache.http") || name.startsWith("org.apache.http."));
+    }
+
+    private static boolean suppressHttpLog(String name) {
+        return Boolean.TRUE.equals(SENSITIVE_HTTP.get()) && isApacheHttpLogger(name);
+    }
+
+    private record HttpLoggingFilter(java.util.logging.Filter delegate) implements java.util.logging.Filter {
+        @Override
+        public boolean isLoggable(java.util.logging.LogRecord record) {
+            return !suppressHttpLog(record.getLoggerName()) && (delegate == null || delegate.isLoggable(record));
+        }
+    }
 
     public static void setLevel(Level logLevel) {
         logbackLogger.setLevel(logLevel);
