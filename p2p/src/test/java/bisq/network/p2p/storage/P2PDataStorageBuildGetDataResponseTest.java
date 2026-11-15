@@ -25,6 +25,7 @@ import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
+import bisq.network.p2p.storage.mocks.ProtectedStoragePayloadStub;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -33,6 +34,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Sig;
+import bisq.common.proto.network.GetDataResponsePriority;
 
 import com.google.protobuf.Message;
 
@@ -141,6 +143,45 @@ public class P2PDataStorageBuildGetDataResponseTest {
             when(stub.getProtectedStoragePayload()).thenReturn(protectedStoragePayload);
 
             return stub;
+        }
+
+        // A response gives 25% of its size limit to the PersistableNetworkPayloads and 75% to the ProtectedStorageEntries
+        private static int sizeLimitOfPNP() {
+            return (int) Math.round(P2PDataStorage.getDefaultMaxSize() * 0.25);
+        }
+
+        private static int sizeLimitOfPSE() {
+            return (int) Math.round(P2PDataStorage.getDefaultMaxSize() * 0.75);
+        }
+
+        private static PersistableNetworkPayload getPersistableNetworkPayloadOfSize(int hash, int serializedSize) {
+            PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[]{(byte) hash});
+            when(persistableNetworkPayload.toProtoMessage().getSerializedSize()).thenReturn(serializedSize);
+            return persistableNetworkPayload;
+        }
+
+        // An entry with GetDataResponsePriority.LOW, like an offer or a mailbox message, and with a payload hash of its own
+        private ProtectedStorageEntry getProtectedStorageEntryOfSize(int serializedSize) throws NoSuchAlgorithmException {
+            KeyPair ownerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
+
+            Message entryMessageMock = mock(Message.class);
+            when(entryMessageMock.getSerializedSize()).thenReturn(serializedSize);
+
+            ProtectedStorageEntry stub = mock(ProtectedStorageEntry.class);
+            when(stub.getOwnerPubKey()).thenReturn(ownerKeys.getPublic());
+            when(stub.isValidForAddOperation()).thenReturn(true);
+            when(stub.matchesRelevantPubKey(any(ProtectedStorageEntry.class))).thenReturn(true);
+            when(stub.getSequenceNumber()).thenReturn(1);
+            when(stub.getProtectedStoragePayload()).thenReturn(protectedStoragePayload);
+            when(stub.getGetDataResponsePriority()).thenReturn(GetDataResponsePriority.LOW);
+            when(stub.toProtoMessage()).thenReturn(entryMessageMock);
+
+            return stub;
+        }
+
+        private static byte[] getHash(ProtectedStorageEntry protectedStorageEntry) {
+            return P2PDataStorage.get32ByteHash(protectedStorageEntry.getProtectedStoragePayload());
         }
 
         // TESTCASE: Given a GetDataRequest w/ unknown PNP, nothing is sent back
@@ -469,6 +510,85 @@ public class P2PDataStorageBuildGetDataResponseTest {
             assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
             assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
             assertTrue(getDataResponse.getDataSet().contains(onlyLocal));
+        }
+
+        // TESTCASE: PNP which exceed the size limit together are sent one after the other in repeated responses
+        @Test
+        public void buildGetDataResponse_PNPExceedingSizeLimitTogetherAreSentInRepeatedResponses() {
+            int moreThanHalfOfSizeLimit = sizeLimitOfPNP() / 2 + 1;
+            PersistableNetworkPayload onlyLocal1 = getPersistableNetworkPayloadOfSize(1, moreThanHalfOfSizeLimit);
+            PersistableNetworkPayload onlyLocal2 = getPersistableNetworkPayloadOfSize(2, moreThanHalfOfSizeLimit);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal1, this.localNodeAddress, false);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal2, this.localNodeAddress, false);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse firstResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertTrue(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, firstResponse.getPersistableNetworkPayloadSet().size());
+            PersistableNetworkPayload sentFirst = firstResponse.getPersistableNetworkPayloadSet().iterator().next();
+
+            // The requester repeats its request, now with the hash of the PNP it has received
+            outPNPTruncated = new AtomicBoolean(false);
+            Set<byte[]> knownKeys = new HashSet<>(Collections.singletonList(sentFirst.getHash()));
+            GetDataResponse secondResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(2, knownKeys), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(Collections.singleton(sentFirst == onlyLocal1 ? onlyLocal2 : onlyLocal1),
+                    secondResponse.getPersistableNetworkPayloadSet());
+        }
+
+        // TESTCASE: A PNP of exactly the size limit is sent
+        @Test
+        public void buildGetDataResponse_PNPOfSizeLimitIsSent() {
+            PersistableNetworkPayload onlyLocal = getPersistableNetworkPayloadOfSize(1, sizeLimitOfPNP());
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal, this.localNodeAddress, false);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(Collections.singleton(onlyLocal), getDataResponse.getPersistableNetworkPayloadSet());
+        }
+
+        // TESTCASE: PSE which exceed the size limit together are sent one after the other in repeated responses
+        @Test
+        public void buildGetDataResponse_PSEExceedingSizeLimitTogetherAreSentInRepeatedResponses()
+                throws NoSuchAlgorithmException {
+            int moreThanHalfOfSizeLimit = sizeLimitOfPSE() / 2 + 1;
+            ProtectedStorageEntry onlyLocal1 = getProtectedStorageEntryOfSize(moreThanHalfOfSizeLimit);
+            ProtectedStorageEntry onlyLocal2 = getProtectedStorageEntryOfSize(moreThanHalfOfSizeLimit);
+            this.testState.mockedStorage.addProtectedStorageEntry(onlyLocal1, this.localNodeAddress, null);
+            this.testState.mockedStorage.addProtectedStorageEntry(onlyLocal2, this.localNodeAddress, null);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse firstResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(outPNPTruncated.get());
+            assertTrue(outPSETruncated.get());
+            assertEquals(1, firstResponse.getDataSet().size());
+            ProtectedStorageEntry sentFirst = firstResponse.getDataSet().iterator().next();
+
+            // The requester repeats its request, now with the hash of the PSE it has received
+            outPSETruncated = new AtomicBoolean(false);
+            Set<byte[]> knownKeys = new HashSet<>(Collections.singletonList(getHash(sentFirst)));
+            GetDataResponse secondResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(2, knownKeys), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(Collections.singleton(sentFirst == onlyLocal1 ? onlyLocal2 : onlyLocal1),
+                    secondResponse.getDataSet());
         }
     }
 
