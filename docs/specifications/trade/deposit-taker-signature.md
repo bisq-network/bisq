@@ -3,7 +3,8 @@
 ## Scope
 
 This specification covers which transaction the taker signs as the deposit transaction of the Bisq
-v1 trade protocol. BSQ swaps are out of scope.
+v1 trade protocol, and the sequence numbers of the deposit transaction inputs. BSQ swaps are out of
+scope.
 
 ## The prepared and the signed transaction
 
@@ -26,14 +27,19 @@ fields, so it is valid for one transaction ID only.
 - The taker signs its inputs only if the transaction it built has the transaction ID of the
   maker's prepared deposit transaction. Otherwise it creates no signature and the trade fails at
   this step. The rule applies to the buyer as taker and to the seller as taker.
+- Every input of a deposit transaction has the final sequence number `0xffffffff`. The taker
+  refuses a prepared deposit transaction with another sequence number before it publishes its
+  taker fee transaction, and again before it signs. The buyer applies the rule to the deposit
+  transaction it receives from the seller and to the one it sees in its wallet, and the seller to
+  the one it publishes.
 
 ## Rationale
 
-The taker creates all inputs of the transaction it signs with the final sequence number
-`0xffffffff`. Version, lock time, input outpoints and outputs of the prepared transaction are
-checked before, but for the sequence numbers both `0xfffffffe` and `0xffffffff` are accepted, the
-two values that do not signal replaceability. With `0xfffffffe` at one input of the prepared
-transaction, the taker signed a transaction with another transaction ID.
+The taker creates all inputs of the transaction it signs with the final sequence number. Version,
+lock time, input outpoints and outputs of the prepared transaction were already checked, but for
+the sequence numbers both `0xfffffffe` and `0xffffffff` were accepted, the two values that do not
+signal replaceability. With `0xfffffffe` at one input of the prepared transaction, the taker signed
+a transaction with another transaction ID.
 
 A buyer as taker verified and signed the delayed payout transaction for the prepared transaction,
 while its deposit signatures were valid for the other one. A seller with a modified client could
@@ -43,22 +49,28 @@ case, and every payout depends on the seller. A seller as taker creates the dela
 transaction from the transaction it signed, so it was not exposed, but the rule is the same for
 both roles.
 
-The rule removes the cause: the taker signs the prepared transaction or nothing, whatever field
-differs.
+The first rule removes the cause: the taker signs the prepared transaction or nothing, whatever
+field differs. The second rule lets the taker refuse such a prepared transaction where it checks
+the other fields, before it pays the taker fee.
+
+No Bisq wallet creates a deposit transaction input with another sequence number. Bisq sets a
+sequence number only on a transaction with a lock time, which is the delayed payout transaction,
+and the wallet library creates inputs with the final one. A prepared transaction with another value
+could not complete a trade either: the transaction of the taker has the final value at every input,
+and the signatures of both traders must be valid for the same transaction. So the second rule
+refuses only deposit transactions of a modified client.
 
 ## Compatibility
 
-No message and no persisted data change. An honest maker of any version creates all inputs of the
-deposit transaction with the final sequence number, so the transaction that the taker builds has
-the transaction ID of the prepared one, and trades with makers of earlier versions are not
-affected. Up to v1.10.11 the taker signed a transaction with another transaction ID if a sequence
-number of the prepared deposit transaction was `0xfffffffe`.
+No message and no persisted data change. The deposit transactions of makers and takers of earlier
+versions satisfy both rules, so trades with them are not affected. Up to v1.10.11 the taker
+accepted the sequence number `0xfffffffe` in the prepared deposit transaction and signed a
+transaction with another transaction ID.
 
 ## Not covered
 
 - The buyer as taker verifies, signs and finalizes the delayed payout transaction against the
-  prepared deposit transaction and not against the transaction it signed. With the rule both have
-  the same transaction ID and the same outputs.
-- A prepared deposit transaction with the sequence number `0xfffffffe` at an input passes the checks
-  that the taker runs before it publishes its taker fee transaction. The taker refuses it only when
-  it signs, so it pays the taker fee for a trade that fails.
+  prepared deposit transaction and not against the transaction it signed. With the first rule both
+  have the same transaction ID and the same outputs.
+- Which other checks the buyer applies to a deposit transaction that it sees in its wallet before
+  the message of the seller arrives.
