@@ -17,11 +17,14 @@
 
 package bisq.network.p2p.storage;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.mocks.PersistableExpirableProtectedStoragePayloadStub;
+import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
 import bisq.network.p2p.storage.mocks.ProtectedStoragePayloadStub;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
@@ -31,10 +34,14 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -189,5 +196,37 @@ public class P2PDataStorageGetDataIntegrationTest {
         // Should succeed
         clientNodeTestState.verifyProtectedStorageRemove(
                 beforeState, onSeedNodeAndClientNode, false, false, false, false);
+    }
+
+    // TESTCASE: A client node gets the payloads of a seed node which also holds a payload above the size limit of a
+    // response, and the response does not tell the client node to repeat its request
+    @Test
+    public void synchronizationWorksIfSeedNodeHasPayloadAboveSizeLimit() {
+        TestState seedNodeTestState = new TestState();
+        P2PDataStorage seedNode = seedNodeTestState.mockedStorage;
+
+        TestState clientNodeTestState = new TestState();
+        P2PDataStorage clientNode = clientNodeTestState.mockedStorage;
+
+        NodeAddress sender = new NodeAddress("localhost", 8080);
+        PersistableNetworkPayload aboveSizeLimit = new PersistableNetworkPayloadStub(new byte[]{1});
+        when(aboveSizeLimit.toProtoMessage().getSerializedSize()).thenReturn((int) P2PDataStorage.getDefaultMaxSize());
+        seedNode.addPersistableNetworkPayload(aboveSizeLimit, sender, false);
+        Set<PersistableNetworkPayload> others = new HashSet<>();
+        for (int hash = 2; hash <= 6; hash++) {
+            PersistableNetworkPayload other = new PersistableNetworkPayloadStub(new byte[]{(byte) hash});
+            others.add(other);
+            seedNode.addPersistableNetworkPayload(other, sender, false);
+        }
+
+        GetDataRequest getDataRequest = clientNode.buildPreliminaryGetDataRequest(1);
+
+        GetDataResponse getDataResponse = seedNode.buildGetDataResponse(
+                getDataRequest, 10, new AtomicBoolean(), new AtomicBoolean(), new Capabilities());
+
+        clientNode.processGetDataResponse(getDataResponse, sender, true);
+
+        assertFalse(getDataResponse.isWasTruncated());
+        assertEquals(others, new HashSet<>(clientNode.getPersistableNetworkPayloadCollection()));
     }
 }
