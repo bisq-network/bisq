@@ -16,6 +16,6 @@ Most Bisq contributors use IDEA for development. Bisq is built with Java 21, so 
 9. You should now be able to run Bisq by clicking on the _Play_ button or via `Run -> Run 'Bisq Desktop'`
 10. Use `Run -> Debug 'Bisq Desktop'` to debug the application and execute breakpoints
 
-> TIP: If you encounter compilation errors in IDEA related to the `protobuf.*` classes, it probably is because you didn't build Bisq at the command line as instructed above. You need to run the `generateProto` task in the `other` project. You can do this via the Gradle tool window in IDEA, or you can do it the command line with `./gradlew :other:generateProto`. After this, run `Build -> Build Project` again, and verify it completes successfully.
+> TIP: If you encounter compilation errors in IDEA related to the `protobuf.*` classes, it probably is because you didn't build Bisq at the command line as instructed above. You need to run the `generateProto` task of the `proto` and `proto-grpc` projects. You can do this via the Gradle tool window in IDEA, or you can do it the command line with `./gradlew generateProto`. After this, run `Build -> Build Project` again, and verify it completes successfully.
 >
 > If this does not solve the issue, try to execute `./gradlew clean` and then rebuild the project again.
