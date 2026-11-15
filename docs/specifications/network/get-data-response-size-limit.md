@@ -25,6 +25,13 @@ limits for the number of items in a response.
   it does not mark the response as truncated.
 - Trade statistics are LOW items which are added after the other LOW items, and only if those did
   not exceed the limit.
+- A response must stay within the largest message that a requester reads (10 MB). As the items of
+  the priorities MID and HIGH do not count for the limit, a response can be larger. Such a response
+  is cut until it fits: the largest items are left out first, and items of the priority HIGH only
+  when no other item is left. The response is marked as truncated if an item that was left out fits
+  into a later response. An item which alone is above the largest message is left out of every
+  response without this mark. The size of a response is estimated from above, so a response just
+  below the largest message can be cut as well.
 
 ## Rationale
 
@@ -42,20 +49,33 @@ Leaving the item out without a mark is the only result that ends the requests: n
 can hold it. An honest item is far below the limit. An offer with 36 accepted countries and 1500
 characters of extra information has 3.6 kB, the limit for the protected storage entries is 4.7 MB.
 
+A requester closes the connection on a message above the largest message without reading it
+([`received-messages.md`](received-messages.md)). Version 1.10.11 and earlier still read the first
+such message of a connection. A response above it so gave the requester no data at all from this
+node. Any peer can add large items of the priorities MID and HIGH to the storage (see Known gaps),
+and a node which returns after a long time can lack enough witnesses to exceed it honestly. Cutting
+the response keeps it readable. The largest items go first, because a large item is more likely to
+be junk and an honest witness, offer or mailbox message is small. Filters, alerts and dispute agents
+go last, because a node needs them before it trades.
+
 ## Compatibility
 
 No message and no persisted data change. Only the node that answers a request changes, for
 requesters of all versions. An item above the limit was not part of a response before either. A
-node of an earlier version still answers as described in the rationale.
+node of an earlier version still answers as described in the rationale. Requesters of all versions
+read a response which was cut to the largest message and repeat their request, as for any
+truncated response. Only a response which no requester of this version reads is cut.
 
 ## Known gaps
 
 - Items of the priorities MID and HIGH do not count for the limit, and any peer can add large ones
   to the storage: an entry of a payload type with the priority HIGH, as only the nodes that use a
   filter, an alert or a dispute agent check its privileged signature, and a signed witness, as the
-  storage checks neither its signature nor the size of its key fields. A few such items can make a
-  response larger than 10 MB. The requester does not read a message above 10 MB and closes the
-  connection ([`received-messages.md`](received-messages.md)), so it gets no data from this node.
+  storage checks neither its signature nor the size of its key fields. The cut to the largest
+  message keeps such a response readable, but the items use up responses and requests, and the
+  witnesses of the last response of a requester, which is not marked as truncated, are not applied
+  if witnesses were applied before. A size limit that counts all items, as the inventory of Bisq 2
+  has, and size limits for the fields of a signed witness would remove the cause.
 - The storage has no size limit of its own for an item. A single message above 200 kB is dropped,
   but an element of a bundle of messages and an entry of a `GetDataResponse` are not checked.
   Several entries which are large but below the limit of a response each use up most of one

@@ -144,6 +144,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return Connection.getMaxPermittedMessageSize() * 0.6;
     }
 
+    // Upper bounds of what a GetDataResponse adds to the serialized size of its items: the other fields of the
+    // response with its envelope, and the tag and length of an item, twice for an entry in its StorageEntryWrapper.
+    @VisibleForTesting
+    static final int GET_DATA_RESPONSE_FRAME_RESERVE = 1024;
+    @VisibleForTesting
+    static final int GET_DATA_RESPONSE_ITEM_FRAME_RESERVE = 12;
+
     private boolean initialRequestApplied = false;
     private boolean seedNodeOnlyInitialRequestApplied = false;
 
@@ -373,6 +380,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         .map(e -> get32ByteHashAsByteArray((e.getProtectedStoragePayload())))
                         .toArray());
 
+        // The items with the priorities MID and HIGH do not count for the size limits above. The requester closes the
+        // connection instead of reading a message above the largest it reads, so such a response is cut to fit.
+        cutToFrameLimit(filteredPersistableNetworkPayloads,
+                filteredProtectedStorageEntries,
+                Connection.getMaxPermittedMessageSize(),
+                wasPersistableNetworkPayloadsTruncated,
+                wasProtectedStorageEntriesTruncated);
+
         boolean wasTruncated = wasPersistableNetworkPayloadsTruncated.get() || wasProtectedStorageEntriesTruncated.get();
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
@@ -563,6 +578,59 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
         return true;
+    }
+
+    // An item of a GetDataResponse with an upper bound of the bytes that it adds to the serialized response
+    private record ResponseItem(NetworkPayload item, boolean isHighPriority, long frameSize) {
+    }
+
+    // Leaves items out of a response which is above frameLimit, the largest message that a requester reads, until it
+    // fits: the largest items first, and items with GetDataResponsePriority.HIGH only when no other item is left. An
+    // item which fits into a later response marks its part of the response as truncated, so that the requester repeats
+    // its request. An item which alone is above frameLimit fits into no response and does not mark it.
+    private static void cutToFrameLimit(Set<PersistableNetworkPayload> persistableNetworkPayloads,
+                                        Set<ProtectedStorageEntry> protectedStorageEntries,
+                                        int frameLimit,
+                                        AtomicBoolean wasPersistableNetworkPayloadsTruncated,
+                                        AtomicBoolean wasProtectedStorageEntriesTruncated) {
+        List<ResponseItem> items = new ArrayList<>();
+        persistableNetworkPayloads.forEach(item -> items.add(toResponseItem(item)));
+        protectedStorageEntries.forEach(item -> items.add(toResponseItem(item)));
+        long responseSize = GET_DATA_RESPONSE_FRAME_RESERVE + items.stream().mapToLong(ResponseItem::frameSize).sum();
+        if (responseSize <= frameLimit) {
+            return;
+        }
+
+        long sizeBeforeCut = responseSize;
+        items.sort(Comparator.comparing(ResponseItem::isHighPriority)
+                .thenComparing(Comparator.comparingLong(ResponseItem::frameSize).reversed()));
+        int numLeftOut = 0;
+        for (ResponseItem responseItem : items) {
+            if (responseSize <= frameLimit) {
+                break;
+            }
+            responseSize -= responseItem.frameSize();
+            numLeftOut++;
+            boolean fitsIntoLaterResponse = GET_DATA_RESPONSE_FRAME_RESERVE + responseItem.frameSize() <= frameLimit;
+            if (responseItem.item() instanceof PersistableNetworkPayload persistableNetworkPayload) {
+                persistableNetworkPayloads.remove(persistableNetworkPayload);
+                if (fitsIntoLaterResponse) {
+                    wasPersistableNetworkPayloadsTruncated.set(true);
+                }
+            } else {
+                protectedStorageEntries.remove((ProtectedStorageEntry) responseItem.item());
+                if (fitsIntoLaterResponse) {
+                    wasProtectedStorageEntriesTruncated.set(true);
+                }
+            }
+        }
+        log.warn("The GetDataResponse had up to {} bytes, above the largest message of {} bytes. We left out {} items, " +
+                "so it has now up to {} bytes", sizeBeforeCut, frameLimit, numLeftOut, responseSize);
+    }
+
+    private static ResponseItem toResponseItem(NetworkPayload item) {
+        long frameSize = item.toProtoMessage().getSerializedSize() + GET_DATA_RESPONSE_ITEM_FRAME_RESERVE;
+        return new ResponseItem(item, item.getGetDataResponsePriority() == GetDataResponsePriority.HIGH, frameSize);
     }
 
     public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
