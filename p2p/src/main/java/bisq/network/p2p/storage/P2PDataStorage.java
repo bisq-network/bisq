@@ -693,7 +693,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         log.info("Processing {} protectedStorageEntries took {} ms.", protectedStorageEntries.size(), this.clock.millis() - ts);
 
         ts = this.clock.millis();
-        persistableNetworkPayloadSet.forEach(e -> {
+        boolean seedNodeOnlyPayloadsApplied = false;
+        for (PersistableNetworkPayload e : persistableNetworkPayloadSet) {
             if (e instanceof ProcessOncePersistableNetworkPayload) {
                 // We use an optimized method as many checks are not required in that case to avoid
                 // performance issues.
@@ -717,12 +718,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         (!payloadTypeAlreadyApplied || getDataResponse.isWasTruncated());
                 if (shouldApplyPayload) {
                     addPersistableNetworkPayloadFromInitialRequest(e);
+                    seedNodeOnlyPayloadsApplied |= seedNodeOnlyPayload;
                 }
             } else {
                 // We don't broadcast here as we are only connected to the seed node and would be pointless
                 addPersistableNetworkPayload(e, sender, false, false, false);
             }
-        });
+        }
         log.info("Processing {} persistableNetworkPayloads took {} ms.",
                 persistableNetworkPayloadSet.size(), this.clock.millis() - ts);
 
@@ -730,7 +732,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
         // startup.
 
-        if (isSeedNodeResponse) {
+        // A seed node response without seed-node-only payloads has applied none of them, so it must not keep a later
+        // seed node response from providing them.
+        if (seedNodeOnlyPayloadsApplied) {
             seedNodeOnlyInitialRequestApplied = true;
         }
 
