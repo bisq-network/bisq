@@ -73,10 +73,11 @@ public class TradeLimitsTest {
     public void testRiskCategoryMaxTradeLimitsWithCurrentCap() {
         initTradeLimits(Coin.parseCoin("2"));
 
-        assertEquals(Coin.parseCoin("0.250"), getMaxTradeLimit(PaymentMethod.ADVANCED_CASH_ID, "USD"));
-        assertEquals(Coin.parseCoin("0.1252"), getMaxTradeLimit(PaymentMethod.SWISH_ID, "SEK"));
-        assertEquals(Coin.parseCoin("0.0832"), getMaxTradeLimit(PaymentMethod.SWIFT_ID, "USD"));
-        assertEquals(Coin.parseCoin("0.0624"), getMaxTradeLimit(PaymentMethod.SEPA_ID, "EUR"));
+        assertEquals(Coin.parseCoin("0.500"), getMaxTradeLimit(PaymentMethod.ADVANCED_CASH_ID, "USD"));
+        assertEquals(Coin.parseCoin("0.250"), getMaxTradeLimit(PaymentMethod.SWISH_ID, "SEK"));
+        assertEquals(Coin.parseCoin("0.1668"), getMaxTradeLimit(PaymentMethod.SWIFT_ID, "USD"));
+        assertEquals(Coin.parseCoin("0.1252"), getMaxTradeLimit(PaymentMethod.SEPA_ID, "EUR"));
+        assertEquals(Coin.parseCoin("0.0125"), getMaxTradeLimit(PaymentMethod.UPI_ID, "INR"));
     }
 
     @Test
