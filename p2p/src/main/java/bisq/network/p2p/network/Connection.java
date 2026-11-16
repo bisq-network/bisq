@@ -143,6 +143,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // set in init
     private ProtoOutputStream protoOutputStream;
+    // Set in init before the input handler starts, which reads them on its own thread. Actions before
+    // ExecutorService.execute happen-before the task, so it sees them although they are not final.
+    private InputStream protoInputStream;
+    private NetworkEnvelopeReader networkEnvelopeReader;
 
     // mutable data, set from other threads but not changed internally.
     @Getter
@@ -708,8 +712,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // Runs in same thread as Connection, receives a message, performs several checks on it
     // (including throttling limits, validity and statistics)
     // and delivers it to the message listener given in the constructor.
-    private InputStream protoInputStream;
-    private NetworkEnvelopeReader networkEnvelopeReader;
     private final NetworkProtoResolver networkProtoResolver;
 
     private long lastReadTimeStamp;
