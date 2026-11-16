@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.payload;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkPayload;
@@ -31,10 +32,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import org.bouncycastle.util.encoders.Hex;
 
 import java.security.PublicKey;
+
+import java.nio.ByteBuffer;
 
 import java.time.Clock;
 
@@ -43,11 +48,20 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @EqualsAndHashCode
 @Slf4j
 public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload {
+    // Signatures which failed verification, by a hash of the public key, the signed hash and the signature. Copies of
+    // an entry with another creation date, which the signature does not cover, are rejected without a new
+    // verification. See docs/specifications/network/storage-entry-signatures.md.
+    private static final int MAX_INVALID_SIGNATURES = 10_000;
+    private static final Cache<P2PDataStorage.ByteArray, Boolean> INVALID_SIGNATURES = CacheBuilder.newBuilder()
+            .maximumSize(MAX_INVALID_SIGNATURES)
+            .build();
+
     private final ProtectedStoragePayload protectedStoragePayload;
     private final byte[] ownerPubKeyBytes;
     transient private final PublicKey ownerPubKey;
@@ -171,13 +185,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             boolean result = this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
 
             if (!result) {
-                String res1 = this.toString();
-                String res2 = "null";
-                if (protectedStoragePayload.getOwnerPubKey() != null)
-                    res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-                log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
-                        "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
+                log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload " +
+                        "owner. Entry: {}. Hash of payload owner key={}", toLogString(),
+                        toKeyHash(protectedStoragePayload.getOwnerPubKey()));
             }
 
             return result;
@@ -194,13 +204,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         boolean result = this.isValidForAddOperation();
 
         if (!result) {
-            String res1 = this.toString();
-            String res2 = "null";
-            if (protectedStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-            log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
-                    "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
+            log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. The signature is invalid or the entry " +
+                    "owner does not match the payload owner. Entry: {}. Hash of payload owner key={}", toLogString(),
+                    toKeyHash(protectedStoragePayload.getOwnerPubKey()));
         }
 
         return result;
@@ -214,18 +220,57 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(
                     new P2PDataStorage.DataAndSeqNrPair(this.protectedStoragePayload, this.sequenceNumber));
 
+            // A verification gives the same result for the same public key, signed hash and signature
+            P2PDataStorage.ByteArray verifiedValues = getVerifiedValues(hashOfDataAndSeqNr);
+            if (INVALID_SIGNATURES.getIfPresent(verifiedValues) != null) {
+                log.debug("The signature for {} failed its verification before",
+                        protectedStoragePayload.getClass().getSimpleName());
+                return false;
+            }
+
             boolean result = Sig.verify(this.ownerPubKey, hashOfDataAndSeqNr, this.signature);
 
-            if (!result)
-                log.warn("Invalid signature for {}.\nSerialized data as hex={}}",
+            if (!result) {
+                INVALID_SIGNATURES.put(verifiedValues, Boolean.TRUE);
+                // A peer can make each invalid entry new at no cost, and a payload can have tens of kB, so we do not
+                // log the payload itself
+                log.warn("Invalid signature for {} of {} bytes. Hash of payload and sequence number={}",
                         protectedStoragePayload.getClass().getSimpleName(),
-                        Hex.toHexString(protectedStoragePayload.toProtoMessage().toByteArray()));
+                        protectedStoragePayload.toProtoMessage().getSerializedSize(),
+                        Hex.toHexString(hashOfDataAndSeqNr));
+            }
 
             return result;
         } catch (CryptoException e) {
             log.error("ProtectedStorageEntry::isSignatureValid() exception {}", e.toString());
             return false;
         }
+    }
+
+    // For the log line of a failed check. A peer can send many entries which fail a check, with payloads of tens of kB,
+    // so the line names the payload and the hash of the owner key instead of holding them.
+    String toLogString() {
+        return protectedStoragePayload.getClass().getSimpleName() + " of " +
+                protectedStoragePayload.toProtoMessage().getSerializedSize() + " bytes, sequence number " +
+                sequenceNumber + ", hash of owner key " + toKeyHash(ownerPubKey);
+    }
+
+    static String toKeyHash(@Nullable PublicKey publicKey) {
+        return publicKey == null ? "null" : Utilities.encodeToHex(Hash.getSha256Hash(publicKey.getEncoded()));
+    }
+
+    // The hash of the public key, the signed hash and the signature that a verification uses. The length of the public
+    // key separates it from the signed hash, which always has 32 bytes, and from the signature.
+    private P2PDataStorage.ByteArray getVerifiedValues(byte[] hashOfDataAndSeqNr) {
+        byte[] publicKey = Sig.getPublicKeyBytes(this.ownerPubKey);
+        byte[] values = ByteBuffer.allocate(Integer.BYTES + publicKey.length + hashOfDataAndSeqNr.length +
+                        this.signature.length)
+                .putInt(publicKey.length)
+                .put(publicKey)
+                .put(hashOfDataAndSeqNr)
+                .put(this.signature)
+                .array();
+        return new P2PDataStorage.ByteArray(Hash.getSha256Hash(values));
     }
 
     /*
@@ -236,8 +281,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         boolean result = protectedStorageEntry.getOwnerPubKey().equals(this.ownerPubKey);
 
         if (!result) {
-            log.warn("New data entry does not match our stored data. storedData.ownerPubKey={}, ownerPubKey={}}",
-                    protectedStorageEntry.getOwnerPubKey().toString(), this.ownerPubKey);
+            log.warn("New data entry does not match our stored data. Hash of stored owner key={}, hash of owner key={}",
+                    toKeyHash(protectedStorageEntry.getOwnerPubKey()), toKeyHash(this.ownerPubKey));
         }
 
         return result;

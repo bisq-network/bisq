@@ -83,6 +83,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`network/peer-timestamp-validation.md`](network/peer-timestamp-validation.md) | Overflow-safe freshness validation for peer-controlled protocol timestamps. |
 | [`network/received-messages.md`](network/received-messages.md) | How a connection reads a received message, the size checks before the message reaches the handlers, and the size limits of the senders of large responses. |
 | [`network/reported-peer-dates.md`](network/reported-peer-dates.md) | The date of a peer in the peer lists: the local time of reception for reported peers, and the limits applied when the persisted list is read. |
+| [`network/storage-entry-signatures.md`](network/storage-entry-signatures.md) | When a node verifies the signature of a received storage entry, and why a signature that failed its verification is not verified again for a copy of the entry. |
 | [`network/tor-startup.md`](network/tor-startup.md) | Starting Tor or connecting to a running Tor, the torrc entries of the user, and the bridges and pluggable transports. |
 | [`network/tor-stream-isolation.md`](network/tor-stream-isolation.md) | Which connections may share a Tor circuit, and what `--torStreamIsolation` changes for the HTTP requests. |
 
