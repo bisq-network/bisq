@@ -69,6 +69,12 @@ give for a reserved offer, and takers of all versions know it. A taker whose tak
 ignored sees what it sees for every refused take offer request. Makers of earlier versions accept a
 second request once the reservation of 60 seconds has ended.
 
+A taker whose attempt fails on its own side after the maker accepted its request, for example
+because its taker fee transaction could not be published, waits longer before it can take the offer
+again. The maker's trade gets its error only with the timeout, so the maker answers "offer taken" to
+that taker as well until the 120 seconds have passed. With makers of earlier versions the taker
+could take the offer again after the 60 seconds of the reservation.
+
 ## Not covered
 
 - Once the handshake is not pending any more, the maker accepts another request for the offer, as
