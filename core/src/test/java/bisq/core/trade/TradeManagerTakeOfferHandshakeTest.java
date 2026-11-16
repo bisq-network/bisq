@@ -57,6 +57,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -148,6 +149,20 @@ class TradeManagerTakeOfferHandshakeTest {
         } else {
             assertRequestHandled();
         }
+    }
+
+    // After the system clock was set back, the request of the earlier trade seems to be in the future. Its handshake
+    // must not block the offer for as long as the clock was set back: after a restart, for example, no timeout of the
+    // protocol sets the error of the trade.
+    @ParameterizedTest
+    @ValueSource(longs = {1, 60_000, 3_600_000})
+    void handshakeIsNotPendingIfTheRequestIsLaterThanNow(long msAfterNow) {
+        addTrade(OFFER_ID, NOW + msAfterNow, false);
+
+        assertFalse(tradeManager.isTakeOfferHandshakePending(OFFER_ID));
+        receiveTakeOfferRequest();
+
+        assertRequestHandled();
     }
 
     // A failure of the maker's first step frees the offer at once, and another taker can take it

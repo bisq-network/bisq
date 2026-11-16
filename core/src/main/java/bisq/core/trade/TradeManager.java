@@ -1014,13 +1014,17 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     // We have started a trade for a take offer request of that offer and still wait for the taker's next message,
     // with which we remove the offer: the trade has no error, and the timeout of the handshake has not passed since
     // the request. A trade which failed or timed out stays in the list, so a trade for the offer must not block the
-    // offer for longer than that.
+    // offer for longer than that. A request later than now means that the clock was set back. Its handshake counts as
+    // timed out, as it would otherwise block the offer for as long as the clock was set back.
     public boolean isTakeOfferHandshakePending(String offerId) {
         long timeout = TimeUnit.SECONDS.toMillis(MakerProtocol.TAKE_OFFER_HANDSHAKE_TIMEOUT_SEC);
         long now = now();
         return tradableList.stream()
                 .filter(trade -> trade.getId().equals(offerId))
-                .anyMatch(trade -> !trade.hasFailed() && now - trade.getTakeOfferDate() < timeout);
+                .anyMatch(trade -> {
+                    long age = now - trade.getTakeOfferDate();
+                    return !trade.hasFailed() && age >= 0 && age < timeout;
+                });
     }
 
     @VisibleForTesting

@@ -21,7 +21,8 @@ The handshake of a request is pending while all of the following hold:
 
 - the trade of the request is in the maker's pending trades;
 - the trade has no error;
-- less than 120 seconds have passed since the request.
+- less than 120 seconds have passed since the request, by the system clock. If the system clock
+  shows a time before the request, the handshake is not pending.
 
 ## Rules
 
@@ -62,6 +63,13 @@ also holds after a restart, where the reservation is gone and no timer runs. A m
 in the wrong phase stops the timer of the maker's protocol without an error; it does not end the
 handshake.
 
+A system clock that was set back shows a time before the request. Counted as less than 120 seconds,
+such a time would block the offer for as long as the clock was set back, for example one hour, when
+no timer of the protocol sets the error of the trade before: after a restart, after the timer was
+stopped, or on a node without a graphical user interface, whose timers use the system clock as well.
+So the handshake is not pending then, and the offer can be taken again, as with makers of earlier
+versions once the reservation has ended.
+
 ## Compatibility
 
 No message and no persisted data change. "Offer taken" is the answer that makers of all versions
@@ -92,7 +100,8 @@ could take the offer again after the 60 seconds of the reservation.
   it. If the step fails outside of its tasks, the trade has no error, and the offer is free again
   only when the 120 seconds have passed.
 - The 120 seconds are measured with the system clock, so a change of the clock makes the time
-  shorter or longer.
+  shorter or longer. A clock that is set back to before a request ends the handshake of that request
+  at once, so a second request can then replace the first trade, as before.
 - Every take offer request that the maker accepts and whose taker does not continue leaves a trade
   in the maker's pending trades.
 - Offers which share one maker fee transaction have different IDs. A request for one of them is not
