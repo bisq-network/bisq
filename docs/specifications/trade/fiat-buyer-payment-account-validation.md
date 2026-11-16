@@ -24,10 +24,12 @@ For a fiat trade, the buyer must reveal the payment-account payload committed to
 Before the seller records that reveal as validated, the seller must verify all of the following:
 
 1. the revealed payload hashes to the buyer payload commitment in the contract;
-2. the peer and revealed payment-account data pass the current trade filters;
-3. the account-age witness is derived from the revealed payload and the buyer's trade public key;
-4. the buyer's signature over the trade challenge is valid; and
-5. the witness-derived trade limit at trade time is at least the negotiated trade amount.
+2. the revealed payload is of the payment method the buyer stated in the contract (see
+   [`revealed-payment-account-payment-method.md`](revealed-payment-account-payment-method.md));
+3. the peer and revealed payment-account data pass the current trade filters;
+4. the account-age witness is derived from the revealed payload and the buyer's trade public key;
+5. the buyer's signature over the trade challenge is valid; and
+6. the witness-derived trade limit at trade time is at least the negotiated trade amount.
 
 Successful validation is persisted. Merely receiving or persisting a payment-account payload is not
 equivalent to successful validation because a later filter or witness check may fail.

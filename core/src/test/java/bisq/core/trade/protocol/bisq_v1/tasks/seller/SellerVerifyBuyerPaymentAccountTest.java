@@ -82,6 +82,7 @@ class SellerVerifyBuyerPaymentAccountTest {
         PaymentAccountPayload paymentAccountPayload = mock(PaymentAccountPayload.class);
         byte[] paymentAccountHash = {3};
         when(paymentAccountPayload.getHashForContract()).thenReturn(paymentAccountHash);
+        when(paymentAccountPayload.getPaymentMethodId()).thenReturn("SEPA");
         PubKeyRing pubKeyRing = mock(PubKeyRing.class);
         byte[] nonce = {1};
         byte[] signature = {2};
@@ -106,6 +107,7 @@ class SellerVerifyBuyerPaymentAccountTest {
         when(trade.getContract()).thenReturn(contract);
         when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
                 .thenReturn(paymentAccountHash);
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing())).thenReturn("SEPA");
 
         TaskResult result = runTask(trade);
 
@@ -182,6 +184,33 @@ class SellerVerifyBuyerPaymentAccountTest {
         verify(processModel, never()).getAccountAgeWitnessService();
     }
 
+    // The buyer has committed the hash of the revealed account in the contract, but has agreed there to another
+    // payment method than the one of that account
+    @Test
+    void accountOfAnotherPaymentMethodThanInTheContractFails() {
+        ProcessModel processModel = processModel(false);
+        TradingPeer tradingPeer = new TradingPeer();
+        PaymentAccountPayload paymentAccountPayload = mock(PaymentAccountPayload.class);
+        byte[] paymentAccountHash = {3};
+        when(paymentAccountPayload.getHashForContract()).thenReturn(paymentAccountHash);
+        when(paymentAccountPayload.getPaymentMethodId()).thenReturn("REVOLUT");
+        tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
+        when(processModel.getTradePeer()).thenReturn(tradingPeer);
+        Trade trade = trade("EUR", processModel);
+        Contract contract = mock(Contract.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
+                .thenReturn(paymentAccountHash);
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing())).thenReturn("SEPA");
+
+        TaskResult result = runTask(trade);
+
+        assertFalse(result.completed());
+        assertTrue(result.errorMessage().contains("peersPaymentMethodId mismatch. current=REVOLUT, expected=SEPA"));
+        verify(processModel, never()).getAccountAgeWitnessService();
+        verify(processModel, never()).setBuyerPaymentAccountValidated(true);
+    }
+
     private static ProcessModel processModel(boolean validated) {
         ProcessModel processModel = mock(ProcessModel.class);
         when(processModel.isBuyerPaymentAccountValidated()).thenReturn(validated);
@@ -226,6 +255,8 @@ class SellerVerifyBuyerPaymentAccountTest {
         when(trade.getContract()).thenReturn(contract);
         when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
                 .thenReturn(paymentAccountPayload.getHashForContract());
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing()))
+                .thenReturn(paymentAccountPayload.getPaymentMethodId());
         return trade;
     }
 

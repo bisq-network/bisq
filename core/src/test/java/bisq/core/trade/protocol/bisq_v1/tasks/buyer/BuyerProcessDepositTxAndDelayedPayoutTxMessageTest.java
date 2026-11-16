@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
@@ -29,6 +30,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.tasks.SepaInstantTakerContractFixture;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -53,6 +55,7 @@ import org.junit.jupiter.api.Test;
 
 import org.mockito.MockedStatic;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.same;
@@ -248,6 +251,8 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         when(trade.getContract()).thenReturn(contract);
         when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
                 .thenReturn(sellerPaymentAccountPayload.getHashForContract());
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing()))
+                .thenReturn(sellerPaymentAccountPayload.getPaymentMethodId());
         when(processModel.getPaymentAccountPayload(trade)).thenReturn(customPayload("M-Pesa"));
         KeyRing keyRing = mock(KeyRing.class);
         when(keyRing.getSignatureKeyPair()).thenReturn(Sig.generateKeyPair());
@@ -277,6 +282,84 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         payload.setPaymentMethodName(paymentMethodName);
         payload.setAccountData("Jane Doe, +254 700 000000");
         return payload;
+    }
+
+    // The buyer is the maker of a SEPA offer, the seller has taken it with a SEPA Instant account. The payment
+    // method of the seller is then not the one of the offer and not the one of the buyer.
+    @Test
+    void runAcceptsSepaInstantAccountOfTheTakerOfASepaOffer() {
+        SepaInstantTakerContractFixture fixture = new SepaInstantTakerContractFixture(true);
+        Transaction preparedDepositTx = depositTx(0);
+        Transaction delayedPayoutTx = delayedPayoutTx(preparedDepositTx, 144);
+        Wallet wallet = mock(Wallet.class);
+        BuyerAsMakerTrade trade = buyerAsMakerTrade(preparedDepositTx, delayedPayoutTx.bitcoinSerialize(), wallet);
+        ProcessModel processModel = trade.getProcessModel();
+        when(processModel.getTradeMessage()).thenReturn(new DepositTxAndDelayedPayoutTxMessage("uid",
+                "trade-id",
+                NODE_ADDRESS,
+                preparedDepositTx.bitcoinSerialize(),
+                delayedPayoutTx.bitcoinSerialize(),
+                fixture.takerPaymentAccountPayload));
+        when(trade.getContract()).thenReturn(fixture.contract);
+        when(processModel.getPubKeyRing()).thenReturn(fixture.makerPubKeyRing);
+        when(processModel.getPaymentAccountPayload(trade)).thenReturn(fixture.makerPaymentAccountPayload);
+        KeyRing keyRing = mock(KeyRing.class);
+        when(keyRing.getSignatureKeyPair()).thenReturn(Sig.generateKeyPair());
+        when(processModel.getKeyRing()).thenReturn(keyRing);
+
+        try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
+            walletService.when(() -> WalletService.maybeAddSelfTxToWallet(any(Transaction.class), same(wallet)))
+                    .thenReturn(preparedDepositTx);
+
+            new BuyerProcessDepositTxAndDelayedPayoutTxMessage(taskRunner(), trade).run();
+        }
+
+        verify(trade, never()).setErrorMessage(any());
+        verify(processModel.getTradePeer()).setPaymentAccountPayload(fixture.takerPaymentAccountPayload);
+        assertSame(fixture.takerPaymentAccountPayload, fixture.contract.getSellerPaymentAccountPayload());
+        assertSame(fixture.makerPaymentAccountPayload, fixture.contract.getBuyerPaymentAccountPayload());
+        verify(trade).setContractAsJson(any());
+        verify(trade).setState(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+    }
+
+    // The seller has committed the hash of the revealed account in the contract, but has agreed there to another
+    // payment method than the one of that account. The check comes after the deposit tx was applied, as the check
+    // of the hash does, so the buyer keeps the deposit tx but does not take the account for the payment.
+    @Test
+    void runRejectsSellerPaymentAccountOfAnotherPaymentMethodThanInContract() {
+        Transaction depositTx = depositTx(0);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        Wallet wallet = mock(Wallet.class);
+        Trade trade = trade(depositTx, delayedPayoutTx.bitcoinSerialize(), wallet);
+        byte[] paymentAccountHash = {3};
+        PaymentAccountPayload sellerPaymentAccountPayload = mock(PaymentAccountPayload.class);
+        when(sellerPaymentAccountPayload.getHashForContract()).thenReturn(paymentAccountHash);
+        when(sellerPaymentAccountPayload.getPaymentMethodId()).thenReturn("REVOLUT");
+        ProcessModel processModel = trade.getProcessModel();
+        when(processModel.getTradeMessage()).thenReturn(new DepositTxAndDelayedPayoutTxMessage("uid",
+                "trade-id",
+                NODE_ADDRESS,
+                depositTx.bitcoinSerialize(),
+                delayedPayoutTx.bitcoinSerialize(),
+                sellerPaymentAccountPayload));
+        Contract contract = mock(Contract.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
+                .thenReturn(paymentAccountHash);
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing())).thenReturn("SEPA");
+
+        try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
+            walletService.when(() -> WalletService.maybeAddSelfTxToWallet(any(Transaction.class), same(wallet)))
+                    .thenReturn(depositTx);
+
+            new BuyerProcessDepositTxAndDelayedPayoutTxMessage(taskRunner(), trade).run();
+        }
+
+        verify(trade).applyDepositTx(depositTx);
+        verify(processModel.getTradePeer(), never()).setPaymentAccountPayload(any());
+        verify(contract, never()).setPaymentAccountPayloads(any(), any(), any());
+        verify(trade, never()).setContractAsJson(any());
+        verify(trade).setErrorMessage(contains("peersPaymentMethodId mismatch. current=REVOLUT, expected=SEPA"));
     }
 
     private static Trade trade(Transaction depositTx, byte[] delayedPayoutTxBytes, Wallet wallet) {

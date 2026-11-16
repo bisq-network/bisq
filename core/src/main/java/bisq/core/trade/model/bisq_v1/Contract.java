@@ -456,6 +456,16 @@ public final class Contract implements NetworkPayload {
         return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(getOfferPayload()).getPaymentMethodId();
     }
 
+    // The payment method which the peer has set for its payment account. It is not always the one of the offer: a
+    // taker of a SEPA offer can use a SEPA Instant account.
+    public String getPeersPaymentMethodId(PubKeyRing myPubKeyRing) {
+        String peersPaymentMethodId = isMyRoleMaker(myPubKeyRing) ? takerPaymentMethodId : makerPaymentMethodId;
+        // Either the payment method ID of the peer is set or available in offerPayload
+        return peersPaymentMethodId != null ?
+                peersPaymentMethodId :
+                Objects.requireNonNull(getOfferPayload()).getPaymentMethodId();
+    }
+
     public Coin getTradeAmount() {
         return Coin.valueOf(tradeAmount);
     }
