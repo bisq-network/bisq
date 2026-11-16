@@ -26,6 +26,9 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.UnknownFieldSet;
+
 import java.net.Socket;
 
 import java.io.ByteArrayInputStream;
@@ -57,6 +60,16 @@ class ConnectionBundleElementParseTest {
     private static final protobuf.NetworkEnvelope INVALID_ELEMENT = protobuf.NetworkEnvelope.newBuilder()
             .setMessageVersion(Version.getP2PMessageVersion())
             .setFileTransferPart(protobuf.FileTransferPart.newBuilder())
+            .build();
+    // A message of a type which the node does not know, as one of a newer version. Its field is unknown, so no
+    // message type is set.
+    private static final protobuf.NetworkEnvelope UNKNOWN_ELEMENT = protobuf.NetworkEnvelope.newBuilder()
+            .setMessageVersion(Version.getP2PMessageVersion())
+            .setUnknownFields(UnknownFieldSet.newBuilder()
+                    .addField(1000, UnknownFieldSet.Field.newBuilder()
+                            .addLengthDelimited(ByteString.copyFromUtf8("message of a newer version"))
+                            .build())
+                    .build())
             .build();
 
     private final MessageListener messageListener = mock(MessageListener.class);
@@ -130,6 +143,22 @@ class ConnectionBundleElementParseTest {
                 same(connection));
         assertEquals(RuleViolation.INVALID_DATA_TYPE, connection.getRuleViolation());
         verify(messageListener, never()).onMessage(any(), any());
+    }
+
+    // A relay of a newer version passes such elements on, unless their type requires a capability
+    @Test
+    void dropsElementsOfAnUnknownTypeWithoutAViolation() throws IOException {
+        RefreshOfferMessage first = refreshOfferMessage(1);
+        RefreshOfferMessage second = refreshOfferMessage(2);
+
+        Connection connection = connection(concat(delimited(bundle(UNKNOWN_ELEMENT, proto(first))),
+                delimited(bundle(UNKNOWN_ELEMENT, UNKNOWN_ELEMENT, proto(second)))));
+
+        verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.NO_PROTO_BUFFER_ENV),
+                same(connection));
+        verify(messageListener).onMessage(same(first), same(connection));
+        verify(messageListener).onMessage(same(second), same(connection));
+        assertNull(connection.getRuleViolation());
     }
 
     private RefreshOfferMessage refreshOfferMessage(int sequenceNumber) {

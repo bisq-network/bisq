@@ -39,8 +39,8 @@ import lombok.Value;
 public final class BundleOfEnvelopes extends BroadcastMessage implements ExtendedDataSizePermission, CapabilityRequiringPayload {
 
     private final List<NetworkEnvelope> envelopes;
-    // The received elements which cannot be parsed. They are not in envelopes, and the connection counts each as a
-    // rule violation. Not part of the message.
+    // The received elements of a known type which cannot be parsed. They are not in envelopes, and the connection
+    // counts each as a rule violation. Not part of the message.
     @EqualsAndHashCode.Exclude
     private final int numUnparsableEnvelopes;
 
@@ -82,6 +82,12 @@ public final class BundleOfEnvelopes extends BroadcastMessage implements Extende
         List<NetworkEnvelope> envelopes = new ArrayList<>();
         int numUnparsableEnvelopes = 0;
         for (protobuf.NetworkEnvelope envelope : proto.getEnvelopesList()) {
+            // An element of a type which we do not know, as one of a newer version, has no message case. A relay of a
+            // newer version passes such elements on unless their type requires a capability, so we drop them
+            // without counting them.
+            if (envelope.getMessageCase() == protobuf.NetworkEnvelope.MessageCase.MESSAGE_NOT_SET) {
+                continue;
+            }
             try {
                 envelopes.add(resolver.fromProto(envelope));
             } catch (ProtobufferException e) {
