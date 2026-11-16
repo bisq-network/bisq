@@ -144,6 +144,22 @@ public class StableCoinPaymentMethodTest {
         }
     }
 
+    // The texts of the trade steps take arguments, so a quote or a brace in them would break the formatting
+    @Test
+    public void tradeStepTextsTakeTheirArguments() {
+        String buyerText = Res.get("portfolio.pending.step2_buyer.stablecoin",
+                "1000 USDT", "Tron (TRC-20)", "Tether USD (USDT)");
+        assertTrue(buyerText.startsWith("Please transfer 1000 USDT from your external wallet"), buyerText);
+        assertTrue(buyerText.contains("Use the network Tron (TRC-20) and send only Tether USD (USDT) with"), buyerText);
+
+        String sellerText = Res.get("portfolio.pending.step3_seller.stablecoin",
+                "PART1 ", "Tron (TRC-20)", "MY_ADDRESS", "1000 USDT", "TOKEN_CONTRACT");
+        assertTrue(sellerText.startsWith("PART1 Please check in your wallet or in a block explorer of the network " +
+                "Tron (TRC-20) if the transfer to your address\nMY_ADDRESS\nhas arrived and is final."), sellerText);
+        assertTrue(sellerText.contains("The payment amount has to be 1000 USDT of the token with the token " +
+                "contract\nTOKEN_CONTRACT\n\n"), sellerText);
+    }
+
     @Test
     public void factoryCreatesAStableCoinAccountOfTheRail() {
         for (StableCoinPaymentRail rail : StableCoinPaymentRail.values()) {

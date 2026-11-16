@@ -63,6 +63,7 @@ import bisq.desktop.components.paymentmethods.SbpForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.StableCoinForm;
 import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
@@ -121,6 +122,7 @@ import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.RevolutAccount;
+import bisq.core.payment.StableCoinAccount;
 import bisq.core.payment.USPostalMoneyOrderAccount;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -302,6 +304,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             // CashByMail has no chargeback risk so we don't show the text from payment.limits.info.
             new Popup().information(Res.get("payment.cashByMail.info"))
                     .width(850)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else if (paymentAccount instanceof StableCoinAccount) {
+            // A stablecoin transfer has no chargeback risk so we don't show the text from payment.limits.info.
+            new Popup().information(Res.get("payment.stablecoin.info.account"))
+                    .width(900)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
@@ -635,6 +645,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     @SuppressWarnings("deprecation")
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
+        if (paymentMethod.isStableCoin()) {
+            return new StableCoinForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+        }
+
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
