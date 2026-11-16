@@ -53,9 +53,10 @@ bundles messages: it sends the broadcast messages of 2 seconds to a peer in one 
   - Before, such an element was dropped without a trace, so a peer could send any number of
     elements which the node parses and resolves in vain, without a violation.
   - An element with a payload of a type which the node does not know, for example a stored entry
-    of a newer version, counts in the same way. Before, it failed the conversion of the whole
-    bundle and closed the connection (`UNKNOWN_EXCEPTION`), as a single message with such a payload
-    still does. So every new payload type must require a capability.
+    of a newer version, or with such a type nested in its payload, for example a new type of
+    proposal in a `TempProposalPayload`, counts in the same way. Before, it failed the conversion of
+    the whole bundle and closed the connection (`UNKNOWN_EXCEPTION`), as a single message with such
+    a payload still does.
   - An element whose conversion fails with another error, for example an offer without the ID of
     its fee transaction, still fails the conversion of the whole bundle: no element of the bundle is
     passed to the handlers and the connection closes, as for a single message with such an error.
@@ -67,9 +68,15 @@ bundles messages: it sends the broadcast messages of 2 seconds to a peer in one 
     message types require one: `NewAccountingBlockBroadcastMessage` does not. The node cannot tell
     such an element from one without any message type, so with a violation for each, two bundles
     from an honest relay of a newer version would close the connection to it.
-  - Every new broadcast message type must still require a capability. A node sends a broadcast
-    message alone, not in a bundle, when it has no other one for the peer within 2 seconds, and a
-    single message of a type which the node does not know violates `INVALID_DATA_TYPE`.
+- Every new type in a broadcast message must reach only peers which know it: a new message type, a
+  new payload type, and a new type nested in a payload, such as a new type of proposal in a
+  `TempProposalPayload`. The sender tests the capabilities only of the message and of the payload of
+  a storage message, so the message or the payload which contains the new type must require a
+  capability for it.
+  - A node sends a broadcast message alone, not in a bundle, when it has no other one for the peer
+    within 2 seconds. A single message of a message type which the node does not know violates
+    `INVALID_DATA_TYPE`, and a single message with a payload or a nested type which the node does
+    not know closes the connection (`UNKNOWN_EXCEPTION`).
 
 ## Limits of the senders
 
