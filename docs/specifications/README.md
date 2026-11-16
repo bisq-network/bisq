@@ -102,6 +102,12 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`payment/custom-payment-method.md`](payment/custom-payment-method.md) | The payment method for payment methods which Bisq does not support: the name and the account data as free texts, which accounts and offers belong together, the checks on the account of the peer, the trade limit and the warnings. |
 
+### `payment/`
+
+| Specification | Covers |
+|---|---|
+| [`payment/stablecoin-payment-methods.md`](payment/stablecoin-payment-methods.md) | Stablecoins as payment methods of their peg currency: the listed coins and networks, the meaning of an offer, the account data, and which rules of fiat payment methods apply. |
+
 ### `trade/`
 
 | Specification | Covers |

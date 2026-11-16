@@ -118,7 +118,9 @@ the current max in the table above.
 
 Very low risk:
 
-`ADVANCED_CASH`, `BLOCK_CHAINS`, `BLOCK_CHAINS_INSTANT`, `BSQ_SWAP`
+`ADVANCED_CASH`, `BLOCK_CHAINS`, `BLOCK_CHAINS_INSTANT`, `BSQ_SWAP` and the stablecoin payment
+methods (one per rail of `StableCoinPaymentRail`, for example `USDT_TRC20`; see
+[`stablecoin-payment-methods.md`](specifications/payment/stablecoin-payment-methods.md))
 
 Low risk:
 
