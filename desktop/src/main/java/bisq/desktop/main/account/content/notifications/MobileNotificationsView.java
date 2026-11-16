@@ -95,6 +95,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private InputTextField ntfyServerUrlField, ntfyTopicField;
     private PasswordTextField ntfyAccessTokenField;
     private Button saveNtfyButton, testNtfyButton;
+    private boolean ntfyTestPending;
     private ToggleButton ntfyIncludeDetailsToggle, ntfyAllowInsecureLanToggle;
     private TextField tokenInputTextField;
     private InputTextField priceAlertHighInputTextField, priceAlertLowInputTextField, marketAlertTriggerInputTextField;
@@ -161,12 +162,15 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         });
         saveNtfyButton.setOnAction(e -> saveNtfySettings());
         testNtfyButton.setOnAction(e -> {
-            if (saveNtfySettings()) {
-                testNtfyButton.setDisable(true);
+            if (saveNtfySettings() && !ntfyTestPending) {
+                ntfyTestPending = true;
+                updateBackendFields();
                 mobileNotificationService.sendNtfyTestMessage(result -> {
+                    ntfyTestPending = false;
                     updateBackendFields();
                     new Popup().feedback(Res.get("account.notifications.ntfy.testSuccess")).show();
                 }, error -> {
+                    ntfyTestPending = false;
                     updateBackendFields();
                     new Popup().error(Res.get("account.notifications.ntfy.testFailure")).show();
                 });
@@ -639,7 +643,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         ntfyIncludeDetailsToggle.setDisable(!ntfy);
         ntfyAllowInsecureLanToggle.setDisable(!ntfy);
         saveNtfyButton.setDisable(!ntfy);
-        testNtfyButton.setDisable(!ntfy);
+        testNtfyButton.setDisable(!ntfy || ntfyTestPending);
         setDisableForSetupFields(!mobileNotificationService.isNotificationSetupComplete());
         eraseButton.setDisable(ntfy || !mobileNotificationService.isSetupConfirmationSent());
         useSoundToggleButton.setDisable(ntfy || !mobileNotificationService.isNotificationSetupComplete());
