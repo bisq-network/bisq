@@ -149,7 +149,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     public boolean matchesRelevantPubKey(ProtectedStorageEntry protectedStorageEntry) {
         if (!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry)) {
             log.error("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to object type mismatch. " +
-                    "ProtectedMailboxStorageEntry required, but got\n" + protectedStorageEntry);
+                    "ProtectedMailboxStorageEntry required, but got {}", protectedStorageEntry.toLogString());
 
             return false;
         }
@@ -159,8 +159,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         boolean result = protectedMailboxStorageEntry.getReceiversPubKey().equals(this.receiversPubKey);
         if (!result) {
             log.warn("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to metadata mismatch. " +
-                    "new.receiversPubKey=" + Utilities.bytesAsHexString(protectedMailboxStorageEntry.getReceiversPubKeyBytes()) +
-                    "stored.receiversPubKey=" + Utilities.bytesAsHexString(this.getReceiversPubKeyBytes()));
+                    "Hash of new receiversPubKey={}, hash of stored receiversPubKey={}",
+                    toKeyHash(protectedMailboxStorageEntry.getReceiversPubKey()), toKeyHash(this.receiversPubKey));
         }
 
         return result;

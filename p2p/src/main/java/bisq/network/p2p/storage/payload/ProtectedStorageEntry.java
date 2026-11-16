@@ -281,8 +281,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         boolean result = protectedStorageEntry.getOwnerPubKey().equals(this.ownerPubKey);
 
         if (!result) {
-            log.warn("New data entry does not match our stored data. storedData.ownerPubKey={}, ownerPubKey={}}",
-                    protectedStorageEntry.getOwnerPubKey().toString(), this.ownerPubKey);
+            log.warn("New data entry does not match our stored data. Hash of stored owner key={}, hash of owner key={}",
+                    toKeyHash(protectedStorageEntry.getOwnerPubKey()), toKeyHash(this.ownerPubKey));
         }
 
         return result;

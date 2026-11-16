@@ -34,6 +34,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -228,6 +229,35 @@ public class ProtectedStorageEntryInvalidSignatureTest {
                 "The log line has " + warning.length() + " characters"));
     }
 
+    // A new entry of a stored payload must have the key of the stored entry. The lines of this check are short as well.
+    @Test
+    public void theLogLinesOfAFailedCheckOfTheStoredKeyAreShort() throws Exception {
+        KeyPair owner = TestUtils.generateKeyPair();
+        KeyPair other = TestUtils.generateKeyPair();
+        ProtectedStoragePayload payload = new ProtectedStoragePayloadStub(owner.getPublic());
+        ProtectedStorageEntry stored = buildSignedEntry(payload, owner, 1);
+        ProtectedStorageEntry fromAnotherOwner = buildSignedEntry(payload, other, 2);
+
+        KeyPair sender = TestUtils.generateKeyPair();
+        KeyPair receiver = TestUtils.generateKeyPair();
+        MailboxStoragePayload mailboxPayload = buildMailboxStoragePayload(sender.getPublic(), receiver.getPublic());
+        byte[] signature = Sig.sign(sender.getPrivate(), hashOfDataAndSeqNr(mailboxPayload, 1));
+        ProtectedMailboxStorageEntry storedMailboxEntry = new ProtectedMailboxStorageEntry(mailboxPayload,
+                sender.getPublic(), 1, signature, receiver.getPublic(), CLOCK);
+        ProtectedMailboxStorageEntry toAnotherReceiver = new ProtectedMailboxStorageEntry(mailboxPayload,
+                sender.getPublic(), 1, signature, other.getPublic(), CLOCK);
+
+        List<String> lines = new ArrayList<>(warningsDuring(ProtectedStorageEntry.class,
+                () -> assertFalse(fromAnotherOwner.matchesRelevantPubKey(stored))));
+        lines.addAll(warningsDuring(ProtectedMailboxStorageEntry.class, () -> {
+            assertFalse(toAnotherReceiver.matchesRelevantPubKey(storedMailboxEntry));
+            assertFalse(toAnotherReceiver.matchesRelevantPubKey(stored));
+        }));
+
+        assertEquals(3, lines.size());
+        lines.forEach(line -> assertTrue(line.length() < 500, "The log line has " + line.length() + " characters"));
+    }
+
     // The description of a payload grows with its content, as the one of an offer does
     private static ProtectedStoragePayload payloadWithALargeDescription(PublicKey owner) {
         ProtectedStoragePayloadStub payload = new ProtectedStoragePayloadStub(owner) {
@@ -240,6 +270,7 @@ public class ProtectedStorageEntryInvalidSignatureTest {
         return payload;
     }
 
+    // The lines at WARN and ERROR level
     private static List<String> warningsDuring(Class<?> loggingClass, Runnable action) {
         Logger logger = (Logger) LoggerFactory.getLogger(loggingClass);
         ListAppender<ILoggingEvent> appender = new ListAppender<>();
@@ -248,7 +279,7 @@ public class ProtectedStorageEntryInvalidSignatureTest {
         try {
             action.run();
             return appender.list.stream()
-                    .filter(event -> event.getLevel() == Level.WARN)
+                    .filter(event -> event.getLevel().isGreaterOrEqual(Level.WARN))
                     .map(ILoggingEvent::getFormattedMessage)
                     .collect(Collectors.toList());
         } finally {

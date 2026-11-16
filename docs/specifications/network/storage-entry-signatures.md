@@ -29,8 +29,9 @@ verification before.
   least recently used ones.
 - The log line of a failed verification names the type and the size of the payload and the signed
   hash, not the content of the payload. The log lines of the checks of the owner, which follow a
-  valid signature, and the line of a failed removal name the type and the size of the payload, its
-  sequence number and hashes of the keys, not the content of the payload or the keys.
+  valid signature, of the check that a new entry has the key of the stored entry, and the line of a
+  failed removal name the type and the size of the payload, its sequence number and hashes of the
+  keys, not the content of the payload or the keys.
 
 ## Rationale
 
