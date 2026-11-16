@@ -40,7 +40,9 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PriceFeedNodeAddressProvider {
     public static final List<String> DEFAULT_NODES = Arrays.asList(
-            "http://runbtcpn7gmbj5rgqeyfyvepqokrijem6rbw7o5wgqbguimuoxrmcdyd.onion"   // @runbtc
+            "http://ro7nv73awqs3ga2qtqeqawrjpbxwarsazznszvr6whv7tes5ehffopid.onion/", // @alexej996
+            "http://runbtcpn7gmbj5rgqeyfyvepqokrijem6rbw7o5wgqbguimuoxrmcdyd.onion",   // @runbtc
+            "http://bsqprcgpyw7z337btcbjxvvtmud4mr6k552piui4xq62qdeqej2cgryd.onion"   // @suddenwhipvapor
     );
 
     private final Config config;
