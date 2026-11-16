@@ -164,8 +164,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     // the shutDown being called.
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
 
+    // Set by the thread which reports the violation, for example the user thread, and read by the read thread
     @Getter
-    private RuleViolation ruleViolation;
+    private volatile RuleViolation ruleViolation;
     private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
 
     private final Capabilities capabilities = new Capabilities();
