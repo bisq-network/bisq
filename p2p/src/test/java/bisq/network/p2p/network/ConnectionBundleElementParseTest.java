@@ -52,9 +52,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ConnectionBundleElementParseTest {
-    // A message type which the resolver does not know, as one of a newer version
-    private static final protobuf.NetworkEnvelope UNKNOWN_ELEMENT = protobuf.NetworkEnvelope.newBuilder()
+    // A message of a known type which the resolver cannot convert, as one of a type which was removed
+    @SuppressWarnings("deprecation")
+    private static final protobuf.NetworkEnvelope INVALID_ELEMENT = protobuf.NetworkEnvelope.newBuilder()
             .setMessageVersion(Version.getP2PMessageVersion())
+            .setFileTransferPart(protobuf.FileTransferPart.newBuilder())
             .build();
 
     private final MessageListener messageListener = mock(MessageListener.class);
@@ -76,7 +78,7 @@ class ConnectionBundleElementParseTest {
             }
             NetworkEnvelope element = elements.get(proto);
             if (element == null) {
-                throw new ProtobufferException("Unknown proto message case");
+                throw new ProtobufferException("Unknown test proto");
             }
             return element;
         });
@@ -91,7 +93,7 @@ class ConnectionBundleElementParseTest {
     void deliversTheOtherElementsOfABundleWithAnElementWhichCannotBeParsed() throws IOException {
         RefreshOfferMessage valid = refreshOfferMessage(1);
 
-        Connection connection = connection(delimited(bundle(UNKNOWN_ELEMENT, proto(valid))));
+        Connection connection = connection(delimited(bundle(INVALID_ELEMENT, proto(valid))));
 
         verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.NO_PROTO_BUFFER_ENV),
                 same(connection));
@@ -105,8 +107,8 @@ class ConnectionBundleElementParseTest {
         RefreshOfferMessage first = refreshOfferMessage(1);
         RefreshOfferMessage second = refreshOfferMessage(2);
 
-        Connection connection = connection(concat(delimited(bundle(UNKNOWN_ELEMENT, proto(first))),
-                delimited(bundle(UNKNOWN_ELEMENT, proto(second)))));
+        Connection connection = connection(concat(delimited(bundle(INVALID_ELEMENT, proto(first))),
+                delimited(bundle(INVALID_ELEMENT, proto(second)))));
 
         verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.RULE_VIOLATION),
                 same(connection));
@@ -121,7 +123,7 @@ class ConnectionBundleElementParseTest {
         RefreshOfferMessage next = refreshOfferMessage(2);
 
         Connection connection = connection(concat(
-                delimited(bundle(proto(valid), UNKNOWN_ELEMENT, UNKNOWN_ELEMENT)),
+                delimited(bundle(proto(valid), INVALID_ELEMENT, INVALID_ELEMENT)),
                 delimited(bundle(proto(next)))));
 
         verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.RULE_VIOLATION),

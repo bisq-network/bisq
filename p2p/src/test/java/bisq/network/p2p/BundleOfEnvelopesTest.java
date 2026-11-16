@@ -43,16 +43,19 @@ class BundleOfEnvelopesTest {
     void countsTheElementsWhichCannotBeParsed() throws ProtobufferException {
         NetworkProtoResolver resolver = mock(NetworkProtoResolver.class);
         RefreshOfferMessage valid = new RefreshOfferMessage(new byte[20], new byte[46], new byte[20], 1);
-        protobuf.NetworkEnvelope unknown = protobuf.NetworkEnvelope.newBuilder()
+        // A message of a known type which the resolver cannot convert, as one of a type which was removed
+        @SuppressWarnings("deprecation")
+        protobuf.NetworkEnvelope invalid = protobuf.NetworkEnvelope.newBuilder()
                 .setMessageVersion(Version.getP2PMessageVersion())
+                .setFileTransferPart(protobuf.FileTransferPart.newBuilder())
                 .build();
         when(resolver.fromProto(valid.toProtoNetworkEnvelope())).thenReturn(valid);
-        when(resolver.fromProto(unknown)).thenThrow(new ProtobufferException("Unknown proto message case"));
+        when(resolver.fromProto(invalid)).thenThrow(new ProtobufferException("Unknown proto message case"));
 
         BundleOfEnvelopes bundle = BundleOfEnvelopes.fromProto(protobuf.BundleOfEnvelopes.newBuilder()
-                        .addEnvelopes(unknown)
+                        .addEnvelopes(invalid)
                         .addEnvelopes(valid.toProtoNetworkEnvelope())
-                        .addEnvelopes(unknown)
+                        .addEnvelopes(invalid)
                         .build(),
                 resolver,
                 Version.getP2PMessageVersion());
