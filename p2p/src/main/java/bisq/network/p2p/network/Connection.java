@@ -168,6 +168,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Getter
     private volatile RuleViolation ruleViolation;
     private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
+    // For the log of the elements of bundles which we drop without a rule violation
+    private long lastInvalidBundleElementLogTimeStamp;
 
     private final Capabilities capabilities = new Capabilities();
 
@@ -428,13 +430,22 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         Set<NetworkEnvelope> envelopesToProcess = new HashSet<>();
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
-            // An element which violates a rule is not delivered. If the violation closes the connection, no element
-            // of the bundle is delivered.
-            RuleViolation elementRuleViolation = getRuleViolationOfBundleElement(networkEnvelope);
-            if (elementRuleViolation != null) {
-                if (reportInvalidRequest(elementRuleViolation)) {
+            // Only broadcast messages are bundled (Broadcaster). Another message type, or a bundle in the bundle, would
+            // skip the handling which only a single message gets, for example the one of a CloseConnectionMessage or of
+            // a sender address; no broadcast message has a sender address. No relay passes such an element on, so it
+            // violates a rule. If the violation closes the connection, no element of the bundle is delivered.
+            if (!(networkEnvelope instanceof BroadcastMessage) || networkEnvelope instanceof BundleOfEnvelopes) {
+                log.warn("We received a {} in a BundleOfEnvelopes, which may only hold broadcast messages",
+                        networkEnvelope.getClass().getSimpleName());
+                if (reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE)) {
                     return;
                 }
+                continue;
+            }
+
+            String reasonToDrop = getReasonToDropBundleElement(networkEnvelope);
+            if (reasonToDrop != null) {
+                logDroppedBundleElement(networkEnvelope, reasonToDrop);
                 continue;
             }
 
@@ -460,23 +471,16 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 messageListeners.forEach(listener -> listener.onMessage(envelope, connection))));
     }
 
-    // An element of a bundle passes the checks of a single message. Only broadcast messages are bundled
-    // (Broadcaster). Another message type, or a bundle in the bundle, would skip the handling which only a single
-    // message gets, for example the one of a CloseConnectionMessage or of a sender address. No broadcast message has
-    // a sender address.
+    // An element of a bundle passes the checks of a single message: the hash size of its payload, the size limit of
+    // its type and the network. A relay of an earlier version stores and relays elements without them: payloads of
+    // any size, a SignedWitness which this version rejects as malformed, and some messages with the message version
+    // which it received. We cannot tell the relay from the peer which created the element, so we drop it without a
+    // rule violation. Returns null if the element passes the checks.
     @Nullable
-    private RuleViolation getRuleViolationOfBundleElement(NetworkEnvelope element) {
-        if (!(element instanceof BroadcastMessage) || element instanceof BundleOfEnvelopes) {
-            log.warn("We received a {} in a BundleOfEnvelopes, which may only hold broadcast messages",
-                    element.getClass().getSimpleName());
-            return RuleViolation.INVALID_DATA_TYPE;
-        }
-
+    private static String getReasonToDropBundleElement(NetworkEnvelope element) {
         if (element instanceof AddPersistableNetworkPayloadMessage &&
                 !((AddPersistableNetworkPayloadMessage) element).getPersistableNetworkPayload().verifyHashSize()) {
-            log.warn("PersistableNetworkPayload.verifyHashSize failed for an element of a BundleOfEnvelopes: " +
-                    "wrong hash size or malformed payload");
-            return RuleViolation.MAX_MSG_SIZE_EXCEEDED;
+            return "wrong hash size or malformed payload";
         }
 
         // The serialized form of the element as we handle and relay it. Bytes which the parse drops, like unknown
@@ -484,18 +488,25 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         protobuf.NetworkEnvelope proto = element.toProtoNetworkEnvelope();
         int size = proto.getSerializedSize();
         if (exceedsPermittedSize(element, size)) {
-            log.warn("An element of a BundleOfEnvelopes is above the size limit of its type. size={}; element={}",
-                    size, element.getClass().getSimpleName());
-            return RuleViolation.MAX_MSG_SIZE_EXCEEDED;
+            return "above the size limit of its type, size=" + size;
         }
 
         if (proto.getMessageVersion() != Version.getP2PMessageVersion()) {
-            log.warn("An element of a BundleOfEnvelopes is of another network. version of element={}, app version={}",
-                    proto.getMessageVersion(), Version.getP2PMessageVersion());
-            return RuleViolation.WRONG_NETWORK_ID;
+            return "of another network, message version=" + proto.getMessageVersion();
         }
 
         return null;
+    }
+
+    // At most once per 10 seconds for each connection, as any peer can send such elements without a rule violation
+    private void logDroppedBundleElement(NetworkEnvelope element, String reason) {
+        long now = System.currentTimeMillis();
+        if (now - lastInvalidBundleElementLogTimeStamp >= TimeUnit.SECONDS.toMillis(10)) {
+            lastInvalidBundleElementLogTimeStamp = now;
+            log.warn("We drop a {} of a BundleOfEnvelopes without a rule violation: {}. peer={}, uid={}",
+                    element.getClass().getSimpleName(), reason,
+                    peersNodeAddressOptional.map(NodeAddress::getFullAddress).orElse("unknown"), uid);
+        }
     }
 
     private static boolean exceedsPermittedSize(NetworkEnvelope networkEnvelope, int size) {

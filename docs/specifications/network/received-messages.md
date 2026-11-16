@@ -78,21 +78,33 @@ bundles messages: it sends the broadcast messages of 2 seconds to a peer in one 
     `INVALID_DATA_TYPE`, and a single message with a payload or a nested type which the node does
     not know closes the connection (`UNKNOWN_EXCEPTION`).
 - Each element passes the checks of a single message before it is passed to the handlers: the size
-  limit of its type and the hash size of an `AddPersistableNetworkPayloadMessage`
-  (`MAX_MSG_SIZE_EXCEEDED`), and the message version of the network (`WRONG_NETWORK_ID`). An element
-  which is no broadcast message, or which is a bundle itself, violates `INVALID_DATA_TYPE`. An element
-  which violates a rule is not passed to the handlers, and the violation counts as for a single
-  message. If a violation closes the connection, no element of the bundle is passed to the handlers
-  and the connection reads no further message.
+  limit of its type, the hash size of the payload of an `AddPersistableNetworkPayloadMessage` and
+  the message version of the network. An element which fails one of them is dropped without a rule
+  violation. At most once per 10 seconds for each connection, the node logs such an element.
   - The size of an element is the size of the element serialized as the node handles and relays
     it. Bytes which the parse drops, such as unknown fields, count in the size of the bundle, which
     the rules above check against the received bytes.
   - Before, the elements skipped these checks: a bundle of 10 MB could deliver an element of almost
     10 MB, which the node stored and broadcast, without a rule violation.
+  - Such an element causes no violation because an honest relay of an earlier version passes it on.
+    Nodes of earlier versions do not check the elements of a bundle, and they store and relay
+    payloads of any size, a `SignedWitness` which this version rejects as malformed (its check of
+    the hash size also checks the keys of the witness since this version), and a
+    `RefreshOfferMessage`, `NewBlockBroadcastMessage` or `NewAccountingBlockBroadcastMessage` with
+    the message version which they received. The receiver cannot tell the relay from the peer which
+    created the element. With a violation, any peer could send such elements to an honest relay of
+    an earlier version and make the nodes of this version close their connections to it, which
+    also removes the relay from their persisted peers (`bundle-element-wrong-network-closes-relay`,
+    `bundle-wrong-network-relay-still-closable`).
+- An element which is no broadcast message, or which is a bundle itself, violates
+  `INVALID_DATA_TYPE` and is not passed to the handlers; the violation counts as for a single
+  message. If the violation closes the connection, no element of the bundle is passed to the
+  handlers and the connection reads no further message.
   - A message of another type in a bundle would skip the handling that only a single message gets:
     a `CloseConnectionMessage` closes the connection, a `SupportedCapabilitiesMessage` sets the
     capabilities, a sender address binds the connection. Nodes before v1.8.0 also bundled direct
     messages that they sent within 20 ms; a node of this version does not pass them to the handlers.
+  - Since v1.8.0 nodes bundle only broadcast messages, so no relay passes such an element on.
 
 ## Limits of the senders
 
@@ -161,6 +173,18 @@ A node keeps its responses below the limit of 10 MB:
 - A peer can send bundles with any number of elements without a message type, which the node parses
   and drops without a violation. Only the size limit of a bundle, 10 MB, bounds this work for each
   bundle.
+- A peer which sends elements of bundles that fail the checks of a single message is not penalized
+  for them. The node parses and drops them. The size limit of a bundle bounds this work for each
+  bundle; the allowance of the elements of bundles of the throttle (PR #270,
+  `p2p-bundle-throttle-granularity`) and the parse memory budget (PR #276,
+  `p2p-parse-memory-concurrent`) bound it further.
+- A relay of an earlier version still loses the connection when it passes such a message on alone,
+  not in a bundle, which it does when it has no other broadcast message for the peer within 2
+  seconds. A single message of another network violates `WRONG_NETWORK_ID`, which closes the
+  connection at once, and a single message above the size limit of its type, or whose payload fails
+  the check of the hash size, counts as a violation of `MAX_MSG_SIZE_EXCEEDED`, which closes it at
+  the second. Either way `PeerManager` removes the relay from the persisted peers. This path
+  predates the checks of the elements of bundles and is not changed by them.
 
 ## Compatibility
 
@@ -169,9 +193,10 @@ attachments were removed in 1.10.0.
 
 A `NewBlockBroadcastMessage` or a `NewAccountingBlockBroadcastMessage` above 200 kB is now dropped
 also when it arrives as an element of a bundle, which it does whenever its sender had other broadcast
-messages within the same 2 seconds. Before, such an element was passed to the handlers. As for a
-single message, it counts as a violation of `MAX_MSG_SIZE_EXCEEDED`. A lite node which misses the
-broadcast of a block requests the block from a seed node 10 seconds after its wallet saw the block.
+messages within the same 2 seconds. Before, such an element was passed to the handlers. In a
+bundle it is dropped without a rule violation; as a single message it counts as a violation of
+`MAX_MSG_SIZE_EXCEEDED`, as before. A lite node which misses the broadcast of a block requests the
+block from a seed node 10 seconds after its wallet saw the block.
 
 A node of an earlier version answers a request for state hashes or for accounting blocks with all of
 them from the requested height on. From the DAO genesis height these are 12 MB of state hashes, which

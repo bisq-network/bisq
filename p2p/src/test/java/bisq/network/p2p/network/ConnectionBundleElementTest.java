@@ -111,12 +111,13 @@ class ConnectionBundleElementTest {
         verifyClosedAtTheEndOfTheStream(connection);
         verify(messageListener).onMessage(same(small), same(connection));
         verify(messageListener, never()).onMessage(same(oversized), any());
-        // The first violation of the rule is tolerated, as for a single message
         assertNull(connection.getRuleViolation());
     }
 
+    // A relay of an earlier version stores and relays payloads without a size limit, so such elements are dropped
+    // without a rule violation
     @Test
-    void closesAtTheSecondElementAboveTheSizeOfItsTypeAndDeliversNoElementOfTheBundle() throws IOException {
+    void dropsElementsAboveTheSizeOfTheirTypeWithoutAViolation() throws IOException {
         RefreshOfferMessage small = refreshOfferMessage(1, 100);
         RefreshOfferMessage oversized = refreshOfferMessage(2, Connection.getPermittedMessageSize());
         RefreshOfferMessage oversizedToo = refreshOfferMessage(3, Connection.getPermittedMessageSize());
@@ -126,28 +127,36 @@ class ConnectionBundleElementTest {
                 delimited(bundle(proto(small), proto(oversized), proto(oversizedToo))),
                 delimited(bundle(proto(next)))));
 
-        verifyClosedForRuleViolation(connection, RuleViolation.MAX_MSG_SIZE_EXCEEDED);
-        verify(messageListener, never()).onMessage(any(), any());
+        verifyClosedAtTheEndOfTheStream(connection);
+        verify(messageListener).onMessage(same(small), same(connection));
+        verify(messageListener).onMessage(same(next), same(connection));
+        verify(messageListener, never()).onMessage(same(oversized), any());
+        verify(messageListener, never()).onMessage(same(oversizedToo), any());
+        assertNull(connection.getRuleViolation());
     }
 
+    // A relay of an earlier version passes some messages on with the message version which it received, for example a
+    // RefreshOfferMessage, so such elements are dropped without a rule violation
     @Test
-    void closesForAnElementOfAnotherNetwork() throws IOException {
+    void dropsElementsOfAnotherNetworkWithoutAViolation() throws IOException {
         RefreshOfferMessage small = refreshOfferMessage(1, 100);
-        protobuf.NetworkEnvelope otherNetworkProto = proto(refreshOfferMessage(2, 100)).toBuilder()
-                .setMessageVersion(Version.getP2PMessageVersion() + 1)
-                .build();
-        RefreshOfferMessage otherNetwork = RefreshOfferMessage.fromProto(otherNetworkProto.getRefreshOfferMessage(),
-                otherNetworkProto.getMessageVersion());
-        elements.put(otherNetworkProto, otherNetwork);
+        RefreshOfferMessage otherNetwork = ofAnotherNetwork(refreshOfferMessage(2, 100));
+        RefreshOfferMessage otherNetworkToo = ofAnotherNetwork(refreshOfferMessage(3, 100));
 
-        Connection connection = connection(delimited(bundle(proto(small), otherNetworkProto)));
+        Connection connection = connection(delimited(bundle(proto(small), proto(otherNetwork),
+                proto(otherNetworkToo))));
 
-        verifyClosedForRuleViolation(connection, RuleViolation.WRONG_NETWORK_ID);
-        verify(messageListener, never()).onMessage(any(), any());
+        verifyClosedAtTheEndOfTheStream(connection);
+        verify(messageListener).onMessage(same(small), same(connection));
+        verify(messageListener, never()).onMessage(same(otherNetwork), any());
+        verify(messageListener, never()).onMessage(same(otherNetworkToo), any());
+        assertNull(connection.getRuleViolation());
     }
 
+    // A relay of an earlier version stores and relays a payload which this version rejects as malformed, for example
+    // a SignedWitness without keys, so such elements are dropped without a rule violation
     @Test
-    void dropsAnElementWhosePayloadHashHasTheWrongSize() throws IOException {
+    void dropsElementsWhosePayloadHashHasTheWrongSizeWithoutAViolation() throws IOException {
         RefreshOfferMessage small = refreshOfferMessage(1, 100);
         // The stub cannot be serialized, so it stands for the element which the resolver returns for any proto
         protobuf.NetworkEnvelope wrongHashSizeProto = protobuf.NetworkEnvelope.newBuilder()
@@ -158,11 +167,12 @@ class ConnectionBundleElementTest {
                 new AddPersistableNetworkPayloadMessage(new PersistableNetworkPayloadStub(false));
         elements.put(wrongHashSizeProto, wrongHashSize);
 
-        Connection connection = connection(delimited(bundle(wrongHashSizeProto, proto(small))));
+        Connection connection = connection(delimited(bundle(wrongHashSizeProto, proto(small), wrongHashSizeProto)));
 
         verifyClosedAtTheEndOfTheStream(connection);
         verify(messageListener, never()).onMessage(same(wrongHashSize), any());
         verify(messageListener).onMessage(same(small), same(connection));
+        assertNull(connection.getRuleViolation());
     }
 
     @Test
@@ -211,6 +221,17 @@ class ConnectionBundleElementTest {
         RefreshOfferMessage message = new RefreshOfferMessage(new byte[20], signature, new byte[20], sequenceNumber);
         elements.put(message.toProtoNetworkEnvelope(), message);
         return message;
+    }
+
+    // The message with the message version of another network
+    private RefreshOfferMessage ofAnotherNetwork(RefreshOfferMessage message) {
+        protobuf.NetworkEnvelope otherNetworkProto = proto(message).toBuilder()
+                .setMessageVersion(Version.getP2PMessageVersion() + 1)
+                .build();
+        RefreshOfferMessage otherNetwork = RefreshOfferMessage.fromProto(otherNetworkProto.getRefreshOfferMessage(),
+                otherNetworkProto.getMessageVersion());
+        elements.put(otherNetworkProto, otherNetwork);
+        return otherNetwork;
     }
 
     private static protobuf.NetworkEnvelope proto(NetworkEnvelope networkEnvelope) {
