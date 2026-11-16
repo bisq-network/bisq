@@ -22,6 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
@@ -170,6 +171,74 @@ class SellerVerifyBuyerPaymentAccountTest {
                 result.errorMessage());
         verify(processModel, never()).setBuyerPaymentAccountValidated(true);
         verify(processModel, never()).getAccountAgeWitnessService();
+    }
+
+    // A stablecoin payment method is a payment method of USD, so the trade takes the validation of a fiat trade and
+    // is not passed as a crypto trade. The contract hash is the one of the real payload.
+    @Test
+    void usdTradeWithStableCoinAccountIsValidatedAsFiatTrade() {
+        ProcessModel processModel = processModel(false);
+        TradingPeer tradingPeer = new TradingPeer();
+        StableCoinAccountPayload paymentAccountPayload = new StableCoinAccountPayload("USDT_TRC20", "account-id");
+        paymentAccountPayload.setAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        PubKeyRing pubKeyRing = mock(PubKeyRing.class);
+        byte[] nonce = {1};
+        byte[] signature = {2};
+        tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
+        tradingPeer.setPubKeyRing(pubKeyRing);
+        tradingPeer.setAccountAgeWitnessNonce(nonce);
+        tradingPeer.setAccountAgeWitnessSignature(signature);
+        tradingPeer.setCurrentDate(1234L);
+        when(processModel.getTradePeer()).thenReturn(tradingPeer);
+
+        AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
+        when(processModel.getAccountAgeWitnessService()).thenReturn(accountAgeWitnessService);
+        when(accountAgeWitnessService.verifyAccountAgeWitnessAtTradeDate(
+                any(),
+                eq(paymentAccountPayload),
+                any(),
+                eq(pubKeyRing),
+                same(nonce),
+                same(signature),
+                any())).thenReturn(true);
+
+        Trade trade = trade("USD", processModel);
+        Contract contract = mock(Contract.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
+                .thenReturn(paymentAccountPayload.getHashForContract());
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing())).thenReturn("USDT_TRC20");
+
+        TaskResult result = runTask(trade);
+
+        assertTrue(result.completed());
+        assertNull(result.errorMessage());
+        verify(processModel).setBuyerPaymentAccountValidated(true);
+    }
+
+    @Test
+    void stableCoinTradeWithAnotherAccountThanInTheContractFails() {
+        ProcessModel processModel = processModel(false);
+        TradingPeer tradingPeer = new TradingPeer();
+        StableCoinAccountPayload paymentAccountPayload = new StableCoinAccountPayload("USDT_TRC20", "account-id");
+        paymentAccountPayload.setAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
+        when(processModel.getTradePeer()).thenReturn(tradingPeer);
+
+        StableCoinAccountPayload payloadOfContract = new StableCoinAccountPayload("USDT_ERC20", "account-id");
+        payloadOfContract.setSalt(paymentAccountPayload.getSalt());
+        payloadOfContract.setAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        Trade trade = trade("USD", processModel);
+        Contract contract = mock(Contract.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
+                .thenReturn(payloadOfContract.getHashForContract());
+
+        TaskResult result = runTask(trade);
+
+        assertFalse(result.completed());
+        assertTrue(result.errorMessage().contains("peersPaymentAccountPayloadHash mismatch"));
+        verify(processModel, never()).setBuyerPaymentAccountValidated(true);
     }
 
     @Test

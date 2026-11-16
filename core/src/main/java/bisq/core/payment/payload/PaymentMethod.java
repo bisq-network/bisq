@@ -21,6 +21,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.TradeLimits;
+import bisq.core.payment.stablecoin.StableCoinPaymentRail;
 
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.MathUtils;
@@ -29,6 +30,7 @@ import org.bitcoinj.core.Coin;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -225,7 +227,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
     // than new trade limit) and violate the maker expectation when he created the offer (duration).
-    private static final List<PaymentMethod> PAYMENT_METHODS = Stream.of(
+    private static final List<PaymentMethod> PAYMENT_METHODS = Stream.concat(Stream.of(
             // EUR
             SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -314,6 +316,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // BsqSwap
             BSQ_SWAP = new PaymentMethod(BSQ_SWAP_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+    ), getStableCoinPaymentMethods()
     ).sorted(Comparator.comparing(
             m -> m.id.equals(CLEAR_X_CHANGE_ID) ? "ZELLE" : m.id)
     ).collect(Collectors.toUnmodifiableList());
@@ -323,6 +326,13 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     public static List<PaymentMethod> getPaymentMethods() {
         return PAYMENT_METHODS;
+    }
+
+    // One payment method per stablecoin rail, with the name of the rail as ID. A transfer on a blockchain cannot be
+    // charged back, so the trade limit and the trade period are those of the altcoin payment methods.
+    private static Stream<PaymentMethod> getStableCoinPaymentMethods() {
+        return Arrays.stream(StableCoinPaymentRail.values())
+                .map(rail -> new PaymentMethod(rail.name(), DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK));
     }
 
     public static PaymentMethod getDummyPaymentMethod(String id) {
@@ -499,6 +509,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     public boolean isBsqSwap() {
         return this.equals(BSQ_SWAP);
+    }
+
+    // A stablecoin payment method is a payment method of the currency the coin is pegged to, so it is a fiat payment
+    // method and not an altcoin one.
+    public boolean isStableCoin() {
+        return StableCoinPaymentRail.find(id).isPresent();
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, List<TradeCurrency> tradeCurrencies) {

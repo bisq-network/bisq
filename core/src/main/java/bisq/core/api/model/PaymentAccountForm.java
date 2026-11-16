@@ -255,8 +255,10 @@ public class PaymentAccountForm {
 
     // An account of the custom payment method is created in the desktop application only. There the name of the
     // payment method is checked and the user has to confirm the warnings about the risks.
+    // The stablecoin payment methods share one account class, which is created with its payment method. The form
+    // creates an account from its class alone, so it cannot create an account of such a payment method.
     private static void checkPaymentMethodIsSupported(PaymentMethod paymentMethod) {
-        if (paymentMethod.isCustom()) {
+        if (paymentMethod.isCustom() || paymentMethod.isStableCoin()) {
             throw new IllegalArgumentException(
                     format("the api does not support %s payment accounts", paymentMethod.getId()));
         }

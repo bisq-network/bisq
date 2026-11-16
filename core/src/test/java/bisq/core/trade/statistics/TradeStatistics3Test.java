@@ -18,6 +18,7 @@
 package bisq.core.trade.statistics;
 
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.stablecoin.StableCoinPaymentRail;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 
 import bisq.network.p2p.BundleOfEnvelopes;
@@ -40,6 +41,7 @@ import java.time.Clock;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -51,6 +53,7 @@ import org.junit.jupiter.api.Test;
 
 import static bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap.Keys.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -60,6 +63,54 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TradeStatistics3Test {
     private static final long POST_STRICT_HASH_CHECK_DATE = 1_700_000_000_000L;
+
+    // The payment method of a statistic is stored as the position in PaymentMethodMapper, so an entry must never
+    // move. The positions of the stablecoin rails are pinned here by name. A new entry is added at the end of the
+    // mapper and of this list.
+    @Test
+    public void stableCoinRailsKeepTheirPositionInThePaymentMethodMapper() {
+        List<String> mappedFromPosition58 = List.of(
+                "USDT_ERC20", "USDT_TRC20", "USDT_BEP20", "USDT_SPL",
+                "USDC_ERC20", "USDC_SPL", "USDC_BEP20",
+                "USDS_ERC20", "USDE_ERC20", "DAI_ERC20",
+                "RLUSD_ERC20",
+                "USDG_ERC20", "USDG_SPL",
+                "PYUSD_ERC20", "PYUSD_SPL",
+                "U_ERC20", "U_BEP20",
+                "USDF_ERC20");
+        assertEquals(56, TradeStatistics3.PaymentMethodMapper.SBP.ordinal());
+        // The custom payment method came first in the release candidate
+        assertEquals(57, TradeStatistics3.PaymentMethodMapper.CUSTOM.ordinal());
+        for (int i = 0; i < mappedFromPosition58.size(); i++) {
+            assertEquals(mappedFromPosition58.get(i), TradeStatistics3.PaymentMethodMapper.values()[58 + i].name());
+        }
+    }
+
+    // A rail without an entry would be stored with its full name in every statistic
+    @Test
+    public void everyStableCoinRailIsInThePaymentMethodMapper() {
+        for (StableCoinPaymentRail rail : StableCoinPaymentRail.values()) {
+            assertDoesNotThrow(() -> TradeStatistics3.PaymentMethodMapper.valueOf(rail.name()), rail.name());
+        }
+    }
+
+    @Test
+    public void stableCoinStatisticIsAValidUsdStatistic() {
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("USD",
+                1_000_000_000L,
+                Coin.parseCoin("0.05").value,
+                "USDT_TRC20",
+                System.currentTimeMillis(),
+                null,
+                null,
+                (TreeMap<String, String>) null);
+
+        assertTrue(tradeStatistics.isValid());
+        assertEquals("USDT_TRC20", tradeStatistics.getPaymentMethodId());
+        assertEquals(String.valueOf(TradeStatistics3.PaymentMethodMapper.USDT_TRC20.ordinal()),
+                tradeStatistics.toProtoTradeStatistics3().getPaymentMethod());
+        assertEquals("5000", tradeStatistics.getTradeVolume().toPlainString());
+    }
 
     @Test
     public void isValidAcceptsHistoricalTradeAboveCurrentTradeLimit() {

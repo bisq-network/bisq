@@ -129,13 +129,21 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         sepa.setIban("DE89370400440532013000");
         sepa.setBic("COBADEFFXXX");
 
+        StableCoinAccountPayload stableCoin = new StableCoinAccountPayload("USDC_SPL", "local-stable-coin");
+        stableCoin.setAddress("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+        StableCoinAccountPayload stableCoinWithoutAddress = new StableCoinAccountPayload("USDT_ERC20",
+                "local-stable-coin-2");
+
         return List.of(
                 new NamedPayload("aliPaySaltOnly", aliPayWithSaltOnly),
                 new NamedPayload("aliPayWithHolderName", aliPayWithHolderName),
                 new NamedPayload("custom", custom),
                 new NamedPayload("customWithoutTexts", customWithoutTexts),
                 new NamedPayload("nationalBankDefaults", nationalBankDefaults),
-                new NamedPayload("sepaWithEmptyAcceptedCountries", sepa));
+                new NamedPayload("sepaWithEmptyAcceptedCountries", sepa),
+                new NamedPayload("stableCoin", stableCoin),
+                new NamedPayload("stableCoinWithoutAddress", stableCoinWithoutAddress));
     }
 
     private record NamedPayload(String name, PaymentAccountPayload payload) {
@@ -486,6 +494,10 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                                 .setHolderName("Sbp Holder")
                                 .setMobileNumber("+79123456789")
                                 .setBankName("Sbp Bank"))
+                        .build()),
+                testCase("stableCoin", account("USDT_TRC20")
+                        .setStableCoinAccountPayload(protobuf.StableCoinAccountPayload.newBuilder()
+                                .setAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"))
                         .build())
         );
     }
