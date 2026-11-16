@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -109,6 +110,13 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String referralId;
     @Nullable
     private String phoneKeyAndToken;
+    private boolean useNtfyNotifications;
+    private String ntfyServerUrl = "";
+    private String ntfyTopic = "";
+    @ToString.Exclude
+    private String ntfyAccessToken = "";
+    private boolean ntfyIncludeDetails;
+    private boolean ntfyAllowInsecureLan;
     private boolean useSoundForMobileNotifications = true;
     private boolean useTradeNotifications = true;
     private boolean useMarketNotifications = true;
@@ -202,6 +210,12 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setBridgeOptionOrdinal(bridgeOptionOrdinal)
                 .setTorTransportOrdinal(torTransportOrdinal)
                 .setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal)
+                .setUseNtfyNotifications(useNtfyNotifications)
+                .setNtfyServerUrl(ntfyServerUrl)
+                .setNtfyTopic(ntfyTopic)
+                .setNtfyAccessToken(ntfyAccessToken)
+                .setNtfyIncludeDetails(ntfyIncludeDetails)
+                .setNtfyAllowInsecureLan(ntfyAllowInsecureLan)
                 .setUseSoundForMobileNotifications(useSoundForMobileNotifications)
                 .setUseTradeNotifications(useTradeNotifications)
                 .setUseMarketNotifications(useMarketNotifications)
@@ -314,6 +328,12 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBitcoinNodesOptionOrdinal(),
                 proto.getReferralId().isEmpty() ? null : proto.getReferralId(),
                 proto.getPhoneKeyAndToken().isEmpty() ? null : proto.getPhoneKeyAndToken(),
+                proto.getUseNtfyNotifications(),
+                proto.getNtfyServerUrl(),
+                proto.getNtfyTopic(),
+                proto.getNtfyAccessToken(),
+                proto.getNtfyIncludeDetails(),
+                proto.getNtfyAllowInsecureLan(),
                 proto.getUseSoundForMobileNotifications(),
                 proto.getUseTradeNotifications(),
                 proto.getUseMarketNotifications(),

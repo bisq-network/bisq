@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -78,6 +79,40 @@ public class PreferencesTest {
             ((Consumer<PreferencesPayload>) invocation.getArgument(1)).accept(payload);
             return null;
         }).when(persistenceManager).readPersisted(anyString(), any(), any());
+    }
+
+    @Test
+    public void testNtfySettingsRoundTrip() {
+        PreferencesPayload payload = PreferencesPayload.fromProto(protobuf.PreferencesPayload.newBuilder()
+                .setUserCountry((protobuf.Country) CountryUtil.getDefaultCountry().toProtoMessage())
+                .setUseNtfyNotifications(true)
+                .setNtfyServerUrl("http://localhost:8080")
+                .setNtfyTopic("bisq-alerts")
+                .setNtfyAccessToken("tk_test_secret")
+                .setNtfyIncludeDetails(true)
+                .setNtfyAllowInsecureLan(true)
+                .build(), null);
+        protobuf.PreferencesPayload stored = ((protobuf.PersistableEnvelope) payload.toProtoMessage())
+                .getPreferencesPayload();
+        assertTrue(stored.getUseNtfyNotifications());
+        assertEquals("http://localhost:8080", stored.getNtfyServerUrl());
+        assertEquals("bisq-alerts", stored.getNtfyTopic());
+        assertEquals("tk_test_secret", stored.getNtfyAccessToken());
+        assertTrue(stored.getNtfyIncludeDetails());
+        assertTrue(stored.getNtfyAllowInsecureLan());
+        assertFalse(payload.toString().contains("tk_test_secret"));
+    }
+
+    @Test
+    public void testLegacyPreferencesKeepMobileBackend() {
+        PreferencesPayload payload = PreferencesPayload.fromProto(protobuf.PreferencesPayload.newBuilder()
+                .setUserCountry((protobuf.Country) CountryUtil.getDefaultCountry().toProtoMessage()).build(), null);
+        assertFalse(payload.isUseNtfyNotifications());
+        assertEquals("", payload.getNtfyServerUrl());
+        assertEquals("", payload.getNtfyTopic());
+        assertEquals("", payload.getNtfyAccessToken());
+        assertFalse(payload.isNtfyIncludeDetails());
+        assertFalse(payload.isNtfyAllowInsecureLan());
     }
 
     @Test

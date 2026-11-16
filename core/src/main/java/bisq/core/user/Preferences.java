@@ -398,7 +398,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         // For users from old versions the 4 flags a false but we want to have it true by default
         // PhoneKeyAndToken is also null so we can use that to enable the flags
-        if (prefPayload.getPhoneKeyAndToken() == null) {
+        if (prefPayload.getPhoneKeyAndToken() == null && !prefPayload.isUseNtfyNotifications()) {
             setUseSoundForMobileNotifications(true);
             setUseTradeNotifications(true);
             setUseMarketNotifications(true);
@@ -760,6 +760,36 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setPhoneKeyAndToken(String phoneKeyAndToken) {
         prefPayload.setPhoneKeyAndToken(phoneKeyAndToken);
+        requestPersistence();
+    }
+
+    public void setUseNtfyNotifications(boolean value) {
+        prefPayload.setUseNtfyNotifications(value);
+        requestPersistence();
+    }
+
+    public void setNtfyServerUrl(String value) {
+        prefPayload.setNtfyServerUrl(value);
+        requestPersistence();
+    }
+
+    public void setNtfyTopic(String value) {
+        prefPayload.setNtfyTopic(value);
+        requestPersistence();
+    }
+
+    public void setNtfyIncludeDetails(boolean value) {
+        prefPayload.setNtfyIncludeDetails(value);
+        requestPersistence();
+    }
+
+    public void setNtfyAllowInsecureLan(boolean value) {
+        prefPayload.setNtfyAllowInsecureLan(value);
+        requestPersistence();
+    }
+
+    public void setNtfyAccessToken(String value) {
+        prefPayload.setNtfyAccessToken(value);
         requestPersistence();
     }
 
@@ -1183,6 +1213,18 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setReferralId(String referralId);
 
         void setPhoneKeyAndToken(String phoneKeyAndToken);
+
+        void setUseNtfyNotifications(boolean value);
+
+        void setNtfyServerUrl(String value);
+
+        void setNtfyTopic(String value);
+
+        void setNtfyAccessToken(String value);
+
+        void setNtfyIncludeDetails(boolean value);
+
+        void setNtfyAllowInsecureLan(boolean value);
 
         void setUseSoundForMobileNotifications(boolean value);
 

@@ -19,6 +19,15 @@ package bisq.network.http;
 
 import bisq.network.Socks5ProxyProvider;
 
+import bisq.common.app.Log;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
+import org.slf4j.LoggerFactory;
+
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.UserPasswordAuthentication;
 
@@ -47,6 +56,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -94,6 +104,15 @@ class HttpClientImplStreamIsolationTest {
     }
 
     @Test
+    void proxiedPostsPreserveUtf8NotificationText() throws Exception {
+        HttpClientImpl client = new HttpClientImpl(providerOf(() -> isolatedProxy(socksServer.port())));
+        client.setBaseUrl("http://example.com/");
+        String body = "Žltý kôň — platba prijatá";
+        assertEquals("ok", client.post(body, null, null));
+        assertEquals(body, socksServer.requestBodies.poll(10, TimeUnit.SECONDS));
+    }
+
+    @Test
     void anHttpsRequestSendsTheCredentialsBeforeTls() throws Exception {
         HttpClientImpl client = new HttpClientImpl(providerOf(() -> isolatedProxy(socksServer.port())));
         client.setBaseUrl("https://example.com/");
@@ -136,6 +155,95 @@ class HttpClientImplStreamIsolationTest {
         assertEquals("example.com", handshake.host());
     }
 
+    @Test
+    void sensitiveProxiedRequestsSuppressApacheDiagnosticsAcrossLoggingBackends() throws Exception {
+        Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        Logger apache = (Logger) LoggerFactory.getLogger("org.apache.http");
+        Level previousLevel = apache.getLevel();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        root.addAppender(appender);
+        apache.setLevel(Level.TRACE);
+        java.util.logging.Logger julRoot = java.util.logging.Logger.getLogger("");
+        List<String> julMessages = new ArrayList<>();
+        java.util.logging.Handler handler = new java.util.logging.Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord record) {
+                if (isLoggable(record) && record.getLoggerName().startsWith("org.apache.http."))
+                    julMessages.add(record.getMessage());
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        handler.setLevel(java.util.logging.Level.ALL);
+        julRoot.addHandler(handler);
+        java.util.logging.Logger retries = java.util.logging.Logger.getLogger("org.apache.http.impl.execchain.RetryExec");
+        java.util.logging.Level previousRetryLevel = retries.getLevel();
+        retries.setLevel(java.util.logging.Level.ALL);
+        HttpClientImpl client = new HttpClientImpl(providerOf(() -> isolatedProxy(socksServer.port())));
+        try {
+            client.setSensitive(true);
+            client.setBaseUrl("http://private-notification.example/");
+            assertEquals("ok", client.post("private-trade-123", "Authorization", "Bearer tk_private"));
+            assertEquals("private-notification.example", socksServer.nextHandshake().host());
+
+            client.setBaseUrl("https://private-notification.example/");
+            assertThrows(IOException.class, () -> client.get("private-topic", "Authorization", "Bearer tk_private"));
+            assertEquals("private-notification.example", socksServer.nextHandshake().host());
+
+            try (Log.HttpLoggingScope ignored = Log.suppressHttpClientLogging()) {
+                retries.info("private-notification.example");
+                for (String name : List.of("org.apache.http.headers", "org.apache.http.wire")) {
+                    LoggerFactory.getLogger(name).error("Authorization: Bearer tk_private private-trade-123");
+                    java.util.logging.Logger child = java.util.logging.Logger.getLogger(name);
+                    java.util.logging.Level previousChildLevel = child.getLevel();
+                    child.setLevel(java.util.logging.Level.ALL);
+                    try {
+                        child.info("Authorization: Bearer tk_private private-trade-123");
+                    } finally {
+                        child.setLevel(previousChildLevel);
+                    }
+                }
+            }
+            assertTrue(julMessages.isEmpty());
+            assertFalse(appender.list.stream().anyMatch(event -> event.getLoggerName().startsWith("org.apache.http.")));
+            String logs = appender.list.stream().map(ILoggingEvent::getFormattedMessage)
+                    .reduce("", (a, b) -> a + "\n" + b);
+            for (String secret : List.of("private-notification.example", "private-topic", "tk_private", "private-trade-123"))
+                assertFalse(logs.contains(secret));
+            LoggerFactory.getLogger("bisq.network.http.privacyTest").warn("Unrelated diagnostics remain available");
+            assertTrue(appender.list.stream().anyMatch(event -> event.getMessage().equals("Unrelated diagnostics remain available")));
+            retries.info("Normal Apache diagnostics after request");
+            apache.warn("Normal Apache diagnostics after request");
+            assertTrue(julMessages.contains("Normal Apache diagnostics after request"));
+            assertTrue(appender.list.stream().anyMatch(event -> event.getMessage().equals("Normal Apache diagnostics after request")));
+            try (Log.HttpLoggingScope ignored = Log.suppressHttpClientLogging()) {
+                Thread otherRequest = new Thread(() -> {
+                    retries.info("Concurrent non-sensitive request");
+                    apache.warn("Concurrent non-sensitive request");
+                });
+                otherRequest.start();
+                otherRequest.join(5_000);
+                assertFalse(otherRequest.isAlive());
+            }
+            assertTrue(julMessages.contains("Concurrent non-sensitive request"));
+            assertTrue(appender.list.stream().anyMatch(event -> event.getMessage().equals("Concurrent non-sensitive request")));
+        } finally {
+            client.shutDown();
+            root.detachAppender(appender);
+            appender.stop();
+            apache.setLevel(previousLevel);
+            retries.setLevel(previousRetryLevel);
+            julRoot.removeHandler(handler);
+        }
+    }
+
     private interface ProxySupplier {
         Socks5Proxy get() throws UnknownHostException;
     }
@@ -174,6 +282,7 @@ class HttpClientImplStreamIsolationTest {
             return thread;
         });
         private final BlockingQueue<Handshake> handshakes = new LinkedBlockingQueue<>();
+        private final BlockingQueue<String> requestBodies = new LinkedBlockingQueue<>();
         private volatile boolean acceptUsernameAndPassword = true;
 
         private FakeSocksServer() throws IOException {
@@ -241,7 +350,10 @@ class HttpClientImplStreamIsolationTest {
                 output.flush();
 
                 if (port == 80) {
-                    readHttpRequestHead(input);
+                    String headers = readHttpRequestHead(input);
+                    int length = headers.lines().filter(line -> line.regionMatches(true, 0, "Content-Length:", 0, 15))
+                            .mapToInt(line -> Integer.parseInt(line.substring(15).trim())).findFirst().orElse(0);
+                    requestBodies.add(new String(input.readNBytes(length), StandardCharsets.UTF_8));
                     output.write(("HTTP/1.0 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok")
                             .getBytes(StandardCharsets.US_ASCII));
                     output.flush();
@@ -256,11 +368,15 @@ class HttpClientImplStreamIsolationTest {
         }
 
         // Reads up to the empty line after the headers
-        private static void readHttpRequestHead(DataInputStream input) throws IOException {
+        private static String readHttpRequestHead(DataInputStream input) throws IOException {
+            StringBuilder headers = new StringBuilder();
             int lastFourBytes = 0;
             while (lastFourBytes != 0x0D0A0D0A) {
-                lastFourBytes = (lastFourBytes << 8) | input.readUnsignedByte();
+                int value = input.readUnsignedByte();
+                headers.append((char) value);
+                lastFourBytes = (lastFourBytes << 8) | value;
             }
+            return headers.toString();
         }
 
         @Override

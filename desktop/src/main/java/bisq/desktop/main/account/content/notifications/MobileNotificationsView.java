@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -32,6 +33,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileNotificationService;
+import bisq.core.notifications.NtfyNotificationService;
 import bisq.core.notifications.alerts.DisputeMsgEvents;
 import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
@@ -89,6 +91,12 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private final MarketAlerts marketAlerts;
     private final MobileNotificationService mobileNotificationService;
 
+    private ComboBox<String> backendComboBox;
+    private InputTextField ntfyServerUrlField, ntfyTopicField;
+    private PasswordTextField ntfyAccessTokenField;
+    private Button saveNtfyButton, testNtfyButton;
+    private boolean ntfyTestPending;
+    private ToggleButton ntfyIncludeDetailsToggle, ntfyAllowInsecureLanToggle;
     private TextField tokenInputTextField;
     private InputTextField priceAlertHighInputTextField, priceAlertLowInputTextField, marketAlertTriggerInputTextField;
     private ToggleButton useSoundToggleButton, tradeToggleButton, marketToggleButton, priceToggleButton;
@@ -142,6 +150,33 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         addListeners();
 
+        backendComboBox.getSelectionModel().select(preferences.isUseNtfyNotifications() ? 1 : 0);
+        ntfyServerUrlField.setText(preferences.getNtfyServerUrl());
+        ntfyTopicField.setText(preferences.getNtfyTopic());
+        ntfyAccessTokenField.setText(preferences.getNtfyAccessToken());
+        ntfyIncludeDetailsToggle.setSelected(preferences.isNtfyIncludeDetails());
+        ntfyAllowInsecureLanToggle.setSelected(preferences.isNtfyAllowInsecureLan());
+        backendComboBox.setOnAction(e -> {
+            preferences.setUseNtfyNotifications(backendComboBox.getSelectionModel().getSelectedIndex() == 1);
+            updateBackendFields();
+        });
+        saveNtfyButton.setOnAction(e -> saveNtfySettings());
+        testNtfyButton.setOnAction(e -> {
+            if (saveNtfySettings() && !ntfyTestPending) {
+                ntfyTestPending = true;
+                updateBackendFields();
+                mobileNotificationService.sendNtfyTestMessage(result -> {
+                    ntfyTestPending = false;
+                    updateBackendFields();
+                    new Popup().feedback(Res.get("account.notifications.ntfy.testSuccess")).show();
+                }, error -> {
+                    ntfyTestPending = false;
+                    updateBackendFields();
+                    new Popup().error(Res.get("account.notifications.ntfy.testFailure")).show();
+                });
+            }
+        });
+
         // setup
         tokenInputTextField.textProperty().addListener(tokenInputTextFieldListener);
         downloadButton.setOnAction(e -> onDownload());
@@ -183,7 +218,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             eraseButton.setDisable(true);
             //testMsgButton.setDisable(true);
         }
-        setDisableForSetupFields(!mobileNotificationService.isSetupConfirmationSent());
+        updateBackendFields();
         updateMarketAlertFields();
         fillPriceAlertFields();
         updatePriceAlertFields();
@@ -192,6 +227,10 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     @Override
     protected void deactivate() {
         removeListeners();
+        backendComboBox.setOnAction(null);
+        saveNtfyButton.setOnAction(null);
+        testNtfyButton.setOnAction(null);
+        ntfyAccessTokenField.clear();
 
         // setup
         tokenInputTextField.textProperty().removeListener(tokenInputTextFieldListener);
@@ -348,10 +387,13 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createSetupFields() {
-        addTitledGroupBg(root, gridRow, 3, Res.get("account.notifications.setup.title"));
-        downloadButton = addButton(root, gridRow,
-                Res.get("account.notifications.download.label"),
-                Layout.TWICE_FIRST_ROW_DISTANCE);
+        addTitledGroupBg(root, gridRow, 11, Res.get("account.notifications.setup.title"));
+        backendComboBox = FormBuilder.addComboBox(root, gridRow,
+                Res.get("account.notifications.backend"), Layout.TWICE_FIRST_ROW_DISTANCE);
+        backendComboBox.setItems(FXCollections.observableArrayList(
+                Res.get("account.notifications.backend.mobile"), "ntfy"));
+        downloadButton = addButton(root, ++gridRow,
+                Res.get("account.notifications.download.label"));
 
         tokenInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("account.notifications.email.label"));
@@ -366,6 +408,18 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 Res.get("account.notifications.erase.label"),
                 Res.get("account.notifications.erase.title")).second;
         eraseButton.setId("notification-erase-button");
+        ntfyServerUrlField = addInputTextField(root, ++gridRow, Res.get("account.notifications.ntfy.url"));
+        ntfyTopicField = addInputTextField(root, ++gridRow, Res.get("account.notifications.ntfy.topic"));
+        ntfyAccessTokenField = addPasswordTextField(root, ++gridRow, Res.get("account.notifications.ntfy.token"));
+        ntfyIncludeDetailsToggle = addSlideToggleButton(root, ++gridRow,
+                Res.get("account.notifications.ntfy.includeDetails"));
+        ntfyAllowInsecureLanToggle = addSlideToggleButton(root, ++gridRow,
+                Res.get("account.notifications.ntfy.allowInsecureLan"));
+        addMultilineLabel(root, ++gridRow, Res.get("account.notifications.ntfy.info"));
+        Tuple2<Button, Button> ntfyButtons = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
+                Res.get("account.notifications.ntfy.save"), Res.get("account.notifications.ntfy.test"));
+        saveNtfyButton = ntfyButtons.first;
+        testNtfyButton = ntfyButtons.second;
     }
 
     private void createSettingsFields() {
@@ -560,6 +614,43 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Setup/Settings
+    private boolean saveNtfySettings() {
+        String url = ntfyServerUrlField.getText().strip();
+        String topic = ntfyTopicField.getText().strip();
+        String token = ntfyAccessTokenField.getText().strip();
+        try {
+            NtfyNotificationService.validate(url, topic, token, ntfyAllowInsecureLanToggle.isSelected());
+        } catch (IllegalArgumentException e) {
+            new Popup().warning(Res.get("account.notifications.ntfy.invalid")).show();
+            return false;
+        }
+        preferences.setNtfyServerUrl(url);
+        preferences.setNtfyTopic(topic);
+        preferences.setNtfyAccessToken(token);
+        preferences.setNtfyIncludeDetails(ntfyIncludeDetailsToggle.isSelected());
+        preferences.setNtfyAllowInsecureLan(ntfyAllowInsecureLanToggle.isSelected());
+        updateBackendFields();
+        return true;
+    }
+
+    private void updateBackendFields() {
+        boolean ntfy = preferences.isUseNtfyNotifications();
+        downloadButton.setDisable(ntfy);
+        tokenInputTextField.setDisable(ntfy);
+        ntfyServerUrlField.setDisable(!ntfy);
+        ntfyTopicField.setDisable(!ntfy);
+        ntfyAccessTokenField.setDisable(!ntfy);
+        ntfyIncludeDetailsToggle.setDisable(!ntfy);
+        ntfyAllowInsecureLanToggle.setDisable(!ntfy);
+        saveNtfyButton.setDisable(!ntfy);
+        testNtfyButton.setDisable(!ntfy || ntfyTestPending);
+        setDisableForSetupFields(!mobileNotificationService.isNotificationSetupComplete());
+        eraseButton.setDisable(ntfy || !mobileNotificationService.isSetupConfirmationSent());
+        useSoundToggleButton.setDisable(ntfy || !mobileNotificationService.isNotificationSetupComplete());
+        updateMarketAlertFields();
+        updatePriceAlertFields();
+    }
+
     private void applyKeyAndToken(String keyAndToken) {
         if (keyAndToken != null && !keyAndToken.isEmpty()) {
             boolean isValid = mobileNotificationService.applyKeyAndToken(keyAndToken);
@@ -603,7 +694,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void updateMarketAlertFields() {
-        boolean setupConfirmationSent = mobileNotificationService.isSetupConfirmationSent();
+        boolean setupConfirmationSent = mobileNotificationService.isNotificationSetupComplete();
         boolean selected = marketToggleButton.isSelected();
         boolean disabled = !selected || !setupConfirmationSent;
         boolean isPaymentAccountSelected = paymentAccountsComboBox.getSelectionModel().getSelectedItem() != null;
@@ -647,7 +738,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
     private void updatePriceAlertFields() {
-        boolean setupConfirmationSent = mobileNotificationService.isSetupConfirmationSent();
+        boolean setupConfirmationSent = mobileNotificationService.isNotificationSetupComplete();
         boolean selected = priceToggleButton.isSelected();
         boolean disable = !setupConfirmationSent ||
                 !selected;

@@ -71,6 +71,7 @@ public class MobileNotificationService {
     private final MobileMessageEncryption mobileMessageEncryption;
     private final MobileNotificationValidator mobileNotificationValidator;
     private final HttpClient httpClient;
+    private final NtfyNotificationService ntfyNotificationService;
 
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "MobileNotificationService", 10, 15, 10 * 60);
@@ -94,11 +95,13 @@ public class MobileNotificationService {
                                      MobileNotificationValidator mobileNotificationValidator,
                                      MobileModel mobileModel,
                                      HttpClient httpClient,
+                                     NtfyNotificationService ntfyNotificationService,
                                      @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalHost) {
         this.preferences = preferences;
         this.mobileMessageEncryption = mobileMessageEncryption;
         this.mobileNotificationValidator = mobileNotificationValidator;
         this.httpClient = httpClient;
+        this.ntfyNotificationService = ntfyNotificationService;
         this.mobileModel = mobileModel;
 
         // httpClient.setBaseUrl(useLocalHost ? DEV_URL_LOCALHOST : URL);
@@ -172,9 +175,6 @@ public class MobileNotificationService {
                                 boolean useSound,
                                 Consumer<String> resultHandler,
                                 Consumer<Throwable> errorHandler) throws Exception {
-        if (mobileModel.getKey() == null)
-            return false;
-
         boolean doSend;
         switch (message.getMobileMessageType()) {
             case SETUP_CONFIRMATION:
@@ -199,6 +199,17 @@ public class MobileNotificationService {
         }
 
         if (!doSend)
+            return false;
+
+        if (preferences.isUseNtfyNotifications()) {
+            if (message.getMobileMessageType() == MobileMessageType.SETUP_CONFIRMATION ||
+                    message.getMobileMessageType() == MobileMessageType.ERASE)
+                return false;
+            sendNtfyMessage(message, resultHandler, errorHandler);
+            return true;
+        }
+
+        if (mobileModel.getKey() == null)
             return false;
 
         log.info("Send message: '{}'", message.getMessage());
@@ -227,6 +238,46 @@ public class MobileNotificationService {
 
         doSendMessage(iv, cipher, useSound, resultHandler, errorHandler);
         return true;
+    }
+
+    public boolean isNotificationSetupComplete() {
+        if (!preferences.isUseNtfyNotifications())
+            return setupConfirmationSent;
+        try {
+            NtfyNotificationService.validate(preferences.getNtfyServerUrl(), preferences.getNtfyTopic(),
+                    preferences.getNtfyAccessToken(), preferences.isNtfyAllowInsecureLan());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public void sendNtfyTestMessage(Consumer<String> resultHandler, Consumer<Throwable> errorHandler) {
+        sendNtfyMessage(new MobileMessage("Bisq", "Test notification", MobileMessageType.TRADE),
+                resultHandler, errorHandler);
+    }
+
+    private void sendNtfyMessage(MobileMessage message, Consumer<String> resultHandler,
+                                 Consumer<Throwable> errorHandler) {
+        String serverUrl = preferences.getNtfyServerUrl();
+        String topic = preferences.getNtfyTopic();
+        String accessToken = preferences.getNtfyAccessToken();
+        boolean includeDetails = preferences.isNtfyIncludeDetails();
+        boolean allowInsecureLan = preferences.isNtfyAllowInsecureLan();
+        NtfyNotificationService.validate(serverUrl, topic, accessToken, allowInsecureLan);
+        ListenableFuture<String> future = executorService.submit(() ->
+                ntfyNotificationService.publish(serverUrl, topic, accessToken, message, includeDetails, allowInsecureLan));
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(String result) {
+                UserThread.execute(() -> resultHandler.accept("success"));
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> errorHandler.accept(new Exception("ntfy delivery failed")));
+            }
+        }, MoreExecutors.directExecutor());
     }
 
     public void sendEraseMessage() throws Exception {

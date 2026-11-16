@@ -20,6 +20,7 @@ package bisq.network.http;
 import bisq.network.Socks5ProxyProvider;
 
 import bisq.common.app.DevEnv;
+import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
@@ -119,6 +120,7 @@ public class HttpClientImpl implements HttpClient {
     @Getter
     private volatile String baseUrl;
     private volatile boolean ignoreSocks5Proxy;
+    private volatile boolean sensitive;
     @Getter
     private final String uid;
     private final AtomicBoolean hasPendingRequest = new AtomicBoolean(false);
@@ -161,6 +163,11 @@ public class HttpClientImpl implements HttpClient {
     @Override
     public void setIgnoreSocks5Proxy(boolean ignoreSocks5Proxy) {
         this.ignoreSocks5Proxy = ignoreSocks5Proxy;
+    }
+
+    @Override
+    public void setSensitive(boolean sensitive) {
+        this.sensitive = sensitive;
     }
 
     @Override
@@ -211,7 +218,7 @@ public class HttpClientImpl implements HttpClient {
         checkNotNull(baseUrl, "baseUrl must be set before calling doRequest");
         checkArgument(hasPendingRequest.compareAndSet(false, true),
                 "We got called on the same HttpClient again while a request is still open.");
-        try {
+        try (Log.HttpLoggingScope ignored = sensitive ? Log.suppressHttpClientLogging() : null) {
             // Validate the *effective* URL the network stack will see. For GET we
             // append param to baseUrl, so a baseUrl with no trailing slash plus a
             // param starting with '@', '?', or '#' could shift the effective host
@@ -264,12 +271,16 @@ public class HttpClientImpl implements HttpClient {
                 // Dev/testing escape hatch: send directly without Tor.
                 log.info("No SOCKS5 proxy available; sending {} clearnet (no Tor) to non-local {} " +
                                 "because allowClearnetHttpRequests=true",
-                        httpMethod, baseUrl);
+                        httpMethod, sensitive ? "[redacted]" : baseUrl);
                 return requestWithoutProxy(baseUrl, param, httpMethod, headerKey, headerValue);
             }
 
             throw new IOException("No SOCKS5 proxy available, refusing to send "
                     + httpMethod + " to non-local " + baseUrl);
+        } catch (IOException e) {
+            if (sensitive)
+                throw new IOException("Sensitive HTTP request failed");
+            throw e;
         } finally {
             hasPendingRequest.set(false);
         }
@@ -281,7 +292,8 @@ public class HttpClientImpl implements HttpClient {
                                        @Nullable String headerKey,
                                        @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
-        log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}",
+                sensitive ? "[redacted]" : baseUrl, sensitive ? "[redacted]" : param, httpMethod);
         try {
             String spec = httpMethod == HttpMethod.GET ? baseUrl + param : baseUrl;
             // URI.toURL forces well-formed URLs and rejects characters that the
@@ -307,11 +319,11 @@ public class HttpClientImpl implements HttpClient {
             if (isSuccess(responseCode)) {
                 String response = readBoundedUtf8(conn.getInputStream());
                 log.debug("Response from {} with param {} took {} ms. Data size:{}, response: {}",
-                        baseUrl,
-                        param,
+                        sensitive ? "[redacted]" : baseUrl,
+                        sensitive ? "[redacted]" : param,
                         System.currentTimeMillis() - ts,
                         Utilities.readableFileSize(response.getBytes(StandardCharsets.UTF_8).length),
-                        Utilities.toTruncatedString(response));
+                        sensitive ? "[redacted]" : Utilities.toTruncatedString(response));
                 return response;
             } else {
                 InputStream errorStream = conn.getErrorStream();
@@ -319,23 +331,25 @@ public class HttpClientImpl implements HttpClient {
                     String error = readBoundedUtf8(errorStream);
                     errorStream.close();
                     log.info("Received errorMsg '{}' with responseCode {} from {}. Response took: {} ms. param: {}",
-                            error,
+                            sensitive ? "[redacted]" : error,
                             responseCode,
-                            baseUrl,
+                            sensitive ? "[redacted]" : baseUrl,
                             System.currentTimeMillis() - ts,
-                            param);
-                    throw new HttpException(error, responseCode);
+                            sensitive ? "[redacted]" : param);
+                    throw new HttpException(sensitive ? "Request failed" : error, responseCode);
                 } else {
                     log.info("Response with responseCode {} from {}. Response took: {} ms. param: {}",
                             responseCode,
-                            baseUrl,
+                            sensitive ? "[redacted]" : baseUrl,
                             System.currentTimeMillis() - ts,
-                            param);
+                            sensitive ? "[redacted]" : param);
                     throw new HttpException("Request failed", responseCode);
                 }
             }
         } catch (Exception e) {
             // HttpException ends up here too; callers retrieve it via getCause().
+            if (sensitive)
+                throw new IOException("Sensitive HTTP request failed");
             throw new IOException("Direct request to " + baseUrl + " failed: " + rootCauseMessage(e), e);
         } finally {
             HttpURLConnection c = connection;
@@ -361,7 +375,8 @@ public class HttpClientImpl implements HttpClient {
                                       @Nullable String headerKey,
                                       @Nullable String headerValue) throws IOException {
         long ts = System.currentTimeMillis();
-        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}",
+                sensitive ? "[redacted]" : baseUrl, sensitive ? "[redacted]" : param, httpMethod);
 
         // Register socket factories that pass the unresolved hostname through to
         // the SOCKS proxy so DNS resolution happens on the Tor exit, never on the
@@ -421,24 +436,26 @@ public class HttpClientImpl implements HttpClient {
                 String response = entity != null ? readBoundedUtf8(entity.getContent()) : "";
                 if (isSuccess(statusCode)) {
                     log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
-                            baseUrl,
+                            sensitive ? "[redacted]" : baseUrl,
                             System.currentTimeMillis() - ts,
                             Utilities.readableFileSize(response.getBytes(StandardCharsets.UTF_8).length),
-                            Utilities.toTruncatedString(response),
-                            param);
+                            sensitive ? "[redacted]" : Utilities.toTruncatedString(response),
+                            sensitive ? "[redacted]" : param);
                     return response;
                 } else {
                     log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
-                            response,
+                            sensitive ? "[redacted]" : response,
                             statusCode,
-                            baseUrl,
+                            sensitive ? "[redacted]" : baseUrl,
                             System.currentTimeMillis() - ts,
-                            param);
-                    throw new HttpException(response, statusCode);
+                            sensitive ? "[redacted]" : param);
+                    throw new HttpException(sensitive ? "Request failed" : response, statusCode);
                 }
             }
         } catch (Exception e) {
             // HttpException ends up here too; callers retrieve it via getCause().
+            if (sensitive)
+                throw new IOException("Sensitive HTTP request failed");
             throw new IOException("Request via SOCKS proxy to " + baseUrl + " failed: " + rootCauseMessage(e), e);
         } finally {
             CloseableHttpClient client = closeableHttpClient;
@@ -459,7 +476,7 @@ public class HttpClientImpl implements HttpClient {
                 return new HttpGet(baseUrl + param);
             case POST:
                 HttpPost httpPost = new HttpPost(baseUrl);
-                HttpEntity httpEntity = new StringEntity(param);
+                HttpEntity httpEntity = new StringEntity(param, StandardCharsets.UTF_8);
                 httpPost.setEntity(httpEntity);
                 return httpPost;
 
@@ -562,6 +579,8 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public String toString() {
+        if (sensitive)
+            return "HttpClientImpl{[redacted]}";
         return "HttpClientImpl{" +
                 "\n     socks5ProxyProvider=" + socks5ProxyProvider +
                 ",\n     baseUrl='" + baseUrl + '\'' +
