@@ -34,11 +34,22 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
 import org.mockito.MockedStatic;
+
+import org.slf4j.LoggerFactory;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -128,6 +139,38 @@ public class ProtectedStorageEntryInvalidSignatureTest {
         assertFalse(copyWithOtherReceiver.isValidForAddOperation());
 
         assertTrue(validEntry.isValidForAddOperation());
+    }
+
+    // Each invalid entry that a peer makes new writes one line, so the line must not grow with the payload
+    @Test
+    public void theLogLineOfAFailedVerificationDoesNotHoldThePayload() throws Exception {
+        KeyPair owner = TestUtils.generateKeyPair();
+        ProtectedStoragePayload payload = new ProtectedStoragePayloadStub(owner.getPublic());
+        byte[] serializedPayload = new byte[50_000];
+        when(payload.toProtoMessage().toByteArray()).thenReturn(serializedPayload);
+        when(payload.toProtoMessage().getSerializedSize()).thenReturn(serializedPayload.length);
+        ProtectedStorageEntry entry = new ProtectedStorageEntry(payload, owner.getPublic(), 1,
+                signatureOfOtherData(owner), CLOCK);
+
+        Logger logger = (Logger) LoggerFactory.getLogger(ProtectedStorageEntry.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            assertFalse(entry.isValidForAddOperation());
+
+            List<ILoggingEvent> warnings = appender.list.stream()
+                    .filter(event -> event.getLevel() == Level.WARN)
+                    .collect(Collectors.toList());
+            assertEquals(1, warnings.size());
+            String message = warnings.get(0).getFormattedMessage();
+            assertTrue(message.length() < 500, "The log line has " + message.length() + " characters");
+            assertTrue(message.contains(ProtectedStoragePayloadStub.class.getSimpleName()));
+            assertTrue(message.contains(String.valueOf(serializedPayload.length)));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
     }
 
     private static ProtectedStorageEntry buildSignedEntry(ProtectedStoragePayload payload,

@@ -27,6 +27,8 @@ verification before.
   signature is not well formed, is not remembered either.
 - A node remembers at most 10000 failed verifications. When it would remember more, it forgets the
   least recently used ones.
+- The log line of a failed verification names the type and the size of the payload and the signed
+  hash, not the content of the payload.
 
 ## Rationale
 
@@ -44,6 +46,8 @@ verification before.
   the receiver key of a mailbox entry, so its failure must not be remembered: a copy that differs only
   in such a value can be valid.
 - About 150 bytes per remembered verification, 1.5 MB for the bound.
+- A peer can make each invalid entry new at no cost, and a payload can have tens of kB. With the
+  payload in the log line, one bundle of such entries wrote megabytes of log.
 
 ## Known gaps
 
@@ -69,7 +73,6 @@ verification before.
   tolerance of the existing rule violations a penalty could close connections to honest peers and to
   seed nodes. It needs a decision about the threshold and a compatibility review
   (`storage-invalid-signature-connection-penalty`).
-- Each failed verification logs the payload as hex.
 - As the creation date is not signed, a valid entry can also be sent again with another date. That is
   a separate item (`storage-entry-replay-redate`).
 

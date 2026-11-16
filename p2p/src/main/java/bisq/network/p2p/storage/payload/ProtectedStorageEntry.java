@@ -239,9 +239,12 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
             if (!result) {
                 INVALID_SIGNATURES.put(verifiedValues, Boolean.TRUE);
-                log.warn("Invalid signature for {}.\nSerialized data as hex={}}",
+                // A peer can make each invalid entry new at no cost, and a payload can have tens of kB, so we do not
+                // log the payload itself
+                log.warn("Invalid signature for {} of {} bytes. Hash of payload and sequence number={}",
                         protectedStoragePayload.getClass().getSimpleName(),
-                        Hex.toHexString(protectedStoragePayload.toProtoMessage().toByteArray()));
+                        protectedStoragePayload.toProtoMessage().getSerializedSize(),
+                        Hex.toHexString(hashOfDataAndSeqNr));
             }
 
             return result;
