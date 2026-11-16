@@ -25,6 +25,10 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.handlers.ErrorMessageHandler;
 
 public interface MakerProtocol {
+    // After a take offer request the maker waits that long for the next message of the taker, with which the maker
+    // removes the offer. Without that message the trade gets the timeout error.
+    int TAKE_OFFER_HANDSHAKE_TIMEOUT_SEC = 120;
+
     void handleTakeOfferRequest(InputsForDepositTxRequest message,
                                 NodeAddress taker,
                                 ErrorMessageHandler errorMessageHandler);
