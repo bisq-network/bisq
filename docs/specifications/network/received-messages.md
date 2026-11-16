@@ -117,3 +117,8 @@ blocks and the regular state hashes come from seed nodes, which are normally not
 peers, as nodes do not report seed nodes to other nodes. The DAO monitor view sends its request for
 the state hashes from the DAO genesis height to a peer that the user chooses, which can be such a
 peer.
+
+Seed nodes are to be updated before the other nodes. Nodes request the accounting blocks and the
+state hashes mainly from seed nodes, and a node of this version gets the responses above only from
+seed nodes of this version. A block response of an earlier version holds at most 3000 blocks, at most
+about 8 MB with the blocks up to 1.10.12, so it stays below 10 MB.
