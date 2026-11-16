@@ -57,7 +57,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -151,18 +150,31 @@ class TradeManagerTakeOfferHandshakeTest {
         }
     }
 
-    // After the system clock was set back, the request of the earlier trade seems to be in the future. Its handshake
-    // must not block the offer for as long as the clock was set back: after a restart, for example, no timeout of the
-    // protocol sets the error of the trade.
+    // After the system clock was set back, the request of the earlier trade seems to be in the future. A clock set
+    // back by less than the timeout keeps the handshake pending: the timer of the protocol on the desktop does not
+    // follow the clock, and the offer is available again after its reservation. A request at least the timeout later
+    // than now does not block the offer, as it would otherwise stay blocked for as long as the clock was set back:
+    // after a restart, for example, no timeout of the protocol sets the error of the trade.
     @ParameterizedTest
-    @ValueSource(longs = {1, 60_000, 3_600_000})
-    void handshakeIsNotPendingIfTheRequestIsLaterThanNow(long msAfterNow) {
-        addTrade(OFFER_ID, NOW + msAfterNow, false);
+    @CsvSource({
+            "1, true",
+            "60000, true",
+            "119999, true",
+            "120000, false",
+            "3600000, false"
+    })
+    void handshakeIsPendingIfTheRequestIsLessThanTheTimeoutLaterThanNow(long requestLaterThanNowInMs,
+                                                                         boolean pending) {
+        addTrade(OFFER_ID, NOW + requestLaterThanNowInMs, false);
 
-        assertFalse(tradeManager.isTakeOfferHandshakePending(OFFER_ID));
+        assertEquals(pending, tradeManager.isTakeOfferHandshakePending(OFFER_ID));
         receiveTakeOfferRequest();
 
-        assertRequestHandled();
+        if (pending) {
+            assertRequestIgnored();
+        } else {
+            assertRequestHandled();
+        }
     }
 
     // A failure of the maker's first step frees the offer at once, and another taker can take it

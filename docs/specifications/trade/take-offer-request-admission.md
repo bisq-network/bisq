@@ -21,8 +21,8 @@ The handshake of a request is pending while all of the following hold:
 
 - the trade of the request is in the maker's pending trades;
 - the trade has no error;
-- less than 120 seconds have passed since the request, by the system clock. If the system clock
-  shows a time before the request, the handshake is not pending.
+- the system clock shows a time less than 120 seconds after the request and less than 120 seconds
+  before it.
 
 ## Rules
 
@@ -63,12 +63,17 @@ also holds after a restart, where the reservation is gone and no timer runs. A m
 in the wrong phase stops the timer of the maker's protocol without an error; it does not end the
 handshake.
 
-A system clock that was set back shows a time before the request. Counted as less than 120 seconds,
-such a time would block the offer for as long as the clock was set back, for example one hour, when
-no timer of the protocol sets the error of the trade before: after a restart, after the timer was
-stopped, or on a node without a graphical user interface, whose timers use the system clock as well.
-So the handshake is not pending then, and the offer can be taken again, as with makers of earlier
-versions once the reservation has ended.
+A system clock that was set back shows a time before the request. If every such time counted as
+pending, the handshake would block the offer for as long as the clock was set back, for example one
+hour, when no timer of the protocol sets the error of the trade before: after a restart, after the
+timer was stopped, or on a node without a graphical user interface, whose timers use the system
+clock as well. If no such time counted, a small correction of the clock during a handshake would end
+it early: the timer of the desktop application does not follow the system clock and sets the timeout
+error 120 seconds after the request, but after the reservation another request would be accepted
+before that. So a time less than 120 seconds before the request counts as pending, like a time less
+than 120 seconds after it. A clock set back by less than 120 seconds keeps the handshake pending. A
+clock set back further blocks the offer only while it shows a time within 120 seconds of the
+request, not for the whole time it was set back.
 
 ## Compatibility
 
@@ -100,8 +105,11 @@ could take the offer again after the 60 seconds of the reservation.
   it. If the step fails outside of its tasks, the trade has no error, and the offer is free again
   only when the 120 seconds have passed.
 - The 120 seconds are measured with the system clock, so a change of the clock makes the time
-  shorter or longer. A clock that is set back to before a request ends the handshake of that request
-  at once, so a second request can then replace the first trade, as before.
+  shorter or longer. While the clock shows a time 120 seconds or more before a request, for example
+  after it was set back by more than 120 seconds, the handshake of that request is not pending, and
+  a second request can replace the first trade, as before. When the clock reaches the time 120
+  seconds before the request again, a trade that still has no error blocks the offer again until the
+  clock shows 120 seconds after the request.
 - Every take offer request that the maker accepts and whose taker does not continue leaves a trade
   in the maker's pending trades.
 - Offers which share one maker fee transaction have different IDs. A request for one of them is not
