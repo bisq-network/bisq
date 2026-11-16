@@ -190,7 +190,7 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxShapeRejectsRbfEnabledSequence() {
+    void checkCanonicalDepositTxShapeRejectsZeroSequence() {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(0);
 
@@ -201,7 +201,7 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxShapeRejectsLockTimeOptInSequence() {
+    void checkCanonicalDepositTxShapeRejectsSequenceOneBelowFinal() {
         // NO_SEQUENCE - 1 (0xFFFFFFFE) does not opt in to RBF, but the taker signs a tx with NO_SEQUENCE inputs,
         // which has another txid
         Transaction tx = canonicalTx();
@@ -426,7 +426,7 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxFieldsRejectsRbfEnabledSequence() {
+    void checkCanonicalDepositTxFieldsRejectsZeroSequence() {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(0);
 
@@ -435,7 +435,7 @@ class DepositTxValidationTest {
     }
 
     @Test
-    void checkCanonicalDepositTxFieldsRejectsLockTimeOptInSequence() {
+    void checkCanonicalDepositTxFieldsRejectsSequenceOneBelowFinal() {
         Transaction tx = canonicalTx();
         tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
 
