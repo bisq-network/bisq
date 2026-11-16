@@ -40,7 +40,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Reads messages with the framing of docs/specifications/network/received-messages.md: a varint length prefix,
- * followed by the serialized envelope. It is the receive part of NetworkEnvelopeSocket of Bisq 2, with the same code.
+ * followed by the serialized envelope. It is the receive part of NetworkEnvelopeSocket of Bisq 2, with the same code,
+ * except for the exception at an end of the stream inside the length prefix (see {@link #receiveNextMessage()}).
  * The owner of the stream passes the size limit of the envelope.
  */
 class NetworkEnvelopeReader {
@@ -88,10 +89,10 @@ class NetworkEnvelopeReader {
      * unknown.
      *
      * @return The bytes of the next message, or null if the input stream ends before the first byte of a length prefix.
-     * @throws InvalidProtocolBufferException if the length prefix has more than 5 bytes, if the length exceeds the size
-     *                                        limit (before any byte of the message is read), or if the stream ends
-     *                                        inside the length prefix.
-     * @throws EOFException                   if the stream ends inside the message.
+     * @throws InvalidProtocolBufferException if the length prefix has more than 5 bytes, or if the length exceeds the
+     *                                        size limit (before any byte of the message is read).
+     * @throws EOFException                   if the stream ends inside a length prefix of at most 5 bytes or inside the
+     *                                        message.
      * @throws SocketTimeoutException         if the bytes of the message do not arrive within
      *                                        {@link #MAX_MESSAGE_READ_DURATION}.
      */
@@ -108,7 +109,18 @@ class NetworkEnvelopeReader {
         // become 0. readRawVarint64 keeps 64 bits, but it reads up to 10 bytes and drops higher bits of a prefix of 10
         // bytes. A prefix of at most 5 bytes has at most 35 bits, so the check of its size after the call makes the
         // decoded length exact. An invalid prefix of 6 to 10 bytes has been read then, but no byte of the message.
-        long size = lengthPrefixInput.readRawVarint64();
+        long size;
+        try {
+            size = lengthPrefixInput.readRawVarint64();
+        } catch (InvalidProtocolBufferException e) {
+            // The decoder rejects a varint without an end only after 10 bytes. So with fewer than 5 bytes, the stream
+            // ended inside a prefix which can still be valid. Bisq 2 keeps the exception, but Connection closes for a
+            // rule violation at it, so we end as at the end of the stream inside a message.
+            if (lengthPrefixInput.getTotalBytesRead() < MAX_LENGTH_PREFIX_SIZE) {
+                throw new EOFException("The input stream ended inside the length prefix of a message.");
+            }
+            throw e;
+        }
         if (lengthPrefixInput.getTotalBytesRead() > MAX_LENGTH_PREFIX_SIZE) {
             throw new InvalidProtocolBufferException("The length prefix of the received message has more than " +
                     MAX_LENGTH_PREFIX_SIZE + " bytes.");

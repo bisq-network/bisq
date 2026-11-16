@@ -81,6 +81,17 @@ class ConnectionTest {
         verify(messageListener, never()).onMessage(any(), any());
     }
 
+    // A peer can close the connection at any time. A rule violation would remove it from the persisted peers.
+    @Test
+    void closesWithoutARuleViolationIfTheStreamEndsInsideTheLengthPrefix() throws IOException {
+        Connection connection = connection(new ByteArrayInputStream(new byte[]{(byte) 0x80}));
+
+        verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.TERMINATED),
+                same(connection));
+        assertNull(connection.getRuleViolation());
+        verify(messageListener, never()).onMessage(any(), any());
+    }
+
     @Test
     void deliversTheNextMessageAfterBytesWhichAreNotAValidEnvelope() throws IOException {
         Ping ping = new Ping(1, 0);

@@ -33,6 +33,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -47,7 +48,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-// The receive tests of NetworkEnvelopeSocketTest of Bisq 2, with JUnit assertions instead of AssertJ
+// The receive tests of NetworkEnvelopeSocketTest of Bisq 2, with JUnit assertions instead of AssertJ. Unlike Bisq 2, an end
+// of the stream inside a length prefix of up to 5 bytes is an EOFException.
 class NetworkEnvelopeReaderTest {
     // The size limit which Connection passes, Connection.MAX_PERMITTED_MESSAGE_SIZE
     private static final int MAX_SERIALIZED_SIZE = 10 * 1024 * 1024;
@@ -161,9 +163,26 @@ class NetworkEnvelopeReaderTest {
         }
     }
 
-    @Test
-    void failsIfTheStreamEndsInsideTheLengthPrefix() {
-        NetworkEnvelopeReader receiver = createReceiver(new byte[]{(byte) 0x80});
+    // Connection closes for a rule violation at an InvalidProtocolBufferException, so the reader ends as at the end of a
+    // message.
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4})
+    void failsIfTheStreamEndsInsideTheLengthPrefix(int numReceivedBytes) {
+        // Each byte has the continuation bit, so the length prefix is not complete
+        byte[] partialLengthPrefix = new byte[numReceivedBytes];
+        Arrays.fill(partialLengthPrefix, (byte) 0x80);
+        NetworkEnvelopeReader receiver = createReceiver(partialLengthPrefix);
+
+        assertThrows(EOFException.class, receiver::receiveNextEnvelope);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {5, 9})
+    void rejectsALengthPrefixOfMoreThanFiveBytesAlsoIfTheStreamEndsInsideIt(int numReceivedBytes) {
+        // The fifth byte has the continuation bit, so the length prefix has more than 5 bytes
+        byte[] partialLengthPrefix = new byte[numReceivedBytes];
+        Arrays.fill(partialLengthPrefix, (byte) 0x80);
+        NetworkEnvelopeReader receiver = createReceiver(partialLengthPrefix);
 
         assertThrows(InvalidProtocolBufferException.class, receiver::receiveNextEnvelope);
     }
