@@ -437,16 +437,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 continue;
             }
 
-            // If SendersNodeAddressAwareEnvelope we do some verifications and apply if successful, otherwise we return false.
-            if (networkEnvelope instanceof SendersNodeAddressAwareEnvelope) {
-                boolean isValid = processSendersNodeAddressAwareEnvelope((SendersNodeAddressAwareEnvelope) networkEnvelope);
-                if (!isValid) {
-                    log.warn("Received an invalid {} at processing BundleOfEnvelopes", networkEnvelope.getClass().getSimpleName());
-                    // The sender is banned, which closed the connection
-                    return;
-                }
-            }
-
             if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
                 PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) networkEnvelope).getPersistableNetworkPayload();
                 byte[] hash = persistableNetworkPayload.getHash();
@@ -471,7 +461,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // An element of a bundle passes the checks of a single message. Only broadcast messages are bundled
     // (Broadcaster). Another message type, or a bundle in the bundle, would skip the handling which only a single
-    // message gets, for example the one of a CloseConnectionMessage or of a sender address.
+    // message gets, for example the one of a CloseConnectionMessage or of a sender address. No broadcast message has
+    // a sender address.
     @Nullable
     private RuleViolation getRuleViolationOfBundleElement(NetworkEnvelope element) {
         if (!(element instanceof BroadcastMessage) || element instanceof BundleOfEnvelopes) {
