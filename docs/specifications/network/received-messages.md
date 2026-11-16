@@ -107,3 +107,13 @@ them from the requested height on. From the DAO genesis height these are 12 MB o
 the DAO monitor view requests on demand, and 17 MB of accounting blocks, which only a node without the
 shipped accounting data requests. A node of this version closes the connection when it receives such
 a response, so it gets these responses only from nodes of this version.
+
+Such a response closes the connection for the rule violation `MAX_MSG_SIZE_EXCEEDED`, and a node
+removes the peer of a connection that closed for a rule violation from its persisted peers. Earlier
+versions read the first message above 10 MB of a connection and closed the connection only at the
+second one, so they kept the peer. A peer of an earlier version which sends such a response is now
+removed from the persisted peers, although it is honest. Few peers are affected: the accounting
+blocks and the regular state hashes come from seed nodes, which are normally not among the persisted
+peers, as nodes do not report seed nodes to other nodes. The DAO monitor view sends its request for
+the state hashes from the DAO genesis height to a peer that the user chooses, which can be such a
+peer.
