@@ -19,6 +19,7 @@ package bisq.network.p2p.storage;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.TestUtils;
+import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
@@ -105,6 +106,18 @@ public class P2PDataStorageBuildGetDataResponseTest {
             }
         }
 
+        // Like account age witnesses and signed witnesses, which do not count for the size limit
+        static class MidPriorityPNPStub extends PersistableNetworkPayloadStub {
+            MidPriorityPNPStub(byte[] hash) {
+                super(hash);
+            }
+
+            @Override
+            public GetDataResponsePriority getGetDataResponsePriority() {
+                return GetDataResponsePriority.MID;
+            }
+        }
+
         // Like trade statistics: added after the other PNP and sorted by date
         static class DateSortedPNPStub extends PersistableNetworkPayloadStub implements DateSortedTruncatablePayload {
             DateSortedPNPStub(byte[] hash) {
@@ -179,6 +192,18 @@ public class P2PDataStorageBuildGetDataResponseTest {
             return persistableNetworkPayload;
         }
 
+        private static PersistableNetworkPayload getMidPriorityPersistableNetworkPayloadOfSize(int hash, int serializedSize) {
+            PersistableNetworkPayload persistableNetworkPayload = new MidPriorityPNPStub(new byte[]{(byte) hash});
+            when(persistableNetworkPayload.toProtoMessage().getSerializedSize()).thenReturn(serializedSize);
+            return persistableNetworkPayload;
+        }
+
+        // The size of the largest message that a requester reads, available for the items of a response
+        private static int frameSpaceForItems(int numItems) {
+            return Connection.getMaxPermittedMessageSize() - P2PDataStorage.GET_DATA_RESPONSE_FRAME_RESERVE -
+                    numItems * P2PDataStorage.GET_DATA_RESPONSE_ITEM_FRAME_RESERVE;
+        }
+
         private static PersistableNetworkPayload getDateSortedPersistableNetworkPayloadOfSize(int hash, int serializedSize) {
             PersistableNetworkPayload persistableNetworkPayload = new DateSortedPNPStub(new byte[]{(byte) hash});
             when(persistableNetworkPayload.toProtoMessage().getSerializedSize()).thenReturn(serializedSize);
@@ -187,6 +212,11 @@ public class P2PDataStorageBuildGetDataResponseTest {
 
         // An entry with GetDataResponsePriority.LOW, like an offer or a mailbox message, and with a payload hash of its own
         private ProtectedStorageEntry getProtectedStorageEntryOfSize(int serializedSize) throws NoSuchAlgorithmException {
+            return getProtectedStorageEntryOfSize(serializedSize, GetDataResponsePriority.LOW);
+        }
+
+        private ProtectedStorageEntry getProtectedStorageEntryOfSize(int serializedSize, GetDataResponsePriority priority)
+                throws NoSuchAlgorithmException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
             ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
 
@@ -199,7 +229,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
             when(stub.matchesRelevantPubKey(any(ProtectedStorageEntry.class))).thenReturn(true);
             when(stub.getSequenceNumber()).thenReturn(1);
             when(stub.getProtectedStoragePayload()).thenReturn(protectedStoragePayload);
-            when(stub.getGetDataResponsePriority()).thenReturn(GetDataResponsePriority.LOW);
+            when(stub.getGetDataResponsePriority()).thenReturn(priority);
             when(stub.toProtoMessage()).thenReturn(entryMessageMock);
 
             return stub;
@@ -718,6 +748,98 @@ public class P2PDataStorageBuildGetDataResponseTest {
             assertFalse(outPSETruncated.get());
             assertEquals(Collections.singleton(sentFirst == onlyLocal1 ? onlyLocal2 : onlyLocal1),
                     secondResponse.getDataSet());
+        }
+
+        // TESTCASE: A response whose items fill the largest message that a requester reads exactly is not cut
+        @Test
+        public void buildGetDataResponse_responseAtFrameLimitIsNotCut() {
+            int frameSpace = frameSpaceForItems(2);
+            PersistableNetworkPayload onlyLocal1 = getMidPriorityPersistableNetworkPayloadOfSize(1, frameSpace / 2);
+            PersistableNetworkPayload onlyLocal2 = getMidPriorityPersistableNetworkPayloadOfSize(2,
+                    frameSpace - frameSpace / 2);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal1, this.localNodeAddress, false);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal2, this.localNodeAddress, false);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(getDataResponse.isWasTruncated());
+            assertEquals(new HashSet<>(Set.of(onlyLocal1, onlyLocal2)), getDataResponse.getPersistableNetworkPayloadSet());
+        }
+
+        // TESTCASE: Items of the priority MID do not count for the size limit. One byte above the largest message that a
+        // requester reads, the response is cut to fit, and the item left out is sent in a repeated response.
+        @Test
+        public void buildGetDataResponse_responseAboveFrameLimitIsCutAndRepeated() {
+            int frameSpace = frameSpaceForItems(2);
+            PersistableNetworkPayload onlyLocal1 = getMidPriorityPersistableNetworkPayloadOfSize(1, frameSpace / 2);
+            PersistableNetworkPayload onlyLocal2 = getMidPriorityPersistableNetworkPayloadOfSize(2,
+                    frameSpace - frameSpace / 2 + 1);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal1, this.localNodeAddress, false);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal2, this.localNodeAddress, false);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse firstResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            // The larger item is left out first
+            assertTrue(firstResponse.isWasTruncated());
+            assertTrue(outPNPTruncated.get());
+            assertEquals(Collections.singleton(onlyLocal1), firstResponse.getPersistableNetworkPayloadSet());
+
+            outPNPTruncated = new AtomicBoolean(false);
+            Set<byte[]> knownKeys = new HashSet<>(Collections.singletonList(onlyLocal1.getHash()));
+            GetDataResponse secondResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(2, knownKeys), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(secondResponse.isWasTruncated());
+            assertEquals(Collections.singleton(onlyLocal2), secondResponse.getPersistableNetworkPayloadSet());
+        }
+
+        // TESTCASE: An item which alone is above the largest message that a requester reads is left out without marking
+        // the response as truncated, as no repeated response could hold it
+        @Test
+        public void buildGetDataResponse_itemAboveFrameLimitIsLeftOutWithoutTruncation() {
+            PersistableNetworkPayload aboveFrameLimit = getMidPriorityPersistableNetworkPayloadOfSize(1,
+                    frameSpaceForItems(1) + 1);
+            PersistableNetworkPayload onlyLocal = getMidPriorityPersistableNetworkPayloadOfSize(2, 100);
+            this.testState.mockedStorage.addPersistableNetworkPayload(aboveFrameLimit, this.localNodeAddress, false);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal, this.localNodeAddress, false);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertFalse(getDataResponse.isWasTruncated());
+            assertEquals(Collections.singleton(onlyLocal), getDataResponse.getPersistableNetworkPayloadSet());
+        }
+
+        // TESTCASE: An entry of the priority HIGH, like a filter, stays in a response which is cut, while other items can
+        // be left out, also if it is the largest item
+        @Test
+        public void buildGetDataResponse_highPriorityEntryStaysInResponseCutToFrameLimit()
+                throws NoSuchAlgorithmException {
+            int frameLimit = Connection.getMaxPermittedMessageSize();
+            ProtectedStorageEntry highPriority = getProtectedStorageEntryOfSize(frameLimit / 2,
+                    GetDataResponsePriority.HIGH);
+            PersistableNetworkPayload onlyLocal1 = getMidPriorityPersistableNetworkPayloadOfSize(1, frameLimit / 3);
+            PersistableNetworkPayload onlyLocal2 = getMidPriorityPersistableNetworkPayloadOfSize(2, frameLimit / 3);
+            this.testState.mockedStorage.addProtectedStorageEntry(highPriority, this.localNodeAddress, null);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal1, this.localNodeAddress, false);
+            this.testState.mockedStorage.addPersistableNetworkPayload(onlyLocal2, this.localNodeAddress, false);
+
+            AtomicBoolean outPNPTruncated = new AtomicBoolean(false);
+            AtomicBoolean outPSETruncated = new AtomicBoolean(false);
+            GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
+                    this.buildGetDataRequest(1, new HashSet<>()), 10, outPNPTruncated, outPSETruncated, new Capabilities());
+
+            assertTrue(getDataResponse.isWasTruncated());
+            assertEquals(Collections.singleton(highPriority), getDataResponse.getDataSet());
+            assertEquals(1, getDataResponse.getPersistableNetworkPayloadSet().size());
         }
     }
 

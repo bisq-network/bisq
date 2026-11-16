@@ -176,15 +176,18 @@ public class DisputeValidation {
         checkArgument(isCanonicalTxId, "%s must be a canonical 32-byte transaction ID", fieldName);
     }
 
-    public static void validateTradeAndDispute(Dispute dispute, Trade trade)
+    // A closed or failed trade loaded from disk is checked before it is moved back to the pending trades, so before its
+    // process model has the services. The delayed payout tx is therefore read with the given wallet service.
+    public static void validateTradeAndDispute(Dispute dispute, Trade trade, BtcWalletService btcWalletService)
             throws ValidationException {
         try {
             checkArgument(contractsMatchForDispute(dispute.getContract(), trade.getContract()),
                     "contract must match contract from trade");
 
-            checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
+            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx(btcWalletService),
+                    "trade.getDelayedPayoutTx() must not be null");
             checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
-            checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
+            checkArgument(dispute.getDelayedPayoutTxId().equals(delayedPayoutTx.getTxId().toString()),
                     "delayedPayoutTxId must match delayedPayoutTxId from trade");
 
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");

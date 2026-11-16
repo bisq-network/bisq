@@ -701,7 +701,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             // The opener chose the contract and the transaction IDs. With another contract, for example with key rings
             // or multisig keys, which the traders do not sign, the agent would decide a case about another trade.
             try {
-                DisputeValidation.validateTradeAndDispute(dispute, trade);
+                DisputeValidation.validateTradeAndDispute(dispute, trade, btcWalletService);
             } catch (DisputeValidation.ValidationException e) {
                 errorMessage = "The dispute does not match the trade: " + e.getMessage();
             }
