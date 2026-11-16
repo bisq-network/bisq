@@ -288,6 +288,33 @@ Trade amount validation also rejects any trade above the hard cap of
 `0.500 BTC`, including legacy offers that were persisted before the hard cap was
 introduced. This check uses the hard cap, not `networkMax`.
 
+## Raising The Network Maximum
+
+The hard cap is part of the code, the DAO value is not. A DAO vote changes
+`networkMax` on all nodes at the same block, but each node clamps it to its own
+hard cap. Nodes with different hard caps then compute different limits for the
+same offer and the same peer. The verifier computes the peer's limit with its
+own values, so the larger limit of a newer node is not accepted by an older one.
+
+A raise of `MAX_TRADE_LIMIT` above the hard cap of older versions therefore
+needs this order:
+
+1. Release the version with the higher hard cap.
+2. Set `disableTradeBelowVersion` of the filter to that version, before the
+   activation height of the vote. Versions without a hard cap (up to 1.9.22)
+   follow the DAO value directly and are excluded by the same setting.
+3. Activate the DAO vote. One vote can at most double the value.
+
+Without step 2, after the vote:
+
+- A seller maker of an older version rejects a BTC buyer in the half-limit stage
+  of account signing who buys more than half of the older payment-method
+  maximum, after the taker fee is paid. Makers before v1.10.5 reject it only
+  after the deposit transaction is published, so such a trade needs mediation.
+- Older nodes cannot take larger fiat offers of newer makers, and the desktop
+  offer book of an older node hides every offer above its own payment-method
+  maximum.
+
 ## Examples
 
 These examples assume the mainnet `networkMax = 0.250 BTC` and the default local
