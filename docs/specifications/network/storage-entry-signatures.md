@@ -28,7 +28,9 @@ verification before.
 - A node remembers at most 10000 failed verifications. When it would remember more, it forgets the
   least recently used ones.
 - The log line of a failed verification names the type and the size of the payload and the signed
-  hash, not the content of the payload.
+  hash, not the content of the payload. The log lines of the checks of the owner, which follow a
+  valid signature, and the line of a failed removal name the type and the size of the payload, its
+  sequence number and hashes of the keys, not the content of the payload or the keys.
 
 ## Rationale
 
@@ -47,7 +49,10 @@ verification before.
   in such a value can be valid.
 - About 150 bytes per remembered verification, 1.5 MB for the bound.
 - A peer can make each invalid entry new at no cost, and a payload can have tens of kB. With the
-  payload in the log line, one bundle of such entries wrote megabytes of log.
+  payload in the log line, one bundle of such entries wrote megabytes of log. An entry that fails the
+  check of the owner costs the peer one signature with its own key, and a removal logged the whole
+  entry after every failed check, also after an invalid signature, so these lines are bounded in the
+  same way.
 
 ## Known gaps
 

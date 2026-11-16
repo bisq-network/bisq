@@ -104,14 +104,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         boolean result = mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         if (!result) {
-            String res1 = this.toString();
-            String res2 = "null";
-            if (mailboxStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(mailboxStoragePayload.getSenderPubKeyForAddOperation().getEncoded(),true);
-
-            log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. " +
-                    "Entry owner does not match sender key in payload:\nProtectedStorageEntry=%{}\n" +
-                    "SenderPubKeyForAddOperation=%{}", res1, res2);
+            log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. Entry owner does not match " +
+                    "sender key in payload. Entry: {}. Hash of SenderPubKeyForAddOperation={}", toLogString(),
+                    toKeyHash(mailboxStoragePayload.getSenderPubKeyForAddOperation()));
         }
 
         return result;
@@ -138,14 +133,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                 mailboxStoragePayload.getOwnerPubKey().equals(this.getOwnerPubKey());
 
         if (!result) {
-            String res1 = this.toString();
-            String res2 = "null";
-            if (mailboxStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(mailboxStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-            log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. " +
-                    "Entry owner does not match Payload owner:\nProtectedStorageEntry={}\n" +
-                    "PayloadOwner={}", res1, res2);
+            log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match " +
+                    "Payload owner. Entry: {}. Hash of payload owner key={}", toLogString(),
+                    toKeyHash(mailboxStoragePayload.getOwnerPubKey()));
         }
 
         return result;

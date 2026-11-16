@@ -173,6 +173,90 @@ public class ProtectedStorageEntryInvalidSignatureTest {
         }
     }
 
+    // The owner of the entry signed it, but the payload belongs to another key. Each such entry costs the peer one
+    // signature and writes the lines of the owner checks.
+    @Test
+    public void theLogLinesOfAFailedOwnerCheckDoNotHoldThePayload() throws Exception {
+        KeyPair payloadOwner = TestUtils.generateKeyPair();
+        KeyPair entryOwner = TestUtils.generateKeyPair();
+        ProtectedStorageEntry entry = buildSignedEntry(payloadWithALargeDescription(payloadOwner.getPublic()),
+                entryOwner, 1);
+
+        List<String> warnings = warningsDuring(ProtectedStorageEntry.class, () -> {
+            assertFalse(entry.isValidForAddOperation());
+            assertFalse(entry.isValidForRemoveOperation());
+        });
+
+        assertFalse(warnings.isEmpty());
+        warnings.forEach(warning -> assertTrue(warning.length() < 500,
+                "The log line has " + warning.length() + " characters"));
+    }
+
+    // A removal is checked as an add first, and its own line followed every failure of that check, also an invalid
+    // signature, which costs the peer nothing
+    @Test
+    public void theLogLinesOfARemovalWithAnInvalidSignatureDoNotHoldThePayload() throws Exception {
+        KeyPair owner = TestUtils.generateKeyPair();
+        ProtectedStorageEntry entry = new ProtectedStorageEntry(payloadWithALargeDescription(owner.getPublic()),
+                owner.getPublic(), 1, signatureOfOtherData(owner), CLOCK);
+
+        List<String> warnings = warningsDuring(ProtectedStorageEntry.class,
+                () -> assertFalse(entry.isValidForRemoveOperation()));
+
+        assertFalse(warnings.isEmpty());
+        warnings.forEach(warning -> assertTrue(warning.length() < 500,
+                "The log line has " + warning.length() + " characters"));
+    }
+
+    @Test
+    public void theLogLinesOfAFailedMailboxOwnerCheckAreShort() throws Exception {
+        KeyPair sender = TestUtils.generateKeyPair();
+        KeyPair receiver = TestUtils.generateKeyPair();
+        KeyPair entryOwner = TestUtils.generateKeyPair();
+        MailboxStoragePayload payload = buildMailboxStoragePayload(sender.getPublic(), receiver.getPublic());
+        byte[] signature = Sig.sign(entryOwner.getPrivate(), hashOfDataAndSeqNr(payload, 1));
+        ProtectedMailboxStorageEntry entry = new ProtectedMailboxStorageEntry(payload, entryOwner.getPublic(), 1,
+                signature, receiver.getPublic(), CLOCK);
+
+        List<String> warnings = warningsDuring(ProtectedMailboxStorageEntry.class, () -> {
+            assertFalse(entry.isValidForAddOperation());
+            assertFalse(entry.isValidForRemoveOperation());
+        });
+
+        assertEquals(2, warnings.size());
+        warnings.forEach(warning -> assertTrue(warning.length() < 500,
+                "The log line has " + warning.length() + " characters"));
+    }
+
+    // The description of a payload grows with its content, as the one of an offer does
+    private static ProtectedStoragePayload payloadWithALargeDescription(PublicKey owner) {
+        ProtectedStoragePayloadStub payload = new ProtectedStoragePayloadStub(owner) {
+            @Override
+            public String toString() {
+                return "x".repeat(50_000);
+            }
+        };
+        when(payload.toProtoMessage().getSerializedSize()).thenReturn(50_000);
+        return payload;
+    }
+
+    private static List<String> warningsDuring(Class<?> loggingClass, Runnable action) {
+        Logger logger = (Logger) LoggerFactory.getLogger(loggingClass);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            action.run();
+            return appender.list.stream()
+                    .filter(event -> event.getLevel() == Level.WARN)
+                    .map(ILoggingEvent::getFormattedMessage)
+                    .collect(Collectors.toList());
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
     private static ProtectedStorageEntry buildSignedEntry(ProtectedStoragePayload payload,
                                                           KeyPair owner,
                                                           int sequenceNumber) throws CryptoException {

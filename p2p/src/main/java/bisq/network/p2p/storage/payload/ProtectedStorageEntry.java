@@ -48,6 +48,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @EqualsAndHashCode
@@ -184,13 +185,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             boolean result = this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
 
             if (!result) {
-                String res1 = this.toString();
-                String res2 = "null";
-                if (protectedStoragePayload.getOwnerPubKey() != null)
-                    res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-                log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
-                        "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
+                log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload " +
+                        "owner. Entry: {}. Hash of payload owner key={}", toLogString(),
+                        toKeyHash(protectedStoragePayload.getOwnerPubKey()));
             }
 
             return result;
@@ -207,13 +204,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         boolean result = this.isValidForAddOperation();
 
         if (!result) {
-            String res1 = this.toString();
-            String res2 = "null";
-            if (protectedStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-            log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
-                    "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
+            log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. The signature is invalid or the entry " +
+                    "owner does not match the payload owner. Entry: {}. Hash of payload owner key={}", toLogString(),
+                    toKeyHash(protectedStoragePayload.getOwnerPubKey()));
         }
 
         return result;
@@ -252,6 +245,18 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             log.error("ProtectedStorageEntry::isSignatureValid() exception {}", e.toString());
             return false;
         }
+    }
+
+    // For the log line of a failed check. A peer can send many entries which fail a check, with payloads of tens of kB,
+    // so the line names the payload and the hash of the owner key instead of holding them.
+    String toLogString() {
+        return protectedStoragePayload.getClass().getSimpleName() + " of " +
+                protectedStoragePayload.toProtoMessage().getSerializedSize() + " bytes, sequence number " +
+                sequenceNumber + ", hash of owner key " + toKeyHash(ownerPubKey);
+    }
+
+    static String toKeyHash(@Nullable PublicKey publicKey) {
+        return publicKey == null ? "null" : Utilities.encodeToHex(Hash.getSha256Hash(publicKey.getEncoded()));
     }
 
     // The hash of the public key, the signed hash and the signature that a verification uses. The length of the public
