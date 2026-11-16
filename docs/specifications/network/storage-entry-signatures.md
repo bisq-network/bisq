@@ -47,11 +47,21 @@ verification before.
 
 ## Known gaps
 
-- The rule only saves the verification of repeated copies. A peer can change the signed content of
-  each entry at no cost, as it needs no valid signature, and each such entry still costs one
-  verification. The limits for this are elsewhere: the number of messages a connection may send
-  (the throttle counts a bundle as one message, `p2p-bundle-throttle-granularity`) and the number of
-  connections (`p2p-unbounded-inbound-connections`).
+- The rule only saves the verification of copies that repeat all three values, such as copies that
+  differ only in their creation date. A peer needs no valid signature, so it can make each entry new
+  at no cost: another well-formed signature alone is enough, as is another sequence number or
+  another byte of the payload, and each such entry still costs one verification. So the rule stops
+  naive replays, not a peer that sends invalid entries on purpose. The limits for this are
+  elsewhere: the number of messages a connection may send (the throttle counts a bundle as one
+  message, `p2p-bundle-throttle-granularity`) and the number of connections
+  (`p2p-unbounded-inbound-connections`).
+- The same peer can make the node forget the remembered failures: 10000 invalid entries with new
+  values push them out, and the copies of a forgotten entry cost a verification again.
+- A limit at the origin would be a budget of signature verifications per received message, for
+  example per bundle of messages, beyond which the node drops the remaining entries of the message
+  without a verification (`storage-signature-verification-budget`). It needs no rule violation, so
+  it avoids the problem of the next point. Not covered: the budget and its effect on the bundles of
+  honest peers need a design.
 - A peer that sends entries with invalid signatures is not penalized. A rule violation would stop it
   at the origin, but an invalid signature does not prove a malicious peer: honest nodes relay only
   entries whose signature they verified, yet a node of another version can compute another signed
