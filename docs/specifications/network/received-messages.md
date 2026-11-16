@@ -93,7 +93,6 @@ bundles messages: it sends the broadcast messages of 2 seconds to a peer in one 
     a `CloseConnectionMessage` closes the connection, a `SupportedCapabilitiesMessage` sets the
     capabilities, a sender address binds the connection. Nodes before v1.8.0 also bundled direct
     messages that they sent within 20 ms; a node of this version does not pass them to the handlers.
-    Like a single message, a `NewBlockBroadcastMessage` above 200 kB is dropped also in a bundle.
 
 ## Limits of the senders
 
@@ -167,6 +166,12 @@ A node keeps its responses below the limit of 10 MB:
 
 Honest messages above 200 kB without `ExtendedDataSizePermission` are not known: dispute chat
 attachments were removed in 1.10.0.
+
+A `NewBlockBroadcastMessage` or a `NewAccountingBlockBroadcastMessage` above 200 kB is now dropped
+also when it arrives as an element of a bundle, which it does whenever its sender had other broadcast
+messages within the same 2 seconds. Before, such an element was passed to the handlers. As for a
+single message, it counts as a violation of `MAX_MSG_SIZE_EXCEEDED`. A lite node which misses the
+broadcast of a block requests the block from a seed node 10 seconds after its wallet saw the block.
 
 A node of an earlier version answers a request for state hashes or for accounting blocks with all of
 them from the requested height on. From the DAO genesis height these are 12 MB of state hashes, which
