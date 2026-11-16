@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
+import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import com.google.protobuf.ByteString;
@@ -98,5 +99,33 @@ class BundleOfEnvelopesTest {
 
         assertEquals(List.of(valid), bundle.getEnvelopes());
         assertEquals(0, bundle.getNumUnparsableEnvelopes());
+    }
+
+    @Test
+    void countsAnElementWithAPayloadOfAnUnknownType() throws ProtobufferException {
+        NetworkProtoResolver resolver = mock(NetworkProtoResolver.class);
+        RefreshOfferMessage valid = new RefreshOfferMessage(new byte[20], new byte[46], new byte[20], 1);
+        // A storage entry whose payload type the node does not know, as one of a newer version
+        protobuf.NetworkEnvelope unknownPayload = protobuf.NetworkEnvelope.newBuilder()
+                .setMessageVersion(Version.getP2PMessageVersion())
+                .setAddDataMessage(protobuf.AddDataMessage.newBuilder()
+                        .setEntry(protobuf.StorageEntryWrapper.newBuilder()
+                                .setProtectedStorageEntry(protobuf.ProtectedStorageEntry.newBuilder()
+                                        .setStoragePayload(protobuf.StoragePayload.newBuilder()))))
+                .build();
+        when(resolver.fromProto(valid.toProtoNetworkEnvelope())).thenReturn(valid);
+        // As the resolver of the node does
+        when(resolver.fromProto(unknownPayload))
+                .thenThrow(new ProtobufferRuntimeException("Unknown proto message case (PB.StoragePayload)"));
+
+        BundleOfEnvelopes bundle = BundleOfEnvelopes.fromProto(protobuf.BundleOfEnvelopes.newBuilder()
+                        .addEnvelopes(unknownPayload)
+                        .addEnvelopes(valid.toProtoNetworkEnvelope())
+                        .build(),
+                resolver,
+                Version.getP2PMessageVersion());
+
+        assertEquals(List.of(valid), bundle.getEnvelopes());
+        assertEquals(1, bundle.getNumUnparsableEnvelopes());
     }
 }

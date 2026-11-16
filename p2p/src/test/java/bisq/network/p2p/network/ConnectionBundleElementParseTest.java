@@ -23,6 +23,7 @@ import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
+import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
@@ -71,6 +72,14 @@ class ConnectionBundleElementParseTest {
                             .build())
                     .build())
             .build();
+    // A storage entry whose payload type the node does not know, as one of a newer version
+    private static final protobuf.NetworkEnvelope UNKNOWN_PAYLOAD_ELEMENT = protobuf.NetworkEnvelope.newBuilder()
+            .setMessageVersion(Version.getP2PMessageVersion())
+            .setAddDataMessage(protobuf.AddDataMessage.newBuilder()
+                    .setEntry(protobuf.StorageEntryWrapper.newBuilder()
+                            .setProtectedStorageEntry(protobuf.ProtectedStorageEntry.newBuilder()
+                                    .setStoragePayload(protobuf.StoragePayload.newBuilder()))))
+            .build();
 
     private final MessageListener messageListener = mock(MessageListener.class);
     private final ConnectionListener connectionListener = mock(ConnectionListener.class);
@@ -88,6 +97,10 @@ class ConnectionBundleElementParseTest {
             if (proto.hasBundleOfEnvelopes()) {
                 return BundleOfEnvelopes.fromProto(proto.getBundleOfEnvelopes(), networkProtoResolver,
                         proto.getMessageVersion());
+            }
+            if (proto.equals(UNKNOWN_PAYLOAD_ELEMENT)) {
+                // As the resolver of the node does
+                throw new ProtobufferRuntimeException("Unknown proto message case (PB.StoragePayload)");
             }
             NetworkEnvelope element = elements.get(proto);
             if (element == null) {
@@ -159,6 +172,22 @@ class ConnectionBundleElementParseTest {
         verify(messageListener).onMessage(same(first), same(connection));
         verify(messageListener).onMessage(same(second), same(connection));
         assertNull(connection.getRuleViolation());
+    }
+
+    // Counted like an element which cannot be parsed, so the other elements of the bundle are delivered
+    @Test
+    void closesAtTheSecondElementWithAPayloadOfAnUnknownType() throws IOException {
+        RefreshOfferMessage first = refreshOfferMessage(1);
+        RefreshOfferMessage second = refreshOfferMessage(2);
+
+        Connection connection = connection(concat(delimited(bundle(UNKNOWN_PAYLOAD_ELEMENT, proto(first))),
+                delimited(bundle(UNKNOWN_PAYLOAD_ELEMENT, proto(second)))));
+
+        verify(connectionListener, timeout(5_000)).onDisconnect(eq(CloseConnectionReason.RULE_VIOLATION),
+                same(connection));
+        assertEquals(RuleViolation.INVALID_DATA_TYPE, connection.getRuleViolation());
+        verify(messageListener).onMessage(same(first), same(connection));
+        verify(messageListener, never()).onMessage(same(second), any());
     }
 
     private RefreshOfferMessage refreshOfferMessage(int sequenceNumber) {

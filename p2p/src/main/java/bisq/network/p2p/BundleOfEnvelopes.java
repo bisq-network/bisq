@@ -24,6 +24,7 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
+import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
@@ -90,7 +91,8 @@ public final class BundleOfEnvelopes extends BroadcastMessage implements Extende
             }
             try {
                 envelopes.add(resolver.fromProto(envelope));
-            } catch (ProtobufferException e) {
+            } catch (ProtobufferException | ProtobufferRuntimeException e) {
+                // The runtime exception comes from a payload of an unknown type, for example in an AddDataMessage
                 numUnparsableEnvelopes++;
             }
         }

@@ -52,6 +52,13 @@ bundles messages: it sends the broadcast messages of 2 seconds to a peer in one 
   the handlers and the connection reads no further message.
   - Before, such an element was dropped without a trace, so a peer could send any number of
     elements which the node parses and resolves in vain, without a violation.
+  - An element with a payload of a type which the node does not know, for example a stored entry
+    of a newer version, counts in the same way. Before, it failed the conversion of the whole
+    bundle and closed the connection (`UNKNOWN_EXCEPTION`), as a single message with such a payload
+    still does. So every new payload type must require a capability.
+  - An element whose conversion fails with another error, for example an offer without the ID of
+    its fee transaction, still fails the conversion of the whole bundle: no element of the bundle is
+    passed to the handlers and the connection closes, as for a single message with such an error.
 - An element of a message type which the node does not know, as one of a newer version, is dropped
   without a violation. Protobuf keeps the field of such a type as an unknown field, so the element
   has no message type for the node.
