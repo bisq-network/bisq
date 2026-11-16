@@ -41,6 +41,43 @@ large responses keep.
   rule only decides when the connection is closed: at the second violation of
   `MAX_MSG_SIZE_EXCEEDED`.
 
+## Bundles of messages
+
+A `BundleOfEnvelopes` carries several messages, its elements. Since v1.8.0 only `Broadcaster`
+bundles messages: it sends the broadcast messages of 2 seconds to a peer in one bundle.
+
+- An element of a known type which cannot be parsed violates `INVALID_DATA_TYPE` and is not passed
+  to the handlers, as a single message which cannot be parsed. The other elements are passed to the
+  handlers, unless a violation closes the connection: then no element of the bundle is passed to
+  the handlers and the connection reads no further message.
+  - Before, such an element was dropped without a trace, so a peer could send any number of
+    elements which the node parses and resolves in vain, without a violation.
+  - An element with a payload of a type which the node does not know, for example a stored entry
+    of a newer version, or with such a type nested in its payload, for example a new type of
+    proposal in a `TempProposalPayload`, counts in the same way. Before, it failed the conversion of
+    the whole bundle and closed the connection (`UNKNOWN_EXCEPTION`), as a single message with such
+    a payload still does.
+  - An element whose conversion fails with another error, for example an offer without the ID of
+    its fee transaction, still fails the conversion of the whole bundle: no element of the bundle is
+    passed to the handlers and the connection closes, as for a single message with such an error.
+- An element of a message type which the node does not know, as one of a newer version, is dropped
+  without a violation. Protobuf keeps the field of such a type as an unknown field, so the element
+  has no message type for the node.
+  - A relay of a newer version passes a broadcast message of a new type on to nodes of this
+    version, unless the type requires a capability which they do not have. Not all broadcast
+    message types require one: `NewAccountingBlockBroadcastMessage` does not. The node cannot tell
+    such an element from one without any message type, so with a violation for each, two bundles
+    from an honest relay of a newer version would close the connection to it.
+- Every new type in a broadcast message must reach only peers which know it: a new message type, a
+  new payload type, and a new type nested in a payload, such as a new type of proposal in a
+  `TempProposalPayload`. The sender tests the capabilities only of the message and of the payload of
+  a storage message, so the message or the payload which contains the new type must require a
+  capability for it.
+  - A node sends a broadcast message alone, not in a bundle, when it has no other one for the peer
+    within 2 seconds. A single message of a message type which the node does not know violates
+    `INVALID_DATA_TYPE`, and a single message with a payload or a nested type which the node does
+    not know closes the connection (`UNKNOWN_EXCEPTION`).
+
 ## Limits of the senders
 
 A node keeps its responses below the limit of 10 MB:
@@ -105,6 +142,9 @@ A node keeps its responses below the limit of 10 MB:
   `PreliminaryGetDataRequest` of 10 MB with keys of 1 byte passes the checks of the connection and
   waits for its handling on the user thread. At up to 232 MB each, 18 such messages at the same time
   need more than the 4 GB heap of a seed node.
+- A peer can send bundles with any number of elements without a message type, which the node parses
+  and drops without a violation. Only the size limit of a bundle, 10 MB, bounds this work for each
+  bundle.
 
 ## Compatibility
 
