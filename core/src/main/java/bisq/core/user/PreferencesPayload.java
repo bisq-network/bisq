@@ -154,6 +154,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean tacAcceptedV1_10_1;
     private boolean tradeRulesAccepted;
     private long coldStorageReminderThreshold = Preferences.INITIAL_COLD_STORAGE_REMINDER_THRESHOLD;
+    private double bsqOfferPriceRangeFactor = Preferences.DEFAULT_BSQ_OFFER_PRICE_RANGE_FACTOR;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +231,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseBisqWalletFunding(useBisqWalletFunding)
                 .setTacAcceptedV1101(tacAcceptedV1_10_1)
                 .setTradeRulesAccepted(tradeRulesAccepted)
-                .setColdStorageReminderThreshold(coldStorageReminderThreshold);
+                .setColdStorageReminderThreshold(coldStorageReminderThreshold)
+                .setBsqOfferPriceRangeFactor(bsqOfferPriceRangeFactor);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -346,7 +348,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseBisqWalletFunding(),
                 proto.getTacAcceptedV1101(),
                 proto.getTradeRulesAccepted(),
-                Preferences.getClampedColdStorageReminderThreshold(proto.getColdStorageReminderThreshold())
+                Preferences.getClampedColdStorageReminderThreshold(proto.getColdStorageReminderThreshold()),
+                Preferences.getValidBsqOfferPriceRangeFactor(proto.getBsqOfferPriceRangeFactor())
         );
     }
 }

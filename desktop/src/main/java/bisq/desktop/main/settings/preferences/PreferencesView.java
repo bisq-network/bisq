@@ -61,6 +61,7 @@ import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.validation.InputValidator;
 import bisq.core.util.validation.IntegerValidator;
 import bisq.core.util.validation.RegexValidator;
 import bisq.core.util.validation.RegexValidatorFactory;
@@ -109,6 +110,8 @@ import javafx.collections.ObservableList;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -168,11 +171,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<CryptoCurrency> cryptoCurrencies;
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
-    private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField;
-    private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, ignoreTradersListListener, ignoreDustThresholdListener,
+    private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField, bsqOfferPriceRangeFactorTextField;
+    private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, bsqOfferPriceRangeFactorListener,
+            ignoreTradersListListener, ignoreDustThresholdListener,
             rpcUserListener, rpcPwListener, blockNotifyPortListener, clearDataAfterDaysListener, coldStorageReminderThresholdListener,
             autoConfTradeLimitListener, autoConfServiceAddressListener, userDefinedTradeLimitListener;
-    private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
+    private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener,
+            bsqOfferPriceRangeFactorFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoFullModeFromOptionsSet;
@@ -718,7 +723,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 8,
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 9,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
 
         processBurningManAccountingDataToggleButton = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.dao.processBurningManAccountingData"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -777,6 +782,44 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             if (oldValue1 && !newValue1)
                 UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
                         preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
+        };
+
+        bsqOfferPriceRangeFactorTextField = addInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.bsqOfferPriceRangeFactor"));
+        bsqOfferPriceRangeFactorTextField.setValidator(new InputValidator() {
+            @Override
+            public ValidationResult validate(String input) {
+                ValidationResult result = validateIfNotEmpty(input);
+                if (!result.isValid) {
+                    return result;
+                }
+                double factor;
+                try {
+                    factor = ParsingUtils.parseNumberStringToDouble(input);
+                } catch (NumberFormatException e) {
+                    return new ValidationResult(false, Res.get("validation.NaN"));
+                }
+                if (!(factor > 1)) {
+                    return new ValidationResult(false, Res.get("validation.inputTooSmall", 1));
+                }
+                if (factor > Preferences.MAX_BSQ_OFFER_PRICE_RANGE_FACTOR) {
+                    return new ValidationResult(false, Res.get("validation.inputTooLarge",
+                            formatFactor(Preferences.MAX_BSQ_OFFER_PRICE_RANGE_FACTOR)));
+                }
+                return result;
+            }
+        });
+        bsqOfferPriceRangeFactorListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue) &&
+                    bsqOfferPriceRangeFactorTextField.getValidator().validate(newValue).isValid) {
+                preferences.setBsqOfferPriceRangeFactor(ParsingUtils.parseNumberStringToDouble(newValue));
+            }
+        };
+        // Shows the stored factor, also when the last input was invalid and was not stored
+        bsqOfferPriceRangeFactorFocusedListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+                UserThread.runAfter(() -> bsqOfferPriceRangeFactorTextField.setText(formatFactor(
+                        preferences.getBsqOfferPriceRangeFactor())), 100, TimeUnit.MILLISECONDS);
         };
 
 
@@ -1241,6 +1284,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         bsqAverageTrimThresholdTextField.textProperty().addListener(bsqAverageTrimThresholdListener);
         bsqAverageTrimThresholdTextField.focusedProperty().addListener(bsqAverageTrimThresholdFocusedListener);
 
+        bsqOfferPriceRangeFactorTextField.setText(formatFactor(preferences.getBsqOfferPriceRangeFactor()));
+        bsqOfferPriceRangeFactorTextField.textProperty().addListener(bsqOfferPriceRangeFactorListener);
+        bsqOfferPriceRangeFactorTextField.focusedProperty().addListener(bsqOfferPriceRangeFactorFocusedListener);
+
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
         int blockNotifyPort = preferences.getBlockNotifyPort();
@@ -1319,6 +1366,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         blockNotifyPortTextField.textProperty().addListener(blockNotifyPortListener);
     }
 
+    private static String formatFactor(double factor) {
+        return BigDecimal.valueOf(factor).stripTrailingZeros().toPlainString();
+    }
+
     private boolean isDaoModeEnabled() {
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
@@ -1369,7 +1420,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void updateDaoFields() {
         boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
-        int rowSpan = 9;
+        int rowSpan = 10;
         if (isDaoFullNode) {
             rowSpan += 3;
         }
@@ -1452,6 +1503,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         resyncBMAccFromResourcesButton.setOnAction(null);
         bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);
         bsqAverageTrimThresholdTextField.focusedProperty().removeListener(bsqAverageTrimThresholdFocusedListener);
+        bsqOfferPriceRangeFactorTextField.textProperty().removeListener(bsqOfferPriceRangeFactorListener);
+        bsqOfferPriceRangeFactorTextField.focusedProperty().removeListener(bsqOfferPriceRangeFactorFocusedListener);
         isDaoFullNodeToggleButton.setOnAction(null);
         rpcUserTextField.textProperty().removeListener(rpcUserListener);
         rpcPwTextField.textProperty().removeListener(rpcPwListener);

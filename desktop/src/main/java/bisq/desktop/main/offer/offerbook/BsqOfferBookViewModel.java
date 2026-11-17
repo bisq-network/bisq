@@ -115,6 +115,17 @@ public class BsqOfferBookViewModel extends OfferBookViewModel {
         };
     }
 
+    // Offers of others with a price far from the average BSQ price of 90 days are hidden. Without an average, as on a
+    // node without BSQ trade statistics, all offers are shown.
+    @Override
+    Predicate<OfferBookListItem> getPriceRangePredicate() {
+        Predicate<Offer> isOutsidePriceRange = priceUtil.getOutsideBsqOfferPriceRangePredicate();
+        return offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
+            return !isOutsidePriceRange.test(offer) || isMyOffer(offer);
+        };
+    }
+
     @Override
     TradeCurrency getDefaultTradeCurrency() {
         return BSQ;

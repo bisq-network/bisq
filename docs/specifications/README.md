@@ -94,6 +94,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`offer/take-offer-refusals.md`](offer/take-offer-refusals.md) | What the taker is told when the maker refuses an availability request, and what the client remembers about the maker afterwards. |
 | [`offer/offer-edit-and-removal.md`](offer/offer-edit-and-removal.md) | The completion contracts of offer edit and removal, and the preconditions they impose on wallet restore, wallet emptying and BSQ swap republishing. |
 | [`offer/offer-book-offer-id.md`](offer/offer-book-offer-id.md) | When an offer replaces a listed offer with the same ID in the offer book: only for the same owner. |
+| [`offer/bsq-offer-price-range.md`](offer/bsq-offer-price-range.md) | Which BSQ offers the BSQ offer book hides because their price is far from the average BSQ price of 90 days, the factor in the preferences, and the hint when the range hides every offer. |
 
 ### `payment/`
 

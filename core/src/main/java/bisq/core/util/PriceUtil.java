@@ -39,12 +39,16 @@ import org.bitcoinj.utils.Fiat;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.math.BigDecimal;
+
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -127,6 +131,36 @@ public class PriceUtil {
                     tradeStatisticsManager, 30).second;
         }
         return bsq30DayAveragePrice;
+    }
+
+    // A price of 0 means that there is no average
+    public Price getBsq90DayAveragePrice() {
+        return AveragePriceUtil.getAveragePriceTuple(preferences, tradeStatisticsManager, 90).second;
+    }
+
+    // BSQ offers with a price outside the range around the 90-day average BSQ price which the preferences set. Reads the
+    // average and the factor once, so that one filtering of many offers computes the average once.
+    public Predicate<Offer> getOutsideBsqOfferPriceRangePredicate() {
+        Price averagePrice = getBsq90DayAveragePrice();
+        double factor = preferences.getBsqOfferPriceRangeFactor();
+        return offer -> offer.getCurrencyCode().equals("BSQ") &&
+                isOutsidePriceRange(offer.getPrice(), averagePrice, factor);
+    }
+
+    // Whether the price is above the average price times the factor or below the average divided by the factor.
+    // Without a price or an average, no price is outside the range.
+    public static boolean isOutsidePriceRange(@Nullable Price price, Price averagePrice, double factor) {
+        if (price == null || !price.isPositive() || !averagePrice.isPositive()) {
+            return false;
+        }
+        checkArgument(price.getCurrencyCode().equals(averagePrice.getCurrencyCode()),
+                "Price %s and average price %s have different currencies", price, averagePrice);
+        BigDecimal value = BigDecimal.valueOf(price.getValue());
+        BigDecimal average = BigDecimal.valueOf(averagePrice.getValue());
+        BigDecimal rangeFactor = BigDecimal.valueOf(factor);
+        // Compare decimal products to keep both inclusive bounds exact, even for fractional factors.
+        return value.compareTo(average.multiply(rangeFactor)) > 0 ||
+                value.multiply(rangeFactor).compareTo(average) < 0;
     }
 
     public static Optional<Double> offerPercentageToDeviation(Offer offer) {
