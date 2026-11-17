@@ -140,6 +140,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     @Deprecated
     public static final String VENMO_ID = "VENMO";  // Removed due too high chargeback risk
 
+    // The removed payment methods. They are not in the list of payment methods.
+    @SuppressWarnings("deprecation")
+    public static final List<String> REMOVED_PAYMENT_METHOD_IDS = List.of(OK_PAY_ID, CASH_APP_ID, VENMO_ID, CHASE_QUICK_PAY_ID);
+
     public static PaymentMethod UPHOLD;
     public static PaymentMethod MONEY_BEAM;
     public static PaymentMethod POPMONEY;
