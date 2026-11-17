@@ -108,6 +108,14 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         aliPayWithHolderName.setAccountNr("local-ali-account-2");
         aliPayWithHolderName.setHolderName("Local Holder");
 
+        CustomPaymentMethodAccountPayload custom = new CustomPaymentMethodAccountPayload(PaymentMethod.CUSTOM_ID,
+                "local-custom");
+        custom.setPaymentMethodName("M-Pesa");
+        custom.setAccountData("Jane Doe\n+254 700 000000");
+
+        CustomPaymentMethodAccountPayload customWithoutTexts = new CustomPaymentMethodAccountPayload(
+                PaymentMethod.CUSTOM_ID, "local-custom-2");
+
         NationalBankAccountPayload nationalBankDefaults = new NationalBankAccountPayload(PaymentMethod.NATIONAL_BANK_ID,
                 "local-national-bank");
         nationalBankDefaults.setCountryCode("US");
@@ -124,6 +132,8 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
         return List.of(
                 new NamedPayload("aliPaySaltOnly", aliPayWithSaltOnly),
                 new NamedPayload("aliPayWithHolderName", aliPayWithHolderName),
+                new NamedPayload("custom", custom),
+                new NamedPayload("customWithoutTexts", customWithoutTexts),
                 new NamedPayload("nationalBankDefaults", nationalBankDefaults),
                 new NamedPayload("sepaWithEmptyAcceptedCountries", sepa));
     }
@@ -462,6 +472,11 @@ public class PaymentAccountPayloadCanonicalEncoderTest {
                 testCase("verse", account(PaymentMethod.VERSE_ID)
                         .setVerseAccountPayload(protobuf.VerseAccountPayload.newBuilder()
                                 .setHolderName("Verse Holder"))
+                        .build()),
+                testCase("custom", account(PaymentMethod.CUSTOM_ID)
+                        .setCustomPaymentMethodAccountPayload(protobuf.CustomPaymentMethodAccountPayload.newBuilder()
+                                .setPaymentMethodName("Orange Money (CI)")
+                                .setAccountData("Compte: 07 00 00 00 00\nNom: A. Kone"))
                         .build()),
                 testCase("bsqSwap", account(PaymentMethod.BSQ_SWAP_ID)
                         .setBsqSwapAccountPayload(protobuf.BsqSwapAccountPayload.newBuilder())

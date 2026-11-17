@@ -29,6 +29,8 @@ import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.payment.CashByMailAccount;
+import bisq.core.payment.CustomPaymentMethodAccount;
+import bisq.core.payment.CustomPaymentMethodUtil;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SameBankAccount;
@@ -367,6 +369,11 @@ public class OfferUtil {
             offerPayloadExtraDataMap.put(CASH_BY_MAIL_EXTRA_INFO, ((CashByMailAccount) paymentAccount).getExtraInfo());
         }
 
+        if (paymentAccount instanceof CustomPaymentMethodAccount) {
+            offerPayloadExtraDataMap.put(CUSTOM_PAYMENT_METHOD_NAME,
+                    ((CustomPaymentMethodAccount) paymentAccount).getPaymentMethodName());
+        }
+
         offerPayloadExtraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
 
         if (currencyCode.equals("XMR") && direction == OfferDirection.SELL) {
@@ -394,6 +401,15 @@ public class OfferUtil {
                         getMinBuyerSecurityDepositAsPercent());
         if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount)) {
             checkArgument(!acceptedBanks.contains(null), "acceptedBanks must not be null for SAME_BANK or SPECIFIC_BANKS accounts");
+        }
+        // An account which was imported has not passed the account form. No account matches an offer without a
+        // valid name, and the peer refuses account data which is not valid in the trade.
+        if (paymentAccount instanceof CustomPaymentMethodAccount) {
+            CustomPaymentMethodAccount customPaymentMethodAccount = (CustomPaymentMethodAccount) paymentAccount;
+            checkArgument(CustomPaymentMethodUtil.isValidName(customPaymentMethodAccount.getPaymentMethodName()),
+                    "The name of the custom payment method of the account is not valid");
+            checkArgument(CustomPaymentMethodUtil.isValidAccountData(customPaymentMethodAccount.getAccountData()),
+                    "The account data of the account of the custom payment method is not valid");
         }
     }
 

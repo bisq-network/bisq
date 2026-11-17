@@ -135,6 +135,8 @@ public class PaymentAccountFactory {
                 return new MercadoPagoAccount();
             case PaymentMethod.SBP_ID:
                 return new SbpAccount();
+            case PaymentMethod.CUSTOM_ID:
+                return new CustomPaymentMethodAccount();
 
             // Cannot be deleted as it would break old trade history entries
             case PaymentMethod.OK_PAY_ID:
