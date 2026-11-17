@@ -102,6 +102,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 abstract class OfferBookViewModel extends ActivatableViewModel implements DaoStateListener {
     private final OpenOfferManager openOfferManager;
@@ -115,7 +117,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
     private final BsqSwapTradeManager bsqSwapTradeManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    private final PriceUtil priceUtil;
+    final PriceUtil priceUtil;
     final OfferFilterService offerFilterService;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -632,11 +634,19 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
                 getCurrencyAndMethodPredicate(direction, selectedTradeCurrency);
 
         Predicate<OfferBookListItem> predicate2 = item -> !OfferUtil.doesOfferAmountExceedTradeLimit(item.getOffer());
-        filteredItems.setPredicate(predicate1.and(predicate2));
+        Predicate<OfferBookListItem> predicate = predicate1.and(predicate2);
+        Predicate<OfferBookListItem> priceRangePredicate = getPriceRangePredicate();
+        filteredItems.setPredicate(priceRangePredicate != null ? predicate.and(priceRangePredicate) : predicate);
     }
 
     abstract Predicate<OfferBookListItem> getCurrencyAndMethodPredicate(OfferDirection direction,
                                                                         TradeCurrency selectedTradeCurrency);
+
+    // The offers within the price range of the market. Null if the market has no price range.
+    @Nullable
+    Predicate<OfferBookListItem> getPriceRangePredicate() {
+        return null;
+    }
 
     private Predicate<OfferBookListItem> getOffersMatchingMyAccountsPredicate() {
         // This code duplicates code in the view at the button column. We need there the different results for

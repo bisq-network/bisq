@@ -26,6 +26,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
@@ -112,6 +113,20 @@ public class BsqOfferBookViewModel extends OfferBookViewModel {
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
+        };
+    }
+
+    // Offers of others with a price far from the average BSQ price of 90 days are hidden. Without an average, as on a
+    // node without BSQ trade statistics, all offers are shown.
+    @Override
+    Predicate<OfferBookListItem> getPriceRangePredicate() {
+        Price averagePrice = priceUtil.getBsq90DayAveragePrice();
+        double factor = preferences.getBsqOfferPriceRangeFactor();
+        return offerBookListItem -> {
+            Offer offer = offerBookListItem.getOffer();
+            return !offer.getCurrencyCode().equals(BSQ.getCode()) ||
+                    isMyOffer(offer) ||
+                    !PriceUtil.isOutsidePriceRange(offer.getPrice(), averagePrice, factor);
         };
     }
 
