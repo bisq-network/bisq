@@ -19,6 +19,7 @@ package bisq.desktop.main.account.content.fiataccounts;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AchTransferForm;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
@@ -146,7 +147,6 @@ import javax.inject.Named;
 import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.input.Clipboard;
@@ -155,7 +155,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
@@ -164,6 +163,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 @FxmlView
 public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccountsViewModel> {
@@ -193,7 +193,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final TransferwiseValidator transferwiseValidator;
     private final SbpValidator sbpValidator;
     private final CoinFormatter formatter;
-    private ComboBox<PaymentMethod> paymentMethodComboBox;
+    private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
     private Button saveNewAccountButton;
@@ -473,15 +473,20 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.selectPaymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        paymentMethodComboBox.setVisibleRowCount(11);
+        // The list of payment methods is long, so it can be searched
+        paymentMethodComboBox = (AutocompleteComboBox<PaymentMethod>) FormBuilder.<PaymentMethod>addLabelAutocompleteComboBox(
+                root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        paymentMethodComboBox.setPromptText(Res.get("payment.select.paymentMethod"));
+        paymentMethodComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.paymentMethod"),
+                paymentMethodComboBox));
+        paymentMethodComboBox.getEditor().focusedProperty().addListener(observable ->
+                paymentMethodComboBox.setPromptText(""));
         paymentMethodComboBox.setPrefWidth(250);
         @SuppressWarnings("deprecation") List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(PaymentMethod::isFiat)
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.VERSE_ID)) // Verse not existing anymore
                 .sorted()
                 .collect(Collectors.toList());
-        paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
@@ -490,16 +495,27 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
             @Override
             public PaymentMethod fromString(String s) {
-                return null;
+                return list.stream()
+                        .filter(paymentMethod -> toString(paymentMethod).equals(s))
+                        .findAny()
+                        .orElse(null);
             }
         });
-        paymentMethodComboBox.setOnAction(e -> {
+        paymentMethodComboBox.setAutocompleteItems(list);
+        // Not onAction, which fires on every change of the search text
+        paymentMethodComboBox.setOnChangeConfirmed(e -> {
+            PaymentMethod selectedPaymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
+            // An empty search text confirms as well
+            if (selectedPaymentMethod == null) {
+                return;
+            }
+
             if (paymentMethodForm != null) {
                 FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
                 GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
             }
             gridRow = 2;
-            paymentMethodForm = getPaymentMethodForm(paymentMethodComboBox.getSelectionModel().getSelectedItem());
+            paymentMethodForm = getPaymentMethodForm(selectedPaymentMethod);
             if (paymentMethodForm != null) {
                 if (paymentMethodForm.getPaymentAccount().getMessageForAccountCreation() != null &&
                         !DevEnv.isIgnorePopupsInDevMode()) {
