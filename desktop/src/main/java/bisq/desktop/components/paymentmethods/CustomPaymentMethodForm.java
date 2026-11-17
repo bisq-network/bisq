@@ -17,7 +17,9 @@
 
 package bisq.desktop.components.paymentmethods;
 
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.CustomPaymentMethodNameValidator;
 
@@ -40,7 +42,11 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.GridPane;
 
-import javafx.collections.FXCollections;
+import javafx.util.StringConverter;
+
+import java.util.ArrayList;
+
+import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.*;
 
@@ -77,8 +83,7 @@ public class CustomPaymentMethodForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        addTradeCurrencyComboBox();
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
+        addSearchableTradeCurrencyComboBox();
 
         InputTextField nameField = addInputTextField(gridPane, ++gridRow, Res.get("payment.custom.name"));
         nameField.setPromptText(Res.get("payment.custom.name.prompt", CustomPaymentMethodUtil.MAX_NAME_LENGTH));
@@ -101,6 +106,51 @@ public class CustomPaymentMethodForm extends PaymentMethodForm {
 
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
+    }
+
+    // All fiat currencies are offered, so the list can be searched by the name or the code of the currency
+    private void addSearchableTradeCurrencyComboBox() {
+        currencyComboBox = FormBuilder.<TradeCurrency>addLabelAutocompleteComboBox(gridPane, ++gridRow,
+                Res.get("shared.currency"), 0).second;
+        currencyComboBox.setMaxWidth(Double.MAX_VALUE);
+        currencyComboBox.setPromptText(Res.get("list.currency.select"));
+        currencyComboBox.getEditor().focusedProperty().addListener(observable -> currencyComboBox.setPromptText(""));
+        currencyComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
+            }
+
+            @Override
+            public TradeCurrency fromString(String nameAndCode) {
+                return currencyComboBox.getItems().stream()
+                        .filter(tradeCurrency -> tradeCurrency.getNameAndCode().equals(nameAndCode))
+                        .findAny()
+                        .orElse(null);
+            }
+        });
+
+        AutocompleteComboBox<TradeCurrency> autocompleteComboBox = (AutocompleteComboBox<TradeCurrency>) currencyComboBox;
+        autocompleteComboBox.setAutocompleteItems(new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies()));
+        autocompleteComboBox.setOnChangeConfirmed(e ->
+                onCurrencyConfirmed(currencyComboBox.getSelectionModel().getSelectedItem()));
+    }
+
+    private void onCurrencyConfirmed(@Nullable TradeCurrency selectedCurrency) {
+        if (selectedCurrency == null) {
+            // The search was left without a choice. The currency of the account stays and is shown again.
+            TradeCurrency tradeCurrency = paymentAccount.getSingleTradeCurrency();
+            if (tradeCurrency != null) {
+                currencyComboBox.getSelectionModel().select(tradeCurrency);
+            }
+            return;
+        }
+
+        paymentAccount.setSingleTradeCurrency(selectedCurrency);
+        updateFromInputs();
+        if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
+            ArsBlueRatePopup.show();
+        }
     }
 
     // Text which is typed or pasted is cut, so that the account data stays within its max length
