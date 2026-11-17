@@ -81,6 +81,12 @@ While a node holds no price from the price feed for a currency, the price alert 
 of the mobile notifications compare against the market price derived from trade statistics, which any
 peer can set by publishing statistics. A price alert which fires is removed.
 
+The average BSQ prices of 30 and 90 days weight each statistic by its volume and leave out only
+prices more than 10 standard deviations from the trimmed mean. A valid statistic of 2 BTC is more than
+the BSQ volume of a month. On the BSQ trades of the 30 days to 2026-11-16, one such statistic at twice
+the average stays in the average and moves it from 1,386 to 2,141 satoshis per BSQ, and one at half the
+average moves it to 813 satoshis.
+
 The trade volume of an altcoin in trade statistics over its look-back period decides whether the
 node shows the altcoin as actively traded or as delisted (DAO parameter `ASSET_MIN_VOLUME`). Only
 altcoins which are not delisted can be chosen for a new payment account and in the preferences.
