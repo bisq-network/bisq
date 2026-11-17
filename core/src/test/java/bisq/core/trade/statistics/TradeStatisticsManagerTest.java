@@ -53,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -126,6 +127,44 @@ public class TradeStatisticsManagerTest {
 
         assertEquals(Set.of(valid), manager.getObservableTradeStatisticsSet());
         verify(priceFeedService).setBisqMarketPrice("USD", valid.getTradePrice());
+    }
+
+    // A statistic can arrive after newer ones of its currency, for example when a trader republishes it
+    @Test
+    public void receivedStatisticOlderThanTheNewestOfItsCurrencyKeepsThePriceOfTheNewest() {
+        TradeStatistics3 newer = usdStatistics(Price.parse("USD", "200").getValue(), System.currentTimeMillis());
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData = new HashMap<>();
+        mapOfAllData.put(new P2PDataStorage.ByteArray(newer.getHash()), newer);
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService, mapOfAllData).onAllServicesInitialized();
+        TradeStatistics3 older = usdStatistics(Price.parse("USD", "100").getValue(),
+                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(30));
+
+        appendOnlyDataStoreListener(p2PDataStorage).onAdded(older);
+
+        verify(priceFeedService).setBisqMarketPrice("USD", newer.getTradePrice());
+        verify(priceFeedService, never()).setBisqMarketPrice("USD", older.getTradePrice());
+    }
+
+    // A date up to one day ahead is valid. Such a statistic is the newest one of its currency until a statistic with
+    // a later date arrives, as after a restart.
+    @Test
+    public void receivedStatisticDatedAheadStaysTheNewestOfItsCurrency() {
+        long now = System.currentTimeMillis();
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService, new HashMap<>()).onAllServicesInitialized();
+        TradeStatistics3 datedAhead = usdStatistics(Price.parse("USD", "1").getValue(),
+                now + TimeUnit.HOURS.toMillis(23));
+        TradeStatistics3 current = usdStatistics(Price.parse("USD", "100").getValue(), now);
+        AppendOnlyDataStoreListener listener = appendOnlyDataStoreListener(p2PDataStorage);
+
+        listener.onAdded(datedAhead);
+        listener.onAdded(current);
+
+        verify(priceFeedService, times(2)).setBisqMarketPrice("USD", datedAhead.getTradePrice());
+        verify(priceFeedService, never()).setBisqMarketPrice("USD", current.getTradePrice());
     }
 
     @Test

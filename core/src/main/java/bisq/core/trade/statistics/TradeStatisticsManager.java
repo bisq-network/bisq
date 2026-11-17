@@ -107,7 +107,13 @@ public class TradeStatisticsManager {
                     return;
                 }
                 observableTradeStatisticsSet.add(tradeStatistics);
-                priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
+                // A statistic can arrive after newer ones of its currency, for example when a trader republishes it
+                String currencyCode = tradeStatistics.getCurrency();
+                TradeStatistics3 newest = navigableTradeStatisticsSet.descendingSet().stream()
+                        .filter(e -> e.getCurrency().equals(currencyCode))
+                        .findFirst()
+                        .orElse(tradeStatistics);
+                priceFeedService.setBisqMarketPrice(currencyCode, newest.getTradePrice());
                 maybeDumpStatistics();
             }
         });
