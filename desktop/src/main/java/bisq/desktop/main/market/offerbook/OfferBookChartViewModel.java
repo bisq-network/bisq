@@ -43,6 +43,7 @@ import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.PriceUtil;
 import bisq.core.util.VolumeUtil;
 
 import com.google.inject.Inject;
@@ -66,6 +67,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 class OfferBookChartViewModel extends ActivatableViewModel {
@@ -77,6 +79,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     final PriceFeedService priceFeedService;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
+    private final PriceUtil priceUtil;
 
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     private final List<XYChart.Data<Number, Number>> buyData = new ArrayList<>();
@@ -103,13 +106,15 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                             Preferences preferences,
                             PriceFeedService priceFeedService,
                             AccountAgeWitnessService accountAgeWitnessService,
-                            Navigation navigation) {
+                            Navigation navigation,
+                            PriceUtil priceUtil) {
         this.offerBook = offerBook;
         this.openOfferManager = openOfferManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.priceUtil = priceUtil;
 
         String code = preferences.getOfferBookChartScreenCurrencyCode();
         if (code != null) {
@@ -329,12 +334,19 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 offerPriceComparator
                         .thenComparing(offerAmountComparator);
 
+        // As in the BSQ offer book, BSQ offers of others outside the price range of the preferences are left out
+        Predicate<Offer> isOutsidePriceRange = getCurrencyCode().equals(GUIUtil.BSQ.getCode()) ?
+                priceUtil.getOutsideBsqOfferPriceRangePredicate() :
+                offer -> false;
+        Predicate<Offer> isShown = offer -> !isOutsidePriceRange.test(offer) || isMyOffer(offer);
+
         OfferDirection buyOfferDirection = isCrypto ? OfferDirection.SELL : OfferDirection.BUY;
 
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(buyOfferDirection))
+                        && e.getDirection().equals(buyOfferDirection)
+                        && isShown.test(e))
                 .sorted(buyOfferSortComparator)
                 .collect(Collectors.toList());
 
@@ -365,7 +377,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(sellOfferDirection))
+                        && e.getDirection().equals(sellOfferDirection)
+                        && isShown.test(e))
                 .sorted(sellOfferSortComparator)
                 .collect(Collectors.toList());
 
