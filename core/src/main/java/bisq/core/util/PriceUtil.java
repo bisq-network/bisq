@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -127,6 +128,24 @@ public class PriceUtil {
                     tradeStatisticsManager, 30).second;
         }
         return bsq30DayAveragePrice;
+    }
+
+    // A price of 0 means that there is no average
+    public Price getBsq90DayAveragePrice() {
+        return AveragePriceUtil.getAveragePriceTuple(preferences, tradeStatisticsManager, 90).second;
+    }
+
+    // Whether the price is above the average price times the factor or below the average divided by the factor.
+    // Without a price or an average, no price is outside the range.
+    public static boolean isOutsidePriceRange(@Nullable Price price, Price averagePrice, double factor) {
+        if (price == null || !price.isPositive() || !averagePrice.isPositive()) {
+            return false;
+        }
+        checkArgument(price.getCurrencyCode().equals(averagePrice.getCurrencyCode()),
+                "Price %s and average price %s have different currencies", price, averagePrice);
+        double value = price.getValue();
+        double average = averagePrice.getValue();
+        return value > average * factor || value < average / factor;
     }
 
     public static Optional<Double> offerPercentageToDeviation(Offer offer) {
