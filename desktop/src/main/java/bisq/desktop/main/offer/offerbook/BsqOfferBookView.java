@@ -35,6 +35,8 @@ import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 
 import javax.inject.Inject;
@@ -46,12 +48,21 @@ import javafx.beans.value.ChangeListener;
 
 import java.math.BigDecimal;
 
+import javax.annotation.Nullable;
+
 @FxmlView
 public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewModel> {
+    // The offer book passes through intermediate states: the tab is selected before the view is activated, an edited
+    // offer is removed before its new version is added, and offers arrive one by one. The hint waits until the state
+    // has settled.
+    private static final long ALL_OFFERS_OUTSIDE_PRICE_RANGE_DELAY_SEC = 1;
+
     private final Navigation navigation;
     private final Preferences preferences;
     private final ChangeListener<Boolean> allOffersOutsidePriceRangeListener;
-    // At most one popup while the tab stays selected
+    @Nullable
+    private Timer allOffersOutsidePriceRangeTimer;
+    // At most one popup per visit of the tab
     private boolean allOffersOutsidePriceRangePopupShown;
 
     @Inject
@@ -68,7 +79,7 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
         super(model, navigation, offerDetailsWindow, bsqSwapOfferDetailsWindow, formatter, privateNotificationManager, useDevPrivilegeKeys, accountAgeWitnessService, signedWitnessService);
         this.navigation = navigation;
         this.preferences = preferences;
-        allOffersOutsidePriceRangeListener = (observable, oldValue, newValue) -> maybeShowAllOffersOutsidePriceRangePopup();
+        allOffersOutsidePriceRangeListener = (observable, oldValue, newValue) -> scheduleAllOffersOutsidePriceRangePopup();
     }
 
     @Override
@@ -88,7 +99,7 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
         currencyComboBoxContainer.setManaged(false);
 
         model.allOffersOutsidePriceRange.addListener(allOffersOutsidePriceRangeListener);
-        maybeShowAllOffersOutsidePriceRangePopup();
+        scheduleAllOffersOutsidePriceRangePopup();
     }
 
     @Override
@@ -96,16 +107,16 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
         super.deactivate();
 
         model.allOffersOutsidePriceRange.removeListener(allOffersOutsidePriceRangeListener);
+        stopAllOffersOutsidePriceRangeTimer();
         allOffersOutsidePriceRangePopupShown = false;
     }
 
+    // Selecting the tab sets the state of the model, which schedules the popup through the listener
     @Override
     public void onTabSelected(boolean isSelected) {
         super.onTabSelected(isSelected);
 
-        if (isSelected) {
-            maybeShowAllOffersOutsidePriceRangePopup();
-        } else {
+        if (!isSelected) {
             allOffersOutsidePriceRangePopupShown = false;
         }
     }
@@ -115,8 +126,24 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
         return BsqOfferBookViewModel.BSQ.getCode();
     }
 
+    private void scheduleAllOffersOutsidePriceRangePopup() {
+        stopAllOffersOutsidePriceRangeTimer();
+        if (model.allOffersOutsidePriceRange.get()) {
+            allOffersOutsidePriceRangeTimer = UserThread.runAfter(this::maybeShowAllOffersOutsidePriceRangePopup,
+                    ALL_OFFERS_OUTSIDE_PRICE_RANGE_DELAY_SEC);
+        }
+    }
+
+    private void stopAllOffersOutsidePriceRangeTimer() {
+        if (allOffersOutsidePriceRangeTimer != null) {
+            allOffersOutsidePriceRangeTimer.stop();
+            allOffersOutsidePriceRangeTimer = null;
+        }
+    }
+
     private void maybeShowAllOffersOutsidePriceRangePopup() {
-        if (allOffersOutsidePriceRangePopupShown || !model.allOffersOutsidePriceRange.get()) {
+        allOffersOutsidePriceRangeTimer = null;
+        if (allOffersOutsidePriceRangePopupShown || !model.isTabSelected || !model.allOffersOutsidePriceRange.get()) {
             return;
         }
 

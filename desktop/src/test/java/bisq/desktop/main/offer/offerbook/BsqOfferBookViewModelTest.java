@@ -24,7 +24,9 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -43,6 +45,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +61,8 @@ import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -172,7 +177,33 @@ public class BsqOfferBookViewModelTest {
         assertFalse(model.allOffersOutsidePriceRange.get());
     }
 
+    // With "Show offers matching my accounts" and no BSQ account, that filter hides every offer, not the range. On the
+    // first click on the tab, the tab is selected before the model is activated, and only the activation applies that
+    // filter. The state after the activation must not report the offers as hidden by the range.
+    @Test
+    public void offersHiddenByTheMatchingAccountsFilterDoNotCountAfterTheFirstLoad() {
+        offerBookListItems.add(item("above", 3 * AVERAGE_PRICE));
+        preferences.setShowOffersMatchingMyAccounts(true);
+        User user = mock(User.class);
+        when(user.getPaymentAccounts()).thenReturn(Set.of(mock(PaymentAccount.class)));
+        OfferFilterService offerFilterService = mock(OfferFilterService.class);
+        when(offerFilterService.canTakeOffer(any(), eq(false)))
+                .thenReturn(OfferFilterService.Result.HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER);
+
+        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE), user, offerFilterService);
+
+        assertTrue(shownOfferIds(model).isEmpty());
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
     private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic) {
+        return activatedModel(statistic, mock(User.class), null);
+    }
+
+    // In the order of the first click on the tab: the tab is selected before the model is activated
+    private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic,
+                                                 User user,
+                                                 OfferFilterService offerFilterService) {
         OfferBook offerBook = mock(OfferBook.class);
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
@@ -181,12 +212,12 @@ public class BsqOfferBookViewModelTest {
         PriceFeedService priceFeedService = mock(PriceFeedService.class);
         PriceUtil priceUtil = new PriceUtil(priceFeedService, tradeStatisticsManager, preferences);
 
-        BsqOfferBookViewModel model = new BsqOfferBookViewModel(mock(User.class), openOfferManager, offerBook,
-                preferences, null, null, priceFeedService, null, null, null, null, priceUtil, null,
+        BsqOfferBookViewModel model = new BsqOfferBookViewModel(user, openOfferManager, offerBook,
+                preferences, null, null, priceFeedService, null, null, null, null, priceUtil, offerFilterService,
                 coinFormatter, new BsqFormatter(), null, null, daoStateService);
         model.initWithDirection(OfferDirection.BUY);
-        model.activate();
         model.onTabSelected(true);
+        model.activate();
         return model;
     }
 
