@@ -219,6 +219,8 @@ public class PaymentAccountUtil {
                 return MercadoPagoAccount.SUPPORTED_CURRENCIES();
             case SBP_ID:
                 return SbpAccount.SUPPORTED_CURRENCIES;
+            case CUSTOM_ID:
+                return CustomPaymentMethodAccount.SUPPORTED_CURRENCIES;
             default:
                 return Collections.emptyList();
         }

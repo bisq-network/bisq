@@ -58,6 +58,9 @@ public class Res {
     @SuppressWarnings("CanBeFinal")
     private static ResourceBundle resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", GlobalSettings.getLocale(), new UTF8Control());
 
+    // The strings of the default language (English). They do not depend on the language of the user.
+    private static final ResourceBundle defaultResourceBundle = ResourceBundle.getBundle("i18n.displayStrings", Locale.ROOT, new UTF8Control());
+
     static {
         GlobalSettings.addLocaleListener((oldValue, newValue) -> {
             if ("en".equalsIgnoreCase(newValue.getLanguage()))
@@ -76,6 +79,10 @@ public class Res {
 
     public static ResourceBundle getResourceBundle() {
         return resourceBundle;
+    }
+
+    public static ResourceBundle getDefaultResourceBundle() {
+        return defaultResourceBundle;
     }
 
     private static String baseCurrencyCode;

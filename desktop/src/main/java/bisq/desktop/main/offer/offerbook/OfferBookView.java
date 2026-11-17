@@ -814,6 +814,12 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     }
 
     private void openPopupForMissingAccountSetup(Offer offer) {
+        // No account can match an offer of the custom payment method without a valid name
+        if (offer.getPaymentMethod().isCustom() && offer.getCustomPaymentMethodName().isEmpty()) {
+            new Popup().warning(Res.get("payment.custom.offerWithoutValidName")).show();
+            return;
+        }
+
         String headline = Res.get("offerbook.warning.noMatchingAccount.headline");
 
         if (offer.getCurrencyCode().equals("BSQ")) {
@@ -847,8 +853,12 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                 navigation.navigateTo(MainView.class, AccountView.class, accountViewClass);
                 return;
             }
+            // An account of the custom payment method matches only an offer with the name of its payment method
+            String msgKey = offer.getPaymentMethod().isCustom() ?
+                    "payment.custom.noMatchingAccount" :
+                    "offerbook.warning.noMatchingAccount.msg";
             new Popup().headLine(headline)
-                    .instruction(Res.get("offerbook.warning.noMatchingAccount.msg"))
+                    .instruction(Res.get(msgKey))
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());

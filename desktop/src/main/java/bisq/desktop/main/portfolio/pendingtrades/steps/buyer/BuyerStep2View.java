@@ -35,6 +35,7 @@ import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.CustomPaymentMethodForm;
 import bisq.desktop.components.paymentmethods.DomesticWireTransferForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
@@ -97,6 +98,7 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
@@ -338,6 +340,12 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.CASH_BY_MAIL_ID:
                 gridRow = CashByMailForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.CUSTOM_ID:
+                checkNotNull(model.dataModel.getTrade(), "model.dataModel.getTrade() must not be null");
+                checkNotNull(model.dataModel.getTrade().getOffer(), "model.dataModel.getTrade().getOffer() must not be null");
+                gridRow = CustomPaymentMethodForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload,
+                        model.dataModel.getTrade().getOffer());
                 break;
             case PaymentMethod.MONEY_GRAM_ID:
                 gridRow = MoneyGramForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -745,6 +753,9 @@ public class BuyerStep2View extends TradeStepView {
                         Res.get("portfolio.pending.step2_buyer.fees.swift");
             } else if (paymentAccountPayload instanceof SbpAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.sbp", amount);
+            } else if (paymentAccountPayload instanceof CustomPaymentMethodAccountPayload) {
+                message += Res.get("portfolio.pending.step2_buyer.custom", amount) +
+                        refTextWarn;
             } else {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +

@@ -91,6 +91,8 @@ class CorePaymentAccountsService {
 
     List<PaymentMethod> getFiatPaymentMethods() {
         return PaymentMethod.getPaymentMethods().stream()
+                // The account form does not create an account of the custom payment method (see PaymentAccountForm)
+                .filter(paymentMethod -> !paymentMethod.isCustom())
                 .filter(PaymentMethod::isFiat)
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());

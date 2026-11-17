@@ -215,7 +215,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TRANSFERWISE_USD,
         ACH_TRANSFER,
         DOMESTIC_WIRE_TRANSFER,
-        SBP;
+        SBP,
+        CUSTOM;
 
         private static final PaymentMethodMapper[] values = values(); // cache for perf gain
     }

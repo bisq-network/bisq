@@ -19,7 +19,9 @@ package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
@@ -113,6 +115,61 @@ class SellerVerifyBuyerPaymentAccountTest {
         verify(processModel.getTradeManager(), atLeastOnce()).requestPersistence();
     }
 
+    // All custom payment methods share one payment method ID. A buyer with a modified client could commit to an
+    // account of another custom payment method than the one of the offer.
+    @Test
+    void customAccountWithTheNameOfTheOfferIsValidated() {
+        ProcessModel processModel = processModel(false);
+        CustomPaymentMethodAccountPayload paymentAccountPayload = customPayload("m pesa");
+        Trade trade = tradeWithRevealedAccount(processModel, paymentAccountPayload, true);
+        Offer offer = trade.getOffer();
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.CUSTOM_ID));
+        when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
+
+        TaskResult result = runTask(trade);
+
+        assertTrue(result.completed());
+        assertNull(result.errorMessage());
+        verify(processModel).setBuyerPaymentAccountValidated(true);
+    }
+
+    @Test
+    void customAccountWithAnotherNameThanTheOfferFailsClosed() {
+        ProcessModel processModel = processModel(false);
+        CustomPaymentMethodAccountPayload paymentAccountPayload = customPayload("PayPal");
+        Trade trade = tradeWithRevealedAccount(processModel, paymentAccountPayload, true);
+        Offer offer = trade.getOffer();
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.CUSTOM_ID));
+        when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
+
+        TaskResult result = runTask(trade);
+
+        assertFalse(result.completed());
+        assertNotNull(result.errorMessage());
+        assertTrue(result.errorMessage().contains("is not for the custom payment method of the offer"),
+                result.errorMessage());
+        assertFalse(result.errorMessage().contains("PayPal"), result.errorMessage());
+        verify(processModel, never()).setBuyerPaymentAccountValidated(true);
+        verify(processModel, never()).getAccountAgeWitnessService();
+    }
+
+    // The account of a custom payment method has no signing rule, so it must not stand in for the account of a
+    // payment method which has one
+    @Test
+    void customAccountForAnotherPaymentMethodFailsClosed() {
+        ProcessModel processModel = processModel(false);
+        Trade trade = tradeWithRevealedAccount(processModel, customPayload("SEPA"), true);
+
+        TaskResult result = runTask(trade);
+
+        assertFalse(result.completed());
+        assertNotNull(result.errorMessage());
+        assertTrue(result.errorMessage().contains("must both be of the custom payment method"),
+                result.errorMessage());
+        verify(processModel, never()).setBuyerPaymentAccountValidated(true);
+        verify(processModel, never()).getAccountAgeWitnessService();
+    }
+
     @Test
     void cryptoTradeDoesNotRequireAccountAgeValidation() {
         ProcessModel processModel = processModel(false);
@@ -133,9 +190,49 @@ class SellerVerifyBuyerPaymentAccountTest {
         return processModel;
     }
 
+    private static CustomPaymentMethodAccountPayload customPayload(String paymentMethodName) {
+        CustomPaymentMethodAccountPayload payload = new CustomPaymentMethodAccountPayload(PaymentMethod.CUSTOM_ID, "id");
+        payload.setPaymentMethodName(paymentMethodName);
+        payload.setAccountData("Jane Doe, +254 700 000000");
+        return payload;
+    }
+
+    // A EUR trade with an offer of the payment method SEPA, in which the buyer revealed the given account
+    private static Trade tradeWithRevealedAccount(ProcessModel processModel,
+                                                  PaymentAccountPayload paymentAccountPayload,
+                                                  boolean accountAgeWitnessIsValid) {
+        TradingPeer tradingPeer = new TradingPeer();
+        PubKeyRing pubKeyRing = mock(PubKeyRing.class);
+        byte[] nonce = {1};
+        byte[] signature = {2};
+        tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
+        tradingPeer.setPubKeyRing(pubKeyRing);
+        tradingPeer.setAccountAgeWitnessNonce(nonce);
+        tradingPeer.setAccountAgeWitnessSignature(signature);
+        tradingPeer.setCurrentDate(1234L);
+        when(processModel.getTradePeer()).thenReturn(tradingPeer);
+        AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
+        when(processModel.getAccountAgeWitnessService()).thenReturn(accountAgeWitnessService);
+        when(accountAgeWitnessService.verifyAccountAgeWitnessAtTradeDate(
+                any(),
+                eq(paymentAccountPayload),
+                any(),
+                eq(pubKeyRing),
+                same(nonce),
+                same(signature),
+                any())).thenReturn(accountAgeWitnessIsValid);
+        Trade trade = trade("EUR", processModel);
+        Contract contract = mock(Contract.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
+                .thenReturn(paymentAccountPayload.getHashForContract());
+        return trade;
+    }
+
     private static Trade trade(String currencyCode, ProcessModel processModel) {
         Offer offer = mock(Offer.class);
         when(offer.getCurrencyCode()).thenReturn(currencyCode);
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.SEPA_ID));
         Trade trade = mock(Trade.class);
         when(trade.getOffer()).thenReturn(offer);
         when(trade.getProcessModel()).thenReturn(processModel);

@@ -95,6 +95,12 @@ specification says so explicitly instead of describing the implementation as if 
 | [`offer/offer-edit-and-removal.md`](offer/offer-edit-and-removal.md) | The completion contracts of offer edit and removal, and the preconditions they impose on wallet restore, wallet emptying and BSQ swap republishing. |
 | [`offer/offer-book-offer-id.md`](offer/offer-book-offer-id.md) | When an offer replaces a listed offer with the same ID in the offer book: only for the same owner. |
 
+### `payment/`
+
+| Specification | Covers |
+|---|---|
+| [`payment/custom-payment-method.md`](payment/custom-payment-method.md) | The payment method for payment methods which Bisq does not support: the name and the account data as free texts, which accounts and offers belong together, the checks on the account of the peer, the trade limit and the warnings. |
+
 ### `trade/`
 
 | Specification | Covers |

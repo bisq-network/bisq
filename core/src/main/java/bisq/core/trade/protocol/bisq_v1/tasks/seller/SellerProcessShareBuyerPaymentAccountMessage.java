@@ -50,6 +50,7 @@ import java.security.PrivateKey;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -75,6 +76,7 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
 
             PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(message.getBuyerPaymentAccountPayload(),
                     "buyerPaymentAccountPayload must not be null for trade: " + trade.getId());
+            checkPeersPaymentAccountPayload(peersPaymentAccountPayload, checkNotNull(trade.getOffer()));
             byte[] peersHashFromAccountPayload = peersPaymentAccountPayload.getHashForContract();
             byte[] peersCommittedHashFromContract = contract.getHashOfPeersPaymentAccountPayload(myPubKeyRing);
 

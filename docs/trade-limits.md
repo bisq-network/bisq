@@ -97,7 +97,8 @@ For peer verification, the equivalent limits are `PM`, `S`, `0.5 * PM`, and
 
 ## Payment-Method Maximum
 
-Payment methods use either a risk category or a custom static limit.
+Payment methods use either a risk category or a custom static limit. The
+custom payment method `CUSTOM` uses a risk category with a fixed cap.
 
 ### Risk Categories
 
@@ -156,6 +157,20 @@ With the current `networkMax = 0.250 BTC`, the custom limits are:
 | `UPI` | `0.05 BTC` | `0.00625 BTC` |
 | `PAYTM` | `0.05 BTC` | `0.00625 BTC` |
 | `TIKKIE` | `0.05 BTC` | `0.00625 BTC` |
+
+### Fixed Cap Of The Custom Payment Method
+
+`CUSTOM` is the payment method for payment methods which Bisq does not support
+(see `docs/specifications/payment/custom-payment-method.md`). It is in the
+high-risk category, and its maximum is capped at a fixed `0.05 BTC`. The cap is
+not scaled by the network maximum.
+
+```text
+customPaymentMethodMax = min(highRiskMax, 0.05 BTC)
+```
+
+With the current `networkMax = 0.250 BTC`, the maximum is `0.05 BTC`. `CUSTOM`
+is not a chargeback-risk method, so account signing does not reduce its limit.
 
 ### Effect Of The Local User Limit
 
@@ -289,6 +304,7 @@ user-defined limit `U = 0.1 BTC`.
 | Any trader uses `ADVANCED_CASH` with default preference | Very-low-risk method lowered by default user limit. | `0.1 BTC` |
 | Any trader uses `ADVANCED_CASH` after raising preference to `0.250 BTC` | Very-low-risk method reaches the hard cap. | `0.250 BTC` |
 | Any trader uses `UPI` | Custom scaled payment-method limit. | `0.00625 BTC` |
+| Any trader uses `CUSTOM` | High-risk category with the fixed cap of the custom payment method. | `0.05 BTC` |
 
 ## Source References
 

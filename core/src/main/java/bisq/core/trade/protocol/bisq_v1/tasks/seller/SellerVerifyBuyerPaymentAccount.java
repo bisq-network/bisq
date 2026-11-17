@@ -32,6 +32,7 @@ import bisq.common.taskrunner.TaskRunner;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -55,6 +56,7 @@ public class SellerVerifyBuyerPaymentAccount extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradePeer();
             PaymentAccountPayload paymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),
                     "Buyer payment account was not revealed and validated");
+            checkPeersPaymentAccountPayload(paymentAccountPayload, offer);
             Contract contract = checkNotNull(trade.getContract());
             checkHashFromContract(paymentAccountPayload.getHashForContract(),
                     contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()),

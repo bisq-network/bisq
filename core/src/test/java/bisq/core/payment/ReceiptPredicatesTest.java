@@ -85,6 +85,45 @@ public class ReceiptPredicatesTest {
     }
 
     @Test
+    public void testIsCustomPaymentMethod() {
+        Offer offer = mock(Offer.class);
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.CUSTOM_ID));
+        assertTrue(predicates.isCustomPaymentMethod(offer));
+
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.F2F_ID));
+        assertFalse(predicates.isCustomPaymentMethod(offer));
+    }
+
+    @Test
+    public void testIsMatchingCustomPaymentMethodAccount() {
+        Offer offer = mock(Offer.class);
+        when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
+        CustomPaymentMethodAccount account = mock(CustomPaymentMethodAccount.class);
+        when(account.getAccountData()).thenReturn("Jane Doe, +254 700 000000");
+
+        when(account.getPaymentMethodName()).thenReturn("m pesa");
+        assertTrue(predicates.isMatchingCustomPaymentMethodAccount(offer, account));
+
+        when(account.getPaymentMethodName()).thenReturn("Airtel Money");
+        assertFalse(predicates.isMatchingCustomPaymentMethodAccount(offer, account));
+
+        // An account which was imported can have account data which the peer would refuse
+        when(account.getPaymentMethodName()).thenReturn("M-Pesa");
+        when(account.getAccountData()).thenReturn("");
+        assertFalse(predicates.isMatchingCustomPaymentMethodAccount(offer, account));
+        when(account.getAccountData()).thenReturn("a".repeat(CustomPaymentMethodUtil.MAX_ACCOUNT_DATA_LENGTH + 1));
+        assertFalse(predicates.isMatchingCustomPaymentMethodAccount(offer, account));
+
+        // An offer without a valid name has an empty name
+        when(account.getAccountData()).thenReturn("Jane Doe, +254 700 000000");
+        when(offer.getCustomPaymentMethodName()).thenReturn("");
+        when(account.getPaymentMethodName()).thenReturn("");
+        assertFalse(predicates.isMatchingCustomPaymentMethodAccount(offer, account));
+
+        assertFalse(predicates.isMatchingCustomPaymentMethodAccount(offer, mock(PaymentAccount.class)));
+    }
+
+    @Test
     public void testIsEqualPaymentMethods() {
         PaymentMethod method = PaymentMethod.getDummyPaymentMethod("1");
 

@@ -349,6 +349,26 @@ public class TradeStatistics3Test {
         assertTrue(tradeStatistics.getTradeVolume().getValue() > 0);
     }
 
+    // The payment method of a statistic is stored as its position in PaymentMethodMapper, so an entry must never
+    // move once it is released. The statistic does not tell which custom payment method was used.
+    @Test
+    public void customPaymentMethodStatisticStoresThePositionOfThePaymentMethod() {
+        assertEquals(57, TradeStatistics3.PaymentMethodMapper.CUSTOM.ordinal());
+
+        TradeStatistics3 tradeStatistics = new TradeStatistics3("KES",
+                130_000_000_000L,
+                Coin.parseCoin("0.05").value,
+                PaymentMethod.CUSTOM_ID,
+                System.currentTimeMillis(),
+                null,
+                null,
+                (TreeMap<String, String>) null);
+
+        assertTrue(tradeStatistics.isValid());
+        assertEquals(PaymentMethod.CUSTOM_ID, tradeStatistics.getPaymentMethodId());
+        assertEquals("57", tradeStatistics.toProtoTradeStatistics3().getPaymentMethod());
+    }
+
     private static TradeStatistics3 tradeStatistics(String currency) {
         return tradeStatistics(currency, null);
     }

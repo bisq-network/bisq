@@ -19,8 +19,12 @@ package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.offer.Offer;
+import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
@@ -28,6 +32,8 @@ import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
@@ -48,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -166,6 +173,112 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         }
     }
 
+    @Test
+    void runRejectsMissingCustomSellerAccountBeforeWalletMutation() {
+        Transaction depositTx = depositTx(0);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        Wallet wallet = mock(Wallet.class);
+        Trade trade = trade(depositTx, delayedPayoutTx.bitcoinSerialize(), wallet);
+        Offer offer = offer(PaymentMethod.CUSTOM_ID);
+        when(trade.getOffer()).thenReturn(offer);
+
+        try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
+            walletService.when(() -> WalletService.maybeAddSelfTxToWallet(any(Transaction.class), same(wallet)))
+                    .thenReturn(depositTx);
+
+            new BuyerProcessDepositTxAndDelayedPayoutTxMessage(taskRunner(), trade).run();
+
+            walletService.verifyNoInteractions();
+            verify(trade, never()).applyDepositTx(any(Transaction.class));
+            verify(trade, never()).applyDelayedPayoutTxBytes(any(byte[].class));
+            verify(trade.getProcessModel().getTradePeer(), never()).setPaymentAccountPayload(any());
+            verify(trade).setErrorMessage(contains("peersPaymentAccountPayload must not be null"));
+        }
+    }
+
+    // All custom payment methods share one payment method ID. A seller with a modified client could commit to an
+    // account of another custom payment method than the one of the offer.
+    @Test
+    void runRejectsSellerAccountOfAnotherCustomPaymentMethodBeforeWalletMutation() {
+        Transaction depositTx = depositTx(0);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        Wallet wallet = mock(Wallet.class);
+        Trade trade = trade(depositTx, delayedPayoutTx.bitcoinSerialize(), wallet);
+        when(trade.getProcessModel().getTradeMessage()).thenReturn(new DepositTxAndDelayedPayoutTxMessage("uid",
+                "trade-id",
+                NODE_ADDRESS,
+                depositTx.bitcoinSerialize(),
+                delayedPayoutTx.bitcoinSerialize(),
+                customPayload("PayPal")));
+        Offer offer = offer(PaymentMethod.CUSTOM_ID);
+        when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
+        when(trade.getOffer()).thenReturn(offer);
+
+        try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
+            new BuyerProcessDepositTxAndDelayedPayoutTxMessage(taskRunner(), trade).run();
+
+            walletService.verifyNoInteractions();
+            verify(trade, never()).applyDepositTx(any(Transaction.class));
+            verify(trade, never()).applyDelayedPayoutTxBytes(any(byte[].class));
+            verify(trade.getProcessModel().getTradePeer(), never()).setPaymentAccountPayload(any());
+            verify(trade).setErrorMessage(contains("is not for the custom payment method of the offer"));
+        }
+    }
+
+    // Shows that the test above fails for the name and not for another part of its setup: with the name of the
+    // offer the same account is taken and the task ends without an error
+    @Test
+    void runTakesSellerAccountOfTheCustomPaymentMethodOfTheOffer() {
+        Transaction depositTx = depositTx(0);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        Wallet wallet = mock(Wallet.class);
+        Trade trade = trade(depositTx, delayedPayoutTx.bitcoinSerialize(), wallet);
+        ProcessModel processModel = trade.getProcessModel();
+        CustomPaymentMethodAccountPayload sellerPaymentAccountPayload = customPayload("m pesa");
+        when(processModel.getTradeMessage()).thenReturn(new DepositTxAndDelayedPayoutTxMessage("uid",
+                "trade-id",
+                NODE_ADDRESS,
+                depositTx.bitcoinSerialize(),
+                delayedPayoutTx.bitcoinSerialize(),
+                sellerPaymentAccountPayload));
+        Offer offer = offer(PaymentMethod.CUSTOM_ID);
+        when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
+        when(trade.getOffer()).thenReturn(offer);
+        Contract contract = mock(Contract.class);
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
+                .thenReturn(sellerPaymentAccountPayload.getHashForContract());
+        when(processModel.getPaymentAccountPayload(trade)).thenReturn(customPayload("M-Pesa"));
+        KeyRing keyRing = mock(KeyRing.class);
+        when(keyRing.getSignatureKeyPair()).thenReturn(Sig.generateKeyPair());
+        when(processModel.getKeyRing()).thenReturn(keyRing);
+
+        try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
+            walletService.when(() -> WalletService.maybeAddSelfTxToWallet(any(Transaction.class), same(wallet)))
+                    .thenReturn(depositTx);
+
+            new BuyerProcessDepositTxAndDelayedPayoutTxMessage(taskRunner(), trade).run();
+
+            verify(trade, never()).setErrorMessage(any());
+            verify(processModel.getTradePeer()).setPaymentAccountPayload(sellerPaymentAccountPayload);
+            verify(trade).setContractAsJson(any());
+            verify(trade).setContractHash(any());
+        }
+    }
+
+    private static Offer offer(String paymentMethodId) {
+        Offer offer = mock(Offer.class);
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(paymentMethodId));
+        return offer;
+    }
+
+    private static CustomPaymentMethodAccountPayload customPayload(String paymentMethodName) {
+        CustomPaymentMethodAccountPayload payload = new CustomPaymentMethodAccountPayload(PaymentMethod.CUSTOM_ID, "id");
+        payload.setPaymentMethodName(paymentMethodName);
+        payload.setAccountData("Jane Doe, +254 700 000000");
+        return payload;
+    }
+
     private static Trade trade(Transaction depositTx, byte[] delayedPayoutTxBytes, Wallet wallet) {
         return trade(depositTx, delayedPayoutTxBytes, delayedPayoutTxBytes, wallet);
     }
@@ -182,7 +295,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 messageDelayedPayoutTxBytes,
                 wallet);
 
+        Offer offer = offer(PaymentMethod.SEPA_ID);
         when(trade.getProcessModel()).thenReturn(processModel);
+        when(trade.getOffer()).thenReturn(offer);
         when(trade.getDelayedPayoutTxBytes()).thenReturn(delayedPayoutTxBytes);
         when(trade.getTradeState()).thenReturn(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
         when(trade.getId()).thenReturn("trade-id");
@@ -197,7 +312,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 preparedDepositTx.bitcoinSerialize(),
                 delayedPayoutTxBytes,
                 wallet);
+        Offer offer = offer(PaymentMethod.SEPA_ID);
         when(trade.getProcessModel()).thenReturn(processModel);
+        when(trade.getOffer()).thenReturn(offer);
         when(trade.getDelayedPayoutTxBytes()).thenReturn(delayedPayoutTxBytes);
         when(trade.getTradeState()).thenReturn(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
         when(trade.getId()).thenReturn("trade-id");
@@ -220,7 +337,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 messageDelayedPayoutTxBytes,
                 wallet);
 
+        Offer offer = offer(PaymentMethod.SEPA_ID);
         when(trade.getProcessModel()).thenReturn(processModel);
+        when(trade.getOffer()).thenReturn(offer);
         when(trade.getDelayedPayoutTxBytes()).thenReturn(delayedPayoutTxBytes);
         when(trade.getTradeState()).thenReturn(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
         when(trade.getId()).thenReturn("trade-id");

@@ -41,6 +41,7 @@ import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
+import bisq.core.payment.payload.CustomPaymentMethodAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
@@ -448,6 +449,9 @@ public class SellerStep3View extends TradeStepView {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode);
             } else if (paymentAccountPayload instanceof CashByMailAccountPayload) {
                 message = Res.get("portfolio.pending.step3_seller.cashByMail", part1, tradeVolumeWithCode);
+            } else if (paymentAccountPayload instanceof CustomPaymentMethodAccountPayload) {
+                message = Res.get("portfolio.pending.step3_seller.custom", part1, tradeVolumeWithCode,
+                        Res.get("portfolio.pending.step3_seller.openDispute"));
             } else if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                     !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                     !(paymentAccountPayload instanceof F2FAccountPayload) &&
