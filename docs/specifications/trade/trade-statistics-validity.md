@@ -25,11 +25,11 @@ through its trigger price.
 4. The trigger price of an open offer deactivates the offer only with a recent price from the price
    feed, which is at most 30 minutes old (`MarketPrice.isRecentExternalPriceAvailable`). A price
    which a node derives from trade statistics never deactivates an offer.
-5. An average price computed from valid statistics, in the market charts and for the average BSQ
-   price, does not fail for any values. An average which cannot be represented as a long is 0, which
-   stands for no average, as when there are no trades. A value converted with the average BSQ price,
-   such as a trade fee in BSQ shown in the user's currency, is not shown if it cannot be represented
-   as a long.
+5. An average price computed from valid statistics, in the market charts, for the average BSQ price
+   and for the market price of BSQ, does not fail for any values. An average which cannot be
+   represented as a long is 0, which stands for no average, as when there are no trades. A value
+   converted with the average BSQ price, such as a trade fee in BSQ shown in the user's currency, is
+   not shown if it cannot be represented as a long.
 6. A sum over valid statistics, such as the traded amount or volume of a period, never wraps
    around. An average is computed from sums as floating point numbers. A total which is
    shown or compared, such as the volume in the charts or the traded amount of an altcoin, is the
@@ -40,8 +40,9 @@ through its trigger price.
 A trade statistic is an unauthenticated claim: no signature binds it to a trade or to a trader, and
 any peer can publish one. Validity (rule 2) removes only values which no trade can have. A valid
 statistic can still state a price, an amount or a date which no trade had. Values which a node
-derives from trade statistics, such as the newest price of a currency, average prices and volumes,
-are therefore informational. They must not change an offer, a trade, a fee or the DAO state.
+derives from trade statistics, such as the market price of a currency without a price from the price
+feed (see [`trade-statistics-market-price.md`](trade-statistics-market-price.md)), average prices and
+volumes, are therefore informational. They must not change an offer, a trade, a fee or the DAO state.
 
 ## Reasons
 
@@ -49,9 +50,9 @@ are therefore informational. They must not change an offer, a trade, a fee or th
   statistic is published. A statistic dated in the future would be the newest one of its currency
   until that date, also after a restart. One day covers differences between the clocks of nodes, as
   for account age witnesses and signed witnesses.
-- Rule 2, price: the limit is far above the price of any trade. Prices derived from a valid
-  statistic, such as the market price taken from the newest one, stay in the long range when they
-  are converted.
+- Rule 2, price: the limit is far above the price of any trade. Prices derived from valid
+  statistics, such as the market price of a currency without a price from the price feed, stay in
+  the long range when they are converted.
 - Rule 2, volume: the charts, the trades table and the average prices compute the volume from the
   price and the amount, and some of them divide by it. For values which no trade can have, this
   computation fails or gives zero.
@@ -77,8 +78,14 @@ startup or during an outage of the price feed, no offer is deactivated by its tr
 ## Known gaps
 
 While a node holds no price from the price feed for a currency, the price alert and the market alert
-of the mobile notifications compare against the newest price from trade statistics, which any peer
-can publish. A price alert which fires is removed.
+of the mobile notifications compare against the market price derived from trade statistics, which any
+peer can set by publishing statistics. A price alert which fires is removed.
+
+The average BSQ prices of 30 and 90 days weight each statistic by its volume and leave out only
+prices more than 10 standard deviations from the trimmed mean. A valid statistic of 2 BTC is more than
+the BSQ volume of a month. On the BSQ trades of the 30 days to 2026-11-16, one such statistic at twice
+the average stays in the average and moves it from 1,386 to 2,141 satoshis per BSQ, and one at half the
+average moves it to 813 satoshis.
 
 The trade volume of an altcoin in trade statistics over its look-back period decides whether the
 node shows the altcoin as actively traded or as delisted (DAO parameter `ASSET_MIN_VOLUME`). Only
