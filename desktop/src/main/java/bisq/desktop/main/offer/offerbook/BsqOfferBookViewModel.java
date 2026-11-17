@@ -26,7 +26,6 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
@@ -120,13 +119,10 @@ public class BsqOfferBookViewModel extends OfferBookViewModel {
     // node without BSQ trade statistics, all offers are shown.
     @Override
     Predicate<OfferBookListItem> getPriceRangePredicate() {
-        Price averagePrice = priceUtil.getBsq90DayAveragePrice();
-        double factor = preferences.getBsqOfferPriceRangeFactor();
+        Predicate<Offer> isOutsidePriceRange = priceUtil.getOutsideBsqOfferPriceRangePredicate();
         return offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
-            return !offer.getCurrencyCode().equals(BSQ.getCode()) ||
-                    isMyOffer(offer) ||
-                    !PriceUtil.isOutsidePriceRange(offer.getPrice(), averagePrice, factor);
+            return !isOutsidePriceRange.test(offer) || isMyOffer(offer);
         };
     }
 

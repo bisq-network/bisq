@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
@@ -116,6 +117,26 @@ class PriceUtilTest {
                 preferences());
 
         assertEquals(0, priceUtil.getBsq90DayAveragePrice().getValue());
+    }
+
+    // The predicate reads the factor of the preferences and leaves offers of other currencies alone
+    @Test
+    void bsqOffersOutsideTheRangeOfThePreferencesMatch() {
+        TradeStatistics3 statistic = new TradeStatistics3("BSQ", 2000, Coin.parseCoin("0.1").getValue(),
+                "BLOCK_CHAINS", System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), null, null,
+                (TreeMap<String, String>) null);
+        Preferences preferences = preferences();
+        when(preferences.getBsqOfferPriceRangeFactor()).thenReturn(4d);
+        PriceUtil priceUtil = new PriceUtil(mock(PriceFeedService.class), tradeStatisticsManager(statistic),
+                preferences);
+
+        Predicate<Offer> isOutsidePriceRange = priceUtil.getOutsideBsqOfferPriceRangePredicate();
+
+        assertFalse(isOutsidePriceRange.test(bsqOffer(8000)));
+        assertFalse(isOutsidePriceRange.test(bsqOffer(500)));
+        assertTrue(isOutsidePriceRange.test(bsqOffer(8001)));
+        assertTrue(isOutsidePriceRange.test(bsqOffer(499)));
+        assertFalse(isOutsidePriceRange.test(make(OfferMaker.btcUsdOffer.but(with(OfferMaker.price, 1L)))));
     }
 
     private static Offer bsqOffer(long price) {

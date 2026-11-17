@@ -40,6 +40,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -133,6 +134,15 @@ public class PriceUtil {
     // A price of 0 means that there is no average
     public Price getBsq90DayAveragePrice() {
         return AveragePriceUtil.getAveragePriceTuple(preferences, tradeStatisticsManager, 90).second;
+    }
+
+    // BSQ offers with a price outside the range around the 90-day average BSQ price which the preferences set. Reads the
+    // average and the factor once, so that one filtering of many offers computes the average once.
+    public Predicate<Offer> getOutsideBsqOfferPriceRangePredicate() {
+        Price averagePrice = getBsq90DayAveragePrice();
+        double factor = preferences.getBsqOfferPriceRangeFactor();
+        return offer -> offer.getCurrencyCode().equals("BSQ") &&
+                isOutsidePriceRange(offer.getPrice(), averagePrice, factor);
     }
 
     // Whether the price is above the average price times the factor or below the average divided by the factor.
