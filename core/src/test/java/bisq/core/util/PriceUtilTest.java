@@ -63,6 +63,19 @@ class PriceUtilTest {
     }
 
     @Test
+    void priceAtDecimalUpperBoundIsNotOutside() {
+        assertFalse(PriceUtil.isOutsidePriceRange(Price.valueOf("BSQ", 2002), AVERAGE, 1.001));
+        assertTrue(PriceUtil.isOutsidePriceRange(Price.valueOf("BSQ", 2003), AVERAGE, 1.001));
+    }
+
+    @Test
+    void priceAtDecimalLowerBoundIsNotOutside() {
+        Price average = Price.valueOf("BSQ", 2260);
+        assertFalse(PriceUtil.isOutsidePriceRange(Price.valueOf("BSQ", 2000), average, 1.13));
+        assertTrue(PriceUtil.isOutsidePriceRange(Price.valueOf("BSQ", 1999), average, 1.13));
+    }
+
+    @Test
     void priceBeyondABoundIsOutside() {
         assertTrue(PriceUtil.isOutsidePriceRange(Price.valueOf("BSQ", 4001), AVERAGE, 2));
         assertTrue(PriceUtil.isOutsidePriceRange(Price.valueOf("BSQ", 999), AVERAGE, 2));

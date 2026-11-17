@@ -39,6 +39,8 @@ import org.bitcoinj.utils.Fiat;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.math.BigDecimal;
+
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -153,9 +155,12 @@ public class PriceUtil {
         }
         checkArgument(price.getCurrencyCode().equals(averagePrice.getCurrencyCode()),
                 "Price %s and average price %s have different currencies", price, averagePrice);
-        double value = price.getValue();
-        double average = averagePrice.getValue();
-        return value > average * factor || value < average / factor;
+        BigDecimal value = BigDecimal.valueOf(price.getValue());
+        BigDecimal average = BigDecimal.valueOf(averagePrice.getValue());
+        BigDecimal rangeFactor = BigDecimal.valueOf(factor);
+        // Compare decimal products to keep both inclusive bounds exact, even for fractional factors.
+        return value.compareTo(average.multiply(rangeFactor)) > 0 ||
+                value.multiply(rangeFactor).compareTo(average) < 0;
     }
 
     public static Optional<Double> offerPercentageToDeviation(Offer offer) {
