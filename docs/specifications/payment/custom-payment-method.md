@@ -125,10 +125,12 @@ Bisq knows nothing about that.
 ### What the user is told
 
 23. A new account is saved only after the user has confirmed a warning which says that
+    - custom payment methods are defined by the traders and carry higher risks than the payment
+      methods of Bisq,
     - mediators and arbitrators might not be able to help, because they might not be familiar with
       the payment method or because there is no good way to prove a payment,
-    - a payment might be reversed after the trade (chargeback), that Bisq has not assessed that
-      risk, and that neither account signing nor account age protects against it,
+    - the BTC buyer might reverse the payment after the trade (chargeback), and the BTC seller then
+      loses the trade amount,
     - Bisq checks neither the name nor the account data, and
     - what the trade limit is.
 24. A trader who creates or takes an offer with an account of the custom payment method is warned
@@ -195,7 +197,10 @@ Bisq knows nothing about that.
   would not start for a payment method which few traders use, and buyers would stay at the limit of
   unsigned accounts. The price of that choice: in EUR, USD, GBP, CAD, AUD and BRL an unsigned
   buyer with a payment method of the chargeback list is limited to 0.002 BTC, and a buyer with a
-  new custom account to 0.05 BTC, 25 times as much.
+  new custom account to 0.05 BTC, 25 times as much. A limit of 0.002 BTC for buyers of the custom
+  payment method in these currencies was considered and dropped: without signing it would hold
+  every custom trade in these currencies at 0.002 BTC, and a buyer can only trade with a seller who
+  has set up an account with the same name and confirmed the warning of rule 23.
 - **Trade period.** The speed of an unknown payment method is not known. 4 days is the period of
   the custom payment rail of Bisq 2.
 - **Account age witness input.** It is the input which Bisq 2 uses for its user defined account,
