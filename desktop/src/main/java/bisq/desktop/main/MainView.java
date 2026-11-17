@@ -48,6 +48,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.p2p.network.BridgesCanHelpException;
 
@@ -107,6 +108,7 @@ import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -530,6 +532,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             if (model.getIsExternallyProvidedPrice().get()) {
                 label.setText(Res.get("mainView.marketPriceWithProvider.label", "Bisq Price Index"));
                 label.setTooltip(new Tooltip(getPriceProviderTooltipString()));
+            } else if ("BSQ".equals(model.getPriceFeedService().getCurrencyCode())) {
+                label.setText(Res.get("mainView.marketPrice.bisqInternalBsqPrice"));
+                label.setTooltip(new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalBsqPrice",
+                        TimeUnit.MILLISECONDS.toHours(TradeStatisticsManager.BSQ_MARKET_PRICE_PERIOD))));
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));

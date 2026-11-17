@@ -99,7 +99,9 @@ public class AveragePriceUtil {
                 .collect(Collectors.toList());
     }
 
-    private static long getBTCAverage(List<TradeStatistics3> list) {
+    // The volume weighted average price of BSQ statistics: their BTC amounts divided by their BSQ volumes. 0 if there
+    // is no average.
+    public static long getBTCAverage(List<TradeStatistics3> list) {
         // Floating point sums, so that they cannot wrap
         double accumulatedVolume = 0;
         double accumulatedAmount = 0;

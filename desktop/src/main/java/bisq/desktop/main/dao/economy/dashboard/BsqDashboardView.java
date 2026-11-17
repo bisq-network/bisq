@@ -32,6 +32,7 @@ import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
+import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -65,6 +66,7 @@ import javafx.collections.ObservableList;
 import java.text.DecimalFormat;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.addLabelWithSubText;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
@@ -86,7 +88,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private TextField avgPrice90TextField, avgUSDPrice90TextField, marketCapTextField, availableAmountTextField,
             usdVolumeTextField, btcVolumeTextField, averageBsqUsdPriceTextField, averageBsqBtcPriceTextField;
     private TextFieldWithIcon avgPrice30TextField, avgUSDPrice30TextField;
-    private Label marketPriceLabel;
+    private Label marketPriceLabel, marketPriceSubTextLabel;
 
     private ChangeListener<Number> priceChangeListener;
     private int gridRow = 0;
@@ -210,7 +212,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         marketPriceLabel = marketPriceBox.first;
         marketPriceLabel.getStyleClass().add("dao-kpi-big");
 
-        marketPriceBox.second.getStyleClass().add("dao-kpi-subtext");
+        marketPriceSubTextLabel = marketPriceBox.second;
+        marketPriceSubTextLabel.getStyleClass().add("dao-kpi-subtext");
+        // The row has no second field, and the subtext is wider than one column
+        GridPane.setColumnSpan(marketPriceBox.third, 2);
 
         avgUSDPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90"), -20).second;
@@ -312,6 +317,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         } else {
             marketPriceLabel.setText(Res.get("shared.na"));
         }
+
+        // A BSQ price which is not from the price feed is the average of the recent BSQ trades
+        MarketPrice bsqMarketPrice = priceFeedService.getMarketPrice("BSQ");
+        marketPriceSubTextLabel.setText(bsqMarketPrice != null && !bsqMarketPrice.isExternallyProvidedPrice() ?
+                Res.get("dao.factsAndFigures.dashboard.marketPriceFromTrades",
+                        TimeUnit.MILLISECONDS.toHours(TradeStatisticsManager.BSQ_MARKET_PRICE_PERIOD)) :
+                "");
     }
 
     private void updateMarketCap() {

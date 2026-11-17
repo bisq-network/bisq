@@ -36,7 +36,9 @@ import org.bitcoinj.core.Coin;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +53,7 @@ import org.mockito.ArgumentCaptor;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -167,6 +170,118 @@ public class TradeStatisticsManagerTest {
         verify(priceFeedService, never()).setBisqMarketPrice("USD", current.getTradePrice());
     }
 
+    // 300 BSQ at 2000 sats and 100 BSQ at 1000 sats cost 700,000 sats, which is 1750 sats per BSQ. The USD statistic
+    // between them does not count for BSQ and keeps its own price.
+    @Test
+    public void seedsVolumeWeightedBsqPriceOfTheDayUpToTheNewestBsqStatistic() {
+        long now = System.currentTimeMillis();
+        TradeStatistics3 usd = usdStatistics(Price.parse("USD", "100").getValue(), now - TimeUnit.HOURS.toMillis(6));
+
+        Map<String, Price> seeded = seededPrices(bsqStatistics(2000, 300, now - TimeUnit.HOURS.toMillis(12)),
+                usd,
+                bsqStatistics(1000, 100, now - TimeUnit.HOURS.toMillis(1)));
+
+        assertEquals(1750, seeded.get("BSQ").getValue());
+        assertEquals(usd.getTradePrice(), seeded.get("USD"));
+    }
+
+    // The day starts after the statistic which is exactly one day older than the newest one
+    @Test
+    public void bsqStatisticExactlyOneDayOlderThanTheNewestIsNotAveraged() {
+        long newestDate = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+        long dayBefore = newestDate - TradeStatisticsManager.BSQ_MARKET_PRICE_PERIOD;
+
+        Map<String, Price> seeded = seededPrices(bsqStatistics(3000, 100, dayBefore),
+                bsqStatistics(2000, 100, dayBefore + 1),
+                bsqStatistics(1000, 100, newestDate));
+
+        assertEquals(1500, seeded.get("BSQ").getValue());
+    }
+
+    @Test
+    public void receivedBsqStatisticIsAveragedWithTheBsqStatisticsOfItsDay() {
+        long now = System.currentTimeMillis();
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService,
+                mapOfAllData(bsqStatistics(2000, 300, now - TimeUnit.HOURS.toMillis(12)))).onAllServicesInitialized();
+
+        appendOnlyDataStoreListener(p2PDataStorage).onAdded(bsqStatistics(1000, 100,
+                now - TimeUnit.HOURS.toMillis(1)));
+
+        verify(priceFeedService).setBisqMarketPrice("BSQ", Price.valueOf("BSQ", 1750));
+    }
+
+    // The day ends at the newest BSQ statistic which the node holds, not at the received one
+    @Test
+    public void receivedBsqStatisticOlderThanTheDayOfTheNewestKeepsItsAverage() {
+        long now = System.currentTimeMillis();
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService,
+                mapOfAllData(bsqStatistics(1000, 100, now - TimeUnit.HOURS.toMillis(1)))).onAllServicesInitialized();
+
+        appendOnlyDataStoreListener(p2PDataStorage).onAdded(bsqStatistics(5000, 100,
+                now - TimeUnit.DAYS.toMillis(3)));
+
+        verify(priceFeedService).setBisqMarketPrice("BSQ", Price.valueOf("BSQ", 1000));
+    }
+
+    // On a day with 1665 BSQ traded at 1200 sats, a newest trade of 25 BSQ at twice the price would double the price of
+    // the newest trade. The average moves by 1.5%.
+    @Test
+    public void smallBsqTradeAtADistantPriceMovesTheBsqPriceByItsShareOfTheVolume() {
+        assertEquals(1218, bsqPriceOfATypicalDayAnd(bsqStatistics(2400, 25,
+                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1))).getValue());
+    }
+
+    // Any peer can publish a valid statistic of up to 2 BTC, which is about 100 days of the BSQ volume of such a day. At
+    // twice the price it sets the average to nearly twice the price, until the newest BSQ trade is dated more than one
+    // day after it. With a date one day ahead, that is about two days.
+    @Test
+    public void bsqTradeOfNearlyTwoBtcAtADistantPriceDominatesTheBsqPrice() {
+        assertEquals(2376, bsqPriceOfATypicalDayAnd(bsqStatistics(2400, 83_333,
+                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1))).getValue());
+    }
+
+    // A date up to one day ahead is valid. Such a statistic ends the day of the average, so the trades before that day
+    // do not count. A small one at a distant price is the price until the next BSQ trade, as the newest trade was.
+    @Test
+    public void receivedBsqStatisticDatedAheadEndsTheDayOfTheAverage() {
+        long now = System.currentTimeMillis();
+        P2PDataStorage p2PDataStorage = mock(P2PDataStorage.class);
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(p2PDataStorage, priceFeedService,
+                mapOfAllData(typicalBsqDayBefore(now).toArray(new TradeStatistics3[0]))).onAllServicesInitialized();
+        AppendOnlyDataStoreListener listener = appendOnlyDataStoreListener(p2PDataStorage);
+
+        listener.onAdded(bsqStatistics(2400, 25, now + TimeUnit.HOURS.toMillis(23)));
+        listener.onAdded(bsqStatistics(1200, 185, now));
+
+        ArgumentCaptor<Price> captor = ArgumentCaptor.forClass(Price.class);
+        verify(priceFeedService, times(2)).setBisqMarketPrice(eq("BSQ"), captor.capture());
+        assertEquals(2400, captor.getAllValues().get(0).getValue());
+        // 25 BSQ at 2400 sats and 185 BSQ at 1200 sats cost 282,000 sats for 210 BSQ
+        assertEquals(1343, captor.getAllValues().get(1).getValue());
+    }
+
+    // A volume is rounded down, so the average of statistics with the highest valid price can be above it. The market
+    // price converts back without leaving the long range.
+    @Test
+    public void bsqMarketPriceAboveTheHighestValidPriceConvertsBack() {
+        // No amount cap before 2021-11-01. 150 BTC at the highest price are 1.5 units of the volume, rounded down to 1.
+        TradeStatistics3 highest = new TradeStatistics3("BSQ", TradeStatistics3.MAX_PRICE, 15_000_000_000L,
+                "BLOCK_CHAINS", 1_600_000_000_000L, null, null, (TreeMap<String, String>) null);
+        PriceFeedService priceFeedService = new PriceFeedService(mock(PriceHttpClient.class), mock(FeeService.class),
+                mock(PriceFeedNodeAddressProvider.class), mock(Preferences.class));
+
+        manager(mock(P2PDataStorage.class), priceFeedService, mapOfAllData(highest)).onAllServicesInitialized();
+
+        Price converted = assertDoesNotThrow(() ->
+                PriceUtil.marketPriceToPrice(priceFeedService.getMarketPrice("BSQ")));
+        assertEquals(1_500_000_000_000_000_000L, converted.getValue());
+    }
+
     @Test
     public void storedStatisticDatedMoreThanOneDayAheadIsNotUsedAtStartup() {
         assertNotUsedAtStartup(usdStatistics(Price.parse("USD", "1").getValue(),
@@ -249,6 +364,45 @@ public class TradeStatisticsManagerTest {
         when(p2PService.getP2PDataStorage()).thenReturn(p2PDataStorage);
         return new TradeStatisticsManager(p2PService, priceFeedService,
                 storageService, mock(AppendOnlyDataStoreService.class), new File("."), false);
+    }
+
+    private static Price bsqPriceOfATypicalDayAnd(TradeStatistics3 newest) {
+        List<TradeStatistics3> tradeStatistics = typicalBsqDayBefore(newest.getDateAsLong());
+        tradeStatistics.add(newest);
+        return seededPrices(tradeStatistics.toArray(new TradeStatistics3[0])).get("BSQ");
+    }
+
+    // Nine trades of 185 BSQ at 1200 sats in the 18 hours before the given date
+    private static List<TradeStatistics3> typicalBsqDayBefore(long date) {
+        List<TradeStatistics3> tradeStatistics = new ArrayList<>();
+        for (int i = 1; i <= 9; i++) {
+            tradeStatistics.add(bsqStatistics(1200, 185, date - TimeUnit.HOURS.toMillis(2L * i)));
+        }
+        return tradeStatistics;
+    }
+
+    private static Map<String, Price> seededPrices(TradeStatistics3... tradeStatistics) {
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        manager(mock(P2PDataStorage.class), priceFeedService, mapOfAllData(tradeStatistics)).onAllServicesInitialized();
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Price>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(priceFeedService).applyInitialBisqMarketPrice(captor.capture());
+        return captor.getValue();
+    }
+
+    private static Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData(
+            TradeStatistics3... tradeStatistics) {
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapOfAllData = new HashMap<>();
+        for (TradeStatistics3 e : tradeStatistics) {
+            mapOfAllData.put(new P2PDataStorage.ByteArray(e.getHash()), e);
+        }
+        return mapOfAllData;
+    }
+
+    // A trade of the given number of BSQ at the given price in satoshis per BSQ
+    private static TradeStatistics3 bsqStatistics(long satsPerBsq, long bsq, long date) {
+        return new TradeStatistics3("BSQ", satsPerBsq, satsPerBsq * bsq, "BLOCK_CHAINS", date, null, null,
+                (TreeMap<String, String>) null);
     }
 
     private static TradeStatistics3 usdStatistics(long price, long date) {
