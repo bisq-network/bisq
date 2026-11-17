@@ -176,7 +176,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             ignoreTradersListListener, ignoreDustThresholdListener,
             rpcUserListener, rpcPwListener, blockNotifyPortListener, clearDataAfterDaysListener, coldStorageReminderThresholdListener,
             autoConfTradeLimitListener, autoConfServiceAddressListener, userDefinedTradeLimitListener;
-    private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
+    private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener,
+            bsqOfferPriceRangeFactorFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
     private final boolean daoFullModeFromOptionsSet;
@@ -814,6 +815,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 preferences.setBsqOfferPriceRangeFactor(ParsingUtils.parseNumberStringToDouble(newValue));
             }
         };
+        // Shows the stored factor, also when the last input was invalid and was not stored
+        bsqOfferPriceRangeFactorFocusedListener = (observable, oldValue, newValue) -> {
+            if (oldValue && !newValue)
+                UserThread.runAfter(() -> bsqOfferPriceRangeFactorTextField.setText(formatFactor(
+                        preferences.getBsqOfferPriceRangeFactor())), 100, TimeUnit.MILLISECONDS);
+        };
 
 
         isDaoFullNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isDaoFullNode"));
@@ -1279,6 +1286,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         bsqOfferPriceRangeFactorTextField.setText(formatFactor(preferences.getBsqOfferPriceRangeFactor()));
         bsqOfferPriceRangeFactorTextField.textProperty().addListener(bsqOfferPriceRangeFactorListener);
+        bsqOfferPriceRangeFactorTextField.focusedProperty().addListener(bsqOfferPriceRangeFactorFocusedListener);
 
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
@@ -1496,6 +1504,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);
         bsqAverageTrimThresholdTextField.focusedProperty().removeListener(bsqAverageTrimThresholdFocusedListener);
         bsqOfferPriceRangeFactorTextField.textProperty().removeListener(bsqOfferPriceRangeFactorListener);
+        bsqOfferPriceRangeFactorTextField.focusedProperty().removeListener(bsqOfferPriceRangeFactorFocusedListener);
         isDaoFullNodeToggleButton.setOnAction(null);
         rpcUserTextField.textProperty().removeListener(rpcUserListener);
         rpcPwTextField.textProperty().removeListener(rpcPwListener);
