@@ -129,20 +129,22 @@ public class CustomPaymentMethodTest {
     @Test
     public void displayStringsWithArgumentsAreFormatted() {
         String info = Res.get("payment.custom.info", "0.05 BTC");
-        assertTrue(info.contains("the trade limit is 0.05 BTC per trade"), info);
+        assertTrue(info.contains("the limit is 0.05 BTC per trade"), info);
         assertFalse(info.contains("{0}"), info);
 
         assertTrue(Res.get("payment.custom.name.prompt", CustomPaymentMethodUtil.MAX_NAME_LENGTH)
                 .contains("max. 20 characters"));
-        assertFalse(Res.get("payment.custom.accountData.prompt", CustomPaymentMethodUtil.MAX_ACCOUNT_DATA_LENGTH)
-                .contains("{0}"));
+        String accountDataPrompt = Res.get("payment.custom.accountData.prompt",
+                CustomPaymentMethodUtil.MAX_ACCOUNT_DATA_LENGTH);
+        assertFalse(accountDataPrompt.contains("{0}"), accountDataPrompt);
+        assertTrue(accountDataPrompt.contains("the account holder's name"), accountDataPrompt);
         assertTrue(Res.get("payment.custom.name.tooLong", CustomPaymentMethodUtil.MAX_NAME_LENGTH)
                 .contains("20 characters"));
         assertEquals("Name of the payment method (text of the maker): M-Pesa",
                 Res.get("payment.custom.offerbook.tooltip.name", "M-Pesa"));
 
         String buyer = Res.get("portfolio.pending.step2_buyer.custom", "1000 KES");
-        assertTrue(buyer.startsWith("Please pay 1000 KES to the BTC seller"), buyer);
+        assertTrue(buyer.startsWith("Send 1000 KES to the BTC seller"), buyer);
         String seller = Res.get("portfolio.pending.step3_seller.custom", "PART1 ", "1000 KES", "open a dispute.");
         assertTrue(seller.startsWith("PART1 Please check if you have received 1000 KES from the BTC buyer"), seller);
         assertTrue(seller.endsWith("If you are in doubt, open a dispute."), seller);
