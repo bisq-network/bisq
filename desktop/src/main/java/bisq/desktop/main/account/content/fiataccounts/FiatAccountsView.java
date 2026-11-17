@@ -32,6 +32,7 @@ import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.CustomPaymentMethodForm;
 import bisq.desktop.components.paymentmethods.DomesticWireTransferForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
@@ -113,6 +114,7 @@ import bisq.core.payment.AustraliaPayidAccount;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
+import bisq.core.payment.CustomPaymentMethodAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.MoneyGramAccount;
@@ -308,6 +310,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             // HalCash has no chargeback risk so we don't show the text from payment.limits.info.
             new Popup().information(Res.get("payment.halCash.info"))
                     .width(700)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else if (paymentAccount instanceof CustomPaymentMethodAccount) {
+            // The trade limit of a custom payment method does not depend on the account age, so we show its own
+            // warning instead of the text from payment.limits.info.
+            new Popup().warning(Res.get("payment.custom.info", formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
+                    .width(900)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
@@ -673,6 +684,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_BY_MAIL_ID:
                 return new CashByMailForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.CUSTOM_ID:
+                return new CustomPaymentMethodForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.HAL_CASH_ID:
                 return new HalCashForm(paymentAccount, accountAgeWitnessService, halCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.F2F_ID:

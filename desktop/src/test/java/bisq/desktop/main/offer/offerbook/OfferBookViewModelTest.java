@@ -26,6 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayloadExtraDataMap;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
@@ -533,6 +534,108 @@ public class OfferBookViewModelTest {
                 null,
                 null,
                 null);
+    }
+
+    // The name of a custom payment method is a text of the maker. It is shown with the prefix of the custom payment
+    // method, so that a name which equals a payment method of Bisq cannot be taken for that payment method.
+    @Test
+    public void testGetPaymentMethodOfCustomPaymentMethodOffer() {
+        OfferBookViewModel model = getOfferBookViewModel();
+
+        assertEquals("Custom: M-Pesa",
+                model.getPaymentMethod(item(getCustomPaymentMethodOffer("KES", "M-Pesa"))));
+        assertEquals("Custom: SEPA",
+                model.getPaymentMethod(item(getCustomPaymentMethodOffer("EUR", "SEPA"))));
+        assertEquals("SEPA (DE)",
+                model.getPaymentMethod(item(getSEPAPaymentMethod("EUR", "DE", new ArrayList<>(), null))));
+    }
+
+    // A name which breaks the rules for such a name is not shown
+    @Test
+    public void testGetPaymentMethodOfCustomPaymentMethodOfferWithInvalidName() {
+        OfferBookViewModel model = getOfferBookViewModel();
+
+        assertEquals("Custom: " + Res.get("shared.na"),
+                model.getPaymentMethod(item(getCustomPaymentMethodOffer("KES", "M-Pesa\nSEPA"))));
+        assertEquals("Custom: " + Res.get("shared.na"),
+                model.getPaymentMethod(item(getCustomPaymentMethodOffer("KES", "a".repeat(21)))));
+    }
+
+    @Test
+    public void testGetPaymentMethodToolTipOfCustomPaymentMethodOffer() {
+        OfferBookViewModel model = getOfferBookViewModel();
+
+        String toolTip = model.getPaymentMethodToolTip(item(getCustomPaymentMethodOffer("KES", "M-Pesa")));
+
+        assertTrue(toolTip.contains("Payment method: Custom payment method"), toolTip);
+        assertTrue(toolTip.contains("Name of the payment method (text of the maker): M-Pesa"), toolTip);
+        assertTrue(toolTip.contains("Bisq does not support this payment method. Higher risks apply."), toolTip);
+    }
+
+    @Test
+    public void testGetPaymentMethodToolTipOfCustomPaymentMethodOfferWithInvalidName() {
+        OfferBookViewModel model = getOfferBookViewModel();
+
+        String toolTip = model.getPaymentMethodToolTip(item(getCustomPaymentMethodOffer("KES", "M-Pesa\nSEPA")));
+
+        assertTrue(toolTip.contains("Name of the payment method (text of the maker): " + Res.get("shared.na")), toolTip);
+        assertFalse(toolTip.contains("SEPA"), toolTip);
+    }
+
+    private static OfferBookListItem item(Offer offer) {
+        OfferBookListItem item = mock(OfferBookListItem.class);
+        when(item.getOffer()).thenReturn(offer);
+        return item;
+    }
+
+    private OfferBookViewModel getOfferBookViewModel() {
+        OfferBook offerBook = mock(OfferBook.class);
+        when(offerBook.getOfferBookListItems()).thenReturn(FXCollections.observableArrayList());
+        return new BtcOfferBookViewModel(null, null, offerBook, empty, null, null, null,
+                null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null, daoStateService);
+    }
+
+    private Offer getCustomPaymentMethodOffer(String tradeCurrencyCode, String customPaymentMethodName) {
+        OfferPayloadExtraDataMap extraDataMap = new OfferPayloadExtraDataMap();
+        extraDataMap.put(OfferPayloadExtraDataMap.Keys.CUSTOM_PAYMENT_METHOD_NAME, customPaymentMethodName);
+        return new Offer(new OfferPayload(null,
+                0,
+                null,
+                null,
+                null,
+                0,
+                0,
+                false,
+                0,
+                0,
+                "BTC",
+                tradeCurrencyCode,
+                null,
+                null,
+                PaymentMethod.CUSTOM_ID,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                0,
+                0,
+                0,
+                false,
+                0,
+                0,
+                0,
+                0,
+                false,
+                false,
+                0,
+                0,
+                false,
+                null,
+                extraDataMap,
+                1));
     }
 
     private Offer getSEPAPaymentMethod(String currencyCode,

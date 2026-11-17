@@ -483,6 +483,8 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
             String methodCountryCode = offer.getCountryCode();
             if (isF2F(offer)) {
                 result = method + " (" + methodCountryCode + ", " + offer.getF2FCity() + ")";
+            } else if (offer.getPaymentMethod().isCustom()) {
+                result = offer.getPaymentMethodShortName();
             } else {
                 if (methodCountryCode != null)
                     result = method + " (" + methodCountryCode + ")";
@@ -499,6 +501,12 @@ abstract class OfferBookViewModel extends ActivatableViewModel implements DaoSta
         if (item != null) {
             Offer offer = item.getOffer();
             result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
+            if (offer.getPaymentMethod().isCustom()) {
+                String name = offer.getCustomPaymentMethodName();
+                result += "\n" + Res.get("payment.custom.offerbook.tooltip.name",
+                        name.isEmpty() ? Res.get("shared.na") : name);
+                result += "\n" + Res.get("payment.custom.offerbook.tooltip.risk");
+            }
             result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             if (offer.isXmr()) {
