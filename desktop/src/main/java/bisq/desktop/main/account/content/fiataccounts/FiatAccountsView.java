@@ -505,8 +505,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         // Not onAction, which fires on every change of the search text
         paymentMethodComboBox.setOnChangeConfirmed(e -> {
             PaymentMethod selectedPaymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
-            // An empty search text confirms as well
-            if (selectedPaymentMethod == null) {
+            // An empty search text confirms as well. Reselecting the current method must keep the entered account data.
+            if (selectedPaymentMethod == null ||
+                    (paymentMethodForm != null &&
+                            selectedPaymentMethod.equals(paymentMethodForm.getPaymentAccount().getPaymentMethod()))) {
                 return;
             }
 
