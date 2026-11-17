@@ -2,16 +2,18 @@
 
 ## Scope
 
-Which offers the BSQ offer book of the desktop application hides because their price is far from the
-average BSQ price of the last 90 days, the preference that sets the range, and the hint shown when the
-range hides every offer.
+Which offers the BSQ offer book and the BSQ market of the offer book chart of the desktop application hide
+because their price is far from the average BSQ price of the last 90 days, the preference that sets the
+range, and the hint shown when the range hides every offer of the offer book.
 
 ## Rules
 
-1. The BSQ offer book (the BSQ tab of the "Buy" and of the "Sell" screen) hides an offer if its price is above
-   the reference price times the factor, or below the reference price divided by the factor. An offer with a
-   price equal to one of the two bounds is shown. With the factor 4, an offer is hidden if its price is more
-   than 4 times or less than a quarter of the reference price.
+1. The BSQ offer book (the BSQ tab of the "Buy" and of the "Sell" screen) and the offer book chart of the
+   market view with BSQ selected hide an offer if its price is above the reference price times the factor,
+   or below the reference price divided by the factor. The chart leaves such an offer out of the depth chart
+   and of the two offer lists below it. An offer with a price equal to one of the two bounds is shown. With
+   the factor 4, an offer is hidden if its price is more than 4 times or less than a quarter of the reference
+   price.
 2. The reference price is the average BSQ/BTC price of the BSQ trades of the last 90 days, which the node
    computes from its trade statistics. It is the average which the DAO dashboard shows as the 90 days
    average BSQ/BTC trade price, with the outlier threshold of the preferences.
@@ -25,9 +27,12 @@ range hides every offer.
    - an offer without a price, such as an offer with a price relative to the market price while the node
      has no recent market price for BSQ;
    - the user's own offers.
-5. The reference price and the factor in use are those at the last filtering of the offer book: when the
-   tab is selected or the offer book is opened, when a filter of the offer book changes, and after each new
-   block. A changed factor applies when the offer book is opened again.
+5. The reference price and the factor in use are those at the last filtering:
+   - in the offer book: when the tab is selected or the offer book is opened, when a filter of the offer book
+     changes, and after each new block;
+   - in the chart: when the chart is opened, when BSQ is selected, and when a BSQ offer is added or removed.
+
+   A changed factor applies when the view is opened again.
 6. When the BSQ tab is selected and the offer book shows no offer, but at least one offer passes all other
    filters of the offer book and only the range hides it, the user gets a hint: the range may need to be
    adjusted, with a button that opens the preferences. There is no hint when the offer book has no offer for
@@ -37,8 +42,9 @@ range hides every offer.
      replaced, when offers arrive one by one, or while the screen opens.
    - It appears at most once per visit: from opening the BSQ tab, or the screen with the BSQ tab selected,
      until the user switches to another tab or screen. The user can turn it off with "Don't show again".
-7. The range changes only what the BSQ offer book shows. It does not change offers, taking an offer, the
-   API, or other views.
+   - The chart shows no hint.
+7. The range changes only what the BSQ offer book and the chart show. It does not change offers, taking an
+   offer, the API, or other views.
 
 ## Trust model
 
@@ -46,7 +52,9 @@ The reference price comes from trade statistics. A trade statistic is an unauthe
 peer can publish (see the trust model of
 [`../trade/trade-statistics-validity.md`](../trade/trade-statistics-validity.md)), and enough invented
 statistics move the average of 90 days. The average is weighted by volume, and a statistic may state up to
-2 BTC, so a few invented statistics move it far when the BSQ volume of the 90 days is small.
+2 BTC, so a few invented statistics move it far when the BSQ volume of the 90 days is small (see the known
+gaps of [`../trade/trade-statistics-validity.md`](../trade/trade-statistics-validity.md) for the effect of
+one such statistic on the average of 30 days).
 
 A moved average moves the range: offers with a fair price fall outside and are hidden, while offers near
 the moved average stay visible. The offer book is then not empty, so the hint of rule 6 does not appear.
@@ -72,6 +80,10 @@ the market from emptying the offer book without explanation.
   hides offers at several times or a fraction of the market price.
 - Rule 3, maximum: a factor of 1000 hides practically no offer. It takes the place of a switch to turn the
   range off.
+- Rule 1, chart: the chart and the offer book show the same BSQ offers, so that the market view does not
+  present offers which the offer book hides. The chart has its own display limit: it leaves out of the depth
+  chart, but not of the offer lists, buy offers at a third or less of the highest buy price and sell offers at
+  3 times or more of the lowest sell price. The range applies before it.
 - Rule 4, own offers: a maker sees and manages their own offers in the offer book, whatever their price.
 - Rule 6: an empty offer book looks like a market without offers. The hint names the range as the reason
   only when it is the reason, so that it never asks the user to change a setting which would not show any
@@ -101,5 +113,5 @@ data or API changes.
 
 ## Not covered
 
-The offer book chart of the market view, the offer counts of the currency selection, the offers of the API,
-and the take offer screen.
+The offer counts of the currency selection in the offer book and in the chart, the spread view of the
+market view, the offers of the API, and the take offer screen.
