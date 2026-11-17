@@ -193,8 +193,32 @@ public class PreferencesTest {
         assertEquals(4, preferences.getBsqOfferPriceRangeFactor());
     }
 
+    // A data directory of a version without the factor has no value, which protobuf reads as 0
     @Test
-    public void persistedFactorOfAnOlderVersionIsReplacedByTheDefault() {
+    public void factorMissingInPersistedDataIsTheDefault() {
+        protobuf.PreferencesPayload withoutFactor = protobuf.PreferencesPayload.getDefaultInstance();
+        protobuf.PreferencesPayload withFactor = withoutFactor.toBuilder().setBsqOfferPriceRangeFactor(4).build();
+
+        assertEquals(2, PreferencesPayload.fromProto(withoutFactor, null).getBsqOfferPriceRangeFactor());
+        assertEquals(4, PreferencesPayload.fromProto(withFactor, null).getBsqOfferPriceRangeFactor());
+    }
+
+    @Test
+    public void factorIsSavedAndReadBack() {
+        PreferencesPayload payload = PreferencesPayload.fromProto(protobuf.PreferencesPayload.getDefaultInstance(), null);
+        payload.setBsqOfferPriceRangeFactor(4.5);
+
+        protobuf.PreferencesPayload saved =
+                ((protobuf.PersistableEnvelope) payload.toProtoMessage()).getPreferencesPayload();
+
+        assertEquals(4.5, saved.getBsqOfferPriceRangeFactor());
+        assertEquals(4.5, PreferencesPayload.fromProto(saved, null).getBsqOfferPriceRangeFactor());
+    }
+
+    // Persisted data passes fromProto, which already replaces an invalid factor. Reading the preferences checks the
+    // factor once more, as it does for the cold storage reminder threshold.
+    @Test
+    public void invalidFactorIsReplacedWhenThePreferencesAreRead() {
         PreferencesPayload payload = mock(PreferencesPayload.class);
 
         addReadPersistedStub(payload);
