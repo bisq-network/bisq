@@ -40,6 +40,7 @@ range, and the hint shown when the range hides every offer of one of these views
    - The hint depends on the settled state: it appears only if the condition still holds about one second
      after it began. The offer book passes through intermediate states, for example when an edited offer is
      replaced, when offers arrive one by one, or while the screen opens.
+     If other popups delay the hint, its condition is checked again when it can be displayed.
    - It appears at most once per visit: from opening the BSQ tab, or the screen with the BSQ tab selected,
      until the user switches to another tab or screen. The user can turn it off with "Don't show again".
    - The chart with BSQ selected shows the same hint when neither of its offer lists shows an offer, but the

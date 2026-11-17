@@ -20,6 +20,7 @@ package bisq.desktop.main.offer.offerbook;
 import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.popups.PopupManager;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 
@@ -85,6 +86,12 @@ public class BsqOfferPriceRangeHint {
     private void showIfStillApplicable() {
         timer = null;
         if (isShown || !isApplicable.getAsBoolean()) {
+            return;
+        }
+
+        // A queued hint could become stale before it is displayed. Keep checking until it can appear immediately.
+        if (!PopupManager.isReadyForPopup()) {
+            update();
             return;
         }
 
