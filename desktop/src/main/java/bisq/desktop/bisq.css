@@ -2426,6 +2426,131 @@ textfield */
     -fx-border-color: -bs-rd-separator-dark;
 }
 
+.news-window.popup-bg {
+    /* The sizes of the news-* styles are relative to the 14 px of the popup. */
+    -fx-background-color: -bs-news-background;
+    -fx-background-radius: 12;
+}
+
+.news-eyebrow {
+    -fx-font-size: 0.786em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-news-accent;
+}
+
+.news-headline {
+    -fx-font-size: 1.714em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-text-fill: -bs-news-text;
+}
+
+.news-lead {
+    -fx-font-size: 1em;
+    -fx-line-spacing: 2;
+    -fx-text-fill: -bs-news-text-secondary;
+}
+
+.news-column-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -bs-news-icon;
+    -fx-stroke-width: 1.75;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.news-column-title {
+    -fx-font-size: 1.143em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -bs-news-text;
+}
+
+.news-column-tagline {
+    -fx-font-size: 0.964em;
+    -fx-text-fill: -bs-news-text-secondary;
+}
+
+.news-table {
+    -fx-border-color: -bs-news-separator transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.news-table-row {
+    -fx-border-color: transparent transparent -bs-news-separator transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 36;
+    -fx-pref-height: 36;
+}
+
+.news-table-label {
+    -fx-font-size: 0.857em;
+    -fx-text-fill: -bs-news-text-secondary;
+}
+
+.news-table-value {
+    -fx-font-size: 0.964em;
+    -fx-text-fill: -bs-news-text;
+}
+
+.news-risk-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -bs-news-warning;
+    -fx-stroke-width: 2.4;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+}
+
+.news-risk-text {
+    -fx-font-size: 0.857em;
+    -fx-line-spacing: 2;
+    -fx-text-fill: -bs-news-text-secondary;
+}
+
+.news-separator {
+    -fx-background-color: -bs-news-separator;
+}
+
+.news-hint {
+    -fx-font-size: 0.857em;
+    -fx-text-fill: -bs-news-text-secondary;
+}
+
+.news-hint-path {
+    -fx-font-size: 0.857em;
+    -fx-text-fill: -bs-news-text;
+}
+
+.news-button {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-border-color: -bs-news-button-border;
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+    -fx-text-fill: -bs-news-text;
+    -fx-font-size: 1.077em;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-padding: 0 20 0 20;
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-effect: null;
+    -fx-cursor: hand;
+}
+
+.news-button:hover, .news-button:focused {
+    -fx-background-color: -bs-news-separator;
+}
+
+.news-button-primary {
+    -fx-background-color: -bs-news-primary;
+    -fx-border-color: -bs-news-primary;
+    -fx-text-fill: -bs-news-on-primary;
+    -fx-padding: 0 24 0 24;
+}
+
+.news-button-primary:hover, .news-button-primary:focused {
+    -fx-background-color: derive(-bs-news-primary, -12%);
+}
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                    *
