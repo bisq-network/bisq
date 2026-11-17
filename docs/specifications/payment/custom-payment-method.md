@@ -99,7 +99,9 @@ Bisq knows nothing about that.
     part of the contract. The payment step of the BTC buyer and the payment method of the trade
     details show that name. Where the account of a trader is shown as a whole, it is shown with
     the name in that account, which is the same name by rule 17.
-17. When the peer reveals its payment account, the node checks before it uses or stores it that
+17. In a custom trade, the seller must include its account with the deposit and delayed payout
+    transactions. A missing account is rejected before any change of the buyer's wallet or trade.
+    When the peer reveals its payment account, the node checks before it uses or stores it that
     - the account is an account of the custom payment method if, and only if, the offer is an offer
       of the custom payment method. This holds for the kind of the account and for the payment
       method ID in it, which the peer sets independently of each other,

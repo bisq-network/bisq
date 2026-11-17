@@ -173,6 +173,29 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
         }
     }
 
+    @Test
+    void runRejectsMissingCustomSellerAccountBeforeWalletMutation() {
+        Transaction depositTx = depositTx(0);
+        Transaction delayedPayoutTx = delayedPayoutTx(depositTx, 144);
+        Wallet wallet = mock(Wallet.class);
+        Trade trade = trade(depositTx, delayedPayoutTx.bitcoinSerialize(), wallet);
+        Offer offer = offer(PaymentMethod.CUSTOM_ID);
+        when(trade.getOffer()).thenReturn(offer);
+
+        try (MockedStatic<WalletService> walletService = mockStatic(WalletService.class)) {
+            walletService.when(() -> WalletService.maybeAddSelfTxToWallet(any(Transaction.class), same(wallet)))
+                    .thenReturn(depositTx);
+
+            new BuyerProcessDepositTxAndDelayedPayoutTxMessage(taskRunner(), trade).run();
+
+            walletService.verifyNoInteractions();
+            verify(trade, never()).applyDepositTx(any(Transaction.class));
+            verify(trade, never()).applyDelayedPayoutTxBytes(any(byte[].class));
+            verify(trade.getProcessModel().getTradePeer(), never()).setPaymentAccountPayload(any());
+            verify(trade).setErrorMessage(contains("peersPaymentAccountPayload must not be null"));
+        }
+    }
+
     // All custom payment methods share one payment method ID. A seller with a modified client could commit to an
     // account of another custom payment method than the one of the offer.
     @Test
@@ -187,8 +210,7 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 depositTx.bitcoinSerialize(),
                 delayedPayoutTx.bitcoinSerialize(),
                 customPayload("PayPal")));
-        Offer offer = mock(Offer.class);
-        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.CUSTOM_ID));
+        Offer offer = offer(PaymentMethod.CUSTOM_ID);
         when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
         when(trade.getOffer()).thenReturn(offer);
 
@@ -219,8 +241,7 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 depositTx.bitcoinSerialize(),
                 delayedPayoutTx.bitcoinSerialize(),
                 sellerPaymentAccountPayload));
-        Offer offer = mock(Offer.class);
-        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(PaymentMethod.CUSTOM_ID));
+        Offer offer = offer(PaymentMethod.CUSTOM_ID);
         when(offer.getCustomPaymentMethodName()).thenReturn("M-Pesa");
         when(trade.getOffer()).thenReturn(offer);
         Contract contract = mock(Contract.class);
@@ -243,6 +264,12 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
             verify(trade).setContractAsJson(any());
             verify(trade).setContractHash(any());
         }
+    }
+
+    private static Offer offer(String paymentMethodId) {
+        Offer offer = mock(Offer.class);
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(paymentMethodId));
+        return offer;
     }
 
     private static CustomPaymentMethodAccountPayload customPayload(String paymentMethodName) {
@@ -268,7 +295,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 messageDelayedPayoutTxBytes,
                 wallet);
 
+        Offer offer = offer(PaymentMethod.SEPA_ID);
         when(trade.getProcessModel()).thenReturn(processModel);
+        when(trade.getOffer()).thenReturn(offer);
         when(trade.getDelayedPayoutTxBytes()).thenReturn(delayedPayoutTxBytes);
         when(trade.getTradeState()).thenReturn(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
         when(trade.getId()).thenReturn("trade-id");
@@ -283,7 +312,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 preparedDepositTx.bitcoinSerialize(),
                 delayedPayoutTxBytes,
                 wallet);
+        Offer offer = offer(PaymentMethod.SEPA_ID);
         when(trade.getProcessModel()).thenReturn(processModel);
+        when(trade.getOffer()).thenReturn(offer);
         when(trade.getDelayedPayoutTxBytes()).thenReturn(delayedPayoutTxBytes);
         when(trade.getTradeState()).thenReturn(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
         when(trade.getId()).thenReturn("trade-id");
@@ -306,7 +337,9 @@ class BuyerProcessDepositTxAndDelayedPayoutTxMessageTest {
                 messageDelayedPayoutTxBytes,
                 wallet);
 
+        Offer offer = offer(PaymentMethod.SEPA_ID);
         when(trade.getProcessModel()).thenReturn(processModel);
+        when(trade.getOffer()).thenReturn(offer);
         when(trade.getDelayedPayoutTxBytes()).thenReturn(delayedPayoutTxBytes);
         when(trade.getTradeState()).thenReturn(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
         when(trade.getId()).thenReturn("trade-id");

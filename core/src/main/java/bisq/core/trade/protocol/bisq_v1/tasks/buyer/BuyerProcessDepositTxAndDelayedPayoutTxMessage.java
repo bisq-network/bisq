@@ -70,8 +70,9 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             checkNotNull(message);
 
             PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
-            if (sellerPaymentAccountPayload != null) {
-                checkPeersPaymentAccountPayload(sellerPaymentAccountPayload, checkNotNull(trade.getOffer()));
+            var offer = checkNotNull(trade.getOffer());
+            if (sellerPaymentAccountPayload != null || offer.getPaymentMethod().isCustom()) {
+                checkPeersPaymentAccountPayload(sellerPaymentAccountPayload, offer);
             }
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
