@@ -56,6 +56,8 @@ import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -255,6 +257,86 @@ public class OfferBookChartViewModelTest {
 
         offerBookListItems.add(bsqItem("arrives-below-lower-bound", AVERAGE_BSQ_PRICE / 3, OfferDirection.BUY));
         assertEquals(List.of("at-lower-bound"), offerIds(model.getTopSellOfferList()));
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    @Test
+    public void allOffersOutsidePriceRangeOnlyWhenTheRangeHidesEveryOffer() {
+        ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList(
+                bsqItem("above", 3 * AVERAGE_BSQ_PRICE, OfferDirection.SELL),
+                bsqItem("below", AVERAGE_BSQ_PRICE / 3, OfferDirection.BUY));
+        OfferBookChartViewModel model = activatedBsqModel(offerBookListItems);
+
+        assertTrue(model.getTopBuyOfferList().isEmpty());
+        assertTrue(model.getTopSellOfferList().isEmpty());
+        assertTrue(model.allOffersOutsidePriceRange.get());
+
+        // An offer within the range arrives
+        OfferBookListItem inRange = bsqItem("in-range", AVERAGE_BSQ_PRICE, OfferDirection.BUY);
+        offerBookListItems.add(inRange);
+        assertFalse(model.allOffersOutsidePriceRange.get());
+
+        offerBookListItems.remove(inRange);
+        assertTrue(model.allOffersOutsidePriceRange.get());
+
+        // Another currency has no price range
+        model.onSetTradeCurrency(usd);
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // An empty BSQ market is not caused by the range
+    @Test
+    public void noOffersIsNotAllOffersOutsidePriceRange() {
+        OfferBookChartViewModel model = activatedBsqModel(FXCollections.observableArrayList());
+
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // The chart leaves out offers without a price, such as an offer with a price relative to the market price while
+    // there is no market price. They are not hidden by the range, so the hint must not name the range.
+    @Test
+    public void offersWithoutPriceDoNotCountAsOutsidePriceRange() {
+        OfferBookListItem withoutPrice = new OfferBookListItem(make(OfferMaker.btcUsdOffer.but(
+                with(OfferMaker.id, "without-price"),
+                with(OfferMaker.baseCurrencyCode, "BSQ"),
+                with(OfferMaker.counterCurrencyCode, "BTC"),
+                with(OfferMaker.paymentMethodId, "BLOCK_CHAINS"),
+                with(OfferMaker.useMarketBasedPrice, true))));
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        withoutPrice.getOffer().setPriceFeedService(priceFeedService);
+
+        OfferBookChartViewModel model = activatedBsqModel(FXCollections.observableArrayList(withoutPrice));
+
+        assertTrue(model.getTopBuyOfferList().isEmpty());
+        assertTrue(model.getTopSellOfferList().isEmpty());
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // The market view keeps the chart active while another of its tabs is selected
+    @Test
+    public void offerBookTabIsTheFirstTabOfTheMarketView() {
+        OfferBookChartViewModel model = activatedBsqModel(FXCollections.observableArrayList());
+
+        model.setSelectedTabIndex(0);
+        assertTrue(model.isOfferBookTabSelected());
+        model.setSelectedTabIndex(1);
+        assertFalse(model.isOfferBookTabSelected());
+    }
+
+    private OfferBookChartViewModel activatedBsqModel(ObservableList<OfferBookListItem> offerBookListItems) {
+        OfferBook offerBook = mock(OfferBook.class);
+        when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
+        // A new instance, as the shared one must keep its currency
+        Preferences preferences = make(a(PreferenceMakers.Preferences));
+        preferences.setOfferBookChartScreenCurrencyCode("BSQ");
+
+        PriceFeedService priceFeedService = mock(PriceFeedService.class);
+        when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
+
+        OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, mock(OpenOfferManager.class),
+                preferences, priceFeedService, null, null, priceUtil(preferences));
+        model.activate();
+        return model;
     }
 
     @Test

@@ -52,8 +52,10 @@ import com.google.common.math.LongMath;
 
 import javafx.scene.chart.XYChart;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -95,6 +97,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     public final IntegerProperty maxPlacesForBuyVolume = new SimpleIntegerProperty();
     public final IntegerProperty maxPlacesForSellPrice = new SimpleIntegerProperty();
     public final IntegerProperty maxPlacesForSellVolume = new SimpleIntegerProperty();
+    // True if the chart shows no offer, but the BSQ offer price range hides at least one offer of the currency
+    final BooleanProperty allOffersOutsidePriceRange = new SimpleBooleanProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -213,6 +217,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     public void setSelectedTabIndex(int selectedTabIndex) {
         this.selectedTabIndex = selectedTabIndex;
         syncPriceFeedCurrency();
+    }
+
+    boolean isOfferBookTabSelected() {
+        return selectedTabIndex == TAB_INDEX;
     }
 
     public boolean isSellOffer(OfferDirection direction) {
@@ -401,6 +409,13 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
 
         buildChartAndTableEntries(allSellOffers, OfferDirection.SELL, sellData, topSellOfferList);
+
+        allOffersOutsidePriceRange.set(topBuyOfferList.isEmpty() &&
+                topSellOfferList.isEmpty() &&
+                offerBookListItems.stream()
+                        .map(OfferBookListItem::getOffer)
+                        .anyMatch(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
+                                && !isShown.test(e)));
     }
 
     private void buildChartAndTableEntries(List<Offer> sortedList,

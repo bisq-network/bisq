@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.market.offerbook;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -26,6 +27,7 @@ import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.PeerInfoIconSmall;
 import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
+import bisq.desktop.main.offer.offerbook.BsqOfferPriceRangeHint;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.DisplayUtils;
@@ -101,6 +103,9 @@ import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 @FxmlView
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
     private final boolean useDevPrivilegeKeys;
+    // At most one popup while the offer book tab of the market view stays selected
+    private final BsqOfferPriceRangeHint priceRangeHint;
+    private final ChangeListener<Boolean> allOffersOutsidePriceRangeListener;
 
     private NumberAxis xAxis;
     private XYChart.Series<Number, Number> seriesBuy, seriesSell;
@@ -137,11 +142,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @Inject
     public OfferBookChartView(OfferBookChartViewModel model,
+                              Navigation navigation,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+        priceRangeHint = new BsqOfferPriceRangeHint(model.preferences, navigation,
+                () -> model.isOfferBookTabSelected() && model.allOffersOutsidePriceRange.get());
+        allOffersOutsidePriceRangeListener = (observable, oldValue, newValue) -> priceRangeHint.update();
     }
 
     @Override
@@ -185,7 +194,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     protected void activate() {
         // root.getParent() is null at initialize
         tabPaneSelectionModel = GUIUtil.getParentOfType(root, BisqJfxTabPane.class).getSelectionModel();
-        selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
+        selectedTabIndexListener = (observable, oldValue, newValue) -> {
+            model.setSelectedTabIndex((int) newValue);
+            if (model.isOfferBookTabSelected()) {
+                priceRangeHint.update();
+            } else {
+                priceRangeHint.reset();
+            }
+        };
 
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
@@ -274,6 +290,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         layout();
 
         updateChartData();
+
+        model.allOffersOutsidePriceRange.addListener(allOffersOutsidePriceRangeListener);
+        priceRangeHint.update();
     }
 
     static class CurrencyListItemStringConverter extends StringConverter<CurrencyListItem> {
@@ -312,6 +331,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @Override
     protected void deactivate() {
+        model.allOffersOutsidePriceRange.removeListener(allOffersOutsidePriceRangeListener);
+        priceRangeHint.reset();
         model.getOfferBookListItems().removeListener(changeListener);
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.currencyListItems.getObservableList().removeListener(currencyListItemsListener);
