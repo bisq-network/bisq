@@ -48,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
+import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxFields;
 import static bisq.core.trade.validation.TransactionValidation.checkSerializedTransaction;
 import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
@@ -67,6 +68,11 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             var message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
             checkNotNull(message);
+
+            PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
+            if (sellerPaymentAccountPayload != null) {
+                checkPeersPaymentAccountPayload(sellerPaymentAccountPayload, checkNotNull(trade.getOffer()));
+            }
 
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             Wallet wallet = btcWalletService.getWallet();
@@ -111,7 +117,6 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            PaymentAccountPayload sellerPaymentAccountPayload = message.getSellerPaymentAccountPayload();
             if (sellerPaymentAccountPayload != null) {
                 byte[] sellerPaymentAccountPayloadHash = sellerPaymentAccountPayload.getHashForContract();
                 Contract contract = checkNotNull(trade.getContract());
