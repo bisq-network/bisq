@@ -132,14 +132,25 @@ public class CustomPaymentMethodForm extends PaymentMethodForm {
 
         AutocompleteComboBox<TradeCurrency> autocompleteComboBox = (AutocompleteComboBox<TradeCurrency>) currencyComboBox;
         autocompleteComboBox.setAutocompleteItems(new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies()));
-        autocompleteComboBox.setOnChangeConfirmed(e ->
-                onCurrencyConfirmed(currencyComboBox.getSelectionModel().getSelectedItem()));
+        // Also handle a dismissed search whose text does not match an item.
+        autocompleteComboBox.setOnHidden(e -> {
+            TradeCurrency selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
+            if (selectedCurrency != null &&
+                    selectedCurrency.getNameAndCode().equals(currencyComboBox.getEditor().getText())) {
+                onCurrencyConfirmed(selectedCurrency);
+                currencyComboBox.getParent().requestFocus();
+            } else {
+                onCurrencyConfirmed(null);
+            }
+        });
     }
 
     private void onCurrencyConfirmed(@Nullable TradeCurrency selectedCurrency) {
         if (selectedCurrency == null) {
             // The search was left without a choice. The currency of the account stays and is shown again.
             TradeCurrency tradeCurrency = paymentAccount.getSingleTradeCurrency();
+            ((AutocompleteComboBox<TradeCurrency>) currencyComboBox)
+                    .setAutocompleteItems(new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies()));
             if (tradeCurrency != null) {
                 currencyComboBox.getSelectionModel().select(tradeCurrency);
             }
