@@ -11,7 +11,9 @@ The short version is:
 3. Account signing can lower the amount only for a trader who is buying BTC with
    a chargeback-risk fiat payment method in a mature-market currency.
 4. Selling BTC is never reduced by account signing.
-5. All trades are capped by the current hard network cap of `0.250 BTC`.
+5. All trades are capped by the network maximum: the DAO parameter
+   `MAX_TRADE_LIMIT`, clamped to the hard network cap of `0.500 BTC`. On
+   mainnet the DAO value is `0.25 BTC`, so the network maximum is `0.250 BTC`.
 
 ## Scope
 
@@ -39,17 +41,28 @@ If the trader is selling BTC, signing state does not reduce the trade limit.
 | Name | Current value | Meaning |
 | --- | ---: | --- |
 | DAO `MAX_TRADE_LIMIT` default | `2 BTC` | DAO parameter used as the base for payment-method limits. |
-| Hard network cap | `0.250 BTC` | `TradeLimits.MAX_TRADE_AMOUNT`; clamps the DAO value and rejects larger trades. |
+| DAO `MAX_TRADE_LIMIT` on mainnet | `0.25 BTC` | Voted value, active since block 950827 (DAO state at block 971800). One vote can at most halve or double it. |
+| Hard network cap | `0.500 BTC` | `TradeLimits.MAX_TRADE_AMOUNT`; clamps the DAO value and rejects larger trades. |
 | Default local user-defined limit | `0.1 BTC` | Initial `Preferences.INITIAL_TRADE_LIMIT`. |
 | Current small-trade limit | `0.002 BTC` | Limit for unsigned or newly peer-signed chargeback-risk BTC buyers. |
 | Legacy account exception timestamp | `2019-03-01 00:00 UTC` | Account witnesses at or before this timestamp bypass signing limits. |
 
-Unless the DAO lowers `MAX_TRADE_LIMIT` below `0.250 BTC`, the effective network
-maximum used by payment methods is `0.250 BTC`.
+The effective network maximum used by payment methods is the DAO value, clamped
+to the hard cap:
 
 ```text
-networkMax = min(DAO_MAX_TRADE_LIMIT, 0.250 BTC)
+networkMax = min(DAO_MAX_TRADE_LIMIT, 0.500 BTC)
 ```
+
+With the mainnet DAO value of `0.25 BTC`, `networkMax` is `0.250 BTC`. It
+reaches the hard cap of `0.500 BTC` only after a DAO vote sets
+`MAX_TRADE_LIMIT` to at least `0.5 BTC`.
+
+A node reads the DAO value at its own DAO chain height. While its DAO state is
+below block 950827, for example during a resync from genesis, it reads an
+earlier value (`2 BTC`, `1 BTC` or `0.5 BTC`), which the hard cap clamps to
+`0.500 BTC`. Taking an offer and answering a take request need a DAO state in
+sync with the seed nodes; creating an offer does not.
 
 ## Calculation Flow
 
@@ -104,17 +117,18 @@ custom payment method `CUSTOM` uses a risk category with a fixed cap.
 
 Risk-category methods are derived from `networkMax` with a risk factor. The code
 rounds the first-month value to 10,000 satoshis and then multiplies it by four.
-With the current `networkMax = 0.250 BTC`, the resulting category maxima are:
+The resulting category maxima at the mainnet `networkMax = 0.250 BTC` and at the
+hard cap are:
 
-| Category | Risk factor | Current max |
-| --- | ---: | ---: |
-| Very low risk | 1 | `0.250 BTC` |
-| Low risk | 2 | `0.1252 BTC` |
-| Mid risk | 3 | `0.0832 BTC` |
-| High risk | 4 | `0.0624 BTC` |
+| Category | Risk factor | Max at `0.250 BTC` | Max at `0.500 BTC` |
+| --- | ---: | ---: | ---: |
+| Very low risk | 1 | `0.250 BTC` | `0.500 BTC` |
+| Low risk | 2 | `0.1252 BTC` | `0.250 BTC` |
+| Mid risk | 3 | `0.0832 BTC` | `0.1668 BTC` |
+| High risk | 4 | `0.0624 BTC` | `0.1252 BTC` |
 
 The payment methods in each category are listed below. The category name maps to
-the current max in the table above.
+the max in the table above.
 
 Very low risk:
 
@@ -150,15 +164,16 @@ current network maximum relative to the original `2 BTC` DAO base.
 customMax = staticBaseLimit * networkMax / 2 BTC
 ```
 
-With the current `networkMax = 0.250 BTC`, the custom limits are:
+The custom limits at the mainnet `networkMax = 0.250 BTC` and at the hard cap
+are:
 
-| Payment method | Static base limit | Current max |
-| --- | ---: | ---: |
-| `NEFT` | `0.02 BTC` | `0.0025 BTC` |
-| `BIZUM` | `0.04 BTC` | `0.005 BTC` |
-| `UPI` | `0.05 BTC` | `0.00625 BTC` |
-| `PAYTM` | `0.05 BTC` | `0.00625 BTC` |
-| `TIKKIE` | `0.05 BTC` | `0.00625 BTC` |
+| Payment method | Static base limit | Max at `0.250 BTC` | Max at `0.500 BTC` |
+| --- | ---: | ---: | ---: |
+| `NEFT` | `0.02 BTC` | `0.0025 BTC` | `0.005 BTC` |
+| `BIZUM` | `0.04 BTC` | `0.005 BTC` | `0.01 BTC` |
+| `UPI` | `0.05 BTC` | `0.00625 BTC` | `0.0125 BTC` |
+| `PAYTM` | `0.05 BTC` | `0.00625 BTC` | `0.0125 BTC` |
+| `TIKKIE` | `0.05 BTC` | `0.00625 BTC` | `0.0125 BTC` |
 
 ### Fixed Cap Of The Custom Payment Method
 
@@ -176,20 +191,20 @@ is not a chargeback-risk method, so account signing does not reduce its limit.
 
 ### Effect Of The Local User Limit
 
-The default local user-defined limit is `0.1 BTC`. With the current hard cap,
-this lowers very-low-risk and low-risk methods:
+The default local user-defined limit is `0.1 BTC`. At `networkMax = 0.250 BTC`
+it lowers very-low-risk and low-risk methods. At `networkMax = 0.500 BTC` it
+lowers all four categories:
 
-| Payment-method max | Default user limit | Local base limit |
-| ---: | ---: | ---: |
-| `0.250 BTC` | `0.1 BTC` | `0.1 BTC` |
-| `0.1252 BTC` | `0.1 BTC` | `0.1 BTC` |
-| `0.0832 BTC` | `0.1 BTC` | `0.0832 BTC` |
-| `0.0624 BTC` | `0.1 BTC` | `0.0624 BTC` |
+| Category | Local base limit at `0.250 BTC` | Local base limit at `0.500 BTC` |
+| --- | ---: | ---: |
+| Very low risk | `0.1 BTC` | `0.1 BTC` |
+| Low risk | `0.1 BTC` | `0.1 BTC` |
+| Mid risk | `0.0832 BTC` | `0.1 BTC` |
+| High risk | `0.0624 BTC` | `0.1 BTC` |
 
-A user can raise the local preference up to the clamped DAO maximum. That can
-restore very-low-risk methods from `0.1 BTC` to `0.250 BTC` and
-low-risk methods from `0.1 BTC` to `0.1252 BTC`, but it cannot raise a
-method above its payment-method maximum.
+A user can raise the local preference up to `networkMax`, the clamped DAO
+maximum. That can restore a method up to its payment-method maximum, but not
+above it.
 
 ## Account-Signing Reduction
 
@@ -288,12 +303,40 @@ account cannot lower their limit.
 Peer checks do not apply the peer's local user-defined limit because that
 setting is not part of the witness or offer contract.
 
-Trade amount validation also rejects any trade above `0.250 BTC`, including
-legacy offers that were persisted before the hard cap was introduced.
+Trade amount validation also rejects any trade above the hard cap of
+`0.500 BTC`, including legacy offers that were persisted before the hard cap was
+introduced. This check uses the hard cap, not `networkMax`.
+
+## Raising The Network Maximum
+
+The hard cap is part of the code, the DAO value is not. A DAO vote changes
+`networkMax` on all nodes at the same block, but each node clamps it to its own
+hard cap. Nodes with different hard caps then compute different limits for the
+same offer and the same peer. The verifier computes the peer's limit with its
+own values, so the larger limit of a newer node is not accepted by an older one.
+
+A raise of `MAX_TRADE_LIMIT` above the hard cap of older versions therefore
+needs this order:
+
+1. Release the version with the higher hard cap.
+2. Set `disableTradeBelowVersion` of the filter to that version, before the
+   activation height of the vote. Versions without a hard cap (up to 1.9.22)
+   follow the DAO value directly and are excluded by the same setting.
+3. Activate the DAO vote. One vote can at most double the value.
+
+Without step 2, after the vote:
+
+- A seller maker of an older version rejects a BTC buyer in the half-limit stage
+  of account signing who buys more than half of the older payment-method
+  maximum, after the taker fee is paid. Makers before v1.10.5 reject it only
+  after the deposit transaction is published, so such a trade needs mediation.
+- Older nodes cannot take larger fiat offers of newer makers, and the desktop
+  offer book of an older node hides every offer above its own payment-method
+  maximum.
 
 ## Examples
 
-These examples assume the current `networkMax = 0.250 BTC` and the default local
+These examples assume the mainnet `networkMax = 0.250 BTC` and the default local
 user-defined limit `U = 0.1 BTC`.
 
 | Scenario | Why | Limit |
@@ -306,13 +349,13 @@ user-defined limit `U = 0.1 BTC`.
 | Taker takes a `BUY` offer with `SEPA`/`EUR`, unsigned account | Taker is selling BTC, so signing does not reduce the limit. | `0.0624 BTC` |
 | Any trader uses `SWISH` | Low-risk payment-method max, then lowered by the default user limit. | `0.1 BTC` |
 | Any trader uses `ADVANCED_CASH` with default preference | Very-low-risk method lowered by default user limit. | `0.1 BTC` |
-| Any trader uses `ADVANCED_CASH` after raising preference to `0.250 BTC` | Very-low-risk method reaches the hard cap. | `0.250 BTC` |
+| Any trader uses `ADVANCED_CASH` after raising preference to `0.250 BTC` | Very-low-risk method reaches `networkMax`. | `0.250 BTC` |
 | Any trader uses `UPI` | Custom scaled payment-method limit. | `0.00625 BTC` |
 | Any trader uses `CUSTOM` | High-risk category with the fixed cap of the custom payment method. | `0.05 BTC` |
 
 ## Source References
 
-- `TradeLimits.MAX_TRADE_AMOUNT` defines the `0.250 BTC` hard cap.
+- `TradeLimits.MAX_TRADE_AMOUNT` defines the `0.500 BTC` hard cap.
 - `TradeLimits.getMaxTradeLimitFromDaoParam` reads and clamps DAO
   `MAX_TRADE_LIMIT`.
 - `PaymentMethod.getMaxTradeLimitAsCoin` derives risk-category and custom
