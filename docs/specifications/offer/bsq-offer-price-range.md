@@ -4,7 +4,7 @@
 
 Which offers the BSQ offer book and the BSQ market of the offer book chart of the desktop application hide
 because their price is far from the average BSQ price of the last 90 days, the preference that sets the
-range, and the hint shown when the range hides every offer of the offer book.
+range, and the hint shown when the range hides every offer of one of these views.
 
 ## Rules
 
@@ -42,7 +42,11 @@ range, and the hint shown when the range hides every offer of the offer book.
      replaced, when offers arrive one by one, or while the screen opens.
    - It appears at most once per visit: from opening the BSQ tab, or the screen with the BSQ tab selected,
      until the user switches to another tab or screen. The user can turn it off with "Don't show again".
-   - The chart shows no hint.
+   - The chart with BSQ selected shows the same hint when neither of its offer lists shows an offer, but the
+     range hides at least one BSQ offer. It appears only while the offer book tab of the market view is
+     selected, after the same wait, and at most once until the user switches to another tab of the market
+     view or leaves it. Selecting another currency and BSQ again within that time does not show it again.
+   - "Don't show again" turns the hint off in both views.
 7. The range changes only what the BSQ offer book and the chart show. It does not change offers, taking an
    offer, the API, or other views.
 
@@ -64,7 +68,7 @@ with absurd prices only while the trade statistics are honest. It is a display f
 still has to verify the price of an offer before taking it.
 
 Rule 4 keeps a missing reference price from hiding offers. Rule 6 keeps a reference price which is far from
-the market from emptying the offer book without explanation.
+the market from emptying the offer book or the chart without explanation.
 
 ## Reasons
 
@@ -85,9 +89,10 @@ the market from emptying the offer book without explanation.
   chart, but not of the offer lists, buy offers at a third or less of the highest buy price and sell offers at
   3 times or more of the lowest sell price. The range applies before it.
 - Rule 4, own offers: a maker sees and manages their own offers in the offer book, whatever their price.
-- Rule 6: an empty offer book looks like a market without offers. The hint names the range as the reason
-  only when it is the reason, so that it never asks the user to change a setting which would not show any
-  offer.
+- Rule 6: an empty offer book or chart looks like a market without offers. The hint names the range as the
+  reason only when it is the reason, so that it never asks the user to change a setting which would not show
+  any offer. Both views share the hint and its "Don't show again", as it says the same about the same
+  setting.
 
 ## Compatibility
 
@@ -106,8 +111,8 @@ data or API changes.
 
 ## Known gaps
 
-- The offer book does not show how many offers the range hides, only the hint of rule 6 when it hides all of
-  them.
+- The offer book and the chart do not show how many offers the range hides, only the hint of rule 6 when it
+  hides all of them.
 - Trade statistics which the node receives while the offer book is open count from the next filtering
   (rule 5).
 
