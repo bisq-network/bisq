@@ -19,8 +19,12 @@ package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.main.settings.preferences.PreferencesView;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -38,8 +42,17 @@ import javax.inject.Named;
 
 import javafx.scene.layout.GridPane;
 
+import javafx.beans.value.ChangeListener;
+
+import java.math.BigDecimal;
+
 @FxmlView
 public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewModel> {
+    private final Navigation navigation;
+    private final Preferences preferences;
+    private final ChangeListener<Boolean> allOffersOutsidePriceRangeListener;
+    // At most one popup while the tab stays selected
+    private boolean allOffersOutsidePriceRangePopupShown;
 
     @Inject
     BsqOfferBookView(BsqOfferBookViewModel model,
@@ -53,6 +66,9 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
                      SignedWitnessService signedWitnessService,
                      Preferences preferences) {
         super(model, navigation, offerDetailsWindow, bsqSwapOfferDetailsWindow, formatter, privateNotificationManager, useDevPrivilegeKeys, accountAgeWitnessService, signedWitnessService);
+        this.navigation = navigation;
+        this.preferences = preferences;
+        allOffersOutsidePriceRangeListener = (observable, oldValue, newValue) -> maybeShowAllOffersOutsidePriceRangePopup();
     }
 
     @Override
@@ -70,10 +86,47 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
 
         currencyComboBoxContainer.setVisible(false);
         currencyComboBoxContainer.setManaged(false);
+
+        model.allOffersOutsidePriceRange.addListener(allOffersOutsidePriceRangeListener);
+        maybeShowAllOffersOutsidePriceRangePopup();
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+
+        model.allOffersOutsidePriceRange.removeListener(allOffersOutsidePriceRangeListener);
+        allOffersOutsidePriceRangePopupShown = false;
+    }
+
+    @Override
+    public void onTabSelected(boolean isSelected) {
+        super.onTabSelected(isSelected);
+
+        if (isSelected) {
+            maybeShowAllOffersOutsidePriceRangePopup();
+        } else {
+            allOffersOutsidePriceRangePopupShown = false;
+        }
     }
 
     @Override
     String getTradeCurrencyCode() {
         return BsqOfferBookViewModel.BSQ.getCode();
+    }
+
+    private void maybeShowAllOffersOutsidePriceRangePopup() {
+        if (allOffersOutsidePriceRangePopupShown || !model.allOffersOutsidePriceRange.get()) {
+            return;
+        }
+
+        allOffersOutsidePriceRangePopupShown = true;
+        String factor = BigDecimal.valueOf(preferences.getBsqOfferPriceRangeFactor()).stripTrailingZeros().toPlainString();
+        new Popup().information(Res.get("offerbook.bsq.allOffersOutsidePriceRange", factor))
+                .actionButtonTextWithGoTo("navigation.settings.preferences")
+                .onAction(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
+                .closeButtonText(Res.get("shared.close"))
+                .dontShowAgainId("bsqOfferBookAllOffersOutsidePriceRange")
+                .show();
     }
 }

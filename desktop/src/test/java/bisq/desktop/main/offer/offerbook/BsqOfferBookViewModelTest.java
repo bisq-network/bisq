@@ -56,6 +56,8 @@ import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -88,6 +90,7 @@ public class BsqOfferBookViewModelTest {
         BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
 
         assertEquals(List.of("at-average", "at-upper-bound", "at-lower-bound"), shownOfferIds(model));
+        assertFalse(model.allOffersOutsidePriceRange.get());
     }
 
     @Test
@@ -126,6 +129,47 @@ public class BsqOfferBookViewModelTest {
         BsqOfferBookViewModel model = activatedModel(olderThan90Days);
 
         assertEquals(List.of("low", "high"), shownOfferIds(model));
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    @Test
+    public void allOffersOutsidePriceRangeOnlyWhenTheRangeHidesEveryOffer() {
+        offerBookListItems.addAll(item("above", 3 * AVERAGE_PRICE), item("below", AVERAGE_PRICE / 3));
+
+        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
+
+        assertTrue(shownOfferIds(model).isEmpty());
+        assertTrue(model.allOffersOutsidePriceRange.get());
+
+        // An offer within the range arrives
+        OfferBookListItem inRange = item("in-range", AVERAGE_PRICE);
+        offerBookListItems.add(inRange);
+        assertFalse(model.allOffersOutsidePriceRange.get());
+
+        offerBookListItems.remove(inRange);
+        assertTrue(model.allOffersOutsidePriceRange.get());
+
+        model.onTabSelected(false);
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // An empty offer book is not caused by the range
+    @Test
+    public void noOffersIsNotAllOffersOutsidePriceRange() {
+        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
+
+        assertTrue(shownOfferIds(model).isEmpty());
+        assertFalse(model.allOffersOutsidePriceRange.get());
+    }
+
+    // Offers of the other direction are not in this offer book, so they do not count as hidden by the range
+    @Test
+    public void offersHiddenByOtherFiltersDoNotCount() {
+        offerBookListItems.add(item("other-direction", 3 * AVERAGE_PRICE, OfferDirection.SELL));
+
+        BsqOfferBookViewModel model = activatedModel(bsqStatisticAt(AVERAGE_PRICE));
+
+        assertFalse(model.allOffersOutsidePriceRange.get());
     }
 
     private BsqOfferBookViewModel activatedModel(TradeStatistics3 statistic) {
