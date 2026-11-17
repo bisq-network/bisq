@@ -63,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
+import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static java.lang.String.format;
 
@@ -152,11 +153,17 @@ class CoreTradesService {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
-        offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
-
         var paymentAccount = user.getPaymentAccount(paymentAccountId);
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
+
+        // The desktop lets the taker choose only among the accounts which match the offer
+        if (!isPaymentAccountValidForOffer(offer, paymentAccount))
+            throw new IllegalArgumentException(format("payment account with id '%s' does not match offer with id '%s'",
+                    paymentAccountId,
+                    offer.getId()));
+
+        offerUtil.maybeSetFeePaymentCurrencyPreference(takerFeeCurrencyCode);
 
         verifyIntendedTradeAmountIsInRange(intendedTradeAmount, offer);
 
