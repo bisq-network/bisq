@@ -218,7 +218,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         GridPane.setColumnSpan(marketPriceBox.third, 2);
 
         avgUSDPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
-                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90"), -20).second;
+                Res.get("dao.factsAndFigures.dashboard.avgUSDPrice90"), 0).second;
 
         avgUSDPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.dashboard.avgUSDPrice30"), -35).second;
