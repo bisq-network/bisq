@@ -283,6 +283,8 @@ Offer-book filtering also uses `verifyPeersTradeAmount` to estimate whether the
 maker's account can support the offer amount. In that filter path, a missing
 peer witness permits only trades at or below the small-trade limit. If a witness
 exists, the verifier uses the payment-method maximum and the signing schedule.
+Offers of the stablecoin payment methods skip this filter, because the age of an
+account cannot lower their limit.
 Peer checks do not apply the peer's local user-defined limit because that
 setting is not part of the witness or offer contract.
 

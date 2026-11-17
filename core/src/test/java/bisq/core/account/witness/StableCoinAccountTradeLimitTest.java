@@ -18,26 +18,39 @@ package bisq.core.account.witness;
 
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterPolicyService;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
+import bisq.core.payment.StableCoinAccount;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.crypto.Encryption;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+
+import org.bitcoinj.core.Coin;
+
+import java.security.KeyPair;
 
 import java.time.Clock;
+
+import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -87,5 +100,59 @@ public class StableCoinAccountTradeLimitTest {
 
         assertEquals(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value,
                 service.getMyTradeLimit(account, "USD", OfferDirection.BUY));
+    }
+
+    // A taker of a stablecoin offer does not wait for the maker's witness. In the trade the peers verify the witness
+    // of the revealed account, and if it is not stored yet they derive it from the account. That must not limit the
+    // trade, or a taker would enter a trade which fails later.
+    @Test
+    public void peerWhoseWitnessIsNotStoredPassesTheTradeCheckWithTheFullLimit() throws Exception {
+        PaymentMethod paymentMethod = PaymentMethod.getPaymentMethod("USDT_TRC20");
+        StableCoinAccount peersAccount = (StableCoinAccount) PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        peersAccount.init();
+        peersAccount.setAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+        Coin fullLimit = paymentMethod.getMaxTradeLimitAsCoin("USD");
+
+        assertTrue(verifyPeersWitnessAtTradeDate(peersAccount.getPaymentAccountPayload(), paymentMethod, fullLimit));
+    }
+
+    // Shows that the check limits a peer whose witness is not stored where the age matters
+    @Test
+    public void peerWhoseWitnessIsNotStoredIsLimitedForAPaymentMethodWithChargebackRisk() throws Exception {
+        PaymentMethod paymentMethod = PaymentMethod.getPaymentMethod(PaymentMethod.CLEAR_X_CHANGE_ID);
+        ClearXchangeAccount peersAccount = new ClearXchangeAccount();
+        peersAccount.init();
+        peersAccount.setEmailOrMobileNr("peer@example.com");
+        Coin fullLimit = paymentMethod.getMaxTradeLimitAsCoin("USD");
+        assertTrue(fullLimit.isGreaterThan(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT));
+
+        assertFalse(verifyPeersWitnessAtTradeDate(peersAccount.getPaymentAccountPayload(), paymentMethod, fullLimit));
+    }
+
+    // The peer buys BTC, the direction in which the age matters for a payment method with chargeback risk
+    private boolean verifyPeersWitnessAtTradeDate(PaymentAccountPayload peersPaymentAccountPayload,
+                                                  PaymentMethod paymentMethod,
+                                                  Coin tradeAmount) throws Exception {
+        KeyPair peersSignatureKeyPair = Sig.generateKeyPair();
+        PubKeyRing peersPubKeyRing = new PubKeyRing(peersSignatureKeyPair.getPublic(),
+                Encryption.generateKeyPair().getPublic());
+        byte[] nonce = {1, 2, 3, 4};
+        byte[] signature = Sig.sign(peersSignatureKeyPair.getPrivate(), nonce);
+        Offer offer = mock(Offer.class);
+        when(offer.getPaymentMethod()).thenReturn(paymentMethod);
+        when(offer.getCurrencyCode()).thenReturn("USD");
+        when(offer.getDirection()).thenReturn(OfferDirection.BUY);
+        Trade trade = mock(Trade.class);
+        when(trade.getOffer()).thenReturn(offer);
+        when(trade.getAmount()).thenReturn(tradeAmount);
+
+        return service.verifyAccountAgeWitnessAtTradeDate(trade,
+                peersPaymentAccountPayload,
+                new Date(),
+                peersPubKeyRing,
+                nonce,
+                signature,
+                errorMessage -> {
+                });
     }
 }

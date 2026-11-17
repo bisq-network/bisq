@@ -39,7 +39,8 @@ stablecoins (tickers such as `USDT-E`), which follow the rules of altcoin market
 6. An account matches only the offers of its own rail. The same coin on another network is another
    payment method.
 7. A transfer on a blockchain cannot be charged back. The trade limit is the highest limit class,
-   as for altcoins, and it does not depend on the age or the signing of the account.
+   as for altcoins, and it does not depend on the age or the signing of the account. A taker
+   therefore does not require the account age witness of the maker to take an offer.
 8. The trade period is 24 hours.
 9. All other rules are those of a fiat payment method:
    - the account has an account age witness, and the seller validates the account of the buyer
@@ -104,6 +105,13 @@ statistics store a payment method as its position in that list, so an entry neve
 - **One unit of the coin for one unit of the peg currency.** It keeps the price, the volume and the
   trade protocol of a fiat offer unchanged. A trader who expects a coin to leave its peg sets the
   price accordingly or does not use the payment method.
+- **No witness of the maker for the taker.** For other fiat payment methods a taker accepts an
+  offer above 0.002 BTC only if it knows the account age witness of the maker, because the age can
+  lower the limit of a payment method with chargeback risk. Here the age cannot lower the limit, so
+  that requirement would only block the offers of a new account until its witness has spread. The
+  witness hash in an offer is only a preliminary hint (see
+  [`fiat-buyer-payment-account-validation.md`](../trade/fiat-buyer-payment-account-validation.md));
+  in the trade the seller still validates the account of the buyer.
 - **Trade limit and issuer risk.** The limit classes follow the chargeback risk of a payment
   method, and a transfer on a blockchain has none. The risk that an issuer freezes coins stays
   with the trader who holds them. It is not lowered by a smaller trade limit, so it is stated in
@@ -160,9 +168,6 @@ statistics store a payment method as its position in that list, so an entry neve
   peg currency, not the coin.
 - The issuer of a coin may be able to freeze the coins of an address. Mediation cannot undo that.
   Which of the listed coins can be frozen is not recorded.
-- A taker accepts an offer above the tolerated small amount only if the account age witness of the
-  maker is known to the taker, as for every fiat payment method. Offers of a new account can show
-  as not takeable until its witness has spread.
 - The same coin can be traded in two ways, as an altcoin market and as a payment method of its peg
   currency, so its offers are split between two offer books.
 - Coins on other networks are not listed, among them USDC on Base and Arbitrum, which hold more
