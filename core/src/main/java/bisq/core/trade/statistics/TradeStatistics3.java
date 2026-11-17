@@ -216,7 +216,25 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         ACH_TRANSFER,
         DOMESTIC_WIRE_TRANSFER,
         SBP,
-        CUSTOM;
+        CUSTOM,
+        USDT_ERC20,
+        USDT_TRC20,
+        USDT_BEP20,
+        USDT_SPL,
+        USDC_ERC20,
+        USDC_SPL,
+        USDC_BEP20,
+        USDS_ERC20,
+        USDE_ERC20,
+        DAI_ERC20,
+        RLUSD_ERC20,
+        USDG_ERC20,
+        USDG_SPL,
+        PYUSD_ERC20,
+        PYUSD_SPL,
+        U_ERC20,
+        U_BEP20,
+        USDF_ERC20;
 
         private static final PaymentMethodMapper[] values = values(); // cache for perf gain
     }

@@ -94,6 +94,8 @@ class CorePaymentAccountsService {
                 // The account form does not create an account of the custom payment method (see PaymentAccountForm)
                 .filter(paymentMethod -> !paymentMethod.isCustom())
                 .filter(PaymentMethod::isFiat)
+                // The account form cannot create an account of a stablecoin payment method (see PaymentAccountForm)
+                .filter(paymentMethod -> !paymentMethod.isStableCoin())
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
     }

@@ -118,6 +118,8 @@ class SellerProcessShareBuyerCustomPaymentMethodAccountTest {
         when(trade.getContract()).thenReturn(contract);
         when(contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()))
                 .thenReturn(buyerPaymentAccountPayload.getHashForContract());
+        when(contract.getPeersPaymentMethodId(processModel.getPubKeyRing()))
+                .thenReturn(buyerPaymentAccountPayload.getPaymentMethodId());
         return trade;
     }
 

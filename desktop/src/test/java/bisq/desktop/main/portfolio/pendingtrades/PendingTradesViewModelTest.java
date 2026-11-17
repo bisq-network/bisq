@@ -23,8 +23,11 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel.DeadDepo
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterPolicyService;
+import bisq.core.monetary.Volume;
 import bisq.core.network.MessageState;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.mempool.TxValidator;
@@ -46,6 +49,7 @@ import bisq.common.ClockWatcher;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.utils.Fiat;
 
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -127,6 +131,30 @@ class PendingTradesViewModelTest {
     private void select(Trade trade) {
         this.trade = trade;
         viewModel.onSelectedItemChanged(new PendingTradesListItem(trade, mock(CoinFormatter.class)));
+    }
+
+    // A trade with a stablecoin payment method is a USD trade which is paid in units of the coin, so the amount to
+    // transfer and to receive must name the coin.
+    @Test
+    void volumeOfAStableCoinTradeIsShownInUnitsOfTheCoin() {
+        selectTradeWithVolume("USDT_TRC20");
+
+        assertEquals("1000 USDT", viewModel.getFiatVolume());
+    }
+
+    @Test
+    void volumeOfAnotherFiatTradeIsShownInItsCurrency() {
+        selectTradeWithVolume(PaymentMethod.CELPAY_ID);
+
+        assertEquals("1000 USD", viewModel.getFiatVolume());
+    }
+
+    private void selectTradeWithVolume(String paymentMethodId) {
+        Offer offer = mock(Offer.class);
+        when(offer.getPaymentMethod()).thenReturn(PaymentMethod.getPaymentMethod(paymentMethodId));
+        when(trade.getOffer()).thenReturn(offer);
+        when(trade.getVolume()).thenReturn(new Volume(Fiat.parseFiat("USD", "1000")));
+        when(viewModel.dataModel.getTrade()).thenReturn(trade);
     }
 
     @Test

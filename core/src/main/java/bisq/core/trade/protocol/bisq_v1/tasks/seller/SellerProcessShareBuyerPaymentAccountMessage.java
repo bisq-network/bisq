@@ -52,6 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
+import static bisq.core.trade.validation.TradeValidation.checkPaymentMethodFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -84,6 +85,7 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
             // which the peer committed in early stages of the trade protocol.
             checkHashFromContract(peersHashFromAccountPayload, peersCommittedHashFromContract,
                     "peersPaymentAccountPayloadHash");
+            checkPaymentMethodFromContract(peersPaymentAccountPayload, contract, myPubKeyRing);
 
             processModel.getTradePeer().setPaymentAccountPayload(peersPaymentAccountPayload);
 

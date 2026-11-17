@@ -260,7 +260,11 @@ public class OfferFilterService {
             return insufficientCounterpartyTradeLimitCache.get(cacheKey);
         }
 
+        // The age of the maker's account cannot lower the trade limit of a stablecoin payment method, as it has no
+        // chargeback risk. Requiring the maker's witness would only block the offers of a new account until its
+        // witness has reached us. The trade itself still verifies the witness of the revealed account.
         boolean result = offer.isFiatOffer() &&
+                !offer.getPaymentMethod().isStableCoin() &&
                 !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(),
                         errorMessage -> {
                         });

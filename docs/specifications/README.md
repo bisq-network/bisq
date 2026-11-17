@@ -102,6 +102,12 @@ specification says so explicitly instead of describing the implementation as if 
 |---|---|
 | [`payment/custom-payment-method.md`](payment/custom-payment-method.md) | The payment method for payment methods which Bisq does not support: the name and the account data as free texts, which accounts and offers belong together, the checks on the account of the peer, the trade limit and the warnings. |
 
+### `payment/`
+
+| Specification | Covers |
+|---|---|
+| [`payment/stablecoin-payment-methods.md`](payment/stablecoin-payment-methods.md) | Stablecoins as payment methods of their peg currency: the listed coins and networks, the meaning of an offer, the account data, and which rules of fiat payment methods apply. |
+
 ### `trade/`
 
 | Specification | Covers |
@@ -110,6 +116,7 @@ specification says so explicitly instead of describing the implementation as if 
 | [`trade/deposit-transaction-liveness.md`](trade/deposit-transaction-liveness.md) | The block-explorer evidence rules for classifying a deposit transaction as dead and for authorizing the move to failed trades. |
 | [`trade/delayed-payout-receivers.md`](trade/delayed-payout-receivers.md) | Proposal authenticity, address-list versioning, and fail-closed receiver rules for Burning Man delayed payout transactions. |
 | [`trade/fiat-buyer-payment-account-validation.md`](trade/fiat-buyer-payment-account-validation.md) | Contract-bound buyer payment-account validation and the fiat deposit/settlement gates that depend on it. |
+| [`trade/revealed-payment-account-payment-method.md`](trade/revealed-payment-account-payment-method.md) | The payment method which revealed payment account data must have: the one the peer stated in the contract, for the account data of both traders. |
 | [`trade/repeated-payout-confirmation.md`](trade/repeated-payout-confirmation.md) | The seller's repeated payment receipt confirmation after the payout was published: it re-sends the stored payout transaction and never creates it again. A confirmation is refused once the mediated payout is signed by both traders or published. |
 | [`trade/take-offer-request-admission.md`](trade/take-offer-request-admission.md) | Which take offer requests the maker accepts for an offer while the handshake of an earlier request is pending, so that a second trade does not replace the trade of a taker who may have paid its fee, and the "offer taken" answer to availability requests in that time. |
 | [`trade/taker-trade-tx-fee.md`](trade/taker-trade-tx-fee.md) | The maker's bounds for the trade transaction fee stated by the taker, the taker's check against them before taking an offer, and the fee rate both use. |

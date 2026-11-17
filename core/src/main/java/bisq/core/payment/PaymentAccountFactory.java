@@ -22,6 +22,10 @@ import bisq.core.payment.payload.PaymentMethod;
 public class PaymentAccountFactory {
     @SuppressWarnings("deprecation")
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
+        if (paymentMethod.isStableCoin()) {
+            return new StableCoinAccount(paymentMethod);
+        }
+
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdAccount();

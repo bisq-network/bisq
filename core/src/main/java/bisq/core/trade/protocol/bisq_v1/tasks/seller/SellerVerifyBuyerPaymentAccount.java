@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.TradeValidation.checkHashFromContract;
+import static bisq.core.trade.validation.TradeValidation.checkPaymentMethodFromContract;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SellerVerifyBuyerPaymentAccount extends TradeTask {
@@ -61,6 +62,7 @@ public class SellerVerifyBuyerPaymentAccount extends TradeTask {
             checkHashFromContract(paymentAccountPayload.getHashForContract(),
                     contract.getHashOfPeersPaymentAccountPayload(processModel.getPubKeyRing()),
                     "peersPaymentAccountPayloadHash");
+            checkPaymentMethodFromContract(paymentAccountPayload, contract, processModel.getPubKeyRing());
             PubKeyRing pubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "Buyer pubKeyRing must not be null");
             byte[] nonce = checkNotNull(tradingPeer.getAccountAgeWitnessNonce(),
                     "Buyer account-age witness nonce must not be null");

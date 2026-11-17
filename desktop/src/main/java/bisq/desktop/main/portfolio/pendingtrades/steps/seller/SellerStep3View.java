@@ -22,6 +22,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.components.paymentmethods.StableCoinForm;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
@@ -48,8 +49,10 @@ import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.payment.stablecoin.StableCoin;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.txproof.AssetTxProofResult;
@@ -245,6 +248,13 @@ public class SellerStep3View extends TradeStepView {
                         ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress() : "NA";
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", currencyName);
+            } else if (myPaymentAccountPayload instanceof StableCoinAccountPayload) {
+                // as for altcoins display the receiving address
+                myPaymentDetails = ((StableCoinAccountPayload) myPaymentAccountPayload).getAddress();
+                peersPaymentDetails = peersPaymentAccountPayload instanceof StableCoinAccountPayload ?
+                        ((StableCoinAccountPayload) peersPaymentAccountPayload).getAddress() : "NA";
+                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);
+                peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", currencyName);
             } else {
                 if (myPaymentDetails.isEmpty()) {
                     // Not expected
@@ -295,6 +305,15 @@ public class SellerStep3View extends TradeStepView {
                 1, peersTitle, peersPaymentDetails).second;
         peersPaymentDetailsTextField.setMouseTransparent(false);
         peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
+
+        Optional<StableCoin> stableCoin = findStableCoin(trade);
+        if (stableCoin.isPresent()) {
+            // The seller checks the received transfer against the network and the token contract of the payment method
+            addCompactTopLabelTextField(gridPane, ++gridRow, 0, Res.get("payment.stablecoin.network"),
+                    StableCoinForm.getNetworkDisplayString(stableCoin.get()));
+            addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.stablecoin.tokenContract"),
+                    stableCoin.get().getTokenContract());
+        }
 
         String counterCurrencyTxId = trade.getCounterCurrencyTxId();
         String counterCurrencyExtraData = trade.getCounterCurrencyExtraData();
@@ -354,7 +373,10 @@ public class SellerStep3View extends TradeStepView {
     protected String getFirstHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_seller.warn.part1a", getCurrencyName(trade)) :
-                Res.get("portfolio.pending.step3_seller.warn.part1b");
+                findStableCoin(trade)
+                        .map(stableCoin -> Res.get("portfolio.pending.step3_seller.warn.part1a",
+                                stableCoin.getNetwork().getDisplayName()))
+                        .orElseGet(() -> Res.get("portfolio.pending.step3_seller.warn.part1b"));
         return Res.get("portfolio.pending.step3_seller.warn.part2", substitute);
 
 
@@ -444,6 +466,14 @@ public class SellerStep3View extends TradeStepView {
                     address,
                     tradeVolumeWithCode,
                     currencyName);
+        } else if (paymentAccountPayload instanceof StableCoinAccountPayload && findStableCoin(trade).isPresent()) {
+            StableCoin stableCoin = findStableCoin(trade).get();
+            message = Res.get("portfolio.pending.step3_seller.stablecoin",
+                    part1,
+                    StableCoinForm.getNetworkDisplayString(stableCoin),
+                    ((StableCoinAccountPayload) paymentAccountPayload).getAddress(),
+                    model.getFiatVolume(),
+                    stableCoin.getTokenContract());
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
                 message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode);

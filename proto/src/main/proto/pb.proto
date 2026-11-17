@@ -1128,6 +1128,7 @@ message PaymentAccountPayload {
         VerseAccountPayload verse_account_payload = 39;
         BsqSwapAccountPayload bsq_swap_account_payload = 40;
         SbpAccountPayload sbp_account_payload = 41;
+        StableCoinAccountPayload stable_coin_account_payload = 42;
         CustomPaymentMethodAccountPayload custom_payment_method_account_payload = 43;
     }
     map<string, string> exclude_from_json_data = 15;
@@ -1488,6 +1489,11 @@ message SbpAccountPayload {
     string holder_name = 1;
     string mobile_number = 2;
     string bank_name = 3;
+}
+
+// One message for all stablecoin payment methods. The coin and its network are given by the payment_method_id.
+message StableCoinAccountPayload {
+    string address = 1;
 }
 
 // Both fields are free texts of the account owner

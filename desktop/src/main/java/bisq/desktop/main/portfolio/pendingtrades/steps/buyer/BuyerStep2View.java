@@ -65,6 +65,7 @@ import bisq.desktop.components.paymentmethods.SbpForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.StableCoinForm;
 import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
@@ -108,9 +109,11 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SbpAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.payment.stablecoin.StableCoin;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.validation.DelayedPayoutTxValidation;
 import bisq.core.user.DontShowAgainLookup;
@@ -132,6 +135,8 @@ import javafx.scene.layout.Priority;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -253,7 +258,7 @@ public class BuyerStep2View extends TradeStepView {
 
         int rowSpanStart = gridRow;
 
-        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        PaymentAccountPayload paymentAccountPayload = getSellersPaymentAccountPayloadOfOffersRail();
         PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
 
@@ -448,7 +453,11 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = SbpForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
-                if (paymentAccountPayload != null) {
+                if (paymentAccountPayload instanceof StableCoinAccountPayload && findStableCoin(trade).isPresent()) {
+                    // The stablecoin payment methods share one form. Their IDs are the names of the rails.
+                    gridRow = StableCoinForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload,
+                            findStableCoin(trade).get());
+                } else if (paymentAccountPayload != null) {
                     log.error("Not supported PaymentMethod: " + paymentMethodId);
                 }
         }
@@ -477,7 +486,9 @@ public class BuyerStep2View extends TradeStepView {
             // details to show. Render a warning instead of dereferencing null here,
             // which used to throw an NPE and leave the whole trade step pane blank.
             SimpleMarkdownLabel missingLabel = addSimpleMarkdownLabel(gridPane, ++gridRow,
-                    Res.get("portfolio.pending.step2_buyer.paymentAccountPayloadMissing"), 10);
+                    Res.get(isSellersPaymentAccountPayloadOfAnotherRail() ?
+                            "portfolio.pending.step2_buyer.stablecoin.paymentAccountPayloadMismatch" :
+                            "portfolio.pending.step2_buyer.paymentAccountPayloadMissing"), 10);
             missingLabel.getStyleClass().add("medium-text");
             GridPane.setColumnSpan(missingLabel, 2);
         } else if (paymentAccountPayload.showRefTextWarning()) {
@@ -546,7 +557,7 @@ public class BuyerStep2View extends TradeStepView {
     protected void updateDisputeState(Trade.DisputeState disputeState) {
         super.updateDisputeState(disputeState);
 
-        confirmButton.setDisable(model.dataModel.getSellersPaymentAccountPayload() == null
+        confirmButton.setDisable(getSellersPaymentAccountPayloadOfOffersRail() == null
                 || !trade.confirmPermitted());
     }
 
@@ -563,6 +574,11 @@ public class BuyerStep2View extends TradeStepView {
         }
 
         if (!model.dataModel.isBootstrappedOrShowPopup()) {
+            return;
+        }
+
+        if (isSellersPaymentAccountPayloadOfAnotherRail()) {
+            // The button is disabled in that case
             return;
         }
 
@@ -704,8 +720,24 @@ public class BuyerStep2View extends TradeStepView {
         });
     }
 
-    private void showPopup() {
+    // A stablecoin payment method fixes the coin and its network, and the same address can be valid on another
+    // network. The trade protocol checks which payment method the payment account data of the seller names, but not
+    // that the data is of the kind of that payment method. So data of another payment method or of another kind
+    // than the one of the offer is not shown, and the payment cannot be started with it.
+    private boolean isSellersPaymentAccountPayloadOfAnotherRail() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        return paymentAccountPayload != null &&
+                StableCoinAccountPayload.isOfAnotherPaymentMethod(checkNotNull(trade.getOffer()).getPaymentMethod(),
+                        paymentAccountPayload);
+    }
+
+    @Nullable
+    private PaymentAccountPayload getSellersPaymentAccountPayloadOfOffersRail() {
+        return isSellersPaymentAccountPayloadOfAnotherRail() ? null : model.dataModel.getSellersPaymentAccountPayload();
+    }
+
+    private void showPopup() {
+        PaymentAccountPayload paymentAccountPayload = getSellersPaymentAccountPayloadOfOffersRail();
         if (paymentAccountPayload != null) {
             String message = Res.get("portfolio.pending.step2.confReached");
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
@@ -716,6 +748,12 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         getCurrencyName(trade),
                         amount);
+            } else if (paymentAccountPayload instanceof StableCoinAccountPayload && findStableCoin(trade).isPresent()) {
+                StableCoin stableCoin = findStableCoin(trade).get();
+                message += Res.get("portfolio.pending.step2_buyer.stablecoin",
+                        model.getFiatVolume(),
+                        StableCoinForm.getNetworkDisplayString(stableCoin),
+                        StableCoinForm.getCoinDisplayString(stableCoin));
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +

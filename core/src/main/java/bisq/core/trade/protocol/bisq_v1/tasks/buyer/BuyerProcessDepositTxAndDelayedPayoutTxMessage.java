@@ -50,6 +50,7 @@ import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_T
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
 import static bisq.core.trade.validation.CustomPaymentMethodValidation.checkPeersPaymentAccountPayload;
 import static bisq.core.trade.validation.DepositTxValidation.checkCanonicalDepositTxFields;
+import static bisq.core.trade.validation.TradeValidation.checkPaymentMethodFromContract;
 import static bisq.core.trade.validation.TransactionValidation.checkSerializedTransaction;
 import static bisq.core.trade.validation.TransactionValidation.toVerifiedTransaction;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -125,6 +126,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                 byte[] peersPaymentAccountPayloadHash = contract.getHashOfPeersPaymentAccountPayload(pubKeyRing);
                 checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                         "Hash of payment account is invalid");
+                checkPaymentMethodFromContract(sellerPaymentAccountPayload, contract, pubKeyRing);
 
                 tradePeer.setPaymentAccountPayload(sellerPaymentAccountPayload);
                 PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),

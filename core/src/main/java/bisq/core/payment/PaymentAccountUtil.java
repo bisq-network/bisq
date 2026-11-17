@@ -112,6 +112,10 @@ public class PaymentAccountUtil {
 
     @SuppressWarnings("deprecation")
     public static List<TradeCurrency> getTradeCurrencies(PaymentMethod paymentMethod) {
+        if (paymentMethod.isStableCoin()) {
+            return StableCoinAccount.getSupportedCurrencies(paymentMethod);
+        }
+
         switch (paymentMethod.getId()) {
             case ADVANCED_CASH_ID:
                 return AdvancedCashAccount.SUPPORTED_CURRENCIES;

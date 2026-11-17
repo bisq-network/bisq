@@ -69,6 +69,7 @@ import bisq.core.payment.payload.SbpAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
+import bisq.core.payment.payload.StableCoinAccountPayload;
 import bisq.core.payment.payload.StrikeAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
@@ -240,6 +241,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return BsqSwapAccountPayload.fromProto(proto);
                 case SBP_ACCOUNT_PAYLOAD:
                     return SbpAccountPayload.fromProto(proto);
+                case STABLE_COIN_ACCOUNT_PAYLOAD:
+                    return StableCoinAccountPayload.fromProto(proto);
                 case CUSTOM_PAYMENT_METHOD_ACCOUNT_PAYLOAD:
                     return CustomPaymentMethodAccountPayload.fromProto(proto);
 
