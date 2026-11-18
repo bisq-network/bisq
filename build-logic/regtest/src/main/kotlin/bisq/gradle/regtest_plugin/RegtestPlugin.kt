@@ -8,12 +8,14 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.Sync
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.jvm.toolchain.JvmImplementation
 import org.gradle.jvm.toolchain.JvmVendorSpec
 import org.gradle.kotlin.dsl.register
+import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
 import javax.inject.Inject
 
@@ -63,18 +65,41 @@ class RegtestPlugin @Inject constructor(
             }
         }
 
-        val startFirstBitcoindTask = project.tasks.register<StartBitcoindTask>("startFirstRegtestBitcoind") {
+        project.tasks.register<Exec>("startBitcoind") {
             dependsOn(initialDaoSetupTask)
-            pidFile.set(project.layout.projectDirectory.file(".localnet/bitcoind.pid"))
 
-            dataDirectory.set(project.layout.projectDirectory.dir(".localnet/bitcoind"))
-            rpcUser.set(RPC_USER)
-            rpcPassword.set(RPC_PASSWORD)
-            blockNotifyArg.set(".localnet/bitcoind/blocknotify %s")
-        }
+            executable = "bitcoind"
 
-        val stopFirstBitcoindTask = project.tasks.register<KillTask>("stopFirstRegtestBitcoind") {
-            pidFile.set(startFirstBitcoindTask.flatMap { it.pidFile })
+            val dataDir: Directory = project.layout.projectDirectory
+                .dir(".localnet")
+                .dir("bitcoind")
+            val port = 18444
+            val onionPort = 18445
+            val rpcBindPort = 18443
+
+            argumentProviders.add(
+                CommandLineArgumentProvider {
+                    listOf(
+                        "-datadir=${dataDir.asFile.absolutePath}",
+                        "-regtest",
+
+                        "-port=$port",
+                        "-bind=127.0.0.1:$port",
+                        "-bind=127.0.0.1:$onionPort=onion",
+
+                        "-prune=0",
+                        "-txindex=1",
+                        "-peerbloomfilters=1",
+                        "-server",
+
+                        "-rpcbind=127.0.0.1:$rpcBindPort",
+                        "-rpcuser=$RPC_USER",
+                        "-rpcpassword=$RPC_PASSWORD",
+
+                        "-blocknotify=${dataDir.asFile.absolutePath}/blocknotify %s"
+                    )
+                }
+            )
         }
 
         val startSecondBitcoindTask = project.tasks.register<StartBitcoindTask>("startSecondRegtestBitcoind") {
@@ -101,8 +126,6 @@ class RegtestPlugin @Inject constructor(
         val seedNodeLibsDirProvider: Provider<Directory> = getBisqAppLibsDirProvider(project, "seednode")
 
         val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
-            dependsOn(startFirstBitcoindTask)
-
             workingDirectory.set(project.layout.projectDirectory)
             javaExecutable.set(getJavaExecutable())
             libsDir.set(seedNodeLibsDirProvider)
@@ -121,7 +144,6 @@ class RegtestPlugin @Inject constructor(
         }
 
         val startSecondSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestSecondSeednode") {
-            dependsOn(startFirstBitcoindTask)
             dependsOn(startFirstSeedNodeTask)
 
             workingDirectory.set(project.layout.projectDirectory)
@@ -214,7 +236,6 @@ class RegtestPlugin @Inject constructor(
         }
 
         project.tasks.register<KillTask>("stopRegtest") {
-            dependsOn(stopFirstBitcoindTask)
             dependsOn(stopSecondBitcoindTask)
 
             dependsOn(stopFirstSeedNodeTask)
