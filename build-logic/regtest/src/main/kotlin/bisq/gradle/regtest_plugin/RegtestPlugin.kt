@@ -40,18 +40,15 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
             includeEmptyDirs = false
             duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-            doLast {
-                val blockNotifyFile = project.layout.projectDirectory
-                    .dir(".localnet")
-                    .dir("bitcoind")
-                    .file("blocknotify")
-                    .asFile
-                blockNotifyFile.appendText("echo exit 0")
+            val localnetDir = project.layout.projectDirectory.dir(".localnet")
+            val blockNotifyFile = localnetDir.dir("bitcoind").file("blocknotify")
+            val bitcoind2Dir = localnetDir.dir("bitcoind2")
 
-                project.layout.projectDirectory
-                    .dir(".localnet")
-                    .dir("bitcoind2")
-                    .asFile
+            doLast {
+                blockNotifyFile.asFile
+                    .appendText("echo exit 0")
+
+                bitcoind2Dir.asFile
                     .mkdirs()
             }
         }
