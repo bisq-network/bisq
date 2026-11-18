@@ -2,6 +2,7 @@ package bisq.gradle.regtest_plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.RegularFile
@@ -17,7 +18,10 @@ import java.io.File
 import javax.inject.Inject
 
 @Suppress("unused")
-class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaToolchainService) : Plugin<Project> {
+class RegtestPlugin @Inject constructor(
+    private val javaToolchainService: JavaToolchainService,
+    private val archiveOperations: ArchiveOperations
+) : Plugin<Project> {
 
     companion object {
         const val RPC_USER = "bisqdao"
@@ -26,7 +30,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
     override fun apply(project: Project) {
         val initialDaoSetupTask = project.tasks.register<Copy>("initialDaoSetup") {
-            from(project.zipTree("docs/dao-setup.zip"))
+            from(archiveOperations.zipTree("docs/dao-setup.zip"))
             into(project.layout.projectDirectory.dir(".localnet"))
 
             exclude("dao-setup/Bitcoin-regtest/bitcoin.conf")
