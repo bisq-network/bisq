@@ -35,26 +35,43 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class DisplayStringsTest {
     private static final Pattern ARGUMENT = Pattern.compile("\\{\\d+[},]");
-    private static final Pattern SINGLE_APOSTROPHE = Pattern.compile("(?<!')'(?!')");
+    // An odd number of apostrophes in a row, of which one starts a quoted part
+    private static final Pattern SINGLE_APOSTROPHE = Pattern.compile("(?<!')'(?:'')*(?!')");
 
     // A text with an argument is formatted as a message format, in which a single apostrophe starts a quoted part:
     // the apostrophe is not shown, and an argument after it is shown as {0}. Such a text writes an apostrophe as ''.
-    // The translations come from Transifex and are not checked here.
     @Test
     void textsWithArgumentsDoubleTheirApostrophes() throws Exception {
-        Properties displayStrings = new Properties();
-        try (InputStream inputStream = getClass().getResourceAsStream("/i18n/displayStrings.properties")) {
-            assertNotNull(inputStream);
-            displayStrings.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        }
-        assertFalse(displayStrings.isEmpty());
+        Properties english = load("displayStrings.properties");
 
-        List<String> textsWithSingleApostrophe = displayStrings.stringPropertyNames().stream()
-                .filter(key -> ARGUMENT.matcher(displayStrings.getProperty(key)).find())
-                .filter(key -> SINGLE_APOSTROPHE.matcher(displayStrings.getProperty(key)).find())
+        assertEquals(List.of(), textsWithSingleApostrophe(english, english));
+    }
+
+    // A translation is formatted with the arguments of the English text. The translations come from Transifex. Of
+    // them only French is checked, as several others still have texts with a single apostrophe.
+    @Test
+    void frenchTextsWithArgumentsDoubleTheirApostrophes() throws Exception {
+        Properties english = load("displayStrings.properties");
+        Properties french = load("displayStrings_fr.properties");
+
+        assertEquals(List.of(), textsWithSingleApostrophe(english, french));
+    }
+
+    private static List<String> textsWithSingleApostrophe(Properties english, Properties texts) {
+        return texts.stringPropertyNames().stream()
+                .filter(key -> english.containsKey(key) && ARGUMENT.matcher(english.getProperty(key)).find())
+                .filter(key -> SINGLE_APOSTROPHE.matcher(texts.getProperty(key)).find())
                 .sorted()
                 .collect(Collectors.toList());
+    }
 
-        assertEquals(List.of(), textsWithSingleApostrophe);
+    private Properties load(String fileName) throws Exception {
+        Properties properties = new Properties();
+        try (InputStream inputStream = getClass().getResourceAsStream("/i18n/" + fileName)) {
+            assertNotNull(inputStream);
+            properties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        }
+        assertFalse(properties.isEmpty());
+        return properties;
     }
 }
